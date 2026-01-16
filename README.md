@@ -2,7 +2,7 @@
 
 A neon-styled, turn-based dice strategy game inspired by Dice Wars / Risk.
 
-**[🎮 LIVE PREVIEW](https://diceception.feuerware.com/)**
+**[🎮 LIVE PREVIEW](https://diception.feuerware.com/)**
 
 ## Overview
 
