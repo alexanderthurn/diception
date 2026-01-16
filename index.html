@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DICEPTION</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="loading-screen">
+        <h1 class="tron-title">DICEPTION</h1>
+        <div class="loading-status">INITIALIZING SYSTEM...</div>
+    </div>
+
+    <div id="game-container"></div>
+
+    <div id="ui-overlay">
+        <button id="end-turn-btn" class="tron-btn game-ui hidden">End Turn</button>
+        <button id="auto-win-btn" class="tron-btn game-ui hidden">Autoplay</button>
+
+        <div id="music-controls" class="panel">
+            <button id="new-game-btn" class="tron-btn small game-ui hidden" title="New Game"><span class="btn-text">NEW
+                    GAME</span><span class="btn-icon">⚙️</span></button>
+            <span class="separator"></span>
+            <button id="music-toggle" class="tron-btn small" title="Music">🔇</button>
+            <input type="range" id="music-volume" min="0" max="100" value="50" title="Music Volume">
+            <span class="separator"></span>
+            <button id="sfx-toggle" class="tron-btn small active" title="Sound Effects">🔔</button>
+            <input type="range" id="sfx-volume" min="0" max="100" value="50" title="SFX Volume">
+        </div>
+
+        <div id="setup-modal" class="modal">
+            <h1 class="tron-title">DICEPTION</h1>
+            <div class="credits">by Alexander Thurn</div>
+            <div class="control-group">
+                <label>Map Size</label>
+                <input type="range" id="map-size" min="1" max="13" value="5">
+                <span id="map-size-val">7x9</span>
+            </div>
+
+            <div class="control-row">
+                <div class="control-group half">
+                    <label>Map Style</label>
+                    <select id="map-style">
+                        <option value="random" selected>Random</option>
+                        <option value="full">Full Grid</option>
+                        <option value="continents">Continents</option>
+                        <option value="caves">Caves</option>
+                        <option value="islands">Islands</option>
+                        <option value="maze">Maze</option>
+                        <option value="tunnels">Tunnels</option>
+                        <option value="swiss">Swiss Cheese</option>
+                    </select>
+                </div>
+                <div class="control-group half">
+                    <label>Start Mode</label>
+                    <select id="game-mode">
+                        <option value="classic" selected>Classic</option>
+                        <option value="fair">Fair Start</option>
+                        <option value="madness">Full Madness</option>
+                        <option value="2of2">2 of 2</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="control-group half">
+                    <label>Humans</label>
+                    <select id="human-count">
+                        <option value="0">0</option>
+                        <option value="1" selected>1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                    </select>
+                </div>
+                <div class="control-group half">
+                    <label>Bots</label>
+                    <select id="bot-count">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="control-group half">
+                    <label>Max Dice per Territory</label>
+                    <div class="range-row">
+                        <input type="range" id="max-dice" min="2" max="16" value="9">
+                        <span id="max-dice-val">9</span>
+                    </div>
+                </div>
+                <div class="control-group half">
+                    <label>Dice Sides</label>
+                    <div class="range-row">
+                        <input type="range" id="dice-sides" min="2" max="20" value="6">
+                        <span id="dice-sides-val">6</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-row" style="margin-top: 10px;">
+                <div class="control-group half checkbox-group">
+                    <label for="fast-mode">
+                        <input type="checkbox" id="fast-mode">
+                        <span>Fast Mode</span>
+                    </label>
+                </div>
+                <div class="control-group half">
+                    <label>Visual Effects</label>
+                    <select id="effects-quality">
+                        <option value="high">High</option>
+                        <option value="low">Low</option>
+                        <option value="off">Off</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-row" style="margin-top: 20px; gap: 10px;">
+                <button id="howto-btn" class="tron-btn small" style="flex: 0 0 auto; width: auto; padding: 0 15px;"
+                    title="How to Play">?</button>
+                <button id="start-game-btn" class="tron-btn large" style="flex: 1;">START</button>
+            </div>
+        </div>
+
+        <div id="howto-modal" class="modal hidden large-modal">
+            <div class="modal-header">
+                <h2 class="tron-title small">ARCHIVE ACCESS</h2>
+                <button id="howto-close-btn" class="close-btn">×</button>
+            </div>
+            <div class="howto-content">
+                <section>
+                    <h3>PROTOCOL: BASICS</h3>
+                    <p><strong>OBJECTIVE:</strong> Conquer all tiles of the grid.</p>
+                    <ul class="howto-list">
+                        <li><strong>COMBAT:</strong> Dice attack dice. Your attack power is the sum of all your dice
+                            values. Highest sum wins.</li>
+                        <li><strong>WINNING:</strong> If you have a higher total than the defender, you win. You take
+                            over the territory and move your dice there (leaving 1 behind).</li>
+                        <li><strong>LOSING:</strong> If you have equal or fewer points, you lose. Your dice count drops
+                            to 1 and your turn ends immediately.</li>
+                        <li><strong>REINFORCE:</strong> At the end of your turn, you get new dice. You get dice based on
+                            your biggest connected territories amount. Like if you have 3 territories, but only 2 are
+                            adjacent, you get 2 dice.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3>INTERFACE CONTROLS</h3>
+                    <table class="control-table">
+                        <tr>
+                            <th>Action</th>
+                            <th>Keyboard</th>
+                            <th>Gamepad</th>
+                        </tr>
+                        <tr>
+                            <td>Navigate</td>
+                            <td>WASD / Arrows</td>
+                            <td>D-Pad / Left Stick</td>
+                        </tr>
+                        <tr>
+                            <td>Select / Attack</td>
+                            <td>WASD (into neighbor) / Enter / E</td>
+                            <td>A Button</td>
+                        </tr>
+                        <tr>
+                            <td>Cancel / Deselect</td>
+                            <td>Q</td>
+                            <td>B Button</td>
+                        </tr>
+                        <tr>
+                            <td>End Turn</td>
+                            <td>Space / R</td>
+                            <td>Y Button</td>
+                        </tr>
+                        <tr>
+                            <td>Camera Pan</td>
+                            <td>I J K L</td>
+                            <td>Right Stick</td>
+                        </tr>
+                    </table>
+                </section>
+
+                <section>
+                    <h3>SYSTEM CONFIGURATION</h3>
+                    <div class="setting-explain">
+                        <p><strong>Config:</strong></p>
+                        <ul>
+                            <li><em>Map Size:</em> Controls the dimensions of the grid. Larger maps take longer to
+                                conquer.</li>
+                            <li><em>Map Style:</em> Shape of the world (e.g., Continents, Maze, Swiss Cheese). Affects
+                                movement paths.</li>
+                            <li><em>Start Mode:</em> "Classic" gives each player one dice more that later he starts.
+                                "Fair Start" gives everyone equal
+                                resources.</li>
+                            <li><em>Max Dice:</em> The maximum number of dice a single tile can hold.</li>
+                            <li><em>Dice Sides:</em> A normal dice has 6 sides. Here you can change that. Values always
+                                start with 1,2,3,...</li>
+                            <li><em>Humans:</em> Set number of human players.</li>
+                            <li><em>Bots:</em> Set number of AIs</li>
+                            <li><em>Fast Mode:</em> Skips many animations.</li>
+                            <li><em>Visual Effects:</em> "High" for full neon glow with particles. "Low/Off" for better
+                                performance on
+                                slow devices.</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section>
+                    <h3>ABOUT</h3>
+                    <div class="setting-explain">
+                        <p>This game was made by <strong>Alexander Thurn</strong>.</p>
+                        <p>It is provided <strong>free of charge</strong>.</p>
+                        <p>Visit <a href="https://feuerware.com" target="_blank" class="about-link">feuerware.com</a>
+                            for more.</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div id="player-dashboard" class="panel game-ui hidden">
+            <h3 class="dash-header" id="dash-header">
+                <span id="player-turn">Initializing...</span>
+                <span id="dash-toggle">[-]</span>
+            </h3>
+            <div id="dash-content">
+                <div id="player-list">
+                    <!-- Populated by JS -->
+                </div>
+                <hr class="dash-divider">
+                <h4 class="log-title">BATTLE LOG</h4>
+                <div id="log-entries">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <div id="game-over-modal" class="modal hidden">
+            <h1>GAME OVER</h1>
+            <p id="winner-text"></p>
+            <button id="restart-btn" class="tron-btn">Play Again</button>
+        </div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+
+</html>

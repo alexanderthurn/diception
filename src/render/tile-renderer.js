@@ -1,0 +1,349 @@
+import { Container, Graphics, Text, Sprite, RenderTexture } from 'pixi.js';
+
+/**
+ * TileRenderer - Optimized tile rendering using pre-rendered sprites
+ * 
+ * This is the SINGLE SOURCE OF TRUTH for tile rendering.
+ * Uses RenderTexture to pre-render dice patterns once, then fast sprite rendering.
+ */
+export class TileRenderer {
+    // Texture cache
+    static textureCache = new Map();
+    static app = null;
+    static initialized = false;
+    static tileSize = 60;
+
+    // Supported dice sides
+    static diceSidesOptions = [2, 4, 6, 8, 10, 12, 20];
+    static maxDiceCount = 25;
+
+    /**
+     * Initialize textures - call once at startup
+     * @param {Application} app - PixiJS Application instance
+     */
+    static async initTextures(app) {
+        if (TileRenderer.initialized) return;
+
+        TileRenderer.app = app;
+        const size = TileRenderer.tileSize;
+
+        console.log('TileRenderer: Pre-rendering dice textures...');
+
+        // Pre-render tile background (white, will be tinted)
+        TileRenderer.textureCache.set('bg', TileRenderer.createBgTexture(app, size));
+        TileRenderer.textureCache.set('bg_border', TileRenderer.createBgTexture(app, size, true));
+
+        // Pre-render D6 emoji dice patterns (1-25 dice)
+        for (let count = 1; count <= TileRenderer.maxDiceCount; count++) {
+            const key = `dice_6_${count}`;
+            const texture = TileRenderer.createDicePatternTexture(app, size, count, 6);
+            TileRenderer.textureCache.set(key, texture);
+        }
+
+        // Pre-render other dice sides patterns (1-25 dice for each sides value)
+        for (const sides of TileRenderer.diceSidesOptions) {
+            if (sides === 6) continue; // Already done with emoji
+
+            for (let count = 1; count <= TileRenderer.maxDiceCount; count++) {
+                const key = `dice_${sides}_${count}`;
+                const texture = TileRenderer.createDicePatternTexture(app, size, count, sides);
+                TileRenderer.textureCache.set(key, texture);
+            }
+        }
+
+        TileRenderer.initialized = true;
+        console.log(`TileRenderer: Pre-rendered ${TileRenderer.textureCache.size} textures`);
+    }
+
+    /**
+     * Create background texture (white, for tinting)
+     */
+    static createBgTexture(app, size, withBorder = false) {
+        const g = new Graphics();
+        g.roundRect(0, 0, size, size, 4);
+        g.fill({ color: 0xffffff, alpha: 1 });
+
+        if (withBorder) {
+            g.stroke({ width: 2, color: 0xffffff, alpha: 1 });
+        }
+
+        const texture = app.renderer.generateTexture({
+            target: g,
+            resolution: 2, // 2x resolution for crisp rendering when zoomed
+            antialias: true
+        });
+        g.destroy();
+        return texture;
+    }
+
+    /**
+     * Create dice pattern texture (white dice on transparent bg)
+     */
+    static createDicePatternTexture(app, size, count, sides) {
+        const container = new Container();
+
+        // Add invisible bounds to ensure texture is exactly size x size
+        // Without this, generateTexture only captures the visible dice area
+        const bounds = new Graphics();
+        bounds.rect(0, 0, size, size);
+        bounds.fill({ color: 0x000000, alpha: 0 });
+        container.addChild(bounds);
+
+        // Render dice pattern in white (will be tinted later)
+        TileRenderer.renderDiceToContainer(container, {
+            size,
+            diceCount: count,
+            diceSides: sides,
+            color: 0xffffff
+        });
+
+        const texture = app.renderer.generateTexture({
+            target: container,
+            resolution: 2, // 2x resolution for crisp rendering when zoomed
+            antialias: true
+        });
+
+        container.destroy({ children: true });
+        return texture;
+    }
+
+    /**
+     * Create a tile using sprites (FAST - use this in game)
+     * Falls back to createTile() if textures not initialized
+     */
+    static createTileSprite(options = {}) {
+        if (!TileRenderer.initialized) {
+            // Fallback to slow method if not initialized
+            return TileRenderer.createTile(options);
+        }
+
+        const {
+            size = 60,
+            diceCount = 1,
+            diceSides = 6,
+            color = 0x00ffff,
+            fillAlpha = 0.4,
+            showBorder = true
+        } = options;
+
+        const container = new Container();
+
+        // Background sprite
+        const bgKey = showBorder ? 'bg_border' : 'bg';
+        const bgTexture = TileRenderer.textureCache.get(bgKey);
+
+        if (bgTexture) {
+            const bgSprite = new Sprite(bgTexture);
+            bgSprite.tint = color;
+            bgSprite.alpha = fillAlpha;
+
+            // Scale to desired size
+            const scale = size / TileRenderer.tileSize;
+            bgSprite.scale.set(scale);
+
+            container.addChild(bgSprite);
+        }
+
+        // Dice pattern sprite
+        // Find closest supported dice sides
+        let actualSides = 6;
+        if (TileRenderer.diceSidesOptions.includes(diceSides)) {
+            actualSides = diceSides;
+        }
+
+        const diceKey = `dice_${actualSides}_${Math.min(diceCount, TileRenderer.maxDiceCount)}`;
+        const diceTexture = TileRenderer.textureCache.get(diceKey);
+
+        if (diceTexture) {
+            const diceSprite = new Sprite(diceTexture);
+            diceSprite.tint = diceSides === 6 ? 0xffffff : color; // D6 emoji stays white, others get tinted
+
+            // Scale to desired size
+            const scale = size / TileRenderer.tileSize;
+            diceSprite.scale.set(scale);
+
+            container.addChild(diceSprite);
+        }
+
+        return container;
+    }
+
+    /**
+     * Create a tile graphic with dice (SLOW - use for fallback/intro only)
+     */
+    static createTile(options = {}) {
+        const {
+            size = 60,
+            diceCount = 1,
+            diceSides = 6,
+            color = 0x00ffff,
+            fillAlpha = 0.4,
+            showBorder = true
+        } = options;
+
+        const container = new Container();
+
+        // Background
+        const bg = new Graphics();
+        bg.roundRect(0, 0, size, size, 4);
+        bg.fill({ color: color, alpha: fillAlpha });
+
+        if (showBorder) {
+            bg.stroke({ width: 2, color: color, alpha: 0.8 });
+        }
+
+        container.addChild(bg);
+
+        // Add dice
+        TileRenderer.renderDiceToContainer(container, {
+            size,
+            diceCount,
+            diceSides,
+            color
+        });
+
+        return container;
+    }
+
+    /**
+     * Render dice patterns onto a container (internal helper)
+     */
+    static renderDiceToContainer(container, options = {}) {
+        const {
+            size = 60,
+            diceCount = 1,
+            diceSides = 6,
+            color = null
+        } = options;
+
+        const centerX = size / 2;
+        const centerY = size / 2;
+
+        // Determine grid size and spacing based on count
+        let gridSize, fontSize, spacing;
+        if (diceCount <= 9) {
+            gridSize = 3;
+            fontSize = 12;
+            spacing = 13;
+        } else if (diceCount <= 16) {
+            gridSize = 4;
+            fontSize = 10;
+            spacing = 11;
+        } else {
+            gridSize = 5;
+            fontSize = 8;
+            spacing = 9;
+        }
+
+        // Predefined patterns for 1-9 (classic dice layouts)
+        const classicPatterns = {
+            1: [[0, 0]],
+            2: [[-0.8, -0.8], [0.8, 0.8]],
+            3: [[-1, -1], [0, 0], [1, 1]],
+            4: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+            5: [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, 0]],
+            6: [[-0.8, -1], [0.8, -1], [-0.8, 0], [0.8, 0], [-0.8, 1], [0.8, 1]],
+            7: [[-0.8, -1], [0.8, -1], [-0.8, 0], [0.8, 0], [-0.8, 1], [0.8, 1], [0, 0]],
+            8: [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]],
+            9: [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1], [1, 1]]
+        };
+
+        let positions;
+
+        if (diceCount <= 9 && classicPatterns[diceCount]) {
+            positions = classicPatterns[diceCount];
+        } else {
+            // Generate dynamic grid positions for 10+ dice
+            positions = [];
+            const half = (gridSize - 1) / 2;
+
+            for (let row = 0; row < gridSize && positions.length < diceCount; row++) {
+                for (let col = 0; col < gridSize && positions.length < diceCount; col++) {
+                    positions.push([col - half, row - half]);
+                }
+            }
+        }
+
+        // Render each die
+        for (const pos of positions) {
+            const dx = centerX + (pos[0] * spacing);
+            const dy = centerY + (pos[1] * spacing);
+
+            if (diceSides !== 6) {
+                // Non-standard dice: show dice sides number
+                TileRenderer.renderDieSides(container, dx, dy, diceSides, fontSize, color);
+            } else {
+                // Standard 6-sided dice: use emoji
+                TileRenderer.renderDieEmoji(container, dx, dy, fontSize, color);
+            }
+        }
+    }
+
+    /**
+     * Render a single die with sides label
+     */
+    static renderDieSides(container, x, y, sides, fontSize, color) {
+        const labelFontSize = Math.max(6, fontSize * 0.75);
+
+        const labelText = new Text({
+            text: sides.toString(),
+            style: {
+                fontFamily: 'Arial',
+                fontSize: labelFontSize,
+                fontWeight: 'bold',
+                fill: 0xffffff,
+                align: 'center',
+                stroke: { color: 0x000000, width: 2 }
+            }
+        });
+
+        if (color) {
+            labelText.tint = color;
+        }
+
+        labelText.anchor.set(0.5);
+        labelText.x = x;
+        labelText.y = y;
+        container.addChild(labelText);
+    }
+
+    /**
+     * Render a single die with emoji (6-sided)
+     */
+    static renderDieEmoji(container, x, y, fontSize, color) {
+        const text = new Text({
+            text: '🎲',
+            style: {
+                fontFamily: 'Arial',
+                fontSize: fontSize,
+                fill: 0xffffff,
+                align: 'center',
+                stroke: { color: 0x000000, width: 2 }
+            }
+        });
+
+        if (color) {
+            text.tint = color;
+        }
+
+        text.anchor.set(0.5);
+        text.x = x + 2;
+        text.y = y - 1;
+        container.addChild(text);
+    }
+
+    /**
+     * Check if textures are initialized
+     */
+    static isReady() {
+        return TileRenderer.initialized;
+    }
+
+    /**
+     * Get a cached dice texture directly (for advanced use)
+     */
+    static getDiceTexture(diceSides, diceCount) {
+        const key = `dice_${diceSides}_${Math.min(diceCount, TileRenderer.maxDiceCount)}`;
+        return TileRenderer.textureCache.get(key);
+    }
+}
