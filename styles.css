@@ -901,3 +901,8 @@ input[type="range"] {
     border-bottom-color: #fff;
     text-shadow: 0 0 5px var(--accent-color);
 }
+
+.highlight-link {
+    font-weight: bold;
+    color: var(--border-color);
+}
