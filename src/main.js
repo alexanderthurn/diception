@@ -1002,6 +1002,14 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 gameMode: gameModeInput.value
             });
 
+            // Assign names for API
+            tourneyGame.players.forEach(p => {
+                const aiId = getPlayerAIId(p.id);
+                const aiDef = aiRegistry.getAI(aiId);
+                const aiName = aiDef ? aiDef.name : aiId;
+                p.name = `${aiName} ${p.id}`;
+            });
+
             // Run game to completion using simple direct AI (no Web Workers for speed)
             let turns = 0;
             const maxTurns = 2000;
@@ -1058,6 +1066,86 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                             getAllTiles: () => tourneyGame.map.tiles.filter(t => !t.blocked).map(t => ({ ...t, x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width, y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width) })),
                             getAdjacentTiles: (x, y) => tourneyGame.map.getAdjacentTiles(x, y),
                             getTileAt: (x, y) => tourneyGame.map.getTile(x, y),
+
+                            // --- NEW API METHODS ---
+                            getLargestConnectedRegion: (playerId) => {
+                                return tourneyGame.map.findLargestConnectedRegion(playerId);
+                            },
+
+                            getReinforcements: (playerId) => {
+                                const region = tourneyGame.map.findLargestConnectedRegion(playerId);
+                                const player = tourneyGame.players.find(p => p.id === playerId);
+                                const stored = player ? (player.storedDice || 0) : 0;
+                                return region + stored;
+                            },
+
+                            getPlayerInfo: (playerId) => {
+                                return tourneyGame.players.find(p => p.id === playerId) || null;
+                            },
+
+                            get players() { return tourneyGame.players; },
+
+                            simulateAttack: (fromX, fromY, toX, toY) => {
+                                const fromTile = tourneyGame.map.getTile(fromX, fromY);
+                                const toTile = tourneyGame.map.getTile(toX, toY);
+
+                                if (!fromTile || !toTile || fromTile.owner !== currentPlayer.id || fromTile.dice <= 1) {
+                                    return { success: false, reason: 'invalid_move' };
+                                }
+
+                                // Temporarily mutate state for simulation
+                                const originalFromOwner = fromTile.owner;
+                                const originalFromDice = fromTile.dice;
+                                const originalToOwner = toTile.owner;
+                                const originalToDice = toTile.dice;
+
+                                const expectedWin = fromTile.dice > toTile.dice;
+                                let myReinforcements = 0;
+                                let enemyReinforcements = 0;
+                                const enemyId = originalToOwner;
+
+                                if (expectedWin) {
+                                    fromTile.dice = 1;
+                                    toTile.owner = currentPlayer.id;
+                                    toTile.dice = originalFromDice - 1;
+
+                                    myReinforcements = tourneyGame.map.findLargestConnectedRegion(currentPlayer.id);
+                                    myReinforcements += (currentPlayer.storedDice || 0);
+
+                                    if (enemyId !== null) {
+                                        const enemy = tourneyGame.players.find(p => p.id === enemyId);
+                                        enemyReinforcements = tourneyGame.map.findLargestConnectedRegion(enemyId);
+                                        if (enemy) enemyReinforcements += (enemy.storedDice || 0);
+                                    }
+
+                                    // Revert
+                                    fromTile.owner = originalFromOwner;
+                                    fromTile.dice = originalFromDice;
+                                    toTile.owner = originalToOwner;
+                                    toTile.dice = originalToDice;
+
+                                    // Also revert fromTile ownership if it changed (it didn't in this logic, only dice)
+                                } else {
+                                    // Attack failed - state unchanged w.r.t regions
+                                    myReinforcements = tourneyGame.map.findLargestConnectedRegion(currentPlayer.id);
+                                    myReinforcements += (currentPlayer.storedDice || 0);
+
+                                    if (enemyId !== null) {
+                                        const enemy = tourneyGame.players.find(p => p.id === enemyId);
+                                        enemyReinforcements = tourneyGame.map.findLargestConnectedRegion(enemyId);
+                                        if (enemy) enemyReinforcements += (enemy.storedDice || 0);
+                                    }
+                                }
+
+                                return {
+                                    success: true,
+                                    expectedWin,
+                                    myPredictedReinforcements: myReinforcements,
+                                    enemyPredictedReinforcements: enemyReinforcements
+                                };
+                            },
+                            // -----------------------
+
                             getMyId: () => currentPlayer.id, // Legacy support
                             get myId() { return currentPlayer.id; },
                             get maxDice() { return tourneyGame.maxDice; },
@@ -1402,7 +1490,11 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         });
     };
 
-    game.on('gameStart', updatePlayerUI);
+    game.on('gameStart', () => {
+        // Attach names for AI serialization
+        game.players.forEach(p => p.name = getPlayerName(p));
+        updatePlayerUI();
+    });
     game.on('turnStart', updatePlayerUI);
     game.on('attackResult', updatePlayerUI);
     game.on('reinforcements', updatePlayerUI);

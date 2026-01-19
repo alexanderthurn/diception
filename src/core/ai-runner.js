@@ -101,6 +101,47 @@ export class AIRunner {
             let myId = null;
             let aiStorage = {};
 
+            // Helper for connected regions (BFS)
+            const calculateLargestRegion = (playerId, currentTiles) => {
+                const myTiles = currentTiles.filter(t => t.owner === playerId && !t.blocked);
+                if (myTiles.length === 0) return 0;
+
+                // Build lookup for O(1) adjacency checks
+                const tileSet = new Set(myTiles.map(t => \`\${t.x},\${t.y}\`));
+
+                const seen = new Set();
+                let maxRegion = 0;
+
+                for (const tile of myTiles) {
+                    const key = \`\${tile.x},\${tile.y}\`;
+                    if (seen.has(key)) continue;
+
+                    let size = 0;
+                    const queue = [tile];
+                    seen.add(key);
+
+                    while (queue.length > 0) {
+                        const current = queue.shift();
+                        size++;
+
+                        // Check neighbors
+                        const directions = [{dx: -1, dy: 0}, {dx: 1, dy: 0}, {dx: 0, dy: -1}, {dx: 0, dy: 1}];
+                        for (const {dx, dy} of directions) {
+                            const nx = current.x + dx;
+                            const ny = current.y + dy;
+                            const nKey = \`\${nx},\${ny}\`;
+                            
+                            if (tileSet.has(nKey) && !seen.has(nKey)) {
+                                seen.add(nKey);
+                                queue.push({x: nx, y: ny});
+                            }
+                        }
+                    }
+                    if (size > maxRegion) maxRegion = size;
+                }
+                return maxRegion;
+            };
+
             // API exposed to AI code
             const api = {
                 // Game state access
@@ -130,6 +171,81 @@ export class AIRunner {
                     return gameState.tiles.find(t => t.x === x && t.y === y && !t.blocked) || null;
                 },
                 
+                // --- NEW API METHODS ---
+                getLargestConnectedRegion: (playerId) => {
+                    return calculateLargestRegion(playerId, gameState.tiles);
+                },
+
+                getReinforcements: (playerId) => {
+                    const region = calculateLargestRegion(playerId, gameState.tiles);
+                    const player = gameState.players.find(p => p.id === playerId);
+                    const stored = player ? (player.storedDice || 0) : 0;
+                    return region + stored;
+                },
+
+                getPlayerInfo: (playerId) => {
+                    return gameState.players.find(p => p.id === playerId) || null;
+                },
+
+                simulateAttack: (fromX, fromY, toX, toY) => {
+                     // Create a deep copy of tiles for simulation
+                     // Optimization: Only clone relevant tiles if possible, but for correctness globally, flat clone is safest and fast enough for 50x50
+                     const tilesCopy = gameState.tiles.map(t => ({...t}));
+                     
+                     const fromTile = tilesCopy.find(t => t.x === fromX && t.y === fromY);
+                     const toTile = tilesCopy.find(t => t.x === toX && t.y === toY);
+
+                     if (!fromTile || !toTile || fromTile.owner !== myId || fromTile.dice <= 1) {
+                         return { success: false, reason: 'invalid_move' };
+                     }
+
+                     const expectedWin = fromTile.dice > toTile.dice;
+                     let myReinforcements = 0;
+                     let enemyReinforcements = 0;
+
+                     if (expectedWin) {
+                         const enemyId = toTile.owner;
+                         // Simulate conquest
+                         toTile.owner = myId;
+                         toTile.dice = fromTile.dice - 1;
+                         fromTile.dice = 1;
+                         
+                         // Calculate new metrics
+                         myReinforcements = calculateLargestRegion(myId, tilesCopy);
+                         const me = gameState.players.find(p => p.id === myId);
+                         if (me) myReinforcements += (me.storedDice || 0);
+
+                         if (enemyId !== null) {
+                             enemyReinforcements = calculateLargestRegion(enemyId, tilesCopy);
+                             const enemy = gameState.players.find(p => p.id === enemyId);
+                             if (enemy) enemyReinforcements += (enemy.storedDice || 0);
+                         }
+                     } else {
+                         // Attack fails
+                         fromTile.dice = 1;
+                         
+                         // Connectivity unchanged
+                         myReinforcements = calculateLargestRegion(myId, tilesCopy);
+                         const me = gameState.players.find(p => p.id === myId);
+                         if (me) myReinforcements += (me.storedDice || 0);
+                         
+                         // Enemy unchanged (usually)
+                         if (enemyId !== null) {
+                             enemyReinforcements = calculateLargestRegion(enemyId, tilesCopy);
+                             const enemy = gameState.players.find(p => p.id === enemyId);
+                             if (enemy) enemyReinforcements += (enemy.storedDice || 0);
+                         }
+                     }
+
+                     return { 
+                         success: true, 
+                         expectedWin, 
+                         myPredictedReinforcements: myReinforcements,
+                         enemyPredictedReinforcements: enemyReinforcements
+                     };
+                },
+                // -----------------------
+
                 // Game info
                 get myId() { return myId; },
                 get maxDice() { return gameState.maxDice; },
@@ -226,7 +342,7 @@ export class AIRunner {
                     return 1 / (1 + Math.exp(-diff / 2));
                 }
             };
-
+    // ... rest of worker code ...
             self.onmessage = function(e) {
                 const { gameState: gs, code, storage, maxMoves: mm, myId: id } = e.data;
                 gameState = gs;
@@ -269,7 +385,8 @@ export class AIRunner {
                 id: p.id,
                 alive: p.alive,
                 isBot: p.isBot,
-                storedDice: p.storedDice || 0
+                storedDice: p.storedDice || 0,
+                name: p.name || (p.isBot ? `Bot ${p.id}` : `Player ${p.id}`)
             })),
             maxDice: game.maxDice,
             diceSides: game.diceSides,
