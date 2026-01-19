@@ -963,7 +963,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         const sizeValue = parseInt(mapSizeInput.value);
         const sizePreset = getMapSize(sizeValue);
 
-        const configSummary = `<div class="tournament-summary">Map: ${sizePreset.width}x${sizePreset.height} • Dice: D${diceSidesInput.value} (Max ${maxDiceInput.value})</div>`;
+        const configSummary = `<div class="tournament-summary">${sizePreset.width}x${sizePreset.height} sides:${diceSidesInput.value} max:${maxDiceInput.value}</div>`;
 
         // Show progress
         tournamentResults.innerHTML = `
@@ -1522,5 +1522,135 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
     });
 }
+
+// --- Benchmark Tool ---
+window.benchmarkAI = async () => {
+    console.log("%c🤖 AI Benchmark Suite", "font-weight:bold; font-size:16px; color:#0ff");
+
+    // Create local registry instance since we are outside init() scope
+    const aiRegistry = new AIRegistry();
+
+    const runBatch = async (scenario, config, count = 10) => {
+        console.log(`\nStarting: ${scenario} (${count} games)...`);
+        const wins = {};
+
+        for (let i = 0; i < count; i++) {
+            const game = new Game();
+            game.startGame({
+                humanCount: 0,
+                botCount: config.ids.length,
+                mapWidth: config.w,
+                mapHeight: config.h,
+                maxDice: 9,
+                diceSides: 6,
+                mapStyle: 'random',
+                gameMode: 'classic'
+            });
+
+            // Assign AIs
+            game.players.forEach((p, idx) => {
+                p.aiId = config.ids[idx];
+                p.name = `${aiRegistry.getAI(p.aiId).name} ${p.id}`;
+            });
+
+            let turns = 0;
+            const maxTurns = 500;
+
+            while (game.players.filter(p => p.alive).length > 1 && turns < maxTurns) {
+                const p = game.currentPlayer;
+                if (p.alive) {
+                    const aiDef = aiRegistry.getAI(p.aiId);
+                    const w = game.map.width;
+                    const tilesWithCoords = game.map.tiles.map((t, idx) => ({ ...t, x: idx % w, y: Math.floor(idx / w) }));
+
+                    const api = {
+                        getMyTiles: () => tilesWithCoords.filter(t => t.owner === p.id && !t.blocked),
+                        getEnemyTiles: () => tilesWithCoords.filter(t => t.owner !== p.id && !t.blocked),
+                        getAllTiles: () => tilesWithCoords.filter(t => !t.blocked),
+                        getAdjacentTiles: (x, y) => game.map.getAdjacentTiles(x, y),
+                        getTileAt: (x, y) => game.map.getTile(x, y),
+                        getLargestConnectedRegion: (pid) => game.map.findLargestConnectedRegion(pid),
+                        getReinforcements: (pid) => {
+                            const r = game.map.findLargestConnectedRegion(pid);
+                            const pl = game.players.find(pp => pp.id === pid);
+                            return r + (pl ? (pl.storedDice || 0) : 0);
+                        },
+                        getPlayerInfo: (pid) => game.players.find(pp => pp.id === pid) || null,
+                        get players() { return game.players; },
+                        simulateAttack: (fromX, fromY, toX, toY) => {
+                            const fromT = game.map.getTile(fromX, fromY);
+                            const toT = game.map.getTile(toX, toY);
+                            if (!fromT || !toT || fromT.owner !== p.id || fromT.dice <= 1) return { success: false };
+                            const eWin = fromT.dice > toT.dice;
+                            const origFromD = fromT.dice;
+                            const origFromO = fromT.owner;
+                            const origToD = toT.dice;
+                            const origToO = toT.owner;
+                            const eId = origToO;
+                            let mR = 0, eR = 0;
+
+                            if (eWin) {
+                                fromT.dice = 1;
+                                toT.owner = p.id;
+                                toT.dice = origFromD - 1;
+                                mR = game.map.findLargestConnectedRegion(p.id) + (p.storedDice || 0);
+                                if (eId !== null) eR = game.map.findLargestConnectedRegion(eId) + (game.players.find(pp => pp.id === eId)?.storedDice || 0);
+                                fromT.dice = origFromD;
+                                toT.owner = origToO;
+                                toT.dice = origToD;
+                            } else {
+                                mR = game.map.findLargestConnectedRegion(p.id) + (p.storedDice || 0);
+                                if (eId !== null) eR = game.map.findLargestConnectedRegion(eId) + (game.players.find(pp => pp.id === eId)?.storedDice || 0);
+                            }
+                            return { success: true, expectedWin: eWin, myPredictedReinforcements: mR, enemyPredictedReinforcements: eR };
+                        },
+                        get myId() { return p.id; },
+                        get maxDice() { return game.maxDice; },
+                        get diceSides() { return game.diceSides; },
+                        get mapWidth() { return game.map.width; },
+                        get mapHeight() { return game.map.height; },
+                        attack: (fx, fy, tx, ty) => {
+                            const ft = game.map.getTile(fx, fy);
+                            const tt = game.map.getTile(tx, ty);
+                            if (ft && tt && ft.owner === p.id && ft.dice > tt.dice) {
+                                game.attack(fx, fy, tx, ty);
+                                return { success: true, expectedWin: true };
+                            }
+                            return { success: false };
+                        },
+                        endTurn: () => { /* no-op in sync loop */ },
+                        load: () => null,
+                        save: () => null,
+                        log: () => { },
+                        getWinProbability: (a, d) => 1 / (1 + Math.exp(-(a * 3.5 - d * 3.5) / 2))
+                    };
+
+                    if (aiDef) {
+                        try {
+                            const fn = new Function('api', aiDef.code);
+                            fn(api);
+                        } catch (e) { }
+                    }
+                }
+                game.endTurn();
+                turns++;
+            }
+            const wName = game.winner ? game.winner.aiId : 'Draw';
+            wins[wName] = (wins[wName] || 0) + 1;
+
+            // Yield every game to not freeze UI completely
+            await new Promise(r => setTimeout(r, 0));
+        }
+        console.table(wins);
+    };
+
+    await runBatch('Easy vs Easy', { ids: ['easy', 'easy'], w: 4, h: 4 }, 10);
+    await runBatch('Easy vs Medium', { ids: ['easy', 'medium'], w: 4, h: 4 }, 10);
+    await runBatch('Medium vs Hard', { ids: ['medium', 'hard'], w: 4, h: 4 }, 10);
+    await runBatch('Medium vs Hard (Large)', { ids: ['medium', 'hard'], w: 8, h: 8 }, 10);
+    await runBatch('FFA (Easy, Med, Hard)', { ids: ['easy', 'medium', 'hard'], w: 6, h: 6 }, 10);
+
+    console.log("✅ Benchmark Complete");
+};
 
 init();

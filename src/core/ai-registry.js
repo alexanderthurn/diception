@@ -41,151 +41,115 @@ api.endTurn();
             `.trim()
         });
 
-        // Medium AI - Better move evaluation, prioritizes good trades
+        // Medium AI - Connects territory to maximize reinforcements
         this.builtIn.set('medium', {
             id: 'medium',
             name: 'Medium',
-            description: 'Smarter AI that evaluates all moves and picks the best ones',
+            description: 'Tries to connect its territory to gain more dice',
             code: `
-// Medium AI: Evaluates all moves and picks best
-function evaluateMove(from, to) {
-    const diff = from.dice - to.dice;
-    
-    // Strong advantage
-    if (diff >= 2) return 100 + diff;
-    
-    // Full stack should always attack
-    if (from.dice === api.maxDice) return 90 + diff;
-    
-    // Small advantage
-    if (diff > 0) return 50 + diff;
-    
-    // Even fight only if we're full
-    if (diff === 0 && from.dice === api.maxDice) return 40;
-    
-    return -1;
-}
-
-// Collect all possible moves
+// Medium AI: Prioritizes moves that increase connected region size
 const moves = [];
 const myTiles = api.getMyTiles().filter(t => t.dice > 1);
 
 for (const tile of myTiles) {
     const neighbors = api.getAdjacentTiles(tile.x, tile.y);
     for (const target of neighbors) {
-        if (target.owner !== api.myId) {
-            const score = evaluateMove(tile, target);
-            if (score > 0) {
-                moves.push({ from: tile, to: target, score });
-            }
+        if (target.owner !== api.myId && tile.dice > target.dice) {
+            
+            // Simulate to see if this improves our connected region
+            const sim = api.simulateAttack(tile.x, tile.y, target.x, target.y);
+            
+            // Score based primarily on predicted reinforcements
+            let score = sim.myPredictedReinforcements;
+            
+            // Tie-breaker: efficiency (dice difference) logic to prefer safer wins
+            const diff = tile.dice - target.dice;
+            score += diff * 0.1;
+
+            moves.push({ from: tile, to: target, score });
         }
     }
 }
 
-// Sort by score and execute
+// Sort: Highest reinforcements first
 moves.sort((a, b) => b.score - a.score);
 
+// Execute
 for (const move of moves) {
-    // Re-check the tile still has enough dice
-    const currentTile = api.getTileAt(move.from.x, move.from.y);
-    if (currentTile && currentTile.dice > 1 && currentTile.owner === api.myId) {
+    const t = api.getTileAt(move.from.x, move.from.y);
+    const target = api.getTileAt(move.to.x, move.to.y);
+    
+    // Validation before execution
+    if (t && target && t.owner === api.myId && t.dice > target.dice && target.owner !== api.myId) {
         api.attack(move.from.x, move.from.y, move.to.x, move.to.y);
     }
 }
-
 api.endTurn();
             `.trim()
         });
 
-        // Hard AI - Risk assessment, connectivity bonus, endgame awareness
+        // Hard AI - Risk assessment + Smart connectivity + Supply line cutting
         this.builtIn.set('hard', {
             id: 'hard',
             name: 'Hard',
-            description: 'Advanced AI with risk assessment and strategic planning',
+            description: 'Advanced AI that maximizes territory efficiently and cuts enemy supply lines',
             code: `
-// Hard AI: Risk assessment and strategic planning
-
-function getConnectedTiles(tiles, startTile) {
-    const connected = new Set();
-    const queue = [startTile];
-    const key = t => t.x + ',' + t.y;
-    connected.add(key(startTile));
-    
-    while (queue.length > 0) {
-        const current = queue.shift();
-        const neighbors = api.getAdjacentTiles(current.x, current.y);
-        for (const n of neighbors) {
-            if (n.owner === api.myId && !connected.has(key(n))) {
-                connected.add(key(n));
-                queue.push(n);
-            }
-        }
-    }
-    return connected.size;
-}
-
-function evaluateMove(from, to, allMyTiles) {
-    let score = 0;
-    const diff = from.dice - to.dice;
-    
-    // Base score from dice advantage
-    score += diff * 10;
-    
-    // Win probability bonus
-    const winProb = api.getWinProbability(from.dice, to.dice, api.diceSides);
-    if (winProb < 0.4) return -100; // Too risky
-    score += winProb * 50;
-    
-    // Full stack must attack
-    if (from.dice === api.maxDice) score += 30;
-    
-    // Bonus for attacking weak targets
-    if (to.dice === 1) score += 20;
-    
-    // Bonus for expanding territory (check if target connects to more enemies)
-    const targetNeighbors = api.getAdjacentTiles(to.x, to.y);
-    const newFrontier = targetNeighbors.filter(n => n.owner !== api.myId && n.owner !== to.owner).length;
-    score += newFrontier * 5;
-    
-    // Penalty for leaving frontier weak
-    const fromNeighbors = api.getAdjacentTiles(from.x, from.y);
-    const enemyNeighbors = fromNeighbors.filter(n => n.owner !== api.myId).length;
-    if (enemyNeighbors > 0) {
-        score -= enemyNeighbors * 3;
-    }
-    
-    return score;
-}
-
-// Collect and score all moves
+// Hard AI: Smart Connector - Prioritizes efficiency and cutting enemies
 const moves = [];
-const myTiles = api.getMyTiles();
-const attackers = myTiles.filter(t => t.dice > 1);
+const myTiles = api.getMyTiles().filter(t => t.dice > 1);
 
-for (const tile of attackers) {
+// Cache current stats to detect "cuts"
+const enemyStats = {};
+const players = api.players;
+for (const p of players) {
+    if (p.id !== api.myId && p.alive) {
+        enemyStats[p.id] = api.getReinforcements(p.id);
+    }
+}
+
+for (const tile of myTiles) {
     const neighbors = api.getAdjacentTiles(tile.x, tile.y);
     for (const target of neighbors) {
-        if (target.owner !== api.myId) {
-            const score = evaluateMove(tile, target, myTiles);
-            if (score > 0) {
-                moves.push({ from: tile, to: target, score });
+        if (target.owner !== api.myId && tile.dice > target.dice) {
+            
+            const sim = api.simulateAttack(tile.x, tile.y, target.x, target.y);
+            
+            // 1. Base Score: Territory connectivity
+            let score = sim.myPredictedReinforcements * 10; 
+
+            // 2. Efficiency Bonus (+2 dice diff is strong reason)
+            const diff = tile.dice - target.dice;
+            if (diff >= 2) {
+                score += 20; // Equivalent to gaining +2 territory blocks roughly in weight
+            } else {
+                // Risky attack (diff == 1)
+                // Only do it if strategic gain is huge
+                score -= 5; 
             }
+
+            // 3. Cutting Bonus (Destroying enemy connectivity)
+            if (target.owner !== null && sim.enemyPredictedReinforcements < (enemyStats[target.owner] || 0)) {
+                const cutAmount = (enemyStats[target.owner] || 0) - sim.enemyPredictedReinforcements;
+                score += cutAmount * 15; // Cutting is very valuable
+            }
+
+            moves.push({ from: tile, to: target, score });
         }
     }
 }
 
-// Sort by score (best first)
+// Sort best moves first
 moves.sort((a, b) => b.score - a.score);
 
-// Execute top moves
+// Execute
 for (const move of moves) {
-    const currentTile = api.getTileAt(move.from.x, move.from.y);
-    if (currentTile && currentTile.dice > 1 && currentTile.owner === api.myId) {
-        const result = api.attack(move.from.x, move.from.y, move.to.x, move.to.y);
-        if (!result.success) break;
+    const t = api.getTileAt(move.from.x, move.from.y);
+    const target = api.getTileAt(move.to.x, move.to.y);
+    
+    if (t && target && t.owner === api.myId && t.dice > target.dice && target.owner !== api.myId) {
+        api.attack(move.from.x, move.from.y, move.to.x, move.to.y);
     }
 }
-
 api.endTurn();
             `.trim()
         });
