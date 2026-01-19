@@ -66,7 +66,7 @@
             </div>
 
             <div class="control-row">
-                <div class="control-group half">
+                <div class="control-group quarter">
                     <label>Humans</label>
                     <select id="human-count">
                         <option value="0">0</option>
@@ -80,7 +80,7 @@
                         <option value="8">8</option>
                     </select>
                 </div>
-                <div class="control-group half">
+                <div class="control-group quarter">
                     <label>Bots</label>
                     <select id="bot-count">
                         <option value="0">0</option>
@@ -93,6 +93,30 @@
                         <option value="7">7</option>
                         <option value="8">8</option>
                     </select>
+                </div>
+                <div class="control-group half">
+                    <label>Bot AI</label>
+                    <div class="select-with-btn">
+                        <select id="bot-ai-select">
+                            <option value="easy" selected>Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                            <option value="adaptive">Adaptive</option>
+                            <!-- Custom AIs added dynamically -->
+                        </select>
+                        <button id="manage-ais-btn" class="tron-btn small" title="Manage AIs">⚙️</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-row" id="tournament-config" style="display: none; margin-top: 10px;">
+                <div class="control-group">
+                    <label>Tournament Games</label>
+                    <div class="range-row">
+                        <input type="number" id="tournament-games" min="1" max="10000" value="100"
+                            style="width: 100px;">
+                        <button id="run-tournament-btn" class="tron-btn small">▶ Run Tournament</button>
+                    </div>
                 </div>
             </div>
 
@@ -258,6 +282,97 @@
             <h1>GAME OVER</h1>
             <p id="winner-text"></p>
             <button id="restart-btn" class="tron-btn">Play Again</button>
+        </div>
+
+        <!-- AI Editor Modal -->
+        <div id="ai-editor-modal" class="modal hidden large-modal">
+            <div class="modal-header">
+                <h2 class="tron-title small">AI EDITOR</h2>
+                <button id="ai-editor-close-btn" class="close-btn">×</button>
+            </div>
+            <div class="ai-editor-content">
+                <div class="ai-editor-left">
+                    <div class="ai-list-section">
+                        <h4>Your AIs</h4>
+                        <div id="ai-list"></div>
+                        <button id="new-ai-btn" class="tron-btn small">+ New AI</button>
+                    </div>
+                </div>
+                <div class="ai-editor-right">
+                    <div class="ai-name-row">
+                        <input type="text" id="ai-name-input" placeholder="AI Name" maxlength="30">
+                        <div class="ai-editor-actions">
+                            <button id="test-ai-btn" class="tron-btn small" title="Test AI">▶ Test</button>
+                            <button id="save-ai-btn" class="tron-btn small" title="Save AI">💾 Save</button>
+                            <button id="delete-ai-btn" class="tron-btn small danger" title="Delete AI">🗑️</button>
+                        </div>
+                    </div>
+                    <textarea id="ai-code-input" placeholder="// Your AI code here..." spellcheck="false"></textarea>
+
+                    <div class="ai-prompt-section">
+                        <h4>🤖 AI Prompt Generator</h4>
+                        <textarea id="ai-prompt-input"
+                            placeholder="Describe your strategy, e.g.: 'Make an aggressive AI that always attacks when it has more dice, but never attacks tiles with 8+ dice'"></textarea>
+                        <button id="generate-prompt-btn" class="tron-btn small">📋 Copy Prompt to Clipboard</button>
+                    </div>
+
+                    <div class="ai-import-export">
+                        <button id="export-ai-btn" class="tron-btn small">📤 Export</button>
+                        <button id="import-ai-btn" class="tron-btn small">📥 Import</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-api-docs collapsible">
+                <h4 class="collapsible-header">📖 API Reference <span class="toggle-icon">▼</span></h4>
+                <div class="collapsible-content">
+                    <div class="api-section">
+                        <strong>Game State:</strong>
+                        <ul>
+                            <li><code>api.getMyTiles()</code> → [{x, y, dice, owner}] - Your tiles</li>
+                            <li><code>api.getEnemyTiles()</code> → Enemy tiles</li>
+                            <li><code>api.getAllTiles()</code> → All playable tiles</li>
+                            <li><code>api.getAdjacentTiles(x, y)</code> → Neighboring tiles</li>
+                            <li><code>api.getTileAt(x, y)</code> → Specific tile or null</li>
+                            <li><code>api.myId</code>, <code>api.maxDice</code>, <code>api.diceSides</code></li>
+                        </ul>
+                    </div>
+                    <div class="api-section">
+                        <strong>Actions:</strong>
+                        <ul>
+                            <li><code>api.attack(fromX, fromY, toX, toY)</code> → {success, expectedWin}</li>
+                            <li><code>api.endTurn()</code> - End your turn</li>
+                        </ul>
+                    </div>
+                    <div class="api-section">
+                        <strong>Storage:</strong>
+                        <ul>
+                            <li><code>api.save(key, value)</code> - Persist data</li>
+                            <li><code>api.load(key)</code> - Load persisted data</li>
+                        </ul>
+                    </div>
+                    <div class="api-section">
+                        <strong>Utilities:</strong>
+                        <ul>
+                            <li><code>api.log(msg)</code> - Debug output</li>
+                            <li><code>api.getWinProbability(attackDice, defendDice)</code> → 0-1</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tournament Results Modal -->
+        <div id="tournament-results-modal" class="modal hidden">
+            <div class="modal-header">
+                <h2 class="tron-title small">TOURNAMENT RESULTS</h2>
+                <button id="tournament-close-btn" class="close-btn">×</button>
+            </div>
+            <div id="tournament-results"></div>
+            <div class="tournament-actions">
+                <button id="tournament-again-btn" class="tron-btn">Run Again</button>
+                <button id="tournament-done-btn" class="tron-btn">Done</button>
+            </div>
         </div>
     </div>
 

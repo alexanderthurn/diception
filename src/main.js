@@ -2,7 +2,8 @@ import { Game } from './core/game.js';
 import { Renderer } from './render/renderer.js';
 import { InputController } from './input/input-controller.js';
 import { InputManager } from './input/input-manager.js';
-import { AIController } from './core/ai.js';
+import { AIRunner } from './core/ai-runner.js';
+import { AIRegistry } from './core/ai-registry.js';
 import { SoundManager } from './audio/sound-manager.js';
 import { EffectsManager } from './render/effects/effects-manager.js';
 
@@ -47,8 +48,17 @@ async function init() {
         effectsManager.onTileClick(x, y);
     };
 
-    // 5. Initialize AI
-    const ai = new AIController('aggressive');
+    // 5. Initialize AI System
+    const aiRegistry = new AIRegistry();
+    aiRegistry.loadCustomAIs();
+
+    // Map player ID -> AIRunner instance (set during game start)
+    let playerAIs = new Map();
+
+    // Current selected AI for all bots (default easy)
+    let selectedBotAI = localStorage.getItem('dicy_botAI') || 'easy';
+    // Per-player AI config (when using custom per player)
+    let perPlayerAIConfig = {};
 
     // 5. Initialize Music with localStorage
     const music = new Audio('./Neon Dice Offensive.mp3');
@@ -256,7 +266,12 @@ async function init() {
         if (newState && game.currentPlayer.id === playerId && !game.gameOver) {
             endTurnBtn.disabled = true;
             endTurnBtn.textContent = 'END TURN';
-            setTimeout(() => ai.takeTurn(game), 500);
+            setTimeout(async () => {
+                const playerAI = playerAIs.get(playerId);
+                if (playerAI) {
+                    await playerAI.takeTurn(game);
+                }
+            }, 500);
         }
     };
 
@@ -448,8 +463,15 @@ async function init() {
             endTurnBtn.textContent = 'END TURN';
             // In fast mode, minimal delay; otherwise use normal delays
             const delay = fastModeEnabled ? 10 : (data.player.isBot ? 300 : 500);
-            setTimeout(() => {
-                ai.takeTurn(game);
+            setTimeout(async () => {
+                // Use per-player AI configuration
+                const playerAI = playerAIs.get(data.player.id);
+                if (playerAI) {
+                    await playerAI.takeTurn(game);
+                } else {
+                    // Fallback: end turn immediately
+                    game.endTurn();
+                }
             }, delay);
         } else {
             endTurnBtn.disabled = false;
@@ -568,6 +590,404 @@ async function init() {
         setupModal.classList.remove('hidden');
     });
 
+    // === AI Editor Modal Logic ===
+    const aiEditorModal = document.getElementById('ai-editor-modal');
+    const aiEditorCloseBtn = document.getElementById('ai-editor-close-btn');
+    const manageAIsBtn = document.getElementById('manage-ais-btn');
+    const aiList = document.getElementById('ai-list');
+    const aiNameInput = document.getElementById('ai-name-input');
+    const aiCodeInput = document.getElementById('ai-code-input');
+    const aiPromptInput = document.getElementById('ai-prompt-input');
+    const newAIBtn = document.getElementById('new-ai-btn');
+    const saveAIBtn = document.getElementById('save-ai-btn');
+    const testAIBtn = document.getElementById('test-ai-btn');
+    const deleteAIBtn = document.getElementById('delete-ai-btn');
+    const exportAIBtn = document.getElementById('export-ai-btn');
+    const importAIBtn = document.getElementById('import-ai-btn');
+    const generatePromptBtn = document.getElementById('generate-prompt-btn');
+    const botAISelect = document.getElementById('bot-ai-select');
+    const apiDocsHeader = document.querySelector('.collapsible-header');
+    const apiDocs = document.querySelector('.ai-api-docs');
+
+    let currentEditingAI = null;
+
+    // Populate AI dropdown and list
+    const updateAIDropdown = () => {
+        const ais = aiRegistry.getAllAIs();
+        // Clear custom options from dropdown
+        while (botAISelect.options.length > 4) {
+            botAISelect.remove(4);
+        }
+        // Add custom AIs
+        for (const ai of ais.filter(a => !a.isBuiltIn)) {
+            const option = document.createElement('option');
+            option.value = ai.id;
+            option.textContent = ai.name;
+            botAISelect.appendChild(option);
+        }
+        // Restore selection
+        if (selectedBotAI && Array.from(botAISelect.options).some(o => o.value === selectedBotAI)) {
+            botAISelect.value = selectedBotAI;
+        }
+    };
+
+    const updateAIList = () => {
+        const ais = aiRegistry.getAllAIs();
+        aiList.innerHTML = '';
+
+        for (const ai of ais) {
+            const item = document.createElement('div');
+            item.className = 'ai-list-item' + (ai.isBuiltIn ? ' builtin' : '') +
+                (currentEditingAI === ai.id ? ' active' : '');
+            item.textContent = ai.name + (ai.isBuiltIn ? ' (built-in)' : '');
+            item.dataset.aiId = ai.id;
+            item.addEventListener('click', () => loadAIForEditing(ai.id));
+            aiList.appendChild(item);
+        }
+    };
+
+    const loadAIForEditing = (aiId) => {
+        const ai = aiRegistry.getAI(aiId);
+        if (!ai) return;
+
+        currentEditingAI = aiId;
+        aiNameInput.value = ai.name;
+        aiCodeInput.value = ai.code;
+
+        // Disable editing for built-in AIs
+        const isBuiltIn = aiRegistry.builtIn.has(aiId);
+        aiNameInput.disabled = isBuiltIn;
+        aiCodeInput.disabled = isBuiltIn;
+        saveAIBtn.disabled = isBuiltIn;
+        deleteAIBtn.disabled = isBuiltIn;
+
+        updateAIList();
+    };
+
+    const createNewAI = () => {
+        currentEditingAI = null;
+        aiNameInput.value = '';
+        aiNameInput.disabled = false;
+        aiCodeInput.disabled = false;
+        saveAIBtn.disabled = false;
+        deleteAIBtn.disabled = true;
+        aiCodeInput.value = `// Your AI code here
+// Use api.getMyTiles(), api.attack(), etc.
+
+const myTiles = api.getMyTiles().filter(t => t.dice > 1);
+
+for (const tile of myTiles) {
+    const neighbors = api.getAdjacentTiles(tile.x, tile.y);
+    for (const target of neighbors) {
+        if (target.owner !== api.myId && tile.dice > target.dice) {
+            api.attack(tile.x, tile.y, target.x, target.y);
+        }
+    }
+}
+
+api.endTurn();`;
+        updateAIList();
+    };
+
+    const saveCurrentAI = () => {
+        const name = aiNameInput.value.trim();
+        const code = aiCodeInput.value;
+
+        if (!name) {
+            alert('Please enter a name for your AI');
+            return;
+        }
+
+        if (currentEditingAI && aiRegistry.custom.has(currentEditingAI)) {
+            // Update existing
+            aiRegistry.updateCustomAI(currentEditingAI, { name, code });
+        } else {
+            // Create new
+            const id = aiRegistry.generateId();
+            aiRegistry.registerCustomAI(id, { name, code });
+            currentEditingAI = id;
+        }
+
+        updateAIList();
+        updateAIDropdown();
+        deleteAIBtn.disabled = false;
+    };
+
+    const deleteCurrentAI = () => {
+        if (!currentEditingAI) return;
+        if (!confirm('Delete this AI?')) return;
+
+        aiRegistry.deleteCustomAI(currentEditingAI);
+        createNewAI();
+        updateAIDropdown();
+    };
+
+    const testCurrentAI = async () => {
+        if (!game.players.length) {
+            alert('Start a game first to test the AI');
+            return;
+        }
+
+        const code = aiCodeInput.value;
+        const testRunner = new AIRunner({
+            id: 'test_' + Date.now(),
+            name: 'Test AI',
+            code
+        });
+
+        testAIBtn.textContent = '⏳ Testing...';
+        testAIBtn.disabled = true;
+
+        try {
+            await testRunner.takeTurn(game);
+            testAIBtn.textContent = '✓ Done!';
+        } catch (e) {
+            alert('AI Error: ' + e.message);
+            testAIBtn.textContent = '✗ Error';
+        }
+
+        setTimeout(() => {
+            testAIBtn.textContent = '▶ Test';
+            testAIBtn.disabled = false;
+        }, 1500);
+    };
+
+    const generatePrompt = () => {
+        const userStrategy = aiPromptInput.value.trim() || 'Create an AI that plays well';
+
+        const prompt = `Create JavaScript code for a DICECEPTION game AI bot.
+
+AVAILABLE API:
+- api.getMyTiles() → [{x, y, dice, owner}] - Get all tiles owned by this AI
+- api.getEnemyTiles() → [{x, y, dice, owner}] - Get all enemy tiles
+- api.getAllTiles() → All playable tiles on the map
+- api.getAdjacentTiles(x, y) → [{x, y, dice, owner}] - Get neighboring tiles
+- api.getTileAt(x, y) → Get specific tile or null
+- api.myId → This AI's player ID
+- api.maxDice → Maximum dice per tile (usually 9)
+- api.diceSides → Number of sides on each die (usually 6)
+- api.attack(fromX, fromY, toX, toY) → {success: boolean, expectedWin: boolean}
+- api.endTurn() → End this AI's turn
+- api.save(key, value) → Persist data between games
+- api.load(key) → Load persisted data
+- api.log(msg) → Debug output to console
+- api.getWinProbability(attackDice, defendDice) → 0-1 probability
+
+GAME RULES:
+- Attacker must have dice > 1 to attack
+- Both sides roll all their dice, highest sum wins
+- On win: attacker moves to captured tile with (dice-1), leaving 1 behind
+- On loss: attacker drops to 1 die
+- At end of turn, player gets reinforcements equal to largest connected region
+
+USER'S STRATEGY REQUEST:
+${userStrategy}
+
+Return ONLY the JavaScript code, no explanations or markdown. The code will run inside a sandboxed environment with access to the 'api' object.`;
+
+        navigator.clipboard.writeText(prompt).then(() => {
+            generatePromptBtn.textContent = '✓ Copied!';
+            setTimeout(() => {
+                generatePromptBtn.textContent = '📋 Copy Prompt to Clipboard';
+            }, 2000);
+        }).catch(() => {
+            alert('Could not copy to clipboard. Please manually select and copy the text.');
+        });
+    };
+
+    const exportAI = () => {
+        if (!currentEditingAI) {
+            alert('Select an AI to export');
+            return;
+        }
+        const json = aiRegistry.exportAI(currentEditingAI);
+        if (json) {
+            navigator.clipboard.writeText(json).then(() => {
+                exportAIBtn.textContent = '✓ Copied!';
+                setTimeout(() => {
+                    exportAIBtn.textContent = '📤 Export';
+                }, 2000);
+            });
+        }
+    };
+
+    const importAI = () => {
+        const json = prompt('Paste AI JSON:');
+        if (!json) return;
+
+        const result = aiRegistry.importAI(json);
+        if (result.success) {
+            updateAIList();
+            updateAIDropdown();
+            loadAIForEditing(result.id);
+        } else {
+            alert('Import failed: ' + result.error);
+        }
+    };
+
+    // Event handlers
+    manageAIsBtn.addEventListener('click', () => {
+        setupModal.classList.add('hidden');
+        aiEditorModal.classList.remove('hidden');
+        updateAIList();
+        if (!currentEditingAI) {
+            loadAIForEditing('easy');
+        }
+    });
+
+    aiEditorCloseBtn.addEventListener('click', () => {
+        aiEditorModal.classList.add('hidden');
+        setupModal.classList.remove('hidden');
+    });
+
+    newAIBtn.addEventListener('click', createNewAI);
+    saveAIBtn.addEventListener('click', saveCurrentAI);
+    deleteAIBtn.addEventListener('click', deleteCurrentAI);
+    testAIBtn.addEventListener('click', testCurrentAI);
+    exportAIBtn.addEventListener('click', exportAI);
+    importAIBtn.addEventListener('click', importAI);
+    generatePromptBtn.addEventListener('click', generatePrompt);
+
+    // API docs toggle
+    apiDocsHeader.addEventListener('click', () => {
+        apiDocs.classList.toggle('open');
+    });
+
+    // AI selection change
+    botAISelect.addEventListener('change', () => {
+        selectedBotAI = botAISelect.value;
+        localStorage.setItem('dicy_botAI', selectedBotAI);
+    });
+
+    // Load saved AI selection
+    if (selectedBotAI) {
+        botAISelect.value = selectedBotAI;
+    }
+    updateAIDropdown();
+
+    // === Tournament Mode ===
+    const tournamentConfig = document.getElementById('tournament-config');
+    const tournamentGamesInput = document.getElementById('tournament-games');
+    const runTournamentBtn = document.getElementById('run-tournament-btn');
+    const tournamentResultsModal = document.getElementById('tournament-results-modal');
+    const tournamentResults = document.getElementById('tournament-results');
+    const tournamentCloseBtn = document.getElementById('tournament-close-btn');
+    const tournamentAgainBtn = document.getElementById('tournament-again-btn');
+    const tournamentDoneBtn = document.getElementById('tournament-done-btn');
+
+    // Show tournament config when humans = 0
+    humanCountInput.addEventListener('change', () => {
+        const humans = parseInt(humanCountInput.value);
+        tournamentConfig.style.display = humans === 0 ? 'block' : 'none';
+    });
+
+    const runTournament = async () => {
+        const gameCount = parseInt(tournamentGamesInput.value);
+        const botCount = parseInt(botCountInput.value);
+
+        if (botCount < 2) {
+            alert('Need at least 2 bots for a tournament');
+            return;
+        }
+
+        const sizeValue = parseInt(mapSizeInput.value);
+        const sizePreset = getMapSize(sizeValue);
+
+        // Show progress
+        tournamentResults.innerHTML = `
+            <div class="tournament-progress">
+                <div>Running tournament: <span id="tournament-progress-text">0/${gameCount}</span></div>
+                <div class="tournament-progress-bar">
+                    <div class="tournament-progress-fill" id="tournament-progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+        `;
+        setupModal.classList.add('hidden');
+        tournamentResultsModal.classList.remove('hidden');
+
+        const results = {};
+        const aiDef = aiRegistry.getAI(selectedBotAI);
+
+        for (let i = 0; i < gameCount; i++) {
+            // Create a headless game
+            const tourneyGame = new Game();
+            tourneyGame.startGame({
+                humanCount: 0,
+                botCount,
+                mapWidth: sizePreset.width,
+                mapHeight: sizePreset.height,
+                maxDice: parseInt(maxDiceInput.value),
+                diceSides: parseInt(diceSidesInput.value),
+                mapStyle: mapStyleInput.value,
+                gameMode: gameModeInput.value
+            });
+
+            // Create AI runners for each player
+            const tourneyAIs = new Map();
+            for (const player of tourneyGame.players) {
+                tourneyAIs.set(player.id, new AIRunner(aiDef));
+            }
+
+            // Run game to completion
+            let turns = 0;
+            const maxTurns = 2000;
+            while (!tourneyGame.gameOver && turns < maxTurns) {
+                const ai = tourneyAIs.get(tourneyGame.currentPlayer.id);
+                if (ai) {
+                    await ai.takeTurn(tourneyGame);
+                } else {
+                    tourneyGame.endTurn();
+                }
+                turns++;
+            }
+
+            // Record result
+            if (tourneyGame.winner) {
+                const winnerId = tourneyGame.winner.id;
+                const aiName = selectedBotAI;
+                const key = `Player ${winnerId} (${aiName})`;
+                results[key] = (results[key] || 0) + 1;
+            }
+
+            // Update progress
+            const progress = ((i + 1) / gameCount * 100).toFixed(1);
+            document.getElementById('tournament-progress-text').textContent = `${i + 1}/${gameCount}`;
+            document.getElementById('tournament-progress-fill').style.width = progress + '%';
+
+            // Yield to UI
+            if (i % 10 === 0) {
+                await new Promise(r => setTimeout(r, 0));
+            }
+        }
+
+        // Show results
+        const sortedResults = Object.entries(results)
+            .sort((a, b) => b[1] - a[1]);
+
+        tournamentResults.innerHTML = sortedResults.map(([name, wins], index) => {
+            const percent = (wins / gameCount * 100).toFixed(1);
+            return `
+                <div class="tournament-result-row ${index === 0 ? 'winner' : ''}">
+                    <span class="tournament-rank">${index === 0 ? '🏆' : index + 1}</span>
+                    <span class="tournament-ai-name">${name}</span>
+                    <span class="tournament-wins">${wins} wins</span>
+                    <span class="tournament-percent">${percent}%</span>
+                </div>
+            `;
+        }).join('');
+    };
+
+    runTournamentBtn.addEventListener('click', runTournament);
+    tournamentAgainBtn.addEventListener('click', runTournament);
+    tournamentCloseBtn.addEventListener('click', () => {
+        tournamentResultsModal.classList.add('hidden');
+        setupModal.classList.remove('hidden');
+    });
+    tournamentDoneBtn.addEventListener('click', () => {
+        tournamentResultsModal.classList.add('hidden');
+        setupModal.classList.remove('hidden');
+    });
+
     // Fast mode state - controls bot animation speed
     let fastModeEnabled = false;
 
@@ -682,6 +1102,18 @@ async function init() {
             mapStyle: mapStyleInput.value,
             gameMode: gameModeInput.value
         });
+
+        // Initialize AI for all players
+        playerAIs.clear();
+        for (const player of game.players) {
+            // Get AI config for this player (bots use selected AI, humans use same for autoplay)
+            const aiId = perPlayerAIConfig[player.id] || selectedBotAI;
+            const aiDef = aiRegistry.getAI(aiId);
+            if (aiDef) {
+                playerAIs.set(player.id, new AIRunner(aiDef));
+            }
+        }
+
         setupModal.classList.add('hidden');
 
         // Show Game UI

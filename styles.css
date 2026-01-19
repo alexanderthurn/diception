@@ -371,6 +371,12 @@ body {
     flex: 1;
 }
 
+.control-group.quarter {
+    margin: 0;
+    flex: 0 0 calc(25% - 10px);
+    min-width: 0;
+}
+
 .control-row {
     display: flex;
     gap: 15px;
@@ -918,4 +924,374 @@ input[type="range"] {
 .highlight-link {
     font-weight: bold;
     color: var(--border-color);
+}
+
+/* === AI Editor Modal Styles === */
+
+.select-with-btn {
+    display: flex;
+    gap: 5px;
+    align-items: stretch;
+}
+
+.select-with-btn select {
+    flex: 1;
+}
+
+.select-with-btn .tron-btn {
+    padding: 5px 10px;
+}
+
+#ai-editor-modal {
+    width: 900px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.ai-editor-content {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.ai-editor-left {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.ai-list-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.ai-list-section h4 {
+    margin: 0 0 10px 0;
+    color: var(--border-color);
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+#ai-list {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    min-height: 100px;
+}
+
+.ai-list-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+.ai-list-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.ai-list-item.active {
+    background: var(--accent-color);
+    color: #fff;
+}
+
+.ai-list-item.builtin {
+    opacity: 0.7;
+    font-style: italic;
+}
+
+.ai-editor-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    gap: 10px;
+}
+
+.ai-name-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+#ai-name-input {
+    flex: 1;
+    background: #000;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.ai-editor-actions {
+    display: flex;
+    gap: 5px;
+}
+
+#ai-code-input {
+    flex: 1;
+    min-height: 200px;
+    background: #0a0a15;
+    border: 1px solid var(--border-color);
+    color: #0f0;
+    padding: 10px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    resize: none;
+    tab-size: 4;
+}
+
+.ai-prompt-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.ai-prompt-section h4 {
+    margin: 0 0 8px 0;
+    color: var(--border-color);
+    font-size: 12px;
+}
+
+#ai-prompt-input {
+    width: 100%;
+    height: 60px;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    resize: none;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+}
+
+.ai-import-export {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.ai-api-docs {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 10px;
+    padding-top: 10px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.ai-api-docs.collapsible .collapsible-content {
+    display: none;
+}
+
+.ai-api-docs.collapsible.open .collapsible-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.collapsible-header {
+    cursor: pointer;
+    margin: 0;
+    padding: 5px 0;
+    color: var(--border-color);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.collapsible-header:hover {
+    color: #fff;
+}
+
+.toggle-icon {
+    font-size: 10px;
+    transition: transform 0.2s;
+}
+
+.collapsible.open .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.api-section {
+    flex: 1;
+    min-width: 200px;
+    font-size: 11px;
+}
+
+.api-section strong {
+    color: var(--accent-color);
+    display: block;
+    margin-bottom: 5px;
+}
+
+.api-section ul {
+    margin: 0;
+    padding-left: 15px;
+}
+
+.api-section li {
+    margin-bottom: 3px;
+    color: #aaa;
+}
+
+.api-section code {
+    background: rgba(0, 255, 255, 0.1);
+    padding: 1px 4px;
+    border-radius: 2px;
+    color: var(--border-color);
+}
+
+.tron-btn.danger {
+    border-color: #ff3333;
+    color: #ff3333;
+    box-shadow: 0 0 5px #ff3333;
+}
+
+.tron-btn.danger:hover {
+    background: rgba(255, 50, 50, 0.2);
+    box-shadow: 0 0 15px #ff3333;
+}
+
+/* === Tournament Styles === */
+
+#tournament-config {
+    text-align: left;
+}
+
+#tournament-games {
+    background: #000;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 5px;
+    font-family: inherit;
+}
+
+#tournament-results-modal {
+    width: 500px;
+    max-width: 90vw;
+}
+
+#tournament-results {
+    text-align: left;
+    margin: 20px 0;
+}
+
+.tournament-result-row {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.tournament-result-row.winner {
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
+}
+
+.tournament-rank {
+    width: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--border-color);
+}
+
+.tournament-ai-name {
+    flex: 1;
+    font-weight: bold;
+}
+
+.tournament-wins {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+.tournament-percent {
+    width: 60px;
+    text-align: right;
+    color: #888;
+}
+
+.tournament-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.tournament-progress {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.tournament-progress-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.tournament-progress-fill {
+    height: 100%;
+    background: var(--accent-color);
+    transition: width 0.1s;
+}
+
+/* Mobile adjustments for AI Editor */
+@media (max-width: 768px) {
+    #ai-editor-modal {
+        padding: 15px;
+    }
+
+    .ai-editor-content {
+        flex-direction: column;
+    }
+
+    .ai-editor-left {
+        width: 100%;
+        max-height: 120px;
+    }
+
+    #ai-list {
+        min-height: 60px;
+    }
+
+    #ai-code-input {
+        min-height: 150px;
+    }
+
+    .ai-api-docs {
+        max-height: 100px;
+    }
+
+    .ai-name-row {
+        flex-wrap: wrap;
+    }
+
+    #ai-name-input {
+        width: 100%;
+    }
+
+    .ai-editor-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
 }
