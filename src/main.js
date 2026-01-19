@@ -58,7 +58,16 @@ async function init() {
     // Current selected AI for all bots (default easy)
     let selectedBotAI = localStorage.getItem('dicy_botAI') || 'easy';
     // Per-player AI config (when using custom per player)
-    let perPlayerAIConfig = {};
+    let perPlayerAIConfig = JSON.parse(localStorage.getItem('dicy_perPlayerAIConfig') || '{}');
+
+    // Helper to get consistent player names
+    const getPlayerName = (player) => {
+        if (player.isBot) {
+            const aiRunner = playerAIs.get(player.id);
+            return aiRunner ? `${aiRunner.name} ${player.id}` : `Bot ${player.id}`;
+        }
+        return `Human ${player.id + 1}`;
+    };
 
     // 5. Initialize Music with localStorage
     const music = new Audio('./Neon Dice Offensive.mp3');
@@ -150,7 +159,7 @@ async function init() {
 
     // Create a new turn group in the log
     const startTurnLog = (player) => {
-        const playerName = player.isBot ? `Bot ${player.id}` : `Player ${player.id}`;
+        const playerName = getPlayerName(player);
         const colorHex = '#' + player.color.toString(16).padStart(6, '0');
         const isHuman = !player.isBot && !autoplayPlayers.has(player.id);
 
@@ -506,7 +515,7 @@ async function init() {
         }
 
         const defender = game.players.find(p => p.id === result.defenderId);
-        const defenderName = defender?.isBot ? `Bot ${defender.id}` : `Player ${defender?.id}`;
+        const defenderName = defender ? getPlayerName(defender) : `Player ${result.defenderId}`;
 
         const attackRoll = result.attackerRolls?.join('+') || '?';
         const defendRoll = result.defenderRolls?.join('+') || '?';
@@ -895,6 +904,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         perPlayerAIList.querySelectorAll('.per-player-ai-select').forEach(select => {
             select.addEventListener('change', () => {
                 perPlayerAIConfig[select.dataset.playerId] = select.value;
+                localStorage.setItem('dicy_perPlayerAIConfig', JSON.stringify(perPlayerAIConfig));
             });
         });
     };
@@ -992,52 +1002,125 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             // Run game to completion using simple direct AI (no Web Workers for speed)
             let turns = 0;
             const maxTurns = 2000;
-
             while (!tourneyGame.gameOver && turns < maxTurns) {
                 // Simple synchronous AI execution
                 const currentPlayer = tourneyGame.currentPlayer;
                 const playerAIId = getPlayerAIId(currentPlayer.id);
-                const mapWidth = tourneyGame.map.width;
 
-                // Get tiles with their coordinates
-                const myTiles = [];
-                tourneyGame.map.tiles.forEach((t, idx) => {
-                    if (t.owner === currentPlayer.id && t.dice > 1) {
-                        myTiles.push({
-                            tile: t,
-                            x: idx % mapWidth,
-                            y: Math.floor(idx / mapWidth)
-                        });
-                    }
-                });
+                // Check if simple built-in AI (fast path)
+                if (['easy', 'medium', 'hard'].includes(playerAIId)) {
+                    const mapWidth = tourneyGame.map.width;
+                    const myTiles = [];
+                    tourneyGame.map.tiles.forEach((t, idx) => {
+                        if (t.owner === currentPlayer.id && t.dice > 1) {
+                            myTiles.push({
+                                tile: t,
+                                x: idx % mapWidth,
+                                y: Math.floor(idx / mapWidth)
+                            });
+                        }
+                    });
 
-                // Simple attack logic based on AI level
-                for (const { tile, x, y } of myTiles) {
-                    if (tourneyGame.gameOver) break;
-                    const neighbors = tourneyGame.map.getAdjacentTiles(x, y);
-                    for (const target of neighbors) {
-                        if (target.owner !== currentPlayer.id) {
-                            const diff = tile.dice - target.dice;
-                            // Attack based on difficulty
-                            const shouldAttack = playerAIId === 'easy' ? diff >= 0 :
-                                playerAIId === 'medium' ? diff >= 1 :
-                                    playerAIId === 'hard' ? diff >= 2 || tile.dice >= 7 :
-                                        diff >= 0; // adaptive or custom AIs
-                            if (shouldAttack && tile.dice > 1) {
-                                tourneyGame.attack(x, y, target.x, target.y);
+                    // Simple attack logic
+                    for (const { tile, x, y } of myTiles) {
+                        if (tourneyGame.gameOver) break;
+                        const neighbors = tourneyGame.map.getAdjacentTiles(x, y);
+                        for (const target of neighbors) {
+                            if (target.owner !== currentPlayer.id) {
+                                const diff = tile.dice - target.dice;
+                                const shouldAttack = playerAIId === 'easy' ? diff >= 0 :
+                                    playerAIId === 'medium' ? diff >= 1 :
+                                        diff >= 2 || tile.dice >= 7; // hard
+                                if (shouldAttack && tile.dice > 1) {
+                                    tourneyGame.attack(x, y, target.x, target.y);
+                                }
                             }
                         }
                     }
+                    tourneyGame.endTurn();
+                } else {
+                    // Custom or Adaptive AI -> Execute code synchronously
+                    const aiDef = aiRegistry.getAI(playerAIId);
+                    if (aiDef) { // Fallback to easy if missing
+
+                        // Mock API for synchronous execution (subset of full API)
+                        const actions = [];
+                        let turnEnded = false;
+                        let moveCount = 0;
+                        const maxMoves = 200;
+
+                        const api = {
+                            getMyTiles: () => tourneyGame.map.tiles.filter(t => t.owner === currentPlayer.id && !t.blocked).map(t => ({ ...t, x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width, y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width) })),
+                            getEnemyTiles: () => tourneyGame.map.tiles.filter(t => t.owner !== currentPlayer.id && !t.blocked).map(t => ({ ...t, x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width, y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width) })),
+                            getAllTiles: () => tourneyGame.map.tiles.filter(t => !t.blocked).map(t => ({ ...t, x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width, y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width) })),
+                            getAdjacentTiles: (x, y) => tourneyGame.map.getAdjacentTiles(x, y),
+                            getTileAt: (x, y) => tourneyGame.map.getTile(x, y),
+                            getMyId: () => currentPlayer.id, // Legacy support
+                            get myId() { return currentPlayer.id; },
+                            get maxDice() { return tourneyGame.maxDice; },
+                            get diceSides() { return tourneyGame.diceSides; },
+                            get mapWidth() { return tourneyGame.map.width; },
+                            get mapHeight() { return tourneyGame.map.height; },
+
+                            attack: (fromX, fromY, toX, toY) => {
+                                if (turnEnded || moveCount >= maxMoves) return { success: false };
+
+                                // Validate ownership matches current player
+                                const fromTile = tourneyGame.map.getTile(fromX, fromY);
+                                if (!fromTile || fromTile.owner !== currentPlayer.id) return { success: false };
+
+                                actions.push({ type: 'attack', fromX, fromY, toX, toY });
+                                moveCount++;
+
+                                // Simulate for AI state tracking (simplified)
+                                const toTile = tourneyGame.map.getTile(toX, toY);
+                                if (toTile && fromTile.dice > toTile.dice) {
+                                    return { success: true, expectedWin: true };
+                                }
+                                return { success: true, expectedWin: false };
+                            },
+                            endTurn: () => {
+                                turnEnded = true;
+                            },
+                            log: () => { }, // Silence logs
+                            save: () => { }, // No storage in tournaments for speed
+                            load: () => null,
+                            getWinProbability: (att, def) => 1 / (1 + Math.exp(-(att - def) / 2))
+                        };
+
+                        try {
+                            const aiFn = new Function('api', aiDef.code);
+                            aiFn(api);
+
+                            // Execute actions
+                            for (const action of actions) {
+                                if (tourneyGame.gameOver) break;
+                                if (action.type === 'attack') {
+                                    try {
+                                        tourneyGame.attack(action.fromX, action.fromY, action.toX, action.toY);
+                                    } catch (e) { }
+                                }
+                            }
+                        } catch (e) {
+                            console.warn(`AI Error (${playerAIId}):`, e);
+                        }
+                    }
+                    tourneyGame.endTurn();
                 }
 
-                tourneyGame.endTurn();
                 turns++;
             }
 
             // Record result
+            // Record result
             if (tourneyGame.winner) {
                 const winnerId = tourneyGame.winner.id;
-                const key = `Player ${winnerId}`;
+                const aiId = getPlayerAIId(winnerId);
+                const aiDef = aiRegistry.getAI(aiId);
+                const aiName = aiDef ? aiDef.name : aiId;
+
+                // Consistent naming with main game (e.g. "Easy 1" instead of "Easy (Player 1)")
+                const key = `${aiName} ${winnerId}`;
                 results[key] = (results[key] || 0) + 1;
             }
 
@@ -1150,12 +1233,41 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     // Initial map size display
     updateMapSizeDisplay();
 
-    mapSizeInput.addEventListener('input', updateMapSizeDisplay);
+    // Immediate saving of settings
+    mapSizeInput.addEventListener('input', () => {
+        updateMapSizeDisplay();
+        localStorage.setItem('dicy_mapSize', mapSizeInput.value);
+    });
     maxDiceInput.addEventListener('input', () => {
         maxDiceVal.textContent = maxDiceInput.value;
+        localStorage.setItem('dicy_maxDice', maxDiceInput.value);
     });
     diceSidesInput.addEventListener('input', () => {
         diceSidesVal.textContent = diceSidesInput.value;
+        localStorage.setItem('dicy_diceSides', diceSidesInput.value);
+    });
+    humanCountInput.addEventListener('change', () => {
+        localStorage.setItem('dicy_humanCount', humanCountInput.value);
+    });
+    botCountInput.addEventListener('change', () => {
+        localStorage.setItem('dicy_botCount', botCountInput.value);
+    });
+    fastModeInput.addEventListener('change', () => {
+        localStorage.setItem('dicy_fastMode', fastModeInput.checked.toString());
+    });
+    mapStyleInput.addEventListener('change', () => {
+        localStorage.setItem('dicy_mapStyle', mapStyleInput.value);
+    });
+    gameModeInput.addEventListener('change', () => {
+        localStorage.setItem('dicy_gameMode', gameModeInput.value);
+    });
+
+    // Effects quality - save and reload
+    effectsQualityInput.addEventListener('change', () => {
+        localStorage.setItem('effectsQuality', effectsQualityInput.value);
+        if (confirm('Changing visual quality requires a reload. Reload now?')) {
+            window.location.reload();
+        }
     });
 
     startBtn.addEventListener('click', () => {
@@ -1250,7 +1362,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             div.className = `player-item ${game.currentPlayer.id === p.id ? 'active' : ''} ${!p.alive ? 'dead' : ''}`;
             div.style.borderLeftColor = '#' + p.color.toString(16).padStart(6, '0');
 
-            const playerName = p.isBot ? `Bot ${p.id}` : `Player ${p.id}`;
+            const playerName = getPlayerName(p);
             const isAutoplay = autoplayPlayers.has(p.id);
 
             // Only show autoplay toggle for human players
@@ -1291,7 +1403,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     game.on('gameOver', (data) => {
         const modal = document.getElementById('game-over-modal');
         const winnerText = document.getElementById('winner-text');
-        const name = data.winner.isBot ? `Bot ${data.winner.id}` : `Player ${data.winner.id}`;
+        const name = getPlayerName(data.winner);
         winnerText.textContent = `${name} Wins!`;
         modal.classList.remove('hidden');
         addLog(`🏆 ${name} wins the game!`, 'death');
