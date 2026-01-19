@@ -963,8 +963,11 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         const sizeValue = parseInt(mapSizeInput.value);
         const sizePreset = getMapSize(sizeValue);
 
+        const configSummary = `<div class="tournament-summary">Map: ${sizePreset.width}x${sizePreset.height} • Dice: D${diceSidesInput.value} (Max ${maxDiceInput.value})</div>`;
+
         // Show progress
         tournamentResults.innerHTML = `
+            ${configSummary}
             <div class="tournament-progress">
                 <div>Running tournament: <span id="tournament-progress-text">0/${gameCount}</span></div>
                 <div class="tournament-progress-bar">
@@ -1139,7 +1142,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         const sortedResults = Object.entries(results)
             .sort((a, b) => b[1] - a[1]);
 
-        tournamentResults.innerHTML = sortedResults.map(([name, wins], index) => {
+        tournamentResults.innerHTML = configSummary + sortedResults.map(([name, wins], index) => {
             const percent = (wins / gameCount * 100).toFixed(1);
             return `
                 <div class="tournament-result-row ${index === 0 ? 'winner' : ''}">
@@ -1179,6 +1182,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     const savedFastMode = localStorage.getItem('dicy_fastMode') === 'true';
     const savedMapStyle = localStorage.getItem('dicy_mapStyle') || 'random';
     const savedGameMode = localStorage.getItem('dicy_gameMode') || 'classic';
+    const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || '100';
 
     mapSizeInput.value = savedMapSize;
     humanCountInput.value = savedHumanCount;
@@ -1190,6 +1194,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     fastModeInput.checked = savedFastMode;
     mapStyleInput.value = savedMapStyle;
     gameModeInput.value = savedGameMode;
+    tournamentGamesInput.value = savedTournamentGames;
 
     // Initialize dependent UI based on loaded settings
     // Tournament config - show if humans = 0
@@ -1260,6 +1265,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     });
     gameModeInput.addEventListener('change', () => {
         localStorage.setItem('dicy_gameMode', gameModeInput.value);
+    });
+    tournamentGamesInput.addEventListener('input', () => {
+        localStorage.setItem('dicy_tournamentGames', tournamentGamesInput.value);
     });
 
     // Effects quality - save and reload
