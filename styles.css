@@ -1295,3 +1295,34 @@ input[type="range"] {
         justify-content: flex-end;
     }
 }
+
+/* Per-player AI selection */
+#per-player-ai-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.per-player-ai-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.bot-label {
+    font-size: 12px;
+    color: var(--border-color);
+    min-width: 50px;
+}
+
+.per-player-ai-select {
+    background: #000;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 80px;
+}

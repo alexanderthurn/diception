@@ -102,10 +102,19 @@
                             <option value="medium">Medium</option>
                             <option value="hard">Hard</option>
                             <option value="adaptive">Adaptive</option>
+                            <option value="custom">Custom per bot...</option>
                             <!-- Custom AIs added dynamically -->
                         </select>
                         <button id="manage-ais-btn" class="tron-btn small" title="Manage AIs">⚙️</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Per-player AI selection (shown when "Custom per bot" selected) -->
+            <div class="control-row" id="per-player-ai-config" style="display: none;">
+                <div class="control-group" style="width: 100%;">
+                    <label>AI per Bot</label>
+                    <div id="per-player-ai-list"></div>
                 </div>
             </div>
 

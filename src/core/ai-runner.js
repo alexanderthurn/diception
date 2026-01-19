@@ -256,10 +256,11 @@ export class AIRunner {
      * Serialize game state for the worker
      */
     serializeGameState(game) {
+        const width = game.map.width;
         return {
-            tiles: game.map.tiles.map(t => ({
-                x: t.x,
-                y: t.y,
+            tiles: game.map.tiles.map((t, idx) => ({
+                x: idx % width,
+                y: Math.floor(idx / width),
                 owner: t.owner,
                 dice: t.dice,
                 blocked: t.blocked

@@ -614,9 +614,9 @@ async function init() {
     // Populate AI dropdown and list
     const updateAIDropdown = () => {
         const ais = aiRegistry.getAllAIs();
-        // Clear custom options from dropdown
-        while (botAISelect.options.length > 4) {
-            botAISelect.remove(4);
+        // Clear custom options from dropdown (keep 5 built-in: easy, medium, hard, adaptive, custom)
+        while (botAISelect.options.length > 5) {
+            botAISelect.remove(5);
         }
         // Add custom AIs
         for (const ai of ais.filter(a => !a.isBuiltIn)) {
@@ -853,13 +853,73 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         apiDocs.classList.toggle('open');
     });
 
-    // AI selection change
+    // Per-player AI config DOM elements
+    const perPlayerAIConfigEl = document.getElementById('per-player-ai-config');
+    const perPlayerAIList = document.getElementById('per-player-ai-list');
+
+    // Generate AI dropdown options HTML
+    const getAIOptionsHTML = (selectedValue = 'easy') => {
+        const ais = aiRegistry.getAllAIs();
+        let html = '';
+        for (const ai of ais) {
+            const selected = ai.id === selectedValue ? ' selected' : '';
+            html += `<option value="${ai.id}"${selected}>${ai.name}</option>`;
+        }
+        return html;
+    };
+
+    // Update per-player AI config based on bot count
+    const updatePerPlayerConfig = () => {
+        const botCount = parseInt(botCountInput.value);
+        const humanCount = parseInt(humanCountInput.value);
+
+        perPlayerAIList.innerHTML = '';
+
+        for (let i = 0; i < botCount; i++) {
+            // Player IDs for bots start after human players
+            const playerId = humanCount + i;
+            const savedAI = perPlayerAIConfig[playerId] || 'easy';
+
+            const row = document.createElement('div');
+            row.className = 'per-player-ai-row';
+            row.innerHTML = `
+                <span class="bot-label">Bot ${i + 1}</span>
+                <select class="per-player-ai-select" data-player-id="${playerId}">
+                    ${getAIOptionsHTML(savedAI)}
+                </select>
+            `;
+            perPlayerAIList.appendChild(row);
+        }
+
+        // Add change listeners
+        perPlayerAIList.querySelectorAll('.per-player-ai-select').forEach(select => {
+            select.addEventListener('change', () => {
+                perPlayerAIConfig[select.dataset.playerId] = select.value;
+            });
+        });
+    };
+
+    // AI selection change - show/hide per-player config
     botAISelect.addEventListener('change', () => {
         selectedBotAI = botAISelect.value;
         localStorage.setItem('dicy_botAI', selectedBotAI);
+
+        if (selectedBotAI === 'custom') {
+            perPlayerAIConfigEl.style.display = 'flex';
+            updatePerPlayerConfig();
+        } else {
+            perPlayerAIConfigEl.style.display = 'none';
+        }
     });
 
-    // Load saved AI selection
+    // Update per-player config when bot count changes
+    botCountInput.addEventListener('change', () => {
+        if (selectedBotAI === 'custom') {
+            updatePerPlayerConfig();
+        }
+    });
+
+    // Load saved AI selection (per-player config updated later after bot count is loaded)
     if (selectedBotAI) {
         botAISelect.value = selectedBotAI;
     }
@@ -906,7 +966,14 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         tournamentResultsModal.classList.remove('hidden');
 
         const results = {};
-        const aiDef = aiRegistry.getAI(selectedBotAI);
+
+        // Helper to get AI id for a player
+        const getPlayerAIId = (playerId) => {
+            if (selectedBotAI === 'custom') {
+                return perPlayerAIConfig[playerId] || 'easy';
+            }
+            return selectedBotAI;
+        };
 
         for (let i = 0; i < gameCount; i++) {
             // Create a headless game
@@ -922,30 +989,55 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 gameMode: gameModeInput.value
             });
 
-            // Create AI runners for each player
-            const tourneyAIs = new Map();
-            for (const player of tourneyGame.players) {
-                tourneyAIs.set(player.id, new AIRunner(aiDef));
-            }
-
-            // Run game to completion
+            // Run game to completion using simple direct AI (no Web Workers for speed)
             let turns = 0;
             const maxTurns = 2000;
+
             while (!tourneyGame.gameOver && turns < maxTurns) {
-                const ai = tourneyAIs.get(tourneyGame.currentPlayer.id);
-                if (ai) {
-                    await ai.takeTurn(tourneyGame);
-                } else {
-                    tourneyGame.endTurn();
+                // Simple synchronous AI execution
+                const currentPlayer = tourneyGame.currentPlayer;
+                const playerAIId = getPlayerAIId(currentPlayer.id);
+                const mapWidth = tourneyGame.map.width;
+
+                // Get tiles with their coordinates
+                const myTiles = [];
+                tourneyGame.map.tiles.forEach((t, idx) => {
+                    if (t.owner === currentPlayer.id && t.dice > 1) {
+                        myTiles.push({
+                            tile: t,
+                            x: idx % mapWidth,
+                            y: Math.floor(idx / mapWidth)
+                        });
+                    }
+                });
+
+                // Simple attack logic based on AI level
+                for (const { tile, x, y } of myTiles) {
+                    if (tourneyGame.gameOver) break;
+                    const neighbors = tourneyGame.map.getAdjacentTiles(x, y);
+                    for (const target of neighbors) {
+                        if (target.owner !== currentPlayer.id) {
+                            const diff = tile.dice - target.dice;
+                            // Attack based on difficulty
+                            const shouldAttack = playerAIId === 'easy' ? diff >= 0 :
+                                playerAIId === 'medium' ? diff >= 1 :
+                                    playerAIId === 'hard' ? diff >= 2 || tile.dice >= 7 :
+                                        diff >= 0; // adaptive or custom AIs
+                            if (shouldAttack && tile.dice > 1) {
+                                tourneyGame.attack(x, y, target.x, target.y);
+                            }
+                        }
+                    }
                 }
+
+                tourneyGame.endTurn();
                 turns++;
             }
 
             // Record result
             if (tourneyGame.winner) {
                 const winnerId = tourneyGame.winner.id;
-                const aiName = selectedBotAI;
-                const key = `Player ${winnerId} (${aiName})`;
+                const key = `Player ${winnerId}`;
                 results[key] = (results[key] || 0) + 1;
             }
 
@@ -1016,6 +1108,18 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     mapStyleInput.value = savedMapStyle;
     gameModeInput.value = savedGameMode;
 
+    // Initialize dependent UI based on loaded settings
+    // Tournament config - show if humans = 0
+    if (parseInt(savedHumanCount) === 0) {
+        tournamentConfig.style.display = 'block';
+    }
+
+    // Per-player AI config - update after bot count is set
+    if (selectedBotAI === 'custom') {
+        perPlayerAIConfigEl.style.display = 'flex';
+        updatePerPlayerConfig();
+    }
+
     // Map size presets: slider value -> {width, height}
     const mapSizePresets = [
         { width: 3, height: 3 },   // 1 - Tiny
@@ -1076,6 +1180,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         localStorage.setItem('dicy_fastMode', fastModeInput.checked.toString());
         localStorage.setItem('dicy_mapStyle', mapStyleInput.value);
         localStorage.setItem('dicy_gameMode', gameModeInput.value);
+        localStorage.setItem('effectsQuality', effectsQualityInput.value);
 
         // Enable fast mode for this game session
         fastModeEnabled = fastModeInput.checked;
@@ -1106,8 +1211,15 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         // Initialize AI for all players
         playerAIs.clear();
         for (const player of game.players) {
-            // Get AI config for this player (bots use selected AI, humans use same for autoplay)
-            const aiId = perPlayerAIConfig[player.id] || selectedBotAI;
+            // Get AI config for this player
+            let aiId;
+            if (selectedBotAI === 'custom') {
+                // Use per-player config
+                aiId = perPlayerAIConfig[player.id] || 'easy';
+            } else {
+                // Same AI for all
+                aiId = selectedBotAI;
+            }
             const aiDef = aiRegistry.getAI(aiId);
             if (aiDef) {
                 playerAIs.set(player.id, new AIRunner(aiDef));
