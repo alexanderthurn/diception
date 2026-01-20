@@ -16,6 +16,14 @@
 
     <div id="game-container"></div>
 
+    <!-- Turn indicator (shown above playfield in Beginner mode) -->
+    <div id="turn-indicator" class="game-ui hidden"></div>
+
+    <!-- Dice result HUD (shown below playfield in Beginner mode) -->
+    <div id="dice-result-hud" class="game-ui hidden">
+        <div id="dice-result-content"></div>
+    </div>
+
     <div id="ui-overlay">
         <button id="end-turn-btn" class="tron-btn game-ui hidden">End Turn</button>
         <button id="auto-win-btn" class="tron-btn game-ui hidden">Autoplay</button>
@@ -249,7 +257,8 @@
                             <li><em>Humans:</em> Set number of human players.</li>
                             <li><em>Bots:</em> Set number of AIs</li>
                             <li><em>Game Speed:</em> <strong>Beginner</strong> shows all rolls and animations.
-                                <strong>Normal</strong> is standard. <strong>Fast</strong> skips most animations.</li>
+                                <strong>Normal</strong> is standard. <strong>Fast</strong> skips most animations.
+                            </li>
                             <li><em>Visual Effects:</em> "High" for full neon glow with particles. "Low/Off" for better
                                 performance on
                                 slow devices.</li>

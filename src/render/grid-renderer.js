@@ -399,123 +399,145 @@ export class GridRenderer {
             }
         });
 
-        // Beginner mode: show dice rolls
+        // Beginner mode: show tile highlights only (dice results are in DOM HUD)
         if (this.gameSpeed === 'beginner') {
             const attacker = this.game.players.find(p => p.id === result.attackerId);
             const defender = this.game.players.find(p => p.id === result.defenderId);
 
-            const rollContainer = new Container();
-            rollContainer.alpha = 0;
-            this.animationContainer.addChild(rollContainer);
-
-            // Create persistent highlights with scaling and glow
-            const createHighlight = (x, y, player) => {
+            // Create highlight with glow
+            const createHighlight = (x, y, color) => {
                 const group = new Container();
                 group.x = x + this.tileSize / 2;
                 group.y = y + this.tileSize / 2;
+                group.alpha = 0;
 
                 // Glow effect
                 const glow = new Graphics();
-                glow.rect(-this.tileSize / 2 - 4, -this.tileSize / 2 - 4, this.tileSize + 8, this.tileSize + 8);
-                glow.stroke({ color: 0xffffff, width: 6, alpha: 0.3 });
+                glow.rect(-this.tileSize / 2 - 6, -this.tileSize / 2 - 6, this.tileSize + 12, this.tileSize + 12);
+                glow.stroke({ color: 0xffffff, width: 8, alpha: 0.5 });
                 group.addChild(glow);
 
                 const high = new Graphics();
                 high.rect(-this.tileSize / 2, -this.tileSize / 2, this.tileSize, this.tileSize);
-                high.fill({ color: player ? player.color : 0xffffff, alpha: 0.6 });
+                high.fill({ color: color, alpha: 0.8 });
                 high.stroke({ color: 0xffffff, width: 4, alpha: 1.0 });
                 group.addChild(high);
 
                 return group;
             };
 
-            const attackerHigh = createHighlight(fromX, fromY, attacker);
-            const defenderHigh = createHighlight(toX, toY, defender);
-            rollContainer.addChild(attackerHigh, defenderHigh);
+            // Attacker highlight
+            const attackerHigh = createHighlight(fromX, fromY, attacker ? attacker.color : 0xffffff);
+            this.animationContainer.addChild(attackerHigh);
 
-            // Create text styles
-            const rollStyle = {
-                fontFamily: 'Outfit, sans-serif, Arial',
-                fontSize: 22,
-                fill: '#ffffff',
-                fontWeight: 'bold',
-                dropShadow: {
-                    alpha: 0.8,
-                    blur: 4,
-                    color: '#000000',
-                    distance: 2
-                }
-            };
+            // Defender highlight - use attacker color if won (tile is now theirs)
+            const defenderColor = result.won ? (attacker ? attacker.color : 0xffffff) : (defender ? defender.color : 0xffffff);
+            const defenderHigh = createHighlight(toX, toY, defenderColor);
+            this.animationContainer.addChild(defenderHigh);
 
-            // Calculate center position for the popup
-            const centerX = (fromX + toX) / 2 + this.tileSize / 2;
-            const minY = Math.min(fromY, toY);
-            const popupBaseY = minY - 80; // Move it ABOVE the tiles
-
-            // Attacker roll display
-            const attackerRollSum = result.attackerRolls.reduce((a, b) => a + b, 0);
-            const defenderRollSum = result.defenderRolls.reduce((a, b) => a + b, 0);
-
-            const attackerText = new Text({
-                text: `${result.attackerRolls.join('+')} = ${attackerRollSum}`,
-                style: { ...rollStyle, fill: attacker ? '#' + attacker.color.toString(16).padStart(6, '0') : '#ffffff' }
-            });
-            attackerText.anchor.set(0.5);
-
-            const vsText = new Text({
-                text: result.won ? '>' : '≤',
-                style: { ...rollStyle, fontSize: 36, fill: result.won ? '#00ff00' : '#ff0000' }
-            });
-            vsText.anchor.set(0.5);
-
-            const defenderText = new Text({
-                text: `${result.defenderRolls.join('+')} = ${defenderRollSum}`,
-                style: { ...rollStyle, fill: defender ? '#' + defender.color.toString(16).padStart(6, '0') : '#ffffff' }
-            });
-            defenderText.anchor.set(0.5);
-
-            // Layout
-            attackerText.y = -30;
-            vsText.y = 5;
-            defenderText.y = 40;
-
-            // Background box for the "popup"
-            const maxWidth = Math.max(attackerText.width, defenderText.width, vsText.width) + 40;
-            const bg = new Graphics();
-            bg.roundRect(-maxWidth / 2, -65, maxWidth, 130, 20);
-            bg.fill({ color: 0x000000, alpha: 0.95 });
-            bg.stroke({ color: 0xffffff, width: 2, alpha: 0.8 });
-
-            const popupGroup = new Container();
-            popupGroup.x = centerX;
-            popupGroup.y = popupBaseY;
-            popupGroup.addChild(bg, attackerText, vsText, defenderText);
-            rollContainer.addChild(popupGroup);
-
-            // Animate roll container
+            // Staggered animation: attacker appears first
             this.animator.addTween({
-                duration: 90,
+                duration: 10,
                 onUpdate: (p) => {
-                    if (p < 0.1) {
-                        rollContainer.alpha = p * 10;
-                    } else if (p > 0.8) {
-                        rollContainer.alpha = (1 - p) * 5;
-                    } else {
-                        rollContainer.alpha = 1;
-                    }
-
-                    // Scale involved tiles
-                    const scale = 1 + Math.sin(p * Math.PI) * 0.15;
-                    attackerHigh.scale.set(scale);
-                    defenderHigh.scale.set(scale);
-
-                    // Float up popup
-                    popupGroup.y = popupBaseY - p * 30;
+                    attackerHigh.alpha = p;
+                    attackerHigh.scale.set(1 + (1 - p) * 0.3);
                 },
                 onComplete: () => {
-                    rollContainer.destroy();
+                    // Now show defender
+                    this.animator.addTween({
+                        duration: 10,
+                        onUpdate: (p) => {
+                            defenderHigh.alpha = p;
+                            defenderHigh.scale.set(1 + (1 - p) * 0.3);
+                        },
+                        onComplete: () => {
+                            // Hold briefly then fade out both
+                            this.animator.addTween({
+                                duration: 40,
+                                onUpdate: (p) => {
+                                    if (p > 0.7) {
+                                        const fade = (1 - p) / 0.3;
+                                        attackerHigh.alpha = fade;
+                                        defenderHigh.alpha = fade;
+                                    }
+                                },
+                                onComplete: () => {
+                                    attackerHigh.destroy();
+                                    defenderHigh.destroy();
+                                }
+                            });
+                        }
+                    });
                 }
             });
         }
+    }
+
+    animateReinforcements(data) {
+        // Only show in Beginner mode
+        if (this.gameSpeed !== 'beginner') return;
+
+        const player = data.player;
+        const placements = data.placements || [];
+
+        if (placements.length === 0) return;
+
+        // Animate each placement sequentially
+        const animateNextPlacement = (index) => {
+            if (index >= placements.length) return;
+
+            const placement = placements[index];
+            const pixelX = placement.x * (this.tileSize + this.gap);
+            const pixelY = placement.y * (this.tileSize + this.gap);
+
+            // Create a flash effect for this tile
+            const flash = new Graphics();
+            flash.rect(0, 0, this.tileSize, this.tileSize);
+            flash.fill({ color: 0xffffff, alpha: 0.9 });
+            flash.x = pixelX;
+            flash.y = pixelY;
+            flash.alpha = 0;
+            this.animationContainer.addChild(flash);
+
+            // Also create a "+" icon
+            const plusText = new Text({
+                text: '🎲',
+                style: {
+                    fontFamily: 'Outfit, sans-serif',
+                    fontSize: 24,
+                    fill: '#ffffff',
+                }
+            });
+            plusText.anchor.set(0.5);
+            plusText.x = pixelX + this.tileSize / 2;
+            plusText.y = pixelY + this.tileSize / 2;
+            plusText.alpha = 0;
+            this.animationContainer.addChild(plusText);
+
+            // Animate the flash
+            this.animator.addTween({
+                duration: 12,
+                onUpdate: (p) => {
+                    if (p < 0.3) {
+                        flash.alpha = p / 0.3;
+                        plusText.alpha = p / 0.3;
+                        plusText.scale.set(0.5 + p * 1.5);
+                    } else {
+                        flash.alpha = (1 - p) / 0.7;
+                        plusText.alpha = (1 - p) / 0.7;
+                        plusText.y = pixelY + this.tileSize / 2 - (p - 0.3) * 20;
+                    }
+                },
+                onComplete: () => {
+                    flash.destroy();
+                    plusText.destroy();
+                    // Animate next placement
+                    animateNextPlacement(index + 1);
+                }
+            });
+        };
+
+        // Start the sequence
+        animateNextPlacement(0);
     }
 }

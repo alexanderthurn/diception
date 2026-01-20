@@ -152,6 +152,9 @@ async function init() {
     const autoWinBtn = document.getElementById('auto-win-btn');
     const playerText = document.getElementById('player-turn');
     const logEntries = document.getElementById('log-entries');
+    const turnIndicator = document.getElementById('turn-indicator');
+    const diceResultHud = document.getElementById('dice-result-hud');
+    const diceResultContent = document.getElementById('dice-result-content');
 
     // Turn-based log grouping
     let currentTurnLog = null;
@@ -462,12 +465,29 @@ async function init() {
         // Check if this player should be automated (bot OR autoplay enabled)
         const shouldAutomate = data.player.isBot || autoplayPlayers.has(data.player.id);
 
+        // Count human players
+        const humanCount = game.players.filter(p => !p.isBot && p.alive).length;
+
+        // Update turn indicator (Beginner mode only, bots only - replaces End Turn button)
+        if (gameSpeed === 'beginner' && data.player.isBot) {
+            const colorHex = '#' + data.player.color.toString(16).padStart(6, '0');
+            // Get AI name from player AI registry
+            const playerAI = playerAIs.get(data.player.id);
+            const aiName = playerAI?.name || 'Bot';
+            turnIndicator.innerHTML = `<span style="color:${colorHex}">${aiName} ${data.player.id}</span> is playing...`;
+            turnIndicator.classList.remove('hidden');
+        } else {
+            turnIndicator.classList.add('hidden');
+        }
+
         // Play turn sound for human players only
         if (!data.player.isBot && !autoplayPlayers.has(data.player.id)) {
             sfx.turnStart();
         }
 
         if (shouldAutomate) {
+            // Hide End Turn button during bot turns
+            endTurnBtn.classList.add('hidden');
             endTurnBtn.disabled = true;
             endTurnBtn.textContent = 'END TURN';
             // In fast mode, minimal delay; otherwise use normal delays
@@ -492,6 +512,8 @@ async function init() {
                 }
             }, delay);
         } else {
+            // Show End Turn button for human turns
+            endTurnBtn.classList.remove('hidden');
             endTurnBtn.disabled = false;
             // Show expected dice reinforcement on button (no emoji)
             const regionDice = game.map.findLargestConnectedRegion(data.player.id);
@@ -523,6 +545,7 @@ async function init() {
             }
         }
 
+        const attacker = game.players.find(p => p.id === result.attackerId);
         const defender = game.players.find(p => p.id === result.defenderId);
         const defenderName = defender ? getPlayerName(defender) : `Player ${result.defenderId}`;
 
@@ -534,8 +557,41 @@ async function init() {
         const outcome = result.won ? '✓' : '✗';
         addLog(`→ ${defenderName}: [${attackSum}] vs [${defendSum}] ${outcome}`, result.won ? 'attack-win' : 'attack-loss');
 
+        // Beginner mode: show dice result in HUD
+        if (gameSpeed === 'beginner') {
+            const attackerColor = attacker ? '#' + attacker.color.toString(16).padStart(6, '0') : '#ffffff';
+            const defenderColor = defender ? '#' + defender.color.toString(16).padStart(6, '0') : '#ffffff';
+
+            // Build dice icons HTML with + between each die
+            const buildDiceDisplay = (count, sum, color) => {
+                let icons = '';
+                for (let i = 0; i < count; i++) {
+                    icons += `<span class="dice-icon" style="color:${color}">🎲</span>`;
+                    if (i < count - 1) icons += '<span class="dice-plus">+</span>';
+                }
+                return `${icons}<span class="dice-sum" style="color:${color}">${sum}</span>`;
+            };
+
+            diceResultContent.innerHTML = `
+                <div class="dice-group">
+                    ${buildDiceDisplay(result.attackerRolls.length, attackSum, attackerColor)}
+                </div>
+                <span class="vs-indicator ${result.won ? 'win' : 'loss'}">${result.won ? '>' : '≤'}</span>
+                <div class="dice-group">
+                    ${buildDiceDisplay(result.defenderRolls.length, defendSum, defenderColor)}
+                </div>
+            `;
+
+            diceResultHud.classList.remove('hidden');
+
+            // Auto-hide after 1.5 seconds
+            clearTimeout(diceResultHud._hideTimeout);
+            diceResultHud._hideTimeout = setTimeout(() => {
+                diceResultHud.classList.add('hidden');
+            }, 1500);
+        }
+
         // Play sound for human attackers only
-        const attacker = game.players.find(p => p.id === result.attackerId);
         if (attacker && !attacker.isBot && !autoplayPlayers.has(attacker.id)) {
             if (result.won) {
                 sfx.attackWin();
@@ -569,6 +625,26 @@ async function init() {
 
         // Finalize the turn log with reinforcement info
         finalizeTurnLog(data.placed, data.stored);
+
+        // Beginner mode: show reinforcement popup in HUD
+        if (gameSpeed === 'beginner' && (data.placed > 0 || data.stored > 0)) {
+            const playerColor = '#' + data.player.color.toString(16).padStart(6, '0');
+            const total = data.placed + data.stored;
+
+            let content = `<span style="color:${playerColor}; font-size: 28px; font-weight: bold;">+${data.placed} 🎲</span>`;
+            if (data.stored > 0) {
+                content += ` <span style="color:#ffaa00; font-size: 18px;">(${data.stored} saved)</span>`;
+            }
+
+            diceResultContent.innerHTML = content;
+            diceResultHud.classList.remove('hidden');
+
+            // Auto-hide after 2.5 seconds
+            clearTimeout(diceResultHud._hideTimeout);
+            diceResultHud._hideTimeout = setTimeout(() => {
+                diceResultHud.classList.add('hidden');
+            }, 2500);
+        }
 
         // Play sound for human players only
         if (!data.player.isBot && !autoplayPlayers.has(data.player.id)) {

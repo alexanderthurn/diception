@@ -420,7 +420,7 @@ export class AIRunner {
 
                     // Delay between attacks based on speed
                     if (gameSpeed === 'beginner') {
-                        await new Promise(r => setTimeout(r, 2000)); // Wait for attack animation (90 ticks ~ 1.5s + 0.5s pause)
+                        await new Promise(r => setTimeout(r, 1200)); // Wait for attack animation
                     } else if (gameSpeed === 'normal') {
                         await new Promise(r => setTimeout(r, 200));
                     }

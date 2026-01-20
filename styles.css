@@ -151,6 +151,100 @@ body {
     border-radius: 30px;
 }
 
+/* Turn Indicator - Replaces End Turn button for bot turns */
+#turn-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+    padding: 12px 25px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 30px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Dice Result HUD - Below playfield */
+#dice-result-hud {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    padding: 6px 16px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid var(--accent-color);
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+#dice-result-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+#dice-result-content .dice-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+#dice-result-content .dice-icon {
+    font-size: 14px;
+    animation: dice-shake 0.3s ease-in-out;
+}
+
+#dice-result-content .dice-plus {
+    font-size: 10px;
+    opacity: 0.5;
+    margin: 0 1px;
+}
+
+#dice-result-content .dice-sum {
+    font-weight: bold;
+    font-size: 18px;
+    margin-left: 4px;
+}
+
+#dice-result-content .vs-indicator {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 0 8px;
+}
+
+#dice-result-content .vs-indicator.win {
+    color: #00ff00;
+}
+
+#dice-result-content .vs-indicator.loss {
+    color: #ff0000;
+}
+
+@keyframes dice-shake {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(-10deg);
+    }
+
+    75% {
+        transform: rotate(10deg);
+    }
+}
+
 #player-dashboard.collapsed {
     width: auto;
     max-height: none;

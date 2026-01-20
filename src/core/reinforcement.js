@@ -7,6 +7,7 @@ export class ReinforcementManager {
         // Total available to place: new earnings + previously stored
         let diceToDistribute = earned + fromStore;
         let placed = 0;
+        const placements = []; // Track where dice were placed for animation
 
         const ownedTiles = game.map.getTilesByOwner(playerId);
 
@@ -23,6 +24,7 @@ export class ReinforcementManager {
             randomTile.dice++;
             diceToDistribute--;
             placed++;
+            placements.push({ x: randomTile.x, y: randomTile.y });
         }
 
         // Remaining dice go back to store
@@ -33,12 +35,14 @@ export class ReinforcementManager {
         // dropped: 0 (since they are stored now)
         // stored: current amount in store
         // earned: amount earned from tiles this turn
+        // placements: array of {x, y} for animation
         return {
             earned: earned,
             placed: placed,
             dropped: 0,
             stored: player.storedDice,
-            fromStore: fromStore
+            fromStore: fromStore,
+            placements: placements
         };
     }
 }

@@ -57,7 +57,12 @@ export class Renderer {
             this.draw();
         });
 
-        this.game.on('reinforcements', () => this.draw()); // Redraw numbers
+        this.game.on('reinforcements', (data) => {
+            // Trigger reinforcement animation (Beginner mode only)
+            this.grid.animateReinforcements(data);
+            // Redraw numbers
+            this.draw();
+        });
         this.game.on('turnStart', () => this.draw()); // update highlights
     }
 
