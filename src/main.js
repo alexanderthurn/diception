@@ -399,6 +399,9 @@ async function init() {
     });
 
     game.on('turnStart', (data) => {
+        // Hide dice result HUD when turn starts
+        diceResultHud.classList.add('hidden');
+
         const name = data.player.isBot ? `Bot ${data.player.id}` : `Player ${data.player.id}`;
         playerText.textContent = `${name}'s Turn`;
         playerText.style.color = '#' + data.player.color.toString(16).padStart(6, '0');
@@ -438,7 +441,7 @@ async function init() {
             // In fast mode, minimal delay; otherwise use normal delays
             // Calculate delay based on game speed
             let delay = 500; // Default slow
-            if (gameSpeed === 'fast') {
+            if (gameSpeed === 'expert') {
                 delay = 10;
             } else if (gameSpeed === 'normal') {
                 delay = data.player.isBot ? 300 : 500;
@@ -522,8 +525,11 @@ async function init() {
         const outcome = result.won ? '✓' : '✗';
         addLog(`→ ${defenderName}: [${attackSum}] vs [${defendSum}] ${outcome}`, result.won ? 'attack-win' : 'attack-loss');
 
-        // Beginner mode: show dice result in HUD
-        if (gameSpeed === 'beginner') {
+        // Show dice result in HUD
+        const isHumanAttacker = attacker && !attacker.isBot && !autoplayPlayers.has(attacker.id);
+        const shouldShowHUD = gameSpeed === 'beginner' || (gameSpeed === 'normal' && isHumanAttacker);
+
+        if (shouldShowHUD) {
             const attackerColor = attacker ? '#' + attacker.color.toString(16).padStart(6, '0') : '#ffffff';
             const defenderColor = defender ? '#' + defender.color.toString(16).padStart(6, '0') : '#ffffff';
 
@@ -568,7 +574,6 @@ async function init() {
         // Play sound for attackers
         // In Beginner mode, play sounds for all attacks (including bots)
         // In other modes, only play for human attackers
-        const isHumanAttacker = attacker && !attacker.isBot && !autoplayPlayers.has(attacker.id);
         const shouldPlaySound = isHumanAttacker || (gameSpeed === 'beginner' && attacker);
 
         if (shouldPlaySound) {
@@ -608,10 +613,12 @@ async function init() {
         // Finalize the turn log with reinforcement info
         finalizeTurnLog(data.placed, data.stored);
 
-        // Beginner mode: show reinforcement popup in HUD
-        if (gameSpeed === 'beginner' && (data.placed > 0 || data.stored > 0)) {
+        // Show reinforcement popup in HUD
+        const isHuman = !data.player.isBot && !autoplayPlayers.has(data.player.id);
+        const shouldShowHUD = gameSpeed === 'beginner' || (gameSpeed === 'normal' && isHuman);
+
+        if (shouldShowHUD && (data.placed > 0 || data.stored > 0)) {
             const playerColor = '#' + data.player.color.toString(16).padStart(6, '0');
-            const isHuman = !data.player.isBot && !autoplayPlayers.has(data.player.id);
             const fontSize = isHuman ? 36 : 24;
             const storedSize = isHuman ? 20 : 14;
 
@@ -1619,7 +1626,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     // Map legacy fastMode to new speeds
     const legacyFastMode = localStorage.getItem('dicy_fastMode');
     let defaultSpeed = 'beginner';
-    if (legacyFastMode === 'true') defaultSpeed = 'fast';
+    if (legacyFastMode === 'true') defaultSpeed = 'expert';
     else if (legacyFastMode === 'false') defaultSpeed = 'beginner';
 
     const savedGameSpeed = localStorage.getItem('dicy_gameSpeed') || defaultSpeed;

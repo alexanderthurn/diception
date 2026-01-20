@@ -349,8 +349,8 @@ export class GridRenderer {
     }
 
     animateAttack(result, onComplete) {
-        // Skip animations in fast mode
-        if (this.gameSpeed === 'fast') {
+        // Skip animations in expert mode
+        if (this.gameSpeed === 'expert') {
             if (onComplete) onComplete();
             return;
         }
