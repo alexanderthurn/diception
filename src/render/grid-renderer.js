@@ -435,9 +435,14 @@ export class GridRenderer {
             const defenderHigh = createHighlight(toX, toY, defenderColor);
             this.animationContainer.addChild(defenderHigh);
 
+            // Animation timing - faster when attacker loses
+            const fadeInDuration = result.won ? 10 : 6;
+            const holdDuration = result.won ? 40 : 20;
+            const baseX = fromX + this.tileSize / 2;
+
             // Staggered animation: attacker appears first
             this.animator.addTween({
-                duration: 10,
+                duration: fadeInDuration,
                 onUpdate: (p) => {
                     attackerHigh.alpha = p;
                     attackerHigh.scale.set(1 + (1 - p) * 0.3);
@@ -445,16 +450,25 @@ export class GridRenderer {
                 onComplete: () => {
                     // Now show defender
                     this.animator.addTween({
-                        duration: 10,
+                        duration: fadeInDuration,
                         onUpdate: (p) => {
                             defenderHigh.alpha = p;
                             defenderHigh.scale.set(1 + (1 - p) * 0.3);
                         },
                         onComplete: () => {
                             // Hold briefly then fade out both
+                            // If attacker lost, add shake effect
                             this.animator.addTween({
-                                duration: 40,
+                                duration: holdDuration,
                                 onUpdate: (p) => {
+                                    // Shake attacker if lost
+                                    if (!result.won && p < 0.5) {
+                                        const shake = Math.sin(p * Math.PI * 8) * 5;
+                                        attackerHigh.x = baseX + shake;
+                                    } else {
+                                        attackerHigh.x = baseX;
+                                    }
+
                                     if (p > 0.7) {
                                         const fade = (1 - p) / 0.3;
                                         attackerHigh.alpha = fade;

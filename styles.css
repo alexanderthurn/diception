@@ -139,16 +139,20 @@ body {
     position: fixed;
     bottom: 20px;
     right: 180px;
-    /* Positioned to the left of End Turn button */
     z-index: 100;
-    padding: 12px 25px;
-    font-size: 16px;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    font-size: 24px;
+    line-height: 50px;
+    text-align: center;
     background: rgba(0, 0, 0, 0.9);
-    box-shadow: 0 0 15px #ffaa00;
-    /* Distinct amber color for attention */
-    border-color: #ffaa00;
     border-width: 2px;
-    border-radius: 30px;
+    border-radius: 50%;
+}
+
+#auto-win-btn.active {
+    background: rgba(0, 255, 255, 0.2);
 }
 
 /* Turn Indicator - Replaces End Turn button for bot turns */
@@ -242,6 +246,22 @@ body {
 
     75% {
         transform: rotate(10deg);
+    }
+}
+
+@keyframes reinforce-bounce {
+    0% {
+        transform: translateX(-50%) scale(0.8);
+        opacity: 0;
+    }
+
+    50% {
+        transform: translateX(-50%) scale(1.1);
+    }
+
+    100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
     }
 }
 

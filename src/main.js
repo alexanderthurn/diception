@@ -288,76 +288,20 @@ async function init() {
     };
 
     const checkDominance = () => {
-        const stats = game.getPlayerStats();
-        const totalDice = stats.reduce((sum, p) => sum + p.totalDice, 0);
-        const alivePlayers = stats.filter(p => p.alive);
-
-        // Find human players that are not in autoplay mode
-        const activeHumanStats = stats.filter(p => !p.isBot && !autoplayPlayers.has(p.id) && p.alive);
-
-        if (activeHumanStats.length === 0) {
-            // All humans are on autoplay or eliminated - check if any player is dominant
-            const dominantThreshold = totalDice * 0.8;
-            const dominantPlayer = stats.find(p => p.totalDice >= dominantThreshold);
-            if (dominantPlayer) {
-                autoWinBtn.classList.remove('hidden');
-                autoWinBtn.textContent = 'Finish Fast';
-            } else {
-                autoWinBtn.classList.add('hidden');
-            }
-            return;
-        }
-
-        // Check each active human player's situation
-        for (const humanStat of activeHumanStats) {
-            const humanDiceRatio = humanStat.totalDice / totalDice;
-
-            // Human is dominant (80%+ of all dice)
-            if (humanDiceRatio >= 0.8) {
-                autoWinBtn.classList.remove('hidden');
-                autoWinBtn.textContent = 'Finish Fast';
-                return;
-            }
-
-            // Human is struggling (below 40% of average, or only 2 tiles left with more players)
-            const averageDicePerPlayer = totalDice / alivePlayers.length;
-            const isStruggling = humanStat.totalDice < averageDicePerPlayer * 0.4 ||
-                (humanStat.tileCount <= 2 && alivePlayers.length > 2);
-
-            if (isStruggling) {
-                autoWinBtn.classList.remove('hidden');
-                autoWinBtn.textContent = 'Give Up';
-                return;
-            }
-        }
-
-        // Only 1 enemy left - show finish fast to speed up endgame
-        if (alivePlayers.length === 2 && activeHumanStats.length > 0) {
-            autoWinBtn.classList.remove('hidden');
-            autoWinBtn.textContent = 'Finish Fast';
-            return;
-        }
-
-        // No special situation - hide button
-        autoWinBtn.classList.add('hidden');
+        // Dominance check logic can be used for other purposes
+        // autoWinBtn is now controlled in turnStart for per-player autoplay toggle
     };
 
     autoWinBtn.addEventListener('click', () => {
-        const buttonText = autoWinBtn.textContent;
-
-        // Enable autoplay for all human players
-        game.players.forEach(p => {
-            if (!p.isBot) {
-                toggleAutoplay(p.id, true);
+        // Toggle autoplay for current player only
+        if (game.currentPlayer && !game.currentPlayer.isBot) {
+            toggleAutoplay(game.currentPlayer.id);
+            // Update button active state
+            if (autoplayPlayers.has(game.currentPlayer.id)) {
+                autoWinBtn.classList.add('active');
+            } else {
+                autoWinBtn.classList.remove('active');
             }
-        });
-
-        autoWinBtn.classList.add('hidden');
-
-        if (buttonText === 'Give Up') {
-            addLog('Giving up... letting bots finish the game.', 'death');
-        } else {
-            addLog('Finishing game via autoplay...', 'death');
         }
     });
 
@@ -488,6 +432,7 @@ async function init() {
         if (shouldAutomate) {
             // Hide End Turn button during bot turns
             endTurnBtn.classList.add('hidden');
+            autoWinBtn.classList.add('hidden');
             endTurnBtn.disabled = true;
             endTurnBtn.textContent = 'END TURN';
             // In fast mode, minimal delay; otherwise use normal delays
@@ -519,6 +464,26 @@ async function init() {
             const regionDice = game.map.findLargestConnectedRegion(data.player.id);
             const storedDice = data.player.storedDice || 0;
             endTurnBtn.textContent = `END TURN (+${regionDice + storedDice})`;
+
+            // Set button glow to player color
+            const playerColorHex = '#' + data.player.color.toString(16).padStart(6, '0');
+            endTurnBtn.style.boxShadow = `0 0 15px ${playerColorHex}`;
+            endTurnBtn.style.borderColor = playerColorHex;
+
+            // Show autoplay button in Normal/Fast mode (not Beginner)
+            if (gameSpeed !== 'beginner') {
+                autoWinBtn.classList.remove('hidden');
+                autoWinBtn.style.boxShadow = `0 0 15px ${playerColorHex}`;
+                autoWinBtn.style.borderColor = playerColorHex;
+                // Update active state
+                if (autoplayPlayers.has(data.player.id)) {
+                    autoWinBtn.classList.add('active');
+                } else {
+                    autoWinBtn.classList.remove('active');
+                }
+            } else {
+                autoWinBtn.classList.add('hidden');
+            }
 
             // Validate existing selection if any
             if (input.selectedTile) {
@@ -582,6 +547,10 @@ async function init() {
                 </div>
             `;
 
+            // Set HUD glow to attacker color
+            diceResultHud.style.borderColor = attackerColor;
+            diceResultHud.style.boxShadow = `0 0 15px ${attackerColor}40`;
+
             diceResultHud.classList.remove('hidden');
 
             // Auto-hide after 1.5 seconds
@@ -591,14 +560,22 @@ async function init() {
             }, 1500);
         }
 
-        // Play sound for human attackers only
-        if (attacker && !attacker.isBot && !autoplayPlayers.has(attacker.id)) {
+        // Play sound for attackers
+        // In Beginner mode, play sounds for all attacks (including bots)
+        // In other modes, only play for human attackers
+        const isHumanAttacker = attacker && !attacker.isBot && !autoplayPlayers.has(attacker.id);
+        const shouldPlaySound = isHumanAttacker || (gameSpeed === 'beginner' && attacker);
+
+        if (shouldPlaySound) {
             if (result.won) {
                 sfx.attackWin();
             } else {
                 sfx.attackLose();
             }
-            // Update End Turn button with new expected dice (region may have changed, no emoji)
+        }
+
+        // Update End Turn button for human attackers
+        if (isHumanAttacker) {
             const regionDice = game.map.findLargestConnectedRegion(attacker.id);
             const storedDice = attacker.storedDice || 0;
             endTurnBtn.textContent = `END TURN (+${regionDice + storedDice})`;
@@ -629,21 +606,40 @@ async function init() {
         // Beginner mode: show reinforcement popup in HUD
         if (gameSpeed === 'beginner' && (data.placed > 0 || data.stored > 0)) {
             const playerColor = '#' + data.player.color.toString(16).padStart(6, '0');
-            const total = data.placed + data.stored;
+            const isHuman = !data.player.isBot && !autoplayPlayers.has(data.player.id);
+            const fontSize = isHuman ? 36 : 24;
+            const storedSize = isHuman ? 20 : 14;
 
-            let content = `<span style="color:${playerColor}; font-size: 28px; font-weight: bold;">+${data.placed} 🎲</span>`;
+            let content = `<span style="color:${playerColor}; font-size: ${fontSize}px; font-weight: bold;">+${data.placed} 🎲</span>`;
             if (data.stored > 0) {
-                content += ` <span style="color:#ffaa00; font-size: 18px;">(${data.stored} saved)</span>`;
+                content += ` <span style="color:#ffaa00; font-size: ${storedSize}px;">(${data.stored} saved)</span>`;
             }
 
             diceResultContent.innerHTML = content;
+
+            // Set HUD glow to player color
+            diceResultHud.style.borderColor = playerColor;
+            diceResultHud.style.boxShadow = `0 0 ${isHuman ? 25 : 15}px ${playerColor}60`;
+
+            // Bigger padding for human
+            diceResultHud.style.padding = isHuman ? '12px 24px' : '6px 16px';
+
             diceResultHud.classList.remove('hidden');
 
-            // Auto-hide after 2.5 seconds
+            // Add bounce animation for human
+            if (isHuman) {
+                diceResultHud.style.animation = 'reinforce-bounce 0.5s ease-out';
+                diceResultHud.addEventListener('animationend', () => {
+                    diceResultHud.style.animation = '';
+                }, { once: true });
+            }
+
+            // Auto-hide after 2.5 seconds (longer for human)
+            const hideDelay = isHuman ? 3000 : 2000;
             clearTimeout(diceResultHud._hideTimeout);
             diceResultHud._hideTimeout = setTimeout(() => {
                 diceResultHud.classList.add('hidden');
-            }, 2500);
+            }, hideDelay);
         }
 
         // Play sound for human players only
@@ -1847,6 +1843,11 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         // Attach names for AI serialization
         game.players.forEach(p => p.name = getPlayerName(p));
         updatePlayerUI();
+
+        // Ensure buttons are hidden initially (turnStart will show them appropriately)
+        endTurnBtn.classList.add('hidden');
+        autoWinBtn.classList.add('hidden');
+        turnIndicator.classList.add('hidden');
     });
     game.on('turnStart', updatePlayerUI);
     game.on('attackResult', updatePlayerUI);
