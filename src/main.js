@@ -742,6 +742,12 @@ api.endTurn();`;
         updateAIList();
         updateAIDropdown();
         deleteAIBtn.style.display = '';
+
+        // Show success feedback
+        saveAIBtn.textContent = '✓ Saved!';
+        setTimeout(() => {
+            saveAIBtn.textContent = '💾 Save';
+        }, 2000);
     };
 
     const deleteCurrentAI = () => {
@@ -904,6 +910,7 @@ api.endTurn();`;
         for (const opponent of allAIs) {
             statusEl.textContent = `⏳ Testing vs ${opponent.name}...`;
             let wins = 0;
+            let draws = 0;
 
             for (let g = 0; g < 10; g++) {
                 const reversed = g % 2 === 1;
@@ -912,18 +919,23 @@ api.endTurn();`;
                     reversed ? testAI : opponent
                 );
 
-                // Determine if testAI won
-                const testAIIsP0 = !reversed;
-                const winnerIsP0 = winnerId === 0;
-                if (winnerId !== -1 && winnerIsP0 === testAIIsP0) wins++;
+                if (winnerId === -1) {
+                    // Draw (max turns reached)
+                    draws++;
+                } else {
+                    // Determine if testAI won
+                    const testAIIsP0 = !reversed;
+                    const winnerIsP0 = winnerId === 0;
+                    if (winnerIsP0 === testAIIsP0) wins++;
+                }
 
                 await new Promise(r => setTimeout(r, 0));
             }
 
-            const losses = 10 - wins;
+            const losses = 10 - wins - draws;
             const winRate = Math.round(wins * 10);
 
-            results.push({ opponent: opponent.name, wins, losses, winRate });
+            results.push({ opponent: opponent.name, wins, draws, losses, winRate });
 
             // Update table incrementally
             const row = document.createElement('tr');
@@ -931,6 +943,7 @@ api.endTurn();`;
             row.innerHTML = `
                 <td>${opponent.name}</td>
                 <td>${wins}</td>
+                <td>${draws}</td>
                 <td>${losses}</td>
                 <td class="${winRateClass}">${winRate}%</td>
             `;
@@ -952,9 +965,10 @@ api.endTurn();`;
     const generatePrompt = () => {
         const userStrategy = aiPromptInput.value.trim() || 'Create an AI that plays well';
 
-        const prompt = `Create JavaScript code for a DICECEPTION game AI bot.
+        const prompt = `Create JavaScript code for a DICEPTION game AI bot.
 
 AVAILABLE API:
+Game State:
 - api.getMyTiles() → [{x, y, dice, owner}] - Get all tiles owned by this AI
 - api.getEnemyTiles() → [{x, y, dice, owner}] - Get all enemy tiles
 - api.getAllTiles() → All playable tiles on the map
@@ -963,14 +977,29 @@ AVAILABLE API:
 - api.myId → This AI's player ID
 - api.maxDice → Maximum dice per tile (usually 9)
 - api.diceSides → Number of sides on each die (usually 6)
+- api.mapWidth, api.mapHeight → Map dimensions
+- api.players → Array of all players [{id, alive, storedDice}]
+
+Strategy Helpers:
+- api.getLargestConnectedRegion(playerId) → Size of largest connected territory
+- api.getReinforcements(playerId) → Total reinforcements player will receive (region size + stored dice)
+- api.getPlayerInfo(playerId) → Player object {id, alive, storedDice} or null
+- api.simulateAttack(fromX, fromY, toX, toY) → Predict attack WITHOUT executing:
+    Returns {success, expectedWin, myPredictedReinforcements, enemyPredictedReinforcements}
+    Use this to evaluate which moves would most improve your position!
+
+Actions:
 - api.attack(fromX, fromY, toX, toY) → {success: boolean, expectedWin: boolean}
 - api.endTurn() → End this AI's turn
+
+Utilities:
 - api.save(key, value) → Persist data between games
 - api.load(key) → Load persisted data
 - api.log(msg) → Debug output to console
 - api.getWinProbability(attackDice, defendDice) → 0-1 probability
 
 GAME RULES:
+- The game is turn based and the rules similar to risk, kdice or dicewars.
 - Attacker must have dice > 1 to attack
 - Both sides roll all their dice, highest sum wins
 - On win: attacker moves to captured tile with (dice-1), leaving 1 behind

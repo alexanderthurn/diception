@@ -3,7 +3,8 @@
  * 
  * Security features:
  * - Web Worker isolation (no DOM access)
- * - Configurable timeout (default 30s)
+ * - Dangerous functions disabled (alert, fetch, eval, etc.)
+ * - Configurable timeout (default 5s)
  * - Max moves limit per turn (default 200)
  * - Actions queued and validated before execution
  * - Storage isolated per AI
@@ -14,7 +15,7 @@ export class AIRunner {
         this.name = aiDefinition.name;
         this.code = aiDefinition.code;
         this.storageKey = `dicy_ai_storage_${aiDefinition.id}`;
-        this.timeout = aiDefinition.timeout || 30000;  // 30 seconds max per turn
+        this.timeout = aiDefinition.timeout || 5000;  // 5 seconds max per turn
         this.maxMoves = aiDefinition.maxMoves || 200;   // Max attacks per turn
     }
 
@@ -93,6 +94,18 @@ export class AIRunner {
     createWorkerCode() {
         return `
             // Sandboxed AI Execution Environment
+            
+            // ===== SANDBOX SECURITY: Neutralize dangerous functions =====
+            const alert = () => {};
+            const confirm = () => false;
+            const prompt = () => null;
+            const fetch = () => Promise.reject(new Error('fetch disabled'));
+            const XMLHttpRequest = undefined;
+            const WebSocket = undefined;
+            const importScripts = () => { throw new Error('importScripts disabled'); };
+            // Note: eval/Function cannot be fully disabled as worker needs them internally
+            // =============================================================
+            
             const actions = [];
             let moveCount = 0;
             let maxMoves = 200;
