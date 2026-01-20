@@ -574,6 +574,71 @@ input[type="range"] {
     text-shadow: 0 0 10px var(--border-color);
 }
 
+/* Highscore Section in Game Over Modal */
+#highscore-section {
+    margin: 20px 0;
+    text-align: left;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.highscore-title {
+    color: var(--accent-color);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+#highscore-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.highscore-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 12px;
+    border-radius: 5px;
+    border-left: 3px solid var(--border-color);
+}
+
+.highscore-item.highlighted {
+    background: rgba(0, 255, 255, 0.15);
+    border-left-color: var(--accent-color);
+    box-shadow: 0 0 10px rgba(170, 0, 255, 0.3);
+}
+
+.highscore-player-name {
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+}
+
+.highscore-wins {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--border-color);
+    text-shadow: 0 0 5px var(--border-color);
+}
+
+.total-games {
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 #game-log {
     position: absolute;
     bottom: 20px;

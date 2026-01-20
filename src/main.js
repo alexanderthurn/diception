@@ -69,6 +69,59 @@ async function init() {
         return `Human ${player.id + 1}`;
     };
 
+    // === Highscore System ===
+    const HIGHSCORE_STORAGE_KEY = 'dicy_highscores';
+
+    // Load highscores from localStorage
+    const loadHighscores = () => {
+        try {
+            return JSON.parse(localStorage.getItem(HIGHSCORE_STORAGE_KEY)) || { wins: {}, totalGames: 0 };
+        } catch (e) {
+            return { wins: {}, totalGames: 0 };
+        }
+    };
+
+    // Save highscores to localStorage
+    const saveHighscores = (data) => {
+        localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(data));
+    };
+
+    // Record a win for a player
+    const recordWin = (winnerName) => {
+        const data = loadHighscores();
+        data.wins[winnerName] = (data.wins[winnerName] || 0) + 1;
+        data.totalGames = (data.totalGames || 0) + 1;
+        saveHighscores(data);
+        return data;
+    };
+
+    // Display highscores in the GAME OVER modal
+    const displayHighscores = (currentWinnerName) => {
+        const data = loadHighscores();
+        const highscoreList = document.getElementById('highscore-list');
+        const totalGamesEl = document.getElementById('total-games-played');
+
+        // Sort by wins descending
+        const sortedWins = Object.entries(data.wins)
+            .sort((a, b) => b[1] - a[1]);
+
+        if (sortedWins.length === 0) {
+            highscoreList.innerHTML = '<div class="highscore-item"><span class="highscore-player-name">No stats yet</span></div>';
+        } else {
+            highscoreList.innerHTML = sortedWins.map(([name, wins]) => {
+                const isHighlighted = name === currentWinnerName ? 'highlighted' : '';
+                return `
+                    <div class="highscore-item ${isHighlighted}">
+                        <span class="highscore-player-name">${name}</span>
+                        <span class="highscore-wins">${wins} 🏆</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        totalGamesEl.textContent = `Total Games Played: ${data.totalGames || 0}`;
+    };
+
     // 5. Initialize Music with localStorage
     const music = new Audio('./Neon Dice Offensive.mp3');
     music.loop = true;
@@ -1889,6 +1942,11 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         const winnerText = document.getElementById('winner-text');
         const name = getPlayerName(data.winner);
         winnerText.textContent = `${name} Wins!`;
+
+        // Record the win and display highscores
+        recordWin(name);
+        displayHighscores(name);
+
         modal.classList.remove('hidden');
         addLog(`🏆 ${name} wins the game!`, 'death');
 
