@@ -1609,10 +1609,12 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     effectsQualityInput.value = savedEffectsQuality;
 
     // Load saved setup settings
-    const savedMapSize = localStorage.getItem('dicy_mapSize') || '5';
+    // Load saved setup settings
+    // Default Map Size: 3 (4x4) | Max Dice: 8
+    const savedMapSize = localStorage.getItem('dicy_mapSize') || '4';
     const savedHumanCount = localStorage.getItem('dicy_humanCount') || '1';
     const savedBotCount = localStorage.getItem('dicy_botCount') || '3';
-    const savedMaxDice = localStorage.getItem('dicy_maxDice') || '9';
+    const savedMaxDice = localStorage.getItem('dicy_maxDice') || '8';
     const savedDiceSides = localStorage.getItem('dicy_diceSides') || '6';
     // Map legacy fastMode to new speeds
     const legacyFastMode = localStorage.getItem('dicy_fastMode');
@@ -1622,7 +1624,8 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
     const savedGameSpeed = localStorage.getItem('dicy_gameSpeed') || defaultSpeed;
 
-    const savedMapStyle = localStorage.getItem('dicy_mapStyle') || 'random';
+    // Default Map Style: Full Grid
+    const savedMapStyle = localStorage.getItem('dicy_mapStyle') || 'full';
     const savedGameMode = localStorage.getItem('dicy_gameMode') || 'classic';
     const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || '100';
 
@@ -1759,6 +1762,10 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         logEntries.innerHTML = '';
         addLog('Game started!', '');
 
+        // Show Game UI first so event handlers can set correct state
+        setupModal.classList.add('hidden');
+        document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
+
         game.startGame({
             humanCount,
             botCount,
@@ -1787,11 +1794,6 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 playerAIs.set(player.id, new AIRunner(aiDef));
             }
         }
-
-        setupModal.classList.add('hidden');
-
-        // Show Game UI
-        document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
 
         // Ensure camera fits after game start
         setTimeout(() => {
