@@ -293,10 +293,14 @@ async function init() {
     };
 
     autoWinBtn.addEventListener('click', () => {
-        // Toggle autoplay for current player only
-        if (game.currentPlayer && !game.currentPlayer.isBot) {
+        // If any autoplay is active, disable ALL autoplay modes
+        if (autoplayPlayers.size > 0) {
+            autoplayPlayers.clear();
+            autoWinBtn.classList.remove('active');
+            updatePlayerUI();
+        } else if (game.currentPlayer && !game.currentPlayer.isBot) {
+            // No autoplay active - toggle for current player only
             toggleAutoplay(game.currentPlayer.id);
-            // Update button active state
             if (autoplayPlayers.has(game.currentPlayer.id)) {
                 autoWinBtn.classList.add('active');
             } else {
@@ -435,8 +439,19 @@ async function init() {
         if (shouldAutomate) {
             // Hide End Turn button during bot turns
             endTurnBtn.classList.add('hidden');
-            autoWinBtn.classList.add('hidden');
             endTurnBtn.disabled = true;
+
+            // Show auto-win button if any human has autoplay enabled (so they can stop it)
+            // This works even during bot turns
+            if (gameSpeed !== 'beginner' && autoplayPlayers.size > 0) {
+                const playerColorHex = '#' + data.player.color.toString(16).padStart(6, '0');
+                autoWinBtn.classList.remove('hidden');
+                autoWinBtn.classList.add('active');
+                autoWinBtn.style.boxShadow = `0 0 15px ${playerColorHex}`;
+                autoWinBtn.style.borderColor = playerColorHex;
+            } else {
+                autoWinBtn.classList.add('hidden');
+            }
             endTurnBtn.textContent = 'END TURN';
             // In fast mode, minimal delay; otherwise use normal delays
             // Calculate delay based on game speed
