@@ -22,8 +22,10 @@ export class AIRegistry {
         // Easy AI - Current behavior, attacks with any advantage
         this.builtIn.set('easy', {
             id: 'easy',
+            uuid: 'builtin-easy-001',
             name: 'Easy',
             description: 'Simple AI that attacks when it has equal or more dice',
+            prompt: '',
             code: `
 // Easy AI: Attacks when dice advantage >= 0
 const myTiles = api.getMyTiles().filter(t => t.dice > 1);
@@ -44,8 +46,10 @@ api.endTurn();
         // Medium AI - Connects territory to maximize reinforcements
         this.builtIn.set('medium', {
             id: 'medium',
+            uuid: 'builtin-medium-001',
             name: 'Medium',
             description: 'Tries to connect its territory to gain more dice',
+            prompt: '',
             code: `
 // Medium AI: Prioritizes moves that increase connected region size
 const moves = [];
@@ -91,8 +95,10 @@ api.endTurn();
         // Hard AI - Risk assessment + Smart connectivity + Supply line cutting
         this.builtIn.set('hard', {
             id: 'hard',
+            uuid: 'builtin-hard-001',
             name: 'Hard',
             description: 'Advanced AI that maximizes territory efficiently and cuts enemy supply lines',
+            prompt: '',
             code: `
 // Hard AI: Smart Connector - Prioritizes efficiency and cutting enemies
 const moves = [];
@@ -157,8 +163,10 @@ api.endTurn();
         // Adaptive AI - Learns from game, adjusts aggression
         this.builtIn.set('adaptive', {
             id: 'adaptive',
+            uuid: 'builtin-adaptive-001',
             name: 'Adaptive',
             description: 'Learning AI that adapts its strategy based on past games',
+            prompt: '',
             code: `
 // Adaptive AI: Learns and adapts strategy
 
@@ -288,8 +296,10 @@ api.endTurn();
     registerCustomAI(id, definition) {
         this.custom.set(id, {
             id,
+            uuid: definition.uuid || this.generateUUID(),
             name: definition.name,
             description: definition.description || '',
+            prompt: definition.prompt || '',
             code: definition.code
         });
         this.saveCustomAIs();
@@ -347,38 +357,64 @@ api.endTurn();
     }
 
     /**
-     * Export an AI as JSON string (for sharing)
+     * Export an AI as JSON object (for file download)
      */
     exportAI(id) {
         const ai = this.getAI(id);
         if (!ai) return null;
 
-        return JSON.stringify({
+        return {
+            uuid: ai.uuid,
             name: ai.name,
-            description: ai.description,
+            description: ai.description || '',
+            prompt: ai.prompt || '',
             code: ai.code,
             exportedAt: new Date().toISOString()
-        }, null, 2);
+        };
     }
 
     /**
-     * Import an AI from JSON string
+     * Import an AI from JSON data
+     * If uuid matches existing AI, it will be replaced
      */
-    importAI(jsonString) {
+    importAI(data) {
         try {
-            const data = JSON.parse(jsonString);
             if (!data.name || !data.code) {
                 throw new Error('Invalid AI format: missing name or code');
             }
 
-            const id = 'custom_' + Date.now();
-            this.registerCustomAI(id, {
-                name: data.name,
-                description: data.description || '',
-                code: data.code
-            });
+            const uuid = data.uuid || this.generateUUID();
 
-            return { success: true, id };
+            // Check if AI with same uuid exists
+            let existingId = null;
+            for (const [id, ai] of this.custom) {
+                if (ai.uuid === uuid) {
+                    existingId = id;
+                    break;
+                }
+            }
+
+            const id = existingId || 'custom_' + Date.now();
+
+            if (existingId) {
+                this.updateCustomAI(id, {
+                    uuid,
+                    name: data.name,
+                    description: data.description || '',
+                    prompt: data.prompt || '',
+                    code: data.code
+                });
+            } else {
+                this.registerCustomAI(id, {
+                    uuid,
+                    name: data.name,
+                    description: data.description || '',
+                    prompt: data.prompt || '',
+                    code: data.code
+                });
+            }
+
+            return { success: true, id, replaced: !!existingId };
         } catch (e) {
             return { success: false, error: e.message };
         }
@@ -389,5 +425,16 @@ api.endTurn();
      */
     generateId() {
         return 'custom_' + Date.now();
+    }
+
+    /**
+     * Generate a UUID
+     */
+    generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
     }
 }

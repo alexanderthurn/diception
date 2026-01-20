@@ -644,11 +644,25 @@ async function init() {
         const ais = aiRegistry.getAllAIs();
         aiList.innerHTML = '';
 
+        // Count name occurrences to detect duplicates
+        const nameCounts = {};
+        for (const ai of ais) {
+            nameCounts[ai.name] = (nameCounts[ai.name] || 0) + 1;
+        }
+
         for (const ai of ais) {
             const item = document.createElement('div');
             item.className = 'ai-list-item' + (ai.isBuiltIn ? ' builtin' : '') +
                 (currentEditingAI === ai.id ? ' active' : '');
-            item.textContent = ai.name + (ai.isBuiltIn ? ' (built-in)' : '');
+
+            // Show UUID suffix for duplicates
+            let displayName = ai.name;
+            if (nameCounts[ai.name] > 1 && ai.uuid) {
+                displayName += ` (${ai.uuid.slice(-6)})`;
+            }
+            displayName += ai.isBuiltIn ? ' (built-in)' : '';
+
+            item.textContent = displayName;
             item.dataset.aiId = ai.id;
             item.addEventListener('click', () => loadAIForEditing(ai.id));
             aiList.appendChild(item);
@@ -662,17 +676,20 @@ async function init() {
         currentEditingAI = aiId;
         aiNameInput.value = ai.name;
         aiCodeInput.value = ai.code;
+        aiPromptInput.value = ai.prompt || '';
 
         // Hide test results when switching AIs
         const resultsContainer = document.getElementById('ai-test-results');
         if (resultsContainer) resultsContainer.classList.add('hidden');
 
-        // Disable editing for built-in AIs
+        // Hide/show controls based on built-in status
         const isBuiltIn = aiRegistry.builtIn.has(aiId);
         aiNameInput.disabled = isBuiltIn;
         aiCodeInput.disabled = isBuiltIn;
-        saveAIBtn.disabled = isBuiltIn;
-        deleteAIBtn.disabled = isBuiltIn;
+
+        // Hide save/delete for built-in AIs
+        saveAIBtn.style.display = isBuiltIn ? 'none' : '';
+        deleteAIBtn.style.display = isBuiltIn ? 'none' : '';
 
         updateAIList();
     };
@@ -682,8 +699,8 @@ async function init() {
         aiNameInput.value = '';
         aiNameInput.disabled = false;
         aiCodeInput.disabled = false;
-        saveAIBtn.disabled = false;
-        deleteAIBtn.disabled = true;
+        saveAIBtn.style.display = '';
+        deleteAIBtn.style.display = 'none';
         aiCodeInput.value = `// Your AI code here
 // Use api.getMyTiles(), api.attack(), etc.
 
@@ -705,6 +722,7 @@ api.endTurn();`;
     const saveCurrentAI = () => {
         const name = aiNameInput.value.trim();
         const code = aiCodeInput.value;
+        const prompt = aiPromptInput.value.trim();
 
         if (!name) {
             alert('Please enter a name for your AI');
@@ -713,17 +731,17 @@ api.endTurn();`;
 
         if (currentEditingAI && aiRegistry.custom.has(currentEditingAI)) {
             // Update existing
-            aiRegistry.updateCustomAI(currentEditingAI, { name, code });
+            aiRegistry.updateCustomAI(currentEditingAI, { name, code, prompt });
         } else {
             // Create new
             const id = aiRegistry.generateId();
-            aiRegistry.registerCustomAI(id, { name, code });
+            aiRegistry.registerCustomAI(id, { name, code, prompt });
             currentEditingAI = id;
         }
 
         updateAIList();
         updateAIDropdown();
-        deleteAIBtn.disabled = false;
+        deleteAIBtn.style.display = '';
     };
 
     const deleteCurrentAI = () => {
@@ -979,29 +997,64 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             alert('Select an AI to export');
             return;
         }
-        const json = aiRegistry.exportAI(currentEditingAI);
-        if (json) {
-            navigator.clipboard.writeText(json).then(() => {
-                exportAIBtn.textContent = '✓ Copied!';
-                setTimeout(() => {
-                    exportAIBtn.textContent = '📤 Export';
-                }, 2000);
-            });
+        const data = aiRegistry.exportAI(currentEditingAI);
+        if (data) {
+            // Create and download JSON file
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${data.name.replace(/[^a-z0-9]/gi, '_')}_ai.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            exportAIBtn.textContent = '✓ Downloaded!';
+            setTimeout(() => {
+                exportAIBtn.textContent = '📤 Export';
+            }, 2000);
         }
     };
 
     const importAI = () => {
-        const json = prompt('Paste AI JSON:');
-        if (!json) return;
+        // Create hidden file input
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
 
-        const result = aiRegistry.importAI(json);
-        if (result.success) {
-            updateAIList();
-            updateAIDropdown();
-            loadAIForEditing(result.id);
-        } else {
-            alert('Import failed: ' + result.error);
-        }
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+
+                const result = aiRegistry.importAI(data);
+                if (result.success) {
+                    updateAIList();
+                    updateAIDropdown();
+                    loadAIForEditing(result.id);
+
+                    if (result.replaced) {
+                        importAIBtn.textContent = '✓ Updated!';
+                    } else {
+                        importAIBtn.textContent = '✓ Imported!';
+                    }
+                    setTimeout(() => {
+                        importAIBtn.textContent = '📥 Import';
+                    }, 2000);
+                } else {
+                    alert('Import failed: ' + result.error);
+                }
+            } catch (err) {
+                alert('Failed to read file: ' + err.message);
+            }
+        };
+
+        input.click();
     };
 
     // Event handlers
