@@ -78,7 +78,7 @@ export const EffectPresets = {
         speed: { min: 0.5, max: 1.5 },
         life: { min: 15, max: 25 },
         size: { min: 3, max: 5 },
-        colors: [0xff0055, 0xff3377, 0xffaacc],
+        colors: [0xAA00FF, 0xFF33FF, 0xFFAAFF],
         gravity: 0,
         fadeOut: true,
         shrink: false
@@ -118,7 +118,7 @@ export const EffectPresets = {
         speed: { min: 0.1, max: 0.3 },
         life: { min: 200, max: 400 },
         size: { min: 1, max: 2 },
-        colors: [0x00ffff, 0xff0055, 0x0055ff],
+        colors: [0x00ffff, 0xAA00FF, 0x0055ff],
         gravity: 0,
         fadeOut: true,
         shrink: false
@@ -129,7 +129,7 @@ export const EffectPresets = {
         speed: { min: 4, max: 10 },
         life: { min: 40, max: 80 },
         size: { min: 2, max: 5 },
-        colors: [0x00ffff, 0xff0055, 0xffff00, 0x00ff00, 0xff00ff, 0xffffff],
+        colors: [0x00ffff, 0xAA00FF, 0xffff00, 0x00ff00, 0xff00ff, 0xffffff],
         gravity: 0.12,
         fadeOut: true,
         shrink: true
@@ -139,7 +139,7 @@ export const EffectPresets = {
         speed: { min: 0.5, max: 2 },
         life: { min: 120, max: 200 },
         size: { min: 2, max: 4 },
-        colors: [0x00ffff, 0xff0055, 0xffff00, 0x00ff00, 0xff00ff, 0xffffff],
+        colors: [0x00ffff, 0xAA00FF, 0xffff00, 0x00ff00, 0xff00ff, 0xffffff],
         gravity: 0.05,
         fadeOut: true,
         shrink: false
@@ -150,7 +150,7 @@ export const EffectPresets = {
         speed: { min: 2, max: 4 },
         life: { min: 60, max: 120 },
         size: { min: 1, max: 3 },
-        colors: [0x00ffff, 0xff0055, 0x0088ff],
+        colors: [0x00ffff, 0xAA00FF, 0x0088ff],
         gravity: 0,
         fadeOut: true,
         shrink: false
@@ -160,7 +160,7 @@ export const EffectPresets = {
         speed: { min: 0.3, max: 0.8 },
         life: { min: 300, max: 500 },
         size: { min: 8, max: 15 },
-        colors: [0x00ffff, 0xff0055, 0xffffff],
+        colors: [0x00ffff, 0xAA00FF, 0xffffff],
         gravity: 0,
         fadeOut: true,
         shrink: false

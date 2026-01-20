@@ -5,7 +5,7 @@
     --panel-bg: rgba(0, 0, 0, 0.8);
     --border-color: #00ffff;
     --text-color: #ffffff;
-    --accent-color: #ff0055;
+    --accent-color: #AA00FF;
 }
 
 html,
@@ -436,7 +436,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.85);
     border: 2px solid var(--accent-color);
     box-shadow: 0 0 20px var(--accent-color);
     padding: 40px;
@@ -446,6 +446,82 @@ body {
     max-width: calc(100vw - 40px);
     box-sizing: border-box;
     z-index: 100;
+    overflow: hidden;
+    /* For scanline */
+    animation: modalBorderCycle 12s linear infinite;
+}
+
+.modal::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            transparent,
+            rgba(255, 255, 255, 0.05) 50%,
+            transparent);
+    pointer-events: none;
+    z-index: 1;
+    animation: scanlineSweep 4s ease-in-out infinite;
+}
+
+@keyframes modalBorderCycle {
+    0% {
+        border-color: #AA00FF;
+        box-shadow: 0 0 15px rgba(170, 0, 255, 0.5), inset 0 0 10px rgba(170, 0, 255, 0.2);
+    }
+
+    16% {
+        border-color: #00FFFF;
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.5), inset 0 0 15px rgba(0, 255, 255, 0.2);
+    }
+
+    33% {
+        border-color: #55FF00;
+        box-shadow: 0 0 15px rgba(85, 255, 0, 0.5), inset 0 0 10px rgba(85, 255, 0, 0.2);
+    }
+
+    50% {
+        border-color: #FFDD00;
+        box-shadow: 0 0 25px rgba(255, 221, 0, 0.5), inset 0 0 15px rgba(255, 221, 0, 0.2);
+    }
+
+    66% {
+        border-color: #FF8800;
+        box-shadow: 0 0 15px rgba(255, 136, 0, 0.5), inset 0 0 10px rgba(255, 136, 0, 0.2);
+    }
+
+    83% {
+        border-color: #FF00AA;
+        box-shadow: 0 0 25px rgba(255, 0, 170, 0.5), inset 0 0 15px rgba(255, 0, 170, 0.2);
+    }
+
+    100% {
+        border-color: #AA00FF;
+        box-shadow: 0 0 15px rgba(170, 0, 255, 0.5), inset 0 0 10px rgba(170, 0, 255, 0.2);
+    }
+}
+
+@keyframes scanlineSweep {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 0.5;
+    }
+
+    80% {
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: translateY(200%);
+        opacity: 0;
+    }
 }
 
 .tron-title {

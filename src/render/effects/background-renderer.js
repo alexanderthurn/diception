@@ -124,7 +124,7 @@ export class BackgroundRenderer {
         // Particle count based on quality
         const count = this.quality === 'high' ? 40 : 15;
 
-        const colors = [0x00ffff, 0xff0055, 0x00ff88, 0x0088ff];
+        const colors = [0x00ffff, 0xAA00FF, 0x00ff88, 0x0088ff];
 
         for (let i = 0; i < count; i++) {
             const g = new Graphics();
@@ -273,7 +273,7 @@ export class BackgroundRenderer {
         if (!this.enabled) return;
 
         const count = this.quality === 'high' ? 8 : 4;
-        const colors = [0x00ffff, 0xff0055, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
+        const colors = [0x00ffff, 0xAA00FF, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
         const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20]; // Variety of dice types
 
         for (let i = 0; i < count; i++) {

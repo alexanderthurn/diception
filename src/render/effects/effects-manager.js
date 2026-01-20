@@ -220,7 +220,7 @@ export class EffectsManager {
             } else {
                 // Defeat - red burst
                 this.particles.emit(to.x, to.y, 'defeatExplosion');
-                this.background.pulse(0xff0055, 0.15);
+                this.background.pulse(0xAA00FF, 0.15);
             }
         }, 100); // Small delay for trail to reach target
     }
