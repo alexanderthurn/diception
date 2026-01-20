@@ -528,11 +528,16 @@ async function init() {
             const defenderColor = defender ? '#' + defender.color.toString(16).padStart(6, '0') : '#ffffff';
 
             // Build dice icons HTML with + between each die
+            // If more than 6 dice, show as multiplier format (e.g. 7x 🎲)
             const buildDiceDisplay = (count, sum, color) => {
                 let icons = '';
-                for (let i = 0; i < count; i++) {
-                    icons += `<span class="dice-icon" style="color:${color}">🎲</span>`;
-                    if (i < count - 1) icons += '<span class="dice-plus">+</span>';
+                if (count > 6) {
+                    icons = `<span style="color:${color}; font-weight: bold; font-size: 16px; margin-right: 2px;">${count}x</span><span class="dice-icon" style="color:${color}">🎲</span>`;
+                } else {
+                    for (let i = 0; i < count; i++) {
+                        icons += `<span class="dice-icon" style="color:${color}">🎲</span>`;
+                        if (i < count - 1) icons += '<span class="dice-plus">+</span>';
+                    }
                 }
                 return `${icons}<span class="dice-sum" style="color:${color}">${sum}</span>`;
             };
