@@ -31,6 +31,11 @@ export class AnimationManager {
                 this.tweens.splice(i, 1);
             }
         }
+
+        // Update shimmer animation for largest region border
+        if (this.renderer.grid) {
+            this.renderer.grid.updateShimmer(delta / 60); // Convert to seconds
+        }
     }
 
     easeOutQuad(t) {

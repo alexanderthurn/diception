@@ -141,6 +141,12 @@ export class Renderer {
         }
     }
 
+    setEffectsQuality(quality) {
+        if (this.grid) {
+            this.grid.setEffectsQuality(quality);
+        }
+    }
+
     pan(dx, dy) {
         if (!this.rootContainer) return;
         this.rootContainer.x += dx;

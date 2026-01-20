@@ -1760,6 +1760,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
         // Apply effects quality setting
         effectsManager.setQuality(effectsQualityInput.value);
+        renderer.setEffectsQuality(effectsQualityInput.value);
         // Stop intro mode effects (game is starting)
         effectsManager.stopIntroMode();
         renderer.setDiceSides(diceSides);

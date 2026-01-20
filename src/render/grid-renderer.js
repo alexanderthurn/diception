@@ -35,6 +35,15 @@ export class GridRenderer {
         this.cursorPulse = 0; // For animation
         this.gameSpeed = 'beginner'; // Speed level: beginner, normal, fast
         this.diceSides = 6; // Default 6-sided dice
+        this.effectsQuality = 'high'; // Effects quality: off, low, high
+
+        // Shimmer animation for largest region border
+        this.shimmerTime = 0;
+        this.shimmerContainer = new Container();
+        this.stage.addChild(this.shimmerContainer);
+
+        // Cache for current player's largest region edges
+        this.currentPlayerRegionEdges = [];
     }
 
     setGameSpeed(speed) {
@@ -43,6 +52,10 @@ export class GridRenderer {
 
     setDiceSides(sides) {
         this.diceSides = sides;
+    }
+
+    setEffectsQuality(quality) {
+        this.effectsQuality = quality;
     }
 
     setSelection(x, y) {
@@ -87,7 +100,8 @@ export class GridRenderer {
 
         const currentPlayer = this.game.currentPlayer;
 
-
+        // Clear and recollect edges for current player's shimmer effect
+        this.currentPlayerRegionEdges = [];
 
         for (let y = 0; y < map.height; y++) {
             for (let x = 0; x < map.width; x++) {
@@ -133,16 +147,16 @@ export class GridRenderer {
                     tileGfx.stroke({ width: 1, color: color, alpha: 0.6 });
                 }
 
-                // Draw pulsating OUTER borders for largest region tiles
+                // Draw OUTER borders for largest region tiles
                 if (isInLargestRegion) {
-                    const edges = [
+                    const edgeDefs = [
                         { dx: 0, dy: -1, x1: 0, y1: 0, x2: this.tileSize, y2: 0 },
                         { dx: 0, dy: 1, x1: 0, y1: this.tileSize, x2: this.tileSize, y2: this.tileSize },
                         { dx: -1, dy: 0, x1: 0, y1: 0, x2: 0, y2: this.tileSize },
                         { dx: 1, dy: 0, x1: this.tileSize, y1: 0, x2: this.tileSize, y2: this.tileSize }
                     ];
 
-                    for (const edge of edges) {
+                    for (const edge of edgeDefs) {
                         const nx = x + edge.dx;
                         const ny = y + edge.dy;
                         const neighbor = map.getTileRaw(nx, ny);
@@ -161,6 +175,36 @@ export class GridRenderer {
                             tileGfx.moveTo(edge.x1, edge.y1);
                             tileGfx.lineTo(edge.x2, edge.y2);
                             tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.85 });
+
+                            // Collect edges for current player's shimmer effect
+                            // Orient edges for CLOCKWISE flow:
+                            // - Top edges (dy=-1): left→right (x1<x2) - already correct
+                            // - Right edges (dx=1): top→bottom (y1<y2) - already correct
+                            // - Bottom edges (dy=1): right→left - swap to x1>x2
+                            // - Left edges (dx=-1): bottom→top - swap to y1>y2
+                            if (isCurrentPlayer) {
+                                const pixelX = x * (this.tileSize + this.gap);
+                                const pixelY = y * (this.tileSize + this.gap);
+
+                                let ex1 = pixelX + edge.x1;
+                                let ey1 = pixelY + edge.y1;
+                                let ex2 = pixelX + edge.x2;
+                                let ey2 = pixelY + edge.y2;
+
+                                // Swap for clockwise orientation
+                                if (edge.dy === 1) {
+                                    // Bottom edge: should flow right to left
+                                    [ex1, ex2] = [ex2, ex1];
+                                } else if (edge.dx === -1) {
+                                    // Left edge: should flow bottom to top
+                                    [ey1, ey2] = [ey2, ey1];
+                                }
+
+                                this.currentPlayerRegionEdges.push({
+                                    x1: ex1, y1: ey1,
+                                    x2: ex2, y2: ey2
+                                });
+                            }
                         }
                     }
                 }
@@ -215,6 +259,86 @@ export class GridRenderer {
         // Return the largest region
         if (regions.length === 0) return new Set();
         return regions.reduce((a, b) => a.size > b.size ? a : b);
+    }
+
+    /**
+     * Updates the animated shimmer effect on the current player's largest region border.
+     * Call this every frame for smooth animation.
+     */
+    updateShimmer(deltaTime = 1 / 60) {
+        this.shimmerContainer.removeChildren();
+
+        // Skip shimmer if effects are off
+        if (this.effectsQuality === 'off') {
+            return;
+        }
+
+        // Show shimmer for current player (human or bot)
+        const currentPlayer = this.game.currentPlayer;
+        if (!currentPlayer || this.currentPlayerRegionEdges.length === 0) {
+            return;
+        }
+
+        // === ANIMATION CONFIG ===
+        const CYCLE_DURATION = 1.5; // Seconds for one complete cycle (0 to 1 and back)
+        const TRAIL_SEGMENTS = 8; // Number of trail segments behind the head
+
+        // Update time consistently
+        this.shimmerTime += deltaTime;
+
+        // Calculate animation progress (0 to 1, loops)
+        const cycleProgress = (this.shimmerTime / CYCLE_DURATION) % 1;
+
+        const shimmerGfx = new Graphics();
+
+        // Draw one comet on EACH edge, all in sync
+        for (const edge of this.currentPlayerRegionEdges) {
+            const dx = edge.x2 - edge.x1;
+            const dy = edge.y2 - edge.y1;
+            const edgeLength = Math.sqrt(dx * dx + dy * dy);
+
+            if (edgeLength === 0) continue;
+
+            // Comet position along this edge (0 to 1)
+            const headT = cycleProgress;
+
+            // Draw trail segments (including head at seg 0)
+            for (let seg = 0; seg <= TRAIL_SEGMENTS; seg++) {
+                // Trail position (behind head)
+                const segT = headT - (seg * 0.08); // Each segment is 8% behind
+
+                // Wrap around if needed (trail goes off start of edge)
+                if (segT < 0) continue; // Don't draw trail that's off the edge
+
+                const x = edge.x1 + dx * segT;
+                const y = edge.y1 + dy * segT;
+
+                // Fade: head is brightest
+                const fadeProgress = seg / TRAIL_SEGMENTS;
+                const alpha = (1 - fadeProgress) * 0.8;
+                const size = 2.5 - fadeProgress * 1.5;
+
+                if (size > 0.5 && alpha > 0.05) {
+                    if (seg === 0) {
+                        // Bright head with glow
+                        shimmerGfx.circle(x, y, size + 3);
+                        shimmerGfx.fill({ color: 0xffffff, alpha: alpha * 0.15 });
+
+                        shimmerGfx.circle(x, y, size + 1.5);
+                        shimmerGfx.fill({ color: 0xffffff, alpha: alpha * 0.4 });
+
+                        shimmerGfx.circle(x, y, size);
+                        shimmerGfx.fill({ color: 0xffffff, alpha: alpha });
+                    } else {
+                        // Trail particles
+                        shimmerGfx.circle(x, y, size);
+                        shimmerGfx.fill({ color: 0xffffff, alpha: alpha });
+                    }
+                }
+            }
+        }
+
+        this.shimmerContainer.addChild(shimmerGfx);
     }
 
     drawOverlay() {
