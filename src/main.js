@@ -663,6 +663,10 @@ async function init() {
         aiNameInput.value = ai.name;
         aiCodeInput.value = ai.code;
 
+        // Hide test results when switching AIs
+        const resultsContainer = document.getElementById('ai-test-results');
+        if (resultsContainer) resultsContainer.classList.add('hidden');
+
         // Disable editing for built-in AIs
         const isBuiltIn = aiRegistry.builtIn.has(aiId);
         aiNameInput.disabled = isBuiltIn;
@@ -732,33 +736,199 @@ api.endTurn();`;
     };
 
     const testCurrentAI = async () => {
-        if (!game.players.length) {
-            alert('Start a game first to test the AI');
+        const code = aiCodeInput.value;
+        const aiName = aiNameInput.value.trim() || 'Test AI';
+
+        // Get UI elements
+        const resultsContainer = document.getElementById('ai-test-results');
+        const statusEl = document.getElementById('ai-test-status');
+        const tableBody = document.querySelector('#ai-test-table tbody');
+
+        // Show results container
+        resultsContainer.classList.remove('hidden');
+        tableBody.innerHTML = '';
+
+        // Step 1: Validate JS syntax
+        statusEl.className = 'running';
+        statusEl.textContent = '⏳ Validating code syntax...';
+
+        try {
+            new Function('api', code);
+        } catch (e) {
+            statusEl.className = 'error';
+            statusEl.textContent = `❌ Syntax Error: ${e.message}`;
             return;
         }
 
-        const code = aiCodeInput.value;
-        const testRunner = new AIRunner({
-            id: 'test_' + Date.now(),
-            name: 'Test AI',
-            code
-        });
-
-        testAIBtn.textContent = '⏳ Testing...';
+        statusEl.textContent = '✓ Syntax valid. Starting benchmark...';
+        testAIBtn.textContent = '⏳ Running...';
         testAIBtn.disabled = true;
 
-        try {
-            await testRunner.takeTurn(game);
-            testAIBtn.textContent = '✓ Done!';
-        } catch (e) {
-            alert('AI Error: ' + e.message);
-            testAIBtn.textContent = '✗ Error';
+        // Step 2: Get all opponent AIs
+        const allAIs = [
+            aiRegistry.getAI('easy'),
+            aiRegistry.getAI('medium'),
+            aiRegistry.getAI('hard'),
+            ...Array.from(aiRegistry.custom.values())
+        ].filter(Boolean);
+
+        // Create temp AI definition for testing
+        const testAI = {
+            id: 'test_' + Date.now(),
+            name: aiName,
+            code: code
+        };
+
+        const results = [];
+
+        // Step 3: Run games against each opponent
+        const runGame = async (ai1, ai2) => {
+            const testGame = new Game();
+            testGame.startGame({
+                humanCount: 0,
+                botCount: 2,
+                mapWidth: 4,
+                mapHeight: 4,
+                maxDice: 9,
+                diceSides: 6,
+                mapStyle: 'fullgrid',
+                gameMode: 'classic'
+            });
+
+            const ids = [ai1.id, ai2.id];
+            const codes = [ai1.code, ai2.code];
+            testGame.players.forEach((p, idx) => {
+                p.aiId = ids[idx];
+                p.aiCode = codes[idx];
+            });
+
+            let turns = 0;
+            const maxTurns = 500;
+
+            while (testGame.players.filter(p => p.alive).length > 1 && turns < maxTurns) {
+                const p = testGame.currentPlayer;
+                if (p.alive) {
+                    const w = testGame.map.width;
+                    const tilesWithCoords = testGame.map.tiles.map((t, idx) => ({ ...t, x: idx % w, y: Math.floor(idx / w) }));
+
+                    const api = {
+                        getMyTiles: () => tilesWithCoords.filter(t => t.owner === p.id && !t.blocked),
+                        getEnemyTiles: () => tilesWithCoords.filter(t => t.owner !== p.id && !t.blocked),
+                        getAllTiles: () => tilesWithCoords.filter(t => !t.blocked),
+                        getAdjacentTiles: (x, y) => testGame.map.getAdjacentTiles(x, y),
+                        getTileAt: (x, y) => testGame.map.getTile(x, y),
+                        getLargestConnectedRegion: (pid) => testGame.map.findLargestConnectedRegion(pid),
+                        getReinforcements: (pid) => {
+                            const r = testGame.map.findLargestConnectedRegion(pid);
+                            const pl = testGame.players.find(pp => pp.id === pid);
+                            return r + (pl ? (pl.storedDice || 0) : 0);
+                        },
+                        getPlayerInfo: (pid) => testGame.players.find(pp => pp.id === pid) || null,
+                        get players() { return testGame.players; },
+                        simulateAttack: (fromX, fromY, toX, toY) => {
+                            const fromT = testGame.map.getTile(fromX, fromY);
+                            const toT = testGame.map.getTile(toX, toY);
+                            if (!fromT || !toT || fromT.owner !== p.id || fromT.dice <= 1) return { success: false };
+                            const eWin = fromT.dice > toT.dice;
+                            const origFromD = fromT.dice;
+                            const origToD = toT.dice;
+                            const origToO = toT.owner;
+                            let mR = 0, eR = 0;
+
+                            if (eWin) {
+                                fromT.dice = 1;
+                                toT.owner = p.id;
+                                toT.dice = origFromD - 1;
+                                mR = testGame.map.findLargestConnectedRegion(p.id) + (p.storedDice || 0);
+                                if (origToO !== null) eR = testGame.map.findLargestConnectedRegion(origToO);
+                                fromT.dice = origFromD;
+                                toT.owner = origToO;
+                                toT.dice = origToD;
+                            } else {
+                                mR = testGame.map.findLargestConnectedRegion(p.id) + (p.storedDice || 0);
+                                if (origToO !== null) eR = testGame.map.findLargestConnectedRegion(origToO);
+                            }
+                            return { success: true, expectedWin: eWin, myPredictedReinforcements: mR, enemyPredictedReinforcements: eR };
+                        },
+                        get myId() { return p.id; },
+                        get maxDice() { return testGame.maxDice; },
+                        get diceSides() { return testGame.diceSides; },
+                        get mapWidth() { return testGame.map.width; },
+                        get mapHeight() { return testGame.map.height; },
+                        attack: (fx, fy, tx, ty) => {
+                            const ft = testGame.map.getTile(fx, fy);
+                            const tt = testGame.map.getTile(tx, ty);
+                            if (ft && tt && ft.owner === p.id && ft.dice > tt.dice) {
+                                testGame.attack(fx, fy, tx, ty);
+                                return { success: true, expectedWin: true };
+                            }
+                            return { success: false };
+                        },
+                        endTurn: () => { },
+                        load: () => null,
+                        save: () => null,
+                        log: () => { },
+                        getWinProbability: (a, d) => 1 / (1 + Math.exp(-(a * 3.5 - d * 3.5) / 2))
+                    };
+
+                    try {
+                        const fn = new Function('api', p.aiCode);
+                        fn(api);
+                    } catch (e) { }
+                }
+                testGame.endTurn();
+                turns++;
+            }
+            return testGame.winner ? testGame.winner.id : -1;
+        };
+
+        // Run benchmark for each opponent
+        for (const opponent of allAIs) {
+            statusEl.textContent = `⏳ Testing vs ${opponent.name}...`;
+            let wins = 0;
+
+            for (let g = 0; g < 10; g++) {
+                const reversed = g % 2 === 1;
+                const winnerId = await runGame(
+                    reversed ? opponent : testAI,
+                    reversed ? testAI : opponent
+                );
+
+                // Determine if testAI won
+                const testAIIsP0 = !reversed;
+                const winnerIsP0 = winnerId === 0;
+                if (winnerId !== -1 && winnerIsP0 === testAIIsP0) wins++;
+
+                await new Promise(r => setTimeout(r, 0));
+            }
+
+            const losses = 10 - wins;
+            const winRate = Math.round(wins * 10);
+
+            results.push({ opponent: opponent.name, wins, losses, winRate });
+
+            // Update table incrementally
+            const row = document.createElement('tr');
+            const winRateClass = winRate >= 60 ? 'win-rate-good' : (winRate >= 40 ? 'win-rate-ok' : 'win-rate-bad');
+            row.innerHTML = `
+                <td>${opponent.name}</td>
+                <td>${wins}</td>
+                <td>${losses}</td>
+                <td class="${winRateClass}">${winRate}%</td>
+            `;
+            tableBody.appendChild(row);
         }
 
-        setTimeout(() => {
-            testAIBtn.textContent = '▶ Test';
-            testAIBtn.disabled = false;
-        }, 1500);
+        // Compute overall stats
+        const totalWins = results.reduce((s, r) => s + r.wins, 0);
+        const totalGames = results.length * 10;
+        const overallRate = Math.round(totalWins / totalGames * 100);
+
+        statusEl.className = '';
+        statusEl.textContent = `✅ Benchmark complete! Overall: ${totalWins}/${totalGames} wins (${overallRate}%) on 4x4 full grid`;
+
+        testAIBtn.textContent = '▶ Test';
+        testAIBtn.disabled = false;
     };
 
     const generatePrompt = () => {
@@ -847,6 +1017,14 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     aiEditorCloseBtn.addEventListener('click', () => {
         aiEditorModal.classList.add('hidden');
         setupModal.classList.remove('hidden');
+        // Hide test results when closing editor
+        const resultsContainer = document.getElementById('ai-test-results');
+        if (resultsContainer) resultsContainer.classList.add('hidden');
+    });
+
+    // Close button for test results
+    document.getElementById('ai-test-close-btn').addEventListener('click', () => {
+        document.getElementById('ai-test-results').classList.add('hidden');
     });
 
     newAIBtn.addEventListener('click', createNewAI);
@@ -1540,19 +1718,18 @@ window.benchmarkAI = async () => {
 
     console.log(`%c🤖 AI Round Robin: ${allAIs.map(a => a.name).join(', ')}`, "font-weight:bold; font-size:16px; color:#0ff");
 
-    // Initialize Matrix
-    // Cell [Row][Col] = Wins for 'Row' against 'Col'
-    const matrix = {};
+    // Initialize Data Table (Object for console.table)
+    const tableData = {};
     allAIs.forEach(rowAI => {
-        matrix[rowAI.name] = {};
+        tableData[rowAI.name] = {};
         allAIs.forEach(colAI => {
-            if (rowAI.id === colAI.id) {
-                matrix[rowAI.name][colAI.name] = '-';
-            } else {
-                matrix[rowAI.name][colAI.name] = 0;
-            }
+            tableData[rowAI.name][colAI.name] = '0/10';
         });
     });
+
+    const updateCell = (ai1Name, ai2Name, wins, losses) => {
+        if (tableData[ai1Name]) tableData[ai1Name][ai2Name] = `${wins}/${losses}`;
+    };
 
     const runGame = async (ai1, ai2) => {
         const game = new Game();
@@ -1656,12 +1833,12 @@ window.benchmarkAI = async () => {
             game.endTurn();
             turns++;
         }
-        return game.winner ? game.winner.aiId : 'draw';
+        return game.winner ? game.winner.id : -1;
     };
 
     // Round Robin
     for (let i = 0; i < allAIs.length; i++) {
-        for (let j = i + 1; j < allAIs.length; j++) {
+        for (let j = i; j < allAIs.length; j++) {
             const ai1 = allAIs[i];
             const ai2 = allAIs[j];
 
@@ -1675,19 +1852,23 @@ window.benchmarkAI = async () => {
                 const reversed = g % 2 === 1;
                 const winnerId = await runGame(reversed ? ai2 : ai1, reversed ? ai1 : ai2);
 
-                if (winnerId === ai1.id) wins1++;
-                else if (winnerId === ai2.id) wins2++;
+                if (winnerId !== -1) {
+                    const ai1IsP0 = !reversed;
+                    const winnerIsP0 = winnerId === 0;
+                    if (winnerIsP0 === ai1IsP0) wins1++;
+                    else wins2++;
+                }
 
                 await new Promise(r => setTimeout(r, 0));
             }
 
-            matrix[ai1.name][ai2.name] = wins1;
-            matrix[ai2.name][ai1.name] = wins2;
+            updateCell(ai1.name, ai2.name, wins1, 10 - wins1);
+            updateCell(ai2.name, ai1.name, wins2, 10 - wins2);
         }
     }
 
     console.log("✅ Benchmark Complete");
-    console.table(matrix);
+    console.table(tableData);
 };
 
 init();
