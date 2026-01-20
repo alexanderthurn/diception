@@ -361,6 +361,22 @@
                             <li><code>api.getAdjacentTiles(x, y)</code> → Neighboring tiles</li>
                             <li><code>api.getTileAt(x, y)</code> → Specific tile or null</li>
                             <li><code>api.myId</code>, <code>api.maxDice</code>, <code>api.diceSides</code></li>
+                            <li><code>api.mapWidth</code>, <code>api.mapHeight</code> → Map dimensions</li>
+                            <li><code>api.players</code> → Array of all players [{id, alive, storedDice}]</li>
+                        </ul>
+                    </div>
+                    <div class="api-section">
+                        <strong>Strategy Helpers:</strong>
+                        <ul>
+                            <li><code>api.getLargestConnectedRegion(playerId)</code> → Size of largest connected
+                                territory</li>
+                            <li><code>api.getReinforcements(playerId)</code> → Total reinforcements (region + stored
+                                dice)</li>
+                            <li><code>api.getPlayerInfo(playerId)</code> → Player object or null</li>
+                            <li><code>api.simulateAttack(fromX, fromY, toX, toY)</code> → Predict attack outcome without
+                                executing:<br>
+                                Returns {success, expectedWin, myPredictedReinforcements, enemyPredictedReinforcements}
+                            </li>
                         </ul>
                     </div>
                     <div class="api-section">
@@ -373,15 +389,15 @@
                     <div class="api-section">
                         <strong>Storage:</strong>
                         <ul>
-                            <li><code>api.save(key, value)</code> - Persist data</li>
+                            <li><code>api.save(key, value)</code> - Persist data between games</li>
                             <li><code>api.load(key)</code> - Load persisted data</li>
                         </ul>
                     </div>
                     <div class="api-section">
                         <strong>Utilities:</strong>
                         <ul>
-                            <li><code>api.log(msg)</code> - Debug output</li>
-                            <li><code>api.getWinProbability(attackDice, defendDice)</code> → 0-1</li>
+                            <li><code>api.log(msg)</code> - Debug output to console</li>
+                            <li><code>api.getWinProbability(attackDice, defendDice)</code> → 0-1 probability</li>
                         </ul>
                     </div>
                 </div>
