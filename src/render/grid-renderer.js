@@ -13,6 +13,10 @@ export class GridRenderer {
         this.overlayContainer = new Container();
         this.stage.addChild(this.overlayContainer); // Above tiles
 
+        // Container for temporary animations (so they don't get cleared by drawOverlay)
+        this.animationContainer = new Container();
+        this.stage.addChild(this.animationContainer);
+
         this.tileSize = 60;
         this.gap = 4;
 
@@ -29,12 +33,12 @@ export class GridRenderer {
         this.hoverTile = null; // {x, y}
         this.cursorTile = null; // {x, y} - keyboard/gamepad cursor
         this.cursorPulse = 0; // For animation
-        this.fastMode = false; // Skip animations when enabled
+        this.gameSpeed = 'beginner'; // Speed level: beginner, normal, fast
         this.diceSides = 6; // Default 6-sided dice
     }
 
-    setFastMode(enabled) {
-        this.fastMode = enabled;
+    setGameSpeed(speed) {
+        this.gameSpeed = speed;
     }
 
     setDiceSides(sides) {
@@ -346,7 +350,7 @@ export class GridRenderer {
 
     animateAttack(result, onComplete) {
         // Skip animations in fast mode
-        if (this.fastMode) {
+        if (this.gameSpeed === 'fast') {
             if (onComplete) onComplete();
             return;
         }
@@ -382,7 +386,6 @@ export class GridRenderer {
         this.container.addChild(defenderFlash);
 
         const flashColor = result.won ? 0xff0000 : 0xffffff;
-
         defenderFlash.fill({ color: flashColor, alpha: 0.8 });
 
         this.animator.addTween({
@@ -395,5 +398,124 @@ export class GridRenderer {
                 if (onComplete) onComplete();
             }
         });
+
+        // Beginner mode: show dice rolls
+        if (this.gameSpeed === 'beginner') {
+            const attacker = this.game.players.find(p => p.id === result.attackerId);
+            const defender = this.game.players.find(p => p.id === result.defenderId);
+
+            const rollContainer = new Container();
+            rollContainer.alpha = 0;
+            this.animationContainer.addChild(rollContainer);
+
+            // Create persistent highlights with scaling and glow
+            const createHighlight = (x, y, player) => {
+                const group = new Container();
+                group.x = x + this.tileSize / 2;
+                group.y = y + this.tileSize / 2;
+
+                // Glow effect
+                const glow = new Graphics();
+                glow.rect(-this.tileSize / 2 - 4, -this.tileSize / 2 - 4, this.tileSize + 8, this.tileSize + 8);
+                glow.stroke({ color: 0xffffff, width: 6, alpha: 0.3 });
+                group.addChild(glow);
+
+                const high = new Graphics();
+                high.rect(-this.tileSize / 2, -this.tileSize / 2, this.tileSize, this.tileSize);
+                high.fill({ color: player ? player.color : 0xffffff, alpha: 0.6 });
+                high.stroke({ color: 0xffffff, width: 4, alpha: 1.0 });
+                group.addChild(high);
+
+                return group;
+            };
+
+            const attackerHigh = createHighlight(fromX, fromY, attacker);
+            const defenderHigh = createHighlight(toX, toY, defender);
+            rollContainer.addChild(attackerHigh, defenderHigh);
+
+            // Create text styles
+            const rollStyle = {
+                fontFamily: 'Outfit, sans-serif, Arial',
+                fontSize: 22,
+                fill: '#ffffff',
+                fontWeight: 'bold',
+                dropShadow: {
+                    alpha: 0.8,
+                    blur: 4,
+                    color: '#000000',
+                    distance: 2
+                }
+            };
+
+            // Calculate center position for the popup
+            const centerX = (fromX + toX) / 2 + this.tileSize / 2;
+            const minY = Math.min(fromY, toY);
+            const popupBaseY = minY - 80; // Move it ABOVE the tiles
+
+            // Attacker roll display
+            const attackerRollSum = result.attackerRolls.reduce((a, b) => a + b, 0);
+            const defenderRollSum = result.defenderRolls.reduce((a, b) => a + b, 0);
+
+            const attackerText = new Text({
+                text: `${result.attackerRolls.join('+')} = ${attackerRollSum}`,
+                style: { ...rollStyle, fill: attacker ? '#' + attacker.color.toString(16).padStart(6, '0') : '#ffffff' }
+            });
+            attackerText.anchor.set(0.5);
+
+            const vsText = new Text({
+                text: result.won ? '>' : '≤',
+                style: { ...rollStyle, fontSize: 36, fill: result.won ? '#00ff00' : '#ff0000' }
+            });
+            vsText.anchor.set(0.5);
+
+            const defenderText = new Text({
+                text: `${result.defenderRolls.join('+')} = ${defenderRollSum}`,
+                style: { ...rollStyle, fill: defender ? '#' + defender.color.toString(16).padStart(6, '0') : '#ffffff' }
+            });
+            defenderText.anchor.set(0.5);
+
+            // Layout
+            attackerText.y = -30;
+            vsText.y = 5;
+            defenderText.y = 40;
+
+            // Background box for the "popup"
+            const maxWidth = Math.max(attackerText.width, defenderText.width, vsText.width) + 40;
+            const bg = new Graphics();
+            bg.roundRect(-maxWidth / 2, -65, maxWidth, 130, 20);
+            bg.fill({ color: 0x000000, alpha: 0.95 });
+            bg.stroke({ color: 0xffffff, width: 2, alpha: 0.8 });
+
+            const popupGroup = new Container();
+            popupGroup.x = centerX;
+            popupGroup.y = popupBaseY;
+            popupGroup.addChild(bg, attackerText, vsText, defenderText);
+            rollContainer.addChild(popupGroup);
+
+            // Animate roll container
+            this.animator.addTween({
+                duration: 90,
+                onUpdate: (p) => {
+                    if (p < 0.1) {
+                        rollContainer.alpha = p * 10;
+                    } else if (p > 0.8) {
+                        rollContainer.alpha = (1 - p) * 5;
+                    } else {
+                        rollContainer.alpha = 1;
+                    }
+
+                    // Scale involved tiles
+                    const scale = 1 + Math.sin(p * Math.PI) * 0.15;
+                    attackerHigh.scale.set(scale);
+                    defenderHigh.scale.set(scale);
+
+                    // Float up popup
+                    popupGroup.y = popupBaseY - p * 30;
+                },
+                onComplete: () => {
+                    rollContainer.destroy();
+                }
+            });
+        }
     }
 }

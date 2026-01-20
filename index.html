@@ -147,11 +147,13 @@
             </div>
 
             <div class="control-row" style="margin-top: 10px;">
-                <div class="control-group half checkbox-group">
-                    <label for="fast-mode">
-                        <input type="checkbox" id="fast-mode">
-                        <span>Fast Mode</span>
-                    </label>
+                <div class="control-group half">
+                    <label>Game Speed</label>
+                    <select id="game-speed">
+                        <option value="beginner" selected>Beginner</option>
+                        <option value="normal">Normal</option>
+                        <option value="fast">Fast</option>
+                    </select>
                 </div>
                 <div class="control-group half">
                     <label>Visual Effects</label>
@@ -246,7 +248,8 @@
                                 start with 1,2,3,...</li>
                             <li><em>Humans:</em> Set number of human players.</li>
                             <li><em>Bots:</em> Set number of AIs</li>
-                            <li><em>Fast Mode:</em> Skips many animations.</li>
+                            <li><em>Game Speed:</em> <strong>Beginner</strong> shows all rolls and animations.
+                                <strong>Normal</strong> is standard. <strong>Fast</strong> skips most animations.</li>
                             <li><em>Visual Effects:</em> "High" for full neon glow with particles. "Low/Off" for better
                                 performance on
                                 slow devices.</li>

@@ -278,7 +278,7 @@ async function init() {
             setTimeout(async () => {
                 const playerAI = playerAIs.get(playerId);
                 if (playerAI) {
-                    await playerAI.takeTurn(game);
+                    await playerAI.takeTurn(game, gameSpeed);
                 }
             }, 500);
         }
@@ -471,12 +471,21 @@ async function init() {
             endTurnBtn.disabled = true;
             endTurnBtn.textContent = 'END TURN';
             // In fast mode, minimal delay; otherwise use normal delays
-            const delay = fastModeEnabled ? 10 : (data.player.isBot ? 300 : 500);
+            // Calculate delay based on game speed
+            let delay = 500; // Default slow
+            if (gameSpeed === 'fast') {
+                delay = 10;
+            } else if (gameSpeed === 'normal') {
+                delay = data.player.isBot ? 300 : 500;
+            } else if (gameSpeed === 'beginner') {
+                delay = data.player.isBot ? 800 : 1000;
+            }
+
             setTimeout(async () => {
                 // Use per-player AI configuration
                 const playerAI = playerAIs.get(data.player.id);
                 if (playerAI) {
-                    await playerAI.takeTurn(game);
+                    await playerAI.takeTurn(game, gameSpeed);
                 } else {
                     // Fallback: end turn immediately
                     game.endTurn();
@@ -579,7 +588,7 @@ async function init() {
     const maxDiceVal = document.getElementById('max-dice-val');
     const diceSidesInput = document.getElementById('dice-sides');
     const diceSidesVal = document.getElementById('dice-sides-val');
-    const fastModeInput = document.getElementById('fast-mode');
+    const gameSpeedInput = document.getElementById('game-speed');
     const effectsQualityInput = document.getElementById('effects-quality');
     const mapStyleInput = document.getElementById('map-style');
     const gameModeInput = document.getElementById('game-mode');
@@ -1514,8 +1523,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         setupModal.classList.remove('hidden');
     });
 
-    // Fast mode state - controls bot animation speed
-    let fastModeEnabled = false;
+    // Game speed state - controls bot move delay and animation skipping
+    let gameSpeed = 'beginner';
+
 
     // Load saved effects quality and set dropdown
     const savedEffectsQuality = localStorage.getItem('effectsQuality') || 'high';
@@ -1527,7 +1537,14 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     const savedBotCount = localStorage.getItem('dicy_botCount') || '3';
     const savedMaxDice = localStorage.getItem('dicy_maxDice') || '9';
     const savedDiceSides = localStorage.getItem('dicy_diceSides') || '6';
-    const savedFastMode = localStorage.getItem('dicy_fastMode') === 'true';
+    // Map legacy fastMode to new speeds
+    const legacyFastMode = localStorage.getItem('dicy_fastMode');
+    let defaultSpeed = 'beginner';
+    if (legacyFastMode === 'true') defaultSpeed = 'fast';
+    else if (legacyFastMode === 'false') defaultSpeed = 'beginner';
+
+    const savedGameSpeed = localStorage.getItem('dicy_gameSpeed') || defaultSpeed;
+
     const savedMapStyle = localStorage.getItem('dicy_mapStyle') || 'random';
     const savedGameMode = localStorage.getItem('dicy_gameMode') || 'classic';
     const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || '100';
@@ -1539,7 +1556,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     maxDiceVal.textContent = savedMaxDice;
     diceSidesInput.value = savedDiceSides;
     diceSidesVal.textContent = savedDiceSides;
-    fastModeInput.checked = savedFastMode;
+    gameSpeedInput.value = savedGameSpeed;
     mapStyleInput.value = savedMapStyle;
     gameModeInput.value = savedGameMode;
     tournamentGamesInput.value = savedTournamentGames;
@@ -1605,8 +1622,8 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     botCountInput.addEventListener('change', () => {
         localStorage.setItem('dicy_botCount', botCountInput.value);
     });
-    fastModeInput.addEventListener('change', () => {
-        localStorage.setItem('dicy_fastMode', fastModeInput.checked.toString());
+    gameSpeedInput.addEventListener('change', () => {
+        localStorage.setItem('dicy_gameSpeed', gameSpeedInput.value);
     });
     mapStyleInput.addEventListener('change', () => {
         localStorage.setItem('dicy_mapStyle', mapStyleInput.value);
@@ -1645,14 +1662,14 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         localStorage.setItem('dicy_botCount', botCount.toString());
         localStorage.setItem('dicy_maxDice', maxDice.toString());
         localStorage.setItem('dicy_diceSides', diceSides.toString());
-        localStorage.setItem('dicy_fastMode', fastModeInput.checked.toString());
+        localStorage.setItem('dicy_gameSpeed', gameSpeedInput.value);
         localStorage.setItem('dicy_mapStyle', mapStyleInput.value);
         localStorage.setItem('dicy_gameMode', gameModeInput.value);
         localStorage.setItem('effectsQuality', effectsQualityInput.value);
 
-        // Enable fast mode for this game session
-        fastModeEnabled = fastModeInput.checked;
-        renderer.setFastMode(fastModeEnabled);
+        // Enable speed levels for this game session
+        gameSpeed = gameSpeedInput.value;
+        renderer.setGameSpeed(gameSpeed);
 
         // Apply effects quality setting
         effectsManager.setQuality(effectsQualityInput.value);

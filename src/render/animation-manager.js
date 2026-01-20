@@ -4,14 +4,14 @@ export class AnimationManager {
     constructor(renderer) {
         this.renderer = renderer;
         this.tweens = [];
-        this.fastMode = false;
+        this.gameSpeed = 'beginner';
 
         // Add update loop
         Ticker.shared.add(this.update, this);
     }
 
-    setFastMode(enabled) {
-        this.fastMode = enabled;
+    setGameSpeed(speed) {
+        this.gameSpeed = speed;
     }
 
     update(ticker) {

@@ -24,7 +24,7 @@ export class AIRunner {
      * @param {Game} game - The game instance
      * @returns {Promise<void>}
      */
-    async takeTurn(game) {
+    async takeTurn(game, gameSpeed = 'beginner') {
         return new Promise((resolve) => {
             const gameState = this.serializeGameState(game);
             const storage = this.loadStorage();
@@ -65,7 +65,7 @@ export class AIRunner {
                     }
 
                     // Execute validated actions
-                    this.executeActions(actions || [], game);
+                    this.executeActions(actions || [], game, gameSpeed);
                 }
 
                 cleanup();
@@ -412,11 +412,18 @@ export class AIRunner {
     /**
      * Execute validated actions from the worker
      */
-    executeActions(actions, game) {
+    async executeActions(actions, game, gameSpeed = 'beginner') {
         for (const action of actions) {
             if (action.type === 'attack') {
                 try {
                     game.attack(action.fromX, action.fromY, action.toX, action.toY);
+
+                    // Delay between attacks based on speed
+                    if (gameSpeed === 'beginner') {
+                        await new Promise(r => setTimeout(r, 2000)); // Wait for attack animation (90 ticks ~ 1.5s + 0.5s pause)
+                    } else if (gameSpeed === 'normal') {
+                        await new Promise(r => setTimeout(r, 200));
+                    }
                 } catch (e) {
                     // Attack may fail if game state changed - that's ok
                     console.warn(`[AIRunner] Attack failed:`, e.message);

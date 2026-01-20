@@ -11,7 +11,7 @@ export class Renderer {
         this.grid = null;
         this.rootContainer = null;
         this.animator = null;
-        this.fastMode = false;
+        this.gameSpeed = 'beginner';
     }
 
     async init() {
@@ -120,13 +120,13 @@ export class Renderer {
         this.grid.setCursor(x, y);
     }
 
-    setFastMode(enabled) {
-        this.fastMode = enabled;
+    setGameSpeed(speed) {
+        this.gameSpeed = speed;
         if (this.animator) {
-            this.animator.setFastMode(enabled);
+            this.animator.setGameSpeed(speed);
         }
         if (this.grid) {
-            this.grid.setFastMode(enabled);
+            this.grid.setGameSpeed(speed);
         }
     }
 
