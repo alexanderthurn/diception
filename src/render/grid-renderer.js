@@ -280,8 +280,8 @@ export class GridRenderer {
         }
 
         // === ANIMATION CONFIG ===
-        const CYCLE_DURATION = 1.5; // Seconds for one complete cycle (0 to 1 and back)
-        const TRAIL_SEGMENTS = 8; // Number of trail segments behind the head
+        const CYCLE_DURATION = 2; // Seconds for one complete cycle (0 to 1 and back)
+        const TRAIL_SEGMENTS = 1; // Number of trail segments behind the head
 
         // Update time consistently
         this.shimmerTime += deltaTime;
@@ -321,17 +321,19 @@ export class GridRenderer {
                 if (size > 0.5 && alpha > 0.05) {
                     if (seg === 0) {
                         // Bright head with glow
-                        shimmerGfx.circle(x, y, size + 3);
+                        const s1 = size + 3;
+                        shimmerGfx.rect(x - s1, y - s1, s1 * 2, s1 * 2);
                         shimmerGfx.fill({ color: 0xffffff, alpha: alpha * 0.15 });
 
-                        shimmerGfx.circle(x, y, size + 1.5);
+                        const s2 = size + 1.5;
+                        shimmerGfx.rect(x - s2, y - s2, s2 * 2, s2 * 2);
                         shimmerGfx.fill({ color: 0xffffff, alpha: alpha * 0.4 });
 
-                        shimmerGfx.circle(x, y, size);
+                        shimmerGfx.rect(x - size, y - size, size * 2, size * 2);
                         shimmerGfx.fill({ color: 0xffffff, alpha: alpha });
                     } else {
                         // Trail particles
-                        shimmerGfx.circle(x, y, size);
+                        shimmerGfx.rect(x - size, y - size, size * 2, size * 2);
                         shimmerGfx.fill({ color: 0xffffff, alpha: alpha });
                     }
                 }
