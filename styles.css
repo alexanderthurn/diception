@@ -469,38 +469,58 @@ body {
 
 @keyframes modalBorderCycle {
     0% {
-        border-color: #AA00FF;
-        box-shadow: 0 0 15px rgba(170, 0, 255, 0.5), inset 0 0 10px rgba(170, 0, 255, 0.2);
-    }
-
-    16% {
         border-color: #00FFFF;
         box-shadow: 0 0 25px rgba(0, 255, 255, 0.5), inset 0 0 15px rgba(0, 255, 255, 0.2);
     }
 
-    33% {
+    10% {
+        border-color: #AA00FF;
+        box-shadow: 0 0 15px rgba(170, 0, 255, 0.5), inset 0 0 10px rgba(170, 0, 255, 0.2);
+    }
+
+    20% {
+        border-color: #00FFFF;
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.5), inset 0 0 15px rgba(0, 255, 255, 0.2);
+    }
+
+    30% {
         border-color: #55FF00;
         box-shadow: 0 0 15px rgba(85, 255, 0, 0.5), inset 0 0 10px rgba(85, 255, 0, 0.2);
     }
 
-    50% {
-        border-color: #FFDD00;
-        box-shadow: 0 0 25px rgba(255, 221, 0, 0.5), inset 0 0 15px rgba(255, 221, 0, 0.2);
+    40% {
+        border-color: #00FFFF;
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.5), inset 0 0 15px rgba(0, 255, 255, 0.2);
     }
 
-    66% {
+    50% {
+        border-color: #FFDD00;
+        box-shadow: 0 0 15px rgba(255, 221, 0, 0.5), inset 0 0 10px rgba(255, 221, 0, 0.2);
+    }
+
+    60% {
+        border-color: #00FFFF;
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.5), inset 0 0 15px rgba(0, 255, 255, 0.2);
+    }
+
+    70% {
         border-color: #FF8800;
         box-shadow: 0 0 15px rgba(255, 136, 0, 0.5), inset 0 0 10px rgba(255, 136, 0, 0.2);
     }
 
-    83% {
+    80% {
+        border-color: #00FFFF;
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.5), inset 0 0 15px rgba(0, 255, 255, 0.2);
+    }
+
+    90% {
         border-color: #FF00AA;
-        box-shadow: 0 0 25px rgba(255, 0, 170, 0.5), inset 0 0 15px rgba(255, 0, 170, 0.2);
+        box-shadow: 0 0 15px rgba(255, 0, 170, 0.5), inset 0 0 10px rgba(255, 0, 170, 0.2);
     }
 
     100% {
-        border-color: #AA00FF;
-        box-shadow: 0 0 15px rgba(170, 0, 255, 0.5), inset 0 0 10px rgba(170, 0, 255, 0.2);
+        border-color: #00FFFF;
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.5), inset 0 0 15px rgba(0, 255, 255, 0.2);
     }
 }
 
