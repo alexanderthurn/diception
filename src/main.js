@@ -2168,7 +2168,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
             const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleDateString() : (s.isBuiltIn ? 'Built-in' : '-');
             const sizeStr = `${s.width}x${s.height}`;
-            const playersStr = s.players ? `${s.players.length}p` : '-';
+            const playersStr = s.players ? `${s.players.length}` : '-';
 
             let html = `
                 <td>
