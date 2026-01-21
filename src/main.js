@@ -2027,7 +2027,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     // === Scenario System UI ===
     const scenarioBrowserModal = document.getElementById('scenario-browser-modal');
     const scenarioBrowserCloseBtn = document.getElementById('scenario-browser-close-btn');
-    const scenarioListBody = document.getElementById('scenario-list-body');
+    const scenarioList = document.getElementById('scenario-list');
 
 
     const scenariosBtn = document.getElementById('scenarios-btn');
@@ -2061,10 +2061,11 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     };
 
     // Helper: Render Map Preview to Canvas
+    // Helper: Render Map Preview to Canvas
     const renderMapPreview = (canvas, scenario) => {
         const ctx = canvas.getContext('2d');
-        const tileSize = 12; // Half size (compact)
-        const gap = 1;
+        const tileSize = 20; // Larger tiles for detail view
+        const gap = 2;
 
         canvas.width = (scenario.width || 10) * (tileSize + gap) + gap;
         canvas.height = (scenario.height || 10) * (tileSize + gap) + gap;
@@ -2106,7 +2107,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 // Dice Count
                 if (tile.dice) {
                     ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 8px sans-serif';
+                    ctx.font = 'bold 10px sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(tile.dice, x + tileSize / 2, y + tileSize / 2 + 1);
@@ -2115,32 +2116,80 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         }
     };
 
-    // Helper: Show Preview Row
-    const showScenarioPreview = (scenario, tr) => {
-        // Remove existing preview
-        const existing = document.querySelector('.preview-row');
-        if (existing) {
-            const prevRow = existing.previousElementSibling;
-            existing.remove();
+    // Helper: Show Preview in Right Pane
+    const showScenarioPreview = (scenario) => {
+        const container = document.getElementById('scenario-preview-content');
+        if (!container) return;
 
-            // Toggle Logic: If we just removed the preview belonging to THIS row, return (toggle off)
-            if (prevRow === tr) return;
+        container.innerHTML = '';
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'preview-header';
+        header.innerHTML = `<h3 class="preview-title">${scenario.name}</h3>`;
+        container.appendChild(header);
+
+        // Actions in Header
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'preview-header-actions';
+
+        // Play Button
+        const playBtn = document.createElement('button');
+        playBtn.className = 'tron-btn small';
+        playBtn.textContent = '▶ Play';
+        playBtn.onclick = (e) => {
+            e.stopPropagation();
+            loadSelectedScenario();
+        };
+        actionsDiv.appendChild(playBtn);
+
+        // Export Button
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'tron-btn small';
+        exportBtn.textContent = '💾 Save';
+        exportBtn.onclick = (e) => {
+            e.stopPropagation();
+            const json = scenarioManager.exportScenario(scenario.id);
+            if (json) {
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${scenario.id}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        };
+        actionsDiv.appendChild(exportBtn);
+
+        // Delete Button (only if not built-in)
+        if (!scenario.isBuiltIn) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'tron-btn small danger';
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.title = 'Delete Scenario';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (confirm(`Delete "${scenario.name}"?`)) {
+                    scenarioManager.deleteScenario(scenario.id);
+                    renderScenarioList();
+                }
+            };
+            actionsDiv.appendChild(deleteBtn);
         }
 
-        const previewRow = document.createElement('tr');
-        previewRow.className = 'preview-row';
-        const colSpan = currentScenarioTab === 'maps' ? 3 : 4;
+        header.appendChild(actionsDiv);
 
-        const td = document.createElement('td');
-        td.colSpan = colSpan;
-
-        const container = document.createElement('div');
-        container.className = 'preview-container';
+        // Content Wrapper
+        const contentWrapper = document.createElement('div');
+        contentWrapper.className = 'preview-container';
 
         // Map Canvas
         const canvas = document.createElement('canvas');
         canvas.className = 'preview-map';
-        container.appendChild(canvas);
+        contentWrapper.appendChild(canvas);
 
         // Details Panel
         const details = document.createElement('div');
@@ -2180,68 +2229,16 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
 
 
-        // Actions
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'preview-actions';
-
-        // Play Button
-        const playBtn = document.createElement('button');
-        playBtn.className = 'tron-btn small';
-        playBtn.textContent = '▶ Play';
-        playBtn.onclick = (e) => {
-            e.stopPropagation();
-            loadSelectedScenario();
-        };
-        actionsDiv.appendChild(playBtn);
-
-        // Export Button
-        const exportBtn = document.createElement('button');
-        exportBtn.className = 'tron-btn small';
-        exportBtn.textContent = '💾 Save to Disk';
-        exportBtn.onclick = (e) => {
-            e.stopPropagation();
-            const json = scenarioManager.exportScenario(scenario.id);
-            if (json) {
-                const blob = new Blob([json], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${scenario.id}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-        };
-        actionsDiv.appendChild(exportBtn);
-
-        // Delete Button (only if not built-in)
-        if (!scenario.isBuiltIn) {
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'tron-btn small danger';
-            deleteBtn.textContent = '🗑️ Delete';
-            deleteBtn.onclick = (e) => {
-                e.stopPropagation();
-                if (confirm(`Delete "${scenario.name}"?`)) {
-                    scenarioManager.deleteScenario(scenario.id);
-                    renderScenarioTable();
-                }
-            };
-            actionsDiv.appendChild(deleteBtn);
-        }
-
-        details.appendChild(actionsDiv);
-        container.appendChild(details);
-        td.appendChild(container); // td -> container -> [canvas, details]
-        previewRow.appendChild(td); // tr -> td
-
-        tr.after(previewRow);
+        // Append in order: Map (Left), Details (Right)
+        contentWrapper.appendChild(canvas);
+        contentWrapper.appendChild(details);
+        container.appendChild(contentWrapper);
 
         // Render map
         renderMapPreview(canvas, scenario);
     };
 
-    const renderScenarioTable = () => {
+    const renderScenarioList = () => {
         const scenarios = scenarioManager.listScenarios();
 
         // Filter by tab type
@@ -2255,138 +2252,69 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             return false;
         });
 
-        // Sorting
-        filtered.sort((a, b) => {
-            let valA, valB;
-            const field = currentSort.field;
+        // Simple sorting by date desc (default) or maintain current behavior? 
+        // User asked for "simple list with names", likely sorted by Name or Date.
+        // I will sort by name for clarity in list view.
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
 
-            if (field === 'players') {
-                valA = a.players ? a.players.length : 0;
-                valB = b.players ? b.players.length : 0;
-            } else if (field === 'size') {
-                valA = (a.width || 0) * (a.height || 0);
-                valB = (b.width || 0) * (b.height || 0);
-            } else if (field === 'date') {
-                valA = a.createdAt || 0;
-                valB = b.createdAt || 0;
-            } else if (field === 'name') {
-                valA = (a.name || '').toLowerCase();
-                valB = (b.name || '').toLowerCase();
-            }
-
-            if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
-            if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
-            return 0;
-        });
-
-        scenarioListBody.innerHTML = '';
-
-        // Update Headers
-        const getSortIcon = (field) => {
-            if (currentSort.field !== field) return '';
-            return currentSort.direction === 'asc' ? ' ▲' : ' ▼';
-        };
-
-        const tableHead = document.querySelector('.scenario-table thead tr');
-        let headerHTML = `
-            <th data-sort="name" style="width: 40%">Name${getSortIcon('name')}</th>
-            <th data-sort="size" style="width: 15%">Size${getSortIcon('size')}</th>
-        `;
-        if (currentScenarioTab !== 'maps') {
-            headerHTML += `<th data-sort="players" style="width: 15%">Players${getSortIcon('players')}</th>`;
-        }
-        headerHTML += `<th data-sort="date" style="width: 30%">Date${getSortIcon('date')}</th>`;
-
-        tableHead.innerHTML = headerHTML;
-
-        // Header Click Listeners
-        tableHead.querySelectorAll('th').forEach(th => {
-            th.addEventListener('click', () => {
-                const field = th.dataset.sort;
-                if (currentSort.field === field) {
-                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-                } else {
-                    currentSort.field = field;
-                    currentSort.direction = (field === 'date') ? 'desc' : 'asc';
-                }
-                renderScenarioTable();
-            });
-        });
+        scenarioList.innerHTML = '';
 
         const emptyMessages = {
-            replays: 'No saved replays yet.',
-            scenarios: 'No scenarios available.',
-            maps: 'No custom maps available.'
+            replays: 'No saved replays.',
+            scenarios: 'No scenarios found.',
+            maps: 'No maps found.'
         };
 
         if (filtered.length === 0) {
-            const colSpan = currentScenarioTab === 'maps' ? 3 : 4;
-            scenarioListBody.innerHTML = `<tr><td colspan="${colSpan}" class="empty-message">${emptyMessages[currentScenarioTab]}</td></tr>`;
+            scenarioList.innerHTML = `<div class="empty-message">${emptyMessages[currentScenarioTab]}</div>`;
+            document.getElementById('scenario-preview-content').innerHTML = '<div class="empty-message-large">Select a scenario to view details</div>';
             selectedScenarioId = null;
             selectedScenarioData = null;
-            updateActionButtons();
             return;
         }
 
         filtered.forEach(s => {
-            const tr = document.createElement('tr');
-            tr.dataset.id = s.id;
+            const item = document.createElement('div');
+            item.className = 'scenario-list-item';
             if (selectedScenarioId === s.id) {
-                tr.classList.add('selected');
-                selectedScenarioData = s;
+                item.classList.add('selected');
             }
 
-            const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleDateString() : (s.isBuiltIn ? 'Built-in' : '-');
-            const sizeStr = `${s.width}x${s.height}`;
-            const playersStr = s.players ? `${s.players.length}` : '-';
+            const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '';
 
-            let html = `
-                <td>
-                    <div class="cell-name">
-                        <span>${s.name}</span>
-                    </div>
-                </td>
-                <td>${sizeStr}</td>
+            item.innerHTML = `
+                <span class="list-item-name">${s.name}</span>
+                <span class="list-item-date">${dateStr}</span>
             `;
 
-            if (currentScenarioTab !== 'maps') {
-                html += `<td>${playersStr}</td>`;
-            }
-
-            html += `<td>${dateStr}</td>`;
-            tr.innerHTML = html;
-
-            tr.addEventListener('click', () => {
-                // If already selected, maybe toggle preview? 
-                // Currently just re-selecting logic
-                document.querySelectorAll('#scenario-list-body tr').forEach(row => row.classList.remove('selected'));
-                tr.classList.add('selected');
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.scenario-list-item').forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
                 selectedScenarioId = s.id;
                 selectedScenarioData = s;
-                updateActionButtons();
-
-                // Show Preview
-                showScenarioPreview(s, tr);
+                showScenarioPreview(s);
             });
 
-            tr.addEventListener('dblclick', () => {
-                loadSelectedScenario();
-            });
+            item.addEventListener('dblclick', () => loadSelectedScenario());
 
-            scenarioListBody.appendChild(tr);
-
-            // Re-open preview if it was selected and re-rendered (e.g. sorted)
-            if (selectedScenarioId === s.id) {
-                showScenarioPreview(s, tr);
-            }
+            scenarioList.appendChild(item);
         });
 
-        // If selection is no longer in list, clear it
-        if (selectedScenarioId && !document.querySelector(`#scenario-list-body tr[data-id="${selectedScenarioId}"]`)) {
-            selectedScenarioId = null;
-            selectedScenarioData = null;
+        // Auto-select first item if none selected or if previously selected is gone
+        if (filtered.length > 0) {
+            if (!selectedScenarioId || !filtered.find(s => s.id === selectedScenarioId)) {
+                // Select first
+                const first = filtered[0];
+                selectedScenarioId = first.id;
+                selectedScenarioData = first;
+                // Highlight first
+                scenarioList.firstElementChild.classList.add('selected');
+                showScenarioPreview(first);
+            } else {
+                // Re-show current
+                showScenarioPreview(selectedScenarioData);
+            }
         }
-        updateActionButtons();
     };
 
     // Action Button Listeners
@@ -2439,7 +2367,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             // Clear selection on tab switch
             selectedScenarioId = null;
             selectedScenarioData = null;
-            renderScenarioTable();
+            renderScenarioList();
         });
     });
 
@@ -2448,7 +2376,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         pendingScenario = null; // Clear any pending
         selectedScenarioId = null; // Clear selection
         selectedScenarioData = null;
-        renderScenarioTable();
+        renderScenarioList();
         scenarioBrowserModal.classList.remove('hidden');
     });
 
@@ -2464,7 +2392,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             try {
                 const scenario = scenarioManager.importScenario(json);
                 alert(`Imported: ${scenario.name}`);
-                renderScenarioTable();
+                renderScenarioList();
             } catch (e) {
                 alert('Import failed: ' + e.message);
             }

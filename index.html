@@ -441,7 +441,7 @@
         </div>
 
         <!-- Scenario Browser Modal -->
-        <div id="scenario-browser-modal" class="modal hidden large-modal">
+        <div id="scenario-browser-modal" class="modal hidden wide-modal">
             <div class="modal-header compact-header">
                 <div class="scenario-tabs header-tabs">
                     <button class="scenario-tab active" data-tab="maps">🗺️ Maps</button>
@@ -450,31 +450,23 @@
                 </div>
                 <button id="scenario-browser-close-btn" class="close-btn">×</button>
             </div>
-            <div class="scenario-browser-content">
-                <!-- Tabs moved to header -->
-
-
-
-                <div class="scenario-list-container">
-                    <table class="scenario-table tron-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 40%">Name</th>
-                                <th style="width: 15%">Size</th>
-                                <th style="width: 15%">Players</th>
-                                <th style="width: 30%">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="scenario-list-body">
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="scenario-browser-actions">
-
-                    <div class="action-group">
+            <div class="scenario-browser-content split-view">
+                <div class="scenario-browser-left">
+                    <div class="scenario-list-container">
+                        <div id="scenario-list"></div>
+                    </div>
+                    <div class="scenario-left-actions">
                         <button id="scenario-import-btn" class="tron-btn small">📥 Import</button>
-                        <button id="scenario-editor-btn" class="tron-btn small">🎨 Map Editor</button>
+                        <button id="scenario-editor-btn" class="tron-btn small" title="Open Map Editor">✏️
+                            Editor</button>
+                    </div>
+                </div>
+                <div class="scenario-browser-right">
+                    <div id="scenario-preview-content">
+                        <!-- Preview content injected here -->
+                        <div class="empty-message-large">
+                            Select a scenario to view details
+                        </div>
                     </div>
                 </div>
             </div>
