@@ -8,6 +8,7 @@ import { SoundManager } from './audio/sound-manager.js';
 import { EffectsManager } from './render/effects/effects-manager.js';
 import { ScenarioManager } from './scenarios/scenario-manager.js';
 import { TurnHistory } from './scenarios/turn-history.js';
+import { MapEditor } from './editor/map-editor.js';
 
 async function init() {
     // 1. Initialize Game Logic
@@ -66,6 +67,10 @@ async function init() {
     const scenarioManager = new ScenarioManager();
     const turnHistory = new TurnHistory();
     let pendingScenario = null; // Scenario to load when starting game
+
+    // 7. Initialize Map Editor
+    const mapEditor = new MapEditor(scenarioManager, aiRegistry);
+    mapEditor.init();
 
     // Helper to get consistent player names
     const getPlayerName = (player) => {
@@ -2310,6 +2315,21 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         };
         actionsDiv.appendChild(exportBtn);
 
+        // Edit Button - opens scenario in editor
+        const editBtn = document.createElement('button');
+        editBtn.className = 'tron-btn small';
+        editBtn.innerHTML = '✏️ <span class="btn-text">Edit</span>';
+        editBtn.title = 'Edit in Map Editor';
+        editBtn.onclick = (e) => {
+            e.stopPropagation();
+            scenarioBrowserModal.classList.add('hidden');
+            mapEditor.open(scenario);
+            mapEditor.onClose = () => {
+                renderScenarioList();
+            };
+        };
+        actionsDiv.appendChild(editBtn);
+
         // Delete Button (only if not built-in)
         if (!scenario.isBuiltIn) {
             const deleteBtn = document.createElement('button');
@@ -2541,7 +2561,16 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
     // Map Editor (placeholder)
     scenarioEditorBtn.addEventListener('click', () => {
-        alert('Map Editor coming soon!');
+        // Close the scenario browser
+        scenarioBrowserModal.classList.add('hidden');
+        
+        // Open editor with selected scenario (if any), or blank for new
+        mapEditor.open(selectedScenarioData);
+        
+        // When editor closes, refresh the scenario list
+        mapEditor.onClose = () => {
+            renderScenarioList();
+        };
     });
 
     // Save Scenario Modal

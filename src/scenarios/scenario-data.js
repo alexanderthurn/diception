@@ -84,13 +84,20 @@ export function validateScenario(scenario) {
         return { valid: false, errors: ['Scenario is null or undefined'] };
     }
 
-    // Required fields
+    // Check type - maps have different requirements than scenarios
+    const isMap = scenario.type === 'map';
+
+    // Required fields for all types
     if (!scenario.id) errors.push('Missing id');
     if (!scenario.name) errors.push('Missing name');
     if (!scenario.width || scenario.width < 3) errors.push('Invalid width');
     if (!scenario.height || scenario.height < 3) errors.push('Invalid height');
     if (!Array.isArray(scenario.tiles)) errors.push('Tiles must be an array');
-    if (!Array.isArray(scenario.players)) errors.push('Players must be an array');
+
+    // Players only required for scenarios (not maps)
+    if (!isMap && !Array.isArray(scenario.players)) {
+        errors.push('Players must be an array');
+    }
 
     // Validate tiles
     if (Array.isArray(scenario.tiles)) {
@@ -99,17 +106,20 @@ export function validateScenario(scenario) {
             if (typeof tile.x !== 'number' || typeof tile.y !== 'number') {
                 errors.push(`Tile ${i}: invalid coordinates`);
             }
-            if (typeof tile.owner !== 'number') {
-                errors.push(`Tile ${i}: invalid owner`);
-            }
-            if (typeof tile.dice !== 'number' || tile.dice < 1) {
-                errors.push(`Tile ${i}: invalid dice count`);
+            // Owner and dice only required for scenarios (not maps)
+            if (!isMap) {
+                if (typeof tile.owner !== 'number') {
+                    errors.push(`Tile ${i}: invalid owner`);
+                }
+                if (typeof tile.dice !== 'number' || tile.dice < 1) {
+                    errors.push(`Tile ${i}: invalid dice count`);
+                }
             }
         }
     }
 
-    // Validate players
-    if (Array.isArray(scenario.players)) {
+    // Validate players (only for scenarios)
+    if (!isMap && Array.isArray(scenario.players)) {
         if (scenario.players.length < 2) {
             errors.push('At least 2 players required');
         }
