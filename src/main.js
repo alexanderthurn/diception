@@ -803,6 +803,10 @@ async function init() {
     const startBtn = document.getElementById('start-game-btn');
     const mapSizeInput = document.getElementById('map-size');
     const mapSizeVal = document.getElementById('map-size-val');
+    const mapSizeLabel = document.getElementById('map-size-label');
+    const mapSizeRow = document.querySelector('.map-size-row');
+    const mapStyleGroup = document.getElementById('map-style-group');
+    const loadedScenarioName = document.getElementById('loaded-scenario-name');
     const humanCountInput = document.getElementById('human-count');
     const botCountInput = document.getElementById('bot-count');
     const maxDiceInput = document.getElementById('max-dice');
@@ -1807,6 +1811,29 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     const savedGameMode = localStorage.getItem('dicy_gameMode') || 'classic';
     const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || '100';
 
+    // Load saved scenario if any
+    const savedScenarioId = localStorage.getItem('dicy_loadedScenario');
+    if (savedScenarioId) {
+        try {
+            console.log('Loading saved scenario:', savedScenarioId);
+            const scenario = scenarioManager.loadScenario(savedScenarioId);
+            console.log('Loaded scenario:', scenario);
+            if (scenario) {
+                pendingScenario = scenario;
+                updateConfigFromScenario(scenario);
+                updateLoadedScenarioDisplay(scenario.name);
+                console.log('Scenario loaded successfully:', scenario.name);
+            } else {
+                // Scenario no longer exists, remove from localStorage
+                console.warn('Scenario not found, removing from localStorage:', savedScenarioId);
+                localStorage.removeItem('dicy_loadedScenario');
+            }
+        } catch (error) {
+            console.warn('Failed to load saved scenario:', error);
+            localStorage.removeItem('dicy_loadedScenario');
+        }
+    }
+
     mapSizeInput.value = sliderValue;
     humanCountInput.value = savedHumanCount;
     botCountInput.value = savedBotCount;
@@ -1840,6 +1867,37 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         const size = getMapSize(parseInt(mapSizeInput.value));
         mapSizeVal.textContent = size.label;
     };
+
+    const updateLoadedScenarioDisplay = (scenarioName) => {
+        if (scenarioName) {
+            loadedScenarioName.textContent = scenarioName;
+            loadedScenarioName.style.display = 'inline';
+            loadedScenarioName.style.cursor = 'pointer';
+            loadedScenarioName.title = 'Click to unload scenario';
+            // Hide slider, map size value, and map style controls
+            mapSizeInput.style.display = 'none';
+            mapSizeVal.style.display = 'none';
+            mapStyleGroup.style.display = 'none';
+            mapSizeLabel.textContent = 'Map';
+        } else {
+            loadedScenarioName.textContent = '';
+            loadedScenarioName.style.display = 'none';
+            // Show slider, map size value, and map style controls
+            mapSizeInput.style.display = 'block';
+            mapSizeVal.style.display = 'inline';
+            mapStyleGroup.style.display = 'block';
+            mapSizeLabel.textContent = 'Map Size';
+        }
+    };
+
+    // Click handler to reset loaded scenario
+    loadedScenarioName.addEventListener('click', () => {
+        pendingScenario = null;
+        localStorage.removeItem('dicy_loadedScenario');
+        updateLoadedScenarioDisplay(null);
+        // Reset map size display to current slider value
+        updateMapSizeDisplay();
+    });
 
     // Initial map size display
     updateMapSizeDisplay();
@@ -1937,8 +1995,10 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             game.emit('gameStart', { players: game.players, map: game.map });
             game.startTurn();
             pendingScenario = null;
-            // Reset map size display
+            // Reset map size display and scenario name
             mapSizeVal.textContent = sizePreset.label;
+            updateLoadedScenarioDisplay(null);
+            localStorage.removeItem('dicy_loadedScenario');
         } else {
             // New Game (Random Map or Preset Map)
             const config = {
@@ -1958,6 +2018,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 config.mapWidth = pendingScenario.width;
                 config.mapHeight = pendingScenario.height;
                 pendingScenario = null;
+                // Reset display for map scenarios too
+                updateLoadedScenarioDisplay(null);
+                localStorage.removeItem('dicy_loadedScenario');
             }
 
             game.startGame(config);
@@ -2107,6 +2170,10 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             pendingScenario = scenario;
             scenarioBrowserModal.classList.add('hidden');
             updateConfigFromScenario(scenario);
+
+            // Save loaded scenario to localStorage
+            localStorage.setItem('dicy_loadedScenario', selectedScenarioId);
+            updateLoadedScenarioDisplay(scenario.name);
         }
     };
 
@@ -2379,9 +2446,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         const presetIndex = mapSizePresets.findIndex(p => p.width === targetSize);
         if (presetIndex !== -1) {
             mapSizeInput.value = presetIndex + 1;
-            mapSizeVal.textContent = mapSizePresets[presetIndex].label + ' (Loaded)';
+            mapSizeVal.textContent = mapSizePresets[presetIndex].label;
         } else {
-            mapSizeVal.textContent = `${scenario.width}x${scenario.height} (Custom)`;
+            mapSizeVal.textContent = `${scenario.width}x${scenario.height}`;
         }
 
         // Update dice settings
@@ -2394,12 +2461,6 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             diceSidesVal.textContent = scenario.diceSides;
         }
 
-        // Update player count
-        if (scenario.players && playerCountInput) {
-            playerCountInput.value = scenario.players.length;
-            playerCountVal.textContent = scenario.players.length;
-            updatePerPlayerConfig();
-        }
 
         // Update game mode if available
         if (scenario.gameMode && gameModeSelect) {

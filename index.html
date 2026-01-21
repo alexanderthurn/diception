@@ -44,17 +44,18 @@
             <h1 class="tron-title">DICEPTION</h1>
             <div class="credits">by Alexander Thurn</div>
             <div class="control-group">
-                <label>Map Size</label>
+                <label id="map-size-label">Map Size</label>
                 <div class="map-size-row">
+                    <span id="loaded-scenario-name" class="loaded-scenario-text"></span>
                     <input type="range" id="map-size" min="1" max="10" value="2">
-                    <span id="map-size-val">7x7</span>
+                    <span id="map-size-val">4x4</span>
                     <button id="scenarios-btn" class="tron-btn small" title="Load Scenario">📋</button>
                 </div>
             </div>
 
 
             <div class="control-row">
-                <div class="control-group half">
+                <div class="control-group half" id="map-style-group">
                     <label>Map Style</label>
                     <select id="map-style">
                         <option value="random" selected>Random</option>

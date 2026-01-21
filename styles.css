@@ -87,7 +87,7 @@ body {
 }
 
 .tron-btn.small {
-    padding: 5px 10px;
+    padding: 4px 8px;
     font-size: 14px;
 }
 
@@ -829,13 +829,13 @@ input[type="range"] {
     /* Make buttons larger for touch */
     /* Make buttons larger for touch */
     .tron-btn.small:not(#howto-btn) {
-        padding: 12px;
+        padding: 10px;
         font-size: 20px;
         background: rgba(0, 0, 0, 0.6);
         border: 1px solid var(--border-color);
         border-radius: 50%;
-        width: 44px;
-        height: 44px;
+        width: 40px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1669,7 +1669,8 @@ input[type="range"] {
 .map-size-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: flex-start;
+    gap: 5px;
 }
 
 .map-size-row input[type="range"] {
@@ -1681,6 +1682,20 @@ input[type="range"] {
     text-align: center;
     color: var(--accent-color);
     font-weight: bold;
+}
+
+.loaded-scenario-row {
+    margin-top: 5px;
+}
+
+.loaded-scenario-text {
+    color: #0ff;
+    font-weight: bold;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+    flex: 1;
+    text-align: left;
 }
 
 /* Scenario Browser Modal */

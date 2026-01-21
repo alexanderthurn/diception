@@ -122,7 +122,12 @@ export class ScenarioManager {
      * @returns {Object|null}
      */
     loadScenario(id) {
-        return this.scenarios.get(id) || null;
+        const scenario = this.scenarios.get(id) || null;
+        console.log('ScenarioManager.loadScenario:', id, 'found:', !!scenario, 'total scenarios:', this.scenarios.size);
+        if (!scenario) {
+            console.log('Available scenario IDs:', Array.from(this.scenarios.keys()));
+        }
+        return scenario;
     }
 
     /**
