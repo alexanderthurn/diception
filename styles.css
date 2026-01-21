@@ -1788,6 +1788,25 @@ input[type="range"] {
     cursor: pointer;
 }
 
+.preview-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Mobile: Remove rounded corners for buttons in this modal */
+@media (max-width: 600px) {
+    #scenario-browser-modal .tron-btn {
+        border-radius: 4px;
+        /* Keep slight roundness or remove? User said 'not rounded'. */
+        border-radius: 0 !important;
+        padding: 5px 8px;
+        /* Tighter padding */
+        font-size: 0.8em;
+    }
+}
+
 .scenario-table tr:hover {
     background: rgba(0, 255, 255, 0.05);
 }
@@ -1800,8 +1819,10 @@ input[type="range"] {
 
 .preview-container {
     display: flex;
-    gap: 30px;
+    gap: 15px;
     align-items: flex-start;
+    flex-direction: column;
+    /* Details below map */
 }
 
 .preview-map {
@@ -1813,8 +1834,17 @@ input[type="range"] {
     /* Keep it crisp */
 }
 
+/* Mobile: Map full width */
+@media (max-width: 600px) {
+    .preview-map {
+        width: 100%;
+        height: auto;
+    }
+}
+
 .preview-details {
-    flex: 1;
+    width: 100%;
+    /* Full width for details below map */
     display: flex;
     flex-direction: column;
     gap: 12px;

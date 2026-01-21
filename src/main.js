@@ -2028,9 +2028,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     const scenarioBrowserModal = document.getElementById('scenario-browser-modal');
     const scenarioBrowserCloseBtn = document.getElementById('scenario-browser-close-btn');
     const scenarioListBody = document.getElementById('scenario-list-body');
-    const scenarioLoadBtn = document.getElementById('scenario-load-btn');
-    const scenarioExportBtn = document.getElementById('scenario-export-btn');
-    const scenarioDeleteBtn = document.getElementById('scenario-delete-btn');
+
 
     const scenariosBtn = document.getElementById('scenarios-btn');
     const scenarioTabs = document.querySelectorAll('.scenario-tab');
@@ -2049,16 +2047,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     let currentSort = { field: 'date', direction: 'desc' };
 
     const updateActionButtons = () => {
-        const hasSelection = !!selectedScenarioId;
-        scenarioLoadBtn.disabled = !hasSelection;
-        scenarioExportBtn.disabled = !hasSelection;
-
-        // Delete button logic: only enable if selected and NOT built-in
-        let canDelete = false;
-        if (selectedScenarioData && !selectedScenarioData.isBuiltIn) {
-            canDelete = true;
-        }
-        scenarioDeleteBtn.disabled = !canDelete;
+        // Buttons moved to rows, no global update needed
     };
 
     const loadSelectedScenario = () => {
@@ -2160,12 +2149,15 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         const addDetail = (label, value, className = '') => {
             const div = document.createElement('div');
             div.className = 'preview-detail-item';
-            div.innerHTML = `<span class="preview-label">${label}</span><span class="preview-value ${className}">${value}</span>`;
+            let html = '';
+            if (label) html += `<span class="preview-label">${label}</span>`;
+            html += `<span class="preview-value ${className}">${value}</span>`;
+            div.innerHTML = html;
             details.appendChild(div);
         };
 
         if (scenario.author) {
-            addDetail('Author', scenario.author, 'author');
+            addDetail(null, scenario.author, 'author');
         }
 
         if (scenario.description) {
@@ -2186,6 +2178,59 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             addDetail('Tiles', scenario.tiles.length + ' / ' + (scenario.width * scenario.height));
         }
 
+
+
+        // Actions
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'preview-actions';
+
+        // Play Button
+        const playBtn = document.createElement('button');
+        playBtn.className = 'tron-btn small';
+        playBtn.textContent = '▶ Play';
+        playBtn.onclick = (e) => {
+            e.stopPropagation();
+            loadSelectedScenario();
+        };
+        actionsDiv.appendChild(playBtn);
+
+        // Export Button
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'tron-btn small';
+        exportBtn.textContent = '💾 Save to Disk';
+        exportBtn.onclick = (e) => {
+            e.stopPropagation();
+            const json = scenarioManager.exportScenario(scenario.id);
+            if (json) {
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${scenario.id}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        };
+        actionsDiv.appendChild(exportBtn);
+
+        // Delete Button (only if not built-in)
+        if (!scenario.isBuiltIn) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'tron-btn small danger';
+            deleteBtn.textContent = '🗑️ Delete';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (confirm(`Delete "${scenario.name}"?`)) {
+                    scenarioManager.deleteScenario(scenario.id);
+                    renderScenarioTable();
+                }
+            };
+            actionsDiv.appendChild(deleteBtn);
+        }
+
+        details.appendChild(actionsDiv);
         container.appendChild(details);
         td.appendChild(container); // td -> container -> [canvas, details]
         previewRow.appendChild(td); // tr -> td
@@ -2345,35 +2390,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     };
 
     // Action Button Listeners
-    scenarioLoadBtn.addEventListener('click', loadSelectedScenario);
-
-    scenarioDeleteBtn.addEventListener('click', () => {
-        if (!selectedScenarioId) return;
-        if (confirm(`Delete "${selectedScenarioData.name}"?`)) {
-            scenarioManager.deleteScenario(selectedScenarioId);
-            // Clear selection if deleted
-            selectedScenarioId = null;
-            selectedScenarioData = null;
-            renderScenarioTable();
-        }
-    });
-
-    scenarioExportBtn.addEventListener('click', () => {
-        if (!selectedScenarioId) return;
-        const json = scenarioManager.exportScenario(selectedScenarioId);
-        if (json) {
-            // Create download
-            const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${selectedScenarioData.id}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-    });
+    // scenarioLoadBtn listener removed (moved to row)
+    // scenarioDeleteBtn listener removed (moved to row)
+    // scenarioExportBtn listener removed (moved to row)
 
     // Update UI config sliders from a loaded scenario
     const updateConfigFromScenario = (scenario) => {
