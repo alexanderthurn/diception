@@ -129,9 +129,19 @@ async function init() {
         totalGamesEl.textContent = `Total Games Played: ${data.totalGames || 0}`;
     };
 
-    // 5. Initialize Music with localStorage
-    const music = new Audio('./Neon Dice Offensive.mp3');
-    music.loop = true;
+    // 5. Initialize Music Playlist with localStorage
+    // Define available songs (MP3 files in public directory)
+    const availableSongs = [
+        'Neon Dice Offensive.mp3',
+        'Neon Etude.mp3',
+        'Neon Odds.mp3'
+        // TODO: Add the 2 new MP3 files here when they're available
+        // 'NewSong1.mp3',
+        // 'NewSong2.mp3'
+    ];
+
+    let currentSongIndex = parseInt(localStorage.getItem('dicy_currentSongIndex') ?? '0');
+    const music = new Audio('./' + availableSongs[currentSongIndex]);
 
     // Load saved settings - music ON by default unless user explicitly disabled
     const savedMusicEnabled = localStorage.getItem('dicy_musicEnabled') !== 'false'; // Default ON
@@ -144,10 +154,29 @@ async function init() {
 
     const musicToggle = document.getElementById('music-toggle');
     const musicVolume = document.getElementById('music-volume');
+
     musicVolume.value = savedMusicVolume * 100;
+
+
+    // Function to load and play the next song
+    function loadNextSong() {
+        currentSongIndex = (currentSongIndex + 1) % availableSongs.length;
+        music.src = './' + availableSongs[currentSongIndex];
+        localStorage.setItem('dicy_currentSongIndex', currentSongIndex.toString());
+
+        if (musicPlaying) {
+            music.play();
+        }
+    }
+
 
     // Auto-start music on first user interaction (default ON)
     let shouldAutoplayMusic = savedMusicEnabled;
+
+    // Handle song end - play next song
+    music.addEventListener('ended', () => {
+        loadNextSong();
+    });
 
     musicToggle.addEventListener('click', () => {
         if (musicPlaying) {
@@ -166,6 +195,7 @@ async function init() {
         music.volume = e.target.value / 100;
         localStorage.setItem('dicy_musicVolume', (e.target.value / 100).toString());
     });
+
 
     // 6. Initialize Sound Effects with localStorage
     const sfx = new SoundManager();

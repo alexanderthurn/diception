@@ -5,7 +5,7 @@
     --panel-bg: rgba(0, 0, 0, 0.8);
     --border-color: #00ffff;
     --text-color: #ffffff;
-    --accent-color: #AA00FF;
+    --accent-color: #00FFFF;
 }
 
 html,
@@ -56,12 +56,23 @@ body {
     z-index: 10;
 }
 
+.music-display {
+    font-size: 12px;
+    color: #00ffff;
+    text-shadow: 0 0 5px #00ffff;
+    white-space: nowrap;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
 #music-volume {
     width: 80px;
     height: 4px;
     -webkit-appearance: none;
     appearance: none;
-    background: var(--border-color);
+    background: #000;
     border-radius: 2px;
     opacity: 0.7;
 }
@@ -95,7 +106,7 @@ body {
     height: 4px;
     -webkit-appearance: none;
     appearance: none;
-    background: var(--accent-color);
+    background: #000;
     border-radius: 2px;
     opacity: 0.7;
 }
@@ -793,6 +804,12 @@ input[type="range"] {
         box-shadow: none;
         z-index: 200;
         /* Above modal */
+    }
+
+    .music-display {
+        font-size: 10px;
+        max-width: 100px;
+        text-align: right;
     }
 
     #music-controls input[type="range"],
