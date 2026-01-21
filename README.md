@@ -55,6 +55,3 @@ TODO:
 
 * No reload when changing visual effects
 * if it is a bots turn, do not show the border of the active player as white, keep the color of the player. only if a human is active, make it like now (white)
-
-
-* change basic settings. dice sides should be minimum 1 and not 2. max dice per territory should be 16 and not 20

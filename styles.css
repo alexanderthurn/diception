@@ -449,31 +449,59 @@ body {
 }
 
 .tron-title {
-    color: var(--accent-color);
-    text-shadow: 0 0 10px var(--accent-color),
-        0 0 20px var(--accent-color),
-        0 0 40px var(--accent-color);
+    background: linear-gradient(90deg,
+            #AA00FF,
+            /* Human 1 */
+            #FF00AA,
+            /* Human 2 */
+            #00FFFF,
+            /* Human 3 */
+            #FF0055,
+            /* Bot 1 */
+            #55FF00,
+            /* Bot 2 */
+            #FFDD00,
+            /* Bot 3 */
+            #FF8800,
+            /* Bot 4 */
+            #00AAFF,
+            /* Bot 5 */
+            #88FF88,
+            /* Bot 6 */
+            #FFAA55,
+            /* Bot 7 */
+            #AA00FF
+            /* Loop back */
+        );
+    background-size: 300% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
     margin-bottom: 30px;
     letter-spacing: 4px;
-    animation: titleGlow 2s ease-in-out infinite;
+    animation: titleGlow 4s linear infinite, tron-title-move 8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes tron-title-move {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 150% 50%;
+    }
 }
 
 @keyframes titleGlow {
 
     0%,
     100% {
-        text-shadow: 0 0 10px var(--accent-color),
-            0 0 20px var(--accent-color),
-            0 0 40px var(--accent-color);
-        opacity: 1;
+        filter: drop-shadow(0 0 10px rgba(170, 0, 255, 0.5)) drop-shadow(0 0 20px rgba(170, 0, 255, 0.3));
     }
 
     50% {
-        text-shadow: 0 0 20px var(--accent-color),
-            0 0 40px var(--accent-color),
-            0 0 60px var(--accent-color),
-            0 0 80px var(--accent-color);
-        opacity: 0.95;
+        filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.6)) drop-shadow(0 0 30px rgba(0, 255, 255, 0.4));
     }
 }
 
