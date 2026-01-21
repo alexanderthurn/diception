@@ -2027,7 +2027,11 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     // === Scenario System UI ===
     const scenarioBrowserModal = document.getElementById('scenario-browser-modal');
     const scenarioBrowserCloseBtn = document.getElementById('scenario-browser-close-btn');
-    const scenarioGrid = document.getElementById('scenario-grid');
+    const scenarioListBody = document.getElementById('scenario-list-body');
+    const scenarioLoadBtn = document.getElementById('scenario-load-btn');
+    const scenarioExportBtn = document.getElementById('scenario-export-btn');
+    const scenarioDeleteBtn = document.getElementById('scenario-delete-btn');
+
     const scenariosBtn = document.getElementById('scenarios-btn');
     const scenarioTabs = document.querySelectorAll('.scenario-tab');
     const scenarioImportBtn = document.getElementById('scenario-import-btn');
@@ -2040,101 +2044,148 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     const saveScenarioCancelBtn = document.getElementById('save-scenario-cancel-btn');
 
     let currentScenarioTab = 'replays';
+    let selectedScenarioId = null;
+    let selectedScenarioData = null;
 
-    // Render scenario grid
-    const renderScenarioGrid = () => {
+    const updateActionButtons = () => {
+        const hasSelection = !!selectedScenarioId;
+        scenarioLoadBtn.disabled = !hasSelection;
+        scenarioExportBtn.disabled = !hasSelection;
+
+        // Delete button logic: only enable if selected and NOT built-in
+        let canDelete = false;
+        if (selectedScenarioData && !selectedScenarioData.isBuiltIn) {
+            canDelete = true;
+        }
+        scenarioDeleteBtn.disabled = !canDelete;
+    };
+
+    const loadSelectedScenario = () => {
+        if (!selectedScenarioId) return;
+        const scenario = scenarioManager.loadScenario(selectedScenarioId);
+        if (scenario) {
+            pendingScenario = scenario;
+            scenarioBrowserModal.classList.add('hidden');
+            updateConfigFromScenario(scenario);
+        }
+    };
+
+    const renderScenarioTable = () => {
         const scenarios = scenarioManager.listScenarios();
 
         // Filter by tab type
         const filtered = scenarios.filter(s => {
-            const type = s.type || 'replay'; // Default to replay for old saves
-            // Replays tab: only user-saved game states (not built-in)
+            const type = s.type || 'replay';
             if (currentScenarioTab === 'replays') return type === 'replay' && !s.isBuiltIn;
-            // Scenarios tab: preset scenarios and built-in
-            if (currentScenarioTab === 'scenarios') return type === 'scenario' || s.isBuiltIn;
-            // Maps tab: custom map layouts
+            // Scenarios tab: scenarios and built-in scenarios (but NOT maps)
+            if (currentScenarioTab === 'scenarios') return (type === 'scenario' || s.isBuiltIn) && type !== 'map';
+            // Maps tab: custom map layouts and built-in maps
             if (currentScenarioTab === 'maps') return type === 'map';
             return false;
         });
 
-        // Empty state messages per tab
+        // Sort by date (newest first)
+        filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        scenarioListBody.innerHTML = '';
+
         const emptyMessages = {
-            replays: 'No saved replays yet. Play a game and save from the battle log!',
+            replays: 'No saved replays yet.',
             scenarios: 'No scenarios available.',
-            maps: 'No maps available. Create one in the Map Editor!'
-        };
-        const emptyIcons = {
-            replays: '⏪',
-            scenarios: '⭐',
-            maps: '🗺️'
+            maps: 'No custom maps available.'
         };
 
         if (filtered.length === 0) {
-            scenarioGrid.innerHTML = `
-                <div class="scenario-empty">
-                    <div class="scenario-empty-icon">${emptyIcons[currentScenarioTab]}</div>
-                    <div>${emptyMessages[currentScenarioTab]}</div>
-                </div>
-            `;
+            scenarioListBody.innerHTML = `<tr><td colspan="4" class="empty-message">${emptyMessages[currentScenarioTab]}</td></tr>`;
+            selectedScenarioId = null;
+            selectedScenarioData = null;
+            updateActionButtons();
             return;
         }
 
-        scenarioGrid.innerHTML = filtered.map(s => `
-            <div class="scenario-card ${s.isBuiltIn ? 'builtin' : ''}" data-id="${s.id}">
-                <div class="scenario-name">${s.name}</div>
-                <div class="scenario-info">
-                    <span>📐 ${s.width}x${s.height}</span>
-                    <span>👥 ${s.players.length}p</span>
-                    <span>🎲 d${s.diceSides || 6}</span>
-                    <span>⬆️ ${s.maxDice || 8}</span>
-                </div>
-                ${s.description ? `<div class="scenario-desc">${s.description}</div>` : ''}
-                <div class="scenario-actions">
-                    <button class="tron-btn small" data-action="load">▶ Load</button>
-                    ${!s.isBuiltIn ? `<button class="tron-btn small" data-action="delete">🗑️</button>` : ''}
-                    <button class="tron-btn small" data-action="export">📤</button>
-                </div>
-            </div>
-        `).join('');
-
-        // Add event listeners to cards
-        scenarioGrid.querySelectorAll('.scenario-card').forEach(card => {
-            const id = card.dataset.id;
-
-            card.querySelector('[data-action="load"]').addEventListener('click', (e) => {
-                e.stopPropagation();
-                const scenario = scenarioManager.loadScenario(id);
-                if (scenario) {
-                    pendingScenario = scenario;
-                    scenarioBrowserModal.classList.add('hidden');
-
-                    // Update all config sliders to match scenario settings
-                    updateConfigFromScenario(scenario);
-                }
-            });
-
-            const deleteBtn = card.querySelector('[data-action="delete"]');
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (confirm('Delete this scenario?')) {
-                        scenarioManager.deleteScenario(id);
-                        renderScenarioGrid();
-                    }
-                });
+        filtered.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.dataset.id = s.id;
+            if (selectedScenarioId === s.id) {
+                tr.classList.add('selected');
+                selectedScenarioData = s;
             }
 
-            card.querySelector('[data-action="export"]').addEventListener('click', (e) => {
-                e.stopPropagation();
-                const json = scenarioManager.exportScenario(id);
-                if (json) {
-                    navigator.clipboard.writeText(json).then(() => {
-                        alert('Scenario copied to clipboard!');
-                    });
-                }
+            const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleDateString() : 'Built-in';
+            const sizeStr = `${s.width}x${s.height}`;
+            const playersStr = s.players ? `${s.players.length}p` : '-';
+
+            // Icon based on type
+            let icon = '⭐';
+            if (s.type === 'map') icon = '🗺️';
+            else if (s.type === 'replay') icon = '⏪';
+
+            tr.innerHTML = `
+                <td>
+                    <div class="cell-name">
+                        <span class="icon">${icon}</span>
+                        <span>${s.name}</span>
+                        ${s.isBuiltIn ? '<span class="badge">Built-in</span>' : ''}
+                    </div>
+                </td>
+                <td>${sizeStr}</td>
+                <td>${playersStr}</td>
+                <td>${dateStr}</td>
+            `;
+
+            tr.addEventListener('click', () => {
+                document.querySelectorAll('#scenario-list-body tr').forEach(row => row.classList.remove('selected'));
+                tr.classList.add('selected');
+                selectedScenarioId = s.id;
+                selectedScenarioData = s;
+                updateActionButtons();
             });
+
+            tr.addEventListener('dblclick', () => {
+                loadSelectedScenario();
+            });
+
+            scenarioListBody.appendChild(tr);
         });
+
+        // If selection is no longer in list, clear it
+        if (selectedScenarioId && !document.querySelector(`#scenario-list-body tr[data-id="${selectedScenarioId}"]`)) {
+            selectedScenarioId = null;
+            selectedScenarioData = null;
+        }
+        updateActionButtons();
     };
+
+    // Action Button Listeners
+    scenarioLoadBtn.addEventListener('click', loadSelectedScenario);
+
+    scenarioDeleteBtn.addEventListener('click', () => {
+        if (!selectedScenarioId) return;
+        if (confirm(`Delete "${selectedScenarioData.name}"?`)) {
+            scenarioManager.deleteScenario(selectedScenarioId);
+            // Clear selection if deleted
+            selectedScenarioId = null;
+            selectedScenarioData = null;
+            renderScenarioTable();
+        }
+    });
+
+    scenarioExportBtn.addEventListener('click', () => {
+        if (!selectedScenarioId) return;
+        const json = scenarioManager.exportScenario(selectedScenarioId);
+        if (json) {
+            // Create download
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${selectedScenarioData.id}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    });
 
     // Update UI config sliders from a loaded scenario
     const updateConfigFromScenario = (scenario) => {
@@ -2172,19 +2223,25 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     };
 
     // Tab switching
+    // Tab switching
     scenarioTabs.forEach(tab => {
         tab.addEventListener('click', () => {
             scenarioTabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             currentScenarioTab = tab.dataset.tab;
-            renderScenarioGrid();
+            // Clear selection on tab switch
+            selectedScenarioId = null;
+            selectedScenarioData = null;
+            renderScenarioTable();
         });
     });
 
     // Open scenario browser
     scenariosBtn.addEventListener('click', () => {
         pendingScenario = null; // Clear any pending
-        renderScenarioGrid();
+        selectedScenarioId = null; // Clear selection
+        selectedScenarioData = null;
+        renderScenarioTable();
         scenarioBrowserModal.classList.remove('hidden');
     });
 
