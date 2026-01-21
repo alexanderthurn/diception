@@ -17,7 +17,7 @@ export function generateScenarioId() {
  * @param {string} description - Optional description
  * @returns {Object} Scenario data object
  */
-export function createScenarioFromGame(game, name, description = '') {
+export function createScenarioFromGame(game, name, description = '', options = {}) {
     // Extract only non-blocked tiles (sparse format)
     // Tiles don't have x/y properties - they're stored in a flat array where index = y * width + x
     const tiles = [];
@@ -37,27 +37,32 @@ export function createScenarioFromGame(game, name, description = '') {
         }
     }
 
-    // Extract player configuration
+    // Extract player configuration with AI assignments
     const players = game.players.map(p => ({
         id: p.id,
         isBot: p.isBot,
         color: p.color,
-        storedDice: p.storedDice || 0
+        storedDice: p.storedDice || 0,
+        aiId: options.playerAIs?.[p.id] || null // AI ID for this player
     }));
 
     return {
         id: generateScenarioId(),
         name: name,
         description: description,
-        thumbnail: null, // Can be set later
+        thumbnail: null,
         createdAt: Date.now(),
         isBuiltIn: false,
+
+        // Scenario type: 'replay' (game state), 'scenario' (preset), 'map' (just layout)
+        type: options.type || 'replay',
 
         // Map configuration
         width: game.map.width,
         height: game.map.height,
         maxDice: game.maxDice,
         diceSides: game.diceSides,
+        gameMode: game.gameMode || 'classic',
 
         // Tile data
         tiles: tiles,

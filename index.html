@@ -46,8 +46,8 @@
             <div class="control-group">
                 <label>Map Size</label>
                 <div class="map-size-row">
-                    <input type="range" id="map-size" min="1" max="13" value="5">
-                    <span id="map-size-val">7x9</span>
+                    <input type="range" id="map-size" min="1" max="10" value="5">
+                    <span id="map-size-val">7x7</span>
                     <button id="scenarios-btn" class="tron-btn small" title="Load Scenario">📋</button>
                 </div>
             </div>
@@ -448,8 +448,9 @@
             </div>
             <div class="scenario-browser-content">
                 <div class="scenario-tabs">
-                    <button class="scenario-tab active" data-tab="saved">📋 Saved</button>
-                    <button class="scenario-tab" data-tab="builtin">⭐ Built-in</button>
+                    <button class="scenario-tab active" data-tab="replays">⏪ Replays</button>
+                    <button class="scenario-tab" data-tab="scenarios">⭐ Scenarios</button>
+                    <button class="scenario-tab" data-tab="maps">🗺️ Maps</button>
                 </div>
                 <div id="scenario-grid" class="scenario-grid">
                     <!-- Populated by JS -->

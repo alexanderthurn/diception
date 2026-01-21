@@ -178,9 +178,10 @@ export class TurnHistory {
      * @param {Game} game - Game instance (for context)
      * @param {number} snapshotIndex
      * @param {string} name
+     * @param {Object} options - Additional options (playerAIs, type)
      * @returns {Object} Scenario object
      */
-    createScenarioFromSnapshot(game, snapshotIndex, name) {
+    createScenarioFromSnapshot(game, snapshotIndex, name, options = {}) {
         const snapshot = this.snapshots[snapshotIndex];
         if (!snapshot) return null;
 
@@ -188,7 +189,13 @@ export class TurnHistory {
         const originalState = this.serializeGameState(game);
         this.applyGameState(game, snapshot.gameState);
 
-        const scenario = createScenarioFromGame(game, name, `Saved from turn ${snapshot.turn}`);
+        // Default to 'replay' type for battle log saves
+        const scenarioOptions = {
+            type: 'replay',
+            ...options
+        };
+
+        const scenario = createScenarioFromGame(game, name, `Saved from turn ${snapshot.turn}`, scenarioOptions);
 
         // Restore original state
         this.applyGameState(game, originalState);

@@ -1767,21 +1767,19 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         updatePerPlayerConfig();
     }
 
-    // Map size presets: slider value -> {width, height}
+    // Map size presets: slider value -> {width, height, label}
+    // Square maps only, 3x3 to 12x12
     const mapSizePresets = [
-        { width: 3, height: 3 },   // 1 - Tiny
-        { width: 3, height: 5 },
-        { width: 3, height: 4 },
-        { width: 4, height: 4 },
-        { width: 5, height: 5 },   // 2 - Small square
-        { width: 5, height: 7 },   // 3 - Small tall
-        { width: 6, height: 8 },   // 4 - Medium
-        { width: 7, height: 9 },   // 5 - Medium tall (default)
-        { width: 8, height: 8 },   // 6 - Medium square
-        { width: 9, height: 10 },  // 7 - Large
-        { width: 10, height: 12 }, // 8 - Large tall
-        { width: 12, height: 12 }, // 9 - Big square
-        { width: 15, height: 15 }, // 10 - Maximum
+        { width: 3, height: 3, label: '3x3' },    // 1 - Tiny
+        { width: 4, height: 4, label: '4x4' },    // 2
+        { width: 5, height: 5, label: '5x5' },    // 3
+        { width: 6, height: 6, label: '6x6' },    // 4
+        { width: 7, height: 7, label: '7x7' },    // 5 - Default
+        { width: 8, height: 8, label: '8x8' },    // 6
+        { width: 9, height: 9, label: '9x9' },    // 7
+        { width: 10, height: 10, label: '10x10' }, // 8
+        { width: 11, height: 11, label: '11x11' }, // 9
+        { width: 12, height: 12, label: '12x12' }, // 10 - Maximum
     ];
 
     const getMapSize = (sliderValue) => {
@@ -1791,7 +1789,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
     const updateMapSizeDisplay = () => {
         const size = getMapSize(parseInt(mapSizeInput.value));
-        mapSizeVal.textContent = `${size.width}x${size.height}`;
+        mapSizeVal.textContent = size.label;
     };
 
     // Initial map size display
@@ -2029,21 +2027,41 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     const saveScenarioConfirmBtn = document.getElementById('save-scenario-confirm-btn');
     const saveScenarioCancelBtn = document.getElementById('save-scenario-cancel-btn');
 
-    let currentScenarioTab = 'saved';
+    let currentScenarioTab = 'replays';
 
     // Render scenario grid
     const renderScenarioGrid = () => {
         const scenarios = scenarioManager.listScenarios();
+
+        // Filter by tab type
         const filtered = scenarios.filter(s => {
-            if (currentScenarioTab === 'builtin') return s.isBuiltIn;
-            return !s.isBuiltIn;
+            const type = s.type || 'replay'; // Default to replay for old saves
+            // Replays tab: only user-saved game states (not built-in)
+            if (currentScenarioTab === 'replays') return type === 'replay' && !s.isBuiltIn;
+            // Scenarios tab: preset scenarios and built-in
+            if (currentScenarioTab === 'scenarios') return type === 'scenario' || s.isBuiltIn;
+            // Maps tab: custom map layouts
+            if (currentScenarioTab === 'maps') return type === 'map';
+            return false;
         });
+
+        // Empty state messages per tab
+        const emptyMessages = {
+            replays: 'No saved replays yet. Play a game and save from the battle log!',
+            scenarios: 'No scenarios available.',
+            maps: 'No maps available. Create one in the Map Editor!'
+        };
+        const emptyIcons = {
+            replays: '⏪',
+            scenarios: '⭐',
+            maps: '🗺️'
+        };
 
         if (filtered.length === 0) {
             scenarioGrid.innerHTML = `
                 <div class="scenario-empty">
-                    <div class="scenario-empty-icon">${currentScenarioTab === 'builtin' ? '⭐' : '📋'}</div>
-                    <div>${currentScenarioTab === 'builtin' ? 'No built-in scenarios' : 'No saved scenarios yet. Play a game and save from the battle log!'}</div>
+                    <div class="scenario-empty-icon">${emptyIcons[currentScenarioTab]}</div>
+                    <div>${emptyMessages[currentScenarioTab]}</div>
                 </div>
             `;
             return;
@@ -2054,9 +2072,11 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 <div class="scenario-name">${s.name}</div>
                 <div class="scenario-info">
                     <span>📐 ${s.width}x${s.height}</span>
-                    <span>👥 ${s.players.length}</span>
+                    <span>👥 ${s.players.length}p</span>
+                    <span>🎲 d${s.diceSides || 6}</span>
+                    <span>⬆️ ${s.maxDice || 8}</span>
                 </div>
-                ${s.description ? `<div class="scenario-info">${s.description}</div>` : ''}
+                ${s.description ? `<div class="scenario-desc">${s.description}</div>` : ''}
                 <div class="scenario-actions">
                     <button class="tron-btn small" data-action="load">▶ Load</button>
                     ${!s.isBuiltIn ? `<button class="tron-btn small" data-action="delete">🗑️</button>` : ''}
@@ -2075,8 +2095,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 if (scenario) {
                     pendingScenario = scenario;
                     scenarioBrowserModal.classList.add('hidden');
-                    // Update UI to show selected scenario
-                    mapSizeVal.textContent = `${scenario.width}x${scenario.height} (Scenario)`;
+
+                    // Update all config sliders to match scenario settings
+                    updateConfigFromScenario(scenario);
                 }
             });
 
@@ -2101,6 +2122,41 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 }
             });
         });
+    };
+
+    // Update UI config sliders from a loaded scenario
+    const updateConfigFromScenario = (scenario) => {
+        // Find the map size preset index that matches (or closest)
+        const targetSize = scenario.width; // Square maps, so width = height
+        const presetIndex = mapSizePresets.findIndex(p => p.width === targetSize);
+        if (presetIndex !== -1) {
+            mapSizeInput.value = presetIndex + 1;
+            mapSizeVal.textContent = mapSizePresets[presetIndex].label + ' (Loaded)';
+        } else {
+            mapSizeVal.textContent = `${scenario.width}x${scenario.height} (Custom)`;
+        }
+
+        // Update dice settings
+        if (scenario.maxDice && maxDiceInput) {
+            maxDiceInput.value = scenario.maxDice;
+            maxDiceVal.textContent = scenario.maxDice;
+        }
+        if (scenario.diceSides && diceSidesInput) {
+            diceSidesInput.value = scenario.diceSides;
+            diceSidesVal.textContent = scenario.diceSides;
+        }
+
+        // Update player count
+        if (scenario.players && playerCountInput) {
+            playerCountInput.value = scenario.players.length;
+            playerCountVal.textContent = scenario.players.length;
+            updatePerPlayerConfig();
+        }
+
+        // Update game mode if available
+        if (scenario.gameMode && gameModeSelect) {
+            gameModeSelect.value = scenario.gameMode;
+        }
     };
 
     // Tab switching

@@ -47,8 +47,10 @@ Created as a Dice Wars inspired strategy game.
 
 TODO:
 
-* Show biggest connected tiles better
 * Scenarios / Maps / Replays (like play this exact setup again froum round 1,2,3,4)
 * Highscores, how many wins does the human have? 
 * Reset config and highscore button
 * Saving stuff with php (like ai + maps + highscores)
+* BattleLog for Bots opened while playing (Beginner mode important, also in beginner mode show the exact dices thrown)
+* Different highlight if bot is playing (maybe background reddish) + border not white but color of the player
+* No reload when changing graphics
