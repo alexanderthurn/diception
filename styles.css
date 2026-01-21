@@ -450,36 +450,38 @@ body {
 
 .tron-title {
     background: linear-gradient(90deg,
-            #AA00FF,
+            #00ffff 0%,
+            /* Start with long teal section */
+            #00ffff 50%,
+            #AA00FF 55%,
             /* Human 1 */
-            #FF00AA,
+            #FF00AA 60%,
             /* Human 2 */
-            #00FFFF,
-            /* Human 3 */
-            #FF0055,
+            #FF0055 65%,
             /* Bot 1 */
-            #55FF00,
+            #55FF00 70%,
             /* Bot 2 */
-            #FFDD00,
+            #FFDD00 75%,
             /* Bot 3 */
-            #FF8800,
+            #FF8800 80%,
             /* Bot 4 */
-            #00AAFF,
+            #00AAFF 85%,
             /* Bot 5 */
-            #88FF88,
+            #88FF88 90%,
             /* Bot 6 */
-            #FFAA55,
+            #FFAA55 95%,
             /* Bot 7 */
-            #AA00FF
-            /* Loop back */
+            #00ffff 100%
+            /* Loop back to teal */
         );
-    background-size: 300% auto;
+    background-size: 200% auto;
+    /* 200% combined with 50% teal ensures all letters can be teal */
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
     margin-bottom: 30px;
     letter-spacing: 4px;
-    animation: titleGlow 4s linear infinite, tron-title-move 8s linear infinite;
+    animation: titleGlow 4s linear infinite, tron-title-move 10s linear infinite;
     display: inline-block;
 }
 
