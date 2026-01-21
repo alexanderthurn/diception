@@ -31,14 +31,14 @@ export class EffectsManager {
         // World transform reference (set by main.js when available)
         this.worldTransform = null;
 
+        // Screen-space particle system for UI effects (fireworks, confetti)
+        this.screenParticles = new ParticleSystem(stage, { zIndex: 200 });
+
         // Load saved quality
         this.loadQuality();
 
         // Bind game events
         this.bindEvents();
-
-        // Screen-space particle system for UI effects (fireworks, confetti)
-        this.screenParticles = new ParticleSystem(stage, { zIndex: 200 });
 
         // Intro mode state
         this.introModeActive = false;
@@ -88,10 +88,17 @@ export class EffectsManager {
     // ==================== Quality Settings ====================
 
     setQuality(quality) {
+        const wasOff = this.quality === 'off';
         this.quality = quality;
         this.background.setQuality(quality);
         this.particles.setQuality(quality);
+        this.screenParticles.setQuality(quality);
         this.saveQuality();
+
+        // If quality was off and now active, and intro mode is active, restart intro effects
+        if (wasOff && quality !== 'off' && this.introModeActive) {
+            this.startIntroMode();
+        }
     }
 
     loadQuality() {

@@ -1827,12 +1827,12 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         localStorage.setItem('dicy_tournamentGames', tournamentGamesInput.value);
     });
 
-    // Effects quality - save and reload
+    // Effects quality - apply immediately
     effectsQualityInput.addEventListener('change', () => {
-        localStorage.setItem('effectsQuality', effectsQualityInput.value);
-        if (confirm('Changing visual quality requires a reload. Reload now?')) {
-            window.location.reload();
-        }
+        const newQuality = effectsQualityInput.value;
+        localStorage.setItem('effectsQuality', newQuality);
+        effectsManager.setQuality(newQuality);
+        renderer.setEffectsQuality(newQuality);
     });
 
     startBtn.addEventListener('click', () => {
