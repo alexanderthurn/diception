@@ -112,6 +112,12 @@ export class Renderer {
         this.grid.draw();
     }
 
+    forceUpdate() {
+        // Force complete redraw - used when loading scenarios
+        this.draw();
+        this.autoFitCamera();
+    }
+
     setSelection(x, y) {
         this.grid.setSelection(x, y);
         this.draw(); // Trigger redraw to show highlight

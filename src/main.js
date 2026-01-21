@@ -6,6 +6,8 @@ import { AIRunner } from './core/ai-runner.js';
 import { AIRegistry } from './core/ai-registry.js';
 import { SoundManager } from './audio/sound-manager.js';
 import { EffectsManager } from './render/effects/effects-manager.js';
+import { ScenarioManager } from './scenarios/scenario-manager.js';
+import { TurnHistory } from './scenarios/turn-history.js';
 
 async function init() {
     // 1. Initialize Game Logic
@@ -59,6 +61,11 @@ async function init() {
     let selectedBotAI = localStorage.getItem('dicy_botAI') || 'easy';
     // Per-player AI config (when using custom per player)
     let perPlayerAIConfig = JSON.parse(localStorage.getItem('dicy_perPlayerAIConfig') || '{}');
+
+    // 6. Initialize Scenario System
+    const scenarioManager = new ScenarioManager();
+    const turnHistory = new TurnHistory();
+    let pendingScenario = null; // Scenario to load when starting game
 
     // Helper to get consistent player names
     const getPlayerName = (player) => {
@@ -219,19 +226,28 @@ async function init() {
         const colorHex = '#' + player.color.toString(16).padStart(6, '0');
         const isHuman = !player.isBot && !autoplayPlayers.has(player.id);
 
+        // Capture game state snapshot for this turn
+        const snapshot = turnHistory.captureSnapshot(game);
+        const snapshotIndex = turnHistory.length - 1;
+
         // Reset stats
         turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };
 
         // Create wrapper
         const wrapper = document.createElement('div');
         wrapper.className = `turn-group ${isHuman ? 'expanded' : ''}`;
+        wrapper.dataset.snapshotIndex = snapshotIndex;
 
-        // Create header
+        // Create header with action buttons
         const header = document.createElement('div');
         header.className = 'turn-header';
         header.innerHTML = `
             <span class="turn-player" style="color: ${colorHex}">${playerName}</span>
             <span class="turn-summary"></span>
+            <span class="turn-actions">
+                <button class="turn-action-btn" data-action="jump" title="Jump to this turn">⏪</button>
+                <button class="turn-action-btn" data-action="save" title="Save as scenario">💾</button>
+            </span>
             <span class="turn-toggle">${isHuman ? '▼' : '▶'}</span>
         `;
 
@@ -242,8 +258,31 @@ async function init() {
         wrapper.appendChild(header);
         wrapper.appendChild(details);
 
-        // Toggle expand/collapse
-        header.addEventListener('click', () => {
+        // Handle action button clicks
+        header.querySelector('[data-action="jump"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(wrapper.dataset.snapshotIndex);
+            if (turnHistory.restoreSnapshot(game, idx)) {
+                // Clear log and restart UI
+                logEntries.innerHTML = '';
+                turnHistory.snapshots.length = idx + 1; // Truncate future history
+                renderer.forceUpdate();
+                updatePlayerUI();
+                game.emit('turnStart', { player: game.currentPlayer });
+            }
+        });
+
+        header.querySelector('[data-action="save"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Store the snapshot index for the save modal
+            saveScenarioModal.dataset.snapshotIndex = wrapper.dataset.snapshotIndex;
+            scenarioNameInput.value = `Turn ${snapshot.turn} - ${playerName}`;
+            saveScenarioModal.classList.remove('hidden');
+        });
+
+        // Toggle expand/collapse (only on main header area, not buttons)
+        header.addEventListener('click', (e) => {
+            if (e.target.closest('.turn-action-btn')) return;
             wrapper.classList.toggle('expanded');
             header.querySelector('.turn-toggle').textContent =
                 wrapper.classList.contains('expanded') ? '▼' : '▶';
@@ -256,7 +295,7 @@ async function init() {
             logEntries.removeChild(logEntries.lastChild);
         }
 
-        currentTurnLog = { wrapper, details, header, player, isHuman };
+        currentTurnLog = { wrapper, details, header, player, isHuman, snapshotIndex };
     };
 
     // Update summary when turn ends
@@ -1842,16 +1881,27 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         setupModal.classList.add('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
 
-        game.startGame({
-            humanCount,
-            botCount,
-            mapWidth: sizePreset.width,
-            mapHeight: sizePreset.height,
-            maxDice,
-            diceSides,
-            mapStyle: mapStyleInput.value,
-            gameMode: gameModeInput.value
-        });
+        // Start game from scenario or regular config
+        if (pendingScenario) {
+            // Apply the loaded scenario
+            scenarioManager.applyScenarioToGame(game, pendingScenario);
+            game.emit('gameStart', { players: game.players, map: game.map });
+            game.startTurn();
+            pendingScenario = null;
+            // Reset map size display
+            mapSizeVal.textContent = sizePreset.label;
+        } else {
+            game.startGame({
+                humanCount,
+                botCount,
+                mapWidth: sizePreset.width,
+                mapHeight: sizePreset.height,
+                maxDice,
+                diceSides,
+                mapStyle: mapStyleInput.value,
+                gameMode: gameModeInput.value
+            });
+        }
 
         // Initialize AI for all players
         playerAIs.clear();
@@ -1962,6 +2012,170 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         document.getElementById('game-over-modal').classList.add('hidden');
         setupModal.classList.remove('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
+    });
+
+    // === Scenario System UI ===
+    const scenarioBrowserModal = document.getElementById('scenario-browser-modal');
+    const scenarioBrowserCloseBtn = document.getElementById('scenario-browser-close-btn');
+    const scenarioGrid = document.getElementById('scenario-grid');
+    const scenariosBtn = document.getElementById('scenarios-btn');
+    const scenarioTabs = document.querySelectorAll('.scenario-tab');
+    const scenarioImportBtn = document.getElementById('scenario-import-btn');
+    const scenarioEditorBtn = document.getElementById('scenario-editor-btn');
+
+    const saveScenarioModal = document.getElementById('save-scenario-modal');
+    const saveScenarioCloseBtn = document.getElementById('save-scenario-close-btn');
+    const scenarioNameInput = document.getElementById('scenario-name-input');
+    const saveScenarioConfirmBtn = document.getElementById('save-scenario-confirm-btn');
+    const saveScenarioCancelBtn = document.getElementById('save-scenario-cancel-btn');
+
+    let currentScenarioTab = 'saved';
+
+    // Render scenario grid
+    const renderScenarioGrid = () => {
+        const scenarios = scenarioManager.listScenarios();
+        const filtered = scenarios.filter(s => {
+            if (currentScenarioTab === 'builtin') return s.isBuiltIn;
+            return !s.isBuiltIn;
+        });
+
+        if (filtered.length === 0) {
+            scenarioGrid.innerHTML = `
+                <div class="scenario-empty">
+                    <div class="scenario-empty-icon">${currentScenarioTab === 'builtin' ? '⭐' : '📋'}</div>
+                    <div>${currentScenarioTab === 'builtin' ? 'No built-in scenarios' : 'No saved scenarios yet. Play a game and save from the battle log!'}</div>
+                </div>
+            `;
+            return;
+        }
+
+        scenarioGrid.innerHTML = filtered.map(s => `
+            <div class="scenario-card ${s.isBuiltIn ? 'builtin' : ''}" data-id="${s.id}">
+                <div class="scenario-name">${s.name}</div>
+                <div class="scenario-info">
+                    <span>📐 ${s.width}x${s.height}</span>
+                    <span>👥 ${s.players.length}</span>
+                </div>
+                ${s.description ? `<div class="scenario-info">${s.description}</div>` : ''}
+                <div class="scenario-actions">
+                    <button class="tron-btn small" data-action="load">▶ Load</button>
+                    ${!s.isBuiltIn ? `<button class="tron-btn small" data-action="delete">🗑️</button>` : ''}
+                    <button class="tron-btn small" data-action="export">📤</button>
+                </div>
+            </div>
+        `).join('');
+
+        // Add event listeners to cards
+        scenarioGrid.querySelectorAll('.scenario-card').forEach(card => {
+            const id = card.dataset.id;
+
+            card.querySelector('[data-action="load"]').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const scenario = scenarioManager.loadScenario(id);
+                if (scenario) {
+                    pendingScenario = scenario;
+                    scenarioBrowserModal.classList.add('hidden');
+                    // Update UI to show selected scenario
+                    mapSizeVal.textContent = `${scenario.width}x${scenario.height} (Scenario)`;
+                }
+            });
+
+            const deleteBtn = card.querySelector('[data-action="delete"]');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm('Delete this scenario?')) {
+                        scenarioManager.deleteScenario(id);
+                        renderScenarioGrid();
+                    }
+                });
+            }
+
+            card.querySelector('[data-action="export"]').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const json = scenarioManager.exportScenario(id);
+                if (json) {
+                    navigator.clipboard.writeText(json).then(() => {
+                        alert('Scenario copied to clipboard!');
+                    });
+                }
+            });
+        });
+    };
+
+    // Tab switching
+    scenarioTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            scenarioTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentScenarioTab = tab.dataset.tab;
+            renderScenarioGrid();
+        });
+    });
+
+    // Open scenario browser
+    scenariosBtn.addEventListener('click', () => {
+        pendingScenario = null; // Clear any pending
+        renderScenarioGrid();
+        scenarioBrowserModal.classList.remove('hidden');
+    });
+
+    // Close scenario browser
+    scenarioBrowserCloseBtn.addEventListener('click', () => {
+        scenarioBrowserModal.classList.add('hidden');
+    });
+
+    // Import scenario
+    scenarioImportBtn.addEventListener('click', () => {
+        const json = prompt('Paste scenario JSON:');
+        if (json) {
+            try {
+                const scenario = scenarioManager.importScenario(json);
+                alert(`Imported: ${scenario.name}`);
+                renderScenarioGrid();
+            } catch (e) {
+                alert('Import failed: ' + e.message);
+            }
+        }
+    });
+
+    // Map Editor (placeholder)
+    scenarioEditorBtn.addEventListener('click', () => {
+        alert('Map Editor coming soon!');
+    });
+
+    // Save Scenario Modal
+    saveScenarioCloseBtn.addEventListener('click', () => {
+        saveScenarioModal.classList.add('hidden');
+    });
+
+    saveScenarioCancelBtn.addEventListener('click', () => {
+        saveScenarioModal.classList.add('hidden');
+    });
+
+    saveScenarioConfirmBtn.addEventListener('click', () => {
+        const name = scenarioNameInput.value.trim() || 'Unnamed Scenario';
+        const snapshotIndex = parseInt(saveScenarioModal.dataset.snapshotIndex);
+
+        if (!isNaN(snapshotIndex)) {
+            // Save from snapshot
+            const scenario = turnHistory.createScenarioFromSnapshot(game, snapshotIndex, name);
+            if (scenario) {
+                scenarioManager.saveEditorScenario(scenario);
+                alert(`Saved: ${name}`);
+            }
+        } else {
+            // Save current game state
+            scenarioManager.saveScenario(game, name);
+            alert(`Saved: ${name}`);
+        }
+
+        saveScenarioModal.classList.add('hidden');
+    });
+
+    // Clear turn history on new game
+    game.on('gameStart', () => {
+        turnHistory.clear();
     });
 }
 

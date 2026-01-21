@@ -45,9 +45,13 @@
             <div class="credits">by Alexander Thurn</div>
             <div class="control-group">
                 <label>Map Size</label>
-                <input type="range" id="map-size" min="1" max="13" value="5">
-                <span id="map-size-val">7x9</span>
+                <div class="map-size-row">
+                    <input type="range" id="map-size" min="1" max="13" value="5">
+                    <span id="map-size-val">7x9</span>
+                    <button id="scenarios-btn" class="tron-btn small" title="Load Scenario">📋</button>
+                </div>
             </div>
+
 
             <div class="control-row">
                 <div class="control-group half">
@@ -433,6 +437,53 @@
             <div class="tournament-actions">
                 <button id="tournament-again-btn" class="tron-btn">Run Again</button>
                 <button id="tournament-done-btn" class="tron-btn">Done</button>
+            </div>
+        </div>
+
+        <!-- Scenario Browser Modal -->
+        <div id="scenario-browser-modal" class="modal hidden large-modal">
+            <div class="modal-header">
+                <h2 class="tron-title small">SCENARIOS</h2>
+                <button id="scenario-browser-close-btn" class="close-btn">×</button>
+            </div>
+            <div class="scenario-browser-content">
+                <div class="scenario-tabs">
+                    <button class="scenario-tab active" data-tab="saved">📋 Saved</button>
+                    <button class="scenario-tab" data-tab="builtin">⭐ Built-in</button>
+                </div>
+                <div id="scenario-grid" class="scenario-grid">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="scenario-browser-actions">
+                    <button id="scenario-import-btn" class="tron-btn small">📥 Import</button>
+                    <button id="scenario-editor-btn" class="tron-btn small">🎨 Map Editor</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Scenario Modal -->
+        <div id="save-scenario-modal" class="modal hidden">
+            <div class="modal-header">
+                <h2 class="tron-title small">SAVE SCENARIO</h2>
+                <button id="save-scenario-close-btn" class="close-btn">×</button>
+            </div>
+            <div class="save-scenario-content">
+                <div class="control-group">
+                    <label>Scenario Name</label>
+                    <input type="text" id="scenario-name-input" placeholder="My Epic Battle" maxlength="40">
+                </div>
+                <div class="save-scenario-info">
+                    <p>This will save the current game state including:</p>
+                    <ul>
+                        <li>Map layout and size</li>
+                        <li>All player positions and dice counts</li>
+                        <li>Player colors and types</li>
+                    </ul>
+                </div>
+                <div class="save-scenario-actions">
+                    <button id="save-scenario-confirm-btn" class="tron-btn">💾 Save</button>
+                    <button id="save-scenario-cancel-btn" class="tron-btn small">Cancel</button>
+                </div>
             </div>
         </div>
     </div>
