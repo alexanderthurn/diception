@@ -138,10 +138,12 @@ export class GridRenderer {
 
                 // Border logic
                 if (isCurrentPlayer) {
+                    // Use white border for human players, player color for bots
+                    const borderColor = currentPlayer.isBot ? color : 0xffffff;
                     if (tileRaw.dice > 1) {
-                        tileGfx.stroke({ width: 2, color: 0xffffff, alpha: 1.0 });
+                        tileGfx.stroke({ width: 2, color: borderColor, alpha: 1.0 });
                     } else {
-                        tileGfx.stroke({ width: 2, color: 0xffffff, alpha: 0.8 });
+                        tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.8 });
                     }
                 } else {
                     tileGfx.stroke({ width: 1, color: color, alpha: 0.6 });
@@ -164,8 +166,12 @@ export class GridRenderer {
                         const isOuterEdge = !neighbor || neighbor.blocked || neighbor.owner !== tileRaw.owner;
 
                         if (isOuterEdge) {
-                            let borderColor = 0xffffff;
-                            if (!isCurrentPlayer) {
+                            let borderColor;
+                            if (isCurrentPlayer) {
+                                // Use white for human players, player color for bots
+                                borderColor = currentPlayer.isBot ? color : 0xffffff;
+                            } else {
+                                // Non-current players get dimmed color
                                 const r = (color >> 16) & 0xFF;
                                 const g = (color >> 8) & 0xFF;
                                 const b = color & 0xFF;
