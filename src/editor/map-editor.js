@@ -512,8 +512,8 @@ export class MapEditor {
         this.renderDicePalette();
         this.setMode('paint');
         
-        // Render to canvas
-        this.renderToCanvas();
+        // Render to canvas and fit camera on initial open
+        this.renderToCanvas(true);
         
         // Setup canvas interaction
         this.setupCanvasEvents();
@@ -547,8 +547,9 @@ export class MapEditor {
     
     /**
      * Render current state to canvas using the game renderer
+     * @param {boolean} fitCamera - Whether to auto-fit camera (default false)
      */
-    renderToCanvas() {
+    renderToCanvas(fitCamera = false) {
         if (!this.renderer) return;
         
         // Sync editor state to game adapter
@@ -556,7 +557,11 @@ export class MapEditor {
         
         // Draw using the renderer
         this.renderer.draw();
-        this.renderer.autoFitCamera();
+        
+        // Only auto-fit camera when explicitly requested (e.g., on open or resize)
+        if (fitCamera) {
+            this.renderer.autoFitCamera();
+        }
     }
     
     /**
@@ -913,7 +918,8 @@ export class MapEditor {
         this.state.width = newWidth;
         this.state.height = newHeight;
         this.state.isDirty = true;
-        this.renderToCanvas();
+        // Fit camera when grid size changes
+        this.renderToCanvas(true);
     }
     
     /**
