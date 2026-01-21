@@ -326,6 +326,120 @@ export class ScenarioManager {
                 tiles: this.generateLineTiles()
             });
         }
+
+        // World Map - Risk-style with connected continents
+        if (!this.scenarios.has('builtin_world')) {
+            this.scenarios.set('builtin_world', {
+                id: 'builtin_world',
+                name: '🌍 World Conquest',
+                description: 'Risk-style map with 6 connected continents',
+                type: 'scenario',
+                isBuiltIn: true,
+                createdAt: 0,
+                width: 12,
+                height: 10,
+                maxDice: 9,
+                diceSides: 6,
+                players: [
+                    { id: 0, isBot: false, color: 0xAA00FF, storedDice: 0 },
+                    { id: 1, isBot: true, color: 0xFF0055, storedDice: 0 },
+                    { id: 2, isBot: true, color: 0x55FF00, storedDice: 0 },
+                    { id: 3, isBot: true, color: 0xFFDD00, storedDice: 0 },
+                    { id: 4, isBot: true, color: 0x00DDFF, storedDice: 0 },
+                    { id: 5, isBot: true, color: 0xFF8800, storedDice: 0 }
+                ],
+                tiles: this.generateWorldTiles()
+            });
+        }
+
+        // The Ring - Circular battle
+        if (!this.scenarios.has('builtin_ring')) {
+            this.scenarios.set('builtin_ring', {
+                id: 'builtin_ring',
+                name: '💍 The Ring',
+                description: 'Circular arena - attack from both sides!',
+                type: 'scenario',
+                isBuiltIn: true,
+                createdAt: 0,
+                width: 9,
+                height: 9,
+                maxDice: 9,
+                diceSides: 6,
+                players: [
+                    { id: 0, isBot: false, color: 0xAA00FF, storedDice: 0 },
+                    { id: 1, isBot: true, color: 0xFF0055, storedDice: 0 },
+                    { id: 2, isBot: true, color: 0x55FF00, storedDice: 0 }
+                ],
+                tiles: this.generateRingTiles()
+            });
+        }
+
+        // Archipelago - Island hopping
+        if (!this.scenarios.has('builtin_archipelago')) {
+            this.scenarios.set('builtin_archipelago', {
+                id: 'builtin_archipelago',
+                name: '🏝️ Archipelago',
+                description: 'Island-hopping warfare',
+                type: 'scenario',
+                isBuiltIn: true,
+                createdAt: 0,
+                width: 11,
+                height: 9,
+                maxDice: 9,
+                diceSides: 6,
+                players: [
+                    { id: 0, isBot: false, color: 0xAA00FF, storedDice: 0 },
+                    { id: 1, isBot: true, color: 0xFF0055, storedDice: 0 },
+                    { id: 2, isBot: true, color: 0x55FF00, storedDice: 0 },
+                    { id: 3, isBot: true, color: 0xFFDD00, storedDice: 0 }
+                ],
+                tiles: this.generateArchipelagoTiles()
+            });
+        }
+
+        // The Cross - Central chokepoint
+        if (!this.scenarios.has('builtin_cross')) {
+            this.scenarios.set('builtin_cross', {
+                id: 'builtin_cross',
+                name: '✝️ The Cross',
+                description: 'Central chokepoint battlefield',
+                type: 'scenario',
+                isBuiltIn: true,
+                createdAt: 0,
+                width: 9,
+                height: 9,
+                maxDice: 9,
+                diceSides: 6,
+                players: [
+                    { id: 0, isBot: false, color: 0xAA00FF, storedDice: 0 },
+                    { id: 1, isBot: true, color: 0xFF0055, storedDice: 0 },
+                    { id: 2, isBot: true, color: 0x55FF00, storedDice: 0 },
+                    { id: 3, isBot: true, color: 0xFFDD00, storedDice: 0 }
+                ],
+                tiles: this.generateCrossTiles()
+            });
+        }
+
+        // Tiny Battle - Quick 2-player game
+        if (!this.scenarios.has('builtin_tiny')) {
+            this.scenarios.set('builtin_tiny', {
+                id: 'builtin_tiny',
+                name: '🔬 Tiny Battle',
+                description: 'Quick micro-game for rapid battles',
+                type: 'scenario',
+                isBuiltIn: true,
+                createdAt: 0,
+                width: 5,
+                height: 5,
+                maxDice: 6,
+                diceSides: 6,
+                players: [
+                    { id: 0, isBot: false, color: 0xAA00FF, storedDice: 0 },
+                    { id: 1, isBot: true, color: 0xFF0055, storedDice: 0 }
+                ],
+                tiles: this.generateTinyTiles()
+            });
+        }
     }
 
     generateDuelTiles() {
@@ -390,6 +504,181 @@ export class ScenarioManager {
                     owner: owner,
                     dice: x === 0 || x === 14 ? 4 : 2
                 });
+            }
+        }
+        return tiles;
+    }
+
+    // Risk-style world map with 6 connected continents
+    generateWorldTiles() {
+        const tiles = [];
+        const width = 12, height = 10;
+
+        // Define continents as regions with their owner
+        // 0 = North America (top-left), 1 = South America (bottom-left)
+        // 2 = Europe (top-center), 3 = Africa (center-bottom)
+        // 4 = Asia (top-right), 5 = Australia (bottom-right)
+
+        const continentMap = [
+            // Row 0
+            [0, 0, 0, -1, 2, 2, 2, -1, 4, 4, 4, 4],
+            // Row 1  
+            [0, 0, 0, -1, 2, 2, 2, 4, 4, 4, 4, 4],
+            // Row 2
+            [0, 0, 0, 0, 2, 2, 2, 4, 4, 4, 4, -1],
+            // Row 3
+            [-1, 0, 0, -1, 2, 3, 3, 4, 4, 4, -1, -1],
+            // Row 4
+            [-1, 1, -1, -1, 3, 3, 3, 3, -1, -1, -1, -1],
+            // Row 5
+            [1, 1, 1, -1, 3, 3, 3, 3, -1, -1, 5, 5],
+            // Row 6
+            [1, 1, 1, -1, 3, 3, 3, -1, -1, 5, 5, 5],
+            // Row 7
+            [1, 1, -1, -1, -1, 3, -1, -1, -1, 5, 5, 5],
+            // Row 8
+            [-1, 1, -1, -1, -1, -1, -1, -1, -1, 5, 5, -1],
+            // Row 9
+            [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+        ];
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const owner = continentMap[y][x];
+                if (owner !== -1) {
+                    tiles.push({
+                        x, y,
+                        owner: owner,
+                        dice: 2
+                    });
+                }
+            }
+        }
+        return tiles;
+    }
+
+    // Circular ring arena
+    generateRingTiles() {
+        const tiles = [];
+        const size = 9;
+        const center = 4;
+
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                const dist = Math.sqrt((x - center) ** 2 + (y - center) ** 2);
+                // Ring from radius 2 to 4
+                if (dist >= 2 && dist <= 4.5) {
+                    // Divide into 3 sectors
+                    const angle = Math.atan2(y - center, x - center);
+                    let owner;
+                    if (angle < -Math.PI / 3) owner = 0;
+                    else if (angle < Math.PI / 3) owner = 1;
+                    else owner = 2;
+
+                    tiles.push({
+                        x, y,
+                        owner: owner,
+                        dice: 2
+                    });
+                }
+            }
+        }
+        return tiles;
+    }
+
+    // Island archipelago
+    generateArchipelagoTiles() {
+        const tiles = [];
+
+        // Define islands with their positions and owners
+        const islands = [
+            // Large island top-left (player 0)
+            { owner: 0, coords: [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [1, 2]] },
+            // Medium island top-right (player 1)
+            { owner: 1, coords: [[8, 0], [9, 0], [10, 0], [8, 1], [9, 1], [10, 1]] },
+            // Medium island center-left (player 2)
+            { owner: 2, coords: [[0, 4], [1, 4], [2, 4], [0, 5], [1, 5]] },
+            // Central island (contested - player 0)
+            { owner: 0, coords: [[5, 3], [6, 3], [5, 4], [6, 4], [5, 5]] },
+            // Medium island center-right (player 3)
+            { owner: 3, coords: [[9, 4], [10, 4], [9, 5], [10, 5]] },
+            // Large island bottom-left (player 1)
+            { owner: 1, coords: [[1, 7], [2, 7], [3, 7], [1, 8], [2, 8], [3, 8]] },
+            // Medium island bottom-center (player 2)
+            { owner: 2, coords: [[5, 7], [6, 7], [7, 7], [6, 8]] },
+            // Large island bottom-right (player 3)
+            { owner: 3, coords: [[9, 7], [10, 7], [9, 8], [10, 8]] },
+            // Bridge tiles connecting islands
+            { owner: 0, coords: [[3, 2], [4, 3]] },
+            { owner: 1, coords: [[7, 1], [7, 2]] },
+            { owner: 2, coords: [[3, 5], [4, 5]] },
+            { owner: 3, coords: [[8, 5], [8, 6]] },
+            { owner: 0, coords: [[4, 6], [4, 7]] },
+            { owner: 1, coords: [[4, 8]] },
+            { owner: 3, coords: [[8, 7]] },
+        ];
+
+        for (const island of islands) {
+            for (const [x, y] of island.coords) {
+                tiles.push({
+                    x, y,
+                    owner: island.owner,
+                    dice: 2
+                });
+            }
+        }
+
+        return tiles;
+    }
+
+    // Cross-shaped battlefield
+    generateCrossTiles() {
+        const tiles = [];
+        const size = 9;
+        const center = 4;
+
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                // Create cross shape (center column and center row, plus corners)
+                const inVerticalArm = x >= 3 && x <= 5;
+                const inHorizontalArm = y >= 3 && y <= 5;
+
+                if (inVerticalArm || inHorizontalArm) {
+                    // Assign by position
+                    let owner;
+                    if (y < 3) owner = 0;  // Top
+                    else if (y > 5) owner = 1;  // Bottom
+                    else if (x < 3) owner = 2;  // Left
+                    else if (x > 5) owner = 3;  // Right
+                    else owner = (x + y) % 4;  // Center - mixed
+
+                    tiles.push({
+                        x, y,
+                        owner: owner,
+                        dice: 2
+                    });
+                }
+            }
+        }
+        return tiles;
+    }
+
+    // Tiny 5x5 battlefield for quick games
+    generateTinyTiles() {
+        const tiles = [];
+
+        for (let y = 0; y < 5; y++) {
+            for (let x = 0; x < 5; x++) {
+                // Create diamond-ish shape
+                const dist = Math.abs(x - 2) + Math.abs(y - 2);
+                if (dist <= 3) {
+                    const owner = x < 2 ? 0 : (x > 2 ? 1 : (y < 2 ? 0 : 1));
+                    tiles.push({
+                        x, y,
+                        owner: owner,
+                        dice: x === 0 || x === 4 ? 3 : 2
+                    });
+                }
             }
         }
         return tiles;
