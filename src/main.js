@@ -2071,6 +2071,131 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         }
     };
 
+    // Helper: Render Map Preview to Canvas
+    const renderMapPreview = (canvas, scenario) => {
+        const ctx = canvas.getContext('2d');
+        const tileSize = 12; // Half size (compact)
+        const gap = 1;
+
+        canvas.width = (scenario.width || 10) * (tileSize + gap) + gap;
+        canvas.height = (scenario.height || 10) * (tileSize + gap) + gap;
+
+        // Background
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Player Colors Map
+        const playerColors = {};
+        if (scenario.players) {
+            scenario.players.forEach(p => playerColors[p.id] = p.color);
+        }
+
+        // Draw Tiles
+        if (scenario.tiles && Array.isArray(scenario.tiles)) {
+            scenario.tiles.forEach(tile => {
+                const x = tile.x * (tileSize + gap) + gap;
+                const y = tile.y * (tileSize + gap) + gap;
+
+                // Determine color
+                let color = '#222';
+                if (tile.owner !== undefined && tile.owner !== -1) {
+                    const c = playerColors[tile.owner];
+                    if (c !== undefined) {
+                        color = '#' + c.toString(16).padStart(6, '0');
+                    }
+                }
+
+                // Draw Tile
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, tileSize, tileSize);
+
+                // Border
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y, tileSize, tileSize);
+
+                // Dice Count
+                if (tile.dice) {
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 8px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(tile.dice, x + tileSize / 2, y + tileSize / 2 + 1);
+                }
+            });
+        }
+    };
+
+    // Helper: Show Preview Row
+    const showScenarioPreview = (scenario, tr) => {
+        // Remove existing preview
+        const existing = document.querySelector('.preview-row');
+        if (existing) {
+            const prevRow = existing.previousElementSibling;
+            existing.remove();
+
+            // Toggle Logic: If we just removed the preview belonging to THIS row, return (toggle off)
+            if (prevRow === tr) return;
+        }
+
+        const previewRow = document.createElement('tr');
+        previewRow.className = 'preview-row';
+        const colSpan = currentScenarioTab === 'maps' ? 3 : 4;
+
+        const td = document.createElement('td');
+        td.colSpan = colSpan;
+
+        const container = document.createElement('div');
+        container.className = 'preview-container';
+
+        // Map Canvas
+        const canvas = document.createElement('canvas');
+        canvas.className = 'preview-map';
+        container.appendChild(canvas);
+
+        // Details Panel
+        const details = document.createElement('div');
+        details.className = 'preview-details';
+
+        const addDetail = (label, value, className = '') => {
+            const div = document.createElement('div');
+            div.className = 'preview-detail-item';
+            div.innerHTML = `<span class="preview-label">${label}</span><span class="preview-value ${className}">${value}</span>`;
+            details.appendChild(div);
+        };
+
+        if (scenario.author) {
+            addDetail('Author', scenario.author, 'author');
+        }
+
+        if (scenario.description) {
+            const desc = document.createElement('div');
+            desc.className = 'preview-description';
+            desc.textContent = scenario.description;
+            details.appendChild(desc);
+        }
+
+        // Stats
+        if (scenario.isBuiltIn) {
+            addDetail('Type', 'Built-in Scenario');
+        } else {
+            addDetail('Created', scenario.createdAt ? new Date(scenario.createdAt).toLocaleString() : 'Unknown');
+        }
+
+        if (scenario.tiles) {
+            addDetail('Tiles', scenario.tiles.length + ' / ' + (scenario.width * scenario.height));
+        }
+
+        container.appendChild(details);
+        td.appendChild(container); // td -> container -> [canvas, details]
+        previewRow.appendChild(td); // tr -> td
+
+        tr.after(previewRow);
+
+        // Render map
+        renderMapPreview(canvas, scenario);
+    };
+
     const renderScenarioTable = () => {
         const scenarios = scenarioManager.listScenarios();
 
@@ -2187,11 +2312,16 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             tr.innerHTML = html;
 
             tr.addEventListener('click', () => {
+                // If already selected, maybe toggle preview? 
+                // Currently just re-selecting logic
                 document.querySelectorAll('#scenario-list-body tr').forEach(row => row.classList.remove('selected'));
                 tr.classList.add('selected');
                 selectedScenarioId = s.id;
                 selectedScenarioData = s;
                 updateActionButtons();
+
+                // Show Preview
+                showScenarioPreview(s, tr);
             });
 
             tr.addEventListener('dblclick', () => {
@@ -2199,6 +2329,11 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             });
 
             scenarioListBody.appendChild(tr);
+
+            // Re-open preview if it was selected and re-rendered (e.g. sorted)
+            if (selectedScenarioId === s.id) {
+                showScenarioPreview(s, tr);
+            }
         });
 
         // If selection is no longer in list, clear it

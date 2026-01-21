@@ -1728,6 +1728,66 @@ input[type="range"] {
     background: rgba(0, 255, 255, 0.05);
 }
 
+/* Scenario Preview */
+.preview-row td {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 20px;
+}
+
+.preview-container {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.preview-map {
+    background: #000;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    image-rendering: pixelated;
+    /* Keep it crisp */
+}
+
+.preview-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.preview-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.preview-label {
+    font-size: 0.8em;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.preview-value {
+    font-size: 1.1em;
+    color: var(--text-color);
+}
+
+.preview-value.author {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+.preview-description {
+    font-style: italic;
+    color: #ccc;
+    line-height: 1.4;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 6px;
+}
+
 .scenario-table tr.selected {
     background: rgba(0, 255, 255, 0.2);
     box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
