@@ -1880,8 +1880,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
 
         // Start game from scenario or regular config
-        if (pendingScenario) {
-            // Apply the loaded scenario
+        // Start game from scenario or regular config
+        if (pendingScenario && pendingScenario.type !== 'map') {
+            // Apply the loaded scenario or replay (fixed state)
             scenarioManager.applyScenarioToGame(game, pendingScenario);
             game.emit('gameStart', { players: game.players, map: game.map });
             game.startTurn();
@@ -1889,7 +1890,8 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             // Reset map size display
             mapSizeVal.textContent = sizePreset.label;
         } else {
-            game.startGame({
+            // New Game (Random Map or Preset Map)
+            const config = {
                 humanCount,
                 botCount,
                 mapWidth: sizePreset.width,
@@ -1898,7 +1900,17 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 diceSides,
                 mapStyle: mapStyleInput.value,
                 gameMode: gameModeInput.value
-            });
+            };
+
+            // If it's a map type scenario, pass it as a preset
+            if (pendingScenario && pendingScenario.type === 'map') {
+                config.predefinedMap = pendingScenario;
+                config.mapWidth = pendingScenario.width;
+                config.mapHeight = pendingScenario.height;
+                pendingScenario = null;
+            }
+
+            game.startGame(config);
         }
 
         // Initialize AI for all players

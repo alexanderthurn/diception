@@ -5,7 +5,7 @@ export class MapManager {
         this.tiles = [];
     }
 
-    generateMap(width, height, players, maxDice = 9, mapStyle = 'random') {
+    generateMap(width, height, players, maxDice = 9, mapStyle = 'random', presetLayout = null) {
         this.width = width;
         this.height = height;
         this.maxDice = maxDice;
@@ -26,35 +26,39 @@ export class MapManager {
 
         console.log(`Generating ${style} map (${width}x${height})...`);
 
-        switch (style) {
-            case 'full':
-                this.generateFull();
-                break;
-            case 'continents':
-                this.generateContinents();
-                break;
-            case 'caves':
-                this.generateCaves();
-                break;
-            case 'islands':
-                this.generateIslands();
-                break;
-            case 'maze':
-                this.generateMaze();
-                break;
-            case 'tunnels':
-                this.generateTunnels();
-                break;
-            case 'swiss':
-                this.generateSwissCheese();
-                break;
-            default:
-                this.generateContinents();
-        }
+        if (style === 'preset' && presetLayout) {
+            this.applyPresetLayout(presetLayout);
+        } else {
+            switch (style) {
+                case 'full':
+                    this.generateFull();
+                    break;
+                case 'continents':
+                    this.generateContinents();
+                    break;
+                case 'caves':
+                    this.generateCaves();
+                    break;
+                case 'islands':
+                    this.generateIslands();
+                    break;
+                case 'maze':
+                    this.generateMaze();
+                    break;
+                case 'tunnels':
+                    this.generateTunnels();
+                    break;
+                case 'swiss':
+                    this.generateSwissCheese();
+                    break;
+                default:
+                    this.generateContinents();
+            }
 
-        // Ensure connectivity (except for full grid which is always connected)
-        if (style !== 'full') {
-            this.ensureConnectivity();
+            // Ensure connectivity (except for full grid which is always connected)
+            if (style !== 'full') {
+                this.ensureConnectivity();
+            }
         }
 
         // Get playable tiles
@@ -93,6 +97,16 @@ export class MapManager {
     }
 
     // === MAP GENERATION STYLES ===
+
+    applyPresetLayout(tiles) {
+        // Mark all specified tiles as unblocked (playable)
+        for (const t of tiles) {
+            const index = t.y * this.width + t.x;
+            if (index >= 0 && index < this.tiles.length) {
+                this.tiles[index].blocked = false;
+            }
+        }
+    }
 
     generateFull() {
         // Complete grid with no holes - all tiles playable

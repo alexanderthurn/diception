@@ -74,7 +74,11 @@ export class Game {
         this.currentPlayerIndex = 0;
 
         // Generate map with the specified style
-        this.map.generateMap(config.mapWidth, config.mapHeight, this.players, this.maxDice, config.mapStyle || 'random');
+        if (config.predefinedMap) {
+            this.map.generateMap(config.mapWidth, config.mapHeight, this.players, this.maxDice, 'preset', config.predefinedMap.tiles);
+        } else {
+            this.map.generateMap(config.mapWidth, config.mapHeight, this.players, this.maxDice, config.mapStyle || 'random');
+        }
 
         // Apply Game Modes
         if (this.gameMode === 'fair') {
