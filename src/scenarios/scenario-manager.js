@@ -266,27 +266,25 @@ export class ScenarioManager {
     ensureBuiltInScenarios() {
         // Load built-in scenarios from JSON
         for (const scenario of builtinScenarios) {
-            if (!this.scenarios.has(scenario.id)) {
-                this.scenarios.set(scenario.id, {
-                    ...scenario,
-                    createdAt: 0 // Keep sorted at bottom (or top based on sort logic)
-                });
-            }
+            // Always overwrite to ensure latest version (e.g. name changes)
+            this.scenarios.set(scenario.id, {
+                ...scenario,
+                createdAt: 0 // Keep sorted at bottom (or top based on sort logic)
+            });
         }
 
         // Load built-in maps from JSON
         // Maps are scenarios with type='map' and no fixed players/dice
         for (const map of builtinMaps) {
-            if (!this.scenarios.has(map.id)) {
-                this.scenarios.set(map.id, {
-                    ...map,
-                    createdAt: 0,
-                    // Ensure required defaults exist
-                    maxDice: map.maxDice || 9,
-                    diceSides: map.diceSides || 6,
-                    players: map.players || []
-                });
-            }
+            // Always overwrite to ensure latest version
+            this.scenarios.set(map.id, {
+                ...map,
+                createdAt: 0,
+                // Ensure required defaults exist
+                maxDice: map.maxDice || 9,
+                diceSides: map.diceSides || 6,
+                players: map.players || []
+            });
         }
     }
 }
