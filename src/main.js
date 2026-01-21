@@ -70,6 +70,7 @@ async function init() {
 
     // 7. Initialize Map Editor
     const mapEditor = new MapEditor(scenarioManager, aiRegistry);
+    mapEditor.setRenderer(renderer);
     mapEditor.init();
 
     // Helper to get consistent player names

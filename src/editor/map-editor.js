@@ -1,11 +1,8 @@
 /**
  * MapEditor - Interactive map/scenario editor
  * 
- * Features:
- * - Tile painting (add/remove)
- * - Player assignment
- * - Dice placement
- * - Save as map or scenario
+ * Uses the same PixiJS renderer as the game for consistent visuals.
+ * Creates adapter classes to make editor state look like a game.
  */
 
 import { generateScenarioId } from '../scenarios/scenario-data.js';
@@ -16,6 +13,158 @@ const DEFAULT_COLORS = [
     0xFF0055, 0x55FF00, 0xFFDD00, 0xFF8800
 ];
 
+/**
+ * Adapter to make editor state look like a MapManager
+ */
+class EditorMapAdapter {
+    constructor(editorState) {
+        this.editorState = editorState;
+        this.tiles = []; // Will be synced from editorState
+        this.maxDice = 9;
+    }
+    
+    get width() { return this.editorState.width; }
+    get height() { return this.editorState.height; }
+    
+    /**
+     * Sync tiles array from editor state (Map) to array format
+     */
+    syncTiles() {
+        const { width, height, tiles } = this.editorState;
+        this.tiles = new Array(width * height).fill(null).map((_, idx) => {
+            const x = idx % width;
+            const y = Math.floor(idx / width);
+            const key = `${x},${y}`;
+            const tile = tiles.get(key);
+            
+            if (tile) {
+                return { blocked: false, owner: tile.owner, dice: tile.dice || 1 };
+            } else {
+                return { blocked: true, owner: null, dice: 0 };
+            }
+        });
+        this.maxDice = this.editorState.maxDice;
+    }
+    
+    getTileRaw(x, y) {
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height) return null;
+        return this.tiles[y * this.width + x];
+    }
+    
+    getTile(x, y) {
+        const tile = this.getTileRaw(x, y);
+        if (!tile || tile.blocked) return null;
+        return tile;
+    }
+    
+    getTileIndex(x, y) {
+        return y * this.width + x;
+    }
+    
+    getAdjacentTiles(x, y) {
+        const adjacent = [];
+        const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+        
+        for (const [dx, dy] of directions) {
+            const tile = this.getTile(x + dx, y + dy);
+            if (tile) {
+                adjacent.push({ x: x + dx, y: y + dy, ...tile });
+            }
+        }
+        return adjacent;
+    }
+    
+    getTilesByOwner(playerId) {
+        return this.tiles.filter(t => !t.blocked && t.owner === playerId);
+    }
+    
+    findLargestConnectedRegion(playerId) {
+        const visited = new Set();
+        let maxRegionSize = 0;
+        
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                const idx = this.getTileIndex(x, y);
+                const tile = this.tiles[idx];
+                
+                if (!tile.blocked && tile.owner === playerId && !visited.has(idx)) {
+                    const size = this.measureRegion(x, y, playerId, visited);
+                    if (size > maxRegionSize) {
+                        maxRegionSize = size;
+                    }
+                }
+            }
+        }
+        return maxRegionSize;
+    }
+    
+    measureRegion(startX, startY, playerId, visited) {
+        let size = 0;
+        const stack = [{ x: startX, y: startY }];
+        const startIdx = this.getTileIndex(startX, startY);
+        visited.add(startIdx);
+        
+        while (stack.length > 0) {
+            const { x, y } = stack.pop();
+            size++;
+            
+            const neighbors = this.getAdjacentTiles(x, y);
+            for (const n of neighbors) {
+                const nIdx = this.getTileIndex(n.x, n.y);
+                if (n.owner === playerId && !visited.has(nIdx)) {
+                    visited.add(nIdx);
+                    stack.push({ x: n.x, y: n.y });
+                }
+            }
+        }
+        
+        return size;
+    }
+}
+
+/**
+ * Adapter to make editor state look like a Game
+ */
+class EditorGameAdapter {
+    constructor(editorState) {
+        this.editorState = editorState;
+        this.map = new EditorMapAdapter(editorState);
+        this.listeners = {};
+    }
+    
+    get players() {
+        return this.editorState.players.map(p => ({
+            ...p,
+            alive: true,
+            storedDice: 0
+        }));
+    }
+    
+    get currentPlayer() {
+        // In editor, highlight all players equally or first player
+        return this.players[0] || null;
+    }
+    
+    get maxDice() { return this.editorState.maxDice; }
+    get diceSides() { return this.editorState.diceSides; }
+    
+    syncFromState() {
+        this.map.syncTiles();
+    }
+    
+    // Event system (not really used in editor but needed for interface)
+    on(event, callback) {
+        if (!this.listeners[event]) this.listeners[event] = [];
+        this.listeners[event].push(callback);
+    }
+    
+    emit(event, data) {
+        if (this.listeners[event]) {
+            this.listeners[event].forEach(cb => cb(data));
+        }
+    }
+}
+
 export class MapEditor {
     constructor(scenarioManager, aiRegistry) {
         this.scenarioManager = scenarioManager;
@@ -23,6 +172,12 @@ export class MapEditor {
         
         // Editor state
         this.state = this.createEmptyState();
+        
+        // Game adapter for renderer
+        this.gameAdapter = new EditorGameAdapter(this.state);
+        
+        // Reference to the main renderer (will be set from main.js)
+        this.renderer = null;
         
         // UI elements (cached after init)
         this.elements = {};
@@ -33,6 +188,9 @@ export class MapEditor {
         
         // Callback for when editor closes
         this.onClose = null;
+        
+        // Store original game reference to restore
+        this.originalGame = null;
     }
     
     createEmptyState(width = 7, height = 7) {
@@ -61,15 +219,21 @@ export class MapEditor {
     }
     
     /**
+     * Set the renderer reference (call from main.js)
+     */
+    setRenderer(renderer) {
+        this.renderer = renderer;
+    }
+    
+    /**
      * Initialize DOM bindings
      */
     init() {
         // Cache elements
         this.elements = {
-            modal: document.getElementById('editor-modal'),
+            overlay: document.getElementById('editor-overlay'),
             closeBtn: document.getElementById('editor-close-btn'),
             backBtn: document.getElementById('editor-back-btn'),
-            grid: document.getElementById('editor-grid'),
             
             // Settings
             nameInput: document.getElementById('editor-name'),
@@ -102,7 +266,13 @@ export class MapEditor {
             saveAsScenarioBtn: document.getElementById('save-as-scenario-btn'),
             clearBtn: document.getElementById('editor-clear-btn'),
             fillBtn: document.getElementById('editor-fill-btn'),
-            randomizeBtn: document.getElementById('editor-randomize-btn')
+            randomizeBtn: document.getElementById('editor-randomize-btn'),
+            
+            // Elements to hide/show
+            gamePanel: document.querySelector('.game-panel'),
+            endTurnBtn: document.getElementById('end-turn-btn'),
+            aiToggleBtn: document.getElementById('ai-toggle-btn'),
+            setupModal: document.getElementById('setup-modal')
         };
         
         this.bindEvents();
@@ -113,37 +283,36 @@ export class MapEditor {
      */
     bindEvents() {
         // Close buttons
-        this.elements.closeBtn.addEventListener('click', () => this.close());
-        this.elements.backBtn.addEventListener('click', () => this.close());
+        this.elements.closeBtn?.addEventListener('click', () => this.close());
+        this.elements.backBtn?.addEventListener('click', () => this.close());
         
         // Settings changes
-        this.elements.nameInput.addEventListener('input', (e) => {
+        this.elements.nameInput?.addEventListener('input', (e) => {
             this.state.name = e.target.value;
             this.state.isDirty = true;
         });
         
-        this.elements.descriptionInput.addEventListener('input', (e) => {
+        this.elements.descriptionInput?.addEventListener('input', (e) => {
             this.state.description = e.target.value;
             this.state.isDirty = true;
         });
         
         // Size sliders
-        this.elements.widthSlider.addEventListener('input', (e) => {
+        this.elements.widthSlider?.addEventListener('input', (e) => {
             const newWidth = parseInt(e.target.value);
             this.elements.widthVal.textContent = newWidth;
             this.resizeGrid(newWidth, this.state.height);
         });
         
-        this.elements.heightSlider.addEventListener('input', (e) => {
+        this.elements.heightSlider?.addEventListener('input', (e) => {
             const newHeight = parseInt(e.target.value);
             this.elements.heightVal.textContent = newHeight;
             this.resizeGrid(this.state.width, newHeight);
         });
         
         // Max dice and dice sides
-        this.elements.maxDiceSelect.addEventListener('change', (e) => {
+        this.elements.maxDiceSelect?.addEventListener('change', (e) => {
             this.state.maxDice = parseInt(e.target.value);
-            // Clamp dice brush value and re-render palette
             if (this.state.diceBrushValue > this.state.maxDice) {
                 this.state.diceBrushValue = this.state.maxDice;
             }
@@ -151,13 +320,15 @@ export class MapEditor {
             this.state.isDirty = true;
         });
         
-        this.elements.diceSidesSelect.addEventListener('change', (e) => {
+        this.elements.diceSidesSelect?.addEventListener('change', (e) => {
             this.state.diceSides = parseInt(e.target.value);
+            this.renderer?.setDiceSides(this.state.diceSides);
             this.state.isDirty = true;
+            this.renderToCanvas();
         });
         
         // Mode tabs
-        this.elements.modeTabs.forEach(tab => {
+        this.elements.modeTabs?.forEach(tab => {
             tab.addEventListener('click', () => {
                 const mode = tab.dataset.mode;
                 this.setMode(mode);
@@ -165,87 +336,144 @@ export class MapEditor {
         });
         
         // Add player button
-        this.elements.addPlayerBtn.addEventListener('click', () => this.addPlayer());
+        this.elements.addPlayerBtn?.addEventListener('click', () => this.addPlayer());
         
         // Save buttons
-        this.elements.saveAsMapBtn.addEventListener('click', () => this.saveAsMap());
-        this.elements.saveAsScenarioBtn.addEventListener('click', () => this.saveAsScenario());
+        this.elements.saveAsMapBtn?.addEventListener('click', () => this.saveAsMap());
+        this.elements.saveAsScenarioBtn?.addEventListener('click', () => this.saveAsScenario());
         
         // Quick actions
-        this.elements.clearBtn.addEventListener('click', () => this.clearGrid());
-        this.elements.fillBtn.addEventListener('click', () => this.fillGrid());
-        this.elements.randomizeBtn.addEventListener('click', () => this.randomizeDice());
-        
-        // Grid mouse events
-        this.elements.grid.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('editor-cell')) {
-                this.isPainting = true;
-                const x = parseInt(e.target.dataset.x);
-                const y = parseInt(e.target.dataset.y);
-                this.handleTileInteraction(x, y);
-            }
-        });
-        
-        this.elements.grid.addEventListener('mousemove', (e) => {
-            if (this.isPainting && e.target.classList.contains('editor-cell')) {
-                const x = parseInt(e.target.dataset.x);
-                const y = parseInt(e.target.dataset.y);
-                const key = `${x},${y}`;
-                if (this.lastPaintedTile !== key) {
-                    this.handleTileInteraction(x, y);
-                    this.lastPaintedTile = key;
-                }
-            }
-        });
-        
-        document.addEventListener('mouseup', () => {
-            this.isPainting = false;
-            this.lastPaintedTile = null;
-        });
-        
-        // Touch support for mobile
-        this.elements.grid.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (target && target.classList.contains('editor-cell')) {
-                e.preventDefault();
-                this.isPainting = true;
-                const x = parseInt(target.dataset.x);
-                const y = parseInt(target.dataset.y);
-                this.handleTileInteraction(x, y);
-            }
-        }, { passive: false });
-        
-        this.elements.grid.addEventListener('touchmove', (e) => {
-            if (this.isPainting) {
-                const touch = e.touches[0];
-                const target = document.elementFromPoint(touch.clientX, touch.clientY);
-                if (target && target.classList.contains('editor-cell')) {
-                    e.preventDefault();
-                    const x = parseInt(target.dataset.x);
-                    const y = parseInt(target.dataset.y);
-                    const key = `${x},${y}`;
-                    if (this.lastPaintedTile !== key) {
-                        this.handleTileInteraction(x, y);
-                        this.lastPaintedTile = key;
-                    }
-                }
-            }
-        }, { passive: false });
-        
-        this.elements.grid.addEventListener('touchend', () => {
-            this.isPainting = false;
-            this.lastPaintedTile = null;
-        });
+        this.elements.clearBtn?.addEventListener('click', () => this.clearGrid());
+        this.elements.fillBtn?.addEventListener('click', () => this.fillGrid());
+        this.elements.randomizeBtn?.addEventListener('click', () => this.randomizeDice());
         
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            if (!this.elements.modal.classList.contains('hidden')) {
-                if (e.key === 'Escape') {
-                    this.close();
-                }
+            if (this.isOpen && e.key === 'Escape') {
+                this.close();
             }
         });
+    }
+    
+    /**
+     * Setup canvas mouse events for painting
+     */
+    setupCanvasEvents() {
+        if (!this.renderer?.app?.canvas) return;
+        
+        const canvas = this.renderer.app.canvas;
+        
+        // Remove old listeners if any
+        canvas.removeEventListener('mousedown', this.handleCanvasMouseDown);
+        canvas.removeEventListener('mousemove', this.handleCanvasMouseMove);
+        canvas.removeEventListener('mouseup', this.handleCanvasMouseUp);
+        canvas.removeEventListener('touchstart', this.handleCanvasTouchStart);
+        canvas.removeEventListener('touchmove', this.handleCanvasTouchMove);
+        canvas.removeEventListener('touchend', this.handleCanvasTouchEnd);
+        
+        // Bind methods
+        this.handleCanvasMouseDown = this.onCanvasMouseDown.bind(this);
+        this.handleCanvasMouseMove = this.onCanvasMouseMove.bind(this);
+        this.handleCanvasMouseUp = this.onCanvasMouseUp.bind(this);
+        this.handleCanvasTouchStart = this.onCanvasTouchStart.bind(this);
+        this.handleCanvasTouchMove = this.onCanvasTouchMove.bind(this);
+        this.handleCanvasTouchEnd = this.onCanvasTouchEnd.bind(this);
+        
+        // Add listeners
+        canvas.addEventListener('mousedown', this.handleCanvasMouseDown);
+        canvas.addEventListener('mousemove', this.handleCanvasMouseMove);
+        canvas.addEventListener('mouseup', this.handleCanvasMouseUp);
+        canvas.addEventListener('touchstart', this.handleCanvasTouchStart, { passive: false });
+        canvas.addEventListener('touchmove', this.handleCanvasTouchMove, { passive: false });
+        canvas.addEventListener('touchend', this.handleCanvasTouchEnd);
+    }
+    
+    /**
+     * Convert screen coordinates to tile coordinates
+     */
+    screenToTile(screenX, screenY) {
+        if (!this.renderer?.rootContainer || !this.renderer?.grid) return null;
+        
+        const root = this.renderer.rootContainer;
+        const tileSize = this.renderer.grid.tileSize;
+        const gap = this.renderer.grid.gap;
+        
+        // Convert screen coords to world coords
+        const worldX = (screenX - root.x) / root.scale.x;
+        const worldY = (screenY - root.y) / root.scale.y;
+        
+        // Convert world coords to tile coords
+        const tileX = Math.floor(worldX / (tileSize + gap));
+        const tileY = Math.floor(worldY / (tileSize + gap));
+        
+        // Check bounds
+        if (tileX < 0 || tileX >= this.state.width || tileY < 0 || tileY >= this.state.height) {
+            return null;
+        }
+        
+        return { x: tileX, y: tileY };
+    }
+    
+    onCanvasMouseDown(e) {
+        if (!this.isOpen) return;
+        
+        const tile = this.screenToTile(e.clientX, e.clientY);
+        if (tile) {
+            this.isPainting = true;
+            this.handleTileInteraction(tile.x, tile.y);
+            this.lastPaintedTile = `${tile.x},${tile.y}`;
+        }
+    }
+    
+    onCanvasMouseMove(e) {
+        if (!this.isOpen || !this.isPainting) return;
+        
+        const tile = this.screenToTile(e.clientX, e.clientY);
+        if (tile) {
+            const key = `${tile.x},${tile.y}`;
+            if (this.lastPaintedTile !== key) {
+                this.handleTileInteraction(tile.x, tile.y);
+                this.lastPaintedTile = key;
+            }
+        }
+    }
+    
+    onCanvasMouseUp() {
+        this.isPainting = false;
+        this.lastPaintedTile = null;
+    }
+    
+    onCanvasTouchStart(e) {
+        if (!this.isOpen) return;
+        
+        const touch = e.touches[0];
+        const tile = this.screenToTile(touch.clientX, touch.clientY);
+        if (tile) {
+            e.preventDefault();
+            this.isPainting = true;
+            this.handleTileInteraction(tile.x, tile.y);
+            this.lastPaintedTile = `${tile.x},${tile.y}`;
+        }
+    }
+    
+    onCanvasTouchMove(e) {
+        if (!this.isOpen || !this.isPainting) return;
+        
+        const touch = e.touches[0];
+        const tile = this.screenToTile(touch.clientX, touch.clientY);
+        if (tile) {
+            e.preventDefault();
+            const key = `${tile.x},${tile.y}`;
+            if (this.lastPaintedTile !== key) {
+                this.handleTileInteraction(tile.x, tile.y);
+                this.lastPaintedTile = key;
+            }
+        }
+    }
+    
+    onCanvasTouchEnd() {
+        this.isPainting = false;
+        this.lastPaintedTile = null;
     }
     
     /**
@@ -258,25 +486,59 @@ export class MapEditor {
             this.state = this.createEmptyState();
         }
         
+        // Update game adapter reference
+        this.gameAdapter = new EditorGameAdapter(this.state);
+        
+        // Store original game and switch renderer to editor mode
+        if (this.renderer) {
+            this.originalGame = this.renderer.game;
+            this.renderer.game = this.gameAdapter;
+            this.renderer.grid.game = this.gameAdapter;
+            this.renderer.setDiceSides(this.state.diceSides);
+        }
+        
+        // Hide game UI, show editor UI
+        this.elements.gamePanel?.classList.add('hidden');
+        this.elements.endTurnBtn?.classList.add('hidden');
+        this.elements.aiToggleBtn?.classList.add('hidden');
+        this.elements.setupModal?.classList.add('hidden');
+        this.elements.overlay?.classList.remove('hidden');
+        
         // Update UI to match state
         this.updateUIFromState();
-        this.renderGrid();
         this.renderPlayerList();
         this.renderPaintPalette();
         this.renderPlayerPalette();
         this.renderDicePalette();
         this.setMode('paint');
         
-        // Show modal
-        this.elements.modal.classList.remove('hidden');
+        // Render to canvas
+        this.renderToCanvas();
+        
+        // Setup canvas interaction
+        this.setupCanvasEvents();
+        
+        this.isOpen = true;
     }
     
     /**
      * Close editor
      */
     close() {
-        // Close without prompting - changes are auto-saved or user can save manually
-        this.elements.modal.classList.add('hidden');
+        // Restore original game
+        if (this.renderer && this.originalGame) {
+            this.renderer.game = this.originalGame;
+            this.renderer.grid.game = this.originalGame;
+            this.renderer.draw();
+        }
+        
+        // Hide editor UI, show game UI
+        this.elements.overlay?.classList.add('hidden');
+        this.elements.gamePanel?.classList.remove('hidden');
+        this.elements.endTurnBtn?.classList.remove('hidden');
+        this.elements.aiToggleBtn?.classList.remove('hidden');
+        
+        this.isOpen = false;
         
         if (this.onClose) {
             this.onClose();
@@ -284,23 +546,35 @@ export class MapEditor {
     }
     
     /**
+     * Render current state to canvas using the game renderer
+     */
+    renderToCanvas() {
+        if (!this.renderer) return;
+        
+        // Sync editor state to game adapter
+        this.gameAdapter.syncFromState();
+        
+        // Draw using the renderer
+        this.renderer.draw();
+        this.renderer.autoFitCamera();
+    }
+    
+    /**
      * Show a temporary status message
      */
     showStatus(message, type = 'info') {
-        // Create or reuse status element
         let status = document.getElementById('editor-status');
         if (!status) {
             status = document.createElement('div');
             status.id = 'editor-status';
             status.className = 'editor-status';
-            this.elements.modal.appendChild(status);
+            this.elements.overlay?.appendChild(status);
         }
         
         status.textContent = message;
         status.className = `editor-status ${type}`;
         status.classList.add('visible');
         
-        // Auto-hide after 2 seconds
         clearTimeout(this.statusTimeout);
         this.statusTimeout = setTimeout(() => {
             status.classList.remove('visible');
@@ -311,59 +585,14 @@ export class MapEditor {
      * Update UI elements from state
      */
     updateUIFromState() {
-        this.elements.nameInput.value = this.state.name;
-        this.elements.descriptionInput.value = this.state.description;
-        this.elements.widthSlider.value = this.state.width;
-        this.elements.widthVal.textContent = this.state.width;
-        this.elements.heightSlider.value = this.state.height;
-        this.elements.heightVal.textContent = this.state.height;
-        this.elements.maxDiceSelect.value = this.state.maxDice;
-        this.elements.diceSidesSelect.value = this.state.diceSides;
-    }
-    
-    /**
-     * Render the interactive grid
-     */
-    renderGrid() {
-        const { width, height, tiles } = this.state;
-        
-        // Set grid template
-        this.elements.grid.style.gridTemplateColumns = `repeat(${width}, 1fr)`;
-        this.elements.grid.style.gridTemplateRows = `repeat(${height}, 1fr)`;
-        
-        // Clear and rebuild
-        this.elements.grid.innerHTML = '';
-        
-        // Pre-compute player colors map for faster lookup
-        const playerColors = {};
-        this.state.players.forEach(p => {
-            playerColors[p.id] = '#' + p.color.toString(16).padStart(6, '0');
-        });
-        
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                const cell = document.createElement('div');
-                cell.className = 'editor-cell';
-                cell.dataset.x = x;
-                cell.dataset.y = y;
-                
-                const key = `${x},${y}`;
-                const tile = tiles.get(key);
-                
-                if (tile) {
-                    cell.classList.add('active');
-                    cell.style.backgroundColor = playerColors[tile.owner] || '#666';
-                    // Show dice count as text
-                    if (tile.dice > 0) {
-                        cell.textContent = tile.dice;
-                    }
-                } else {
-                    cell.classList.add('empty');
-                }
-                
-                this.elements.grid.appendChild(cell);
-            }
-        }
+        if (this.elements.nameInput) this.elements.nameInput.value = this.state.name;
+        if (this.elements.descriptionInput) this.elements.descriptionInput.value = this.state.description;
+        if (this.elements.widthSlider) this.elements.widthSlider.value = this.state.width;
+        if (this.elements.widthVal) this.elements.widthVal.textContent = this.state.width;
+        if (this.elements.heightSlider) this.elements.heightSlider.value = this.state.height;
+        if (this.elements.heightVal) this.elements.heightVal.textContent = this.state.height;
+        if (this.elements.maxDiceSelect) this.elements.maxDiceSelect.value = this.state.maxDice;
+        if (this.elements.diceSidesSelect) this.elements.diceSidesSelect.value = this.state.diceSides;
     }
     
     /**
@@ -371,9 +600,9 @@ export class MapEditor {
      */
     renderPaintPalette() {
         const container = this.elements.paintPalette;
+        if (!container) return;
         container.innerHTML = '';
         
-        // Add tile button
         const addBtn = document.createElement('div');
         addBtn.className = 'paint-swatch add-tile';
         if (this.state.paintMode === 'add') addBtn.classList.add('selected');
@@ -384,7 +613,6 @@ export class MapEditor {
         });
         container.appendChild(addBtn);
         
-        // Remove tile button
         const removeBtn = document.createElement('div');
         removeBtn.className = 'paint-swatch remove-tile';
         if (this.state.paintMode === 'remove') removeBtn.classList.add('selected');
@@ -401,6 +629,7 @@ export class MapEditor {
      */
     renderDicePalette() {
         const container = this.elements.dicePalette;
+        if (!container) return;
         container.innerHTML = '';
         
         for (let i = 1; i <= this.state.maxDice; i++) {
@@ -426,13 +655,11 @@ export class MapEditor {
         switch (this.state.currentMode) {
             case 'paint':
                 if (this.state.paintMode === 'add') {
-                    // Add tile with current selected player and default dice
                     this.state.tiles.set(key, {
                         owner: this.state.selectedPlayer,
                         dice: this.state.diceBrushValue
                     });
                 } else {
-                    // Remove tile
                     this.state.tiles.delete(key);
                 }
                 break;
@@ -441,7 +668,6 @@ export class MapEditor {
                 if (tile) {
                     tile.owner = this.state.selectedPlayer;
                 } else {
-                    // In assign mode, clicking empty creates tile with selected player
                     this.state.tiles.set(key, {
                         owner: this.state.selectedPlayer,
                         dice: this.state.diceBrushValue
@@ -457,7 +683,7 @@ export class MapEditor {
         }
         
         this.state.isDirty = true;
-        this.renderGrid();
+        this.renderToCanvas();
     }
     
     /**
@@ -466,24 +692,20 @@ export class MapEditor {
     setMode(mode) {
         this.state.currentMode = mode;
         
-        // Update tab active states
-        this.elements.modeTabs.forEach(tab => {
+        this.elements.modeTabs?.forEach(tab => {
             tab.classList.toggle('active', tab.dataset.mode === mode);
         });
         
-        // Show/hide toolbars
-        this.elements.paintToolbar.classList.toggle('hidden', mode !== 'paint');
-        this.elements.assignToolbar.classList.toggle('hidden', mode !== 'assign');
-        this.elements.diceToolbar.classList.toggle('hidden', mode !== 'dice');
+        this.elements.paintToolbar?.classList.toggle('hidden', mode !== 'paint');
+        this.elements.assignToolbar?.classList.toggle('hidden', mode !== 'assign');
+        this.elements.diceToolbar?.classList.toggle('hidden', mode !== 'dice');
     }
     
     /**
      * Add a new player
      */
     addPlayer() {
-        if (this.state.players.length >= 8) {
-            return; // Max players reached
-        }
+        if (this.state.players.length >= 8) return;
         
         const newId = this.state.players.length;
         this.state.players.push({
@@ -502,25 +724,19 @@ export class MapEditor {
      * Remove a player
      */
     removePlayer(id) {
-        if (this.state.players.length <= 2) {
-            return; // Minimum 2 players required
-        }
+        if (this.state.players.length <= 2) return;
         
-        // Reassign any tiles owned by this player to player 0
         for (const tile of this.state.tiles.values()) {
             if (tile.owner === id) {
                 tile.owner = 0;
             }
         }
         
-        // Remove player
         this.state.players = this.state.players.filter(p => p.id !== id);
         
-        // Renumber players
         this.state.players.forEach((p, i) => {
             const oldId = p.id;
             p.id = i;
-            // Update tile ownership
             for (const tile of this.state.tiles.values()) {
                 if (tile.owner === oldId) {
                     tile.owner = i;
@@ -528,7 +744,6 @@ export class MapEditor {
             }
         });
         
-        // Reset selected player if needed
         if (this.state.selectedPlayer >= this.state.players.length) {
             this.state.selectedPlayer = 0;
         }
@@ -536,7 +751,7 @@ export class MapEditor {
         this.state.isDirty = true;
         this.renderPlayerList();
         this.renderPlayerPalette();
-        this.renderGrid();
+        this.renderToCanvas();
     }
     
     /**
@@ -549,7 +764,7 @@ export class MapEditor {
             this.state.isDirty = true;
             this.renderPlayerList();
             this.renderPlayerPalette();
-            this.renderGrid();
+            this.renderToCanvas();
         }
     }
     
@@ -558,11 +773,13 @@ export class MapEditor {
      */
     renderPlayerList() {
         const container = this.elements.playerList;
+        if (!container) return;
         container.innerHTML = '';
         
-        this.elements.playerCountDisplay.textContent = `(${this.state.players.length})`;
+        if (this.elements.playerCountDisplay) {
+            this.elements.playerCountDisplay.textContent = `(${this.state.players.length})`;
+        }
         
-        // Get available AIs
         const ais = this.aiRegistry.getAllAIs();
         
         this.state.players.forEach(player => {
@@ -586,7 +803,6 @@ export class MapEditor {
             
             container.appendChild(row);
             
-            // Event handlers
             const typeSelect = row.querySelector('.editor-player-type');
             const aiSelect = row.querySelector('.editor-player-ai');
             const removeBtn = row.querySelector('.editor-player-remove');
@@ -605,8 +821,9 @@ export class MapEditor {
             });
         });
         
-        // Hide add button if at max
-        this.elements.addPlayerBtn.style.display = this.state.players.length >= 8 ? 'none' : '';
+        if (this.elements.addPlayerBtn) {
+            this.elements.addPlayerBtn.style.display = this.state.players.length >= 8 ? 'none' : '';
+        }
     }
     
     /**
@@ -614,6 +831,7 @@ export class MapEditor {
      */
     renderPlayerPalette() {
         const container = this.elements.playerPalette;
+        if (!container) return;
         container.innerHTML = '';
         
         this.state.players.forEach(player => {
@@ -643,7 +861,7 @@ export class MapEditor {
     clearGrid() {
         this.state.tiles.clear();
         this.state.isDirty = true;
-        this.renderGrid();
+        this.renderToCanvas();
     }
     
     /**
@@ -653,7 +871,6 @@ export class MapEditor {
         const { width, height, players } = this.state;
         const playerCount = players.length;
         
-        // Distribute tiles evenly among players
         let playerIndex = 0;
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
@@ -667,7 +884,7 @@ export class MapEditor {
         }
         
         this.state.isDirty = true;
-        this.renderGrid();
+        this.renderToCanvas();
     }
     
     /**
@@ -679,14 +896,13 @@ export class MapEditor {
         }
         
         this.state.isDirty = true;
-        this.renderGrid();
+        this.renderToCanvas();
     }
     
     /**
      * Resize the grid
      */
     resizeGrid(newWidth, newHeight) {
-        // Remove tiles outside new bounds
         for (const [key] of this.state.tiles) {
             const [x, y] = key.split(',').map(Number);
             if (x >= newWidth || y >= newHeight) {
@@ -697,25 +913,23 @@ export class MapEditor {
         this.state.width = newWidth;
         this.state.height = newHeight;
         this.state.isDirty = true;
-        this.renderGrid();
+        this.renderToCanvas();
     }
     
     /**
      * Save as map (tiles only, no ownership)
      */
     saveAsMap() {
-        // Validation - need at least one tile
         if (this.state.tiles.size === 0) {
             this.showStatus('Add at least one tile first', 'error');
             return null;
         }
         
-        // Auto-generate name if empty
         let name = this.state.name.trim();
         if (!name) {
             name = 'Untitled Map';
             this.state.name = name;
-            this.elements.nameInput.value = name;
+            if (this.elements.nameInput) this.elements.nameInput.value = name;
         }
         
         const mapData = {
@@ -730,7 +944,7 @@ export class MapEditor {
             height: this.state.height,
             tiles: Array.from(this.state.tiles.entries()).map(([key]) => {
                 const [x, y] = key.split(',').map(Number);
-                return { x, y }; // Maps only store coordinates
+                return { x, y };
             })
         };
         
@@ -751,21 +965,18 @@ export class MapEditor {
      * Save as scenario (includes players, ownership, dice)
      */
     saveAsScenario() {
-        // Validation - need at least one tile
         if (this.state.tiles.size === 0) {
             this.showStatus('Add at least one tile first', 'error');
             return null;
         }
         
-        // Auto-generate name if empty
         let name = this.state.name.trim();
         if (!name) {
             name = 'Untitled Scenario';
             this.state.name = name;
-            this.elements.nameInput.value = name;
+            if (this.elements.nameInput) this.elements.nameInput.value = name;
         }
         
-        // Fix any tiles with invalid owners (assign to player 0)
         for (const [key, tile] of this.state.tiles) {
             if (tile.owner === undefined || tile.owner === null || tile.owner < 0) {
                 tile.owner = 0;
@@ -774,7 +985,6 @@ export class MapEditor {
             }
         }
         
-        // Check each player owns at least one tile - auto-assign if not
         const tileCounts = {};
         this.state.players.forEach(p => tileCounts[p.id] = 0);
         for (const tile of this.state.tiles.values()) {
@@ -783,11 +993,8 @@ export class MapEditor {
         
         const playersWithNoTiles = this.state.players.filter(p => tileCounts[p.id] === 0);
         if (playersWithNoTiles.length > 0) {
-            // Auto-assign tiles to players who have none
             const tilesArray = Array.from(this.state.tiles.values());
-            let tileIndex = 0;
             for (const player of playersWithNoTiles) {
-                // Find a tile from player 0 to give to this player
                 for (let i = 0; i < tilesArray.length; i++) {
                     if (tilesArray[i].owner === 0 && tileCounts[0] > 1) {
                         tilesArray[i].owner = player.id;
@@ -797,7 +1004,7 @@ export class MapEditor {
                     }
                 }
             }
-            this.renderGrid();
+            this.renderToCanvas();
         }
         
         const scenarioData = {
@@ -844,13 +1051,12 @@ export class MapEditor {
     importFromScenario(scenario) {
         this.state = this.createEmptyState(scenario.width || 7, scenario.height || 7);
         
-        this.state.originalId = scenario.isBuiltIn ? null : scenario.id; // Don't overwrite built-ins
+        this.state.originalId = scenario.isBuiltIn ? null : scenario.id;
         this.state.name = scenario.isBuiltIn ? scenario.name + ' (Copy)' : scenario.name;
         this.state.description = scenario.description || '';
         this.state.maxDice = scenario.maxDice || 9;
         this.state.diceSides = scenario.diceSides || 6;
         
-        // Import players
         if (scenario.players && scenario.players.length > 0) {
             this.state.players = scenario.players.map(p => ({
                 id: p.id,
@@ -860,7 +1066,6 @@ export class MapEditor {
             }));
         }
         
-        // Import tiles
         this.state.tiles.clear();
         if (scenario.tiles && scenario.tiles.length > 0) {
             for (const tile of scenario.tiles) {

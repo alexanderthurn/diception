@@ -474,125 +474,116 @@
             </div>
         </div>
 
-        <!-- Map/Scenario Editor Modal -->
-        <div id="editor-modal" class="modal hidden wide-modal">
-            <div class="modal-header">
+        <!-- Map/Scenario Editor Overlay (uses main game canvas) -->
+        <div id="editor-overlay" class="editor-overlay hidden">
+            <!-- Top bar with title and close -->
+            <div class="editor-top-bar">
                 <button id="editor-back-btn" class="tron-btn small">← Back</button>
                 <h2 class="tron-title small">MAP EDITOR</h2>
                 <button id="editor-close-btn" class="close-btn">×</button>
             </div>
             
-            <div class="editor-content">
-                <!-- Left: Canvas area -->
-                <div class="editor-canvas-area">
-                    <div id="editor-grid" class="editor-grid"></div>
-                    
-                    <!-- Mode tabs -->
-                    <div class="editor-mode-tabs">
-                        <button class="editor-tab active" data-mode="paint">🖌️ Paint</button>
-                        <button class="editor-tab" data-mode="assign">👤 Assign</button>
-                        <button class="editor-tab" data-mode="dice">🎲 Dice</button>
+            <!-- Bottom toolbar -->
+            <div class="editor-bottom-bar">
+                <!-- Mode tabs -->
+                <div class="editor-mode-tabs">
+                    <button class="editor-tab active" data-mode="paint">🖌️ Paint</button>
+                    <button class="editor-tab" data-mode="assign">👤 Assign</button>
+                    <button class="editor-tab" data-mode="dice">🎲 Dice</button>
+                </div>
+                
+                <!-- Mode-specific toolbar -->
+                <div class="editor-toolbar">
+                    <div id="paint-toolbar" class="toolbar-section">
+                        <label>Tile:</label>
+                        <div id="paint-palette" class="paint-palette"></div>
                     </div>
-                    
-                    <!-- Mode-specific toolbar -->
-                    <div class="editor-toolbar">
-                        <!-- Paint mode toolbar -->
-                        <div id="paint-toolbar" class="toolbar-section">
-                            <label>Tile:</label>
-                            <div id="paint-palette" class="paint-palette"></div>
+                    <div id="assign-toolbar" class="toolbar-section hidden">
+                        <label>Player:</label>
+                        <div id="player-palette" class="player-palette"></div>
+                    </div>
+                    <div id="dice-toolbar" class="toolbar-section hidden">
+                        <label>Dice:</label>
+                        <div id="dice-palette" class="dice-palette"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right settings panel -->
+            <div class="editor-settings">
+                <div class="control-group">
+                    <label>Name</label>
+                    <input type="text" id="editor-name" placeholder="My Map" maxlength="40">
+                </div>
+                
+                <div class="control-group">
+                    <label>Description</label>
+                    <input type="text" id="editor-description" placeholder="Optional description" maxlength="100">
+                </div>
+                
+                <hr class="editor-divider">
+                
+                <div class="control-row">
+                    <div class="control-group half">
+                        <label>Width</label>
+                        <div class="range-row">
+                            <input type="range" id="editor-width" min="3" max="20" value="7">
+                            <span id="editor-width-val">7</span>
                         </div>
-                        
-                        <!-- Assign mode toolbar -->
-                        <div id="assign-toolbar" class="toolbar-section hidden">
-                            <label>Player:</label>
-                            <div id="player-palette" class="player-palette"></div>
-                        </div>
-                        
-                        <!-- Dice mode toolbar -->
-                        <div id="dice-toolbar" class="toolbar-section hidden">
-                            <label>Dice:</label>
-                            <div id="dice-palette" class="dice-palette"></div>
+                    </div>
+                    <div class="control-group half">
+                        <label>Height</label>
+                        <div class="range-row">
+                            <input type="range" id="editor-height" min="3" max="20" value="7">
+                            <span id="editor-height-val">7</span>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Right: Settings panel -->
-                <div class="editor-settings">
-                    <div class="control-group">
-                        <label>Name</label>
-                        <input type="text" id="editor-name" placeholder="My Map" maxlength="40">
+                <hr class="editor-divider">
+                
+                <div class="control-group">
+                    <label>Players <span id="player-count-display">(2)</span></label>
+                    <div id="editor-player-list" class="editor-player-list"></div>
+                    <button id="add-player-btn" class="tron-btn small">+ Add Player</button>
+                </div>
+                
+                <hr class="editor-divider">
+                
+                <div class="control-row">
+                    <div class="control-group half">
+                        <label>Max Dice</label>
+                        <select id="editor-max-dice">
+                            <option value="4">4</option>
+                            <option value="6">6</option>
+                            <option value="9" selected>9</option>
+                            <option value="12">12</option>
+                            <option value="16">16</option>
+                        </select>
                     </div>
-                    
-                    <div class="control-group">
-                        <label>Description</label>
-                        <input type="text" id="editor-description" placeholder="Optional description" maxlength="100">
+                    <div class="control-group half">
+                        <label>Dice Sides</label>
+                        <select id="editor-dice-sides">
+                            <option value="4">4</option>
+                            <option value="6" selected>6</option>
+                            <option value="8">8</option>
+                            <option value="10">10</option>
+                            <option value="12">12</option>
+                        </select>
                     </div>
-                    
-                    <hr class="editor-divider">
-                    
-                    <div class="control-row">
-                        <div class="control-group half">
-                            <label>Width</label>
-                            <div class="range-row">
-                                <input type="range" id="editor-width" min="3" max="20" value="7">
-                                <span id="editor-width-val">7</span>
-                            </div>
-                        </div>
-                        <div class="control-group half">
-                            <label>Height</label>
-                            <div class="range-row">
-                                <input type="range" id="editor-height" min="3" max="20" value="7">
-                                <span id="editor-height-val">7</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <hr class="editor-divider">
-                    
-                    <div class="control-group">
-                        <label>Players <span id="player-count-display">(2)</span></label>
-                        <div id="editor-player-list" class="editor-player-list"></div>
-                        <button id="add-player-btn" class="tron-btn small">+ Add Player</button>
-                    </div>
-                    
-                    <hr class="editor-divider">
-                    
-                    <!-- Scenario-specific settings -->
-                    <div class="control-row">
-                        <div class="control-group half">
-                            <label>Max Dice</label>
-                            <select id="editor-max-dice">
-                                <option value="4">4</option>
-                                <option value="6">6</option>
-                                <option value="9" selected>9</option>
-                                <option value="12">12</option>
-                                <option value="16">16</option>
-                            </select>
-                        </div>
-                        <div class="control-group half">
-                            <label>Dice Sides</label>
-                            <select id="editor-dice-sides">
-                                <option value="4">4</option>
-                                <option value="6" selected>6</option>
-                                <option value="8">8</option>
-                                <option value="10">10</option>
-                                <option value="12">12</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <hr class="editor-divider">
-                    
-                    <div class="editor-actions">
-                        <button id="save-as-map-btn" class="tron-btn">💾 Save as Map</button>
-                        <button id="save-as-scenario-btn" class="tron-btn">💾 Save as Scenario</button>
-                    </div>
-                    
-                    <div class="editor-quick-actions">
-                        <button id="editor-clear-btn" class="tron-btn small">Clear</button>
-                        <button id="editor-fill-btn" class="tron-btn small">Fill</button>
-                        <button id="editor-randomize-btn" class="tron-btn small">Random Dice</button>
-                    </div>
+                </div>
+                
+                <hr class="editor-divider">
+                
+                <div class="editor-actions">
+                    <button id="save-as-map-btn" class="tron-btn">💾 Save as Map</button>
+                    <button id="save-as-scenario-btn" class="tron-btn">💾 Save as Scenario</button>
+                </div>
+                
+                <div class="editor-quick-actions">
+                    <button id="editor-clear-btn" class="tron-btn small">Clear</button>
+                    <button id="editor-fill-btn" class="tron-btn small">Fill</button>
+                    <button id="editor-randomize-btn" class="tron-btn small">Random Dice</button>
                 </div>
             </div>
         </div>

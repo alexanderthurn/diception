@@ -2251,69 +2251,59 @@ input[type="range"] {
 }
 
 /* ============================================
-   MAP / SCENARIO EDITOR
+   MAP / SCENARIO EDITOR (Overlay Mode)
    ============================================ */
 
-.editor-content {
-    display: flex;
-    gap: 20px;
-    height: 65vh;
-    min-height: 400px;
+/* Main overlay container */
+.editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    pointer-events: none; /* Allow clicks through to canvas */
 }
 
-.editor-canvas-area {
-    flex: 1;
+.editor-overlay.hidden {
+    display: none;
+}
+
+/* Enable pointer events on child elements */
+.editor-overlay > * {
+    pointer-events: auto;
+}
+
+/* Top bar */
+.editor-top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 70%, transparent 100%);
+    z-index: 10;
+}
+
+.editor-top-bar .tron-title {
+    margin: 0;
+}
+
+/* Bottom bar */
+.editor-bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 300px; /* Leave space for settings panel */
     display: flex;
     flex-direction: column;
     gap: 10px;
-    min-width: 0;
-}
-
-.editor-grid {
-    flex: 1;
-    display: grid;
-    gap: 0;
-    background: rgba(0, 0, 0, 0.8);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 4px;
-    overflow: auto;
-    min-height: 200px;
-}
-
-.editor-cell {
-    width: 100%;
-    aspect-ratio: 1;
-    min-width: 12px;
-    max-width: 28px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
-    font-weight: bold;
-    user-select: none;
-}
-
-.editor-cell.empty {
-    background: #1a1a22;
-}
-
-.editor-cell.empty:hover {
-    background: #2a2a35;
-}
-
-.editor-cell.active {
-    border: 1px solid rgba(255, 255, 255, 0.4);
-}
-
-.editor-cell.active:hover {
-    border-color: rgba(255, 255, 255, 0.7);
-}
-
-.editor-cell .dice-count {
-    font-size: 8px;
-    text-shadow: 0 0 2px #000;
+    padding: 15px 20px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 70%, transparent 100%);
+    z-index: 10;
 }
 
 /* Mode Tabs */
@@ -2470,18 +2460,22 @@ input[type="range"] {
     transform: scale(1.1);
 }
 
-/* Settings Panel */
+/* Settings Panel (positioned as overlay on right) */
 .editor-settings {
+    position: absolute;
+    top: 70px;
+    right: 10px;
+    bottom: 10px;
     width: 280px;
-    min-width: 260px;
     padding: 15px;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.85);
     border-radius: 8px;
     border: 1px solid var(--border-color);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 0;
+    z-index: 10;
 }
 
 .editor-settings .control-group {
@@ -2665,23 +2659,40 @@ input[type="range"] {
 
 /* Mobile responsive */
 @media (max-width: 900px) {
-    .editor-content {
-        flex-direction: column;
-        height: auto;
-        max-height: 80vh;
-    }
-    
-    .editor-canvas-area {
-        min-height: 300px;
+    .editor-bottom-bar {
+        right: 0;
+        padding-bottom: 10px;
     }
     
     .editor-settings {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
         width: 100%;
-        max-height: 300px;
+        max-height: 40vh;
+        border-radius: 12px 12px 0 0;
+        transform: translateY(calc(100% - 50px));
+        transition: transform 0.3s ease;
     }
     
-    .editor-grid {
-        min-height: 250px;
+    .editor-settings:hover,
+    .editor-settings:focus-within {
+        transform: translateY(0);
+    }
+    
+    .editor-settings::before {
+        content: '⬆ Settings';
+        display: block;
+        text-align: center;
+        padding: 8px;
+        color: #888;
+        font-size: 12px;
+        border-bottom: 1px solid rgba(100, 100, 120, 0.3);
+        margin: -15px -15px 10px -15px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 12px 12px 0 0;
     }
 }
 
