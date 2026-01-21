@@ -2136,7 +2136,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         // Play Button
         const playBtn = document.createElement('button');
         playBtn.className = 'tron-btn small';
-        playBtn.textContent = '▶ Play';
+        playBtn.innerHTML = '▶ <span class="btn-text">Play</span>';
         playBtn.onclick = (e) => {
             e.stopPropagation();
             loadSelectedScenario();
@@ -2146,7 +2146,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         // Export Button
         const exportBtn = document.createElement('button');
         exportBtn.className = 'tron-btn small';
-        exportBtn.textContent = '💾 Save';
+        exportBtn.innerHTML = '💾 <span class="btn-text">Save</span>';
         exportBtn.onclick = (e) => {
             e.stopPropagation();
             const json = scenarioManager.exportScenario(scenario.id);
