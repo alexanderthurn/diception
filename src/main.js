@@ -2046,6 +2046,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     let currentScenarioTab = 'replays';
     let selectedScenarioId = null;
     let selectedScenarioData = null;
+    let currentSort = { field: 'date', direction: 'desc' };
 
     const updateActionButtons = () => {
         const hasSelection = !!selectedScenarioId;
@@ -2084,10 +2085,63 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             return false;
         });
 
-        // Sort by date (newest first)
-        filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        // Sorting
+        filtered.sort((a, b) => {
+            let valA, valB;
+            const field = currentSort.field;
+
+            if (field === 'players') {
+                valA = a.players ? a.players.length : 0;
+                valB = b.players ? b.players.length : 0;
+            } else if (field === 'size') {
+                valA = (a.width || 0) * (a.height || 0);
+                valB = (b.width || 0) * (b.height || 0);
+            } else if (field === 'date') {
+                valA = a.createdAt || 0;
+                valB = b.createdAt || 0;
+            } else if (field === 'name') {
+                valA = (a.name || '').toLowerCase();
+                valB = (b.name || '').toLowerCase();
+            }
+
+            if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
+            if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
 
         scenarioListBody.innerHTML = '';
+
+        // Update Headers
+        const getSortIcon = (field) => {
+            if (currentSort.field !== field) return '';
+            return currentSort.direction === 'asc' ? ' ▲' : ' ▼';
+        };
+
+        const tableHead = document.querySelector('.scenario-table thead tr');
+        let headerHTML = `
+            <th data-sort="name" style="width: 40%">Name${getSortIcon('name')}</th>
+            <th data-sort="size" style="width: 15%">Size${getSortIcon('size')}</th>
+        `;
+        if (currentScenarioTab !== 'maps') {
+            headerHTML += `<th data-sort="players" style="width: 15%">Players${getSortIcon('players')}</th>`;
+        }
+        headerHTML += `<th data-sort="date" style="width: 30%">Date${getSortIcon('date')}</th>`;
+
+        tableHead.innerHTML = headerHTML;
+
+        // Header Click Listeners
+        tableHead.querySelectorAll('th').forEach(th => {
+            th.addEventListener('click', () => {
+                const field = th.dataset.sort;
+                if (currentSort.field === field) {
+                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.field = field;
+                    currentSort.direction = (field === 'date') ? 'desc' : 'asc';
+                }
+                renderScenarioTable();
+            });
+        });
 
         const emptyMessages = {
             replays: 'No saved replays yet.',
@@ -2096,7 +2150,8 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         };
 
         if (filtered.length === 0) {
-            scenarioListBody.innerHTML = `<tr><td colspan="4" class="empty-message">${emptyMessages[currentScenarioTab]}</td></tr>`;
+            const colSpan = currentScenarioTab === 'maps' ? 3 : 4;
+            scenarioListBody.innerHTML = `<tr><td colspan="${colSpan}" class="empty-message">${emptyMessages[currentScenarioTab]}</td></tr>`;
             selectedScenarioId = null;
             selectedScenarioData = null;
             updateActionButtons();
@@ -2111,27 +2166,25 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 selectedScenarioData = s;
             }
 
-            const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleDateString() : 'Built-in';
+            const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleDateString() : (s.isBuiltIn ? 'Built-in' : '-');
             const sizeStr = `${s.width}x${s.height}`;
             const playersStr = s.players ? `${s.players.length}p` : '-';
 
-            // Icon based on type
-            let icon = '⭐';
-            if (s.type === 'map') icon = '🗺️';
-            else if (s.type === 'replay') icon = '⏪';
-
-            tr.innerHTML = `
+            let html = `
                 <td>
                     <div class="cell-name">
-                        <span class="icon">${icon}</span>
                         <span>${s.name}</span>
-                        ${s.isBuiltIn ? '<span class="badge">Built-in</span>' : ''}
                     </div>
                 </td>
                 <td>${sizeStr}</td>
-                <td>${playersStr}</td>
-                <td>${dateStr}</td>
             `;
+
+            if (currentScenarioTab !== 'maps') {
+                html += `<td>${playersStr}</td>`;
+            }
+
+            html += `<td>${dateStr}</td>`;
+            tr.innerHTML = html;
 
             tr.addEventListener('click', () => {
                 document.querySelectorAll('#scenario-list-body tr').forEach(row => row.classList.remove('selected'));

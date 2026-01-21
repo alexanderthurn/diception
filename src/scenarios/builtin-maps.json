@@ -1,10 +1,11 @@
 [
     {
         "id": "map_duel_arena",
-        "name": "⚔️ Duel Arena",
+        "name": "Duel Arena",
         "description": "Balanced 2-player arena layout",
         "type": "map",
         "isBuiltIn": true,
+        "author": "Alexander Thurn",
         "width": 7,
         "height": 7,
         "tiles": [
@@ -192,10 +193,11 @@
     },
     {
         "id": "map_four_corners",
-        "name": "🏰 Four Corners",
+        "name": "Four Corners",
         "description": "4-player symmetric layout with center gap",
         "type": "map",
         "isBuiltIn": true,
+        "author": "Alexander Thurn",
         "width": 9,
         "height": 9,
         "tiles": [
@@ -443,10 +445,11 @@
     },
     {
         "id": "map_world",
-        "name": "🌍 World Map",
+        "name": "World Map",
         "description": "Risk-style continents layout",
         "type": "map",
         "isBuiltIn": true,
+        "author": "Alexander Thurn",
         "width": 12,
         "height": 10,
         "tiles": [
@@ -742,10 +745,11 @@
     },
     {
         "id": "map_ring",
-        "name": "💍 Ring Arena",
+        "name": "Ring Arena",
         "description": "Circular arena layout",
         "type": "map",
         "isBuiltIn": true,
+        "author": "Alexander Thurn",
         "width": 9,
         "height": 9,
         "tiles": [
@@ -833,10 +837,11 @@
     },
     {
         "id": "map_cross",
-        "name": "✝️ Cross",
+        "name": "Cross",
         "description": "Cross-shaped layout with central chokepoint",
         "type": "map",
         "isBuiltIn": true,
+        "author": "Alexander Thurn",
         "width": 9,
         "height": 9,
         "tiles": [
@@ -1024,10 +1029,11 @@
     },
     {
         "id": "map_archipelago",
-        "name": "🏝️ Archipelago",
+        "name": "Archipelago",
         "description": "Island chain connected by bridges",
         "type": "map",
         "isBuiltIn": true,
+        "author": "Alexander Thurn",
         "width": 11,
         "height": 9,
         "tiles": [
@@ -1247,10 +1253,11 @@
     },
     {
         "id": "map_diamond",
-        "name": "💎 Diamond",
+        "name": "Diamond",
         "description": "Diamond-shaped compact layout",
         "type": "map",
         "isBuiltIn": true,
+        "author": "Alexander Thurn",
         "width": 7,
         "height": 7,
         "tiles": [
@@ -1358,10 +1365,11 @@
     },
     {
         "id": "map_hourglass",
-        "name": "⏳ Hourglass",
+        "name": "Hourglass",
         "description": "Two regions connected by narrow passage",
         "type": "map",
         "isBuiltIn": true,
+        "author": "Alexander Thurn",
         "width": 9,
         "height": 9,
         "tiles": [

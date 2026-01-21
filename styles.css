@@ -1698,7 +1698,8 @@ input[type="range"] {
 .scenario-table th {
     text-align: left;
     padding: 10px;
-    background: rgba(0, 255, 255, 0.1);
+    background: #000;
+    /* Opaque background for sticky header */
     color: var(--accent-color);
     font-size: 0.9em;
     text-transform: uppercase;
@@ -1706,6 +1707,13 @@ input[type="range"] {
     top: 0;
     z-index: 10;
     border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    user-select: none;
+}
+
+.scenario-table th:hover {
+    color: #fff;
+    background: #111;
 }
 
 .scenario-table td {
