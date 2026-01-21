@@ -1812,27 +1812,45 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || '100';
 
     // Load saved scenario if any
-    const savedScenarioId = localStorage.getItem('dicy_loadedScenario');
-    if (savedScenarioId) {
-        try {
-            console.log('Loading saved scenario:', savedScenarioId);
-            const scenario = scenarioManager.loadScenario(savedScenarioId);
-            console.log('Loaded scenario:', scenario);
-            if (scenario) {
-                pendingScenario = scenario;
-                updateConfigFromScenario(scenario);
-                updateLoadedScenarioDisplay(scenario.name);
-                console.log('Scenario loaded successfully:', scenario.name);
-            } else {
-                // Scenario no longer exists, remove from localStorage
-                console.warn('Scenario not found, removing from localStorage:', savedScenarioId);
+    const loadSavedScenario = () => {
+        const savedScenarioId = localStorage.getItem('dicy_loadedScenario');
+        if (savedScenarioId) {
+            try {
+                console.log('Loading saved scenario:', savedScenarioId);
+                console.log('Scenario manager has', scenarioManager.scenarios.size, 'scenarios loaded');
+                const scenario = scenarioManager.loadScenario(savedScenarioId);
+                console.log('Loaded scenario result:', scenario ? 'found' : 'not found');
+                if (scenario) {
+                    pendingScenario = scenario;
+                    updateConfigFromScenario(scenario);
+                    updateLoadedScenarioDisplay(scenario.name);
+                    console.log('Scenario loaded successfully:', scenario.name);
+                } else {
+                    // Scenario no longer exists, remove from localStorage
+                    console.warn('Scenario not found, removing from localStorage:', savedScenarioId);
+                    localStorage.removeItem('dicy_loadedScenario');
+                }
+            } catch (error) {
+                console.warn('Failed to load saved scenario:', error);
                 localStorage.removeItem('dicy_loadedScenario');
             }
-        } catch (error) {
-            console.warn('Failed to load saved scenario:', error);
-            localStorage.removeItem('dicy_loadedScenario');
         }
-    }
+    };
+
+    // Load saved scenario after a short delay to ensure scenario manager is ready
+    const tryLoadScenario = (attempts = 0) => {
+        const savedScenarioId = localStorage.getItem('dicy_loadedScenario');
+        if (!savedScenarioId) return;
+
+        const scenario = scenarioManager.loadScenario(savedScenarioId);
+        if (scenario || attempts >= 10) {
+            loadSavedScenario();
+        } else {
+            setTimeout(() => tryLoadScenario(attempts + 1), 50);
+        }
+    };
+
+    setTimeout(() => tryLoadScenario(), 10);
 
     mapSizeInput.value = sliderValue;
     humanCountInput.value = savedHumanCount;
@@ -1987,18 +2005,31 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         setupModal.classList.add('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
 
+        // Load pending scenario from localStorage if needed
+        const loadPendingScenarioIfNeeded = () => {
+            if (!pendingScenario) {
+                const savedScenarioId = localStorage.getItem('dicy_loadedScenario');
+                if (savedScenarioId) {
+                    const scenario = scenarioManager.loadScenario(savedScenarioId);
+                    if (scenario) {
+                        pendingScenario = scenario;
+                    }
+                }
+            }
+        };
+
         // Start game from scenario or regular config
-        // Start game from scenario or regular config
+        loadPendingScenarioIfNeeded();
+
         if (pendingScenario && pendingScenario.type !== 'map') {
             // Apply the loaded scenario or replay (fixed state)
             scenarioManager.applyScenarioToGame(game, pendingScenario);
             game.emit('gameStart', { players: game.players, map: game.map });
             game.startTurn();
             pendingScenario = null;
-            // Reset map size display and scenario name
+            // Keep scenario loaded for reuse - don't clear localStorage
+            // Reset map size display but keep scenario name visible
             mapSizeVal.textContent = sizePreset.label;
-            updateLoadedScenarioDisplay(null);
-            localStorage.removeItem('dicy_loadedScenario');
         } else {
             // New Game (Random Map or Preset Map)
             const config = {
@@ -2018,9 +2049,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 config.mapWidth = pendingScenario.width;
                 config.mapHeight = pendingScenario.height;
                 pendingScenario = null;
-                // Reset display for map scenarios too
-                updateLoadedScenarioDisplay(null);
-                localStorage.removeItem('dicy_loadedScenario');
+                // Keep scenario loaded for reuse - don't clear display or localStorage
             }
 
             game.startGame(config);

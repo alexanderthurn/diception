@@ -13,19 +13,23 @@ const MAX_SCENARIOS = 50;
 export class ScenarioManager {
     constructor() {
         this.scenarios = new Map();
+        console.log('ScenarioManager constructor called');
         this.loadFromStorage();
+        console.log('ScenarioManager loaded', this.scenarios.size, 'scenarios');
     }
 
     /**
      * Load all scenarios from localStorage
      */
     loadFromStorage() {
+        console.log('ScenarioManager.loadFromStorage called');
         this.scenarios.clear();
 
         try {
             const data = localStorage.getItem(STORAGE_KEY);
             if (data) {
                 const parsed = JSON.parse(data);
+                console.log('Loaded', parsed.length, 'user scenarios from localStorage');
                 if (Array.isArray(parsed)) {
                     for (const scenario of parsed) {
                         if (scenario && scenario.id) {
@@ -39,7 +43,9 @@ export class ScenarioManager {
         }
 
         // Add built-in scenarios if not present
+        console.log('Calling ensureBuiltInScenarios');
         this.ensureBuiltInScenarios();
+        console.log('ensureBuiltInScenarios completed, total scenarios:', this.scenarios.size);
     }
 
     /**
@@ -269,6 +275,7 @@ export class ScenarioManager {
      * Add built-in scenarios if not present
      */
     ensureBuiltInScenarios() {
+        console.log('Loading builtin scenarios:', builtinScenarios.length);
         // Load built-in scenarios from JSON
         for (const scenario of builtinScenarios) {
             // Always overwrite to ensure latest version (e.g. name changes)
@@ -278,6 +285,7 @@ export class ScenarioManager {
             });
         }
 
+        console.log('Loading builtin maps:', builtinMaps.length);
         // Load built-in maps from JSON
         // Maps are scenarios with type='map' and no fixed players/dice
         for (const map of builtinMaps) {
@@ -291,5 +299,6 @@ export class ScenarioManager {
                 players: map.players || []
             });
         }
+        console.log('Built-in maps loaded, checking for map_archipelago:', this.scenarios.has('map_archipelago'));
     }
 }
