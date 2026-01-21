@@ -1660,6 +1660,70 @@ input[type="range"] {
     color: #000;
 }
 
+/* Scenario Browser Styles */
+.modal-header.compact-header {
+    justify-content: flex-start;
+    /* Align start to accommodate tabs */
+    gap: 15px;
+    padding: 10px 15px;
+    align-items: center;
+}
+
+.header-tabs {
+    flex: 1;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+}
+
+/* Adjust tab buttons for header */
+.header-tabs .scenario-tab {
+    flex: 0 0 auto;
+    /* Don't stretch */
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.header-tabs .scenario-tab:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.header-tabs .scenario-tab.active {
+    background: rgba(0, 255, 255, 0.15);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    font-weight: bold;
+    box-shadow: 0 0 10px var(--primary-color-glow);
+}
+
+/* Tighter on mobile */
+@media (max-width: 600px) {
+    .modal-header.compact-header {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .header-tabs {
+        gap: 4px;
+    }
+
+    .header-tabs .scenario-tab {
+        padding: 5px 8px;
+        font-size: 0.8rem;
+    }
+
+    /* Hide icon or text if too small? maybe just text-overflow?
+       Or keep as is, emoji + text might fit 3 items. */
+}
+
+/* Remove old references if they conflict */
 /* Scenario Action Bars */
 .scenario-actions-top {
     margin-bottom: 10px;

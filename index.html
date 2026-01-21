@@ -442,16 +442,16 @@
 
         <!-- Scenario Browser Modal -->
         <div id="scenario-browser-modal" class="modal hidden large-modal">
-            <div class="modal-header">
-                <h2 class="tron-title small">SCENARIOS</h2>
+            <div class="modal-header compact-header">
+                <div class="scenario-tabs header-tabs">
+                    <button class="scenario-tab active" data-tab="maps">🗺️ Maps</button>
+                    <button class="scenario-tab" data-tab="scenarios">⭐ Scenarios</button>
+                    <button class="scenario-tab" data-tab="replays">⏪ Replays</button>
+                </div>
                 <button id="scenario-browser-close-btn" class="close-btn">×</button>
             </div>
             <div class="scenario-browser-content">
-                <div class="scenario-tabs">
-                    <button class="scenario-tab active" data-tab="replays">⏪ Replays</button>
-                    <button class="scenario-tab" data-tab="scenarios">⭐ Scenarios</button>
-                    <button class="scenario-tab" data-tab="maps">🗺️ Maps</button>
-                </div>
+                <!-- Tabs moved to header -->
 
                 <div class="scenario-actions-top">
                     <button id="scenario-load-btn" class="tron-btn small" disabled>▶ Load Selected</button>

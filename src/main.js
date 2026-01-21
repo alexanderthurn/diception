@@ -2043,7 +2043,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     const saveScenarioConfirmBtn = document.getElementById('save-scenario-confirm-btn');
     const saveScenarioCancelBtn = document.getElementById('save-scenario-cancel-btn');
 
-    let currentScenarioTab = 'replays';
+    let currentScenarioTab = 'maps';
     let selectedScenarioId = null;
     let selectedScenarioData = null;
     let currentSort = { field: 'date', direction: 'desc' };
@@ -2097,7 +2097,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 const y = tile.y * (tileSize + gap) + gap;
 
                 // Determine color
-                let color = '#222';
+                let color = '#444'; // Lighter gray for better visibility against black background
                 if (tile.owner !== undefined && tile.owner !== -1) {
                     const c = playerColors[tile.owner];
                     if (c !== undefined) {
@@ -2445,7 +2445,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             try {
                 const scenario = scenarioManager.importScenario(json);
                 alert(`Imported: ${scenario.name}`);
-                renderScenarioGrid();
+                renderScenarioTable();
             } catch (e) {
                 alert('Import failed: ' + e.message);
             }
