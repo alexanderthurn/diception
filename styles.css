@@ -1795,15 +1795,12 @@ input[type="range"] {
     flex-wrap: wrap;
 }
 
-/* Mobile: Remove rounded corners for buttons in this modal */
+/* Mobile: Compact buttons helper (opt-in) */
 @media (max-width: 600px) {
-    #scenario-browser-modal .tron-btn {
-        border-radius: 4px;
-        /* Keep slight roundness or remove? User said 'not rounded'. */
+    .btn-mobile-small {
         border-radius: 0 !important;
-        padding: 5px 8px;
-        /* Tighter padding */
-        font-size: 0.8em;
+        padding: 5px 8px !important;
+        font-size: 0.8em !important;
     }
 }
 
