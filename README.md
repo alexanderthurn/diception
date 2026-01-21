@@ -54,5 +54,7 @@ TODO:
 * BattleLog for Bots should be seen immediately when a bot is playing, this is important for beginners to see what is going on.
 
 * No reload when changing visual effects
-* change basic settings. dice sides should be minimum 1 and not 2. max dice per territory should be 16 and not 20
 * if it is a bots turn, do not show the border of the active player as white, keep the color of the player. only if a human is active, make it like now (white)
+
+
+* change basic settings. dice sides should be minimum 1 and not 2. max dice per territory should be 16 and not 20
