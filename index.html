@@ -457,10 +457,9 @@
                         <div id="scenario-list"></div>
                     </div>
                     <div class="scenario-left-actions">
-                        <button id="scenario-import-btn" class="tron-btn small">📥 <span
-                                class="btn-text">Import</span></button>
-                        <button id="scenario-editor-btn" class="tron-btn small" title="Open Map Editor">✏️ <span
-                                class="btn-text">Editor</span></button>
+                        <button id="new-scenario-btn" class="tron-btn small full-width">
+                            + New Map
+                        </button>
                     </div>
                 </div>
                 <div class="scenario-browser-right">
@@ -469,6 +468,15 @@
                         <div class="empty-message-large">
                             Select a scenario to view details
                         </div>
+                    </div>
+                    <div class="scenario-right-actions"
+                        style="margin-top: auto; padding-top: 10px; border-top: 1px solid #333; display: flex; justify-content: flex-end; gap: 10px;">
+                        <button id="scenario-export-btn" class="tron-btn small" disabled>
+                            💾 <span class="btn-text">Export</span>
+                        </button>
+                        <button id="scenario-import-btn" class="tron-btn small">
+                            📥 <span class="btn-text">Import</span>
+                        </button>
                     </div>
                 </div>
             </div>

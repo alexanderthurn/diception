@@ -66,7 +66,7 @@ export class Renderer {
         this.game.on('turnStart', () => this.draw()); // update highlights
     }
 
-    autoFitCamera() {
+    autoFitCamera(fitRatio = 1.0) {
         if (!this.game.map || !this.rootContainer) return;
 
         const map = this.game.map;
@@ -85,10 +85,10 @@ export class Renderer {
         // Calculate scale to fit
         const scaleX = screenWidth / mapPixelWidth;
         const scaleY = screenHeight / mapPixelHeight;
-        const scale = Math.min(scaleX, scaleY, 1.5); // Cap at 1.5x to avoid being too zoomed
+        const scale = Math.min(scaleX, scaleY, 1.5) * fitRatio; // Apply fitRatio
 
         // Apply scale
-        this.rootContainer.scale.set(Math.max(0.3, scale));
+        this.rootContainer.scale.set(Math.max(0.2, scale)); // Allow slightly smaller scale
 
         // Center the map with offset for left sidebar on desktop
         const scaledWidth = mapPixelWidth * this.rootContainer.scale.x;

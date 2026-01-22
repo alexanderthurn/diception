@@ -97,6 +97,14 @@ export class GridRenderer {
         this.overlayContainer.x = 0;
         this.overlayContainer.y = 0;
 
+        if (this.paintMode) {
+            // Draw map boundary border
+            const borderGfx = new Graphics();
+            borderGfx.rect(-2, -2, mapPixelWidth + 4 - this.gap, mapPixelHeight + 4 - this.gap);
+            borderGfx.stroke({ width: 2, color: 0xFFFFFF, alpha: 0.3 });
+            this.container.addChild(borderGfx);
+        }
+
         // Get largest connected regions for ALL alive players
         const largestRegions = new Map();
         for (const player of this.game.players) {

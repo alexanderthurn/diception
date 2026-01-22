@@ -761,7 +761,7 @@ export class MapEditor {
 
         // Only auto-fit camera when explicitly requested (e.g., on open or resize)
         if (fitCamera) {
-            this.renderer.autoFitCamera();
+            this.renderer.autoFitCamera(0.5); // Zoom out to 50% relative to fit
         }
     }
 

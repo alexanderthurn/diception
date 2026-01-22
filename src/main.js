@@ -2180,7 +2180,10 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
     const scenariosBtn = document.getElementById('scenarios-btn');
     const scenarioTabs = document.querySelectorAll('.scenario-tab');
+    const newScenarioBtn = document.getElementById('new-scenario-btn');
     const scenarioImportBtn = document.getElementById('scenario-import-btn');
+    const scenarioExportBtn = document.getElementById('scenario-export-btn');
+    // scenarioEditorBtn removed from HTML
     const scenarioEditorBtn = document.getElementById('scenario-editor-btn');
 
     const saveScenarioModal = document.getElementById('save-scenario-modal');
@@ -2295,27 +2298,6 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         };
         actionsDiv.appendChild(playBtn);
 
-        // Export Button
-        const exportBtn = document.createElement('button');
-        exportBtn.className = 'tron-btn small';
-        exportBtn.innerHTML = '💾 <span class="btn-text">Save</span>';
-        exportBtn.onclick = (e) => {
-            e.stopPropagation();
-            const json = scenarioManager.exportScenario(scenario.id);
-            if (json) {
-                const blob = new Blob([json], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${scenario.id}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-        };
-        actionsDiv.appendChild(exportBtn);
-
         // Edit Button - opens scenario in editor
         const editBtn = document.createElement('button');
         editBtn.className = 'tron-btn small';
@@ -2385,9 +2367,11 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         }
 
         // Stats
+        const typeName = scenario.type === 'map' ? 'Map' : (scenario.type === 'replay' ? 'Replay' : 'Scenario');
         if (scenario.isBuiltIn) {
-            addDetail('Type', 'Built-in Scenario');
+            addDetail('Type', `Built-in ${typeName}`);
         } else {
+            addDetail('Type', `Custom ${typeName}`);
             addDetail('Created', scenario.createdAt ? new Date(scenario.createdAt).toLocaleString() : 'Unknown');
         }
 
@@ -2436,8 +2420,11 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         if (filtered.length === 0) {
             scenarioList.innerHTML = `<div class="empty-message">${emptyMessages[currentScenarioTab]}</div>`;
             document.getElementById('scenario-preview-content').innerHTML = '<div class="empty-message-large">Select a scenario to view details</div>';
+            scenarioList.innerHTML = `<div class="empty-message">${emptyMessages[currentScenarioTab]}</div>`;
+            document.getElementById('scenario-preview-content').innerHTML = '<div class="empty-message-large">Select a scenario to view details</div>';
             selectedScenarioId = null;
             selectedScenarioData = null;
+            if (scenarioExportBtn) scenarioExportBtn.disabled = true;
             return;
         }
 
@@ -2449,17 +2436,20 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             }
 
             const dateStr = s.createdAt ? new Date(s.createdAt).toLocaleDateString() : '';
+            const builtInLabel = s.isBuiltIn ? ' <span class="builtin-label">(built-in)</span>' : '';
 
             item.innerHTML = `
-                <span class="list-item-name">${s.name}</span>
+                <span class="list-item-name">${s.name}${builtInLabel}</span>
                 <span class="list-item-date">${dateStr}</span>
             `;
 
             item.addEventListener('click', () => {
                 document.querySelectorAll('.scenario-list-item').forEach(i => i.classList.remove('selected'));
                 item.classList.add('selected');
+                item.classList.add('selected');
                 selectedScenarioId = s.id;
                 selectedScenarioData = s;
+                if (scenarioExportBtn) scenarioExportBtn.disabled = false;
                 showScenarioPreview(s);
             });
 
@@ -2467,6 +2457,14 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
             scenarioList.appendChild(item);
         });
+
+        // Update New Button state
+        if (currentScenarioTab === 'replays') {
+            newScenarioBtn.style.display = 'none';
+        } else {
+            newScenarioBtn.style.display = 'block';
+            newScenarioBtn.textContent = currentScenarioTab === 'maps' ? '+ New Map' : '+ New Scenario';
+        }
 
         // Auto-select first item if none selected or if previously selected is gone
         if (filtered.length > 0) {
@@ -2545,36 +2543,100 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     // Close scenario browser
     scenarioBrowserCloseBtn.addEventListener('click', () => {
         scenarioBrowserModal.classList.add('hidden');
+        setupModal.classList.remove('hidden');
     });
 
-    // Import scenario
-    scenarioImportBtn.addEventListener('click', () => {
-        const json = prompt('Paste scenario JSON:');
-        if (json) {
-            try {
-                const scenario = scenarioManager.importScenario(json);
-                alert(`Imported: ${scenario.name}`);
+    // New Map/Scenario Button
+    if (newScenarioBtn) {
+        newScenarioBtn.addEventListener('click', () => {
+            scenarioBrowserModal.classList.add('hidden');
+
+            const template = {
+                width: 10,
+                height: 10,
+                name: '', // Empty name to force entry
+                isBuiltIn: false,
+                type: currentScenarioTab === 'scenarios' ? 'scenario' : 'map'
+            };
+
+            mapEditor.open(template);
+
+            // Highlight name input
+            setTimeout(() => {
+                if (mapEditor.elements.nameInput) {
+                    mapEditor.elements.nameInput.focus();
+                    mapEditor.elements.nameInput.select();
+                }
+            }, 100);
+
+            mapEditor.onClose = () => {
                 renderScenarioList();
-            } catch (e) {
-                alert('Import failed: ' + e.message);
+                scenarioBrowserModal.classList.remove('hidden');
+            };
+        });
+    }
+
+    // Import scenario (File Based)
+    if (scenarioImportBtn) {
+        scenarioImportBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                try {
+                    const text = await file.text();
+                    const scenario = scenarioManager.importScenario(text);
+                    alert(`Imported: ${scenario.name}`);
+                    renderScenarioList();
+                } catch (e) {
+                    alert('Import failed: ' + e.message);
+                }
+            };
+
+            input.click();
+        });
+    }
+
+    // Export Scenario (Footer Button)
+    if (scenarioExportBtn) {
+        scenarioExportBtn.addEventListener('click', () => {
+            if (!selectedScenarioId) return;
+
+            const json = scenarioManager.exportScenario(selectedScenarioId);
+            if (json) {
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${selectedScenarioData.name.replace(/[^a-z0-9]/gi, '_')}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             }
-        }
-    });
+        });
+    }
 
-    // Map Editor (placeholder)
-    scenarioEditorBtn.addEventListener('click', () => {
-        // Close the scenario browser
-        scenarioBrowserModal.classList.add('hidden');
+    // Map Editor Launch (Selected Item) - Button removed from HTML, keeping logic conditional just in case
+    if (scenarioEditorBtn) {
+        scenarioEditorBtn.addEventListener('click', () => {
+            // Close the scenario browser
+            scenarioBrowserModal.classList.add('hidden');
 
-        // Open editor with selected scenario (if any), or blank for new
-        mapEditor.open(selectedScenarioData);
+            // Open editor with selected scenario (if any), or blank for new
+            mapEditor.open(selectedScenarioData);
 
-        // When editor closes, refresh the scenario list
-        mapEditor.onClose = () => {
-            renderScenarioList();
-            scenarioBrowserModal.classList.remove('hidden');
-        };
-    });
+            // When editor closes, refresh the scenario list
+            mapEditor.onClose = () => {
+                renderScenarioList();
+                scenarioBrowserModal.classList.remove('hidden');
+            };
+        });
+    }
 
     // Save Scenario Modal
     saveScenarioCloseBtn.addEventListener('click', () => {
