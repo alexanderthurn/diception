@@ -375,8 +375,19 @@ export class MapEditor {
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            if (this.isOpen && e.key === 'Escape') {
+            if (!this.isOpen) return;
+
+            // Ignore if typing in input fields
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            if (e.key === 'Escape') {
                 this.close();
+            } else if (e.key.toLowerCase() === 'y') {
+                this.setMode('paint');
+            } else if (e.key.toLowerCase() === 'x') {
+                this.setMode('assign');
+            } else if (e.key.toLowerCase() === 'c') {
+                this.setMode('dice');
             }
         });
     }

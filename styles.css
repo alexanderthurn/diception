@@ -2262,7 +2262,8 @@ input[type="range"] {
     right: 0;
     bottom: 0;
     z-index: 100;
-    pointer-events: none; /* Allow clicks through to canvas */
+    pointer-events: none;
+    /* Allow clicks through to canvas */
 }
 
 .editor-overlay.hidden {
@@ -2270,7 +2271,7 @@ input[type="range"] {
 }
 
 /* Enable pointer events on child elements */
-.editor-overlay > * {
+.editor-overlay>* {
     pointer-events: auto;
 }
 
@@ -2297,7 +2298,8 @@ input[type="range"] {
     position: absolute;
     bottom: 0;
     left: 0;
-    right: 300px; /* Leave space for settings panel */
+    right: 300px;
+    /* Leave space for settings panel */
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -2307,31 +2309,40 @@ input[type="range"] {
 }
 
 /* Mode Tabs */
+/* Mode Tabs */
 .editor-mode-tabs {
     display: flex;
-    gap: 5px;
+    gap: 0;
 }
 
 .editor-tab {
-    flex: 1;
-    padding: 10px 12px;
+    flex: 0 0 auto;
+    padding: 10px 20px;
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border-color);
     color: var(--border-color);
     cursor: pointer;
     transition: all 0.2s;
     font-size: 13px;
-    border-radius: 6px;
+    border-radius: 0;
+    margin-right: -1px;
+}
+
+.editor-tab:last-child {
+    margin-right: 0;
 }
 
 .editor-tab:hover {
     background: rgba(0, 255, 255, 0.1);
+    z-index: 1;
 }
 
 .editor-tab.active {
     background: var(--border-color);
     color: #000;
     font-weight: bold;
+    z-index: 2;
+    position: relative;
 }
 
 /* Toolbar */
@@ -2663,7 +2674,7 @@ input[type="range"] {
         right: 0;
         padding-bottom: 10px;
     }
-    
+
     .editor-settings {
         position: fixed;
         top: auto;
@@ -2676,12 +2687,12 @@ input[type="range"] {
         transform: translateY(calc(100% - 50px));
         transition: transform 0.3s ease;
     }
-    
+
     .editor-settings:hover,
     .editor-settings:focus-within {
         transform: translateY(0);
     }
-    
+
     .editor-settings::before {
         content: '⬆ Settings';
         display: block;
@@ -2700,17 +2711,17 @@ input[type="range"] {
     .editor-mode-tabs {
         flex-wrap: wrap;
     }
-    
+
     .editor-tab {
         flex: 1 1 30%;
         padding: 8px 6px;
         font-size: 12px;
     }
-    
+
     .editor-player-row {
         flex-wrap: wrap;
     }
-    
+
     .editor-player-type,
     .editor-player-ai {
         flex: 1 1 40%;
