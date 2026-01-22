@@ -264,13 +264,26 @@ export class InputController {
         this.cursorVisible = false;
         this.renderer.setCursor(null, null);
 
-        if (e.button === 2) { // Right click
+        // Check input types
+        const isRightClick = e.button === 2;
+        const isMiddleClick = e.button === 1;
+        const isShiftHeld = e.global.originalEvent ? e.global.originalEvent.shiftKey : false;
+
+        if (isRightClick) { // Right click
             this.deselect();
             return;
         }
 
-        this.isDragging = true;
-        this.lastPos = { x: e.global.x, y: e.global.y };
+        // Drag Logic:
+        // - Allow Middle Click
+        // - Allow Left Click (if NOT holding Shift)
+        // - If Shift is held, we NEVER drag (it's for editor painting or other interactions)
+        const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0);
+
+        if (canDrag) {
+            this.isDragging = true;
+            this.lastPos = { x: e.global.x, y: e.global.y };
+        }
 
         const globalPos = e.global;
         // Convert to local grid coordinates
@@ -319,7 +332,9 @@ export class InputController {
         // Check if it was a click (little movement)
         const dist = Math.abs(e.global.x - this.startDragPos.x) + Math.abs(e.global.y - this.startDragPos.y);
 
-        if (dist < 10) {
+        // Only handle clicks for LEFT mouse button (0)
+        // Middle button (1) is for pan only
+        if (dist < 10 && e.button === 0) {
             // It's a click
             if (this.clickTarget) {
                 this.handleTileClick(this.clickTarget.tile, this.clickTarget.x, this.clickTarget.y);
