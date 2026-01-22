@@ -884,11 +884,6 @@ export class MapEditor {
                 const targetOwner = isRightClick ? this.state.secondarySelectedPlayer : this.state.selectedPlayer;
                 if (tile) {
                     tile.owner = targetOwner;
-                } else {
-                    this.state.tiles.set(key, {
-                        owner: targetOwner,
-                        dice: this.state.diceBrushValue
-                    });
                 }
                 break;
 
