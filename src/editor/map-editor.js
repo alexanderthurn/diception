@@ -710,12 +710,22 @@ export class MapEditor {
         this.setupCanvasEvents();
 
         this.isOpen = true;
+
+        // Initial paint mode set
+        if (this.renderer && this.renderer.grid) {
+            this.renderer.grid.setPaintMode(true);
+        }
     }
 
     /**
      * Close editor
      */
     close() {
+        // Disable paint mode in renderer
+        if (this.renderer && this.renderer.grid) {
+            this.renderer.grid.setPaintMode(false);
+        }
+
         // Restore original game
         if (this.renderer && this.originalGame) {
             this.renderer.game = this.originalGame;
@@ -912,6 +922,12 @@ export class MapEditor {
         this.elements.paintToolbar?.classList.toggle('hidden', mode !== 'paint');
         this.elements.assignToolbar?.classList.toggle('hidden', mode !== 'assign');
         this.elements.diceToolbar?.classList.toggle('hidden', mode !== 'dice');
+
+        // Update renderer paint mode (only in paint mode do we hide details)
+        if (this.renderer && this.renderer.grid) {
+            this.renderer.grid.setPaintMode(mode === 'paint');
+            this.renderToCanvas();
+        }
     }
 
     /**

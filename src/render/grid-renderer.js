@@ -44,6 +44,13 @@ export class GridRenderer {
 
         // Cache for current player's largest region edges
         this.currentPlayerRegionEdges = [];
+
+        // Editor paint mode (neutral rendering)
+        this.paintMode = false;
+    }
+
+    setPaintMode(enabled) {
+        this.paintMode = enabled;
     }
 
     setGameSpeed(speed) {
@@ -134,82 +141,80 @@ export class GridRenderer {
                 const fillAlpha = isCurrentPlayer ? 0.6 : 0.3;
 
                 tileGfx.rect(0, 0, this.tileSize, this.tileSize);
-                tileGfx.fill({ color: color, alpha: fillAlpha });
 
-                // Border logic
-                if (isCurrentPlayer) {
-                    // Use white border for human players, player color for bots
-                    const borderColor = currentPlayer.isBot ? color : 0xffffff;
-                    if (tileRaw.dice > 1) {
-                        tileGfx.stroke({ width: 2, color: borderColor, alpha: 1.0 });
-                    } else {
-                        tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.8 });
-                    }
+                if (this.paintMode) {
+                    // Paint mode: Neutral gray, no numbers, simple border
+                    tileGfx.fill({ color: 0x444444, alpha: 0.8 });
+                    tileGfx.stroke({ width: 1, color: 0x666666, alpha: 0.8 });
                 } else {
-                    tileGfx.stroke({ width: 1, color: color, alpha: 0.6 });
-                }
+                    // Normal game mode
+                    tileGfx.fill({ color: color, alpha: fillAlpha });
 
-                // Draw OUTER borders for largest region tiles
-                if (isInLargestRegion) {
-                    const edgeDefs = [
-                        { dx: 0, dy: -1, x1: 0, y1: 0, x2: this.tileSize, y2: 0 },
-                        { dx: 0, dy: 1, x1: 0, y1: this.tileSize, x2: this.tileSize, y2: this.tileSize },
-                        { dx: -1, dy: 0, x1: 0, y1: 0, x2: 0, y2: this.tileSize },
-                        { dx: 1, dy: 0, x1: this.tileSize, y1: 0, x2: this.tileSize, y2: this.tileSize }
-                    ];
+                    // Border logic
+                    if (isCurrentPlayer) {
+                        // Use white border for human players, player color for bots
+                        const borderColor = currentPlayer.isBot ? color : 0xffffff;
+                        if (tileRaw.dice > 1) {
+                            tileGfx.stroke({ width: 2, color: borderColor, alpha: 1.0 });
+                        } else {
+                            tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.8 });
+                        }
+                    } else {
+                        tileGfx.stroke({ width: 1, color: color, alpha: 0.6 });
+                    }
 
-                    for (const edge of edgeDefs) {
-                        const nx = x + edge.dx;
-                        const ny = y + edge.dy;
-                        const neighbor = map.getTileRaw(nx, ny);
+                    // Draw OUTER borders for largest region tiles
+                    if (isInLargestRegion) {
+                        const edgeDefs = [
+                            { dx: 0, dy: -1, x1: 0, y1: 0, x2: this.tileSize, y2: 0 },
+                            { dx: 0, dy: 1, x1: 0, y1: this.tileSize, x2: this.tileSize, y2: this.tileSize },
+                            { dx: -1, dy: 0, x1: 0, y1: 0, x2: 0, y2: this.tileSize },
+                            { dx: 1, dy: 0, x1: this.tileSize, y1: 0, x2: this.tileSize, y2: this.tileSize }
+                        ];
 
-                        const isOuterEdge = !neighbor || neighbor.blocked || neighbor.owner !== tileRaw.owner;
+                        for (const edge of edgeDefs) {
+                            const nx = x + edge.dx;
+                            const ny = y + edge.dy;
+                            const neighbor = map.getTileRaw(nx, ny);
 
-                        if (isOuterEdge) {
-                            let borderColor;
-                            if (isCurrentPlayer) {
-                                // Use white for human players, player color for bots
-                                borderColor = currentPlayer.isBot ? color : 0xffffff;
-                            } else {
-                                // Non-current players get dimmed color
-                                const r = (color >> 16) & 0xFF;
-                                const g = (color >> 8) & 0xFF;
-                                const b = color & 0xFF;
-                                borderColor = ((r * 0.6) << 16) | ((g * 0.6) << 8) | (b * 0.6);
-                            }
+                            const isOuterEdge = !neighbor || neighbor.blocked || neighbor.owner !== tileRaw.owner;
 
-                            tileGfx.moveTo(edge.x1, edge.y1);
-                            tileGfx.lineTo(edge.x2, edge.y2);
-                            tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.85 });
-
-                            // Collect edges for current player's shimmer effect
-                            // Orient edges for CLOCKWISE flow:
-                            // - Top edges (dy=-1): left→right (x1<x2) - already correct
-                            // - Right edges (dx=1): top→bottom (y1<y2) - already correct
-                            // - Bottom edges (dy=1): right→left - swap to x1>x2
-                            // - Left edges (dx=-1): bottom→top - swap to y1>y2
-                            if (isCurrentPlayer) {
-                                const pixelX = x * (this.tileSize + this.gap);
-                                const pixelY = y * (this.tileSize + this.gap);
-
-                                let ex1 = pixelX + edge.x1;
-                                let ey1 = pixelY + edge.y1;
-                                let ex2 = pixelX + edge.x2;
-                                let ey2 = pixelY + edge.y2;
-
-                                // Swap for clockwise orientation
-                                if (edge.dy === 1) {
-                                    // Bottom edge: should flow right to left
-                                    [ex1, ex2] = [ex2, ex1];
-                                } else if (edge.dx === -1) {
-                                    // Left edge: should flow bottom to top
-                                    [ey1, ey2] = [ey2, ey1];
+                            if (isOuterEdge) {
+                                let borderColor;
+                                if (isCurrentPlayer) {
+                                    // Use white for human players, player color for bots
+                                    borderColor = currentPlayer.isBot ? color : 0xffffff;
+                                } else {
+                                    // Non-current players get dimmed color
+                                    const r = (color >> 16) & 0xFF;
+                                    const g = (color >> 8) & 0xFF;
+                                    const b = color & 0xFF;
+                                    borderColor = ((r * 0.6) << 16) | ((g * 0.6) << 8) | (b * 0.6);
                                 }
 
-                                this.currentPlayerRegionEdges.push({
-                                    x1: ex1, y1: ey1,
-                                    x2: ex2, y2: ey2
-                                });
+                                tileGfx.moveTo(edge.x1, edge.y1);
+                                tileGfx.lineTo(edge.x2, edge.y2);
+                                tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.85 });
+
+                                // Collect edges for current player's shimmer effect
+                                // Orient edges for CLOCKWISE flow
+                                if (isCurrentPlayer) {
+                                    const pixelX = x * (this.tileSize + this.gap);
+                                    const pixelY = y * (this.tileSize + this.gap);
+
+                                    let ex1 = pixelX + edge.x1;
+                                    let ey1 = pixelY + edge.y1;
+                                    let ex2 = pixelX + edge.x2;
+                                    let ey2 = pixelY + edge.y2;
+
+                                    if (edge.dy === 1) [ex1, ex2] = [ex2, ex1];
+                                    else if (edge.dx === -1) [ey1, ey2] = [ey2, ey1];
+
+                                    this.currentPlayerRegionEdges.push({
+                                        x1: ex1, y1: ey1,
+                                        x2: ex2, y2: ey2
+                                    });
+                                }
                             }
                         }
                     }
@@ -217,9 +222,11 @@ export class GridRenderer {
 
                 tileContainer.addChild(tileGfx);
 
-                // Dice color: White (null tint) for active player, player color for inactive
-                const diceColor = isCurrentPlayer ? null : color;
-                this.renderDice(tileContainer, tileRaw.dice, diceColor);
+                // Dice rendering (skip in paint mode)
+                if (!this.paintMode) {
+                    const diceColor = isCurrentPlayer ? null : color;
+                    this.renderDice(tileContainer, tileRaw.dice, diceColor);
+                }
 
                 this.container.addChild(tileContainer);
             }
