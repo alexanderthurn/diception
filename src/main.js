@@ -2589,7 +2589,42 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
                 try {
                     const text = await file.text();
-                    const scenario = scenarioManager.importScenario(text);
+
+                    // Parse and validate first
+                    const scenario = scenarioManager.parseImport(text);
+
+                    // Check for existing ID
+                    const existing = scenarioManager.getScenario(scenario.id);
+                    if (existing) {
+                        const choice = confirm(
+                            `A scenario with ID "${scenario.id}" already exists.\n\n` +
+                            `Click OK to REPLACE the existing scenario.\n` +
+                            `Click Cancel to import as a NEW scenario.`
+                        );
+
+                        if (choice) {
+                            // Replace (keep ID)
+                            // Mark as custom and update timestamp
+                            scenario.isBuiltIn = false;
+                            scenario.createdAt = Date.now();
+                        } else {
+                            // Save as new (generate new ID)
+                            const prefix = scenario.type === 'map' ? 'map' : 'scenario';
+                            scenario.id = scenarioManager.generateUniqueId(prefix);
+                            scenario.isBuiltIn = false;
+                            scenario.createdAt = Date.now();
+                            // Append (Copy) to name
+                            scenario.name = scenario.name + ' (Imported)';
+                        }
+                    } else {
+                        // New scenario, ensure internal fields are correct
+                        scenario.isBuiltIn = false;
+                        if (!scenario.createdAt) scenario.createdAt = Date.now();
+                    }
+
+                    // Save
+                    scenarioManager.saveEditorScenario(scenario);
+
                     alert(`Imported: ${scenario.name}`);
                     renderScenarioList();
                 } catch (e) {

@@ -191,7 +191,11 @@ export class ScenarioManager {
      * @param {string} json 
      * @returns {Object}
      */
-    importScenario(json) {
+    /**
+     * Import a scenario from JSON but do NOT save it yet.
+     * Returns the scenario object if valid.
+     */
+    parseImport(json) {
         let scenario;
         try {
             scenario = JSON.parse(json);
@@ -204,14 +208,14 @@ export class ScenarioManager {
             throw new Error('Invalid scenario: ' + validation.errors.join(', '));
         }
 
-        // Generate new ID to avoid conflicts
-        scenario.id = 'scenario_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        scenario.isBuiltIn = false;
-        scenario.createdAt = Date.now();
-
-        this.scenarios.set(scenario.id, scenario);
-        this.saveToStorage();
         return scenario;
+    }
+
+    /**
+     * Generate a new unique ID for a scenario
+     */
+    generateUniqueId(prefix = 'scenario') {
+        return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
     /**
