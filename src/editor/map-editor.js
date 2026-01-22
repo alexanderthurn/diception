@@ -209,8 +209,10 @@ export class MapEditor {
     createEmptyState(width = 7, height = 7) {
         return {
             id: null,
+            id: null,
             name: 'New Map',
             description: '',
+            author: '',
             width,
             height,
             tiles: new Map(), // "x,y" -> { owner, dice }
@@ -277,6 +279,7 @@ export class MapEditor {
             // Settings
             nameInput: document.getElementById('editor-name'),
             descriptionInput: document.getElementById('editor-description'),
+            authorInput: document.getElementById('editor-author'),
             widthSlider: document.getElementById('editor-width'),
             widthVal: document.getElementById('editor-width-val'),
             heightSlider: document.getElementById('editor-height'),
@@ -341,6 +344,11 @@ export class MapEditor {
 
         this.elements.descriptionInput?.addEventListener('input', (e) => {
             this.state.description = e.target.value;
+            this.state.isDirty = true;
+        });
+
+        this.elements.authorInput?.addEventListener('input', (e) => {
+            this.state.author = e.target.value;
             this.state.isDirty = true;
         });
 
@@ -792,7 +800,9 @@ export class MapEditor {
      */
     updateUIFromState() {
         if (this.elements.nameInput) this.elements.nameInput.value = this.state.name;
+        if (this.elements.nameInput) this.elements.nameInput.value = this.state.name;
         if (this.elements.descriptionInput) this.elements.descriptionInput.value = this.state.description;
+        if (this.elements.authorInput) this.elements.authorInput.value = this.state.author || '';
         if (this.elements.widthSlider) this.elements.widthSlider.value = this.state.width;
         if (this.elements.widthVal) this.elements.widthVal.textContent = this.state.width;
         if (this.elements.heightSlider) this.elements.heightSlider.value = this.state.height;
@@ -1174,10 +1184,11 @@ export class MapEditor {
         const mapData = {
             id: this.state.originalId || generateScenarioId(),
             name: name,
+            name: name,
             description: this.state.description,
             type: 'map',
             isBuiltIn: false,
-            author: 'User',
+            author: this.state.author || 'User',
             createdAt: Date.now(),
             width: this.state.width,
             height: this.state.height,
@@ -1252,7 +1263,7 @@ export class MapEditor {
             description: this.state.description,
             type: 'scenario',
             isBuiltIn: false,
-            author: 'User',
+            author: this.state.author || 'User',
             createdAt: Date.now(),
             width: this.state.width,
             height: this.state.height,
@@ -1293,6 +1304,7 @@ export class MapEditor {
         this.state.originalId = scenario.isBuiltIn ? null : scenario.id;
         this.state.name = scenario.isBuiltIn ? scenario.name + ' (Copy)' : scenario.name;
         this.state.description = scenario.description || '';
+        this.state.author = scenario.isBuiltIn ? 'User' : (scenario.author || 'User');
         this.state.maxDice = scenario.maxDice || 9;
         this.state.diceSides = scenario.diceSides || 6;
 
