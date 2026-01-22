@@ -2327,6 +2327,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             mapEditor.open(scenario);
             mapEditor.onClose = () => {
                 renderScenarioList();
+                scenarioBrowserModal.classList.remove('hidden');
             };
         };
         actionsDiv.appendChild(editBtn);
@@ -2564,13 +2565,14 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     scenarioEditorBtn.addEventListener('click', () => {
         // Close the scenario browser
         scenarioBrowserModal.classList.add('hidden');
-        
+
         // Open editor with selected scenario (if any), or blank for new
         mapEditor.open(selectedScenarioData);
-        
+
         // When editor closes, refresh the scenario list
         mapEditor.onClose = () => {
             renderScenarioList();
+            scenarioBrowserModal.classList.remove('hidden');
         };
     });
 
