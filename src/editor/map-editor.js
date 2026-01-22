@@ -14,6 +14,19 @@ const DEFAULT_COLORS = [
 ];
 
 /**
+ * Helper to decide black or white text based on background color
+ */
+function getContrastColor(hex) {
+    // Separate RGB
+    const r = (hex >> 16) & 0xFF;
+    const g = (hex >> 8) & 0xFF;
+    const b = hex & 0xFF;
+    // Calculate brightness (luma)
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#000000' : '#ffffff';
+}
+
+/**
  * Adapter to make editor state look like a MapManager
  */
 class EditorMapAdapter {
@@ -300,7 +313,13 @@ export class MapEditor {
             gamePanel: document.querySelector('.game-panel'),
             endTurnBtn: document.getElementById('end-turn-btn'),
             aiToggleBtn: document.getElementById('ai-toggle-btn'),
-            setupModal: document.getElementById('setup-modal')
+            aiToggleBtn: document.getElementById('ai-toggle-btn'),
+            setupModal: document.getElementById('setup-modal'),
+
+            // Cursor preview
+            cursorPreview: document.getElementById('editor-cursor-preview'),
+            cursorPreviewPrimary: document.querySelector('#editor-cursor-preview .preview-box.primary .preview-content'),
+            cursorPreviewSecondary: document.querySelector('#editor-cursor-preview .preview-box.secondary .preview-content')
         };
 
         this.bindEvents();
@@ -438,6 +457,74 @@ export class MapEditor {
     }
 
     /**
+     * Update cursor preview position and content
+     */
+    updateCursorPreview(x, y) {
+        if (!this.elements.cursorPreview) return;
+
+        // Position
+        this.elements.cursorPreview.style.transform = `translate(${x + 20}px, ${y + 20}px)`;
+        this.elements.cursorPreview.classList.remove('hidden');
+
+        // Helper to render box content
+        const renderBox = (element, type, mode, isSecondary) => {
+            element.innerHTML = '';
+            element.className = 'preview-content'; // Reset class
+
+            // Determine effective values
+            let player = this.state.selectedPlayer;
+            let dice = this.state.diceBrushValue;
+
+            if (mode === 'assign' && isSecondary) player = this.state.secondarySelectedPlayer;
+            if (mode === 'dice' && isSecondary) dice = this.state.secondaryDiceBrushValue;
+
+            // Handle Paint mode logic
+            let action = 'add';
+            if (mode === 'paint') {
+                if (this.state.paintMode === 'add') {
+                    // Add mode: Left=Add, Right=Remove
+                    action = isSecondary ? 'remove' : 'add';
+                } else {
+                    // Remove mode: Both=Remove
+                    action = 'remove';
+                }
+            } else if (mode === 'assign' || mode === 'dice') {
+                action = 'modify';
+            }
+
+            // Render
+            if (action === 'remove') {
+                element.innerHTML = '✖';
+                element.classList.add('preview-tile-remove');
+                element.style.background = 'rgba(0,0,0,0.8)';
+                element.style.borderColor = '#aaa';
+            } else {
+                // Get player color
+                const pObj = this.state.players.find(p => p.id === player);
+                const color = pObj ? pObj.color : 0xffffff;
+                const hex = '#' + color.toString(16).padStart(6, '0');
+
+                element.style.background = hex;
+                element.style.borderColor = '#fff';
+                element.style.color = getContrastColor(color); // We need a helper for contrast text
+
+                // Content
+                if (mode === 'assign') {
+                    // Just show color, maybe player ID small
+                    element.textContent = ''; // Just color block
+                } else {
+                    // Show dice number
+                    element.textContent = dice;
+                    element.classList.add('preview-tile-dice');
+                }
+            }
+        };
+
+        renderBox(this.elements.cursorPreviewPrimary, 'primary', this.state.currentMode, false);
+        renderBox(this.elements.cursorPreviewSecondary, 'secondary', this.state.currentMode, true);
+    }
+
+    /**
      * Setup canvas mouse events for painting
      */
     setupCanvasEvents() {
@@ -461,10 +548,16 @@ export class MapEditor {
         this.handleCanvasTouchMove = this.onCanvasTouchMove.bind(this);
         this.handleCanvasTouchEnd = this.onCanvasTouchEnd.bind(this);
 
+        // onCanvasMouseOut handler for hiding cursor
+        this.handleCanvasMouseOut = () => {
+            this.elements.cursorPreview?.classList.add('hidden');
+        };
+
         // Add listeners
         canvas.addEventListener('mousedown', this.handleCanvasMouseDown);
         canvas.addEventListener('mousemove', this.handleCanvasMouseMove);
         canvas.addEventListener('mouseup', this.handleCanvasMouseUp);
+        canvas.addEventListener('mouseout', this.handleCanvasMouseOut); // New listener
         canvas.addEventListener('touchstart', this.handleCanvasTouchStart, { passive: false });
         canvas.addEventListener('touchmove', this.handleCanvasTouchMove, { passive: false });
         canvas.addEventListener('touchend', this.handleCanvasTouchEnd);
@@ -513,16 +606,21 @@ export class MapEditor {
     }
 
     onCanvasMouseMove(e) {
-        if (!this.isOpen || !this.isPainting) return;
+        if (!this.isOpen) return;
 
-        const tile = this.screenToTile(e.clientX, e.clientY);
-        if (tile) {
-            const key = `${tile.x},${tile.y}`;
-            if (this.lastPaintedTile !== key) {
-                this.handleTileInteraction(tile.x, tile.y, this.currentInteractionButton, this.currentInteractionShift);
-                this.lastPaintedTile = key;
+        if (this.isPainting) {
+            const tile = this.screenToTile(e.clientX, e.clientY);
+            if (tile) {
+                const key = `${tile.x},${tile.y}`;
+                if (this.lastPaintedTile !== key) {
+                    this.handleTileInteraction(tile.x, tile.y, this.currentInteractionButton, this.currentInteractionShift);
+                    this.lastPaintedTile = key;
+                }
             }
         }
+
+        // Update cursor preview
+        this.updateCursorPreview(e.clientX, e.clientY);
     }
 
     onCanvasMouseUp() {
