@@ -267,7 +267,10 @@ export class InputController {
         // Check input types
         const isRightClick = e.button === 2;
         const isMiddleClick = e.button === 1;
-        const isShiftHeld = e.global.originalEvent ? e.global.originalEvent.shiftKey : false;
+
+        // Fix: Check modifiers correctly on Pixi FederatedPointerEvent
+        // It has .shiftKey directly, or we fall back to originalEvent
+        const isShiftHeld = e.shiftKey || (e.originalEvent && e.originalEvent.shiftKey);
 
         if (isRightClick) { // Right click
             this.deselect();
