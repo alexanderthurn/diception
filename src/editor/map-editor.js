@@ -300,6 +300,10 @@ export class MapEditor {
             playerPalette: document.getElementById('player-palette'),
             dicePalette: document.getElementById('dice-palette'),
 
+            // New Sections
+            playersSection: document.getElementById('editor-players-section'),
+            diceSettingsSection: document.getElementById('editor-dice-settings-section'),
+
             // Players
             playerList: document.getElementById('editor-player-list'),
             playerCountDisplay: document.getElementById('player-count-display'),
@@ -933,6 +937,21 @@ export class MapEditor {
         this.elements.assignToolbar?.classList.toggle('hidden', mode !== 'assign');
         this.elements.diceToolbar?.classList.toggle('hidden', mode !== 'dice');
 
+        // Toggle Right Pane Elements based on Mode
+        if (mode === 'paint') {
+            // Paint Mode: Hide players stuff, dice settings, save as scenario
+            this.elements.playersSection?.classList.add('hidden');
+            this.elements.diceSettingsSection?.classList.add('hidden');
+            this.elements.saveAsScenarioBtn?.classList.add('hidden');
+            this.elements.saveAsMapBtn?.classList.remove('hidden');
+        } else {
+            // Assign/Dice Mode: Show players stuff, dice settings, save as scenario. Hide save as map
+            this.elements.playersSection?.classList.remove('hidden');
+            this.elements.diceSettingsSection?.classList.remove('hidden');
+            this.elements.saveAsScenarioBtn?.classList.remove('hidden');
+            this.elements.saveAsMapBtn?.classList.add('hidden');
+        }
+
         // Update renderer paint mode (only in paint mode do we hide details)
         if (this.renderer && this.renderer.grid) {
             this.renderer.grid.setPaintMode(mode === 'paint');
@@ -1181,9 +1200,21 @@ export class MapEditor {
             if (this.elements.nameInput) this.elements.nameInput.value = name;
         }
 
+        // Generate ID from name
+        const idBase = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const newId = `map_${idBase}`;
+
+        // Check for collision (if ID changed or is new)
+        if (newId !== this.state.originalId) {
+            const existing = this.scenarioManager.getScenario(newId);
+            if (existing) {
+                alert(`A map with ID "${newId}" already exists! Please choose a different name.`);
+                return null;
+            }
+        }
+
         const mapData = {
-            id: this.state.originalId || generateScenarioId(),
-            name: name,
+            id: newId,
             name: name,
             description: this.state.description,
             type: 'map',
@@ -1257,8 +1288,21 @@ export class MapEditor {
             this.renderToCanvas();
         }
 
+        // Generate ID from name
+        const idBase = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const newId = `scenario_${idBase}`;
+
+        // Check for collision
+        if (newId !== this.state.originalId) {
+            const existing = this.scenarioManager.getScenario(newId);
+            if (existing) {
+                alert(`A scenario with ID "${newId}" already exists! Please choose a different name.`);
+                return null;
+            }
+        }
+
         const scenarioData = {
-            id: this.state.originalId || generateScenarioId(),
+            id: newId,
             name: name,
             description: this.state.description,
             type: 'scenario',
