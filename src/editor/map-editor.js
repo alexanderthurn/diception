@@ -269,7 +269,9 @@ export class MapEditor {
             heightSlider: document.getElementById('editor-height'),
             heightVal: document.getElementById('editor-height-val'),
             maxDiceSelect: document.getElementById('editor-max-dice'),
+            maxDiceVal: document.getElementById('editor-max-dice-val'),
             diceSidesSelect: document.getElementById('editor-dice-sides'),
+            diceSidesVal: document.getElementById('editor-dice-sides-val'),
 
             // Mode tabs
             modeTabs: document.querySelectorAll('.editor-tab'),
@@ -337,8 +339,11 @@ export class MapEditor {
         });
 
         // Max dice and dice sides
-        this.elements.maxDiceSelect?.addEventListener('change', (e) => {
-            this.state.maxDice = parseInt(e.target.value);
+        this.elements.maxDiceSelect?.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            this.state.maxDice = val;
+            if (this.elements.maxDiceVal) this.elements.maxDiceVal.textContent = val;
+
             if (this.state.diceBrushValue > this.state.maxDice) {
                 this.state.diceBrushValue = this.state.maxDice;
             }
@@ -346,8 +351,11 @@ export class MapEditor {
             this.state.isDirty = true;
         });
 
-        this.elements.diceSidesSelect?.addEventListener('change', (e) => {
-            this.state.diceSides = parseInt(e.target.value);
+        this.elements.diceSidesSelect?.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            this.state.diceSides = val;
+            if (this.elements.diceSidesVal) this.elements.diceSidesVal.textContent = val;
+
             this.renderer?.setDiceSides(this.state.diceSides);
             this.state.isDirty = true;
             this.renderToCanvas();
@@ -388,8 +396,45 @@ export class MapEditor {
                 this.setMode('assign');
             } else if (e.key.toLowerCase() === 'c') {
                 this.setMode('dice');
+            } else if (/^[1-9]$/.test(e.key)) {
+                const num = parseInt(e.key);
+                this.handleNumberKey(num);
             }
         });
+    }
+
+    /**
+     * Handle number key presses for tool selection
+     */
+    handleNumberKey(num) {
+        switch (this.state.currentMode) {
+            case 'paint':
+                if (num === 1) {
+                    this.state.paintMode = 'add';
+                    this.renderPaintPalette();
+                } else if (num === 2) {
+                    this.state.paintMode = 'remove';
+                    this.renderPaintPalette();
+                }
+                break;
+
+            case 'assign':
+                // Select player (1-indexed input to 0-indexed array)
+                const playerIndex = num - 1;
+                if (playerIndex >= 0 && playerIndex < this.state.players.length) {
+                    this.state.selectedPlayer = this.state.players[playerIndex].id;
+                    this.renderPlayerPalette();
+                }
+                break;
+
+            case 'dice':
+                // Select dice brush value
+                if (num <= this.state.maxDice) {
+                    this.state.diceBrushValue = num;
+                    this.renderDicePalette();
+                }
+                break;
+        }
     }
 
     /**
