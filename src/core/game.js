@@ -31,6 +31,17 @@ export class Game {
         }
     }
 
+    reset() {
+        this.players = [];
+        this.currentPlayerIndex = 0;
+        this.turn = 1;
+        this.gameOver = true;
+        this.winner = null;
+        // Reset map to empty
+        this.map.generateMap(0, 0, [], this.maxDice, 'empty');
+        this.emit('gameReset');
+    }
+
     startGame(config) {
         // config: { humanCount, botCount, mapWidth, mapHeight, maxDice, diceSides, mapStyle, gameMode }
         this.players = [];

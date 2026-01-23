@@ -445,7 +445,37 @@ async function init() {
         game.endTurn();
     });
 
+
+
+    // Helper to completely reset game session
+    const resetGameSession = () => {
+        // Close editor if open
+        if (mapEditor.isOpen) {
+            mapEditor.close();
+        }
+
+        // Reset game logic
+        game.reset();
+
+        // Clear logs
+        logEntries.innerHTML = '';
+        currentTurnLog = null;
+        turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };
+
+        // Hide HUDs
+        diceResultHud.classList.add('hidden');
+        turnIndicator.classList.add('hidden');
+        endTurnBtn.classList.add('hidden');
+        autoWinBtn.classList.add('hidden');
+        playerDashboard.classList.add('hidden');
+        newGameBtn.classList.add('hidden');
+
+        // Clear renderer
+        renderer.draw(); // Will draw empty grid
+    };
+
     newGameBtn.addEventListener('click', () => {
+        resetGameSession();
         // Show setup modal and hide game UI
         setupModal.classList.remove('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
@@ -497,6 +527,7 @@ async function init() {
         }
 
         // Show setup modal (new game menu)
+        resetGameSession();
         setupModal.classList.remove('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
     });
@@ -2207,6 +2238,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         if (scenario) {
             pendingScenario = scenario;
             scenarioBrowserModal.classList.add('hidden');
+            setupModal.classList.remove('hidden'); // Ensure setup modal is visible
             updateConfigFromScenario(scenario);
 
             // Save loaded scenario to localStorage
