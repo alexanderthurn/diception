@@ -137,6 +137,13 @@ export class ScenarioManager {
     }
 
     /**
+     * Alias for loadScenario
+     */
+    getScenario(id) {
+        return this.loadScenario(id);
+    }
+
+    /**
      * Delete a scenario
      * @param {string} id 
      * @returns {boolean}

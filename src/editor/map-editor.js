@@ -208,8 +208,7 @@ export class MapEditor {
 
     createEmptyState(width = 7, height = 7) {
         return {
-            id: null,
-            id: null,
+            id: '',
             name: 'New Map',
             description: '',
             author: '',
@@ -277,6 +276,7 @@ export class MapEditor {
             backBtn: document.getElementById('editor-back-btn'),
 
             // Settings
+            idInput: document.getElementById('editor-id'),
             nameInput: document.getElementById('editor-name'),
             descriptionInput: document.getElementById('editor-description'),
             authorInput: document.getElementById('editor-author'),
@@ -341,6 +341,11 @@ export class MapEditor {
         this.elements.backBtn?.addEventListener('click', () => this.close());
 
         // Settings changes
+        this.elements.idInput?.addEventListener('input', (e) => {
+            this.state.id = e.target.value.trim();
+            this.state.isDirty = true;
+        });
+
         this.elements.nameInput?.addEventListener('input', (e) => {
             this.state.name = e.target.value;
             this.state.isDirty = true;
@@ -803,7 +808,7 @@ export class MapEditor {
      * Update UI elements from state
      */
     updateUIFromState() {
-        if (this.elements.nameInput) this.elements.nameInput.value = this.state.name;
+        if (this.elements.idInput) this.elements.idInput.value = this.state.id || '';
         if (this.elements.nameInput) this.elements.nameInput.value = this.state.name;
         if (this.elements.descriptionInput) this.elements.descriptionInput.value = this.state.description;
         if (this.elements.authorInput) this.elements.authorInput.value = this.state.author || '';
@@ -1200,15 +1205,21 @@ export class MapEditor {
             if (this.elements.nameInput) this.elements.nameInput.value = name;
         }
 
-        // Generate ID from name
-        const idBase = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        const newId = `map_${idBase}`;
+        // generate ID from name if not provided
+        let newId = this.state.id;
+        if (!newId) {
+            const idBase = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            newId = `map_${idBase}`;
+            // Update input so user sees what was generated
+            this.state.id = newId;
+            if (this.elements.idInput) this.elements.idInput.value = newId;
+        }
 
         // Check for collision (if ID changed or is new)
         if (newId !== this.state.originalId) {
             const existing = this.scenarioManager.getScenario(newId);
             if (existing) {
-                alert(`A map with ID "${newId}" already exists! Please choose a different name.`);
+                alert(`A map with ID "${newId}" already exists! Please choose a different ID or name.`);
                 return null;
             }
         }
@@ -1288,15 +1299,21 @@ export class MapEditor {
             this.renderToCanvas();
         }
 
-        // Generate ID from name
-        const idBase = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        const newId = `scenario_${idBase}`;
+        // Generate ID from name if not provided
+        let newId = this.state.id;
+        if (!newId) {
+            const idBase = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            newId = `scenario_${idBase}`;
+            // Update input so user sees what was generated
+            this.state.id = newId;
+            if (this.elements.idInput) this.elements.idInput.value = newId;
+        }
 
         // Check for collision
         if (newId !== this.state.originalId) {
             const existing = this.scenarioManager.getScenario(newId);
             if (existing) {
-                alert(`A scenario with ID "${newId}" already exists! Please choose a different name.`);
+                alert(`A scenario with ID "${newId}" already exists! Please choose a different ID or name.`);
                 return null;
             }
         }
@@ -1346,6 +1363,7 @@ export class MapEditor {
         this.state = this.createEmptyState(scenario.width || 7, scenario.height || 7);
 
         this.state.originalId = scenario.isBuiltIn ? null : scenario.id;
+        this.state.id = scenario.isBuiltIn ? '' : scenario.id; // Populate ID if not built-in
         this.state.name = scenario.isBuiltIn ? scenario.name + ' (Copy)' : scenario.name;
         this.state.description = scenario.description || '';
         this.state.author = scenario.isBuiltIn ? 'User' : (scenario.author || 'User');
