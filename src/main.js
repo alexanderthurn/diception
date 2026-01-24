@@ -9,6 +9,60 @@ import { EffectsManager } from './render/effects/effects-manager.js';
 import { ScenarioManager } from './scenarios/scenario-manager.js';
 import { TurnHistory } from './scenarios/turn-history.js';
 import { MapEditor } from './editor/map-editor.js';
+import { TileRenderer } from './render/tile-renderer.js';
+
+// Global Dice Export Function
+window.exportDiceIcon = async (options = {}) => {
+    const {
+        size = 512,
+        count = 1,
+        color = 0x9b59b6, // Default purple
+        sides = 6
+    } = options;
+
+    console.log('Exporting dice icon with options:', { size, count, color, sides });
+
+    // Ensure renderer is initialized
+    if (!window.gameApp) {
+        console.error('Game app not found. Game might not be fully initialized.');
+        return;
+    }
+
+    try {
+        // Create the tile container
+        const container = TileRenderer.createTile({
+            size,
+            diceCount: count,
+            diceSides: sides,
+            color,
+            fillAlpha: 1.0, // Solid opacity for icon
+            showBorder: true
+        });
+
+        // Use PixiJS extract to get base64 image
+        const image = await window.gameApp.renderer.extract.image(container);
+
+        // Convert the HTMLImageElement to a data URL if needed, or it might already be one source
+        // extract.image returns an HTMLImageElement. We can get the src from it.
+        const dataUrl = image.src;
+
+        // Create download link
+        const link = document.createElement('a');
+        link.download = `dice_icon_s${sides}_c${count}_${size}px.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        console.log('Dice icon exported successfully!');
+
+        // Cleanup
+        container.destroy({ children: true });
+
+    } catch (err) {
+        console.error('Failed to export dice icon:', err);
+    }
+};
 
 async function init() {
     // 1. Initialize Game Logic
@@ -18,6 +72,9 @@ async function init() {
     const container = document.getElementById('game-container');
     const renderer = new Renderer(container, game);
     await renderer.init();
+
+    // Expose app for export function
+    window.gameApp = renderer.app;
 
     // 2.5 Initialize Effects System (completely separate from renderer)
     const effectsManager = new EffectsManager(renderer.app.stage, game, {

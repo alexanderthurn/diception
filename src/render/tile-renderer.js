@@ -60,11 +60,13 @@ export class TileRenderer {
      */
     static createBgTexture(app, size, withBorder = false) {
         const g = new Graphics();
-        g.roundRect(0, 0, size, size, 4);
+        const scale = size / 60;
+
+        g.roundRect(0, 0, size, size, 4 * scale);
         g.fill({ color: 0xffffff, alpha: 1 });
 
         if (withBorder) {
-            g.stroke({ width: 2, color: 0xffffff, alpha: 1 });
+            g.stroke({ width: 2 * scale, color: 0xffffff, alpha: 1 });
         }
 
         const texture = app.renderer.generateTexture({
@@ -185,11 +187,12 @@ export class TileRenderer {
 
         // Background
         const bg = new Graphics();
-        bg.roundRect(0, 0, size, size, 4);
+        const scale = size / 60;
+        bg.roundRect(0, 0, size, size, 4 * scale);
         bg.fill({ color: color, alpha: fillAlpha });
 
         if (showBorder) {
-            bg.stroke({ width: 2, color: color, alpha: 0.8 });
+            bg.stroke({ width: 2 * scale, color: color, alpha: 0.8 });
         }
 
         container.addChild(bg);
@@ -199,7 +202,7 @@ export class TileRenderer {
             size,
             diceCount,
             diceSides,
-            color
+            color: null // Force white text/pips for better visibility (icon style)
         });
 
         return container;
@@ -220,19 +223,21 @@ export class TileRenderer {
         const centerY = size / 2;
 
         // Determine grid size and spacing based on count
+        const scaleFactor = size / 60; // Base size is 60
         let gridSize, fontSize, spacing;
+
         if (diceCount <= 9) {
             gridSize = 3;
-            fontSize = 12;
-            spacing = 13;
+            fontSize = 12 * scaleFactor;
+            spacing = 13 * scaleFactor;
         } else if (diceCount <= 16) {
             gridSize = 4;
-            fontSize = 10;
-            spacing = 11;
+            fontSize = 10 * scaleFactor;
+            spacing = 11 * scaleFactor;
         } else {
             gridSize = 5;
-            fontSize = 8;
-            spacing = 9;
+            fontSize = 8 * scaleFactor;
+            spacing = 9 * scaleFactor;
         }
 
         // Predefined patterns for 1-9 (classic dice layouts)
@@ -293,7 +298,7 @@ export class TileRenderer {
                 fontWeight: 'bold',
                 fill: 0xffffff,
                 align: 'center',
-                stroke: { color: 0x000000, width: 2 }
+                stroke: { color: 0x000000, width: Math.max(2, labelFontSize * 0.1) }
             }
         });
 
@@ -318,7 +323,7 @@ export class TileRenderer {
                 fontSize: fontSize,
                 fill: 0xffffff,
                 align: 'center',
-                stroke: { color: 0x000000, width: 2 }
+                stroke: { color: 0x000000, width: Math.max(2, fontSize * 0.1) }
             }
         });
 
