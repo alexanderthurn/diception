@@ -134,8 +134,8 @@ body {
 /* Global End Turn Button - Fixed bottom right on all devices */
 #end-turn-btn {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 40px;
+    right: 40px;
     z-index: 100;
     padding: 12px 25px;
     font-size: 16px;
@@ -148,8 +148,8 @@ body {
 
 #auto-win-btn {
     position: fixed;
-    bottom: 20px;
-    right: 200px;
+    bottom: 40px;
+    right: 240px;
     z-index: 100;
     width: 50px;
     height: 50px;
@@ -2726,7 +2726,9 @@ input[type="range"] {
     .editor-player-ai {
         flex: 1 1 40%;
     }
-}/* Cursor Preview */
+}
+
+/* Cursor Preview */
 .cursor-preview {
     position: fixed;
     pointer-events: none;
