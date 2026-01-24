@@ -912,6 +912,20 @@ input[type="range"] {
         box-shadow: none !important;
     }
 
+    #resume-modal {
+        width: 90% !important;
+        max-width: 320px !important;
+        height: auto !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        border: 2px solid var(--border-color) !important;
+        box-shadow: 0 0 20px var(--border-color) !important;
+        border-radius: 0 !important;
+        background: #000;
+        padding: 30px 20px;
+    }
+
     .tron-title {
         font-size: 24px;
         margin-bottom: 20px;
