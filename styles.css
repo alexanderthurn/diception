@@ -2794,3 +2794,16 @@ input[type="range"] {
 .preview-tile-dice {
     color: #fff;
 }
+
+@media (max-width: 600px) {
+
+    #scenario-preview-content .preview-header .preview-title,
+    .edit-scenario-btn,
+    #scenario-export-btn,
+    #scenario-import-btn,
+    #manage-ais-btn,
+    #new-scenario-btn,
+    #edit-scenario-btn {
+        display: none !important;
+    }
+}

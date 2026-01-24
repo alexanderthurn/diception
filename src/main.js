@@ -197,7 +197,8 @@ async function init() {
     const availableSongs = [
         'Neon Dice Offensive.mp3',
         'Neon Etude.mp3',
-        'Neon Odds.mp3'
+        'Neon Odds.mp3',
+        'Falling Into Place.mp3'
 
     ];
 
@@ -2400,7 +2401,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
         // Edit Button - opens scenario in editor
         const editBtn = document.createElement('button');
-        editBtn.className = 'tron-btn small';
+        editBtn.className = 'tron-btn small edit-scenario-btn';
         editBtn.innerHTML = '✏️ <span class="btn-text">Edit</span>';
         editBtn.title = 'Edit in Map Editor';
         editBtn.onclick = (e) => {
