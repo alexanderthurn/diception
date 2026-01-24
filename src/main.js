@@ -141,12 +141,23 @@ async function init() {
         'Neon Dice Offensive.mp3',
         'Neon Etude.mp3',
         'Neon Odds.mp3'
-        // TODO: Add the 2 new MP3 files here when they're available
-        // 'NewSong1.mp3',
-        // 'NewSong2.mp3'
+
     ];
 
-    let currentSongIndex = parseInt(localStorage.getItem('dicy_currentSongIndex') ?? '0');
+    let currentSongIndex = 0;
+    const storedIndex = localStorage.getItem('dicy_currentSongIndex');
+
+    if (storedIndex === null) {
+        // First time ever: start with first title
+        currentSongIndex = 0;
+    } else {
+        // Game restart: increment index (rotate playlist)
+        currentSongIndex = (parseInt(storedIndex, 10) + 1) % availableSongs.length;
+    }
+
+    // Save immediately so this counts as the "last started title"
+    localStorage.setItem('dicy_currentSongIndex', currentSongIndex.toString());
+
     const music = new Audio('./' + availableSongs[currentSongIndex]);
 
     // Load saved settings - music ON by default unless user explicitly disabled
