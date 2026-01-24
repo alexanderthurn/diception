@@ -6,6 +6,7 @@
 import { createScenarioFromGame } from './scenario-data.js';
 
 const MAX_HISTORY_LENGTH = 100; // Keep last 100 turns
+const AUTOSAVE_KEY = 'diceception_autosave';
 
 export class TurnHistory {
     constructor() {
@@ -81,6 +82,8 @@ export class TurnHistory {
             players: game.players.map(p => ({
                 id: p.id,
                 isBot: p.isBot,
+                aiId: p.aiId,
+                name: p.name,
                 color: p.color,
                 alive: p.alive,
                 storedDice: p.storedDice || 0
@@ -136,6 +139,8 @@ export class TurnHistory {
             game.players = state.players.map(p => ({
                 id: p.id,
                 isBot: p.isBot,
+                aiId: p.aiId,
+                name: p.name,
                 color: p.color,
                 alive: p.alive,
                 storedDice: p.storedDice || 0
@@ -201,5 +206,52 @@ export class TurnHistory {
         this.applyGameState(game, originalState);
 
         return scenario;
+    }
+
+    /**
+     * Save current game state as auto-save
+     * @param {Game} game 
+     */
+    saveAutoSave(game) {
+        try {
+            const snapshot = {
+                turn: game.turn,
+                currentPlayerIndex: game.currentPlayerIndex,
+                timestamp: Date.now(),
+                gameState: this.serializeGameState(game)
+            };
+            localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(snapshot));
+        } catch (e) {
+            console.error('Failed to auto-save:', e);
+        }
+    }
+
+    /**
+     * Check if auto-save exists
+     * @returns {boolean}
+     */
+    hasAutoSave() {
+        return !!localStorage.getItem(AUTOSAVE_KEY);
+    }
+
+    /**
+     * Load the auto-save snapshot
+     * @returns {Object|null}
+     */
+    loadAutoSave() {
+        try {
+            const data = localStorage.getItem(AUTOSAVE_KEY);
+            if (data) return JSON.parse(data);
+        } catch (e) {
+            console.error('Failed to load auto-save:', e);
+        }
+        return null;
+    }
+
+    /**
+     * Clear auto-save
+     */
+    clearAutoSave() {
+        localStorage.removeItem(AUTOSAVE_KEY);
     }
 }
