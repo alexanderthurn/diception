@@ -2543,9 +2543,77 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         }
 
 
-        // Update game mode if available
         if (scenario.gameMode && gameModeSelect) {
             gameModeSelect.value = scenario.gameMode;
+        }
+
+        // Update player counts
+        if (scenario.players && Array.isArray(scenario.players)) {
+            let humans = 0;
+            let bots = 0;
+            const botAIs = new Set();
+            const newPerPlayerConfig = {};
+
+            scenario.players.forEach(p => {
+                if (p.isBot) {
+                    bots++;
+                    const aiId = p.aiId || 'easy';
+                    botAIs.add(aiId);
+                    // Use the correct player ID for the config (offset by human count happens in game start, 
+                    // but here we might need to be careful. Game.js assigns IDs 0..humanCount-1 to humans, 
+                    // and humanCount..total-1 to bots. 
+                    // However, scenario players have fixed IDs. 
+                    // If we just set counts, Game.js regenerates IDs. 
+                    // So we should map simply by index or assume standard ordering if we want to preserve exact AI per slot.)
+
+                    // For now, let's just collect them. Attempting to map exact IDs from scenario to new game config 
+                    // is tricky if the scenario has gaps or specific ID assignments.
+                    // But simpler: just fill the per-player config map for the *likely* new IDs.
+                    // The new game will assign Bot 1 to ID = humanCount, Bot 2 to humanCount+1, etc.
+
+                    // Let's assume standard packing:
+                } else {
+                    humans++;
+                }
+            });
+
+            // Re-iterate to assign per-player config based on new logical indices
+            let botIndex = 0;
+            scenario.players.forEach(p => {
+                if (p.isBot) {
+                    const anticipatedId = humans + botIndex;
+                    newPerPlayerConfig[anticipatedId] = p.aiId || 'easy';
+                    botIndex++;
+                }
+            });
+
+            if (humanCountInput) humanCountInput.value = humans;
+            if (botCountInput) botCountInput.value = bots;
+
+            // Update AI Selection
+            if (botAIs.size === 1) {
+                // All same AI
+                const ai = [...botAIs][0];
+                if (botAISelect) {
+                    botAISelect.value = ai;
+                    selectedBotAI = ai;
+                    perPlayerAIConfigEl.style.display = 'none';
+                }
+            } else if (botAIs.size > 1) {
+                // Mixed AIs -> Custom
+                if (botAISelect) {
+                    botAISelect.value = 'custom';
+                    selectedBotAI = 'custom';
+
+                    // Populate the global config object
+                    Object.assign(perPlayerAIConfig, newPerPlayerConfig);
+
+                    // Show UI and update
+                    perPlayerAIConfigEl.style.display = 'flex';
+                    updatePerPlayerConfig();
+                }
+            }
+            // If 0 bots, doesn't matter much, keep previous or default
         }
     };
 

@@ -53,7 +53,8 @@ export class ScenarioManager {
      */
     saveToStorage() {
         try {
-            const data = Array.from(this.scenarios.values());
+            // Only save custom scenarios (not built-in)
+            const data = Array.from(this.scenarios.values()).filter(s => !s.isBuiltIn);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         } catch (e) {
             console.error('Failed to save scenarios:', e);
@@ -61,7 +62,7 @@ export class ScenarioManager {
             if (e.name === 'QuotaExceededError') {
                 this.pruneOldScenarios();
                 try {
-                    const data = Array.from(this.scenarios.values());
+                    const data = Array.from(this.scenarios.values()).filter(s => !s.isBuiltIn);
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
                 } catch (e2) {
                     console.error('Still failed after pruning:', e2);
