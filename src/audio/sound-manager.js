@@ -3,7 +3,7 @@ export class SoundManager {
     constructor() {
         this.audioContext = null;
         this.enabled = true;
-        this.volume = 0.3;
+        this.volume = 0.5;
         this.winStreak = 0;
     }
 
@@ -43,7 +43,7 @@ export class SoundManager {
 
         const now = this.audioContext.currentTime;
         gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(this.volume, now + attack);
+        gainNode.gain.linearRampToValueAtTime(this.volume * 0.2, now + attack);
         gainNode.gain.linearRampToValueAtTime(0, now + duration);
 
         oscillator.start(now);
