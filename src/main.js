@@ -2544,17 +2544,24 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                 <span class="list-item-date">${dateStr}</span>
             `;
 
+            let lastClickTime = 0;
             item.addEventListener('click', () => {
+                const currentTime = new Date().getTime();
+                const isDouble = currentTime - lastClickTime < 400;
+                lastClickTime = currentTime;
+
                 document.querySelectorAll('.scenario-list-item').forEach(i => i.classList.remove('selected'));
-                item.classList.add('selected');
                 item.classList.add('selected');
                 selectedScenarioId = s.id;
                 selectedScenarioData = s;
                 if (scenarioExportBtn) scenarioExportBtn.disabled = false;
                 showScenarioPreview(s);
-            });
 
-            item.addEventListener('dblclick', () => loadSelectedScenario());
+                if (isDouble) {
+                    loadSelectedScenario();
+                    lastClickTime = 0; // Prevent triple-click triggering again immediately
+                }
+            });
 
             scenarioList.appendChild(item);
         });
@@ -2616,8 +2623,10 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             gameModeSelect.value = scenario.gameMode;
         }
 
-        // Update player counts
-        if (scenario.players && Array.isArray(scenario.players)) {
+        // Update player counts ONLY for Scenarios/Replays, NOT for Maps
+        // Maps should keep the user's current player configuration or use defaults, 
+        // they only define the layout.
+        if (scenario.type !== 'map' && scenario.players && Array.isArray(scenario.players)) {
             let humans = 0;
             let bots = 0;
             const botAIs = new Set();
