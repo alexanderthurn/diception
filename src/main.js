@@ -321,6 +321,15 @@ async function init() {
     const diceResultHud = document.getElementById('dice-result-hud');
     const diceResultContent = document.getElementById('dice-result-content');
 
+    // Zoom Controls
+    document.getElementById('zoom-in-btn').addEventListener('click', () => {
+        renderer.zoom(-1, window.innerWidth / 2, window.innerHeight / 2);
+    });
+
+    document.getElementById('zoom-out-btn').addEventListener('click', () => {
+        renderer.zoom(1, window.innerWidth / 2, window.innerHeight / 2);
+    });
+
     // Turn-based log grouping
     let currentTurnLog = null;
     let turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };

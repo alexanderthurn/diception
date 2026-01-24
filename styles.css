@@ -56,6 +56,13 @@ body {
     z-index: 10;
 }
 
+/* Hide zoom controls on desktop */
+@media (min-width: 769px) {
+    .zoom-control {
+        display: none !important;
+    }
+}
+
 .music-display {
     font-size: 12px;
     color: #00ffff;

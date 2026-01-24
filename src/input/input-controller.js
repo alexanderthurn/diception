@@ -32,66 +32,21 @@ export class InputController {
             this.renderer.zoom(e.deltaY, e.clientX, e.clientY);
         }, { passive: false });
 
-        // === Pinch-to-Zoom for Touch Devices ===
-        this.activeTouches = new Map();
-        this.lastPinchDistance = null;
+        // === Touches ===
+        // We only care about single touch for dragging/clicking.
+        // Pinch-to-zoom is removed in favor of UI buttons.
 
         this.renderer.app.canvas.addEventListener('touchstart', (e) => {
-            // Prevent browser zoom/scroll
+            // Prevent browser zoom/scroll if multiple touches
             if (e.touches.length > 1) {
                 e.preventDefault();
-            }
-            // Track all active touches
-            for (const touch of e.changedTouches) {
-                this.activeTouches.set(touch.identifier, { x: touch.clientX, y: touch.clientY });
-            }
-            // Initialize pinch distance when 2 fingers touch
-            if (this.activeTouches.size === 2) {
-                const touches = Array.from(this.activeTouches.values());
-                this.lastPinchDistance = this.getTouchDistance(touches[0], touches[1]);
             }
         }, { passive: false });
 
         this.renderer.app.canvas.addEventListener('touchmove', (e) => {
-            // Update touch positions
-            for (const touch of e.changedTouches) {
-                this.activeTouches.set(touch.identifier, { x: touch.clientX, y: touch.clientY });
-            }
-
-            // Pinch-to-zoom with 2 fingers
-            if (this.activeTouches.size === 2) {
+            if (e.touches.length > 1) {
                 e.preventDefault();
-                const touches = Array.from(this.activeTouches.values());
-                const currentDistance = this.getTouchDistance(touches[0], touches[1]);
-
-                if (this.lastPinchDistance !== null) {
-                    const pinchDelta = this.lastPinchDistance - currentDistance;
-                    // Center point between two fingers
-                    const centerX = (touches[0].x + touches[1].x) / 2;
-                    const centerY = (touches[0].y + touches[1].y) / 2;
-                    // Zoom - positive delta means pinching in (zoom out)
-                    this.renderer.zoom(pinchDelta * 2, centerX, centerY);
-                }
-
-                this.lastPinchDistance = currentDistance;
             }
-        }, { passive: false });
-
-        this.renderer.app.canvas.addEventListener('touchend', (e) => {
-            for (const touch of e.changedTouches) {
-                this.activeTouches.delete(touch.identifier);
-            }
-            // Reset pinch state when less than 2 fingers
-            if (this.activeTouches.size < 2) {
-                this.lastPinchDistance = null;
-            }
-        }, { passive: false });
-
-        this.renderer.app.canvas.addEventListener('touchcancel', (e) => {
-            for (const touch of e.changedTouches) {
-                this.activeTouches.delete(touch.identifier);
-            }
-            this.lastPinchDistance = null;
         }, { passive: false });
 
         // Zoom/Pan state
@@ -102,12 +57,7 @@ export class InputController {
         this.setupInputManager();
     }
 
-    // Calculate distance between two touch points
-    getTouchDistance(t1, t2) {
-        const dx = t2.x - t1.x;
-        const dy = t2.y - t1.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
+
 
     setupInputManager() {
         if (!this.inputManager) return;
