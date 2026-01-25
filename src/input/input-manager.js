@@ -222,8 +222,50 @@ export class InputManager {
     }
 
     processGamepadMovement(gp, prevState) {
-        // Disabled in favor of GamepadCursorManager
-        return;
+        // D-pad mapping: 12=Up, 13=Down, 14=Left, 15=Right
+        const dpButtons = {
+            12: { x: 0, y: -1 },
+            13: { x: 0, y: 1 },
+            14: { x: -1, y: 0 },
+            15: { x: 1, y: 0 }
+        };
+
+        const now = Date.now();
+        const repeat = prevState.moveRepeat;
+
+        let activeDir = null;
+
+        for (const [btnIdx, dir] of Object.entries(dpButtons)) {
+            const i = parseInt(btnIdx);
+            const pressed = gp.buttons[i]?.pressed;
+            const wasPressed = prevState.buttons[i];
+
+            if (pressed && !wasPressed) {
+                this.emit('move', dir);
+                // Start repeat timer
+                repeat.active = true;
+                repeat.dir = dir;
+                repeat.started = now;
+                repeat.lastFire = now;
+                activeDir = dir;
+            } else if (pressed) {
+                activeDir = dir;
+            }
+        }
+
+        // Handle repeat
+        if (activeDir && repeat.active) {
+            const elapsed = now - repeat.started;
+            const sinceLast = now - repeat.lastFire;
+
+            if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
+                this.emit('move', activeDir);
+                repeat.lastFire = now;
+            }
+        } else {
+            repeat.active = false;
+            repeat.dir = null;
+        }
     }
 
     processGamepadPan(gp) {
