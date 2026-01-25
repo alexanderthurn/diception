@@ -39,25 +39,24 @@ export class GamepadCursorManager {
 
             // Mapping gamepad buttons:
             // 0: A (South) -> Left Click
-            // 1: B (East) -> Right Click / Cancel
-            // 2: X (West) -> Middle Click (Drag Map)
-            // 3: Y (North) -> End Turn (Click button)
+            // 1: B (East)  -> End Turn
+            // 2: X (West)  -> Right Click / Cancel
+            // 3: Y (North) -> Middle Click (Drag Map)
             // 6: L2 -> Zoom Out
             // 7: R2 -> Zoom In
 
             if (button === 0) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
-            } else if (button === 1) {
+            } else if (button === 2) { // X (West)
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
-            } else if (button === 2) {
+            } else if (button === 3) { // Y (North)
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
-            } else if (button === 3) {
+            } else if (button === 1) { // B (East)
                 // Find and click end turn button if visible
                 const endTurnBtn = document.getElementById('end-turn-btn');
                 if (endTurnBtn && !endTurnBtn.classList.contains('hidden')) {
                     endTurnBtn.click();
                 } else {
-                    // Fallback to emitting event if button not visible or finding click target
                     this.inputManager.emit('endTurn');
                 }
             } else if (button === 6) { // L2
@@ -78,9 +77,9 @@ export class GamepadCursorManager {
             if (button === 0) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
                 this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
-            } else if (button === 1) {
+            } else if (button === 2) { // X (West)
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
-            } else if (button === 2) {
+            } else if (button === 3) { // Y (North)
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 1, index);
             }
         });
