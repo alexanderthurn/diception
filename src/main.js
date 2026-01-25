@@ -2745,13 +2745,35 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         };
         actionsDiv.appendChild(editBtn);
 
+        // Export Button
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'tron-btn small';
+        exportBtn.innerHTML = '💾 <span class="btn-text">Export as file</span>';
+        exportBtn.title = 'Export as file';
+        exportBtn.onclick = (e) => {
+            e.stopPropagation();
+            const json = scenario.isOnline ? JSON.stringify(scenario, null, 2) : scenarioManager.exportScenario(scenario.id);
+            if (json) {
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${scenario.name.replace(/[^a-z0-9]/gi, '_')}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        };
+        actionsDiv.appendChild(exportBtn);
+
         // Delete Button (only if not built-in)
         if (!scenario.isBuiltIn && !scenario.isOnline) {
             // Upload Button (for local maps only)
             if (scenario.type === 'map') {
                 const uploadBtn = document.createElement('button');
                 uploadBtn.className = 'tron-btn small';
-                uploadBtn.textContent = '☁️';
+                uploadBtn.innerHTML = '☁️ <span class="btn-text">Upload</span>';
                 uploadBtn.title = 'Upload to Server';
                 uploadBtn.style.marginRight = '5px';
                 uploadBtn.onclick = (e) => {
@@ -2923,8 +2945,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         if (currentScenarioTab === 'replays') {
             newScenarioBtn.style.display = 'none';
         } else if (currentScenarioTab === 'online') {
-            newScenarioBtn.style.display = 'block';
-            newScenarioBtn.textContent = '☁️ Upload Map';
+            newScenarioBtn.style.display = 'none';
         } else {
             newScenarioBtn.style.display = 'block';
             newScenarioBtn.textContent = currentScenarioTab === 'maps' ? '+ New Map' : '+ New Scenario';
@@ -3089,25 +3110,6 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     if (newScenarioBtn) {
         newScenarioBtn.addEventListener('click', () => {
             if (currentScenarioTab === 'online') {
-                // Upload a file
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.json';
-                input.onchange = (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        try {
-                            const data = JSON.parse(ev.target.result);
-                            uploadMap(data);
-                        } catch (err) {
-                            alert('Invalid JSON file');
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-                input.click();
                 return;
             }
 
