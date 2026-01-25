@@ -206,15 +206,6 @@ export class InputManager {
 
             if (pressed && !wasPressed) {
                 this.emit('gamepadButtonDown', { index: gp.index, button: i });
-
-                // Haptic feedback on confirm (A button)
-                if (i === 0 && gp.vibrationActuator) {
-                    gp.vibrationActuator.playEffect('dual-rumble', {
-                        duration: 50,
-                        strongMagnitude: 0.3,
-                        weakMagnitude: 0.5
-                    }).catch(() => { });
-                }
             } else if (!pressed && wasPressed) {
                 this.emit('gamepadButtonUp', { index: gp.index, button: i });
             }
@@ -284,23 +275,8 @@ export class InputManager {
         }
     }
 
-    // Trigger haptic feedback
+    // Trigger haptic feedback (disabled)
     vibrate(type = 'light') {
-        const gamepads = navigator.getGamepads();
-
-        for (const gp of gamepads) {
-            if (!gp?.vibrationActuator) continue;
-
-            const effects = {
-                light: { duration: 50, strongMagnitude: 0.2, weakMagnitude: 0.4 },
-                medium: { duration: 100, strongMagnitude: 0.5, weakMagnitude: 0.7 },
-                heavy: { duration: 200, strongMagnitude: 1.0, weakMagnitude: 1.0 },
-                win: { duration: 150, strongMagnitude: 0.8, weakMagnitude: 1.0 },
-                lose: { duration: 300, strongMagnitude: 0.3, weakMagnitude: 0.2 }
-            };
-
-            const effect = effects[type] || effects.light;
-            gp.vibrationActuator.playEffect('dual-rumble', effect).catch(() => { });
-        }
+        // Rumble removed as per user request
     }
 }

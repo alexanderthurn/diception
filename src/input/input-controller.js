@@ -357,10 +357,6 @@ export class InputController {
                 const result = this.game.attack(this.selectedTile.x, this.selectedTile.y, x, y);
 
                 if (result && !result.error) {
-                    if (this.inputManager) {
-                        this.inputManager.vibrate(result.won ? 'win' : 'lose');
-                    }
-
                     if (result.won) {
                         this.select(x, y);
                     } else {
