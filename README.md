@@ -40,6 +40,31 @@ Click the **"?"** / **How to Play** button in the main setup menu to view:
     npm run build
     ```
 
+## Steam & Desktop Version
+
+The game is bundled with **Electron** and **steamworks.js** for native desktop support and Steam integration.
+
+### Development
+To run the game in the Electron container during development:
+1. Ensure Steam is running on your machine.
+2. Run the development command:
+   ```bash
+   npm run electron:dev
+   ```
+
+### Building the Steam Version
+To create a bundled desktop application (output to `dist-steam/`):
+```bash
+npm run steam:build
+```
+
+### Steam Integration Details
+- **AppID**: Currently defaults to `480` (SpaceWar test app).
+- **Configuration**: To use your own AppID, update:
+  - `steam_appid.txt` in the root directory.
+  - The AppID in `electron-main.cjs` (line 12).
+- **Features**: The desktop version supports native features like Steam user identification and achievements (via `window.steam` in the frontend).
+
 ## Credits
 
 Created as a Dice Wars inspired strategy game.
