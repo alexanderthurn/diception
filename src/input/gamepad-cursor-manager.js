@@ -9,7 +9,7 @@ export class GamepadCursorManager {
         this.game = game;
         this.inputManager = inputManager;
         this.cursors = new Map(); // gamepadIndex -> { x, y, element, player }
-        this.cursorSpeed = 10;
+        this.cursorSpeed = 20;
         this.deadZone = 0.15;
 
         // Container for all virtual cursors
@@ -37,15 +37,34 @@ export class GamepadCursorManager {
             const cursor = this.cursors.get(index);
             if (!cursor) return;
 
-            // Mapping gamepad buttons to mouse actions
+            // Mapping gamepad buttons:
             // 0: A (South) -> Left Click
             // 1: B (East) -> Right Click / Cancel
-            // 3: Y (North) -> Middle Click (if needed)
+            // 3: Y (North) -> End Turn (Click button)
+            // 6: L2 -> Zoom Out
+            // 7: R2 -> Zoom In
 
             if (button === 0) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0);
             } else if (button === 1) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2);
+            } else if (button === 3) {
+                // Find and click end turn button if visible
+                const endTurnBtn = document.getElementById('end-turn-btn');
+                if (endTurnBtn && !endTurnBtn.classList.contains('hidden')) {
+                    endTurnBtn.click();
+                } else {
+                    // Fallback to emitting event if button not visible or finding click target
+                    this.inputManager.emit('endTurn');
+                }
+            } else if (button === 6) { // L2
+                this.inputManager.emit('panAnalog', { x: 0, y: 0, zoom: 1 }); // Zoom Out
+                const zoomOutBtn = document.getElementById('zoom-out-btn');
+                if (zoomOutBtn) zoomOutBtn.click();
+            } else if (button === 7) { // R2
+                this.inputManager.emit('panAnalog', { x: 0, y: 0, zoom: -1 }); // Zoom In
+                const zoomInBtn = document.getElementById('zoom-in-btn');
+                if (zoomInBtn) zoomInBtn.click();
             }
         });
 
@@ -64,7 +83,6 @@ export class GamepadCursorManager {
 
     update() {
         const gamepads = navigator.getGamepads();
-        let changed = false;
 
         for (let i = 0; i < gamepads.length; i++) {
             const gp = gamepads[i];
@@ -89,12 +107,21 @@ export class GamepadCursorManager {
             if (Math.abs(dy) < this.deadZone) dy = 0;
 
             if (dx !== 0 || dy !== 0) {
+                // Speed Boost Logic:
+                // L1 (Button 4) -> Faster (2x boost)
+                // R1 (Button 5) -> Super Fast (5x boost)
+                let speedMultiplier = 1.0;
+                if (gp.buttons[5]?.pressed) {
+                    speedMultiplier = 5.0; // R1 Super Fast
+                } else if (gp.buttons[4]?.pressed) {
+                    speedMultiplier = 2.0; // L1 Faster
+                }
+
                 // Apply speed and update position
-                // Use a non-linear scaling for better control
                 const scale = (val) => Math.sign(val) * Math.pow(Math.abs(val), 1.5);
 
-                cursor.x += scale(dx) * this.cursorSpeed;
-                cursor.y += scale(dy) * this.cursorSpeed;
+                cursor.x += scale(dx) * this.cursorSpeed * speedMultiplier;
+                cursor.y += scale(dy) * this.cursorSpeed * speedMultiplier;
 
                 // Clamp to screen bounds
                 cursor.x = Math.max(0, Math.min(window.innerWidth, cursor.x));
@@ -105,8 +132,6 @@ export class GamepadCursorManager {
 
                 // Trigger mousemove on current position
                 this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0);
-
-                changed = true;
             }
 
             // Periodically check if player info changed (e.g. game started)
@@ -120,21 +145,21 @@ export class GamepadCursorManager {
         const el = document.createElement('div');
         el.className = 'gamepad-cursor';
         el.style.position = 'absolute';
-        el.style.width = '32px';
-        el.style.height = '32px';
-        el.style.marginLeft = '-16px';
-        el.style.marginTop = '-16px';
+        el.style.width = '64px'; // 2x size
+        el.style.height = '64px'; // 2x size
+        el.style.marginLeft = '-32px';
+        el.style.marginTop = '-32px';
         el.style.transition = 'none';
 
         // Crosshair design
         el.innerHTML = `
-            <svg width="32" height="32" viewBox="0 0 32 32" style="filter: drop-shadow(0 0 2px rgba(0,0,0,0.5))">
-                <line x1="16" y1="0" x2="16" y2="10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-                <line x1="16" y1="22" x2="16" y2="32" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-                <line x1="0" y1="16" x2="10" y2="16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-                <line x1="22" y1="16" x2="32" y2="16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-                <circle cx="16" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="1.5" />
-                <circle cx="16" cy="16" r="1" fill="currentColor" />
+            <svg width="64" height="64" viewBox="0 0 64 64" style="filter: drop-shadow(0 0 4px rgba(0,0,0,0.5))">
+                <line x1="32" y1="0" x2="32" y2="20" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+                <line x1="32" y1="44" x2="32" y2="64" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+                <line x1="0" y1="32" x2="20" y2="32" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+                <line x1="44" y1="32" x2="64" y2="32" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+                <circle cx="32" cy="32" r="6" fill="none" stroke="currentColor" stroke-width="3" />
+                <circle cx="32" cy="32" r="2" fill="currentColor" />
             </svg>
         `;
 
@@ -161,17 +186,11 @@ export class GamepadCursorManager {
     }
 
     updateCursorColor(cursor, index) {
-        // Find if there's a human player for this gamepad index
-        // Simple mapping: Gamepad 0 -> Human Player with ID 0, etc.
-        // We need to check game.players
         if (!this.game || !this.game.players) {
             cursor.element.style.color = '#ffffff';
             return;
         }
 
-        // Try to find a human player that matches this index
-        // Note: This logic depends on how players are assigned.
-        // Usually index 0 is first human, index 1 is second, etc.
         const humanPlayers = this.game.players.filter(p => !p.isBot);
         const player = humanPlayers[index];
 
@@ -188,28 +207,49 @@ export class GamepadCursorManager {
     }
 
     simulateMouseEvent(type, x, y, button = 0) {
-        // Find the element under the cursor
-        // We must hide the container temporarily or use pointer-events: none on the cursors
-        // Since container has pointer-events: none and SVG doesn't capture, we should be fine.
-
         const target = document.elementFromPoint(x, y);
         if (!target) return;
 
-        const event = new MouseEvent(type, {
+        // Use PointerEvent if possible for better PixiJS compatibility
+        const eventInit = {
             view: window,
             bubbles: true,
             cancelable: true,
             clientX: x,
             clientY: y,
             button: button,
-            buttons: button === 0 ? 1 : (button === 2 ? 2 : 0)
-        });
+            buttons: button === 0 ? 1 : (button === 2 ? 2 : 0),
+            pointerId: 1,
+            pointerType: 'mouse',
+            isPrimary: true
+        };
+
+        let event;
+        if (type.startsWith('pointer')) {
+            event = new PointerEvent(type, eventInit);
+        } else {
+            // Also dispatch PointerEvents for mouse actions to satisfy PixiJS
+            const pointerTypeMap = {
+                'mousedown': 'pointerdown',
+                'mouseup': 'pointerup',
+                'mousemove': 'pointermove',
+                'click': 'pointerup' // Click is usually accompanied by pointerup
+            };
+
+            if (pointerTypeMap[type]) {
+                const pEvent = new PointerEvent(pointerTypeMap[type], eventInit);
+                pEvent.isGamepadSimulated = true;
+                target.dispatchEvent(pEvent);
+            }
+
+            event = new MouseEvent(type, eventInit);
+            event.isGamepadSimulated = true;
+        }
 
         target.dispatchEvent(event);
 
-        // Special handling for focus
-        if (type === 'mousedown' && button === 0) {
-            if (target.focus) target.focus();
+        if (type === 'mousedown' && button === 0 && target.focus) {
+            target.focus();
         }
     }
 }

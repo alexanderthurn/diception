@@ -206,7 +206,12 @@ export class InputController {
     onPanAnalog(dir) {
         // Gamepad right stick panning - dir is { x: -1 to 1, y: -1 to 1 }
         const panSpeed = 15;
-        this.renderer.pan(-dir.x * panSpeed, -dir.y * panSpeed);
+        this.renderer.pan(dir.x * panSpeed, dir.y * panSpeed);
+
+        // Handle analog zoom (from R1/R2 buttons)
+        if (dir.zoom) {
+            this.renderer.zoom(dir.zoom * 20, window.innerWidth / 2, window.innerHeight / 2);
+        }
     }
 
     onPointerDown(e) {
@@ -229,9 +234,11 @@ export class InputController {
 
         // Drag Logic:
         // - Allow Middle Click
-        // - Allow Left Click (if NOT holding Shift)
+        // - Allow Left Click (if NOT holding Shift AND NOT a simulated gamepad event)
         // - If Shift is held, we NEVER drag (it's for editor painting or other interactions)
-        const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0);
+        // - We also don't drag for gamepad simulated clicks, as they have right-stick for panning
+        const isSimulated = e.nativeEvent && e.nativeEvent.isGamepadSimulated;
+        const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0 && !isSimulated);
 
         if (canDrag) {
             this.isDragging = true;
@@ -287,7 +294,8 @@ export class InputController {
 
         // Only handle clicks for LEFT mouse button (0)
         // Middle button (1) is for pan only
-        if (dist < 10 && e.button === 0) {
+        const isSimulated = e.nativeEvent && e.nativeEvent.isGamepadSimulated;
+        if ((dist < 10 || isSimulated) && e.button === 0) {
             // It's a click
             if (this.clickTarget) {
                 this.handleTileClick(this.clickTarget.tile, this.clickTarget.x, this.clickTarget.y);
