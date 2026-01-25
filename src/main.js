@@ -2685,7 +2685,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             });
             const result = await response.json();
             if (result.success) {
-                alert('Map uploaded successfully!');
+                alert(result.message || 'Map uploaded successfully!');
                 // Refetch if in online tab
                 if (currentScenarioTab === 'online') {
                     fetchOnlineMaps();
