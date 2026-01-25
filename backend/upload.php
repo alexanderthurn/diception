@@ -22,24 +22,46 @@ if (!$data) {
     exit;
 }
 
-// Simple validation
+// Ensure ID exists
 if (!isset($data['id'])) {
-    $data['id'] = uniqid();
+    $data['id'] = uniqid('online_');
 }
 
-// Use ID as filename if possible, otherwise uniqid
-$filename = uniqid('map_') . '.json';
-if (isset($data['name'])) {
-    $cleanName = preg_replace('/[^a-zA-Z0-9_-]/', '', $data['name']);
-    if (!empty($cleanName)) {
-        $filename = $cleanName . '_' . uniqid() . '.json';
+$targetId = $data['id'];
+$filepath = null;
+$replaced = false;
+
+// Search for existing file with this ID to replace it
+$files = glob(__DIR__ . '/data/*.json');
+foreach ($files as $file) {
+    $content = json_decode(file_get_contents($file), true);
+    if ($content && isset($content['id']) && $content['id'] === $targetId) {
+        $filepath = $file;
+        $replaced = true;
+        break;
     }
 }
 
-$filepath = __DIR__ . '/data/' . $filename;
+// If no existing file found, create a new filename
+if (!$filepath) {
+    $cleanId = preg_replace('/[^a-zA-Z0-9_-]/', '', $targetId);
+    $filename = 'map_' . $cleanId . '.json';
+
+    // Fallback if cleanId is empty
+    if ($filename === 'map_.json') {
+        $filename = 'map_' . uniqid() . '.json';
+    }
+
+    $filepath = __DIR__ . '/data/' . $filename;
+}
 
 if (file_put_contents($filepath, json_encode($data, JSON_PRETTY_PRINT))) {
-    echo json_encode(['success' => true, 'filename' => $filename]);
+    echo json_encode([
+        'success' => true,
+        'filename' => basename($filepath),
+        'id' => $targetId,
+        'replaced' => $replaced
+    ]);
 } else {
     http_response_code(500);
     echo json_encode(['error' => 'Failed to save file']);
