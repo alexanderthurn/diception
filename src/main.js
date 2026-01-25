@@ -205,12 +205,14 @@ async function init() {
     let currentSongIndex = 0;
     const storedIndex = localStorage.getItem('dicy_currentSongIndex');
 
+    let isFirstRunEver = false;
     if (storedIndex === null) {
-        // First time ever: start with first title
+        // First time ever
         currentSongIndex = 0;
+        isFirstRunEver = true;
     } else {
-        // Game restart: increment index (rotate playlist)
-        currentSongIndex = (parseInt(storedIndex, 10) + 1) % availableSongs.length;
+        // Valid stored index - load it directly (don't increment yet)
+        currentSongIndex = parseInt(storedIndex, 10);
     }
 
     // Save immediately so this counts as the "last started title"
@@ -315,9 +317,14 @@ async function init() {
             clearTimeout(musicTimeout);
             showSliderWithTimeout(musicVolume, (t) => musicTimeout = t);
             if (!musicPlaying) {
-                music.play();
-                musicToggle.textContent = '🔊';
                 musicPlaying = true;
+                if (isFirstRunEver) {
+                    isFirstRunEver = false;
+                    music.play();
+                } else {
+                    loadNextSong();
+                }
+                musicToggle.textContent = '🔊';
                 localStorage.setItem('dicy_musicEnabled', 'true');
             }
             return;
@@ -336,9 +343,14 @@ async function init() {
             musicToggle.textContent = '🔇';
             musicPlaying = false;
         } else {
-            music.play();
-            musicToggle.textContent = '🔊';
             musicPlaying = true;
+            if (isFirstRunEver) {
+                isFirstRunEver = false;
+                music.play();
+            } else {
+                loadNextSong();
+            }
+            musicToggle.textContent = '🔊';
         }
         localStorage.setItem('dicy_musicEnabled', musicPlaying.toString());
     });
