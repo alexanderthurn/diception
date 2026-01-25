@@ -2566,13 +2566,12 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             const response = await fetch(`${BACKEND_URL}/list.php`);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
-            // Normalize
+            // Map aggregated data
             onlineMaps = data.map(m => ({
                 ...m,
-                id: m.filename, // Use filename as ID
+                id: m.filename,
                 isOnline: true,
-                // Ensure other fields match simplified scenario structure for preview logic
-                createdAt: m.created * 1000 // Convert to ms
+                createdAt: (m.filemtime || m.created) * 1000
             }));
             renderScenarioList();
         } catch (error) {
@@ -2589,25 +2588,14 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         if (!selectedScenarioId) return;
 
         if (selectedScenarioData && selectedScenarioData.isOnline) {
-            // Fetch full map data
-            try {
-                const response = await fetch(`${BACKEND_URL}/data/${selectedScenarioData.filename}`);
-                if (!response.ok) throw new Error('Failed to download map');
-                const scenario = await response.json();
-                // Ensure type matches for game loading
-                scenario.type = scenario.type || 'map';
+            const scenario = selectedScenarioData;
+            scenario.type = scenario.type || 'map';
 
-                pendingScenario = scenario;
-                scenarioBrowserModal.classList.add('hidden');
-                setupModal.classList.remove('hidden');
-                updateConfigFromScenario(scenario);
-
-                // Note: We don't save online maps to localStorage 'dicy_loadedScenario' as ID lookup won't work simply
-                // Unless we cache them. For now, just load it into pending.
-                updateLoadedScenarioDisplay(scenario.name);
-            } catch (e) {
-                alert('Error loading map: ' + e.message);
-            }
+            pendingScenario = scenario;
+            scenarioBrowserModal.classList.add('hidden');
+            setupModal.classList.remove('hidden');
+            updateConfigFromScenario(scenario);
+            updateLoadedScenarioDisplay(scenario.name);
             return;
         }
 
