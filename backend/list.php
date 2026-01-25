@@ -10,15 +10,11 @@ foreach ($files as $file) {
     $content = file_get_contents($file);
     $json = json_decode($content, true);
     if ($json) {
-        $maps[] = [
-            'filename' => basename($file),
-            'id' => $json['id'] ?? null,
-            'name' => $json['name'] ?? 'Untitled',
-            'author' => $json['author'] ?? 'Unknown',
-            'type' => $json['type'] ?? 'map',
-            'size' => filesize($file),
-            'created' => filemtime($file)
-        ];
+        // Add metadata to the json content itself so it's all in one object
+        $json['filename'] = basename($file);
+        $json['filesize'] = filesize($file);
+        $json['filemtime'] = filemtime($file);
+        $maps[] = $json;
     }
 }
 

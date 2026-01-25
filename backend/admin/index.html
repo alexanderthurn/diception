@@ -87,6 +87,7 @@
 
     <script>
         const API_URL = '..'; // Relative to admin/
+        let mapsData = [];
 
         document.getElementById('uploadInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -124,8 +125,8 @@
         async function fetchMaps() {
             try {
                 const response = await fetch(`${API_URL}/list.php`);
-                const maps = await response.json();
-                renderTable(maps);
+                mapsData = await response.json();
+                renderTable(mapsData);
             } catch (error) {
                 console.error('Error fetching maps:', error);
                 document.getElementById('status').textContent = 'Error loading maps.';
@@ -135,18 +136,18 @@
         function renderTable(maps) {
             const tbody = document.querySelector('#mapTable tbody');
             tbody.innerHTML = '';
-            maps.forEach(map => {
+            maps.forEach((map, index) => {
                 const tr = document.createElement('tr');
-                const safeFilename = map.filename.replace(/'/g, "\\'");
+                const safeFilename = (map.filename || '').replace(/'/g, "\\'");
                 tr.innerHTML = `
-                    <td>${map.filename}</td>
-                    <td>${map.name}</td>
-                    <td>${map.author}</td>
-                    <td>${map.type}</td>
-                    <td>${map.size} bytes</td>
-                    <td>${new Date(map.created * 1000).toLocaleString()}</td>
+                    <td>${map.filename || 'unknown'}</td>
+                    <td>${map.name || 'Untitled'}</td>
+                    <td>${map.author || 'Unknown'}</td>
+                    <td>${map.type || 'map'}</td>
+                    <td>${map.filesize || 0} bytes</td>
+                    <td>${map.filemtime ? new Date(map.filemtime * 1000).toLocaleString() : 'Unknown'}</td>
                     <td>
-                        <button onclick="togglePreview('${safeFilename}', this)">Preview</button>
+                        <button onclick="togglePreview(${index}, this)">Preview</button>
                         <button class="delete-btn" onclick="deleteMap('${safeFilename}')">Delete</button>
                     </td>
                 `;
@@ -154,7 +155,7 @@
             });
         }
 
-        async function togglePreview(filename, btn) {
+        async function togglePreview(index, btn) {
             const row = btn.closest('tr');
             const nextRow = row.nextElementSibling;
             if (nextRow && nextRow.classList.contains('preview-row')) {
@@ -162,6 +163,7 @@
                 return;
             }
 
+            const mapData = mapsData[index];
             const previewRow = document.createElement('tr');
             previewRow.className = 'preview-row';
             const cell = document.createElement('td');
@@ -169,24 +171,14 @@
             previewRow.appendChild(cell);
             row.after(previewRow);
 
-            cell.innerHTML = 'Loading preview...';
+            const canvas = document.createElement('canvas');
+            const pre = document.createElement('pre');
+            pre.textContent = JSON.stringify(mapData, null, 2);
 
-            try {
-                const response = await fetch(`${API_URL}/data/${filename}`);
-                const data = await response.json();
+            cell.appendChild(canvas);
+            cell.appendChild(pre);
 
-                cell.innerHTML = '';
-                const canvas = document.createElement('canvas');
-                const pre = document.createElement('pre');
-                pre.textContent = JSON.stringify(data, null, 2);
-
-                cell.appendChild(canvas);
-                cell.appendChild(pre);
-
-                renderCanvas(data, canvas);
-            } catch (error) {
-                cell.textContent = 'Error loading preview.';
-            }
+            renderCanvas(mapData, canvas);
         }
 
         function renderCanvas(mapData, canvas) {
