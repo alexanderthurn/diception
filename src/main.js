@@ -2556,9 +2556,10 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     let selectedScenarioData = null;
     let currentSort = { field: 'date', direction: 'desc' };
     let onlineMaps = [];
-    // Assuming backend is served at /backend relative to root, or on a specific port for dev
-    // For development, we might point to localhost:8000 if PHP is independent
-    const BACKEND_URL = 'http://localhost:8000/backend';
+    // Dynamically determine backend URL. Use localhost:8000 for local development if PHP is separate.
+    const BACKEND_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:8000/backend'
+        : window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '') + '/backend';
 
     const fetchOnlineMaps = async () => {
         try {
