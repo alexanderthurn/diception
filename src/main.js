@@ -2580,10 +2580,20 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     let selectedScenarioData = null;
     let currentSort = { field: 'date', direction: 'desc' };
     let onlineMaps = [];
-    // Dynamically determine backend URL. Use localhost:8000 for local development if PHP is separate.
-    const BACKEND_URL = window.location.hostname === 'localhost'
+    // Dynamically determine backend URL
+    let BACKEND_URL = window.location.hostname === 'localhost'
         ? 'http://localhost:8000/backend'
         : window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '') + '/backend';
+
+    // Override for Steam version
+    if (window.steam) {
+        const isSteamDev = await window.steam.isDev();
+        if (isSteamDev) {
+            BACKEND_URL = 'https://feuerware.com/2025/diception/dev/backend';
+        } else {
+            BACKEND_URL = 'https://diception.feuerware.com/backend';
+        }
+    }
 
     const fetchOnlineMaps = async () => {
         try {

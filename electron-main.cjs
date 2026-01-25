@@ -68,6 +68,10 @@ ipcMain.handle('steam-quit', () => {
     app.quit();
 });
 
+ipcMain.handle('steam-is-dev', () => {
+    return !app.isPackaged;
+});
+
 ipcMain.handle('steam-activate-achievement', (event, achievementId) => {
     if (steamClient) {
         try {
