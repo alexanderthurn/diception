@@ -237,7 +237,9 @@ export class InputController {
         // - Allow Left Click (if NOT holding Shift AND NOT a simulated gamepad event)
         // - If Shift is held, we NEVER drag (it's for editor painting or other interactions)
         // - We also don't drag for gamepad simulated clicks, as they have right-stick for panning
-        const isSimulated = e.nativeEvent && e.nativeEvent.isGamepadSimulated;
+        const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
+            (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
+            e.isGamepadSimulated;
         const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0 && !isSimulated);
 
         if (canDrag) {
@@ -294,7 +296,9 @@ export class InputController {
 
         // Only handle clicks for LEFT mouse button (0)
         // Middle button (1) is for pan only
-        const isSimulated = e.nativeEvent && e.nativeEvent.isGamepadSimulated;
+        const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
+            (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
+            e.isGamepadSimulated;
         if ((dist < 10 || isSimulated) && e.button === 0) {
             // It's a click
             if (this.clickTarget) {
@@ -309,61 +313,66 @@ export class InputController {
 
     handleTileClick(tile, x, y) {
         if (this.game.gameOver) return;
-        if (this.game.currentPlayer.isBot) return; // Wait for bot
+        if (this.game.currentPlayer.isBot) return;
 
         // 1. If nothing selected, try to select
         if (!this.selectedTile) {
-            if (tile && tile.owner === this.game.currentPlayer.id && tile.dice > 1) {
+            const owner = this.game.players.find(p => p.id === tile?.owner);
+            // Allow any human player to select any of their tiles (regardless of dice count or turn)
+            if (owner && !owner.isBot) {
                 this.select(x, y);
             }
             return;
         }
 
-        // 2. If something selected and clicked "nothing" (blocked or out of bounds)
+        // 2. If something selected, handle action
         if (!tile) {
             this.deselect();
             return;
         }
 
-        const prevX = this.selectedTile.x;
-        const prevY = this.selectedTile.y;
-
-        // A. Clicked same tile -> Deselect
-        if (prevX === x && prevY === y) {
+        if (this.selectedTile.x === x && this.selectedTile.y === y) {
             this.deselect();
             return;
         }
 
-        // B. Clicked another own tile -> Change selection
-        if (tile.owner === this.game.currentPlayer.id) {
-            if (tile.dice > 1) {
-                this.select(x, y);
-            } else {
-                this.deselect();
-            }
+        const fromTile = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
+        if (!fromTile) {
+            this.deselect();
             return;
         }
 
-        // C. Clicked enemy -> Try Attack
-        const result = this.game.attack(prevX, prevY, x, y);
-
-        if (result && !result.error) {
-            // Haptic feedback
-            if (this.inputManager) {
-                this.inputManager.vibrate(result.won ? 'win' : 'lose');
-            }
-
-            if (result.won) {
-                this.select(x, y);
-                // Move cursor to new position
-                this.cursorX = x;
-                this.cursorY = y;
-            } else {
-                this.deselect();
-            }
-        } else {
-            console.log("Invalid attack");
+        // A. Clicked another tile owned by a human (not necessarily the current one) -> Change selection
+        const targetOwner = this.game.players.find(p => p.id === tile.owner);
+        if (targetOwner && !targetOwner.isBot && tile.owner === fromTile.owner) {
+            this.select(x, y);
+            return;
         }
+
+        // B. Try Attack (if it's the current player's turn and tile is a neighbor)
+        if (fromTile.owner === this.game.currentPlayer.id) {
+            const isAdjacent = Math.abs(this.selectedTile.x - x) + Math.abs(this.selectedTile.y - y) === 1;
+
+            if (isAdjacent && tile.owner !== fromTile.owner && fromTile.dice > 1) {
+                const result = this.game.attack(this.selectedTile.x, this.selectedTile.y, x, y);
+
+                if (result && !result.error) {
+                    if (this.inputManager) {
+                        this.inputManager.vibrate(result.won ? 'win' : 'lose');
+                    }
+
+                    if (result.won) {
+                        this.select(x, y);
+                    } else {
+                        this.deselect();
+                    }
+                }
+                return;
+            }
+        }
+
+        // C. Default: deselect if clicking elsewhere
+        this.deselect();
     }
 
     handleKeyboardAttack(dx, dy) {
@@ -375,7 +384,6 @@ export class InputController {
         const targetTile = this.game.map.getTile(targetX, targetY);
         if (!targetTile) return;
 
-        // Reuse the logic from tile click (handle enemy vs own tile)
         this.handleTileClick(targetTile, targetX, targetY);
     }
 
@@ -394,21 +402,18 @@ export class InputController {
         this.renderer.setSelection(null, null);
     }
 
-    // Reset cursor on turn change
     onTurnStart() {
-        // Validate existing selection
         if (this.selectedTile) {
             const tile = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
-            if (!tile || tile.owner !== this.game.currentPlayer.id || tile.dice <= 1) {
+            const owner = this.game.players.find(p => p.id === tile?.owner);
+            if (!tile || !owner || owner.isBot) {
                 this.deselect();
             }
         }
 
-        // Validate cursor position
         if (this.cursorX !== null && this.cursorY !== null) {
             const tile = this.game.map.getTile(this.cursorX, this.cursorY);
             if (!tile) {
-                // Cursor on invalid tile, reset on next move
                 this.cursorX = null;
                 this.cursorY = null;
                 this.renderer.setCursor(null, null);

@@ -40,14 +40,17 @@ export class GamepadCursorManager {
             // Mapping gamepad buttons:
             // 0: A (South) -> Left Click
             // 1: B (East) -> Right Click / Cancel
+            // 2: X (West) -> Middle Click (Drag Map)
             // 3: Y (North) -> End Turn (Click button)
             // 6: L2 -> Zoom Out
             // 7: R2 -> Zoom In
 
             if (button === 0) {
-                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0);
+                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
             } else if (button === 1) {
-                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2);
+                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
+            } else if (button === 2) {
+                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
             } else if (button === 3) {
                 // Find and click end turn button if visible
                 const endTurnBtn = document.getElementById('end-turn-btn');
@@ -73,10 +76,12 @@ export class GamepadCursorManager {
             if (!cursor) return;
 
             if (button === 0) {
-                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0);
-                this.simulateMouseEvent('click', cursor.x, cursor.y, 0);
+                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
+                this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
             } else if (button === 1) {
-                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2);
+                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
+            } else if (button === 2) {
+                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 1, index);
             }
         });
     }
@@ -131,7 +136,7 @@ export class GamepadCursorManager {
                 cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
 
                 // Trigger mousemove on current position
-                this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0);
+                this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, i);
             }
 
             // Periodically check if player info changed (e.g. game started)
@@ -206,47 +211,72 @@ export class GamepadCursorManager {
         }
     }
 
-    simulateMouseEvent(type, x, y, button = 0) {
+    simulateMouseEvent(type, x, y, button = 0, gamepadIndex = 0) {
         const target = document.elementFromPoint(x, y);
         if (!target) return;
 
-        // Use PointerEvent if possible for better PixiJS compatibility
+        // Map mouse events to pointer events for PixiJS
+        const pointerTypeMap = {
+            'mousedown': 'pointerdown',
+            'mouseup': 'pointerup',
+            'mousemove': 'pointermove'
+        };
+
+        const eventType = pointerTypeMap[type] || type;
+
+        // Buttons bitmask for PointerEvent/MouseEvent:
+        // 1: Left, 2: Right, 4: Middle
+        let buttons = 0;
+        if (button === 0) buttons = 1;      // Left
+        else if (button === 1) buttons = 4; // Middle
+        else if (button === 2) buttons = 2; // Right
+
         const eventInit = {
             view: window,
             bubbles: true,
             cancelable: true,
             clientX: x,
             clientY: y,
+            screenX: x,
+            screenY: y,
             button: button,
-            buttons: button === 0 ? 1 : (button === 2 ? 2 : 0),
-            pointerId: 1,
+            buttons: buttons,
+            pointerId: 100 + (gamepadIndex || 0),
             pointerType: 'mouse',
-            isPrimary: true
+            isPrimary: true,
+            detail: type === 'click' ? 1 : 0
         };
 
-        let event;
-        if (type.startsWith('pointer')) {
-            event = new PointerEvent(type, eventInit);
-        } else {
-            // Also dispatch PointerEvents for mouse actions to satisfy PixiJS
-            const pointerTypeMap = {
-                'mousedown': 'pointerdown',
-                'mouseup': 'pointerup',
-                'mousemove': 'pointermove',
-                'click': 'pointerup' // Click is usually accompanied by pointerup
-            };
+        // If it's a mouse activity event, send PointerEvent (Crucial for PixiJS)
+        if (pointerTypeMap[type]) {
+            const event = new PointerEvent(eventType, eventInit);
 
-            if (pointerTypeMap[type]) {
-                const pEvent = new PointerEvent(pointerTypeMap[type], eventInit);
-                pEvent.isGamepadSimulated = true;
-                target.dispatchEvent(pEvent);
-            }
-
-            event = new MouseEvent(type, eventInit);
+            // Tag for identification
             event.isGamepadSimulated = true;
+            Object.defineProperty(event, 'isGamepadSimulated', {
+                value: true,
+                enumerable: true,
+                configurable: true
+            });
+
+            target.dispatchEvent(event);
         }
 
-        target.dispatchEvent(event);
+        // Always send a MouseEvent for standard HTML UI compatibility
+        // Buttons: Click/Up technically have no buttons pressed, but detail is important
+        const mouseEventInit = { ...eventInit };
+        if (type === 'click' || type === 'mouseup') {
+            mouseEventInit.buttons = 0;
+        }
+
+        const mouseEvent = new MouseEvent(type, mouseEventInit);
+        mouseEvent.isGamepadSimulated = true;
+        Object.defineProperty(mouseEvent, 'isGamepadSimulated', {
+            value: true,
+            enumerable: true,
+            configurable: true
+        });
+        target.dispatchEvent(mouseEvent);
 
         if (type === 'mousedown' && button === 0 && target.focus) {
             target.focus();
