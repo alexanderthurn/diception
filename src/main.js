@@ -10,6 +10,7 @@ import { ScenarioManager } from './scenarios/scenario-manager.js';
 import { TurnHistory } from './scenarios/turn-history.js';
 import { MapEditor } from './editor/map-editor.js';
 import { TileRenderer } from './render/tile-renderer.js';
+import { GamepadCursorManager } from './input/gamepad-cursor-manager.js';
 
 // Global Dice Export Function
 window.exportDiceIcon = async (options = {}) => {
@@ -100,6 +101,9 @@ async function init() {
 
     // 4. Initialize Input Controller (handles game input logic)
     const input = new InputController(game, renderer, inputManager);
+
+    // 4.5 Initialize Gamepad Cursors
+    const gamepadCursors = new GamepadCursorManager(game, inputManager);
 
     // Wire tile selection to effects (keeping input controller unchanged)
     const originalSelect = input.select.bind(input);

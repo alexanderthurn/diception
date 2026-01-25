@@ -200,84 +200,30 @@ export class InputManager {
         // 3 = Y (North) = End Turn
         // 9 = Start = Menu
 
-        const buttonActions = {
-            0: 'confirm',   // A
-            1: 'cancel',    // B
-            3: 'endTurn',   // Y
-            9: 'menu'       // Start
-        };
-
-        for (const [index, action] of Object.entries(buttonActions)) {
-            const i = parseInt(index);
-            if (i >= gp.buttons.length) continue;
-
+        for (let i = 0; i < gp.buttons.length; i++) {
             const pressed = gp.buttons[i].pressed;
             const wasPressed = prevState.buttons[i];
 
             if (pressed && !wasPressed) {
-                this.emit(action);
+                this.emit('gamepadButtonDown', { index: gp.index, button: i });
 
-                // Haptic feedback on confirm
-                if (action === 'confirm' && gp.vibrationActuator) {
+                // Haptic feedback on confirm (A button)
+                if (i === 0 && gp.vibrationActuator) {
                     gp.vibrationActuator.playEffect('dual-rumble', {
                         duration: 50,
                         strongMagnitude: 0.3,
                         weakMagnitude: 0.5
-                    }).catch(() => { }); // Ignore if not supported
+                    }).catch(() => { });
                 }
+            } else if (!pressed && wasPressed) {
+                this.emit('gamepadButtonUp', { index: gp.index, button: i });
             }
         }
     }
 
     processGamepadMovement(gp, prevState) {
-        // D-pad: buttons 12 (up), 13 (down), 14 (left), 15 (right)
-        // Left stick: axes 0 (X), 1 (Y)
-
-        let dx = 0;
-        let dy = 0;
-
-        // Check D-pad
-        if (gp.buttons[12]?.pressed) dy = -1;
-        else if (gp.buttons[13]?.pressed) dy = 1;
-        if (gp.buttons[14]?.pressed) dx = -1;
-        else if (gp.buttons[15]?.pressed) dx = 1;
-
-        // Check left stick if D-pad not used
-        if (dx === 0 && dy === 0) {
-            if (Math.abs(gp.axes[0]) > this.deadZone) {
-                dx = gp.axes[0] > 0 ? 1 : -1;
-            }
-            if (Math.abs(gp.axes[1]) > this.deadZone) {
-                dy = gp.axes[1] > 0 ? 1 : -1;
-            }
-        }
-
-        const now = Date.now();
-        const repeat = prevState.moveRepeat;
-
-        if (dx !== 0 || dy !== 0) {
-            const dir = { x: dx, y: dy };
-            const dirKey = `${dx},${dy}`;
-            const prevDirKey = repeat.dir ? `${repeat.dir.x},${repeat.dir.y}` : null;
-
-            if (!repeat.active || dirKey !== prevDirKey) {
-                // New direction - emit immediately
-                this.emit('move', dir);
-                prevState.moveRepeat = { active: true, dir, started: now, lastFire: now };
-            } else {
-                // Same direction held
-                const elapsed = now - repeat.started;
-                const sinceLast = now - repeat.lastFire;
-
-                if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
-                    this.emit('move', dir);
-                    repeat.lastFire = now;
-                }
-            }
-        } else {
-            // No direction input
-            prevState.moveRepeat = { active: false, dir: null, started: 0, lastFire: 0 };
-        }
+        // Disabled in favor of GamepadCursorManager
+        return;
     }
 
     processGamepadPan(gp) {

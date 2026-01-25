@@ -2890,3 +2890,20 @@ input[type="range"] {
         display: none !important;
     }
 }
+
+/* Gamepad Cursors */
+.gamepad-cursor {
+    pointer-events: none;
+    z-index: 10000;
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.8));
+    /* Default color if not set */
+    color: #ffffff;
+}
+
+.gamepad-cursor svg {
+    display: block;
+}
+
+#gamepad-cursors-container {
+    pointer-events: none;
+}
