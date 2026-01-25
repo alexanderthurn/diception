@@ -10,7 +10,9 @@ try {
     // Use 480 (SpaceWar) for testing if no appId is provided
     // Replace 480 with your actual Steam App ID
     steamClient = steamworks.init(480);
-    console.log('Steamworks initialized successfully for App ID: ' + steamClient.localUser.getSteamId().getRawSteamId());
+    if (steamClient) {
+        console.log('Steamworks initialized successfully for App ID: ' + steamClient.localUser.getSteamId().getRawSteamId());
+    }
 } catch (e) {
     console.error('Steamworks failed to initialize. Is Steam running?', e);
 }
@@ -60,6 +62,10 @@ app.on('activate', function () {
 // IPC handlers for Steam integration
 ipcMain.handle('steam-get-user-name', () => {
     return steamClient ? steamClient.localUser.getName() : 'Offline User';
+});
+
+ipcMain.handle('steam-quit', () => {
+    app.quit();
 });
 
 ipcMain.handle('steam-activate-achievement', (event, achievementId) => {

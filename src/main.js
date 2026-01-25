@@ -68,6 +68,15 @@ window.exportDiceIcon = async (options = {}) => {
 async function init() {
     // 0. Steam Integration
     if (window.steam) {
+        // Show Steam-only Quit button
+        const quitBtn = document.getElementById('quit-game-btn');
+        if (quitBtn) {
+            quitBtn.classList.remove('hidden');
+            quitBtn.addEventListener('click', () => {
+                window.steam.quit();
+            });
+        }
+
         window.steam.getUserName().then(name => {
             console.log('Steam User:', name);
             const credits = document.querySelector('.credits');
