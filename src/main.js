@@ -249,11 +249,88 @@ async function init() {
     let shouldAutoplayMusic = savedMusicEnabled;
 
     // Handle song end - play next song
+    // --- Mobile Volume Slider Logic ---
+    let musicTimeout;
+    let sfxTimeout;
+
+    // Helper to determine action based on state:
+    // 1. Muted -> Unmute & Show Slider
+    // 2. Active + Visible -> Hide Slider (Stay Active)
+    // 3. Active + Hidden -> Mute
+    const getMobileAction = (isEnabled, volumeSlider) => {
+        if (window.innerWidth > 768) return null; // Not mobile
+
+        const isVisible = volumeSlider.classList.contains('visible');
+
+        if (!isEnabled) {
+            return 'unmute-show';
+        }
+        if (isEnabled && isVisible) {
+            return 'hide';
+        }
+        // isEnabled && !isVisible
+        return 'mute';
+    };
+
+    const showSliderWithTimeout = (slider, updateTimeoutRef) => {
+        // Hide others
+        document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
+
+        slider.classList.add('visible');
+        const newTimeout = setTimeout(() => {
+            slider.classList.remove('visible');
+        }, 3000);
+        updateTimeoutRef(newTimeout);
+    };
+
+    // Close sliders on outside click
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth > 768) return;
+
+        if (!e.target.closest('#music-controls')) {
+            document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
+        }
+    });
+
+    // Reset timeout on slider interaction
+    const resetSliderTimeout = (slider, timeoutRef, updateTimeoutRef) => {
+        if (window.innerWidth <= 768) {
+            slider.classList.add('visible'); // Keep visible
+            clearTimeout(timeoutRef);
+            const newTimeout = setTimeout(() => {
+                slider.classList.remove('visible');
+            }, 3000);
+            updateTimeoutRef(newTimeout);
+        }
+    };
+
     music.addEventListener('ended', () => {
         loadNextSong();
     });
 
     musicToggle.addEventListener('click', () => {
+        const action = getMobileAction(musicPlaying, musicVolume);
+
+        if (action === 'unmute-show') {
+            clearTimeout(musicTimeout);
+            showSliderWithTimeout(musicVolume, (t) => musicTimeout = t);
+            if (!musicPlaying) {
+                music.play();
+                musicToggle.textContent = '🔊';
+                musicPlaying = true;
+                localStorage.setItem('dicy_musicEnabled', 'true');
+            }
+            return;
+        }
+
+        if (action === 'hide') {
+            clearTimeout(musicTimeout);
+            musicVolume.classList.remove('visible');
+            return;
+        }
+
+        // action === 'mute' or desktop default fallthrough
+
         if (musicPlaying) {
             music.pause();
             musicToggle.textContent = '🔇';
@@ -269,6 +346,7 @@ async function init() {
     musicVolume.addEventListener('input', (e) => {
         music.volume = e.target.value / 100;
         localStorage.setItem('dicy_musicVolume', (e.target.value / 100).toString());
+        resetSliderTimeout(musicVolume, musicTimeout, (t) => musicTimeout = t);
     });
 
 
@@ -296,6 +374,26 @@ async function init() {
     }, { once: true });
 
     sfxToggle.addEventListener('click', () => {
+        const action = getMobileAction(sfx.enabled, sfxVolume);
+
+        if (action === 'unmute-show') {
+            clearTimeout(sfxTimeout);
+            showSliderWithTimeout(sfxVolume, (t) => sfxTimeout = t);
+            if (!sfx.enabled) {
+                sfx.setEnabled(true);
+                sfxToggle.textContent = '🔔';
+                sfxToggle.classList.add('active');
+                localStorage.setItem('dicy_sfxEnabled', 'true');
+            }
+            return;
+        }
+
+        if (action === 'hide') {
+            clearTimeout(sfxTimeout);
+            sfxVolume.classList.remove('visible');
+            return;
+        }
+
         const enabled = !sfx.enabled;
         sfx.setEnabled(enabled);
         sfxToggle.textContent = enabled ? '🔔' : '🔕';
@@ -306,6 +404,7 @@ async function init() {
     sfxVolume.addEventListener('input', (e) => {
         sfx.setVolume(e.target.value / 100);
         localStorage.setItem('dicy_sfxVolume', (e.target.value / 100).toString());
+        resetSliderTimeout(sfxVolume, sfxTimeout, (t) => sfxTimeout = t);
     });
 
     // Per-player autoplay state

@@ -81,6 +81,10 @@ select {
     z-index: 10;
 }
 
+.audio-group {
+    display: contents;
+}
+
 /* Hide zoom controls on desktop */
 @media (min-width: 769px) {
     .zoom-control {
@@ -844,9 +848,44 @@ input[type="range"] {
         text-align: right;
     }
 
-    #music-controls input[type="range"],
-    .separator {
+    .audio-group {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: 40px;
+        /* Only button width by default */
+        position: relative;
+        /* For absolute slider positioning */
+    }
+
+    /* Make volume sliders touch-friendly on mobile */
+    #music-controls input[type="range"] {
         display: none;
+        /* Hidden by default */
+        width: 100px;
+        height: 10px;
+        margin: 0;
+        position: absolute;
+        right: 45px;
+        /* To the left of the button */
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 210;
+        background: rgba(0, 0, 0, 0.9);
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        padding: 0 5px;
+    }
+
+    #music-controls input[type="range"].visible {
+        display: block;
+    }
+
+    #music-controls input[type="range"]::-webkit-slider-thumb {
+        width: 20px;
+        height: 20px;
+        margin-top: -5px;
+        /* Center thumb */
     }
 
     /* Hide text, show icon on mobile */
