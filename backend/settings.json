@@ -1,4 +1,4 @@
 {
     "allowUploads": true,
-    "overwriteMode": "new"
+    "overwriteMode": "replace"
 }
