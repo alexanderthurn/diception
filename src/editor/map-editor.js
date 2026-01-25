@@ -5,7 +5,7 @@
  * Creates adapter classes to make editor state look like a game.
  */
 
-import { generateScenarioId } from '../scenarios/scenario-data.js';
+// No longer using generateScenarioId
 
 // Default player colors
 const DEFAULT_COLORS = [
@@ -208,7 +208,6 @@ export class MapEditor {
 
     createEmptyState(width = 7, height = 7) {
         return {
-            id: '',
             name: 'New Map',
             description: '',
             author: '',
@@ -229,8 +228,7 @@ export class MapEditor {
             paintMode: 'add', // 'add' or 'remove'
             diceBrushValue: 2,
             secondaryDiceBrushValue: 1,
-            isDirty: false,
-            originalId: null // Track if editing existing
+            isDirty: false
         };
     }
 
@@ -276,7 +274,6 @@ export class MapEditor {
             backBtn: document.getElementById('editor-back-btn'),
 
             // Settings
-            idInput: document.getElementById('editor-id'),
             nameInput: document.getElementById('editor-name'),
             descriptionInput: document.getElementById('editor-description'),
             authorInput: document.getElementById('editor-author'),
@@ -341,10 +338,6 @@ export class MapEditor {
         this.elements.backBtn?.addEventListener('click', () => this.close());
 
         // Settings changes
-        this.elements.idInput?.addEventListener('input', (e) => {
-            this.state.id = e.target.value.trim();
-            this.state.isDirty = true;
-        });
 
         this.elements.nameInput?.addEventListener('input', (e) => {
             this.state.name = e.target.value;
@@ -1205,27 +1198,13 @@ export class MapEditor {
             if (this.elements.nameInput) this.elements.nameInput.value = name;
         }
 
-        // generate ID from name if not provided
-        let newId = this.state.id;
-        if (!newId) {
-            const idBase = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-            newId = `map_${idBase}`;
-            // Update input so user sees what was generated
-            this.state.id = newId;
-            if (this.elements.idInput) this.elements.idInput.value = newId;
-        }
-
-        // Check for collision (if ID changed or is new)
-        if (newId !== this.state.originalId) {
-            const existing = this.scenarioManager.getScenario(newId);
-            if (existing) {
-                alert(`A map with ID "${newId}" already exists! Please choose a different ID or name.`);
-                return null;
-            }
+        // Check for collision 
+        const existing = this.scenarioManager.getScenario(name);
+        if (existing && !confirm(`A map with name "${name}" already exists. Overwrite?`)) {
+            return null;
         }
 
         const mapData = {
-            id: newId,
             name: name,
             description: this.state.description,
             type: 'map',
@@ -1243,7 +1222,6 @@ export class MapEditor {
         try {
             this.scenarioManager.saveEditorScenario(mapData);
             this.state.isDirty = false;
-            this.state.originalId = mapData.id;
             this.showStatus('Map saved!', 'success');
             return mapData;
         } catch (e) {
@@ -1299,27 +1277,13 @@ export class MapEditor {
             this.renderToCanvas();
         }
 
-        // Generate ID from name if not provided
-        let newId = this.state.id;
-        if (!newId) {
-            const idBase = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-            newId = `scenario_${idBase}`;
-            // Update input so user sees what was generated
-            this.state.id = newId;
-            if (this.elements.idInput) this.elements.idInput.value = newId;
-        }
-
         // Check for collision
-        if (newId !== this.state.originalId) {
-            const existing = this.scenarioManager.getScenario(newId);
-            if (existing) {
-                alert(`A scenario with ID "${newId}" already exists! Please choose a different ID or name.`);
-                return null;
-            }
+        const existing = this.scenarioManager.getScenario(name);
+        if (existing && !confirm(`A scenario with name "${name}" already exists. Overwrite?`)) {
+            return null;
         }
 
         const scenarioData = {
-            id: newId,
             name: name,
             description: this.state.description,
             type: 'scenario',
@@ -1346,7 +1310,6 @@ export class MapEditor {
         try {
             this.scenarioManager.saveEditorScenario(scenarioData);
             this.state.isDirty = false;
-            this.state.originalId = scenarioData.id;
             this.showStatus('Scenario saved!', 'success');
             return scenarioData;
         } catch (e) {
@@ -1362,8 +1325,6 @@ export class MapEditor {
     importFromScenario(scenario) {
         this.state = this.createEmptyState(scenario.width || 7, scenario.height || 7);
 
-        this.state.originalId = scenario.isBuiltIn ? null : scenario.id;
-        this.state.id = scenario.isBuiltIn ? '' : scenario.id; // Populate ID if not built-in
         this.state.name = scenario.isBuiltIn ? scenario.name + ' (Copy)' : scenario.name;
         this.state.description = scenario.description || '';
         this.state.author = scenario.isBuiltIn ? 'User' : (scenario.author || 'User');

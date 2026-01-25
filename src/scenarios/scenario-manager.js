@@ -32,8 +32,8 @@ export class ScenarioManager {
                 console.log('Loaded', parsed.length, 'user scenarios from localStorage');
                 if (Array.isArray(parsed)) {
                     for (const scenario of parsed) {
-                        if (scenario && scenario.id) {
-                            this.scenarios.set(scenario.id, scenario);
+                        if (scenario && scenario.name) {
+                            this.scenarios.set(scenario.name, scenario);
                         }
                     }
                 }
@@ -81,7 +81,7 @@ export class ScenarioManager {
 
         // Remove oldest 10 custom scenarios
         for (let i = 0; i < Math.min(10, customScenarios.length); i++) {
-            this.scenarios.delete(customScenarios[i].id);
+            this.scenarios.delete(customScenarios[i].name);
         }
     }
 
@@ -98,7 +98,10 @@ export class ScenarioManager {
         }
 
         const scenario = createScenarioFromGame(game, name, description);
-        this.scenarios.set(scenario.id, scenario);
+        // Ensure ID is removed if present
+        delete scenario.id;
+
+        this.scenarios.set(scenario.name, scenario);
         this.saveToStorage();
         return scenario;
     }
@@ -109,6 +112,9 @@ export class ScenarioManager {
      * @returns {Object} The saved scenario
      */
     saveEditorScenario(scenario) {
+        // Ensure ID is removed
+        delete scenario.id;
+
         const validation = validateScenario(scenario);
         if (!validation.valid) {
             throw new Error('Invalid scenario: ' + validation.errors.join(', '));
@@ -118,45 +124,42 @@ export class ScenarioManager {
             this.pruneOldScenarios();
         }
 
-        this.scenarios.set(scenario.id, scenario);
+        this.scenarios.set(scenario.name, scenario);
         this.saveToStorage();
         return scenario;
     }
 
     /**
-     * Load a scenario by ID
-     * @param {string} id 
+     * Load a scenario by Name
+     * @param {string} name 
      * @returns {Object|null}
      */
-    loadScenario(id) {
-        const scenario = this.scenarios.get(id) || null;
-        console.log('ScenarioManager.loadScenario:', id, 'found:', !!scenario, 'total scenarios:', this.scenarios.size);
-        if (!scenario) {
-            console.log('Available scenario IDs:', Array.from(this.scenarios.keys()));
-        }
+    loadScenario(name) {
+        const scenario = this.scenarios.get(name) || null;
+        console.log('ScenarioManager.loadScenario:', name, 'found:', !!scenario, 'total scenarios:', this.scenarios.size);
         return scenario;
     }
 
     /**
      * Alias for loadScenario
      */
-    getScenario(id) {
-        return this.loadScenario(id);
+    getScenario(name) {
+        return this.loadScenario(name);
     }
 
     /**
      * Delete a scenario
-     * @param {string} id 
+     * @param {string} name 
      * @returns {boolean}
      */
-    deleteScenario(id) {
-        const scenario = this.scenarios.get(id);
+    deleteScenario(name) {
+        const scenario = this.scenarios.get(name);
         if (scenario && scenario.isBuiltIn) {
             console.warn('Cannot delete built-in scenario');
             return false;
         }
 
-        const deleted = this.scenarios.delete(id);
+        const deleted = this.scenarios.delete(name);
         if (deleted) {
             this.saveToStorage();
         }
@@ -174,31 +177,27 @@ export class ScenarioManager {
                 if (a.isBuiltIn !== b.isBuiltIn) {
                     return a.isBuiltIn ? -1 : 1;
                 }
-                return b.createdAt - a.createdAt;
+                return (b.createdAt || 0) - (a.createdAt || 0);
             });
     }
 
     /**
      * Export a scenario as JSON string
-     * @param {string} id 
+     * @param {string} name 
      * @returns {string|null}
      */
-    exportScenario(id) {
-        const scenario = this.scenarios.get(id);
+    exportScenario(name) {
+        const scenario = this.scenarios.get(name);
         if (!scenario) return null;
 
         // Create a clean copy without internal fields
         const exported = { ...scenario };
+        delete exported.id;
         delete exported.thumbnail; // Don't export thumbnails (too large)
 
         return JSON.stringify(exported, null, 2);
     }
 
-    /**
-     * Import a scenario from JSON
-     * @param {string} json 
-     * @returns {Object}
-     */
     /**
      * Import a scenario from JSON but do NOT save it yet.
      * Returns the scenario object if valid.
@@ -211,6 +210,8 @@ export class ScenarioManager {
             throw new Error('Invalid JSON format');
         }
 
+        delete scenario.id;
+
         const validation = validateScenario(scenario);
         if (!validation.valid) {
             throw new Error('Invalid scenario: ' + validation.errors.join(', '));
@@ -220,10 +221,15 @@ export class ScenarioManager {
     }
 
     /**
-     * Generate a new unique ID for a scenario
+     * Generate unique name if collision occurs
      */
-    generateUniqueId(prefix = 'scenario') {
-        return prefix + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    generateUniqueName(baseName) {
+        let name = baseName;
+        let counter = 1;
+        while (this.scenarios.has(name)) {
+            name = `${baseName} (${counter++})`;
+        }
+        return name;
     }
 
     /**
@@ -240,7 +246,7 @@ export class ScenarioManager {
         game.turn = 1;
 
         // Set up players
-        game.players = scenario.players.map(p => ({
+        game.players = (scenario.players || []).map(p => ({
             id: p.id,
             isBot: p.isBot,
             color: p.color,
@@ -267,16 +273,18 @@ export class ScenarioManager {
         }
 
         // Apply scenario tiles
-        for (const tile of scenario.tiles) {
-            const index = tile.y * scenario.width + tile.x;
-            if (index >= 0 && index < game.map.tiles.length) {
-                game.map.tiles[index] = {
-                    x: tile.x,
-                    y: tile.y,
-                    blocked: false,
-                    owner: tile.owner,
-                    dice: tile.dice
-                };
+        if (scenario.tiles) {
+            for (const tile of scenario.tiles) {
+                const index = tile.y * scenario.width + tile.x;
+                if (index >= 0 && index < game.map.tiles.length) {
+                    game.map.tiles[index] = {
+                        x: tile.x,
+                        y: tile.y,
+                        blocked: false,
+                        owner: tile.owner,
+                        dice: tile.dice
+                    };
+                }
             }
         }
 
@@ -288,29 +296,24 @@ export class ScenarioManager {
      */
     ensureBuiltInScenarios() {
         console.log('Loading builtin scenarios:', builtinScenarios.length);
-        // Load built-in scenarios from JSON
         for (const scenario of builtinScenarios) {
-            // Always overwrite to ensure latest version (e.g. name changes)
-            this.scenarios.set(scenario.id, {
+            delete scenario.id;
+            this.scenarios.set(scenario.name, {
                 ...scenario,
-                createdAt: 0 // Keep sorted at bottom (or top based on sort logic)
+                createdAt: 0
             });
         }
 
         console.log('Loading builtin maps:', builtinMaps.length);
-        // Load built-in maps from JSON
-        // Maps are scenarios with type='map' and no fixed players/dice
         for (const map of builtinMaps) {
-            // Always overwrite to ensure latest version
-            this.scenarios.set(map.id, {
+            delete map.id;
+            this.scenarios.set(map.name, {
                 ...map,
                 createdAt: 0,
-                // Ensure required defaults exist
                 maxDice: map.maxDice || 9,
                 diceSides: map.diceSides || 6,
                 players: map.players || []
             });
         }
-        console.log('Built-in maps loaded, checking for map_archipelago:', this.scenarios.has('map_archipelago'));
     }
 }

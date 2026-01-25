@@ -4,13 +4,6 @@
  */
 
 /**
- * Generate a unique ID for scenarios
- */
-export function generateScenarioId() {
-    return 'scenario_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
-
-/**
  * Create a scenario object from current game state
  * @param {Game} game - The game instance
  * @param {string} name - User-provided name
@@ -47,7 +40,6 @@ export function createScenarioFromGame(game, name, description = '', options = {
     }));
 
     return {
-        id: generateScenarioId(),
         name: name,
         description: description,
         thumbnail: null,
@@ -88,7 +80,6 @@ export function validateScenario(scenario) {
     const isMap = scenario.type === 'map';
 
     // Required fields for all types
-    if (!scenario.id) errors.push('Missing id');
     if (!scenario.name) errors.push('Missing name');
     if (!scenario.width || scenario.width < 3) errors.push('Invalid width');
     if (!scenario.height || scenario.height < 3) errors.push('Invalid height');
@@ -164,7 +155,6 @@ export function createEmptyScenario(width, height, playerCount = 2) {
     }
 
     return {
-        id: generateScenarioId(),
         name: 'New Map',
         description: '',
         thumbnail: null,

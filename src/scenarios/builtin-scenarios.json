@@ -1,6 +1,5 @@
 [
     {
-        "id": "builtin_duel",
         "name": "Classic Duel",
         "description": "A balanced 2-player arena",
         "type": "scenario",
@@ -298,7 +297,6 @@
         ]
     },
     {
-        "id": "builtin_corners",
         "name": "Four Corners",
         "description": "Symmetric 4-player battlefield",
         "type": "scenario",
@@ -722,7 +720,6 @@
         ]
     },
     {
-        "id": "builtin_world",
         "name": "World Conquest",
         "description": "Risk-style map with 6 connected continents",
         "type": "scenario",
@@ -1176,7 +1173,6 @@
         ]
     },
     {
-        "id": "builtin_tiny",
         "name": "Tiny Battle",
         "description": "Quick micro-game for rapid battles",
         "type": "scenario",

@@ -2087,12 +2087,12 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
     // Load saved scenario if any
     const loadSavedScenario = () => {
-        const savedScenarioId = localStorage.getItem('dicy_loadedScenario');
-        if (savedScenarioId) {
+        const savedScenarioName = localStorage.getItem('dicy_loadedScenario');
+        if (savedScenarioName) {
             try {
-                console.log('Loading saved scenario:', savedScenarioId);
+                console.log('Loading saved scenario:', savedScenarioName);
                 console.log('Scenario manager has', scenarioManager.scenarios.size, 'scenarios loaded');
-                const scenario = scenarioManager.loadScenario(savedScenarioId);
+                const scenario = scenarioManager.loadScenario(savedScenarioName);
                 console.log('Loaded scenario result:', scenario ? 'found' : 'not found');
                 if (scenario) {
                     pendingScenario = scenario;
@@ -2101,7 +2101,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                     console.log('Scenario loaded successfully:', scenario.name);
                 } else {
                     // Scenario no longer exists, remove from localStorage
-                    console.warn('Scenario not found, removing from localStorage:', savedScenarioId);
+                    console.warn('Scenario not found, removing from localStorage:', savedScenarioName);
                     localStorage.removeItem('dicy_loadedScenario');
                 }
             } catch (error) {
@@ -2113,10 +2113,10 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
     // Load saved scenario after a short delay to ensure scenario manager is ready
     const tryLoadScenario = (attempts = 0) => {
-        const savedScenarioId = localStorage.getItem('dicy_loadedScenario');
-        if (!savedScenarioId) return;
+        const savedScenarioName = localStorage.getItem('dicy_loadedScenario');
+        if (!savedScenarioName) return;
 
-        const scenario = scenarioManager.loadScenario(savedScenarioId);
+        const scenario = scenarioManager.loadScenario(savedScenarioName);
         if (scenario || attempts >= 10) {
             loadSavedScenario();
         } else {
@@ -2349,9 +2349,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         // Load pending scenario from localStorage if needed
         const loadPendingScenarioIfNeeded = () => {
             if (!pendingScenario) {
-                const savedScenarioId = localStorage.getItem('dicy_loadedScenario');
-                if (savedScenarioId) {
-                    const scenario = scenarioManager.loadScenario(savedScenarioId);
+                const savedScenarioName = localStorage.getItem('dicy_loadedScenario');
+                if (savedScenarioName) {
+                    const scenario = scenarioManager.loadScenario(savedScenarioName);
                     if (scenario) {
                         pendingScenario = scenario;
                     }
@@ -2552,7 +2552,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     const saveScenarioCancelBtn = document.getElementById('save-scenario-cancel-btn');
 
     let currentScenarioTab = 'maps';
-    let selectedScenarioId = null;
+    let selectedScenarioName = null;
     let selectedScenarioData = null;
     let currentSort = { field: 'date', direction: 'desc' };
     let onlineMaps = [];
@@ -2569,7 +2569,6 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             // Map aggregated data
             onlineMaps = data.map(m => ({
                 ...m,
-                id: m.filename,
                 isOnline: true,
                 createdAt: (m.filemtime || m.created) * 1000
             }));
@@ -2585,7 +2584,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     };
 
     const loadSelectedScenario = async () => {
-        if (!selectedScenarioId) return;
+        if (!selectedScenarioName) return;
 
         if (selectedScenarioData && selectedScenarioData.isOnline) {
             const scenario = selectedScenarioData;
@@ -2599,7 +2598,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             return;
         }
 
-        const scenario = scenarioManager.loadScenario(selectedScenarioId);
+        const scenario = scenarioManager.loadScenario(selectedScenarioName);
         if (scenario) {
             pendingScenario = scenario;
             scenarioBrowserModal.classList.add('hidden');
@@ -2607,7 +2606,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             updateConfigFromScenario(scenario);
 
             // Save loaded scenario to localStorage
-            localStorage.setItem('dicy_loadedScenario', selectedScenarioId);
+            localStorage.setItem('dicy_loadedScenario', selectedScenarioName);
             updateLoadedScenarioDisplay(scenario.name);
         }
     };
@@ -2752,7 +2751,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         exportBtn.title = 'Export as file';
         exportBtn.onclick = (e) => {
             e.stopPropagation();
-            const json = scenario.isOnline ? JSON.stringify(scenario, null, 2) : scenarioManager.exportScenario(scenario.id);
+            const json = scenario.isOnline ? JSON.stringify(scenario, null, 2) : scenarioManager.exportScenario(scenario.name);
             if (json) {
                 const blob = new Blob([json], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -2790,7 +2789,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             deleteBtn.onclick = (e) => {
                 e.stopPropagation();
                 if (confirm(`Delete "${scenario.name}"?`)) {
-                    scenarioManager.deleteScenario(scenario.id);
+                    scenarioManager.deleteScenario(scenario.name);
                     renderScenarioList();
                 }
             };
@@ -2896,9 +2895,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         if (filtered.length === 0) {
             scenarioList.innerHTML = `<div class="empty-message">${emptyMessages[currentScenarioTab]}</div>`;
             document.getElementById('scenario-preview-content').innerHTML = '<div class="empty-message-large">Select a scenario to view details</div>';
-            scenarioList.innerHTML = `<div class="empty-message">${emptyMessages[currentScenarioTab]}</div>`;
-            document.getElementById('scenario-preview-content').innerHTML = '<div class="empty-message-large">Select a scenario to view details</div>';
-            selectedScenarioId = null;
+            selectedScenarioName = null;
             selectedScenarioData = null;
             if (scenarioExportBtn) scenarioExportBtn.disabled = true;
             return;
@@ -2907,7 +2904,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         filtered.forEach(s => {
             const item = document.createElement('div');
             item.className = 'scenario-list-item';
-            if (selectedScenarioId === s.id) {
+            if (selectedScenarioName === s.name) {
                 item.classList.add('selected');
             }
 
@@ -2927,7 +2924,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
                 document.querySelectorAll('.scenario-list-item').forEach(i => i.classList.remove('selected'));
                 item.classList.add('selected');
-                selectedScenarioId = s.id;
+                selectedScenarioName = s.name;
                 selectedScenarioData = s;
                 if (scenarioExportBtn) scenarioExportBtn.disabled = false;
                 showScenarioPreview(s);
@@ -2953,10 +2950,10 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
         // Auto-select first item if none selected or if previously selected is gone
         if (filtered.length > 0) {
-            if (!selectedScenarioId || !filtered.find(s => s.id === selectedScenarioId)) {
+            if (!selectedScenarioName || !filtered.find(s => s.name === selectedScenarioName)) {
                 // Select first
                 const first = filtered[0];
-                selectedScenarioId = first.id;
+                selectedScenarioName = first.name;
                 selectedScenarioData = first;
                 // Highlight first
                 scenarioList.firstElementChild.classList.add('selected');
@@ -3080,7 +3077,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             tab.classList.add('active');
             currentScenarioTab = tab.dataset.tab;
             // Clear selection on tab switch
-            selectedScenarioId = null;
+            selectedScenarioName = null;
             selectedScenarioData = null;
 
             if (currentScenarioTab === 'online') {
@@ -3094,7 +3091,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     // Open scenario browser
     scenariosBtn.addEventListener('click', () => {
         pendingScenario = null; // Clear any pending
-        selectedScenarioId = null; // Clear selection
+        selectedScenarioName = null; // Clear selection
         selectedScenarioData = null;
         renderScenarioList();
         scenarioBrowserModal.classList.remove('hidden');
@@ -3157,31 +3154,27 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                     // Parse and validate first
                     const scenario = scenarioManager.parseImport(text);
 
-                    // Check for existing ID
-                    const existing = scenarioManager.getScenario(scenario.id);
+                    // Check for existing Name
+                    const existing = scenarioManager.getScenario(scenario.name);
                     if (existing) {
                         const choice = confirm(
-                            `A scenario with ID "${scenario.id}" already exists.\n\n` +
+                            `A scenario with name "${scenario.name}" already exists.\n\n` +
                             `Click OK to REPLACE the existing scenario.\n` +
                             `Click Cancel to import as a NEW scenario.`
                         );
 
                         if (choice) {
-                            // Replace (keep ID)
-                            // Mark as custom and update timestamp
+                            // Replace (keep Name)
                             scenario.isBuiltIn = false;
                             scenario.createdAt = Date.now();
                         } else {
-                            // Save as new (generate new ID)
-                            const prefix = scenario.type === 'map' ? 'map' : 'scenario';
-                            scenario.id = scenarioManager.generateUniqueId(prefix);
+                            // Save as new (generate unique name)
+                            scenario.name = scenarioManager.generateUniqueName(scenario.name);
                             scenario.isBuiltIn = false;
                             scenario.createdAt = Date.now();
-                            // Append (Copy) to name
-                            scenario.name = scenario.name + ' (Imported)';
                         }
                     } else {
-                        // New scenario, ensure internal fields are correct
+                        // New scenario
                         scenario.isBuiltIn = false;
                         if (!scenario.createdAt) scenario.createdAt = Date.now();
                     }
@@ -3200,12 +3193,12 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         });
     }
 
-    // Export Scenario (Footer Button)
+    // Export Scenario (Footer Button - though hidden)
     if (scenarioExportBtn) {
         scenarioExportBtn.addEventListener('click', () => {
-            if (!selectedScenarioId) return;
+            if (!selectedScenarioName) return;
 
-            const json = scenarioManager.exportScenario(selectedScenarioId);
+            const json = scenarioManager.exportScenario(selectedScenarioName);
             if (json) {
                 const blob = new Blob([json], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);

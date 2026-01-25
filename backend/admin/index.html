@@ -50,7 +50,6 @@
             margin-top: 10px;
             max-height: 400px;
             overflow: auto;
-            flex: 1;
             font-size: 12px;
             display: block;
         }
@@ -93,10 +92,10 @@
         <div class="config-item">
             Overwrite Mode:
             <label>
-                <input type="radio" name="overwriteMode" value="replace"> Replace Existing (Same ID)
+                <input type="radio" name="overwriteMode" value="replace"> Replace Existing (Same Name)
             </label>
             <label>
-                <input type="radio" name="overwriteMode" value="new"> Always New (Modify ID)
+                <input type="radio" name="overwriteMode" value="new"> Always New (Modify Name)
             </label>
         </div>
         <button id="saveSettingsBtn">Save Settings</button>
@@ -171,6 +170,10 @@
             reader.onload = async (ev) => {
                 try {
                     const json = JSON.parse(ev.target.result);
+                    if (!json.name) {
+                        alert("Missing 'name' in JSON file.");
+                        return;
+                    }
                     if (!json.tiles) {
                         if (!confirm("This doesn't look like a valid map (missing 'tiles'). Upload anyway?")) return;
                     }
@@ -183,7 +186,7 @@
 
                     const result = await response.json();
                     if (result.success) {
-                        alert(result.message || 'Map uploaded successfully!');
+                        alert(result.message);
                         fetchMaps();
                     } else {
                         alert('Upload failed: ' + (result.error || 'Unknown error'));

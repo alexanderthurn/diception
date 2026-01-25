@@ -1,6 +1,5 @@
 [
     {
-        "id": "map_four_corners",
         "name": "Four Corners",
         "description": "4-player symmetric layout with center gap",
         "type": "map",
@@ -268,7 +267,6 @@
         ]
     },
     {
-        "id": "map_cross",
         "name": "Cross",
         "description": "Cross-shaped layout with central chokepoint",
         "type": "map",
@@ -460,7 +458,6 @@
         ]
     },
     {
-        "id": "map_diamond",
         "name": "Diamond",
         "description": "Diamond-shaped compact layout",
         "type": "map",
@@ -572,7 +569,6 @@
         ]
     },
     {
-        "id": "map_world",
         "name": "Weltkarte",
         "description": "Risk-style continents layout",
         "type": "map",

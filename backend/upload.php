@@ -36,52 +36,58 @@ if (!$data) {
     exit;
 }
 
-// Ensure ID exists
-if (!isset($data['id'])) {
-    $data['id'] = uniqid('online_');
+// Ensure name exists
+if (!isset($data['name']) || empty($data['name'])) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Missing map name']);
+    exit;
 }
 
-$originalId = $data['id'];
-$targetId = $data['id'];
-$filepath = null;
-$action = 'created'; // default
+// Remove any ID that might have been sent
+unset($data['id']);
 
-// Search for existing file with this ID
+$targetName = $data['name'];
+$filepath = null;
+$action = 'created';
+
+// Search for existing file with this name
 $files = glob(__DIR__ . '/data/*.json');
 foreach ($files as $file) {
     $content = json_decode(file_get_contents($file), true);
-    if ($content && isset($content['id']) && $content['id'] === $targetId) {
+    if ($content && isset($content['name']) && $content['name'] === $targetName) {
         if ($settings['overwriteMode'] === 'replace') {
             $filepath = $file;
             $action = 'replaced';
         } else {
-            // "new" mode: always generate a new ID to avoid overwriting
-            $targetId .= '_' . substr(md5(uniqid()), 0, 5);
-            $data['id'] = $targetId;
+            // "new" mode: generate a new unique name
+            $targetName .= ' (' . substr(md5(uniqid()), 0, 5) . ')';
+            $data['name'] = $targetName;
             $action = 'duplicated';
         }
         break;
     }
 }
 
-// If no existing file path found (either in 'new' mode or 'replace' mode with no match)
+// If no existing file found or name changed (duplicated)
 if (!$filepath) {
-    $cleanId = preg_replace('/[^a-zA-Z0-9_-]/', '', $targetId);
-    $filename = 'map_' . $cleanId . '.json';
+    // Filename logic: use the name, convert spaces to underscores, keep it alpha-numeric
+    $cleanFilename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $targetName);
+    if (empty($cleanFilename))
+        $cleanFilename = 'map_' . uniqid();
 
-    // Check for filename collision even if ID is new
-    if (file_exists(__DIR__ . '/data/' . $filename)) {
-        $filename = 'map_' . $cleanId . '_' . uniqid() . '.json';
+    $filepath = __DIR__ . '/data/' . $cleanFilename . '.json';
+
+    // Check if THIS specific filename exists (collision of cleaned names)
+    if (file_exists($filepath)) {
+        $filepath = __DIR__ . '/data/' . $cleanFilename . '_' . uniqid() . '.json';
     }
-
-    $filepath = __DIR__ . '/data/' . $filename;
 }
 
 if (file_put_contents($filepath, json_encode($data, JSON_PRETTY_PRINT))) {
     $messages = [
-        'replaced' => "Map '{$data['name']}' has been updated (overwritten).",
-        'duplicated' => "A duplicate of '{$data['name']}' was created with a new ID ({$targetId}).",
-        'created' => "Map '{$data['name']}' was successfully uploaded."
+        'replaced' => "Map '{$targetName}' has been updated (overwritten).",
+        'duplicated' => "A duplicate was created as '{$targetName}'.",
+        'created' => "Map '{$targetName}' was successfully uploaded."
     ];
 
     echo json_encode([
@@ -89,7 +95,7 @@ if (file_put_contents($filepath, json_encode($data, JSON_PRETTY_PRINT))) {
         'action' => $action,
         'message' => $messages[$action],
         'filename' => basename($filepath),
-        'id' => $targetId
+        'name' => $targetName
     ]);
 } else {
     http_response_code(500);
