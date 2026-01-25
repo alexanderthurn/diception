@@ -7,11 +7,13 @@ import { createScenarioFromGame } from './scenario-data.js';
 
 const MAX_HISTORY_LENGTH = 100; // Keep last 100 turns
 const AUTOSAVE_KEY = 'diceception_autosave';
+const INITIAL_STATE_KEY = 'diceception_initial_state';
 
 export class TurnHistory {
     constructor() {
         this.snapshots = [];
         this.currentIndex = -1;
+        this.initialSnapshot = null;
     }
 
     /**
@@ -20,6 +22,7 @@ export class TurnHistory {
     clear() {
         this.snapshots = [];
         this.currentIndex = -1;
+        this.initialSnapshot = null;
     }
 
     /**
@@ -37,6 +40,12 @@ export class TurnHistory {
             gameState: this.serializeGameState(game)
         };
 
+        // Capture initial state (Turn 1) if not already captured in memory
+        if (game.turn === 1 && !this.initialSnapshot) {
+            // Clone deep copy for safety
+            this.initialSnapshot = JSON.parse(JSON.stringify(snapshot));
+        }
+
         // Add to history
         this.snapshots.push(snapshot);
         this.currentIndex = this.snapshots.length - 1;
@@ -48,6 +57,99 @@ export class TurnHistory {
         }
 
         return snapshot;
+    }
+
+    /**
+     * Check if there is a saved initial state available
+     * @returns {boolean}
+     */
+    hasInitialState() {
+        if (this.initialSnapshot) return true;
+
+        try {
+            const stored = localStorage.getItem(INITIAL_STATE_KEY);
+            // Verify it's valid JSON and not null/empty
+            return stored && JSON.parse(stored) !== null;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Explicitly save the current game state as the "Initial State" for restarts.
+     * Should be called when a NEW game is started.
+     * @param {Game} game 
+     */
+    saveInitialState(game) {
+        const snapshot = {
+            turn: game.turn,
+            currentPlayerIndex: game.currentPlayerIndex,
+            timestamp: Date.now(),
+            gameState: this.serializeGameState(game)
+        };
+
+        this.initialSnapshot = JSON.parse(JSON.stringify(snapshot));
+
+        try {
+            localStorage.setItem(INITIAL_STATE_KEY, JSON.stringify(this.initialSnapshot));
+        } catch (e) {
+            console.error('Failed to persist initial state:', e);
+        }
+    }
+
+    // ... serializeGameState ...
+
+    // ... restoreSnapshot ...
+
+    /**
+     * Restore the initial game state (start of game)
+     * @param {Game} game 
+     * @returns {boolean}
+     */
+    restoreInitialSnapshot(game) {
+        // Try to load from memory first, then localStorage
+        if (!this.initialSnapshot) {
+            try {
+                const stored = localStorage.getItem(INITIAL_STATE_KEY);
+                if (stored) {
+                    this.initialSnapshot = JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error('Failed to load initial state from storage:', e);
+            }
+        }
+
+        if (!this.initialSnapshot) {
+            console.warn('No initial snapshot available to restore');
+            return false;
+        }
+
+        // Cache the snapshot object before clearing history (which wipes this.initialSnapshot)
+        const snapshotToRestore = this.initialSnapshot;
+
+        // Reset history since we are restarting
+        this.clear();
+
+        // We re-capture the initial snapshot after restore so it exists for the next restart
+        const success = this.applyGameState(game, snapshotToRestore.gameState);
+
+        if (success) {
+            // Re-save initial snapshot because clear() wiped it
+            // We use the cached one, making a fresh copy just in case applyGameState somehow mutated it (it shouldn't but safe)
+            this.initialSnapshot = JSON.parse(JSON.stringify(snapshotToRestore));
+            // Add as first history item
+            this.snapshots.push(this.initialSnapshot);
+            this.currentIndex = 0;
+
+            // Re-persist to storage just to be safe/consistent (though it should still be there)
+            try {
+                localStorage.setItem(INITIAL_STATE_KEY, JSON.stringify(this.initialSnapshot));
+            } catch (e) {
+                console.error('Failed to re-persist initial state:', e);
+            }
+        }
+
+        return success;
     }
 
     /**
@@ -106,6 +208,8 @@ export class TurnHistory {
         const snapshot = this.snapshots[snapshotIndex];
         return this.applyGameState(game, snapshot.gameState);
     }
+
+
 
     /**
      * Apply a serialized game state to a game instance

@@ -637,16 +637,8 @@ async function init() {
 
 
     // Helper to completely reset game session
-    const resetGameSession = () => {
-        // Close editor if open
-        if (mapEditor.isOpen) {
-            mapEditor.close();
-        }
-
-        // Reset game logic
-        game.reset();
-        turnHistory.clear();
-
+    // Helper to reset UI components
+    const resetUI = () => {
         // Clear logs
         logEntries.innerHTML = '';
         currentTurnLog = null;
@@ -659,9 +651,52 @@ async function init() {
         autoWinBtn.classList.add('hidden');
         playerDashboard.classList.add('hidden');
         newGameBtn.classList.add('hidden');
+    };
+
+    // Helper to completely reset game session
+    const resetGameSession = () => {
+        // Close editor if open
+        if (mapEditor.isOpen) {
+            mapEditor.close();
+        }
+
+        // Reset game logic
+        game.reset();
+        turnHistory.clear();
+
+        resetUI();
 
         // Clear renderer
         renderer.draw(); // Will draw empty grid
+    };
+
+    const restartCurrentGame = () => {
+        // Close editor if open
+        if (mapEditor.isOpen) {
+            mapEditor.close();
+        }
+
+        const success = turnHistory.restoreInitialSnapshot(game);
+
+        if (success) {
+            resetUI();
+
+            // Restore UI visibility
+            document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
+            document.getElementById('game-over-modal').classList.add('hidden');
+            document.getElementById('dash-toggle').textContent = '[-]';
+
+            // Redraw and restart
+            renderer.draw();
+            updatePlayerUI();
+            game.emit('turnStart', { player: game.currentPlayer });
+            renderer.forceUpdate();
+
+            // Clear any lingering auto-save from the finished game
+            turnHistory.clearAutoSave();
+
+            addLog('🔄 Game Restarted', 'info');
+        }
     };
 
     newGameBtn.addEventListener('click', () => {
@@ -2381,6 +2416,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             player.name = getPlayerName(player);
         }
 
+        // Save the initial state for "Play Again" functionality (separate from autosave)
+        turnHistory.saveInitialState(game);
+
         // Force update of autosave to include the newly assigned AI IDs (which were missing in the initial turnStart save)
         turnHistory.saveAutoSave(game);
 
@@ -2470,14 +2508,27 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             sfx.defeat();
         }
 
+        // Conditionally show "Play Again" button only if we have a saved state
+        const cloneGameBtn = document.getElementById('clone-game-btn');
+        if (turnHistory.hasInitialState()) {
+            cloneGameBtn.style.display = 'inline-block';
+        } else {
+            cloneGameBtn.style.display = 'none';
+        }
+
         // Clear auto-save on normal completion
         turnHistory.clearAutoSave();
     });
 
     document.getElementById('restart-btn').addEventListener('click', () => {
         document.getElementById('game-over-modal').classList.add('hidden');
+        resetGameSession(); // Ensure session is cleared when going to new game
         setupModal.classList.remove('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
+    });
+
+    document.getElementById('clone-game-btn').addEventListener('click', () => {
+        restartCurrentGame();
     });
 
     // === Scenario System UI ===
