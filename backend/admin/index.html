@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Admin</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        .delete-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+        }
+
+        .preview-row td {
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+
+        pre {
+            background: #eee;
+            padding: 10px;
+            margin-top: 10px;
+            max-height: 400px;
+            overflow: auto;
+            font-size: 12px;
+            display: block;
+        }
+
+        canvas {
+            border: 1px solid #333;
+            background: #000;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Map Admin</h1>
+    <div id="status"></div>
+    <div style="margin-bottom: 20px;">
+        <input type="file" id="uploadInput" accept=".json" style="display: none;">
+        <button onclick="document.getElementById('uploadInput').click()">Upload Map (JSON)</button>
+    </div>
+
+    <table id="mapTable">
+        <thead>
+            <tr>
+                <th>Filename</th>
+                <th>Name</th>
+                <th>Author</th>
+                <th>Type</th>
+                <th>Size</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const API_URL = '..'; // Relative to admin/
+
+        document.getElementById('uploadInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    const json = JSON.parse(ev.target.result);
+                    if (!json.tiles) {
+                        if (!confirm("This doesn't look like a valid map (missing 'tiles'). Upload anyway?")) return;
+                    }
+
+                    const response = await fetch(`${API_URL}/upload.php`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(json)
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Map uploaded successfully!');
+                        fetchMaps();
+                    } else {
+                        alert('Upload failed: ' + (result.error || 'Unknown error'));
+                    }
+                } catch (err) {
+                    alert('Invalid JSON file');
+                }
+                e.target.value = '';
+            };
+            reader.readAsText(file);
+        });
+
+        async function fetchMaps() {
+            try {
+                const response = await fetch(`${API_URL}/list.php`);
+                const maps = await response.json();
+                renderTable(maps);
+            } catch (error) {
+                console.error('Error fetching maps:', error);
+                document.getElementById('status').textContent = 'Error loading maps.';
+            }
+        }
+
+        function renderTable(maps) {
+            const tbody = document.querySelector('#mapTable tbody');
+            tbody.innerHTML = '';
+            maps.forEach(map => {
+                const tr = document.createElement('tr');
+                const safeFilename = map.filename.replace(/'/g, "\\'");
+                tr.innerHTML = `
+                    <td>${map.filename}</td>
+                    <td>${map.name}</td>
+                    <td>${map.author}</td>
+                    <td>${map.type}</td>
+                    <td>${map.size} bytes</td>
+                    <td>${new Date(map.created * 1000).toLocaleString()}</td>
+                    <td>
+                        <button onclick="togglePreview('${safeFilename}', this)">Preview</button>
+                        <button class="delete-btn" onclick="deleteMap('${safeFilename}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function togglePreview(filename, btn) {
+            const row = btn.closest('tr');
+            const nextRow = row.nextElementSibling;
+            if (nextRow && nextRow.classList.contains('preview-row')) {
+                nextRow.remove();
+                return;
+            }
+
+            const previewRow = document.createElement('tr');
+            previewRow.className = 'preview-row';
+            const cell = document.createElement('td');
+            cell.colSpan = 7;
+            previewRow.appendChild(cell);
+            row.after(previewRow);
+
+            cell.innerHTML = 'Loading preview...';
+
+            try {
+                const response = await fetch(`${API_URL}/data/${filename}`);
+                const data = await response.json();
+
+                cell.innerHTML = '';
+                const canvas = document.createElement('canvas');
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(data, null, 2);
+
+                cell.appendChild(canvas);
+                cell.appendChild(pre);
+
+                renderCanvas(data, canvas);
+            } catch (error) {
+                cell.textContent = 'Error loading preview.';
+            }
+        }
+
+        function renderCanvas(mapData, canvas) {
+            const ctx = canvas.getContext('2d');
+            const tileSize = 20;
+            const gap = 2;
+            const width = mapData.width || 10;
+            const height = mapData.height || 10;
+
+            canvas.width = width * (tileSize + gap) + gap;
+            canvas.height = height * (tileSize + gap) + gap;
+
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const playerColors = {};
+            if (mapData.players) {
+                mapData.players.forEach(p => {
+                    playerColors[p.id] = '#' + (p.color).toString(16).padStart(6, '0');
+                });
+            }
+
+            if (mapData.tiles) {
+                mapData.tiles.forEach(tile => {
+                    const x = tile.x * (tileSize + gap) + gap;
+                    const y = tile.y * (tileSize + gap) + gap;
+                    let color = '#444';
+                    if (tile.owner !== undefined && tile.owner !== -1 && playerColors[tile.owner]) {
+                        color = playerColors[tile.owner];
+                    }
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, tileSize, tileSize);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x, y, tileSize, tileSize);
+                    if (tile.dice) {
+                        ctx.fillStyle = '#fff';
+                        ctx.font = 'bold 10px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(tile.dice, x + tileSize / 2, y + tileSize / 2 + 1);
+                    }
+                });
+            }
+        }
+
+        async function deleteMap(filename) {
+            if (!confirm(`Are you sure you want to delete ${filename}?`)) return;
+            try {
+                const response = await fetch(`${API_URL}/delete.php`, {
+                    method: 'POST',
+                    body: JSON.stringify({ filename })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    fetchMaps();
+                } else {
+                    alert('Error deleting map: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error deleting map.');
+            }
+        }
+
+        fetchMaps();
+    </script>
+</body>
+
+</html>

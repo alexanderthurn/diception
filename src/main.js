@@ -2555,13 +2555,62 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     let selectedScenarioId = null;
     let selectedScenarioData = null;
     let currentSort = { field: 'date', direction: 'desc' };
+    let onlineMaps = [];
+    // Assuming backend is served at /backend relative to root, or on a specific port for dev
+    // For development, we might point to localhost:8000 if PHP is independent
+    const BACKEND_URL = 'http://localhost:8000/backend';
+
+    const fetchOnlineMaps = async () => {
+        try {
+            scenarioList.innerHTML = '<div class="loading-message">Loading online maps...</div>';
+            const response = await fetch(`${BACKEND_URL}/list.php`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            // Normalize
+            onlineMaps = data.map(m => ({
+                ...m,
+                id: m.filename, // Use filename as ID
+                isOnline: true,
+                // Ensure other fields match simplified scenario structure for preview logic
+                createdAt: m.created * 1000 // Convert to ms
+            }));
+            renderScenarioList();
+        } catch (error) {
+            console.error('Error fetching online maps:', error);
+            scenarioList.innerHTML = '<div class="error-message">Failed to load online maps.<br>Ensure PHP backend is running.</div>';
+        }
+    };
 
     const updateActionButtons = () => {
         // Buttons moved to rows, no global update needed
     };
 
-    const loadSelectedScenario = () => {
+    const loadSelectedScenario = async () => {
         if (!selectedScenarioId) return;
+
+        if (selectedScenarioData && selectedScenarioData.isOnline) {
+            // Fetch full map data
+            try {
+                const response = await fetch(`${BACKEND_URL}/data/${selectedScenarioData.filename}`);
+                if (!response.ok) throw new Error('Failed to download map');
+                const scenario = await response.json();
+                // Ensure type matches for game loading
+                scenario.type = scenario.type || 'map';
+
+                pendingScenario = scenario;
+                scenarioBrowserModal.classList.add('hidden');
+                setupModal.classList.remove('hidden');
+                updateConfigFromScenario(scenario);
+
+                // Note: We don't save online maps to localStorage 'dicy_loadedScenario' as ID lookup won't work simply
+                // Unless we cache them. For now, just load it into pending.
+                updateLoadedScenarioDisplay(scenario.name);
+            } catch (e) {
+                alert('Error loading map: ' + e.message);
+            }
+            return;
+        }
+
         const scenario = scenarioManager.loadScenario(selectedScenarioId);
         if (scenario) {
             pendingScenario = scenario;
@@ -2631,6 +2680,40 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         }
     };
 
+    const uploadMap = async (mapData) => {
+        // Basic validation
+        if (!mapData || !mapData.tiles) {
+            alert('Invalid map data.');
+            return;
+        }
+
+        if (!confirm(`Upload "${mapData.name || 'Untitled'}" to the server?`)) return;
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/upload.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(mapData)
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Map uploaded successfully!');
+                // Refetch if in online tab
+                if (currentScenarioTab === 'online') {
+                    fetchOnlineMaps();
+                } else {
+                    // Switch to online tab
+                    const onlineTab = document.querySelector('.scenario-tab[data-tab="online"]');
+                    if (onlineTab) onlineTab.click();
+                }
+            } else {
+                alert('Upload failed: ' + (result.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Upload error: ' + e.message);
+        }
+    };
+
     // Helper: Show Preview in Right Pane
     const showScenarioPreview = (scenario) => {
         const container = document.getElementById('scenario-preview-content');
@@ -2675,7 +2758,21 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         actionsDiv.appendChild(editBtn);
 
         // Delete Button (only if not built-in)
-        if (!scenario.isBuiltIn) {
+        if (!scenario.isBuiltIn && !scenario.isOnline) {
+            // Upload Button (for local maps only)
+            if (scenario.type === 'map') {
+                const uploadBtn = document.createElement('button');
+                uploadBtn.className = 'tron-btn small';
+                uploadBtn.textContent = '☁️';
+                uploadBtn.title = 'Upload to Server';
+                uploadBtn.style.marginRight = '5px';
+                uploadBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    uploadMap(scenario);
+                };
+                actionsDiv.appendChild(uploadBtn);
+            }
+
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'tron-btn small danger';
             deleteBtn.textContent = '🗑️';
@@ -2751,10 +2848,18 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     };
 
     const renderScenarioList = () => {
-        const scenarios = scenarioManager.listScenarios();
+        let scenarios = [];
+
+        if (currentScenarioTab === 'online') {
+            scenarios = onlineMaps;
+        } else {
+            scenarios = scenarioManager.listScenarios();
+        }
 
         // Filter by tab type
         const filtered = scenarios.filter(s => {
+            if (currentScenarioTab === 'online') return true; // Already filtered by source
+
             const type = s.type || 'replay';
             if (currentScenarioTab === 'replays') return type === 'replay' && !s.isBuiltIn;
             // Scenarios tab: scenarios and built-in scenarios (but NOT maps)
@@ -2774,7 +2879,8 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         const emptyMessages = {
             replays: 'No saved replays.',
             scenarios: 'No scenarios found.',
-            maps: 'No maps found.'
+            maps: 'No maps found.',
+            online: 'No online maps found.'
         };
 
         if (filtered.length === 0) {
@@ -2828,6 +2934,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         // Update New Button state
         if (currentScenarioTab === 'replays') {
             newScenarioBtn.style.display = 'none';
+        } else if (currentScenarioTab === 'online') {
+            newScenarioBtn.style.display = 'block';
+            newScenarioBtn.textContent = '☁️ Upload Map';
         } else {
             newScenarioBtn.style.display = 'block';
             newScenarioBtn.textContent = currentScenarioTab === 'maps' ? '+ New Map' : '+ New Scenario';
@@ -2964,7 +3073,12 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             // Clear selection on tab switch
             selectedScenarioId = null;
             selectedScenarioData = null;
-            renderScenarioList();
+
+            if (currentScenarioTab === 'online') {
+                fetchOnlineMaps();
+            } else {
+                renderScenarioList();
+            }
         });
     });
 
@@ -2986,6 +3100,29 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     // New Map/Scenario Button
     if (newScenarioBtn) {
         newScenarioBtn.addEventListener('click', () => {
+            if (currentScenarioTab === 'online') {
+                // Upload a file
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        try {
+                            const data = JSON.parse(ev.target.result);
+                            uploadMap(data);
+                        } catch (err) {
+                            alert('Invalid JSON file');
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+                return;
+            }
+
             scenarioBrowserModal.classList.add('hidden');
 
             const template = {
