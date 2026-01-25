@@ -66,6 +66,17 @@ window.exportDiceIcon = async (options = {}) => {
 };
 
 async function init() {
+    // 0. Steam Integration
+    if (window.steam) {
+        window.steam.getUserName().then(name => {
+            console.log('Steam User:', name);
+            const credits = document.querySelector('.credits');
+            if (credits) {
+                credits.innerHTML += `<br><span style="color: #66c0f4">Logged in as ${name} (Steam)</span>`;
+            }
+        });
+    }
+
     // 1. Initialize Game Logic
     const game = new Game();
 

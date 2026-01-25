@@ -1,7 +1,9 @@
 dist/
+dist-steam/
 .DS_Store
 node_modules/
 *.bak
 .htaccess
 **/.htaccess
 
+.npm-cache/

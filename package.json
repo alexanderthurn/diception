@@ -2,21 +2,46 @@
   "name": "dicy",
   "version": "1.0.0",
   "description": "",
-  "main": "src/main.js",
+  "main": "electron-main.cjs",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "electron .",
+    "steam:build": "npm run build && electron-builder"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "pixi.js": "^8.0.0"
+    "pixi.js": "^8.0.0",
+    "steamworks.js": "^0.4.0"
   },
   "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^24.13.3",
     "vite": "^5.0.0"
+  },
+  "build": {
+    "appId": "com.feuerware.diception",
+    "productName": "DICEPTION",
+    "directories": {
+      "output": "dist-steam"
+    },
+    "files": [
+      "dist/**/*",
+      "electron-main.cjs",
+      "electron-preload.js",
+      "package.json",
+      "public/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.games"
+    },
+    "win": {
+      "target": "portable"
+    }
   }
 }
