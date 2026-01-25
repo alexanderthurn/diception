@@ -280,5 +280,50 @@ export class GamepadCursorManager {
         if (type === 'mousedown' && button === 0 && target.focus) {
             target.focus();
         }
+
+        // Special treatment for Gamepad clicks on UI elements (Selects and Sliders)
+        if (type === 'click' && button === 0) {
+            this.handleUiCycle(target);
+        }
+    }
+
+    /**
+     * Specialized UI interaction for gamepads:
+     * Clicking a SELECT cycles through options.
+     * Clicking a RANGE input (slider) increments value and wraps at max.
+     */
+    handleUiCycle(target) {
+        // 1. Handle <select> elements
+        if (target.tagName === 'SELECT') {
+            const nextIndex = (target.selectedIndex + 1) % target.options.length;
+            target.selectedIndex = nextIndex;
+
+            // Dispatch events so the app responds to the change
+            target.dispatchEvent(new Event('change', { bubbles: true }));
+            target.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        // 2. Handle <input type="range"> elements
+        else if (target.tagName === 'INPUT' && target.type === 'range') {
+            const min = parseFloat(target.min || 0);
+            const max = parseFloat(target.max || 100);
+            const step = parseFloat(target.step || 1);
+            let val = parseFloat(target.value);
+
+            val += step;
+            if (val > max) val = min;
+
+            target.value = val;
+
+            // Dispatch events so the UI updates and the app responds
+            target.dispatchEvent(new Event('input', { bubbles: true }));
+            target.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // 3. Handle <input type="checkbox"> for completeness
+        else if (target.tagName === 'INPUT' && target.type === 'checkbox') {
+            target.checked = !target.checked;
+            target.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
 }
