@@ -79,6 +79,7 @@ export class GamepadCursorManager {
                 this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
             } else if (button === 2) { // X (West)
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
+                this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
             } else if (button === 3) { // Y (North)
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 1, index);
             }
@@ -282,8 +283,13 @@ export class GamepadCursorManager {
         }
 
         // Special treatment for Gamepad clicks on UI elements (Selects and Sliders)
-        if (type === 'click' && button === 0) {
-            this.handleUiCycle(target);
+        // Button 0 (A) goes forward/up, Button 2 (X) goes backward/down
+        if (type === 'click') {
+            if (button === 0) {
+                this.handleUiCycle(target, 1);
+            } else if (button === 2) {
+                this.handleUiCycle(target, -1);
+            }
         }
     }
 
@@ -292,10 +298,11 @@ export class GamepadCursorManager {
      * Clicking a SELECT cycles through options.
      * Clicking a RANGE input (slider) increments value and wraps at max.
      */
-    handleUiCycle(target) {
+    handleUiCycle(target, direction = 1) {
         // 1. Handle <select> elements
         if (target.tagName === 'SELECT') {
-            const nextIndex = (target.selectedIndex + 1) % target.options.length;
+            const len = target.options.length;
+            const nextIndex = (target.selectedIndex + direction + len) % len;
             target.selectedIndex = nextIndex;
 
             // Dispatch events so the app responds to the change
@@ -310,8 +317,10 @@ export class GamepadCursorManager {
             const step = parseFloat(target.step || 1);
             let val = parseFloat(target.value);
 
-            val += step;
+            val += step * direction;
+
             if (val > max) val = min;
+            if (val < min) val = max;
 
             target.value = val;
 
