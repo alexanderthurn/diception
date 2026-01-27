@@ -53,9 +53,14 @@ To run the game in the Electron container during development:
    ```
 
 ### Building the Steam Version
-To create a bundled desktop application (output to `dist-steam/`):
+To create a bundled desktop application for your current OS (output to `dist-steam/`):
 ```bash
 npm run steam:build
+```
+
+To cross-compile for **Windows** from your Mac:
+```bash
+npm run steam:build:win
 ```
 
 ### Steam Integration Details
