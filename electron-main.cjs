@@ -6,15 +6,17 @@ let mainWindow;
 let steamClient;
 
 // Initialize Steamworks
-try {
-    // Use 480 (SpaceWar) for testing if no appId is provided
-    // Replace 480 with your actual Steam App ID
-    steamClient = steamworks.init(480);
-    if (steamClient) {
-        console.log('Steamworks initialized successfully for App ID: ' + steamClient.localUser.getSteamId().getRawSteamId());
+function initSteam() {
+    try {
+        // Use 480 (SpaceWar) for testing if no appId is provided
+        // Replace 480 with your actual Steam App ID
+        steamClient = steamworks.init(480);
+        if (steamClient) {
+            console.log('Steamworks initialized successfully for App ID: ' + steamClient.localUser.getSteamId().getRawSteamId());
+        }
+    } catch (e) {
+        console.error('Steamworks failed to initialize. Is Steam running?', e);
     }
-} catch (e) {
-    console.error('Steamworks failed to initialize. Is Steam running?', e);
 }
 
 function createWindow() {
@@ -29,6 +31,11 @@ function createWindow() {
         backgroundColor: '#000000',
         icon: path.join(__dirname, 'public/icon.png')
     });
+
+    // Set dock icon for macOS development
+    if (process.platform === 'darwin' && !app.isPackaged) {
+        app.dock.setIcon(path.join(__dirname, 'public/icon.png'));
+    }
 
     // In development, load from vite dev server if running
     // In production, load from the built dist folder
@@ -45,7 +52,10 @@ function createWindow() {
     });
 }
 
-app.on('ready', createWindow);
+app.on('ready', () => {
+    initSteam();
+    createWindow();
+});
 
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') {

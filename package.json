@@ -42,7 +42,10 @@
       "public/**/*"
     ],
     "mac": {
-      "category": "public.app-category.games"
+      "category": "public.app-category.games",
+      "extendInfo": {
+        "NSInputMonitoringUsageDescription": "Input monitoring is only used for Gamepad/Controller support while the game is active."
+      }
     },
     "win": {
       "target": "portable"
