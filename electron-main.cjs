@@ -22,6 +22,8 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1280,
         height: 720,
+        fullscreen: true,
+        autoHideMenuBar: true,
         useContentSize: true, // Ensure the DOM area is exactly 1280x720
         minWidth: 1024,
         minHeight: 720,
