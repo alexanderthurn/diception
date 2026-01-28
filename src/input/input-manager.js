@@ -209,6 +209,14 @@ export class InputManager {
 
             if (pressed && !wasPressed) {
                 this.emit('gamepadButtonDown', { index: gp.index, button: i });
+
+                // Map buttons to semantic events
+                if (i === 0) this.emit('confirm');
+                if (i === 2) this.emit('cancel');
+                if (i === 3) this.emit('endTurn');
+                if (i === 9) {
+                    this.emit('menu');
+                }
             } else if (!pressed && wasPressed) {
                 this.emit('gamepadButtonUp', { index: gp.index, button: i });
             }

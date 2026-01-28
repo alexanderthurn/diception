@@ -70,10 +70,26 @@ async function init() {
     if (window.steam) {
         // Show Steam-only Quit button
         const quitBtn = document.getElementById('quit-game-btn');
+        const quitConfirmModal = document.getElementById('quit-confirm-modal');
+        const quitConfirmBtn = document.getElementById('quit-confirm-btn');
+        const quitCancelBtn = document.getElementById('quit-cancel-btn');
+
         if (quitBtn) {
             quitBtn.classList.remove('hidden');
             quitBtn.addEventListener('click', () => {
+                quitConfirmModal.classList.remove('hidden');
+            });
+        }
+
+        if (quitConfirmBtn) {
+            quitConfirmBtn.addEventListener('click', () => {
                 window.steam.quit();
+            });
+        }
+
+        if (quitCancelBtn) {
+            quitCancelBtn.addEventListener('click', () => {
+                quitConfirmModal.classList.add('hidden');
             });
         }
 
@@ -764,12 +780,26 @@ async function init() {
 
     // ESC key opens settings/menu
     inputManager.on('menu', () => {
+        const setupModal = document.getElementById('setup-modal');
+        const quitConfirmModal = document.getElementById('quit-confirm-modal');
         const isSetupOpen = !setupModal.classList.contains('hidden');
+        const isQuitConfirmOpen = !quitConfirmModal.classList.contains('hidden');
         const isGameOverOpen = !document.getElementById('game-over-modal').classList.contains('hidden');
 
         if (isGameOverOpen) return;
 
+        if (isQuitConfirmOpen) {
+            quitConfirmModal.classList.add('hidden');
+            return;
+        }
+
         if (isSetupOpen) {
+            // If at main menu (no game started), show quit confirmation on Steam
+            if (window.steam && game.players.length === 0) {
+                document.getElementById('quit-confirm-modal').classList.remove('hidden');
+                return;
+            }
+
             // Only allow closing if a game has actually started
             if (game.players.length > 0) {
                 setupModal.classList.add('hidden');
@@ -785,6 +815,14 @@ async function init() {
 
         // Re-check resume button visibility (it might have been hidden/shown)
         checkResume();
+    });
+
+    // Q / Gamepad X closes modals
+    inputManager.on('cancel', () => {
+        const quitConfirmModal = document.getElementById('quit-confirm-modal');
+        if (!quitConfirmModal.classList.contains('hidden')) {
+            quitConfirmModal.classList.add('hidden');
+        }
     });
 
     // Space/Enter/Gamepad A triggers start game when in setup menu

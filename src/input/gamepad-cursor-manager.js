@@ -49,8 +49,8 @@ export class GamepadCursorManager {
             // 6: L2 -> Zoom Out
             // 7: R2 -> Zoom In
 
-            // In menus, only the A button (0) is allowed to work (as a click simulation)
-            if (isMenuOpen && button !== 0) return;
+            // In menus, only the A button (0) and Start button (9) are allowed to work
+            if (isMenuOpen && button !== 0 && button !== 9) return;
 
             if (button === 0) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
