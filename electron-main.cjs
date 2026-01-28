@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const steamworks = require('steamworks.js');
+steamworks.electronEnableSteamOverlay();
 
 let mainWindow;
 let steamClient;
