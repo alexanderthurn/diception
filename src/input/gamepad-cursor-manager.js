@@ -166,6 +166,26 @@ export class GamepadCursorManager {
                 this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, i);
             }
 
+            // Scroll Logic using Right Stick
+            // axes[2] is scroll horizontal, axes[3] is scroll vertical
+            let sx = gp.axes[2] || 0;
+            let sy = gp.axes[3] || 0;
+
+            if (Math.abs(sx) < this.deadZone) sx = 0;
+            if (Math.abs(sy) < this.deadZone) sy = 0;
+
+            if (sx !== 0 || sy !== 0) {
+                const scrollX = sx * 15; // Scroll speed
+                const scrollY = sy * 15;
+                const target = document.elementFromPoint(cursor.x, cursor.y);
+                if (target) {
+                    const scrollable = this.findScrollableParent(target);
+                    if (scrollable) {
+                        scrollable.scrollBy(scrollX, scrollY);
+                    }
+                }
+            }
+
             // Periodically check if player info changed (e.g. game started)
             this.updateCursorColor(cursor, i);
         }
@@ -359,5 +379,31 @@ export class GamepadCursorManager {
             target.checked = !target.checked;
             target.dispatchEvent(new Event('change', { bubbles: true }));
         }
+    }
+
+    /**
+     * Finds the nearest scrollable parent of an element.
+     */
+    findScrollableParent(el) {
+        if (!el) return null;
+
+        // Check the element itself first
+        let current = el;
+        while (current && current !== document.body) {
+            const style = window.getComputedStyle(current);
+            const overflowY = style.getPropertyValue('overflow-y');
+            const overflowX = style.getPropertyValue('overflow-x');
+            const overflow = style.getPropertyValue('overflow');
+
+            const isScrollableY = (overflowY === 'auto' || overflowY === 'scroll' || overflow === 'auto' || overflow === 'scroll') && current.scrollHeight > current.clientHeight;
+            const isScrollableX = (overflowX === 'auto' || overflowX === 'scroll' || overflow === 'auto' || overflow === 'scroll') && current.scrollWidth > current.clientWidth;
+
+            if (isScrollableY || isScrollableX) {
+                return current;
+            }
+            current = current.parentElement;
+        }
+
+        return document.documentElement; // Fallback to root scroll
     }
 }

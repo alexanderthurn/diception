@@ -142,6 +142,11 @@ async function init() {
     // 4.5 Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);
 
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        renderer.autoFitCamera();
+    });
+
     // Wire tile selection to effects (keeping input controller unchanged)
     const originalSelect = input.select.bind(input);
     input.select = (x, y) => {

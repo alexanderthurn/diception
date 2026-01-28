@@ -491,8 +491,19 @@ select {
     pointer-events: auto;
     min-width: 300px;
     max-width: calc(100vw - 40px);
+    max-height: 90vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
     box-sizing: border-box;
     z-index: 100;
+}
+
+.modal::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, etc. */
 }
 
 .tron-title {
