@@ -27,7 +27,7 @@ function createWindow() {
             preload: path.join(__dirname, 'electron-preload.js')
         },
         backgroundColor: '#000000',
-        icon: path.join(__dirname, 'public/favicon.ico')
+        icon: path.join(__dirname, 'public/icon.png')
     });
 
     // In development, load from vite dev server if running

@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "electron:dev": "electron .",
     "steam:build": "npm run build && electron-builder",
-    "steam:build:win": "npm run build && electron-builder --win"
+    "steam:build:win": "npm run build && electron-builder --win",
+    "generate-icons": "electron-icon-builder --input=./public/icon.png --output=./public --flatten"
   },
   "keywords": [],
   "author": "",
@@ -23,13 +24,15 @@
   "devDependencies": {
     "electron": "^33.2.1",
     "electron-builder": "^24.13.3",
+    "electron-icon-builder": "^2.0.1",
     "vite": "^5.0.0"
   },
   "build": {
     "appId": "com.feuerware.diception",
     "productName": "DICEPTION",
     "directories": {
-      "output": "dist-steam"
+      "output": "dist-steam",
+      "buildResources": "public"
     },
     "files": [
       "dist/**/*",
