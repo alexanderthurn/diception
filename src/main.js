@@ -750,7 +750,8 @@ async function init() {
     inputManager.on('endTurn', () => {
         // Don't end turn if no game started or menu is open
         if (game.players.length === 0) return;
-        if (!setupModal.classList.contains('hidden')) return;
+        const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
+        if (isMenuOpen) return;
         if (endTurnBtn.disabled) return;
         const humanPlayers = game.players.filter(p => !p.isBot);
         if (humanPlayers.length > 1) {
@@ -786,33 +787,11 @@ async function init() {
     });
 
     // Space/Enter/Gamepad A triggers start game when in setup menu
-    const triggerStartIfMenuOpen = () => {
-        const isSetupOpen = !setupModal.classList.contains('hidden');
-        const isGameOverOpen = !document.getElementById('game-over-modal').classList.contains('hidden');
 
-        if (isSetupOpen) {
-            startBtn.click();
-            return true;
-        }
-        if (isGameOverOpen) {
-            document.getElementById('restart-btn').click();
-            return true;
-        }
-        return false;
-    };
 
-    inputManager.on('confirm', () => {
-        triggerStartIfMenuOpen();
-    });
 
-    inputManager.on('endTurn', () => {
-        // Only trigger start if in menu, otherwise let the normal endTurn handler work
-        const isSetupOpen = !setupModal.classList.contains('hidden');
-        const isGameOverOpen = !document.getElementById('game-over-modal').classList.contains('hidden');
-        if (isSetupOpen || isGameOverOpen) {
-            triggerStartIfMenuOpen();
-        }
-    });
+
+
 
     game.on('turnStart', (data) => {
         // Hide dice result HUD when turn starts

@@ -37,6 +37,9 @@ export class GamepadCursorManager {
             const cursor = this.cursors.get(index);
             if (!cursor) return;
 
+            // Check if any menu/modal is open
+            const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
+
             // Mapping gamepad buttons:
             // 0: A (South) -> Left Click
             // 1: B (East)  -> Middle Click (Drag Map)
@@ -44,6 +47,9 @@ export class GamepadCursorManager {
             // 3: Y (North) -> End Turn
             // 6: L2 -> Zoom Out
             // 7: R2 -> Zoom In
+
+            // In menus, only the A button (0) is allowed to work (as a click simulation)
+            if (isMenuOpen && button !== 0) return;
 
             if (button === 0) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
@@ -73,6 +79,10 @@ export class GamepadCursorManager {
         this.inputManager.on('gamepadButtonUp', ({ index, button }) => {
             const cursor = this.cursors.get(index);
             if (!cursor) return;
+
+            // Check if any menu/modal is open
+            const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
+            if (isMenuOpen && button !== 0) return;
 
             if (button === 0) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
@@ -301,13 +311,9 @@ export class GamepadCursorManager {
         }
 
         // Special treatment for Gamepad clicks on UI elements (Selects and Sliders)
-        // Button 0 (A) goes forward/up, Button 2 (X) goes backward/down
-        if (type === 'click') {
-            if (button === 0) {
-                this.handleUiCycle(target, 1);
-            } else if (button === 2) {
-                this.handleUiCycle(target, -1);
-            }
+        // Button 0 (A) cycles forward
+        if (type === 'click' && button === 0) {
+            this.handleUiCycle(target, 1);
         }
     }
 
