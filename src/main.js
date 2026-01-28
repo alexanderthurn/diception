@@ -243,9 +243,11 @@ async function init() {
     const availableSongs = [
         'Neon Dice Offensive.mp3',
         'Neon Etude.mp3',
-        'Neon Second Etude.mp3',
         'Neon Second Dice Offensive.mp3',
+        'Neon Second Etude.mp3',
+        'Neon Third Dice Offensive.mp3',
         'Neon Third Etude.mp3',
+        'Grid of Echoes.mp3',
         'Neon Fourth Etude.mp3'
     ];
 

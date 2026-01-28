@@ -473,7 +473,6 @@ select {
 
 .tron-btn.large {
     font-size: 1.2em;
-    padding: 15px 40px;
     margin-top: 0;
     /* Handled by container gap/margin now */
 }
