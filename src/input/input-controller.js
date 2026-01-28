@@ -70,7 +70,8 @@ export class InputController {
         this.inputManager.on('panAnalog', (dir) => this.onPanAnalog(dir));
     }
 
-    onMove(dir) {
+    onMove(data) {
+        const { x: dx, y: dy, index } = data;
         if (!this.game.players || this.game.players.length === 0) return;
         if (this.game.gameOver) return;
         if (this.game.currentPlayer.isBot) return;
@@ -81,22 +82,22 @@ export class InputController {
 
         // If tile is selected, try to attack/interact in direction
         if (this.selectedTile) {
-            this.handleKeyboardAttack(dir.x, dir.y);
+            this.handleKeyboardAttack(dx, dy, index);
             return;
         }
 
         // No tile selected - move cursor
         if (this.cursorX === null || this.cursorY === null) {
             // Initialize cursor at nearest owned tile
-            this.initCursorAtNearestTile();
+            this.initCursorAtNearestTile(index);
             return;
         }
 
         // Move cursor to next valid tile in direction
-        this.moveCursor(dir.x, dir.y);
+        this.moveCursor(dx, dy, index);
     }
 
-    initCursorAtNearestTile() {
+    initCursorAtNearestTile(gamepadIndex = -1) {
         const playerId = this.game.currentPlayer.id;
         const ownedTiles = [];
 
@@ -134,9 +135,13 @@ export class InputController {
         this.cursorX = closest.x;
         this.cursorY = closest.y;
         this.renderer.setCursor(this.cursorX, this.cursorY);
+
+        if (gamepadIndex !== -1) {
+            this.syncGamepadCursor(gamepadIndex);
+        }
     }
 
-    moveCursor(dx, dy) {
+    moveCursor(dx, dy, gamepadIndex = -1) {
         // Allow moving to any position within map bounds, even if blocked
         const newX = Math.max(0, Math.min(this.game.map.width - 1, this.cursorX + dx));
         const newY = Math.max(0, Math.min(this.game.map.height - 1, this.cursorY + dy));
@@ -145,6 +150,10 @@ export class InputController {
             this.cursorX = newX;
             this.cursorY = newY;
             this.renderer.setCursor(this.cursorX, this.cursorY);
+
+            if (gamepadIndex !== -1) {
+                this.syncGamepadCursor(gamepadIndex);
+            }
         }
     }
 
@@ -371,7 +380,7 @@ export class InputController {
         this.deselect();
     }
 
-    handleKeyboardAttack(dx, dy) {
+    handleKeyboardAttack(dx, dy, gamepadIndex = -1) {
         if (this.game.gameOver || !this.selectedTile || this.game.currentPlayer.isBot) return;
 
         const targetX = this.selectedTile.x + dx;
@@ -381,6 +390,13 @@ export class InputController {
         if (!targetTile) return;
 
         this.handleTileClick(targetTile, targetX, targetY);
+
+        // Update cursor position to the target of the attack/click
+        if (gamepadIndex !== -1) {
+            // After an attack, the "highlight" usually moves to the won tile anyway in select()
+            // but we ensure it here too for consistency
+            this.syncGamepadCursor(gamepadIndex);
+        }
     }
 
     select(x, y) {
@@ -390,6 +406,21 @@ export class InputController {
         this.renderer.setSelection(x, y);
         if (this.cursorVisible) {
             this.renderer.setCursor(x, y);
+        }
+        // Note: we don't sync gamepad cursor here blindly because select() is called
+        // by multiple things (mouse clicks too). onMove handles the gamepad syncing.
+    }
+
+    syncGamepadCursor(index) {
+        if (this.cursorX === null || this.cursorY === null) return;
+
+        const screenPos = this.renderer.getTileScreenPosition(this.cursorX, this.cursorY);
+        if (screenPos) {
+            this.inputManager.emit('gamepadCursorMoveRequest', {
+                index: index,
+                x: screenPos.x,
+                y: screenPos.y
+            });
         }
     }
 

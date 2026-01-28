@@ -39,9 +39,9 @@ export class GamepadCursorManager {
 
             // Mapping gamepad buttons:
             // 0: A (South) -> Left Click
-            // 1: B (East)  -> End Turn
+            // 1: B (East)  -> Middle Click (Drag Map)
             // 2: X (West)  -> Right Click / Cancel
-            // 3: Y (North) -> Middle Click (Drag Map)
+            // 3: Y (North) -> End Turn
             // 6: L2 -> Zoom Out
             // 7: R2 -> Zoom In
 
@@ -50,8 +50,6 @@ export class GamepadCursorManager {
             } else if (button === 2) { // X (West)
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
             } else if (button === 3) { // Y (North)
-                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
-            } else if (button === 1) { // B (East)
                 // Find and click end turn button if visible
                 const endTurnBtn = document.getElementById('end-turn-btn');
                 if (endTurnBtn && !endTurnBtn.classList.contains('hidden')) {
@@ -59,6 +57,8 @@ export class GamepadCursorManager {
                 } else {
                     this.inputManager.emit('endTurn');
                 }
+            } else if (button === 1) { // B (East)
+                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
             } else if (button === 6) { // L2
                 this.inputManager.emit('panAnalog', { x: 0, y: 0, zoom: 1 }); // Zoom Out
                 const zoomOutBtn = document.getElementById('zoom-out-btn');
@@ -80,9 +80,24 @@ export class GamepadCursorManager {
             } else if (button === 2) { // X (West)
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
                 this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
-            } else if (button === 3) { // Y (North)
+            } else if (button === 1) { // B (East)
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 1, index);
             }
+        });
+
+        this.inputManager.on('gamepadCursorMoveRequest', ({ index, x, y }) => {
+            const cursor = this.cursors.get(index);
+            if (!cursor) return;
+
+            cursor.x = x;
+            cursor.y = y;
+
+            // Update DOM element
+            cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+            cursor.element.style.opacity = '0.35'; // Reduced opacity for d-pad movement
+
+            // Trigger mousemove on new position to update hover highlights in game
+            this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, index);
         });
     }
 
@@ -134,6 +149,7 @@ export class GamepadCursorManager {
 
                 // Update DOM element
                 cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+                cursor.element.style.opacity = '1.0'; // Restore full opacity for analog stick movement
 
                 // Trigger mousemove on current position
                 this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, i);
@@ -167,6 +183,8 @@ export class GamepadCursorManager {
                 <circle cx="32" cy="32" r="2" fill="currentColor" />
             </svg>
         `;
+
+        el.style.transition = 'opacity 0.2s ease';
 
         const cursor = {
             x: window.innerWidth / 2,

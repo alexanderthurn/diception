@@ -221,9 +221,10 @@ async function init() {
     const availableSongs = [
         'Neon Dice Offensive.mp3',
         'Neon Etude.mp3',
-        'Neon Odds.mp3',
-        'Falling Into Place.mp3'
-
+        'Neon Second Etude.mp3',
+        'Neon Second Dice Offensive.mp3',
+        'Neon Third Etude.mp3',
+        'Neon Fourth Etude.mp3'
     ];
 
     let currentSongIndex = 0;

@@ -179,4 +179,19 @@ export class Renderer {
         this.rootContainer.x = x - worldPos.x * newScale;
         this.rootContainer.y = y - worldPos.y * newScale;
     }
+
+    /**
+     * Get screen coordinates for a tile's center.
+     */
+    getTileScreenPosition(x, y) {
+        if (!this.rootContainer || !this.grid) return null;
+
+        const localX = x * (this.grid.tileSize + this.grid.gap) + this.grid.tileSize / 2;
+        const localY = y * (this.grid.tileSize + this.grid.gap) + this.grid.tileSize / 2;
+
+        return {
+            x: this.rootContainer.x + localX * this.rootContainer.scale.x,
+            y: this.rootContainer.y + localY * this.rootContainer.scale.y
+        };
+    }
 }

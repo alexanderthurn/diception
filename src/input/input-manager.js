@@ -86,7 +86,7 @@ export class InputManager {
 
         if (directionMap[key]) {
             const dir = directionMap[key];
-            this.emit('move', dir);
+            this.emit('move', { ...dir, index: -1 });
             // Start repeat timer
             this.heldDirections.set(key, {
                 direction: dir,
@@ -144,7 +144,7 @@ export class InputManager {
             const sinceLast = now - state.lastFire;
 
             if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
-                this.emit('move', state.direction);
+                this.emit('move', { ...state.direction, index: -1 });
                 state.lastFire = now;
             }
         }
@@ -195,8 +195,8 @@ export class InputManager {
     processGamepadButtons(gp, prevState) {
         // Standard gamepad mapping:
         // 0 = A (South) = Confirm
-        // 1 = B (East) = Cancel
-        // 2 = X (West)
+        // 1 = B (East) = Middle Click
+        // 2 = X (West) = Cancel
         // 3 = Y (North) = End Turn
         // 9 = Start = Menu
 
@@ -232,7 +232,7 @@ export class InputManager {
             const wasPressed = prevState.buttons[i];
 
             if (pressed && !wasPressed) {
-                this.emit('move', dir);
+                this.emit('move', { ...dir, index: gp.index });
                 // Start repeat timer
                 repeat.active = true;
                 repeat.dir = dir;
@@ -250,7 +250,7 @@ export class InputManager {
             const sinceLast = now - repeat.lastFire;
 
             if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
-                this.emit('move', activeDir);
+                this.emit('move', { ...activeDir, index: gp.index });
                 repeat.lastFire = now;
             }
         } else {
