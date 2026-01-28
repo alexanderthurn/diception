@@ -9,8 +9,11 @@ export class InputManager {
         // Gamepad state
         this.gamepadStates = new Map();
         this.deadZone = 0.4;
-        this.repeatDelay = 250;  // ms before repeat starts
-        this.repeatRate = 120;   // ms between repeats
+
+        // Steam version often has higher polling rates or different timing, adjust accordingly
+        const isSteam = window.steam?.isSteamVersion;
+        this.repeatDelay = isSteam ? 300 : 250;  // ms before repeat starts
+        this.repeatRate = isSteam ? 160 : 120;   // ms between repeats
 
         // Key repeat state
         this.heldDirections = new Map(); // key -> { direction, lastFire, started }

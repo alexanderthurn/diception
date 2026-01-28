@@ -9,7 +9,8 @@ export class GamepadCursorManager {
         this.game = game;
         this.inputManager = inputManager;
         this.cursors = new Map(); // gamepadIndex -> { x, y, element, player }
-        this.cursorSpeed = 20;
+        const isSteam = window.steam?.isSteamVersion;
+        this.cursorSpeed = isSteam ? 12 : 20;
         this.deadZone = 0.15;
 
         // Container for all virtual cursors
