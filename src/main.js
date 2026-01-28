@@ -307,7 +307,7 @@ async function init() {
     // 2. Active + Visible -> Hide Slider (Stay Active)
     // 3. Active + Hidden -> Mute
     const getMobileAction = (isEnabled, volumeSlider) => {
-        if (window.innerWidth > 768) return null; // Not mobile
+        if (window.innerWidth > 768 && window.innerHeight > 720) return null; // Not mobile
 
         const isVisible = volumeSlider.classList.contains('visible');
 
@@ -334,7 +334,7 @@ async function init() {
 
     // Close sliders on outside click
     document.addEventListener('click', (e) => {
-        if (window.innerWidth > 768) return;
+        if (window.innerWidth > 768 && window.innerHeight > 720) return;
 
         if (!e.target.closest('#music-controls')) {
             document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
@@ -343,7 +343,7 @@ async function init() {
 
     // Reset timeout on slider interaction
     const resetSliderTimeout = (slider, timeoutRef, updateTimeoutRef) => {
-        if (window.innerWidth <= 768) {
+        if (window.innerWidth <= 768 || window.innerHeight <= 720) {
             slider.classList.add('visible'); // Keep visible
             clearTimeout(timeoutRef);
             const newTimeout = setTimeout(() => {
@@ -613,7 +613,7 @@ async function init() {
     const dashToggle = document.getElementById('dash-toggle');
 
     // Collapse by default on mobile
-    if (window.innerWidth <= 768) {
+    if (window.innerWidth <= 768 || window.innerHeight <= 720) {
         playerDashboard.classList.add('collapsed');
         dashToggle.textContent = '[+]';
     }

@@ -49,8 +49,8 @@ export class GamepadCursorManager {
             // 6: L2 -> Zoom Out
             // 7: R2 -> Zoom In
 
-            // In menus, only the A button (0) and Start button (9) are allowed to work
-            if (isMenuOpen && button !== 0 && button !== 9) return;
+            // In menus, only the A button (0), X button (2) and Start button (9) are allowed to work
+            if (isMenuOpen && button !== 0 && button !== 9 && button !== 2) return;
 
             if (button === 0) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
@@ -83,7 +83,7 @@ export class GamepadCursorManager {
 
             // Check if any menu/modal is open
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
-            if (isMenuOpen && button !== 0) return;
+            if (isMenuOpen && button !== 0 && button !== 2) return;
 
             if (button === 0) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
@@ -331,19 +331,21 @@ export class GamepadCursorManager {
             target.focus();
         }
 
-        // Special treatment for Gamepad clicks on UI elements (Selects and Sliders)
-        // Button 0 (A) cycles forward
-        if (type === 'click' && button === 0) {
-            this.handleUiCycle(target, 1);
+        if (type === 'click') {
+            if (button === 0) {
+                this.handleUiCycle(target, x, y, 1);
+            } else if (button === 2) {
+                this.handleUiCycle(target, x, y, -1);
+            }
         }
     }
 
     /**
      * Specialized UI interaction for gamepads:
      * Clicking a SELECT cycles through options.
-     * Clicking a RANGE input (slider) increments value and wraps at max.
+     * Clicking a RANGE input (slider) jumps to the clicked position.
      */
-    handleUiCycle(target, direction = 1) {
+    handleUiCycle(target, x, y, direction = 1) {
         // 1. Handle <select> elements
         if (target.tagName === 'SELECT') {
             const len = target.options.length;
@@ -355,17 +357,25 @@ export class GamepadCursorManager {
             target.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
-        // 2. Handle <input type="range"> elements
+        // 2. Handle <input type="range"> elements (Jump to point)
         else if (target.tagName === 'INPUT' && target.type === 'range') {
+            const rect = target.getBoundingClientRect();
             const min = parseFloat(target.min || 0);
             const max = parseFloat(target.max || 100);
             const step = parseFloat(target.step || 1);
-            let val = parseFloat(target.value);
 
-            val += step * direction;
+            // Calculate percentage based on crosshair X position
+            // Subtract small padding to center the thumb better
+            const padding = 10;
+            const width = rect.width - (padding * 2);
+            let pct = (x - (rect.left + padding)) / width;
+            pct = Math.max(0, Math.min(1, pct));
 
-            if (val > max) val = min;
-            if (val < min) val = max;
+            // Calculate raw value
+            let val = min + pct * (max - min);
+
+            // Snap to step
+            val = Math.round(val / step) * step;
 
             target.value = val;
 

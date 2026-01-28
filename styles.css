@@ -86,7 +86,7 @@ select {
 }
 
 /* Hide zoom controls on desktop */
-@media (min-width: 769px) {
+@media (min-width: 769px) and (min-height: 721px) {
     .zoom-control {
         display: none !important;
     }
@@ -837,7 +837,8 @@ input[type="range"] {
     display: inline;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px),
+(max-height: 720px) {
     #music-controls {
         top: 10px;
         right: 10px;
@@ -965,13 +966,10 @@ input[type="range"] {
     }
 
     .modal {
-        width: 100% !important;
-        height: 100% !important;
-        height: 100dvh !important;
         position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        transform: none !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
         border-radius: 0 !important;
         border: none !important;
         padding: 20px;
@@ -985,6 +983,34 @@ input[type="range"] {
         overflow-y: auto;
         box-sizing: border-box;
         box-shadow: none !important;
+    }
+
+    /* Specific logic for short but wide windows */
+    @media (max-height: 720px) {
+        .modal {
+            height: 100% !important;
+            height: 100dvh !important;
+            top: 0 !important;
+            transform: translate(-50%, 0) !important;
+        }
+    }
+
+    /* Specific logic for narrow windows */
+    @media (max-width: 768px) {
+        .modal {
+            width: 100% !important;
+            left: 0 !important;
+            transform: translate(0, -50%) !important;
+        }
+    }
+
+    /* Both (True fullscreen mobile) */
+    @media (max-width: 768px) and (max-height: 720px) {
+        .modal {
+            transform: none !important;
+            top: 0 !important;
+            left: 0 !important;
+        }
     }
 
     #resume-modal {

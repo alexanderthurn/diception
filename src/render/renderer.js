@@ -101,8 +101,8 @@ export class Renderer {
         const scaledWidth = mapPixelWidth * this.rootContainer.scale.x;
         const scaledHeight = mapPixelHeight * this.rootContainer.scale.y;
 
-        // On desktop (>768px), offset to the right to account for the 280px sidebar
-        const isMobile = window.innerWidth <= 768;
+        // On desktop (>768px wide AND >720px high), offset to the right to account for the 280px sidebar
+        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 720;
         const sidebarOffset = isMobile ? 0 : 140; // Half of sidebar width to shift center
 
         this.rootContainer.x = (window.innerWidth - scaledWidth) / 2 + sidebarOffset;
