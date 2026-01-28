@@ -94,10 +94,10 @@ export const EffectPresets = {
         shrink: true
     },
     defeatExplosion: {
-        count: 16,
-        speed: { min: 2, max: 6 },
-        life: { min: 25, max: 45 },
-        size: { min: 2, max: 5 },
+        count: 24,
+        speed: { min: 2, max: 8 },
+        life: { min: 40, max: 80 },
+        size: { min: 3, max: 6 },
         colors: [0xff0000, 0xff3333, 0xff6666],
         gravity: 0.15,
         fadeOut: true,
@@ -183,7 +183,7 @@ export class ParticleSystem {
         this.pool = new ParticlePool(() => this.createParticleGraphics(), 200);
 
         // Quality settings
-        this.quality = 'high'; // 'off', 'low', 'high'
+        this.quality = 'high'; // 'off', 'medium', 'high'
         this.maxParticles = 500;
 
         // Start update loop
@@ -207,7 +207,13 @@ export class ParticleSystem {
             this.clear();
         }
         // Adjust max particles based on quality
-        this.maxParticles = quality === 'high' ? 500 : (quality === 'low' ? 150 : 0);
+        if (quality === 'high') {
+            this.maxParticles = 500;
+        } else if (quality === 'medium') {
+            this.maxParticles = 250; // Balanced between old medium/low
+        } else {
+            this.maxParticles = 0;
+        }
     }
 
     /**
@@ -223,10 +229,12 @@ export class ParticleSystem {
         const config = typeof preset === 'string' ? EffectPresets[preset] : preset;
         if (!config) return;
 
-        // Reduce particle count on low quality
+        // Particle count based on quality
         let count = config.count;
-        if (this.quality === 'low') {
-            count = Math.ceil(count / 2);
+        if (this.quality === 'high') {
+            // Use config.count directly for high quality
+        } else if (this.quality === 'medium') {
+            count = Math.ceil(count * 0.6); // Slightly more than old low, less than old medium
         }
 
         // Respect max particle limit
@@ -247,7 +255,7 @@ export class ParticleSystem {
         const config = typeof preset === 'string' ? EffectPresets[preset] : preset;
         if (!config) return;
 
-        const actualCount = this.quality === 'low' ? Math.ceil(count / 2) : count;
+        const actualCount = this.quality === 'medium' ? Math.ceil(count * 0.6) : count;
 
         for (let i = 0; i < actualCount; i++) {
             const t = i / actualCount;

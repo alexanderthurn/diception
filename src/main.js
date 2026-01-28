@@ -100,7 +100,8 @@ async function init() {
     // 2.5 Initialize Effects System (completely separate from renderer)
     const effectsManager = new EffectsManager(renderer.app.stage, game, {
         tileSize: 60,
-        gap: 4
+        gap: 4,
+        renderer: renderer
     });
     // Attach to world container so effects follow camera
     effectsManager.setWorldTransform(renderer.rootContainer);
@@ -2031,7 +2032,8 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
 
     // Load saved effects quality and set dropdown
-    const savedEffectsQuality = localStorage.getItem('effectsQuality') || 'high';
+    let savedEffectsQuality = localStorage.getItem('effectsQuality') || 'high';
+    if (savedEffectsQuality === 'low') savedEffectsQuality = 'medium';
     effectsQualityInput.value = savedEffectsQuality;
 
     // Map size presets: slider value -> {width, height, label}

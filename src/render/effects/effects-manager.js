@@ -10,6 +10,7 @@ export class EffectsManager {
     constructor(stage, game, options = {}) {
         this.stage = stage;
         this.game = game;
+        this.renderer = options.renderer || null;
 
         // Quality setting (persisted to localStorage)
         this.quality = 'high';
@@ -43,6 +44,11 @@ export class EffectsManager {
         // Intro mode state
         this.introModeActive = false;
         this.introInterval = null;
+
+        // Streak tracking for dynamic effects
+        this.winStreak = 0;
+        this.lastWinTime = 0;
+        this.streakDecayTimer = null;
     }
 
     bindEvents() {
@@ -59,6 +65,19 @@ export class EffectsManager {
         // Game over celebration
         this.game.on('gameOver', (winner) => {
             this.onGameOver(winner);
+        });
+
+        // Row/Column completion
+        this.game.on('rowCompleted', (data) => {
+            this.onRowCompleted(data);
+        });
+        this.game.on('columnCompleted', (data) => {
+            this.onColumnCompleted(data);
+        });
+
+        // Player elimination
+        this.game.on('playerEliminated', (player) => {
+            this.onPlayerEliminated(player);
         });
     }
 
@@ -102,8 +121,9 @@ export class EffectsManager {
     }
 
     loadQuality() {
-        const saved = localStorage.getItem('effectsQuality');
-        if (saved && ['off', 'low', 'high'].includes(saved)) {
+        let saved = localStorage.getItem('effectsQuality');
+        if (saved === 'low') saved = 'medium'; // Merge low into medium
+        if (saved && ['off', 'medium', 'high'].includes(saved)) {
             this.setQuality(saved);
         }
     }
@@ -218,16 +238,63 @@ export class EffectsManager {
         this.particles.emitLine(from.x, from.y, to.x, to.y, 'attackTrail',
             this.quality === 'high' ? 12 : 6);
 
+        // Track win streak for dynamic effects (only for current player's attacks)
+        const now = Date.now();
+        if (result.won) {
+            if (now - this.lastWinTime < 2000) { // Win within 2 seconds
+                this.winStreak++;
+            } else {
+                this.winStreak = 1;
+            }
+            this.lastWinTime = now;
+        } else {
+            this.winStreak = 0;
+        }
+
+        // Handle Dynamic Screen Shake
+        const isHighOrMedium = this.quality === 'high' || this.quality === 'medium';
+        if (isHighOrMedium && this.renderer) {
+            let shakeIntensity = 0;
+            if (result.won) {
+                // Streak scaling: start only with second attack (winStreak > 1)
+                if (this.winStreak > 1) {
+                    shakeIntensity = 2 + Math.min(this.winStreak - 1, 10) * 1.5;
+                }
+            } else {
+                // Loss results in a sharp jolt
+                shakeIntensity = 12; // Increased slightly for better visibility
+            }
+
+            // Scale shake by quality
+            if (this.quality === 'medium') shakeIntensity *= 0.6;
+
+            if (shakeIntensity > 0) {
+                this.renderer.screenShake(shakeIntensity, result.won ? 200 : 400);
+            }
+        }
+
         // Explosion on defender
         setTimeout(() => {
             if (result.won) {
                 // Victory - green/cyan burst
                 this.particles.emit(to.x, to.y, 'victoryExplosion');
-                this.background.pulse(0x00ff00, 0.2);
+
+                // Background pulse increases with streak
+                const intensity = 0.2 + Math.min(this.winStreak, 10) * 0.05;
+                this.background.pulse(0x00ff00, intensity);
             } else {
-                // Defeat - red burst
+                // Defeat - intensified effects for losses
                 this.particles.emit(to.x, to.y, 'defeatExplosion');
-                this.background.pulse(0xAA00FF, 0.15);
+                if (isHighOrMedium) {
+                    // Extra "smoke" particles on loss - more of them for visibility
+                    for (let i = 0; i < 3; i++) {
+                        this.particles.emit(to.x, to.y, 'introStream', {
+                            directionX: (Math.random() - 0.5) * 0.5,
+                            directionY: -1
+                        });
+                    }
+                }
+                this.background.pulse(0xAA00FF, 0.5); // Bigger/longer pulse on loss (was 0.3)
             }
         }, 100); // Small delay for trail to reach target
     }
@@ -237,6 +304,10 @@ export class EffectsManager {
      */
     onTurnStart(player) {
         if (this.quality === 'off') return;
+
+        // Reset streak on turn start
+        this.winStreak = 0;
+        this.lastWinTime = 0;
 
         const color = player?.color || 0x00ffff;
         this.background.pulse(color, 0.1);
@@ -287,6 +358,59 @@ export class EffectsManager {
 
         // Big pulse
         this.background.pulse(winnerColor, 0.6);
+    }
+
+    /**
+     * Row completion effect
+     */
+    onRowCompleted(data) {
+        if (this.quality === 'off') return;
+        const player = this.game.players.find(p => p.id === data.player);
+        const color = player?.color || 0x00ffff;
+
+        // Convert row index to Y pixel
+        const y = data.y * (this.tileSize + this.gap) + this.tileSize / 2;
+        // In screen space (estimate based on world transform)
+        if (this.worldTransform) {
+            const screenY = this.worldTransform.y + y * this.worldTransform.scale.y;
+            this.background.rowFlash(screenY, color);
+        }
+
+        this.background.pulse(color, 0.4);
+    }
+
+    /**
+     * Column completion effect
+     */
+    onColumnCompleted(data) {
+        if (this.quality === 'off') return;
+        const player = this.game.players.find(p => p.id === data.player);
+        const color = player?.color || 0x00ffff;
+
+        // Convert col index to X pixel
+        const x = data.x * (this.tileSize + this.gap) + this.tileSize / 2;
+        if (this.worldTransform) {
+            const screenX = this.worldTransform.x + x * this.worldTransform.scale.x;
+            this.background.columnFlash(screenX, color);
+        }
+
+        this.background.pulse(color, 0.4);
+    }
+
+    /**
+     * Player elimination effect
+     */
+    onPlayerEliminated(player) {
+        if (this.quality === 'off') return;
+
+        // Show growing square flare in player color
+        this.background.startEliminationFlare(player.color);
+        this.background.pulse(player.color, 0.6);
+
+        // Screenshake for the impact
+        if (this.renderer) {
+            this.renderer.screenShake(20, 800);
+        }
     }
 
     /**

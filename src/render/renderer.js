@@ -12,6 +12,10 @@ export class Renderer {
         this.rootContainer = null;
         this.animator = null;
         this.gameSpeed = 'beginner';
+        this.shakeIntensity = 0;
+        this.shakeDuration = 0;
+        this.originalX = 0;
+        this.originalY = 0;
     }
 
     async init() {
@@ -64,6 +68,9 @@ export class Renderer {
             this.draw();
         });
         this.game.on('turnStart', () => this.draw()); // update highlights
+
+        // Add shake update to ticker
+        this.app.ticker.add(this.updateShake.bind(this));
     }
 
     autoFitCamera(fitRatio = 1.0) {
@@ -193,5 +200,26 @@ export class Renderer {
             x: this.rootContainer.x + localX * this.rootContainer.scale.x,
             y: this.rootContainer.y + localY * this.rootContainer.scale.y
         };
+    }
+
+    screenShake(intensity, duration = 300) {
+        this.shakeIntensity = intensity;
+        this.shakeDuration = duration;
+    }
+
+    updateShake(ticker) {
+        if (this.shakeDuration > 0) {
+            this.shakeDuration -= ticker.deltaMS;
+
+            if (this.shakeDuration <= 0) {
+                this.shakeDuration = 0;
+                this.shakeIntensity = 0;
+                this.rootContainer.pivot.set(0, 0);
+            } else {
+                const currentIntensity = this.shakeIntensity * (this.shakeDuration / 500);
+                this.rootContainer.pivot.x = (Math.random() - 0.5) * currentIntensity;
+                this.rootContainer.pivot.y = (Math.random() - 0.5) * currentIntensity;
+            }
+        }
     }
 }

@@ -36,6 +36,17 @@ export class BackgroundRenderer {
         this.pulseTarget = 0;
         this.pulseColor = 0x00ffff;
 
+        // Dynamic intensity based on game action
+        this.winIntensity = 0;
+        this.intensityColor = 0x00ffff;
+        this.flareProgress = 0;
+        this.flareActive = false;
+        this.flashGfx = new Graphics();
+        this.container.addChild(this.flashGfx);
+
+        this.flareGfx = new Graphics();
+        this.container.addChild(this.flareGfx);
+
         // Intro mode state
         this.introMode = false;
         this.floatingDice = [];
@@ -122,7 +133,8 @@ export class BackgroundRenderer {
         if (!this.enabled) return;
 
         // Particle count based on quality
-        const count = this.quality === 'high' ? 40 : 15;
+        let count = 20; // Medium (merged with low)
+        if (this.quality === 'high') count = 40;
 
         const colors = [0x00ffff, 0xAA00FF, 0x00ff88, 0x0088ff];
 
@@ -173,6 +185,55 @@ export class BackgroundRenderer {
         this.pulseTarget = intensity;
     }
 
+    setWinIntensity(intensity, color = 0x00ffff) {
+        if (!this.enabled) return;
+        this.winIntensity = intensity;
+        this.intensityColor = color;
+    }
+
+    startEliminationFlare(color) {
+        if (!this.enabled) return;
+        this.intensityColor = color;
+        this.flareProgress = 0.01;
+        this.flareActive = true;
+    }
+
+    rowFlash(y, color = 0x00ffff) {
+        if (!this.enabled) return;
+        this.triggerFlash({ type: 'row', y, color });
+    }
+
+    columnFlash(x, color = 0x00ffff) {
+        if (!this.enabled) return;
+        this.triggerFlash({ type: 'column', x, color });
+    }
+
+    triggerFlash(data) {
+        const flash = new Graphics();
+        this.container.addChild(flash);
+
+        let life = 1.0;
+        const ticker = (t) => {
+            life -= t.deltaTime * 0.05;
+            if (life <= 0) {
+                Ticker.shared.remove(ticker);
+                flash.destroy();
+                return;
+            }
+
+            flash.clear();
+            const alpha = life * 0.5;
+            if (data.type === 'row') {
+                flash.rect(0, data.y - 10, this.width, 20);
+            } else {
+                flash.rect(data.x - 10, 0, 20, this.height);
+            }
+            flash.fill({ color: data.color, alpha: alpha });
+            flash.blendMode = 'add';
+        };
+        Ticker.shared.add(ticker);
+    }
+
     update() {
         if (!this.enabled) return;
 
@@ -214,8 +275,44 @@ export class BackgroundRenderer {
 
         // Apply pulse to grid
         const baseAlpha = this.introMode ? 1.5 : 1;
-        this.gridContainer.alpha = baseAlpha + this.pulseAlpha * 2;
+        this.gridContainer.alpha = baseAlpha + this.pulseAlpha * 2 + (this.winIntensity * 0.5);
 
+        // Intensify ambient particles based on winIntensity
+        if (this.winIntensity > 0) {
+            this.winIntensity *= 0.99; // Slower decay (was 0.98)
+            if (this.winIntensity < 0.01) this.winIntensity = 0;
+
+            for (const p of this.ambientParticles) {
+                p.graphics.alpha = Math.min(1, p.graphics.alpha + this.winIntensity * 0.5);
+            }
+        }
+
+        // Update growing flare effect
+        if (this.flareActive) {
+            this.flareProgress += 0.012; // Controls growth speed
+
+            this.flareGfx.clear();
+            const maxDim = Math.max(this.width, this.height);
+            const flareSize = this.flareProgress * maxDim * 2.5; // Grow to fill screen
+            const flareAlpha = Math.min(0.6, (1.0 - this.flareProgress) * 1.2);
+
+            if (this.flareProgress >= 1.0) {
+                this.flareActive = false;
+                this.flareProgress = 0;
+            } else {
+                // Center the growing square
+                this.flareGfx.rect(
+                    this.width / 2 - flareSize / 2,
+                    this.height / 2 - flareSize / 2,
+                    flareSize,
+                    flareSize
+                );
+                this.flareGfx.fill({ color: this.intensityColor, alpha: flareAlpha });
+                this.flareGfx.blendMode = 'add';
+            }
+        } else {
+            this.flareGfx.clear();
+        }
         // Update floating dice (intro mode)
         if (this.introMode) {
             this.updateFloatingDice();
