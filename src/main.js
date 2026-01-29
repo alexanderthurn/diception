@@ -1229,7 +1229,7 @@ async function init() {
     // Populate AI dropdown and list
     const updateAIDropdown = () => {
         const ais = aiRegistry.getAllAIs();
-        // Clear custom options from dropdown (keep 5 built-in: easy, medium, hard, adaptive, custom)
+        // Clear custom options from dropdown (keep 5 built-in: easy, medium, hard, custom)
         while (botAISelect.options.length > 5) {
             botAISelect.remove(5);
         }
@@ -1407,8 +1407,8 @@ async function init() {
             testGame.startGame({
                 humanCount: 0,
                 botCount: 2,
-                mapWidth: 4,
-                mapHeight: 4,
+                mapWidth: 5,
+                mapHeight: 5,
                 maxDice: 9,
                 diceSides: 6,
                 mapStyle: 'fullgrid',
@@ -1418,12 +1418,13 @@ async function init() {
             const ids = [ai1.id, ai2.id];
             const codes = [ai1.code, ai2.code];
             testGame.players.forEach((p, idx) => {
+                p.id = idx; // Ensure predictable IDs for simulation
                 p.aiId = ids[idx];
                 p.aiCode = codes[idx];
             });
 
             let turns = 0;
-            const maxTurns = 500;
+            const maxTurns = 1000;
 
             // Instantiate AI instances once
             const aiInstances = testGame.players.map((p, idx) => {
@@ -1499,13 +1500,9 @@ async function init() {
                         get mapWidth() { return testGame.map.width; },
                         get mapHeight() { return testGame.map.height; },
                         attack: (fx, fy, tx, ty) => {
-                            const ft = testGame.map.getTile(fx, fy);
-                            const tt = testGame.map.getTile(tx, ty);
-                            if (ft && tt && ft.owner === p.id && ft.dice > tt.dice) {
-                                testGame.attack(fx, fy, tx, ty);
-                                return { success: true, expectedWin: true };
-                            }
-                            return { success: false };
+                            const res = testGame.attack(fx, fy, tx, ty);
+                            if (res.error) return { success: false, reason: res.error };
+                            return { success: true, expectedWin: res.won };
                         },
                         endTurn: () => { },
                         load: () => null,
@@ -1579,7 +1576,7 @@ async function init() {
         const overallRate = Math.round(totalWins / totalGames * 100);
 
         statusEl.className = '';
-        statusEl.textContent = `✅ Benchmark complete! Overall: ${totalWins}/${totalGames} wins (${overallRate}%) on 4x4 full grid`;
+        statusEl.textContent = `✅ Benchmark complete! Overall: ${totalWins}/${totalGames} wins (${overallRate}%) on 5x5 full grid`;
 
         testAIBtn.textContent = '▶ Test';
         testAIBtn.disabled = false;
@@ -1791,25 +1788,33 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
         perPlayerAIList.innerHTML = '';
 
         for (let i = 0; i < botCount; i++) {
-            // Player IDs for bots start after human players
-            const playerId = humanCount + i;
-            const savedAI = perPlayerAIConfig[playerId] || 'easy';
+            // Use bot index (0, 1, 2...) as config key instead of global player ID
+            const botIndex = i;
+            const savedAI = perPlayerAIConfig[botIndex] || 'easy';
 
             const row = document.createElement('div');
             row.className = 'per-player-ai-row';
             row.innerHTML = `
                 <span class="bot-label">Bot ${i + 1}</span>
-                <select class="per-player-ai-select" data-player-id="${playerId}">
+                <select class="per-player-ai-select" data-bot-index="${botIndex}">
                     ${getAIOptionsHTML(savedAI)}
                 </select>
             `;
             perPlayerAIList.appendChild(row);
         }
 
+        // Hide/Show per-player config based on whether bots exist and custom is selected
+        if (botCount > 0 && selectedBotAI === 'custom') {
+            perPlayerAIConfigEl.style.display = 'flex';
+        } else {
+            perPlayerAIConfigEl.style.display = 'none';
+        }
+
+
         // Add change listeners
         perPlayerAIList.querySelectorAll('.per-player-ai-select').forEach(select => {
             select.addEventListener('change', () => {
-                perPlayerAIConfig[select.dataset.playerId] = select.value;
+                perPlayerAIConfig[select.dataset.botIndex] = select.value;
                 localStorage.setItem('dicy_perPlayerAIConfig', JSON.stringify(perPlayerAIConfig));
             });
         });
@@ -1889,6 +1894,7 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
         // Helper to get AI id for a player
         const getPlayerAIId = (playerId) => {
             if (selectedBotAI === 'custom') {
+                // In tournaments, all players are bots, so ID is the index
                 return perPlayerAIConfig[playerId] || 'easy';
             }
             return selectedBotAI;
@@ -1978,7 +1984,7 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
                     }
                     tourneyGame.endTurn();
                 } else {
-                    // Custom or Adaptive AI -> Execute class methods synchronously
+                    // Custom AI -> Execute class methods synchronously
                     const instance = aiInstances.get(currentPlayer.id);
                     if (instance) {
 
@@ -2414,9 +2420,11 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
     });
     humanCountInput.addEventListener('change', () => {
         localStorage.setItem('dicy_humanCount', humanCountInput.value);
+        if (selectedBotAI === 'custom') updatePerPlayerConfig();
     });
     botCountInput.addEventListener('change', () => {
         localStorage.setItem('dicy_botCount', botCountInput.value);
+        if (selectedBotAI === 'custom') updatePerPlayerConfig();
     });
     gameSpeedInput.addEventListener('change', () => {
         localStorage.setItem('dicy_gameSpeed', gameSpeedInput.value);
@@ -2539,11 +2547,17 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
         // Initialize AI for all players
         clearPlayerAIs();
         for (const player of game.players) {
+            if (!player.isBot) {
+                player.name = getPlayerName(player);
+                continue;
+            }
+
             // Get AI config for this player
             let aiId;
             if (selectedBotAI === 'custom') {
-                // Use per-player config
-                aiId = perPlayerAIConfig[player.id] || 'easy';
+                // Map global player ID back to 0-based bot index
+                const botIndex = player.id - humanCount;
+                aiId = perPlayerAIConfig[botIndex] || 'easy';
             } else {
                 // Same AI for all
                 aiId = selectedBotAI;

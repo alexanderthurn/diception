@@ -2,7 +2,7 @@
  * AIRegistry - Manages built-in and custom AIs
  * 
  * Features:
- * - Registers built-in AI presets (easy, medium, hard, adaptive)
+ * - Registers built-in AI presets (easy, medium, hard)
  * - Stores custom user-created AIs in localStorage
  * - Import/Export AIs as JSON for sharing
  */
