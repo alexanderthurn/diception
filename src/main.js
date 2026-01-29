@@ -2203,7 +2203,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
 
     // Check for auto-save and auto-resume if found
     const checkResume = () => {
-        if (!turnHistory.hasAutoSave() || game.players.length > 0 || pendingScenario) return;
+        if (!turnHistory.hasAutoSave() || game.players.length > 0) return;
 
         const snapshot = turnHistory.loadAutoSave();
         if (snapshot) {
