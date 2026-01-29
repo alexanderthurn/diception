@@ -1201,8 +1201,26 @@ async function init() {
     const botAISelect = document.getElementById('bot-ai-select');
     const apiDocsHeader = document.querySelector('.collapsible-header');
     const apiDocs = document.querySelector('.ai-api-docs');
+    const aiEditorFooter = document.querySelector('.ai-import-export');
 
     let currentEditingAI = null;
+
+    const updateAIEditorUI = () => {
+        if (!aiEditorFooter) return;
+
+        const isBuiltIn = currentEditingAI && aiRegistry.builtIn.has(currentEditingAI);
+        const promptText = aiPromptInput.value.trim();
+        const codeText = aiCodeInput.value.trim();
+        const defaultComment = '// Paste your generated AI code here';
+
+        // 1. Show code textarea if it's built-in OR if there's a prompt
+        const shouldShowCode = isBuiltIn || promptText.length > 0;
+        aiCodeInput.style.display = shouldShowCode ? 'block' : 'none';
+
+        // 2. Show footer (Test/Export) if code is visible AND has meaningful content
+        const hasMeaningfulCode = codeText.length > 0 && codeText !== defaultComment;
+        aiEditorFooter.style.display = (shouldShowCode && hasMeaningfulCode) ? 'flex' : 'none';
+    };
 
     // Populate AI dropdown and list
     const updateAIDropdown = () => {
@@ -1266,16 +1284,17 @@ async function init() {
         const resultsContainer = document.getElementById('ai-test-results');
         if (resultsContainer) resultsContainer.classList.add('hidden');
 
-        // Hide/show controls based on built-in status
         const isBuiltIn = aiRegistry.builtIn.has(aiId);
         aiNameInput.disabled = isBuiltIn;
         aiCodeInput.disabled = isBuiltIn;
+        aiPromptInput.disabled = isBuiltIn;
 
         // Hide save/delete for built-in AIs
         saveAIBtn.style.display = isBuiltIn ? 'none' : '';
         deleteAIBtn.style.display = isBuiltIn ? 'none' : '';
 
         updateAIList();
+        updateAIEditorUI();
     };
 
     const createNewAI = () => {
@@ -1283,24 +1302,13 @@ async function init() {
         aiNameInput.value = '';
         aiNameInput.disabled = false;
         aiCodeInput.disabled = false;
+        aiPromptInput.disabled = false;
         saveAIBtn.style.display = '';
         deleteAIBtn.style.display = 'none';
-        aiCodeInput.value = `// Your AI code here
-// Use api.getMyTiles(), api.attack(), etc.
-
-const myTiles = api.getMyTiles().filter(t => t.dice > 1);
-
-for (const tile of myTiles) {
-    const neighbors = api.getAdjacentTiles(tile.x, tile.y);
-    for (const target of neighbors) {
-        if (target.owner !== api.myId && tile.dice > target.dice) {
-            api.attack(tile.x, tile.y, target.x, target.y);
-        }
-    }
-}
-
-api.endTurn();`;
+        aiCodeInput.value = '// Paste your generated AI code here';
+        aiPromptInput.value = '';
         updateAIList();
+        updateAIEditorUI();
     };
 
     const saveCurrentAI = () => {
@@ -1700,6 +1708,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     exportAIBtn.addEventListener('click', exportAI);
     importAIBtn.addEventListener('click', importAI);
     generatePromptBtn.addEventListener('click', generatePrompt);
+
+    aiCodeInput.addEventListener('input', updateAIEditorUI);
+    aiPromptInput.addEventListener('input', updateAIEditorUI);
 
     // API docs toggle
     apiDocsHeader.addEventListener('click', () => {

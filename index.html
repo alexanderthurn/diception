@@ -368,19 +368,30 @@
                     <div class="ai-list-section">
                         <h4>Your AIs</h4>
                         <div id="ai-list"></div>
-                        <button id="new-ai-btn" class="tron-btn small">+ New AI</button>
+                        <button id="new-ai-btn" class="tron-btn small" style="width: 100%; margin-bottom: 5px;">+ New
+                            AI</button>
+                        <button id="import-ai-btn" class="tron-btn small" style="width: 100%;">📥 Import</button>
                     </div>
                 </div>
                 <div class="ai-editor-right">
                     <div class="ai-name-row">
                         <input type="text" id="ai-name-input" placeholder="AI Name" maxlength="30">
                         <div class="ai-editor-actions">
-                            <button id="test-ai-btn" class="tron-btn small" title="Test AI">▶ Test</button>
                             <button id="save-ai-btn" class="tron-btn small" title="Save AI">💾 Save</button>
                             <button id="delete-ai-btn" class="tron-btn small danger" title="Delete AI">🗑️</button>
                         </div>
                     </div>
-                    <textarea id="ai-code-input" placeholder="// Your AI code here..." spellcheck="false"></textarea>
+                    <div class="ai-prompt-section">
+                        <h4>🤖 AI Prompt</h4>
+                        <textarea id="ai-prompt-input"
+                            placeholder="Describe your strategy, e.g.: 'Make an aggressive AI that always attacks when it has more dice, but never attacks tiles with 8+ dice'"></textarea>
+                        <button id="generate-prompt-btn" class="tron-btn small">📋 Generate full prompt to
+                            clipboard</button>
+                    </div>
+
+                    <textarea id="ai-code-input"
+                        placeholder="// Click the button above. It will copy clear instructions for an AI to generate the code needed. Generate code with your favorite AI in the web (like ChatGPT or Gemini) and then paste the response here..."
+                        spellcheck="false"></textarea>
 
                     <div id="ai-test-results" class="ai-test-results hidden">
                         <button id="ai-test-close-btn" class="ai-test-close-btn">×</button>
@@ -400,16 +411,9 @@
                         </table>
                     </div>
 
-                    <div class="ai-prompt-section">
-                        <h4>🤖 AI Prompt Generator</h4>
-                        <textarea id="ai-prompt-input"
-                            placeholder="Describe your strategy, e.g.: 'Make an aggressive AI that always attacks when it has more dice, but never attacks tiles with 8+ dice'"></textarea>
-                        <button id="generate-prompt-btn" class="tron-btn small">📋 Copy Prompt to Clipboard</button>
-                    </div>
-
                     <div class="ai-import-export">
-                        <button id="export-ai-btn" class="tron-btn small">📤 Export</button>
-                        <button id="import-ai-btn" class="tron-btn small">📥 Import</button>
+                        <button id="test-ai-btn" class="tron-btn small" style="flex: 1;">▶ Test</button>
+                        <button id="export-ai-btn" class="tron-btn small" style="flex: 1;">📤 Export</button>
                     </div>
                 </div>
             </div>
