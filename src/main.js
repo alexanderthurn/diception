@@ -530,8 +530,8 @@ async function init() {
         turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };
 
         // Create wrapper
-        const wrapper = document.createElement('div');
-        wrapper.className = `turn-group ${isHuman ? 'expanded' : ''}`;
+        const wrapper = document.createElement('div'); // Current active player's log is always expanded
+        wrapper.className = 'turn-group expanded';
         wrapper.dataset.snapshotIndex = snapshotIndex;
 
         // Create header with action buttons
@@ -544,7 +544,7 @@ async function init() {
                 <button class="turn-action-btn" data-action="jump" title="Jump to this turn">⏪</button>
                 <button class="turn-action-btn" data-action="save" title="Save as scenario">💾</button>
             </span>
-            <span class="turn-toggle">${isHuman ? '▼' : '▶'}</span>
+            <span class="turn-toggle">▼</span>
         `;
 
         // Create details container
@@ -586,8 +586,9 @@ async function init() {
 
         logEntries.insertBefore(wrapper, logEntries.firstChild);
 
-        // Keep only last 20 turn groups
-        while (logEntries.children.length > 20) {
+        // Keep only last 3 rounds (every player 3 times)
+        const maxEntries = Math.max(12, game.players.length * 3);
+        while (logEntries.children.length > maxEntries) {
             logEntries.removeChild(logEntries.lastChild);
         }
 
@@ -619,6 +620,12 @@ async function init() {
         }
 
         summary.textContent = summaryText;
+
+        // For bots/autoplay, collapse the log after their turn is finished
+        if (!currentTurnLog.isHuman) {
+            currentTurnLog.wrapper.classList.remove('expanded');
+            currentTurnLog.header.querySelector('.turn-toggle').textContent = '▶';
+        }
     };
 
     // Helper to add log entry to current turn group (newest at top)
