@@ -1143,40 +1143,6 @@ async function init() {
     const mapStyleInput = document.getElementById('map-style');
     const gameModeInput = document.getElementById('game-mode');
 
-    // === UI Scale Setup ===
-    const uiScaleSlider = document.getElementById('ui-scale-slider');
-    const uiScaleVal = document.getElementById('ui-scale-val');
-
-    const setUIScale = (scale) => {
-        // Use zoom property for the overlay
-        document.documentElement.style.setProperty('--ui-scale', scale);
-        if (uiScaleSlider) uiScaleSlider.value = scale;
-        if (uiScaleVal) uiScaleVal.textContent = Math.round(scale * 100) + '%';
-        localStorage.setItem('dicy_uiScale', scale);
-    };
-
-    // Load saved scale or detect high-res
-    const savedUIScale = localStorage.getItem('dicy_uiScale');
-    if (savedUIScale) {
-        setUIScale(parseFloat(savedUIScale));
-    } else {
-        // Auto-detect high-res / large screens
-        // Typical 4k is 3840x2160. Many TVs report this.
-        if (window.innerWidth >= 3840 || window.innerHeight >= 2160) {
-            setUIScale(2.0);
-        } else if (window.innerWidth >= 2500 || window.innerHeight >= 1400) {
-            setUIScale(1.5);
-        } else {
-            setUIScale(1.0);
-        }
-    }
-
-    if (uiScaleSlider) {
-        uiScaleSlider.addEventListener('input', (e) => {
-            setUIScale(parseFloat(e.target.value));
-        });
-    }
-
     // How to play modal logic
     const howtoBtn = document.getElementById('howto-btn');
     const howtoModal = document.getElementById('howto-modal');
