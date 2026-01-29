@@ -15,8 +15,38 @@ export class AIRunner {
         this.name = aiDefinition.name;
         this.code = aiDefinition.code;
         this.storageKey = `dicy_ai_storage_${aiDefinition.id}`;
-        this.timeout = aiDefinition.timeout || 5000;  // 5 seconds max per turn
-        this.maxMoves = aiDefinition.maxMoves || 200;   // Max attacks per turn
+        this.timeout = aiDefinition.timeout || 5000;
+        this.maxMoves = aiDefinition.maxMoves || 200;
+
+        this.worker = null;
+        this.workerUrl = null;
+        this.initialized = false;
+    }
+
+    /**
+     * Terminate the worker if it exists
+     */
+    terminate() {
+        if (this.worker) {
+            this.worker.terminate();
+            this.worker = null;
+        }
+        if (this.workerUrl) {
+            URL.revokeObjectURL(this.workerUrl);
+            this.workerUrl = null;
+        }
+    }
+
+    /**
+     * Ensure the worker is created and initialized
+     */
+    async ensureWorker() {
+        if (this.worker) return;
+
+        const workerCode = this.createWorkerCode();
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        this.workerUrl = URL.createObjectURL(blob);
+        this.worker = new Worker(this.workerUrl);
     }
 
     /**
@@ -25,22 +55,17 @@ export class AIRunner {
      * @returns {Promise<void>}
      */
     async takeTurn(game, gameSpeed = 'beginner') {
+        await this.ensureWorker();
+
         return new Promise((resolve) => {
             const gameState = this.serializeGameState(game);
             const storage = this.loadStorage();
-
-            // Create worker code that will execute the AI
-            const workerCode = this.createWorkerCode();
-            const blob = new Blob([workerCode], { type: 'application/javascript' });
-            const workerUrl = URL.createObjectURL(blob);
-            const worker = new Worker(workerUrl);
 
             let resolved = false;
             const cleanup = () => {
                 if (!resolved) {
                     resolved = true;
-                    worker.terminate();
-                    URL.revokeObjectURL(workerUrl);
+                    // Note: We don't terminate the worker here anymore to keep it persistent
                     resolve();
                 }
             };
@@ -52,38 +77,41 @@ export class AIRunner {
             }, this.timeout);
 
             // Message handler
-            worker.onmessage = (e) => {
-                clearTimeout(timer);
-                const { actions, storage: newStorage, error } = e.data;
+            this.worker.onmessage = (e) => {
+                const { type, actions, storage: newStorage, error } = e.data;
 
-                if (error) {
-                    console.error(`[AIRunner] AI "${this.name}" error:`, error);
-                } else {
-                    // Save updated storage
-                    if (newStorage) {
-                        this.saveStorage(newStorage);
-                    }
-
-                    // Execute validated actions
-                    this.executeActions(actions || [], game, gameSpeed);
+                if (type === 'initialized') {
+                    this.initialized = true;
+                    return; // Wait for the turn response
                 }
 
-                cleanup();
+                if (type === 'turnComplete') {
+                    clearTimeout(timer);
+                    if (error) {
+                        console.error(`[AIRunner] AI "${this.name}" error:`, error);
+                    } else {
+                        if (newStorage) this.saveStorage(newStorage);
+                        this.executeActions(actions || [], game, gameSpeed);
+                    }
+                    cleanup();
+                }
             };
 
-            worker.onerror = (e) => {
+            this.worker.onerror = (e) => {
                 clearTimeout(timer);
                 console.error(`[AIRunner] AI "${this.name}" worker error:`, e.message);
                 cleanup();
             };
 
-            // Start the worker
-            worker.postMessage({
+            // Start the turn
+            this.worker.postMessage({
+                type: 'takeTurn',
                 gameState,
                 code: this.code,
                 storage,
                 maxMoves: this.maxMoves,
-                myId: game.currentPlayer.id
+                myId: game.currentPlayer.id,
+                isFirstTurn: !this.initialized
             });
         });
     }
@@ -355,27 +383,61 @@ export class AIRunner {
                     return 1 / (1 + Math.exp(-diff / 2));
                 }
             };
-    // ... rest of worker code ...
-            self.onmessage = function(e) {
-                const { gameState: gs, code, storage, maxMoves: mm, myId: id } = e.data;
-                gameState = gs;
-                myId = id;
-                maxMoves = mm;
-                aiStorage = storage || {};
+
+            let aiInstance = null;
+
+            self.onmessage = async function(e) {
+                const { type, gameState: gs, code, storage, maxMoves: mm, myId: id, isFirstTurn } = e.data;
                 
-                try {
-                    // Execute AI code
-                    const aiFunction = new Function('api', code);
-                    aiFunction(api);
-                    
-                    // Auto-end turn if not explicitly ended
-                    if (!turnEnded) {
-                        api.endTurn();
+                if (type === 'takeTurn') {
+                    gameState = gs;
+                    myId = id;
+                    maxMoves = mm;
+                    aiStorage = storage || {};
+                    actions.length = 0; // Clear previous actions
+                    moveCount = 0;
+                    turnEnded = false;
+
+                    try {
+                        if (!aiInstance) {
+                            // First time: wrap code in a function that returns the class or class definition
+                            // We expect the user to write: "return class MyAI { ... }" or similar
+                            const factory = new Function('api', code);
+                            const AIClass = factory(api);
+                            
+                            if (typeof AIClass !== 'function') {
+                                throw new Error('AI code must return a class (e.g. "return class MyAI { ... }")');
+                            }
+                            
+                            aiInstance = new AIClass();
+                        }
+
+                        // Call init if it's the first turn or if requested
+                        if (isFirstTurn && typeof aiInstance.init === 'function') {
+                            await aiInstance.init(api);
+                            self.postMessage({ type: 'initialized' });
+                        }
+
+                        // Call endTurn (the name for the turn logic)
+                        if (typeof aiInstance.endTurn === 'function') {
+                            await aiInstance.endTurn(api);
+                        } else {
+                            throw new Error('AI class must have an endTurn(api) method');
+                        }
+                        
+                        // Auto-end turn if not explicitly ended
+                        if (!turnEnded) {
+                            api.endTurn();
+                        }
+                        
+                        self.postMessage({ type: 'turnComplete', actions, storage: aiStorage });
+                    } catch (error) {
+                        self.postMessage({ 
+                            type: 'turnComplete', 
+                            actions: [{ type: 'endTurn' }], 
+                            error: error.message + (error.stack ? "\n" + error.stack : "")
+                        });
                     }
-                    
-                    self.postMessage({ actions, storage: aiStorage });
-                } catch (error) {
-                    self.postMessage({ actions: [{ type: 'endTurn' }], error: error.message });
                 }
             };
         `;

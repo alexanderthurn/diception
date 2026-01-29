@@ -182,6 +182,10 @@ async function init() {
 
     // Map player ID -> AIRunner instance (set during game start)
     let playerAIs = new Map();
+    const clearPlayerAIs = () => {
+        playerAIs.forEach(ai => ai.terminate());
+        playerAIs.clear();
+    };
 
     // Current selected AI for all bots (default easy)
     let selectedBotAI = localStorage.getItem('dicy_botAI') || 'easy';
@@ -1421,6 +1425,29 @@ async function init() {
             let turns = 0;
             const maxTurns = 500;
 
+            // Instantiate AI instances once
+            const aiInstances = testGame.players.map((p, idx) => {
+                try {
+                    const factory = new Function('api', codes[idx]);
+                    const AIClass = factory({}); // Empty api for factory call
+                    return new AIClass();
+                } catch (e) {
+                    console.error("AI Factory Error:", e);
+                    return null;
+                }
+            });
+
+            // Initialize AI instances
+            await Promise.all(aiInstances.map((inst, idx) => {
+                if (inst && inst.init) {
+                    const p = testGame.players[idx];
+                    // Create mini API for init
+                    const api = { myId: p.id, log: () => { } };
+                    return inst.init(api);
+                }
+                return Promise.resolve();
+            }));
+
             while (testGame.players.filter(p => p.alive).length > 1 && turns < maxTurns) {
                 const p = testGame.currentPlayer;
                 if (p.alive) {
@@ -1488,9 +1515,13 @@ async function init() {
                     };
 
                     try {
-                        const fn = new Function('api', p.aiCode);
-                        fn(api);
-                    } catch (e) { }
+                        const instance = aiInstances[p.id];
+                        if (instance && instance.endTurn) {
+                            await instance.endTurn(api);
+                        }
+                    } catch (e) {
+                        console.error("AI Turn Error:", e);
+                    }
                 }
                 testGame.endTurn();
                 turns++;
@@ -1557,7 +1588,28 @@ async function init() {
     const generatePrompt = () => {
         const userStrategy = aiPromptInput.value.trim() || 'Create an AI that plays well';
 
-        const prompt = `Create JavaScript code for a DICEPTION game AI bot.
+        const prompt = `Create a JavaScript class for a DICEPTION game AI bot.
+
+### STRICT FORMATTING RULES:
+1. You MUST return the class definition using a return statement at the end of the script.
+2. The class MUST have an 'async endTurn(api)' method which contains the main turn logic.
+3. The class CAN have an 'async init(api)' method for one-time initialization.
+4. DO NOT call 'api.endTurn()' yourself; the game runner calls it automatically after 'endTurn(api)' resolves.
+5. You CAN use 'async/await' for complex logic or simulations.
+6. Access all functionality via the provided 'api' object.
+
+### TEMPLATE:
+return class MyAI {
+  async init(api) {
+    // One-time setup (optional)
+  }
+
+  async endTurn(api) {
+    // Main turn logic
+    // Example: const tiles = api.getMyTiles();
+    // ...
+  }
+}
 
 AVAILABLE API:
 Game State:
@@ -1582,26 +1634,25 @@ Strategy Helpers:
 
 Actions:
 - api.attack(fromX, fromY, toX, toY) → {success: boolean, expectedWin: boolean}
-- api.endTurn() → End this AI's turn
 
 Utilities:
 - api.save(key, value) → Persist data between games
 - api.load(key) → Load persisted data
 - api.log(msg) → Debug output to console
-- api.getWinProbability(attackDice, defendDice) → 0-1 probability
+- api.getWinProbability(attackDice, defenderDice) → 0-1 probability
 
 GAME RULES:
 - The game is turn based and the rules similar to risk, kdice or dicewars.
-- Attacker must have dice > 1 to attack
-- Both sides roll all their dice, highest sum wins
-- On win: attacker moves to captured tile with (dice-1), leaving 1 behind
-- On loss: attacker drops to 1 die
-- At end of turn, player gets reinforcements equal to largest connected region
+- Attacker must have dice > 1 to attack.
+- Both sides roll all their dice, highest sum wins.
+- On win: attacker moves to captured tile with (dice-1), leaving 1 behind.
+- On loss: attacker drops to 1 die. Turn ends when your endTurn() method returns.
+- At end of turn, player gets reinforcements equal to largest connected region size.
 
 USER'S STRATEGY REQUEST:
 ${userStrategy}
 
-Return ONLY the JavaScript code, no explanations or markdown. The code will run inside a sandboxed environment with access to the 'api' object.`;
+Final Reminder: Return ONLY raw JavaScript code starting with the class or ending with "return YourClass;". No markdown code blocks, no explanations. Just the code.`;
 
         navigator.clipboard.writeText(prompt).then(() => {
             generatePromptBtn.textContent = '✓ Copied!';
@@ -1868,6 +1919,28 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             // Run game to completion using simple direct AI (no Web Workers for speed)
             let turns = 0;
             const maxTurns = 2000;
+
+            // Instantiate AI instances for each player
+            const aiInstances = new Map();
+            for (const p of tourneyGame.players) {
+                const aiId = getPlayerAIId(p.id);
+                // Only instantiate custom/complex AIs or if we want full class support even for built-in
+                if (!['easy', 'medium', 'hard'].includes(aiId)) {
+                    try {
+                        const aiDef = aiRegistry.getAI(aiId);
+                        if (aiDef) {
+                            const factory = new Function('api', aiDef.code);
+                            const AIClass = factory({});
+                            const inst = new AIClass();
+                            if (inst.init) await inst.init({ myId: p.id, log: () => { } });
+                            aiInstances.set(p.id, inst);
+                        }
+                    } catch (e) {
+                        console.error("Tournament AI Init Error:", e);
+                    }
+                }
+            }
+
             while (!tourneyGame.gameOver && turns < maxTurns) {
                 // Simple synchronous AI execution
                 const currentPlayer = tourneyGame.currentPlayer;
@@ -1905,9 +1978,9 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                     }
                     tourneyGame.endTurn();
                 } else {
-                    // Custom or Adaptive AI -> Execute code synchronously
-                    const aiDef = aiRegistry.getAI(playerAIId);
-                    if (aiDef) { // Fallback to easy if missing
+                    // Custom or Adaptive AI -> Execute class methods synchronously
+                    const instance = aiInstances.get(currentPlayer.id);
+                    if (instance) {
 
                         // Mock API for synchronous execution (subset of full API)
                         const actions = [];
@@ -2035,8 +2108,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                         };
 
                         try {
-                            const aiFn = new Function('api', aiDef.code);
-                            aiFn(api);
+                            if (instance.endTurn) await instance.endTurn(api);
 
                             // Execute actions
                             for (const action of actions) {
@@ -2048,7 +2120,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
                                 }
                             }
                         } catch (e) {
-                            console.warn(`AI Error (${playerAIId}):`, e);
+                            console.warn(`Tournament AI Turn Error:`, e);
                         }
                     }
                     tourneyGame.endTurn();
@@ -2225,7 +2297,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             turnHistory.applyGameState(game, snapshot.gameState);
 
             // Restore AIs
-            playerAIs.clear();
+            clearPlayerAIs();
             game.players.forEach(p => {
                 if (p.isBot) {
                     const aiId = p.aiId || 'easy';
@@ -2465,7 +2537,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         }
 
         // Initialize AI for all players
-        playerAIs.clear();
+        clearPlayerAIs();
         for (const player of game.players) {
             // Get AI config for this player
             let aiId;
