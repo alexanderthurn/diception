@@ -435,7 +435,7 @@ export class AIRunner {
                         self.postMessage({ 
                             type: 'turnComplete', 
                             actions: [{ type: 'endTurn' }], 
-                            error: error.message + (error.stack ? "\n" + error.stack : "")
+                            error: error.message + (error.stack ? "\\n" + error.stack : "")
                         });
                     }
                 }
