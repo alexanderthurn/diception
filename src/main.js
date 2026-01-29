@@ -743,7 +743,6 @@ async function init() {
 
         // Hide other modals
         document.getElementById('game-over-modal').classList.add('hidden');
-        document.getElementById('resume-modal').classList.add('hidden');
     };
 
     const quitToMainMenu = () => {
@@ -1145,9 +1144,6 @@ async function init() {
     // Setup Logic
     const setupModal = document.getElementById('setup-modal');
     const startBtn = document.getElementById('start-game-btn');
-    const resumeModal = document.getElementById('resume-modal');
-    const resumeConfirmBtn = document.getElementById('resume-confirm-btn');
-    const resumeDiscardBtn = document.getElementById('resume-discard-btn');
     const mapSizeInput = document.getElementById('map-size');
     const mapSizeVal = document.getElementById('map-size-val');
     const mapSizeLabel = document.getElementById('map-size-label');
@@ -2198,19 +2194,12 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
         }
     };
 
-    // Check for auto-save and show resume modal options
+    // Check for auto-save and auto-resume if found
     const checkResume = () => {
-        if (turnHistory.hasAutoSave() && game.players.length === 0 && !pendingScenario) {
-            setupModal.classList.add('hidden');
-            resumeModal.classList.remove('hidden');
-        }
-    };
+        if (!turnHistory.hasAutoSave() || game.players.length > 0 || pendingScenario) return;
 
-    // Resume Confirm
-    resumeConfirmBtn.addEventListener('click', () => {
         const snapshot = turnHistory.loadAutoSave();
         if (snapshot) {
-            resumeModal.classList.add('hidden');
             setupModal.classList.add('hidden');
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
 
@@ -2241,22 +2230,10 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
             game.emit('gameStart', { players: game.players, map: game.map });
             game.startTurn();
 
-            addLog(`🔄 Game resumed from Turn ${game.turn}`, 'reinforce');
+            addLog(`🔄 Game automatically resumed from Turn ${game.turn}`, 'reinforce');
             setTimeout(() => renderer.autoFitCamera(), 50);
-        } else {
-            alert('Failed to load auto-save data.');
-            turnHistory.clearAutoSave();
-            resumeModal.classList.add('hidden');
-            setupModal.classList.remove('hidden');
         }
-    });
-
-    // Resume Discard
-    resumeDiscardBtn.addEventListener('click', () => {
-        turnHistory.clearAutoSave();
-        resumeModal.classList.add('hidden');
-        setupModal.classList.remove('hidden');
-    });
+    };
 
     setTimeout(() => {
         tryLoadScenario();
