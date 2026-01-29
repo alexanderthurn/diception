@@ -142,6 +142,28 @@ async function init() {
     // 4.5 Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);
 
+    // === FPS Counter Logic ===
+    const fpsCounter = document.getElementById('fps-counter');
+    const urlParams = new URLSearchParams(window.location.search);
+    const showFPS = urlParams.get('fps') !== 'false'; // Default to true if not explicitly false
+
+    if (showFPS && fpsCounter && renderer.app) {
+        fpsCounter.classList.remove('hidden');
+        let frameCount = 0;
+        let lastTime = performance.now();
+
+        renderer.app.ticker.add(() => {
+            frameCount++;
+            const currentTime = performance.now();
+            if (currentTime - lastTime >= 1000) {
+                const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
+                fpsCounter.textContent = `FPS: ${fps}`;
+                frameCount = 0;
+                lastTime = currentTime;
+            }
+        });
+    }
+
     // Handle window resize
     window.addEventListener('resize', () => {
         renderer.autoFitCamera();
@@ -3497,5 +3519,7 @@ window.benchmarkAI = async () => {
     console.log("✅ Benchmark Complete");
     console.table(tableData);
 };
+
+
 
 init();

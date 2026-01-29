@@ -2943,3 +2943,17 @@ input[type="range"] {
 #gamepad-cursors-container {
     pointer-events: none;
 }
+
+#fps-counter {
+    position: fixed;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #00ff00;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 20px;
+    z-index: 1000;
+    pointer-events: none;
+    text-shadow: 1px 1px 1px #000;
+    opacity: 0.8;
+}
