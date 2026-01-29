@@ -2285,8 +2285,7 @@ Return ONLY the JavaScript code, no explanations or markdown. The code will run 
     const updateLoadedScenarioDisplay = (scenarioName) => {
         if (scenarioName) {
             loadedScenarioName.textContent = scenarioName;
-            loadedScenarioName.style.display = 'inline';
-            loadedScenarioName.style.cursor = 'pointer';
+            loadedScenarioName.style.display = 'block';
             loadedScenarioName.title = 'Click to unload scenario';
             // Hide slider, map size value, and map style controls
             mapSizeInput.style.display = 'none';

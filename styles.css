@@ -1810,13 +1810,22 @@ input[type="range"] {
 }
 
 .loaded-scenario-text {
-    color: #0ff;
-    font-weight: bold;
-    text-decoration: underline;
-    cursor: pointer;
-    font-size: 14px;
     flex: 1;
-    text-align: left;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 6px 10px;
+    font-size: 13px;
+    text-transform: none;
+    /* Keep original scenario name casing */
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.loaded-scenario-text:hover {
+    background: rgba(0, 255, 255, 0.2);
+    border-color: #fff;
+    box-shadow: 0 0 10px var(--border-color);
 }
 
 /* Scenario Browser Modal */
