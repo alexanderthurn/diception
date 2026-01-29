@@ -908,20 +908,7 @@ input[type="range"] {
         display: inline;
     }
 
-    /* Make buttons larger for touch */
-    /* Make buttons larger for touch */
-    .tron-btn.small:not(#howto-btn) {
-        padding: 10px;
-        font-size: 20px;
-        background: rgba(0, 0, 0, 0.6);
-        border: 1px solid var(--border-color);
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+
 
     /* Keep howto button rectangular/normal */
     #howto-btn {

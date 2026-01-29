@@ -2549,7 +2549,7 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
             sfx.defeat();
         }
 
-        // Conditionally show "Play Again" button only if we have a saved state
+        // Conditionally show "Try Again" button only if we have a saved state
         const cloneGameBtn = document.getElementById('clone-game-btn');
         if (turnHistory.hasInitialState()) {
             cloneGameBtn.style.display = 'inline-block';
