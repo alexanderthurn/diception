@@ -712,11 +712,22 @@ async function init() {
         // Reset game logic
         game.reset();
         turnHistory.clear();
+        turnHistory.clearAutoSave();
 
         resetUI();
 
         // Clear renderer
         renderer.draw(); // Will draw empty grid
+
+        // Hide other modals
+        document.getElementById('game-over-modal').classList.add('hidden');
+        document.getElementById('resume-modal').classList.add('hidden');
+    };
+
+    const quitToMainMenu = () => {
+        resetGameSession();
+        setupModal.classList.remove('hidden');
+        document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
     };
 
     const restartCurrentGame = () => {
@@ -749,12 +760,7 @@ async function init() {
     };
 
     newGameBtn.addEventListener('click', () => {
-        resetGameSession();
-        // Show setup modal and hide game UI
-        setupModal.classList.remove('hidden');
-        document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
-        // Also hide game over modal if it's open
-        document.getElementById('game-over-modal').classList.add('hidden');
+        quitToMainMenu();
     });
 
     // Connect InputController end turn callback
@@ -816,12 +822,7 @@ async function init() {
         }
 
         // Show setup modal (new game menu)
-        resetGameSession();
-        setupModal.classList.remove('hidden');
-        document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
-
-        // Re-check resume button visibility (it might have been hidden/shown)
-        checkResume();
+        quitToMainMenu();
     });
 
     // Q / Gamepad X closes modals
