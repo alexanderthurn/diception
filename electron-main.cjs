@@ -4,10 +4,10 @@ const steamworks = require('steamworks.js');
 
 // --- 1. PERFORMANCE & DISPLAY SETTINGS ---
 // Diese Flags müssen VOR dem ready-Event gesetzt werden
-app.commandLine.appendSwitch('high-dpi-support', '1');
-app.commandLine.appendSwitch('force-device-scale-factor', '1');
-app.commandLine.appendSwitch('disable-frame-rate-limit');
-app.commandLine.appendSwitch('ignore-gpu-blocklist');
+//app.commandLine.appendSwitch('high-dpi-support', '1');
+//app.commandLine.appendSwitch('force-device-scale-factor', '1');
+//app.commandLine.appendSwitch('limit-fps', '60');
+//app.commandLine.appendSwitch('disable-frame-rate-limit');
 
 // Steam Overlay aktivieren
 steamworks.electronEnableSteamOverlay();
@@ -45,8 +45,9 @@ function createWindow() {
             contextIsolation: true,
             preload: path.join(__dirname, 'electron-preload.js'),
             // Verbessert das Rendering bei ungeraden Skalierungen
-            enablePreferredSizeMode: true ,
-            backgroundThrottling: false
+           // enablePreferredSizeMode: true ,
+            //backgroundThrottling: false, 
+           zoomFactor: 1.0
         }
     });
 
@@ -88,16 +89,26 @@ function createWindow() {
 // --- 5. APP EVENTS ---
 app.on('ready', createWindow);
 
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
-});
-
 app.on('activate', () => {
     if (mainWindow === null) {
         createWindow();
     }
+});
+
+app.on('will-quit', () => {
+    // Erzwingt das Ende des Prozesses, egal was noch offen ist
+    process.exit(0);
+});
+
+app.on('window-all-closed', () => {
+    // 1. Steamworks herunterfahren (falls vorhanden)
+    if (steamClient) {
+        // Manche Wrapper brauchen ein explizites Shutdown, 
+        // steamworks.js macht das oft automatisch, aber sicher ist sicher:
+        steamClient = null; 
+    }
+    app.quit();
+    
 });
 
 // --- 6. IPC HANDLERS (Steam Integration) ---
@@ -106,7 +117,12 @@ ipcMain.handle('steam-get-user-name', () => {
 });
 
 ipcMain.handle('steam-quit', () => {
+console.log("Shutting down...");
     app.quit();
+    // Falls app.quit() nicht reicht (weil noch Events hängen):
+    setTimeout(() => {
+        process.exit(0);
+    }, 500); // Gibt ihm 500ms Zeit zum Aufräumen, dann Kill
 });
 
 ipcMain.handle('steam-is-dev', () => {
@@ -124,3 +140,4 @@ ipcMain.handle('steam-activate-achievement', (event, achievementId) => {
     }
     return false;
 });
+

@@ -18,16 +18,25 @@ export class Renderer {
         this.originalY = 0;
     }
 
+    
     async init() {
+        const realRes = window.innerWidth >= 3840 ? 2 : 1;
         this.app = new Application();
         await this.app.init({
             background: '#050510',
             resizeTo: window,
             antialias: true,
-            resolution: window.devicePixelRatio || 1,
-            autoDensity: true
+            // Falls das Bild immer noch 1080p ist, erzwinge hier mal testweise 2
+            resolution: realRes, 
+            autoDensity: true,
+            roundPixels: true,
+            preference: 'high-performance'
         });
 
+        this.app.canvas.style.width = '100vw';
+        this.app.canvas.style.height = '100vh';
+        this.app.ticker.maxFPS = 120;
+        
         this.container.appendChild(this.app.canvas);
 
         // Pre-render tile textures for fast sprite rendering

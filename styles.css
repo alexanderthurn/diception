@@ -1099,6 +1099,14 @@ input[type="range"] {
     animation: blink 1.5s infinite;
 }
 
+.loading-version {
+    color: var(--border-color);
+    font-family: monospace;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    opacity: 0.85;
+}
+
 @keyframes blink {
 
     0%,
@@ -2952,4 +2960,22 @@ input[type="range"] {
     pointer-events: none;
     text-shadow: 1px 1px 1px #000;
     opacity: 0.8;
+}
+
+canvas {
+    width: 100vw !important;
+    height: 100vh !important;
+    display: block;
+
+    /* Verhindert das "Verschwimmen" durch den Browser-Upscaler */
+    image-rendering: -webkit-optimize-contrast; /* Für scharfe Kanten */
+    image-rendering: crisp-edges;
+    image-rendering: pixelated; /* Falls du Pixel-Art nutzt */
+    
+    /* Sicherstellen, dass der Canvas keine ungeraden Pixel-Werte hat */
+    touch-action: none; 
+    user-select: none;
+
+    -webkit-backface-visibility: hidden; /* Verhindert Zittern/Unschärfe bei Transformationen */
+    transform: translateZ(0);
 }

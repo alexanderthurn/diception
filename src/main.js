@@ -66,6 +66,14 @@ window.exportDiceIcon = async (options = {}) => {
 };
 
 async function init() {
+    // Show package version on loading screen early
+    try {
+        const loadingVersionEl = document.getElementById('loading-version');
+        if (loadingVersionEl) loadingVersionEl.textContent = `v${import.meta.env.VITE_APP_VERSION}`;
+    } catch (e) {
+        console.warn('Failed to show loading version', e);
+    }
+
     // 0. Steam Integration
     if (window.steam) {
         // Show Steam-only Quit button
@@ -147,17 +155,29 @@ async function init() {
     const urlParams = new URLSearchParams(window.location.search);
     const showFPS = urlParams.get('fps') !== 'false'; // Default to true if not explicitly false
 
+    // Track last measured FPS and provide an update helper so resize can refresh resolution text immediately
+    let lastFPS = 0;
+    let updateFPSStatus = null;
+
     if (showFPS && fpsCounter && renderer.app) {
         fpsCounter.classList.remove('hidden');
         let frameCount = 0;
         let lastTime = performance.now();
 
+        // Helper updates the displayed string with lastFPS, package version and canvas resolution
+        updateFPSStatus = () => {
+            const canvas = renderer.app && (renderer.app.canvas || renderer.app.view);
+            const width = canvas ? canvas.width : -3;
+            const height = canvas ? canvas.height : -1;
+            fpsCounter.textContent = `FPS: ${lastFPS} · v${import.meta.env.VITE_APP_VERSION} · ${width}x${height}`;
+        };
+
         renderer.app.ticker.add(() => {
             frameCount++;
             const currentTime = performance.now();
             if (currentTime - lastTime >= 1000) {
-                const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
-                fpsCounter.textContent = `FPS: ${fps}`;
+                lastFPS = Math.round((frameCount * 1000) / (currentTime - lastTime));
+                updateFPSStatus();
                 frameCount = 0;
                 lastTime = currentTime;
             }
@@ -167,6 +187,7 @@ async function init() {
     // Handle window resize
     window.addEventListener('resize', () => {
         renderer.autoFitCamera();
+        if (typeof updateFPSStatus === 'function') updateFPSStatus();
     });
 
     // Wire tile selection to effects (keeping input controller unchanged)
