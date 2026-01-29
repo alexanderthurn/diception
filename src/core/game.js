@@ -190,7 +190,7 @@ export class Game {
             this.emit('attackResult', result);
             this.checkWinCondition();
             if (result.won) {
-                this.checkRowColumnCompletion(result.to.x, result.to.y, result.attackerId);
+                // this.checkRowColumnCompletion(result.to.x, result.to.y, result.attackerId);
             }
 
             // If still active and attacker lost dice, maybe they can't attack anymore?
@@ -260,41 +260,7 @@ export class Game {
         }
     }
 
-    checkRowColumnCompletion(x, y, playerId) {
-        // Check row
-        let rowFull = true;
-        let rowPlayable = 0;
-        for (let ix = 0; ix < this.map.width; ix++) {
-            const tile = this.map.getTileRaw(ix, y);
-            if (!tile.blocked) {
-                rowPlayable++;
-                if (tile.owner !== playerId) {
-                    rowFull = false;
-                    break;
-                }
-            }
-        }
-        if (rowFull && rowPlayable > 1) {
-            this.emit('rowCompleted', { y, player: playerId });
-        }
 
-        // Check column
-        let colFull = true;
-        let colPlayable = 0;
-        for (let iy = 0; iy < this.map.height; iy++) {
-            const tile = this.map.getTileRaw(x, iy);
-            if (!tile.blocked) {
-                colPlayable++;
-                if (tile.owner !== playerId) {
-                    colFull = false;
-                    break;
-                }
-            }
-        }
-        if (colFull && colPlayable > 1) {
-            this.emit('columnCompleted', { x, player: playerId });
-        }
-    }
 
     getPlayerStats() {
         return this.players.map(p => {

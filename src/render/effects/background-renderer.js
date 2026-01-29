@@ -198,41 +198,7 @@ export class BackgroundRenderer {
         this.flareActive = true;
     }
 
-    rowFlash(y, color = 0x00ffff) {
-        if (!this.enabled) return;
-        this.triggerFlash({ type: 'row', y, color });
-    }
 
-    columnFlash(x, color = 0x00ffff) {
-        if (!this.enabled) return;
-        this.triggerFlash({ type: 'column', x, color });
-    }
-
-    triggerFlash(data) {
-        const flash = new Graphics();
-        this.container.addChild(flash);
-
-        let life = 1.0;
-        const ticker = (t) => {
-            life -= t.deltaTime * 0.05;
-            if (life <= 0) {
-                Ticker.shared.remove(ticker);
-                flash.destroy();
-                return;
-            }
-
-            flash.clear();
-            const alpha = life * 0.5;
-            if (data.type === 'row') {
-                flash.rect(0, data.y - 10, this.width, 20);
-            } else {
-                flash.rect(data.x - 10, 0, 20, this.height);
-            }
-            flash.fill({ color: data.color, alpha: alpha });
-            flash.blendMode = 'add';
-        };
-        Ticker.shared.add(ticker);
-    }
 
     update() {
         if (!this.enabled) return;

@@ -67,13 +67,7 @@ export class EffectsManager {
             this.onGameOver(winner);
         });
 
-        // Row/Column completion
-        this.game.on('rowCompleted', (data) => {
-            this.onRowCompleted(data);
-        });
-        this.game.on('columnCompleted', (data) => {
-            this.onColumnCompleted(data);
-        });
+
 
         // Player elimination
         this.game.on('playerEliminated', (player) => {
@@ -360,42 +354,7 @@ export class EffectsManager {
         this.background.pulse(winnerColor, 0.6);
     }
 
-    /**
-     * Row completion effect
-     */
-    onRowCompleted(data) {
-        if (this.quality === 'off') return;
-        const player = this.game.players.find(p => p.id === data.player);
-        const color = player?.color || 0x00ffff;
 
-        // Convert row index to Y pixel
-        const y = data.y * (this.tileSize + this.gap) + this.tileSize / 2;
-        // In screen space (estimate based on world transform)
-        if (this.worldTransform) {
-            const screenY = this.worldTransform.y + y * this.worldTransform.scale.y;
-            this.background.rowFlash(screenY, color);
-        }
-
-        this.background.pulse(color, 0.4);
-    }
-
-    /**
-     * Column completion effect
-     */
-    onColumnCompleted(data) {
-        if (this.quality === 'off') return;
-        const player = this.game.players.find(p => p.id === data.player);
-        const color = player?.color || 0x00ffff;
-
-        // Convert col index to X pixel
-        const x = data.x * (this.tileSize + this.gap) + this.tileSize / 2;
-        if (this.worldTransform) {
-            const screenX = this.worldTransform.x + x * this.worldTransform.scale.x;
-            this.background.columnFlash(screenX, color);
-        }
-
-        this.background.pulse(color, 0.4);
-    }
 
     /**
      * Player elimination effect
