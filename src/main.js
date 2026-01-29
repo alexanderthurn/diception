@@ -1930,212 +1930,99 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
             const aiInstances = new Map();
             for (const p of tourneyGame.players) {
                 const aiId = getPlayerAIId(p.id);
-                // Only instantiate custom/complex AIs or if we want full class support even for built-in
-                if (!['easy', 'medium', 'hard'].includes(aiId)) {
-                    try {
-                        const aiDef = aiRegistry.getAI(aiId);
-                        if (aiDef) {
-                            const factory = new Function('api', aiDef.code);
-                            const AIClass = factory({});
-                            const inst = new AIClass();
-                            if (inst.init) await inst.init({ myId: p.id, log: () => { } });
-                            aiInstances.set(p.id, inst);
-                        }
-                    } catch (e) {
-                        console.error("Tournament AI Init Error:", e);
+                try {
+                    const aiDef = aiRegistry.getAI(aiId);
+                    if (aiDef) {
+                        const factory = new Function('api', aiDef.code);
+                        const AIClass = factory({});
+                        const inst = new AIClass();
+                        if (inst.init) await inst.init({
+                            myId: p.id,
+                            log: (...args) => { if (i === 0) console.log(`[Tourney Game 1] AI ${p.id}:`, ...args); }
+                        });
+                        aiInstances.set(p.id, inst);
                     }
+                } catch (e) {
+                    console.error("Tournament AI Init Error:", e);
                 }
             }
 
             while (!tourneyGame.gameOver && turns < maxTurns) {
-                // Simple synchronous AI execution
                 const currentPlayer = tourneyGame.currentPlayer;
-                const playerAIId = getPlayerAIId(currentPlayer.id);
+                const instance = aiInstances.get(currentPlayer.id);
 
-                // Check if simple built-in AI (fast path)
-                if (['easy', 'medium', 'hard'].includes(playerAIId)) {
-                    const mapWidth = tourneyGame.map.width;
-                    const myTiles = [];
-                    tourneyGame.map.tiles.forEach((t, idx) => {
-                        if (t.owner === currentPlayer.id && t.dice > 1) {
-                            myTiles.push({
-                                tile: t,
-                                x: idx % mapWidth,
-                                y: Math.floor(idx / mapWidth)
-                            });
-                        }
-                    });
+                if (instance) {
+                    let turnEnded = false;
+                    let moveCount = 0;
+                    const maxMoves = 200;
 
-                    // Simple attack logic
-                    for (const { tile, x, y } of myTiles) {
-                        if (tourneyGame.gameOver) break;
-                        const neighbors = tourneyGame.map.getAdjacentTiles(x, y);
-                        for (const target of neighbors) {
-                            if (target.owner !== currentPlayer.id) {
-                                const diff = tile.dice - target.dice;
-                                const shouldAttack = playerAIId === 'easy' ? diff >= 0 :
-                                    playerAIId === 'medium' ? diff >= 1 :
-                                        diff >= 2 || tile.dice >= 7; // hard
-                                if (shouldAttack && tile.dice > 1) {
-                                    tourneyGame.attack(x, y, target.x, target.y);
-                                }
+                    const api = {
+                        getMyTiles: () => tourneyGame.map.tiles.filter(t => t.owner === currentPlayer.id && !t.blocked).map(t => ({
+                            ...t,
+                            x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width,
+                            y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width)
+                        })),
+                        getEnemyTiles: () => tourneyGame.map.tiles.filter(t => t.owner !== currentPlayer.id && !t.blocked).map(t => ({
+                            ...t,
+                            x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width,
+                            y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width)
+                        })),
+                        getAllTiles: () => tourneyGame.map.tiles.filter(t => !t.blocked).map(t => ({
+                            ...t,
+                            x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width,
+                            y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width)
+                        })),
+                        getAdjacentTiles: (x, y) => tourneyGame.map.getAdjacentTiles(x, y),
+                        getTileAt: (x, y) => tourneyGame.map.getTile(x, y),
+                        getLargestConnectedRegion: (playerId) => tourneyGame.map.findLargestConnectedRegion(playerId),
+                        getReinforcements: (playerId) => {
+                            const region = tourneyGame.map.findLargestConnectedRegion(playerId);
+                            const player = tourneyGame.players.find(p => p.id === playerId);
+                            const stored = player ? (player.storedDice || 0) : 0;
+                            return region + stored;
+                        },
+                        getPlayerInfo: (playerId) => tourneyGame.players.find(p => p.id === playerId) || null,
+                        get players() { return tourneyGame.players; },
+                        simulateAttack: (fromX, fromY, toX, toY) => {
+                            const fromTile = tourneyGame.map.getTile(fromX, fromY);
+                            const toTile = tourneyGame.map.getTile(toX, toY);
+                            if (!fromTile || !toTile || fromTile.owner !== currentPlayer.id || fromTile.dice <= 1) return { success: false };
+                            return { success: true, expectedWin: fromTile.dice > toTile.dice };
+                        },
+                        getMyId: () => currentPlayer.id,
+                        get myId() { return currentPlayer.id; },
+                        get maxDice() { return tourneyGame.maxDice; },
+                        get diceSides() { return tourneyGame.diceSides; },
+                        get mapWidth() { return tourneyGame.map.width; },
+                        get mapHeight() { return tourneyGame.map.height; },
+                        attack: (fromX, fromY, toX, toY) => {
+                            if (turnEnded || moveCount >= maxMoves) return { success: false };
+                            moveCount++;
+                            try {
+                                const res = tourneyGame.attack(fromX, fromY, toX, toY);
+                                if (res.error) return { success: false, reason: res.error };
+                                return { success: true, expectedWin: res.won };
+                            } catch (e) {
+                                return { success: false, reason: e.message };
                             }
-                        }
+                        },
+                        endTurn: () => { turnEnded = true; },
+                        log: (...args) => { if (i === 0) console.log(`[Tourney Game 1] AI ${currentPlayer.id}:`, ...args); },
+                        save: () => { },
+                        load: () => null,
+                        getWinProbability: (att, def) => 1 / (1 + Math.exp(-(att - def) / 2))
+                    };
+
+                    try {
+                        if (instance.endTurn) await instance.endTurn(api);
+                    } catch (e) {
+                        console.warn(`Tournament AI Turn Error:`, e);
                     }
-                    tourneyGame.endTurn();
-                } else {
-                    // Custom AI -> Execute class methods synchronously
-                    const instance = aiInstances.get(currentPlayer.id);
-                    if (instance) {
-
-                        // Mock API for synchronous execution (subset of full API)
-                        const actions = [];
-                        let turnEnded = false;
-                        let moveCount = 0;
-                        const maxMoves = 200;
-
-                        const api = {
-                            getMyTiles: () => tourneyGame.map.tiles.filter(t => t.owner === currentPlayer.id && !t.blocked).map(t => ({ ...t, x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width, y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width) })),
-                            getEnemyTiles: () => tourneyGame.map.tiles.filter(t => t.owner !== currentPlayer.id && !t.blocked).map(t => ({ ...t, x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width, y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width) })),
-                            getAllTiles: () => tourneyGame.map.tiles.filter(t => !t.blocked).map(t => ({ ...t, x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width, y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width) })),
-                            getAdjacentTiles: (x, y) => tourneyGame.map.getAdjacentTiles(x, y),
-                            getTileAt: (x, y) => tourneyGame.map.getTile(x, y),
-
-                            // --- NEW API METHODS ---
-                            getLargestConnectedRegion: (playerId) => {
-                                return tourneyGame.map.findLargestConnectedRegion(playerId);
-                            },
-
-                            getReinforcements: (playerId) => {
-                                const region = tourneyGame.map.findLargestConnectedRegion(playerId);
-                                const player = tourneyGame.players.find(p => p.id === playerId);
-                                const stored = player ? (player.storedDice || 0) : 0;
-                                return region + stored;
-                            },
-
-                            getPlayerInfo: (playerId) => {
-                                return tourneyGame.players.find(p => p.id === playerId) || null;
-                            },
-
-                            get players() { return tourneyGame.players; },
-
-                            simulateAttack: (fromX, fromY, toX, toY) => {
-                                const fromTile = tourneyGame.map.getTile(fromX, fromY);
-                                const toTile = tourneyGame.map.getTile(toX, toY);
-
-                                if (!fromTile || !toTile || fromTile.owner !== currentPlayer.id || fromTile.dice <= 1) {
-                                    return { success: false, reason: 'invalid_move' };
-                                }
-
-                                // Temporarily mutate state for simulation
-                                const originalFromOwner = fromTile.owner;
-                                const originalFromDice = fromTile.dice;
-                                const originalToOwner = toTile.owner;
-                                const originalToDice = toTile.dice;
-
-                                const expectedWin = fromTile.dice > toTile.dice;
-                                let myReinforcements = 0;
-                                let enemyReinforcements = 0;
-                                const enemyId = originalToOwner;
-
-                                if (expectedWin) {
-                                    fromTile.dice = 1;
-                                    toTile.owner = currentPlayer.id;
-                                    toTile.dice = originalFromDice - 1;
-
-                                    myReinforcements = tourneyGame.map.findLargestConnectedRegion(currentPlayer.id);
-                                    myReinforcements += (currentPlayer.storedDice || 0);
-
-                                    if (enemyId !== null) {
-                                        const enemy = tourneyGame.players.find(p => p.id === enemyId);
-                                        enemyReinforcements = tourneyGame.map.findLargestConnectedRegion(enemyId);
-                                        if (enemy) enemyReinforcements += (enemy.storedDice || 0);
-                                    }
-
-                                    // Revert
-                                    fromTile.owner = originalFromOwner;
-                                    fromTile.dice = originalFromDice;
-                                    toTile.owner = originalToOwner;
-                                    toTile.dice = originalToDice;
-
-                                    // Also revert fromTile ownership if it changed (it didn't in this logic, only dice)
-                                } else {
-                                    // Attack failed - state unchanged w.r.t regions
-                                    myReinforcements = tourneyGame.map.findLargestConnectedRegion(currentPlayer.id);
-                                    myReinforcements += (currentPlayer.storedDice || 0);
-
-                                    if (enemyId !== null) {
-                                        const enemy = tourneyGame.players.find(p => p.id === enemyId);
-                                        enemyReinforcements = tourneyGame.map.findLargestConnectedRegion(enemyId);
-                                        if (enemy) enemyReinforcements += (enemy.storedDice || 0);
-                                    }
-                                }
-
-                                return {
-                                    success: true,
-                                    expectedWin,
-                                    myPredictedReinforcements: myReinforcements,
-                                    enemyPredictedReinforcements: enemyReinforcements
-                                };
-                            },
-                            // -----------------------
-
-                            getMyId: () => currentPlayer.id, // Legacy support
-                            get myId() { return currentPlayer.id; },
-                            get maxDice() { return tourneyGame.maxDice; },
-                            get diceSides() { return tourneyGame.diceSides; },
-                            get mapWidth() { return tourneyGame.map.width; },
-                            get mapHeight() { return tourneyGame.map.height; },
-
-                            attack: (fromX, fromY, toX, toY) => {
-                                if (turnEnded || moveCount >= maxMoves) return { success: false };
-
-                                // Validate ownership matches current player
-                                const fromTile = tourneyGame.map.getTile(fromX, fromY);
-                                if (!fromTile || fromTile.owner !== currentPlayer.id) return { success: false };
-
-                                actions.push({ type: 'attack', fromX, fromY, toX, toY });
-                                moveCount++;
-
-                                // Simulate for AI state tracking (simplified)
-                                const toTile = tourneyGame.map.getTile(toX, toY);
-                                if (toTile && fromTile.dice > toTile.dice) {
-                                    return { success: true, expectedWin: true };
-                                }
-                                return { success: true, expectedWin: false };
-                            },
-                            endTurn: () => {
-                                turnEnded = true;
-                            },
-                            log: () => { }, // Silence logs
-                            save: () => { }, // No storage in tournaments for speed
-                            load: () => null,
-                            getWinProbability: (att, def) => 1 / (1 + Math.exp(-(att - def) / 2))
-                        };
-
-                        try {
-                            if (instance.endTurn) await instance.endTurn(api);
-
-                            // Execute actions
-                            for (const action of actions) {
-                                if (tourneyGame.gameOver) break;
-                                if (action.type === 'attack') {
-                                    try {
-                                        tourneyGame.attack(action.fromX, action.fromY, action.toX, action.toY);
-                                    } catch (e) { }
-                                }
-                            }
-                        } catch (e) {
-                            console.warn(`Tournament AI Turn Error:`, e);
-                        }
-                    }
-                    tourneyGame.endTurn();
                 }
-
+                tourneyGame.endTurn();
                 turns++;
             }
 
-            // Record result
             // Record result
             if (tourneyGame.winner) {
                 const winnerId = tourneyGame.winner.id;
