@@ -65,7 +65,7 @@ export class InputController {
         this.inputManager.on('move', (dir) => this.onMove(dir));
         this.inputManager.on('confirm', () => this.onConfirm());
         this.inputManager.on('cancel', () => this.onCancel());
-        this.inputManager.on('endTurn', () => this.onEndTurn());
+        this.inputManager.on('endTurn', (data) => this.onEndTurn(data));
         this.inputManager.on('pan', (dir) => this.onPan(dir));
         this.inputManager.on('panAnalog', (dir) => this.onPanAnalog(dir));
     }
@@ -194,11 +194,11 @@ export class InputController {
         }
     }
 
-    onEndTurn() {
+    onEndTurn(data) {
         // Emit end turn event (main.js will handle the actual end turn)
         // We need to use a callback or event for this
         if (this.onEndTurnCallback) {
-            this.onEndTurnCallback();
+            this.onEndTurnCallback(data);
         }
     }
 

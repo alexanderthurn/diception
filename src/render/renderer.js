@@ -70,8 +70,7 @@ export class Renderer {
         });
 
         this.game.on('reinforcements', (data) => {
-            // Trigger reinforcement animation (Beginner mode only)
-            this.grid.animateReinforcements(data);
+            // Trigger reinforcement animation removed as per user request
             // Redraw numbers
             this.draw();
         });

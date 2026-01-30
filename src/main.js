@@ -430,11 +430,22 @@ async function init() {
     });
 
     // Connect InputController end turn callback
-    input.setEndTurnCallback(() => {
+    input.setEndTurnCallback((data) => {
         // Don't end turn if no game started or menu is open
         if (game.players.length === 0) return;
         if (!setupModal.classList.contains('hidden')) return;
         if (endTurnBtn.disabled) return;
+
+        // PHYSICAL GAMEPAD RESTRICTION:
+        // Only allow 'Y' button (physical gamepad input) if it's currently that gamepad's turn.
+        // Simulated clicks on the UI 'END TURN' button (from any gamepad cursor) will have data === undefined.
+        if (data && data.index !== undefined) {
+            if (game.currentPlayer.id !== data.index) {
+                console.log(`Gamepad ${data.index} tried to end turn, but it's player ${game.currentPlayer.id}'s turn.`);
+                return;
+            }
+        }
+
         const humanPlayers = game.players.filter(p => !p.isBot);
         if (humanPlayers.length > 1) {
             input.deselect();
@@ -442,19 +453,9 @@ async function init() {
         game.endTurn();
     });
 
-    // Subscribe to InputManager events
-    inputManager.on('endTurn', () => {
-        // Don't end turn if no game started or menu is open
-        if (game.players.length === 0) return;
-        const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
-        if (isMenuOpen) return;
-        if (endTurnBtn.disabled) return;
-        const humanPlayers = game.players.filter(p => !p.isBot);
-        if (humanPlayers.length > 1) {
-            input.deselect();
-        }
-        game.endTurn();
-    });
+    // Subscribing to InputManager's endTurn directly is now redundant
+    // as InputController already subscribes and routes through its callback.
+    // Removed duplicate inputManager.on('endTurn') listener.
 
 
     // ESC key opens settings/menu
@@ -1418,12 +1419,12 @@ async function init() {
         const maxCanvasSize = 200; // Maximum preview size in pixels
         const mapWidth = scenario.width || 10;
         const mapHeight = scenario.height || 10;
-        
+
         // Calculate tile size to fit within max canvas size
         const maxDimension = Math.max(mapWidth, mapHeight);
         const baseTileSize = 20;
         const baseGap = 2;
-        
+
         // Scale down for large maps
         let tileSize = baseTileSize;
         let gap = baseGap;

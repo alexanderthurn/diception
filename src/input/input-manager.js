@@ -245,7 +245,7 @@ export class InputManager {
                 // Map buttons to semantic events
                 if (i === 0) this.emit('confirm');
                 if (i === 2) this.emit('cancel');
-                if (i === 3) this.emit('endTurn');
+                if (i === 3) this.emit('endTurn', { index: gp.index });
                 if (i === 9) {
                     this.emit('menu');
                 }
