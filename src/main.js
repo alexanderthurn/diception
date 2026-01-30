@@ -280,15 +280,6 @@ async function init() {
     const gameLog = new GameLog(game, turnHistory, scenarioManager);
     gameLog.setPlayerNameGetter(getPlayerName);
     gameLog.setDiceDataURL(TileRenderer.diceDataURL);
-    gameLog.setRestoreSnapshotCallback((idx) => {
-        if (turnHistory.restoreSnapshot(game, idx)) {
-            gameLog.clear();
-            turnHistory.snapshots.length = idx + 1;
-            renderer.forceUpdate();
-            playerDashboard.update();
-            game.emit('turnStart', { player: game.currentPlayer });
-        }
-    });
 
     // Wrapper functions for backward compatibility
     const startTurnLog = (player) => gameLog.startTurnLog(player, autoplayPlayers);
@@ -1695,10 +1686,9 @@ async function init() {
         const filtered = scenarios.filter(s => {
             if (currentScenarioTab === 'online') return true; // Already filtered by source
 
-            const type = s.type || 'replay';
-            if (currentScenarioTab === 'replays') return type === 'replay' && !s.isBuiltIn;
+            const type = s.type || 'scenario';
             // Scenarios tab: scenarios and built-in scenarios (but NOT maps)
-            if (currentScenarioTab === 'scenarios') return (type === 'scenario' || s.isBuiltIn) && type !== 'map';
+            if (currentScenarioTab === 'scenarios') return (type === 'scenario' || type === 'replay' || s.isBuiltIn) && type !== 'map';
             // Maps tab: custom map layouts and built-in maps
             if (currentScenarioTab === 'maps') return type === 'map';
             return false;
@@ -1712,7 +1702,6 @@ async function init() {
         scenarioList.innerHTML = '';
 
         const emptyMessages = {
-            replays: 'No saved replays.',
             scenarios: 'No scenarios found.',
             maps: 'No maps found.',
             online: 'No online maps found.'
@@ -1765,9 +1754,7 @@ async function init() {
         });
 
         // Update New Button state
-        if (currentScenarioTab === 'replays') {
-            newScenarioBtn.style.display = 'none';
-        } else if (currentScenarioTab === 'online') {
+        if (currentScenarioTab === 'online') {
             newScenarioBtn.style.display = 'none';
         } else {
             newScenarioBtn.style.display = 'block';

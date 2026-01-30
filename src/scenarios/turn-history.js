@@ -298,9 +298,9 @@ export class TurnHistory {
         const originalState = this.serializeGameState(game);
         this.applyGameState(game, snapshot.gameState);
 
-        // Default to 'replay' type for battle log saves
+        // Default to 'scenario' type for battle log saves
         const scenarioOptions = {
-            type: 'replay',
+            type: 'scenario',
             ...options
         };
 

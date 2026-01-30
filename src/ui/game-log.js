@@ -13,7 +13,6 @@ export class GameLog {
         
         // Callbacks
         this.getPlayerName = null; // Set by main
-        this.onRestoreSnapshot = null; // Set by main
         this.diceDataURL = null; // Set by main
     }
 
@@ -23,10 +22,6 @@ export class GameLog {
 
     setDiceDataURL(url) {
         this.diceDataURL = url;
-    }
-
-    setRestoreSnapshotCallback(fn) {
-        this.onRestoreSnapshot = fn;
     }
 
     clear() {
@@ -59,7 +54,6 @@ export class GameLog {
             <span class="turn-player" style="color: ${colorHex}">${playerName}</span>
             <span class="turn-summary"></span>
             <span class="turn-actions">
-                <button class="turn-action-btn" data-action="jump" title="Jump to this turn">⏪</button>
                 <button class="turn-action-btn" data-action="save" title="Save as scenario">💾</button>
             </span>
             <span class="turn-toggle">▼</span>
@@ -73,14 +67,6 @@ export class GameLog {
         wrapper.appendChild(details);
 
         // Handle action button clicks
-        header.querySelector('[data-action="jump"]').addEventListener('click', (e) => {
-            e.stopPropagation();
-            const idx = parseInt(wrapper.dataset.snapshotIndex);
-            if (this.onRestoreSnapshot) {
-                this.onRestoreSnapshot(idx);
-            }
-        });
-
         header.querySelector('[data-action="save"]').addEventListener('click', (e) => {
             e.stopPropagation();
             const saveScenarioModal = document.getElementById('save-scenario-modal');
