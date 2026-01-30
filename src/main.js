@@ -11,6 +11,11 @@ import { TurnHistory } from './scenarios/turn-history.js';
 import { MapEditor } from './editor/map-editor.js';
 import { TileRenderer } from './render/tile-renderer.js';
 import { GamepadCursorManager } from './input/gamepad-cursor-manager.js';
+import { AudioController } from './ui/audio-controller.js';
+import { GameLog } from './ui/game-log.js';
+import { PlayerDashboard } from './ui/player-dashboard.js';
+import { DiceHUD } from './ui/dice-hud.js';
+import { HighscoreManager } from './ui/highscore-manager.js';
 
 // Global Dice Export Function
 window.exportDiceIcon = async (options = {}) => {
@@ -238,288 +243,22 @@ async function init() {
         return `Human ${player.id + 1}`;
     };
 
-    // === Highscore System ===
-    const HIGHSCORE_STORAGE_KEY = 'dicy_highscores';
+    // === Highscore System (using HighscoreManager module) ===
+    const highscoreManager = new HighscoreManager();
 
-    // Load highscores from localStorage
-    const loadHighscores = () => {
-        try {
-            return JSON.parse(localStorage.getItem(HIGHSCORE_STORAGE_KEY)) || { wins: {}, totalGames: 0 };
-        } catch (e) {
-            return { wins: {}, totalGames: 0 };
-        }
-    };
+    // Wrapper functions for backward compatibility
+    const recordWin = (winnerName) => highscoreManager.recordWin(winnerName);
+    const displayHighscores = (currentWinnerName) => highscoreManager.display(currentWinnerName);
 
-    // Save highscores to localStorage
-    const saveHighscores = (data) => {
-        localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(data));
-    };
+    // 5. Initialize Sound Effects Manager
+    const sfxManager = new SoundManager();
 
-    // Record a win for a player
-    const recordWin = (winnerName) => {
-        const data = loadHighscores();
-        data.wins[winnerName] = (data.wins[winnerName] || 0) + 1;
-        data.totalGames = (data.totalGames || 0) + 1;
-        saveHighscores(data);
-        return data;
-    };
+    // 6. Initialize Audio Controller (handles music playlist and SFX UI)
+    const audioController = new AudioController(sfxManager);
+    audioController.init();
 
-    // Display highscores in the GAME OVER modal
-    const displayHighscores = (currentWinnerName) => {
-        const data = loadHighscores();
-        const highscoreList = document.getElementById('highscore-list');
-        const totalGamesEl = document.getElementById('total-games-played');
-
-        // Sort by wins descending
-        const sortedWins = Object.entries(data.wins)
-            .sort((a, b) => b[1] - a[1]);
-
-        if (sortedWins.length === 0) {
-            highscoreList.innerHTML = '<div class="highscore-item"><span class="highscore-player-name">No stats yet</span></div>';
-        } else {
-            highscoreList.innerHTML = sortedWins.map(([name, wins]) => {
-                const isHighlighted = name === currentWinnerName ? 'highlighted' : '';
-                return `
-                    <div class="highscore-item ${isHighlighted}">
-                        <span class="highscore-player-name">${name}</span>
-                        <span class="highscore-wins">${wins} 🏆</span>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        totalGamesEl.textContent = `Total Games Played: ${data.totalGames || 0}`;
-    };
-
-    // 5. Initialize Music Playlist with localStorage
-    // Define available songs (MP3 files in public directory)
-    const availableSongs = [
-        'Neon Dice Offensive.mp3',
-        'Neon Etude.mp3',
-        'Neon Second Dice Offensive.mp3',
-        'Neon Second Etude.mp3',
-        'Neon Third Dice Offensive.mp3',
-        'Neon Third Etude.mp3',
-        'Grid of Echoes.mp3',
-        'Neon Fourth Etude.mp3'
-    ];
-
-    let currentSongIndex = 0;
-    const storedIndex = localStorage.getItem('dicy_currentSongIndex');
-
-    let isFirstRunEver = false;
-    if (storedIndex === null) {
-        // First time ever
-        currentSongIndex = 0;
-        isFirstRunEver = true;
-    } else {
-        // Valid stored index - load it directly (don't increment yet)
-        currentSongIndex = parseInt(storedIndex, 10);
-    }
-
-    // Save immediately so this counts as the "last started title"
-    localStorage.setItem('dicy_currentSongIndex', currentSongIndex.toString());
-
-    const music = new Audio('./' + availableSongs[currentSongIndex]);
-
-    // Load saved settings - music ON by default unless user explicitly disabled
-    const savedMusicEnabled = localStorage.getItem('dicy_musicEnabled') !== 'false'; // Default ON
-    const savedMusicVolume = parseFloat(localStorage.getItem('dicy_musicVolume') ?? '0.5');
-    const savedSfxEnabled = localStorage.getItem('dicy_sfxEnabled') !== 'false'; // Default on
-    const savedSfxVolume = parseFloat(localStorage.getItem('dicy_sfxVolume') ?? '0.5');
-
-    music.volume = savedMusicVolume;
-    let musicPlaying = false;
-
-    const musicToggle = document.getElementById('music-toggle');
-    const musicVolume = document.getElementById('music-volume');
-
-    musicVolume.value = savedMusicVolume * 100;
-
-
-    // Function to load and play the next song
-    function loadNextSong() {
-        currentSongIndex = (currentSongIndex + 1) % availableSongs.length;
-        music.src = './' + availableSongs[currentSongIndex];
-        localStorage.setItem('dicy_currentSongIndex', currentSongIndex.toString());
-
-        if (musicPlaying) {
-            music.play();
-        }
-    }
-
-
-    // Auto-start music on first user interaction (default ON)
-    let shouldAutoplayMusic = savedMusicEnabled;
-
-    // Handle song end - play next song
-    // --- Mobile Volume Slider Logic ---
-    let musicTimeout;
-    let sfxTimeout;
-
-    // Helper to determine action based on state:
-    // 1. Muted -> Unmute & Show Slider
-    // 2. Active + Visible -> Hide Slider (Stay Active)
-    // 3. Active + Hidden -> Mute
-    const getMobileAction = (isEnabled, volumeSlider) => {
-        if (window.innerWidth > 768 && window.innerHeight > 720) return null; // Not mobile
-
-        const isVisible = volumeSlider.classList.contains('visible');
-
-        if (!isEnabled) {
-            return 'unmute-show';
-        }
-        if (isEnabled && isVisible) {
-            return 'hide';
-        }
-        // isEnabled && !isVisible
-        return 'mute';
-    };
-
-    const showSliderWithTimeout = (slider, updateTimeoutRef) => {
-        // Hide others
-        document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
-
-        slider.classList.add('visible');
-        const newTimeout = setTimeout(() => {
-            slider.classList.remove('visible');
-        }, 3000);
-        updateTimeoutRef(newTimeout);
-    };
-
-    // Close sliders on outside click
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth > 768 && window.innerHeight > 720) return;
-
-        if (!e.target.closest('#music-controls')) {
-            document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
-        }
-    });
-
-    // Reset timeout on slider interaction
-    const resetSliderTimeout = (slider, timeoutRef, updateTimeoutRef) => {
-        if (window.innerWidth <= 768 || window.innerHeight <= 720) {
-            slider.classList.add('visible'); // Keep visible
-            clearTimeout(timeoutRef);
-            const newTimeout = setTimeout(() => {
-                slider.classList.remove('visible');
-            }, 3000);
-            updateTimeoutRef(newTimeout);
-        }
-    };
-
-    music.addEventListener('ended', () => {
-        loadNextSong();
-    });
-
-    musicToggle.addEventListener('click', () => {
-        const action = getMobileAction(musicPlaying, musicVolume);
-
-        if (action === 'unmute-show') {
-            clearTimeout(musicTimeout);
-            showSliderWithTimeout(musicVolume, (t) => musicTimeout = t);
-            if (!musicPlaying) {
-                musicPlaying = true;
-                if (isFirstRunEver) {
-                    isFirstRunEver = false;
-                    music.play();
-                } else {
-                    loadNextSong();
-                }
-                musicToggle.textContent = '🔊';
-                localStorage.setItem('dicy_musicEnabled', 'true');
-            }
-            return;
-        }
-
-        if (action === 'hide') {
-            clearTimeout(musicTimeout);
-            musicVolume.classList.remove('visible');
-            return;
-        }
-
-        // action === 'mute' or desktop default fallthrough
-
-        if (musicPlaying) {
-            music.pause();
-            musicToggle.textContent = '🔇';
-            musicPlaying = false;
-        } else {
-            musicPlaying = true;
-            if (isFirstRunEver) {
-                isFirstRunEver = false;
-                music.play();
-            } else {
-                loadNextSong();
-            }
-            musicToggle.textContent = '🔊';
-        }
-        localStorage.setItem('dicy_musicEnabled', musicPlaying.toString());
-    });
-
-    musicVolume.addEventListener('input', (e) => {
-        music.volume = e.target.value / 100;
-        localStorage.setItem('dicy_musicVolume', (e.target.value / 100).toString());
-        resetSliderTimeout(musicVolume, musicTimeout, (t) => musicTimeout = t);
-    });
-
-
-    // 6. Initialize Sound Effects with localStorage
-    const sfx = new SoundManager();
-    sfx.setEnabled(savedSfxEnabled);
-    sfx.setVolume(savedSfxVolume);
-
-    const sfxToggle = document.getElementById('sfx-toggle');
-    const sfxVolume = document.getElementById('sfx-volume');
-    sfxVolume.value = savedSfxVolume * 100;
-    sfxToggle.textContent = savedSfxEnabled ? '🔔' : '🔕';
-    sfxToggle.classList.toggle('active', savedSfxEnabled);
-
-    // Ensure audio context is created on first interaction
-    document.body.addEventListener('click', () => {
-        sfx.init();
-        // Auto-play music on first click if it was enabled before
-        if (shouldAutoplayMusic && !musicPlaying) {
-            music.play();
-            musicToggle.textContent = '🔊';
-            musicPlaying = true;
-        }
-        shouldAutoplayMusic = false;
-    }, { once: true });
-
-    sfxToggle.addEventListener('click', () => {
-        const action = getMobileAction(sfx.enabled, sfxVolume);
-
-        if (action === 'unmute-show') {
-            clearTimeout(sfxTimeout);
-            showSliderWithTimeout(sfxVolume, (t) => sfxTimeout = t);
-            if (!sfx.enabled) {
-                sfx.setEnabled(true);
-                sfxToggle.textContent = '🔔';
-                sfxToggle.classList.add('active');
-                localStorage.setItem('dicy_sfxEnabled', 'true');
-            }
-            return;
-        }
-
-        if (action === 'hide') {
-            clearTimeout(sfxTimeout);
-            sfxVolume.classList.remove('visible');
-            return;
-        }
-
-        const enabled = !sfx.enabled;
-        sfx.setEnabled(enabled);
-        sfxToggle.textContent = enabled ? '🔔' : '🔕';
-        sfxToggle.classList.toggle('active', enabled);
-        localStorage.setItem('dicy_sfxEnabled', enabled.toString());
-    });
-
-    sfxVolume.addEventListener('input', (e) => {
-        sfx.setVolume(e.target.value / 100);
-        localStorage.setItem('dicy_sfxVolume', (e.target.value / 100).toString());
-        resetSliderTimeout(sfxVolume, sfxTimeout, (t) => sfxTimeout = t);
-    });
+    // Alias for easier access in game events
+    const sfx = sfxManager;
 
     // Per-player autoplay state
     const autoplayPlayers = new Set();
@@ -529,10 +268,11 @@ async function init() {
     const newGameBtn = document.getElementById('new-game-btn');
     const autoWinBtn = document.getElementById('auto-win-btn');
     const playerText = document.getElementById('player-turn');
-    const logEntries = document.getElementById('log-entries');
     const turnIndicator = document.getElementById('turn-indicator');
-    const diceResultHud = document.getElementById('dice-result-hud');
-    const diceResultContent = document.getElementById('dice-result-content');
+
+    // Dice Result HUD (using DiceHUD module)
+    const diceHUD = new DiceHUD();
+    diceHUD.setDiceDataURL(TileRenderer.diceDataURL);
 
     // Zoom Controls
     document.getElementById('zoom-in-btn').addEventListener('click', () => {
@@ -543,150 +283,30 @@ async function init() {
         renderer.zoom(1, window.innerWidth / 2, window.innerHeight / 2);
     });
 
-    // Turn-based log grouping
-    let currentTurnLog = null;
-    let turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };
-
-    // Create a new turn group in the log
-    const startTurnLog = (player) => {
-        const playerName = getPlayerName(player);
-        const colorHex = '#' + player.color.toString(16).padStart(6, '0');
-        const isHuman = !player.isBot && !autoplayPlayers.has(player.id);
-
-        // Capture game state snapshot for this turn
-        const snapshot = turnHistory.captureSnapshot(game);
-        const snapshotIndex = turnHistory.length - 1;
-
-        // Reset stats
-        turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };
-
-        // Create wrapper
-        const wrapper = document.createElement('div'); // Current active player's log is always expanded
-        wrapper.className = 'turn-group expanded';
-        wrapper.dataset.snapshotIndex = snapshotIndex;
-
-        // Create header with action buttons
-        const header = document.createElement('div');
-        header.className = 'turn-header';
-        header.innerHTML = `
-            <span class="turn-player" style="color: ${colorHex}">${playerName}</span>
-            <span class="turn-summary"></span>
-            <span class="turn-actions">
-                <button class="turn-action-btn" data-action="jump" title="Jump to this turn">⏪</button>
-                <button class="turn-action-btn" data-action="save" title="Save as scenario">💾</button>
-            </span>
-            <span class="turn-toggle">▼</span>
-        `;
-
-        // Create details container
-        const details = document.createElement('div');
-        details.className = 'turn-details';
-
-        wrapper.appendChild(header);
-        wrapper.appendChild(details);
-
-        // Handle action button clicks
-        header.querySelector('[data-action="jump"]').addEventListener('click', (e) => {
-            e.stopPropagation();
-            const idx = parseInt(wrapper.dataset.snapshotIndex);
-            if (turnHistory.restoreSnapshot(game, idx)) {
-                // Clear log and restart UI
-                logEntries.innerHTML = '';
-                turnHistory.snapshots.length = idx + 1; // Truncate future history
-                renderer.forceUpdate();
-                updatePlayerUI();
-                game.emit('turnStart', { player: game.currentPlayer });
-            }
-        });
-
-        header.querySelector('[data-action="save"]').addEventListener('click', (e) => {
-            e.stopPropagation();
-            // Store the snapshot index for the save modal
-            saveScenarioModal.dataset.snapshotIndex = wrapper.dataset.snapshotIndex;
-            scenarioNameInput.value = `Turn ${snapshot.turn} - ${playerName}`;
-            saveScenarioModal.classList.remove('hidden');
-        });
-
-        // Toggle expand/collapse (only on main header area, not buttons)
-        header.addEventListener('click', (e) => {
-            if (e.target.closest('.turn-action-btn')) return;
-            wrapper.classList.toggle('expanded');
-            header.querySelector('.turn-toggle').textContent =
-                wrapper.classList.contains('expanded') ? '▼' : '▶';
-        });
-
-        logEntries.insertBefore(wrapper, logEntries.firstChild);
-
-        // Keep only last 3 rounds (every player 3 times)
-        const maxEntries = Math.max(12, game.players.length * 3);
-        while (logEntries.children.length > maxEntries) {
-            logEntries.removeChild(logEntries.lastChild);
+    // Turn-based log grouping (using GameLog module)
+    const gameLog = new GameLog(game, turnHistory, scenarioManager);
+    gameLog.setPlayerNameGetter(getPlayerName);
+    gameLog.setDiceDataURL(TileRenderer.diceDataURL);
+    gameLog.setRestoreSnapshotCallback((idx) => {
+        if (turnHistory.restoreSnapshot(game, idx)) {
+            gameLog.clear();
+            turnHistory.snapshots.length = idx + 1;
+            renderer.forceUpdate();
+            playerDashboard.update();
+            game.emit('turnStart', { player: game.currentPlayer });
         }
-
-        currentTurnLog = { wrapper, details, header, player, isHuman, snapshotIndex };
-    };
-
-    // Update summary when turn ends
-    const finalizeTurnLog = (reinforcements, saved = 0) => {
-        if (!currentTurnLog) return;
-
-        const { header } = currentTurnLog;
-        const summary = header.querySelector('.turn-summary');
-
-        let summaryHtml = '';
-        if (turnStats.attacks > 0) {
-            summaryHtml = `⚔️${turnStats.wins}/${turnStats.attacks}`;
-            if (turnStats.conquered > 0) {
-                summaryHtml += ` 🏴${turnStats.conquered}`;
-            }
-        }
-        if (reinforcements > 0) {
-            summaryHtml += ` +${reinforcements}<span class="dice-icon-sprite mini" style="background-color: #888; -webkit-mask-image: url(${TileRenderer.diceDataURL}); mask-image: url(${TileRenderer.diceDataURL});"></span>`;
-        }
-        if (saved > 0) {
-            summaryHtml += ` 📦${saved}`;
-        }
-        if (!summaryHtml) {
-            summaryHtml = '(no action)';
-        }
-
-        summary.innerHTML = summaryHtml;
-
-        // For bots/autoplay, collapse the log after their turn is finished
-        if (!currentTurnLog.isHuman) {
-            currentTurnLog.wrapper.classList.remove('expanded');
-            currentTurnLog.header.querySelector('.turn-toggle').textContent = '▶';
-        }
-    };
-
-    // Helper to add log entry to current turn group (newest at top)
-    const addLog = (message, type = '') => {
-        if (!currentTurnLog) return;
-
-        const entry = document.createElement('div');
-        entry.className = `log-entry ${type}`;
-        entry.textContent = message;
-        currentTurnLog.details.insertBefore(entry, currentTurnLog.details.firstChild);
-    };
-
-    // Dashboard Toggle (works on all screen sizes)
-    const playerDashboard = document.getElementById('player-dashboard');
-    const dashHeader = document.getElementById('dash-header');
-    const dashToggle = document.getElementById('dash-toggle');
-
-    // Collapse by default on mobile
-    if (window.innerWidth <= 768 || window.innerHeight <= 720) {
-        playerDashboard.classList.add('collapsed');
-        dashToggle.textContent = '[+]';
-    }
-
-    dashHeader.addEventListener('click', (e) => {
-        // Don't toggle if clicking on autoplay buttons inside
-        if (e.target.closest('.autoplay-toggle')) return;
-
-        playerDashboard.classList.toggle('collapsed');
-        dashToggle.textContent = playerDashboard.classList.contains('collapsed') ? '[+]' : '[-]';
     });
+
+    // Wrapper functions for backward compatibility
+    const startTurnLog = (player) => gameLog.startTurnLog(player, autoplayPlayers);
+    const finalizeTurnLog = (reinforcements, saved = 0) => gameLog.finalizeTurnLog(reinforcements, saved);
+    const addLog = (message, type = '') => gameLog.addEntry(message, type);
+
+    // Dashboard UI (using PlayerDashboard module)
+    const playerDashboard = new PlayerDashboard(game);
+    playerDashboard.setPlayerNameGetter(getPlayerName);
+    playerDashboard.setDiceDataURL(TileRenderer.diceDataURL);
+    playerDashboard.setAutoplayPlayers(autoplayPlayers);
 
     const toggleAutoplay = (playerId, forceState) => {
         const isCurrentlyAutoplay = autoplayPlayers.has(playerId);
@@ -698,7 +318,7 @@ async function init() {
             autoplayPlayers.delete(playerId);
         }
 
-        updatePlayerUI();
+        playerDashboard.update();
 
         // If it's currently this player's turn and we just enabled autoplay, trigger AI
         if (newState && game.currentPlayer.id === playerId && !game.gameOver) {
@@ -713,6 +333,10 @@ async function init() {
         }
     };
 
+    // Set up the autoplay toggle callback after toggleAutoplay is defined
+    playerDashboard.setAutoplayToggleCallback(toggleAutoplay);
+    playerDashboard.init();
+
     const checkDominance = () => {
         // Dominance check logic can be used for other purposes
         // autoWinBtn is now controlled in turnStart for per-player autoplay toggle
@@ -723,7 +347,7 @@ async function init() {
         if (autoplayPlayers.size > 0) {
             autoplayPlayers.clear();
             autoWinBtn.classList.remove('active');
-            updatePlayerUI();
+            playerDashboard.update();
         } else if (game.currentPlayer && !game.currentPlayer.isBot) {
             // No autoplay active - toggle for current player only
             toggleAutoplay(game.currentPlayer.id);
@@ -749,16 +373,14 @@ async function init() {
     // Helper to reset UI components
     const resetUI = () => {
         // Clear logs
-        logEntries.innerHTML = '';
-        currentTurnLog = null;
-        turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };
+        gameLog.clear();
 
         // Hide HUDs
-        diceResultHud.classList.add('hidden');
+        diceHUD.hide();
         turnIndicator.classList.add('hidden');
         endTurnBtn.classList.add('hidden');
         autoWinBtn.classList.add('hidden');
-        playerDashboard.classList.add('hidden');
+        playerDashboard.hide();
         newGameBtn.classList.add('hidden');
     };
 
@@ -807,7 +429,7 @@ async function init() {
 
             // Redraw and restart
             renderer.draw();
-            updatePlayerUI();
+            playerDashboard.update();
             game.emit('turnStart', { player: game.currentPlayer });
             renderer.forceUpdate();
 
@@ -901,7 +523,7 @@ async function init() {
 
     game.on('turnStart', (data) => {
         // Hide dice result HUD when turn starts
-        diceResultHud.classList.add('hidden');
+        diceHUD.hide();
 
         // Auto-save at start of turn
         turnHistory.saveAutoSave(game);
@@ -1022,13 +644,9 @@ async function init() {
         // Auto-save after every attack/step
         turnHistory.saveAutoSave(game);
 
-        // Reset turn stats if new attacker (should be cleared on turn start actually, but just in case)
+        // Track attack stats in game log
         if (result.attackerId === game.currentPlayer.id) {
-            turnStats.attacks++;
-            if (result.won) {
-                turnStats.wins++;
-                turnStats.conquered++;
-            }
+            gameLog.recordAttack(result.won);
         }
 
         const attacker = game.players.find(p => p.id === result.attackerId);
@@ -1043,53 +661,9 @@ async function init() {
         const outcome = result.won ? '✓' : '✗';
         addLog(`→ ${defenderName}: [${attackSum}] vs [${defendSum}] ${outcome}`, result.won ? 'attack-win' : 'attack-loss');
 
-        // Show dice result in HUD
+        // Show dice result in HUD (using DiceHUD module)
         const isHumanAttacker = attacker && !attacker.isBot && !autoplayPlayers.has(attacker.id);
-        const shouldShowHUD = gameSpeed === 'beginner' || (gameSpeed === 'normal' && isHumanAttacker);
-
-        if (shouldShowHUD) {
-            const attackerColor = attacker ? '#' + attacker.color.toString(16).padStart(6, '0') : '#ffffff';
-            const defenderColor = defender ? '#' + defender.color.toString(16).padStart(6, '0') : '#ffffff';
-
-            // Build dice icons HTML with + between each die
-            // If more than 6 dice, show as multiplier format (e.g. 7x 🎲)
-            const buildDiceDisplay = (count, sum, color) => {
-                let icons = '';
-                const diceIconHtml = `<span class="dice-icon-sprite" style="background-color: ${color}; -webkit-mask-image: url(${TileRenderer.diceDataURL}); mask-image: url(${TileRenderer.diceDataURL});"></span>`;
-
-                if (count > 6) {
-                    icons = `<span style="color:${color}; font-weight: bold; font-size: 16px; margin-right: 2px;">${count}x</span>${diceIconHtml}`;
-                } else {
-                    for (let i = 0; i < count; i++) {
-                        icons += diceIconHtml;
-                        if (i < count - 1) icons += '<span class="dice-plus">+</span>';
-                    }
-                }
-                return `${icons}<span class="dice-sum" style="color:${color}">${sum}</span>`;
-            };
-
-            diceResultContent.innerHTML = `
-                <div class="dice-group">
-                    ${buildDiceDisplay(result.attackerRolls.length, attackSum, attackerColor)}
-                </div>
-                <span class="vs-indicator ${result.won ? 'win' : 'loss'}">${result.won ? '>' : '≤'}</span>
-                <div class="dice-group">
-                    ${buildDiceDisplay(result.defenderRolls.length, defendSum, defenderColor)}
-                </div>
-            `;
-
-            // Set HUD glow to attacker color
-            diceResultHud.style.borderColor = attackerColor;
-            diceResultHud.style.boxShadow = `0 0 15px ${attackerColor}40`;
-
-            diceResultHud.classList.remove('hidden');
-
-            // Auto-hide after 1.5 seconds
-            clearTimeout(diceResultHud._hideTimeout);
-            diceResultHud._hideTimeout = setTimeout(() => {
-                diceResultHud.classList.add('hidden');
-            }, 1500);
-        }
+        diceHUD.showAttackResult(result, attacker, defender, gameSpeed, autoplayPlayers);
 
         // Play sound for attackers
         // In Beginner mode, play sounds for all attacks (including bots)
@@ -1133,46 +707,8 @@ async function init() {
         // Finalize the turn log with reinforcement info
         finalizeTurnLog(data.placed, data.stored);
 
-        // Show reinforcement popup in HUD
-        const isHuman = !data.player.isBot && !autoplayPlayers.has(data.player.id);
-        const shouldShowHUD = gameSpeed === 'beginner' || (gameSpeed === 'normal' && isHuman);
-
-        if (shouldShowHUD && (data.placed > 0 || data.stored > 0)) {
-            const playerColor = '#' + data.player.color.toString(16).padStart(6, '0');
-            const fontSize = isHuman ? 36 : 24;
-            const storedSize = isHuman ? 20 : 14;
-
-            let content = `<span style="color:${playerColor}; font-size: ${fontSize}px; font-weight: bold; display: flex; align-items: center; gap: 4px;">+${data.placed} <span class="dice-icon-sprite" style="width: ${fontSize}px; height: ${fontSize}px; background-color: ${playerColor}; -webkit-mask-image: url(${TileRenderer.diceDataURL}); mask-image: url(${TileRenderer.diceDataURL});"></span></span>`;
-            if (data.stored > 0) {
-                content += ` <span style="color:#ffaa00; font-size: ${storedSize}px;">(${data.stored} saved)</span>`;
-            }
-
-            diceResultContent.innerHTML = content;
-
-            // Set HUD glow to player color
-            diceResultHud.style.borderColor = playerColor;
-            diceResultHud.style.boxShadow = `0 0 ${isHuman ? 25 : 15}px ${playerColor}60`;
-
-            // Bigger padding for human
-            diceResultHud.style.padding = isHuman ? '12px 24px' : '6px 16px';
-
-            diceResultHud.classList.remove('hidden');
-
-            // Add bounce animation for human
-            if (isHuman) {
-                diceResultHud.style.animation = 'reinforce-bounce 0.5s ease-out';
-                diceResultHud.addEventListener('animationend', () => {
-                    diceResultHud.style.animation = '';
-                }, { once: true });
-            }
-
-            // Auto-hide after 2.5 seconds (longer for human)
-            const hideDelay = isHuman ? 3000 : 2000;
-            clearTimeout(diceResultHud._hideTimeout);
-            diceResultHud._hideTimeout = setTimeout(() => {
-                diceResultHud.classList.add('hidden');
-            }, hideDelay);
-        }
+        // Show reinforcement popup in HUD (using DiceHUD module)
+        diceHUD.showReinforcements(data, gameSpeed, autoplayPlayers);
 
         // Play sound for human players only
         if (!data.player.isBot && !autoplayPlayers.has(data.player.id)) {
@@ -2403,7 +1939,7 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
         // Clear previous auto-save when explicitly starting new game
         turnHistory.clearAutoSave();
 
-        logEntries.innerHTML = '';
+        gameLog.clear();
         addLog('Game started!', '');
 
         // Show Game UI first so event handlers can set correct state
@@ -2498,65 +2034,21 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
         }, 50);
     });
 
-    // Player List Logic with autoplay toggles
-    const playerList = document.getElementById('player-list');
-    const updatePlayerUI = () => {
-        const stats = game.getPlayerStats();
-        playerList.innerHTML = '';
-
-        stats.forEach(p => {
-            if (!p.alive && p.id === undefined) return;
-
-            const div = document.createElement('div');
-            div.className = `player-item ${game.currentPlayer.id === p.id ? 'active' : ''} ${!p.alive ? 'dead' : ''}`;
-            div.style.borderLeftColor = '#' + p.color.toString(16).padStart(6, '0');
-
-            const playerName = getPlayerName(p);
-            const isAutoplay = autoplayPlayers.has(p.id);
-
-            // Only show autoplay toggle for human players
-            const autoplayBtn = !p.isBot && p.alive ?
-                `<button class="autoplay-toggle ${isAutoplay ? 'active' : ''}" data-player-id="${p.id}">🤖</button>` : '';
-
-            div.innerHTML = `
-                <div class="player-info-row">
-                   <div style="font-weight:bold; color: #${p.color.toString(16).padStart(6, '0')}">${playerName}</div>
-                   ${autoplayBtn}
-                </div>
-                <div class="p-stats-row">
-                   <span title="Tiles owned">🗺️ ${p.tileCount || 0}</span>
-                   <span title="Connected region size">🔗 ${p.connectedTiles || 0}</span>
-                   <span title="Total dice" style="display: flex; align-items: center; gap: 4px;"><span class="dice-icon-sprite mini" style="background-color: #888; -webkit-mask-image: url(${TileRenderer.diceDataURL}); mask-image: url(${TileRenderer.diceDataURL});"></span> ${p.totalDice || 0}</span>
-                   ${p.storedDice > 0 ? `<span title="Stored dice">📦 ${p.storedDice}</span>` : ''}
-                </div>
-            `;
-            playerList.appendChild(div);
-        });
-
-        // Bind autoplay toggle events
-        document.querySelectorAll('.autoplay-toggle').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const playerId = parseInt(btn.dataset.playerId);
-                toggleAutoplay(playerId);
-            });
-        });
-    };
-
+    // Player List Logic - using PlayerDashboard module
     game.on('gameStart', () => {
         // Attach names for AI serialization
         game.players.forEach(p => p.name = getPlayerName(p));
-        updatePlayerUI();
+        playerDashboard.update();
 
         // Ensure buttons are hidden initially (turnStart will show them appropriately)
         endTurnBtn.classList.add('hidden');
         autoWinBtn.classList.add('hidden');
         turnIndicator.classList.add('hidden');
     });
-    game.on('turnStart', updatePlayerUI);
-    game.on('attackResult', updatePlayerUI);
-    game.on('reinforcements', updatePlayerUI);
-    game.on('playerEliminated', updatePlayerUI);
+    game.on('turnStart', () => playerDashboard.update());
+    game.on('attackResult', () => playerDashboard.update());
+    game.on('reinforcements', () => playerDashboard.update());
+    game.on('playerEliminated', () => playerDashboard.update());
 
     game.on('gameOver', (data) => {
         const modal = document.getElementById('game-over-modal');
