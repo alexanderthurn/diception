@@ -2123,8 +2123,10 @@ input[type="range"] {
 
 /* Map Preview Polish */
 .preview-map {
-    flex: 0 0 140px;
-    width: 140px;
+    flex: 0 0 auto;
+    max-width: 200px;
+    max-height: 200px;
+    width: auto;
     height: auto;
     margin: 0;
     display: block;
@@ -2133,8 +2135,6 @@ input[type="range"] {
     border-radius: 0;
     /* Square corners */
     align-self: flex-start;
-
-
 }
 
 /* Mobile Adjustments */
@@ -2191,6 +2191,10 @@ input[type="range"] {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     image-rendering: pixelated;
     /* Keep it crisp */
+    max-width: 200px;
+    max-height: 200px;
+    width: auto;
+    height: auto;
 }
 
 /* Mobile: Map full width */

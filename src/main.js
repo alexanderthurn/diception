@@ -2693,14 +2693,29 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
     };
 
     // Helper: Render Map Preview to Canvas
-    // Helper: Render Map Preview to Canvas
     const renderMapPreview = (canvas, scenario) => {
         const ctx = canvas.getContext('2d');
-        const tileSize = 20; // Larger tiles for detail view
-        const gap = 2;
+        const maxCanvasSize = 200; // Maximum preview size in pixels
+        const mapWidth = scenario.width || 10;
+        const mapHeight = scenario.height || 10;
+        
+        // Calculate tile size to fit within max canvas size
+        const maxDimension = Math.max(mapWidth, mapHeight);
+        const baseTileSize = 20;
+        const baseGap = 2;
+        
+        // Scale down for large maps
+        let tileSize = baseTileSize;
+        let gap = baseGap;
+        const fullSize = maxDimension * (baseTileSize + baseGap) + baseGap;
+        if (fullSize > maxCanvasSize) {
+            const scale = maxCanvasSize / fullSize;
+            tileSize = Math.max(2, Math.floor(baseTileSize * scale));
+            gap = Math.max(1, Math.floor(baseGap * scale));
+        }
 
-        canvas.width = (scenario.width || 10) * (tileSize + gap) + gap;
-        canvas.height = (scenario.height || 10) * (tileSize + gap) + gap;
+        canvas.width = mapWidth * (tileSize + gap) + gap;
+        canvas.height = mapHeight * (tileSize + gap) + gap;
 
         // Background
         ctx.fillStyle = '#111';
@@ -2736,10 +2751,11 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
                 ctx.lineWidth = 1;
                 ctx.strokeRect(x, y, tileSize, tileSize);
 
-                // Dice Count
-                if (tile.dice) {
+                // Dice Count (only show if tiles are big enough)
+                if (tile.dice && tileSize >= 10) {
                     ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 10px sans-serif';
+                    const fontSize = Math.max(6, Math.floor(tileSize * 0.5));
+                    ctx.font = `bold ${fontSize}px sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(tile.dice, x + tileSize / 2, y + tileSize / 2 + 1);
