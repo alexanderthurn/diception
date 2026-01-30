@@ -6,11 +6,11 @@ export class GameLog {
         this.game = game;
         this.turnHistory = turnHistory;
         this.scenarioManager = scenarioManager;
-        
+
         this.logEntries = document.getElementById('log-entries');
         this.currentTurnLog = null;
         this.turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };
-        
+
         // Callbacks
         this.getPlayerName = null; // Set by main
         this.diceDataURL = null; // Set by main
@@ -41,6 +41,13 @@ export class GameLog {
 
         // Reset stats
         this.turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };
+
+        // Collapse all previous turn groups
+        this.logEntries.querySelectorAll('.turn-group').forEach(group => {
+            group.classList.remove('expanded');
+            const toggle = group.querySelector('.turn-toggle');
+            if (toggle) toggle.textContent = '▶';
+        });
 
         // Create wrapper
         const wrapper = document.createElement('div');

@@ -754,6 +754,15 @@ input[type="range"] {
     max-height: 200px;
     overflow-y: auto;
     z-index: 10;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+}
+
+#game-log::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, etc. */
 }
 
 #log-entries {
@@ -2602,14 +2611,17 @@ canvas {
     display: block;
 
     /* Verhindert das "Verschwimmen" durch den Browser-Upscaler */
-    image-rendering: -webkit-optimize-contrast; /* Für scharfe Kanten */
+    image-rendering: -webkit-optimize-contrast;
+    /* Für scharfe Kanten */
     image-rendering: crisp-edges;
-    image-rendering: pixelated; /* Falls du Pixel-Art nutzt */
-    
+    image-rendering: pixelated;
+    /* Falls du Pixel-Art nutzt */
+
     /* Sicherstellen, dass der Canvas keine ungeraden Pixel-Werte hat */
-    touch-action: none; 
+    touch-action: none;
     user-select: none;
 
-    -webkit-backface-visibility: hidden; /* Verhindert Zittern/Unschärfe bei Transformationen */
+    -webkit-backface-visibility: hidden;
+    /* Verhindert Zittern/Unschärfe bei Transformationen */
     transform: translateZ(0);
 }

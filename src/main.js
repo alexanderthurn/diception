@@ -1349,7 +1349,7 @@ async function init() {
     let onlineMaps = [];
     // Dynamically determine backend URL
     let BACKEND_URL = window.location.hostname === 'localhost'
-        ? 'http://localhost:8000/backend'
+        ? 'https://feuerware.com/2025/diception/dev/backend'
         : window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '') + '/backend';
 
     // Override for Steam version
