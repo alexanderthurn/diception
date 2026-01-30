@@ -12,6 +12,8 @@ export class TileRenderer {
     static app = null;
     static initialized = false;
     static tileSize = 60;
+    static masterDiceTexture = null;
+    static diceDataURL = null;
 
     // Supported dice sides
     static diceSidesOptions = [2, 4, 6, 8, 10, 12, 20];
@@ -27,7 +29,19 @@ export class TileRenderer {
         TileRenderer.app = app;
         const size = TileRenderer.tileSize;
 
-        console.log('TileRenderer: Pre-rendering dice textures...');
+        console.log('TileRenderer: Creating master dice texture...');
+        TileRenderer.masterDiceTexture = TileRenderer.createMasterDiceTexture(app);
+
+        // Extract as DataURL for DOM HUD
+        try {
+            const tempSprite = new Sprite(TileRenderer.masterDiceTexture);
+            TileRenderer.diceDataURL = await app.renderer.extract.base64(tempSprite);
+            tempSprite.destroy();
+        } catch (e) {
+            console.warn('Failed to extract dice DataURL', e);
+        }
+
+        console.log('TileRenderer: Pre-rendering dice patterns...');
 
         // Pre-render tile background (white, will be tinted)
         TileRenderer.textureCache.set('bg', TileRenderer.createBgTexture(app, size));
@@ -71,7 +85,7 @@ export class TileRenderer {
 
         const texture = app.renderer.generateTexture({
             target: g,
-            resolution: 2, // 2x resolution for crisp rendering when zoomed
+            resolution: 4, // 4x resolution for crisp rendering when zoomed
             antialias: true
         });
         g.destroy();
@@ -101,7 +115,40 @@ export class TileRenderer {
 
         const texture = app.renderer.generateTexture({
             target: container,
-            resolution: 2, // 2x resolution for crisp rendering when zoomed
+            resolution: 4, // 4x resolution for crisp rendering when zoomed
+            antialias: true
+        });
+
+        container.destroy({ children: true });
+        return texture;
+    }
+
+    /**
+     * Create a single high-resolution dice face texture
+     */
+    static createMasterDiceTexture(app) {
+        const size = 256; // High resolution base
+        const text = new Text({
+            text: '🎲',
+            style: {
+                fontSize: size * 0.8,
+                fill: 0xffffff,
+                fontFamily: 'Arial, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji"',
+                fontWeight: 'bold',
+                align: 'center'
+            }
+        });
+
+        // Use a container to center it perfectly
+        const container = new Container();
+        container.addChild(text);
+        text.anchor.set(0.5);
+        text.x = size / 2;
+        text.y = size / 2;
+
+        const texture = app.renderer.generateTexture({
+            target: container,
+            resolution: 1,
             antialias: true
         });
 
@@ -313,28 +360,27 @@ export class TileRenderer {
     }
 
     /**
-     * Render a single die with emoji (6-sided)
+     * Render a single die with master sprite (6-sided)
      */
     static renderDieEmoji(container, x, y, fontSize, color) {
-        const text = new Text({
-            text: '🎲',
-            style: {
-                fontFamily: 'Arial',
-                fontSize: fontSize,
-                fill: 0xffffff,
-                align: 'center',
-                stroke: { color: 0x000000, width: Math.max(2, fontSize * 0.1) }
-            }
-        });
+        if (!TileRenderer.masterDiceTexture) return;
+
+        const sprite = new Sprite(TileRenderer.masterDiceTexture);
+
+        // Scale sprite to match desired fontSize
+        // The master texture is 256px, fontSize is typically 8-12
+        const scale = (fontSize * 1.2) / 256;
+        sprite.scale.set(scale);
+
+        sprite.anchor.set(0.5);
+        sprite.x = x;
+        sprite.y = y;
 
         if (color) {
-            text.tint = color;
+            sprite.tint = color;
         }
 
-        text.anchor.set(0.5);
-        text.x = x + 2;
-        text.y = y - 1;
-        container.addChild(text);
+        container.addChild(sprite);
     }
 
     /**

@@ -660,16 +660,11 @@ export class GridRenderer {
             flash.alpha = 0;
             this.animationContainer.addChild(flash);
 
-            // Also create a "+" icon
-            const plusText = new Text({
-                text: '🎲',
-                style: {
-                    fontFamily: 'Outfit, sans-serif',
-                    fontSize: 24,
-                    fill: '#ffffff',
-                }
-            });
+            // Also create a "+" icon (using the same master texture)
+            const plusText = new Sprite(TileRenderer.masterDiceTexture);
             plusText.anchor.set(0.5);
+            plusText.width = 24;
+            plusText.height = 24;
             plusText.x = pixelX + this.tileSize / 2;
             plusText.y = pixelY + this.tileSize / 2;
             plusText.alpha = 0;

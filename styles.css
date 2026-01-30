@@ -266,6 +266,26 @@ select {
     margin-left: 4px;
 }
 
+.dice-icon-sprite {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background-color: #fff;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+}
+
+.dice-icon-sprite.mini {
+    width: 12px;
+    height: 12px;
+    vertical-align: middle;
+    margin-bottom: 2px;
+}
+
 #dice-result-content .vs-indicator {
     font-size: 16px;
     font-weight: bold;

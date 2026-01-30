@@ -121,6 +121,12 @@ async function init() {
     // Expose app for export function
     window.gameApp = renderer.app;
 
+    // Apply master dice texture to any static UI elements
+    document.querySelectorAll('.dice-icon-sprite').forEach(el => {
+        el.style.maskImage = `url(${TileRenderer.diceDataURL})`;
+        el.style.webkitMaskImage = `url(${TileRenderer.diceDataURL})`;
+    });
+
     // 2.5 Initialize Effects System (completely separate from renderer)
     const effectsManager = new EffectsManager(renderer.app.stage, game, {
         tileSize: 60,
@@ -627,24 +633,24 @@ async function init() {
         const { header } = currentTurnLog;
         const summary = header.querySelector('.turn-summary');
 
-        let summaryText = '';
+        let summaryHtml = '';
         if (turnStats.attacks > 0) {
-            summaryText = `⚔️${turnStats.wins}/${turnStats.attacks}`;
+            summaryHtml = `⚔️${turnStats.wins}/${turnStats.attacks}`;
             if (turnStats.conquered > 0) {
-                summaryText += ` 🏴${turnStats.conquered}`;
+                summaryHtml += ` 🏴${turnStats.conquered}`;
             }
         }
         if (reinforcements > 0) {
-            summaryText += ` +${reinforcements}🎲`;
+            summaryHtml += ` +${reinforcements}<span class="dice-icon-sprite mini" style="background-color: #888; -webkit-mask-image: url(${TileRenderer.diceDataURL}); mask-image: url(${TileRenderer.diceDataURL});"></span>`;
         }
         if (saved > 0) {
-            summaryText += ` 📦${saved}`;
+            summaryHtml += ` 📦${saved}`;
         }
-        if (!summaryText) {
-            summaryText = '(no action)';
+        if (!summaryHtml) {
+            summaryHtml = '(no action)';
         }
 
-        summary.textContent = summaryText;
+        summary.innerHTML = summaryHtml;
 
         // For bots/autoplay, collapse the log after their turn is finished
         if (!currentTurnLog.isHuman) {
@@ -1049,11 +1055,13 @@ async function init() {
             // If more than 6 dice, show as multiplier format (e.g. 7x 🎲)
             const buildDiceDisplay = (count, sum, color) => {
                 let icons = '';
+                const diceIconHtml = `<span class="dice-icon-sprite" style="background-color: ${color}; -webkit-mask-image: url(${TileRenderer.diceDataURL}); mask-image: url(${TileRenderer.diceDataURL});"></span>`;
+
                 if (count > 6) {
-                    icons = `<span style="color:${color}; font-weight: bold; font-size: 16px; margin-right: 2px;">${count}x</span><span class="dice-icon" style="color:${color}">🎲</span>`;
+                    icons = `<span style="color:${color}; font-weight: bold; font-size: 16px; margin-right: 2px;">${count}x</span>${diceIconHtml}`;
                 } else {
                     for (let i = 0; i < count; i++) {
-                        icons += `<span class="dice-icon" style="color:${color}">🎲</span>`;
+                        icons += diceIconHtml;
                         if (i < count - 1) icons += '<span class="dice-plus">+</span>';
                     }
                 }
@@ -1134,7 +1142,7 @@ async function init() {
             const fontSize = isHuman ? 36 : 24;
             const storedSize = isHuman ? 20 : 14;
 
-            let content = `<span style="color:${playerColor}; font-size: ${fontSize}px; font-weight: bold;">+${data.placed} 🎲</span>`;
+            let content = `<span style="color:${playerColor}; font-size: ${fontSize}px; font-weight: bold; display: flex; align-items: center; gap: 4px;">+${data.placed} <span class="dice-icon-sprite" style="width: ${fontSize}px; height: ${fontSize}px; background-color: ${playerColor}; -webkit-mask-image: url(${TileRenderer.diceDataURL}); mask-image: url(${TileRenderer.diceDataURL});"></span></span>`;
             if (data.stored > 0) {
                 content += ` <span style="color:#ffaa00; font-size: ${storedSize}px;">(${data.stored} saved)</span>`;
             }
@@ -2518,7 +2526,7 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
                 <div class="p-stats-row">
                    <span title="Tiles owned">🗺️ ${p.tileCount || 0}</span>
                    <span title="Connected region size">🔗 ${p.connectedTiles || 0}</span>
-                   <span title="Total dice">🎲 ${p.totalDice || 0}</span>
+                   <span title="Total dice" style="display: flex; align-items: center; gap: 4px;"><span class="dice-icon-sprite mini" style="background-color: #888; -webkit-mask-image: url(${TileRenderer.diceDataURL}); mask-image: url(${TileRenderer.diceDataURL});"></span> ${p.totalDice || 0}</span>
                    ${p.storedDice > 0 ? `<span title="Stored dice">📦 ${p.storedDice}</span>` : ''}
                 </div>
             `;
