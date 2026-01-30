@@ -1,8 +1,7 @@
 import { Game } from './src/core/game.js';
-import { AIController } from './src/core/ai.js';
+import { createAI } from './src/core/ai/index.js';
 
 const game = new Game();
-const ai = new AIController('aggressive');
 
 // Setup event logging
 game.on('gameStart', (data) => {
@@ -34,24 +33,26 @@ game.on('gameOver', (data) => {
 console.log("Initializing simulation...");
 game.startGame({ humanCount: 0, botCount: 4, mapWidth: 10, mapHeight: 10 });
 
+// Create AI instances for each player
+const playerAIs = new Map();
+game.players.forEach(p => {
+    playerAIs.set(p.id, createAI('hard', game, p.id));
+});
+
 // Game Loop
 async function run() {
     let turns = 0;
     while (!game.gameOver && turns < 1000) {
-        // console.log(`Processing Turn ${game.turn} (Player ${game.currentPlayer.id})`);
-
-        // Find tiles for current player to debug dice count
-        const tiles = game.map.getTilesByOwner(game.currentPlayer.id);
-        const totalDice = tiles.reduce((sum, t) => sum + t.dice, 0);
-
-        // AI takes turn
-        await ai.takeTurn(game);
+        const ai = playerAIs.get(game.currentPlayer.id);
+        if (ai) {
+            await ai.takeTurn('fast');
+        }
+        game.endTurn();
         turns++;
     }
 
     if (!game.winner) {
         console.log("Simulation stopped (limit reached).");
-        // Print status
         game.players.forEach(p => {
             if (p.alive) {
                 const tiles = game.map.getTilesByOwner(p.id);

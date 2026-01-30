@@ -128,24 +128,11 @@
                 </div>
                 <div class="control-group half">
                     <label>Bot AI</label>
-                    <div class="select-with-btn">
-                        <select id="bot-ai-select">
-                            <option value="easy" selected>Easy</option>
-                            <option value="medium">Medium</option>
-                            <option value="hard">Hard</option>
-                            <option value="custom">Custom per bot...</option>
-                            <!-- Custom AIs added dynamically -->
-                        </select>
-                        <button id="manage-ais-btn" class="tron-btn small" title="Manage AIs">⚙️</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Per-player AI selection (shown when "Custom per bot" selected) -->
-            <div class="control-row" id="per-player-ai-config" style="display: none;">
-                <div class="control-group" style="width: 100%;">
-                    <label>AI per Bot</label>
-                    <div id="per-player-ai-list"></div>
+                    <select id="bot-ai-select">
+                        <option value="easy" selected>Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
                 </div>
             </div>
 
@@ -354,122 +341,6 @@
             <div class="game-over-actions">
                 <button id="restart-btn" class="tron-btn">New Game</button>
                 <button id="clone-game-btn" class="tron-btn">Try Again</button>
-            </div>
-        </div>
-
-        <!-- AI Editor Modal -->
-        <div id="ai-editor-modal" class="modal hidden large-modal">
-            <div class="modal-header">
-                <h2 class="tron-title small">AI EDITOR</h2>
-                <button id="ai-editor-close-btn" class="close-btn">×</button>
-            </div>
-            <div class="ai-editor-content">
-                <div class="ai-editor-left">
-                    <div class="ai-list-section">
-                        <h4>Your AIs</h4>
-                        <div id="ai-list"></div>
-                        <button id="new-ai-btn" class="tron-btn small" style="width: 100%; margin-bottom: 5px;">+ New
-                            AI</button>
-                        <button id="import-ai-btn" class="tron-btn small" style="width: 100%;">📥 Import</button>
-                    </div>
-                </div>
-                <div class="ai-editor-right">
-                    <div class="ai-name-row">
-                        <input type="text" id="ai-name-input" placeholder="AI Name" maxlength="30">
-                        <div class="ai-editor-actions">
-                            <button id="save-ai-btn" class="tron-btn small" title="Save AI">💾 Save</button>
-                            <button id="delete-ai-btn" class="tron-btn small danger" title="Delete AI">🗑️</button>
-                        </div>
-                    </div>
-                    <div class="ai-prompt-section">
-                        <h4>🤖 AI Prompt</h4>
-                        <textarea id="ai-prompt-input"
-                            placeholder="Describe your strategy, e.g.: 'Make an aggressive AI that always attacks when it has more dice, but never attacks tiles with 8+ dice'"></textarea>
-                        <button id="generate-prompt-btn" class="tron-btn small">📋 Generate full prompt to
-                            clipboard</button>
-                    </div>
-
-                    <textarea id="ai-code-input"
-                        placeholder="// Click the button above. It will copy clear instructions for an AI to generate the code needed. Generate code with your favorite AI in the web (like ChatGPT or Gemini) and then paste the response here..."
-                        spellcheck="false"></textarea>
-
-                    <div id="ai-test-results" class="ai-test-results hidden">
-                        <button id="ai-test-close-btn" class="ai-test-close-btn">×</button>
-                        <h4>🏆 Benchmark Results</h4>
-                        <div id="ai-test-status"></div>
-                        <table id="ai-test-table" class="benchmark-table">
-                            <thead>
-                                <tr>
-                                    <th>Opponent</th>
-                                    <th>Wins</th>
-                                    <th>Draws</th>
-                                    <th>Losses</th>
-                                    <th>Win Rate</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-
-                    <div class="ai-import-export">
-                        <button id="test-ai-btn" class="tron-btn small" style="flex: 1;">▶ Test</button>
-                        <button id="export-ai-btn" class="tron-btn small" style="flex: 1;">📤 Export</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="ai-api-docs collapsible">
-                <h4 class="collapsible-header">📖 API Reference <span class="toggle-icon">▼</span></h4>
-                <div class="collapsible-content">
-                    <div class="api-section">
-                        <strong>Game State:</strong>
-                        <ul>
-                            <li><code>api.getMyTiles()</code> → [{x, y, dice, owner}] - Your tiles</li>
-                            <li><code>api.getEnemyTiles()</code> → Enemy tiles</li>
-                            <li><code>api.getAllTiles()</code> → All playable tiles</li>
-                            <li><code>api.getAdjacentTiles(x, y)</code> → Neighboring tiles</li>
-                            <li><code>api.getTileAt(x, y)</code> → Specific tile or null</li>
-                            <li><code>api.myId</code>, <code>api.maxDice</code>, <code>api.diceSides</code></li>
-                            <li><code>api.mapWidth</code>, <code>api.mapHeight</code> → Map dimensions</li>
-                            <li><code>api.players</code> → Array of all players [{id, alive, storedDice}]</li>
-                        </ul>
-                    </div>
-                    <div class="api-section">
-                        <strong>Strategy Helpers:</strong>
-                        <ul>
-                            <li><code>api.getLargestConnectedRegion(playerId)</code> → Size of largest connected
-                                territory</li>
-                            <li><code>api.getReinforcements(playerId)</code> → Total reinforcements (region + stored
-                                dice)</li>
-                            <li><code>api.getPlayerInfo(playerId)</code> → Player object or null</li>
-                            <li><code>api.simulateAttack(fromX, fromY, toX, toY)</code> → Predict attack outcome without
-                                executing:<br>
-                                Returns {success, expectedWin, myPredictedReinforcements, enemyPredictedReinforcements}
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="api-section">
-                        <strong>Actions:</strong>
-                        <ul>
-                            <li><code>api.attack(fromX, fromY, toX, toY)</code> → {success, expectedWin}</li>
-                            <li><code>api.endTurn()</code> - End your turn</li>
-                        </ul>
-                    </div>
-                    <div class="api-section">
-                        <strong>Storage:</strong>
-                        <ul>
-                            <li><code>api.save(key, value)</code> - Persist data between games</li>
-                            <li><code>api.load(key)</code> - Load persisted data</li>
-                        </ul>
-                    </div>
-                    <div class="api-section">
-                        <strong>Utilities:</strong>
-                        <ul>
-                            <li><code>api.log(msg)</code> - Debug output to console</li>
-                            <li><code>api.getWinProbability(attackDice, defendDice)</code> → 0-1 probability</li>
-                        </ul>
-                    </div>
-                </div>
             </div>
         </div>
 

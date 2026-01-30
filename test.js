@@ -1,5 +1,5 @@
 import { Game } from './src/core/game.js';
-import { AIController } from './src/core/ai.js';
+import { createAI } from './src/core/ai/index.js';
 
 console.log("=== DICY Logic Test ===\n");
 
@@ -37,14 +37,24 @@ console.log(`  ✓ Map is connected: ${game.map.arePlayableTilesConnected()}`);
 
 // Test 4: AI simulation
 console.log("\nTest 4: AI simulation...");
-const ai = new AIController('aggressive');
+
+// Create AI instances for each bot player
+const playerAIs = new Map();
+game.players.forEach(p => {
+    if (p.isBot) {
+        playerAIs.set(p.id, createAI('hard', game, p.id));
+    }
+});
 
 let turns = 0;
 const MAX_TURNS = 200;
 
 while (!game.gameOver && turns < MAX_TURNS) {
     try {
-        ai.performMoves(game);
+        const ai = playerAIs.get(game.currentPlayer.id);
+        if (ai) {
+            await ai.takeTurn('fast');
+        }
         game.endTurn();
         turns++;
     } catch (e) {

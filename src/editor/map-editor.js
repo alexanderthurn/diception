@@ -178,10 +178,16 @@ class EditorGameAdapter {
     }
 }
 
+// Available AI difficulties
+const AVAILABLE_AIS = [
+    { id: 'easy', name: 'Easy' },
+    { id: 'medium', name: 'Medium' },
+    { id: 'hard', name: 'Hard' }
+];
+
 export class MapEditor {
-    constructor(scenarioManager, aiRegistry) {
+    constructor(scenarioManager) {
         this.scenarioManager = scenarioManager;
-        this.aiRegistry = aiRegistry;
 
         // Editor state
         this.state = this.createEmptyState();
@@ -1036,7 +1042,7 @@ export class MapEditor {
             this.elements.playerCountDisplay.textContent = `(${this.state.players.length})`;
         }
 
-        const ais = this.aiRegistry.getAllAIs();
+        const ais = AVAILABLE_AIS;
 
         this.state.players.forEach(player => {
             const row = document.createElement('div');

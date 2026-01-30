@@ -2,8 +2,7 @@ import { Game } from './core/game.js';
 import { Renderer } from './render/renderer.js';
 import { InputController } from './input/input-controller.js';
 import { InputManager } from './input/input-manager.js';
-import { AIRunner } from './core/ai-runner.js';
-import { AIRegistry } from './core/ai-registry.js';
+import { createAI } from './core/ai/index.js';
 import { SoundManager } from './audio/sound-manager.js';
 import { EffectsManager } from './render/effects/effects-manager.js';
 import { ScenarioManager } from './scenarios/scenario-manager.js';
@@ -209,20 +208,14 @@ async function init() {
     };
 
     // 5. Initialize AI System
-    const aiRegistry = new AIRegistry();
-    aiRegistry.loadCustomAIs();
-
-    // Map player ID -> AIRunner instance (set during game start)
+    // Map player ID -> AI instance (set during game start)
     let playerAIs = new Map();
     const clearPlayerAIs = () => {
-        playerAIs.forEach(ai => ai.terminate());
         playerAIs.clear();
     };
 
-    // Current selected AI for all bots (default easy)
+    // Current selected AI difficulty for all bots (default easy)
     let selectedBotAI = localStorage.getItem('dicy_botAI') || 'easy';
-    // Per-player AI config (when using custom per player)
-    let perPlayerAIConfig = JSON.parse(localStorage.getItem('dicy_perPlayerAIConfig') || '{}');
 
     // 6. Initialize Scenario System
     const scenarioManager = new ScenarioManager();
@@ -230,7 +223,7 @@ async function init() {
     let pendingScenario = null; // Scenario to load when starting game
 
     // 7. Initialize Map Editor
-    const mapEditor = new MapEditor(scenarioManager, aiRegistry);
+    const mapEditor = new MapEditor(scenarioManager);
     mapEditor.setRenderer(renderer);
     mapEditor.init();
 
@@ -327,8 +320,9 @@ async function init() {
             setTimeout(async () => {
                 const playerAI = playerAIs.get(playerId);
                 if (playerAI) {
-                    await playerAI.takeTurn(game, gameSpeed);
+                    await playerAI.takeTurn(gameSpeed);
                 }
+                game.endTurn();
             }, 500);
         }
     };
@@ -587,14 +581,13 @@ async function init() {
             }
 
             setTimeout(async () => {
-                // Use per-player AI configuration
+                // Use AI for this player
                 const playerAI = playerAIs.get(data.player.id);
                 if (playerAI) {
-                    await playerAI.takeTurn(game, gameSpeed);
-                } else {
-                    // Fallback: end turn immediately
-                    game.endTurn();
+                    await playerAI.takeTurn(gameSpeed);
                 }
+                // End turn after AI finishes (or immediately if no AI)
+                game.endTurn();
             }, delay);
         } else {
             // Show End Turn button for human turns
@@ -752,664 +745,19 @@ async function init() {
         setupModal.classList.remove('hidden');
     });
 
-    // === AI Editor Modal Logic ===
-    const aiEditorModal = document.getElementById('ai-editor-modal');
-    const aiEditorCloseBtn = document.getElementById('ai-editor-close-btn');
-    const manageAIsBtn = document.getElementById('manage-ais-btn');
-    const aiList = document.getElementById('ai-list');
-    const aiNameInput = document.getElementById('ai-name-input');
-    const aiCodeInput = document.getElementById('ai-code-input');
-    const aiPromptInput = document.getElementById('ai-prompt-input');
-    const newAIBtn = document.getElementById('new-ai-btn');
-    const saveAIBtn = document.getElementById('save-ai-btn');
-    const testAIBtn = document.getElementById('test-ai-btn');
-    const deleteAIBtn = document.getElementById('delete-ai-btn');
-    const exportAIBtn = document.getElementById('export-ai-btn');
-    const importAIBtn = document.getElementById('import-ai-btn');
-    const generatePromptBtn = document.getElementById('generate-prompt-btn');
+    // === Bot AI Selection ===
     const botAISelect = document.getElementById('bot-ai-select');
-    const apiDocsHeader = document.querySelector('.collapsible-header');
-    const apiDocs = document.querySelector('.ai-api-docs');
-    const aiEditorFooter = document.querySelector('.ai-import-export');
 
-    let currentEditingAI = null;
-
-    const updateAIEditorUI = () => {
-        if (!aiEditorFooter) return;
-
-        const isBuiltIn = currentEditingAI && aiRegistry.builtIn.has(currentEditingAI);
-        const promptText = aiPromptInput.value.trim();
-        const codeText = aiCodeInput.value.trim();
-        const defaultComment = '// Paste your generated AI code here';
-
-        // 1. Show code textarea if it's built-in OR if there's a prompt
-        const shouldShowCode = isBuiltIn || promptText.length > 0;
-        aiCodeInput.style.display = shouldShowCode ? 'block' : 'none';
-
-        // 2. Show footer (Test/Export) if code is visible AND has meaningful content
-        const hasMeaningfulCode = codeText.length > 0 && codeText !== defaultComment;
-        aiEditorFooter.style.display = (shouldShowCode && hasMeaningfulCode) ? 'flex' : 'none';
-    };
-
-    // Populate AI dropdown and list
-    const updateAIDropdown = () => {
-        const ais = aiRegistry.getAllAIs();
-        // Clear custom options from dropdown (keep 5 built-in: easy, medium, hard, custom)
-        while (botAISelect.options.length > 5) {
-            botAISelect.remove(5);
-        }
-        // Add custom AIs
-        for (const ai of ais.filter(a => !a.isBuiltIn)) {
-            const option = document.createElement('option');
-            option.value = ai.id;
-            option.textContent = ai.name;
-            botAISelect.appendChild(option);
-        }
-        // Restore selection
-        if (selectedBotAI && Array.from(botAISelect.options).some(o => o.value === selectedBotAI)) {
-            botAISelect.value = selectedBotAI;
-        }
-    };
-
-    const updateAIList = () => {
-        const ais = aiRegistry.getAllAIs();
-        aiList.innerHTML = '';
-
-        // Count name occurrences to detect duplicates
-        const nameCounts = {};
-        for (const ai of ais) {
-            nameCounts[ai.name] = (nameCounts[ai.name] || 0) + 1;
-        }
-
-        for (const ai of ais) {
-            const item = document.createElement('div');
-            item.className = 'ai-list-item' + (ai.isBuiltIn ? ' builtin' : '') +
-                (currentEditingAI === ai.id ? ' active' : '');
-
-            // Show UUID suffix for duplicates
-            let displayName = ai.name;
-            if (nameCounts[ai.name] > 1 && ai.uuid) {
-                displayName += ` (${ai.uuid.slice(-6)})`;
-            }
-            displayName += ai.isBuiltIn ? ' (built-in)' : '';
-
-            item.textContent = displayName;
-            item.dataset.aiId = ai.id;
-            item.addEventListener('click', () => loadAIForEditing(ai.id));
-            aiList.appendChild(item);
-        }
-    };
-
-    const loadAIForEditing = (aiId) => {
-        const ai = aiRegistry.getAI(aiId);
-        if (!ai) return;
-
-        currentEditingAI = aiId;
-        aiNameInput.value = ai.name;
-        aiCodeInput.value = ai.code;
-        aiPromptInput.value = ai.prompt || '';
-
-        // Hide test results when switching AIs
-        const resultsContainer = document.getElementById('ai-test-results');
-        if (resultsContainer) resultsContainer.classList.add('hidden');
-
-        const isBuiltIn = aiRegistry.builtIn.has(aiId);
-        aiNameInput.disabled = isBuiltIn;
-        aiCodeInput.disabled = isBuiltIn;
-        aiPromptInput.disabled = isBuiltIn;
-
-        // Hide save/delete for built-in AIs
-        saveAIBtn.style.display = isBuiltIn ? 'none' : '';
-        deleteAIBtn.style.display = isBuiltIn ? 'none' : '';
-
-        updateAIList();
-        updateAIEditorUI();
-    };
-
-    const createNewAI = () => {
-        currentEditingAI = null;
-        aiNameInput.value = '';
-        aiNameInput.disabled = false;
-        aiCodeInput.disabled = false;
-        aiPromptInput.disabled = false;
-        saveAIBtn.style.display = '';
-        deleteAIBtn.style.display = 'none';
-        aiCodeInput.value = '// Paste your generated AI code here';
-        aiPromptInput.value = '';
-        updateAIList();
-        updateAIEditorUI();
-    };
-
-    const saveCurrentAI = () => {
-        const name = aiNameInput.value.trim();
-        const code = aiCodeInput.value;
-        const prompt = aiPromptInput.value.trim();
-
-        if (!name) {
-            alert('Please enter a name for your AI');
-            return;
-        }
-
-        if (currentEditingAI && aiRegistry.custom.has(currentEditingAI)) {
-            // Update existing
-            aiRegistry.updateCustomAI(currentEditingAI, { name, code, prompt });
-        } else {
-            // Create new
-            const id = aiRegistry.generateId();
-            aiRegistry.registerCustomAI(id, { name, code, prompt });
-            currentEditingAI = id;
-        }
-
-        updateAIList();
-        updateAIDropdown();
-        deleteAIBtn.style.display = '';
-
-        // Show success feedback
-        saveAIBtn.textContent = '✓ Saved!';
-        setTimeout(() => {
-            saveAIBtn.textContent = '💾 Save';
-        }, 2000);
-    };
-
-    const deleteCurrentAI = () => {
-        if (!currentEditingAI) return;
-        if (!confirm('Delete this AI?')) return;
-
-        aiRegistry.deleteCustomAI(currentEditingAI);
-        createNewAI();
-        updateAIDropdown();
-    };
-
-    const testCurrentAI = async () => {
-        const code = aiCodeInput.value;
-        const aiName = aiNameInput.value.trim() || 'Test AI';
-
-        // Get UI elements
-        const resultsContainer = document.getElementById('ai-test-results');
-        const statusEl = document.getElementById('ai-test-status');
-        const tableBody = document.querySelector('#ai-test-table tbody');
-
-        // Show results container
-        resultsContainer.classList.remove('hidden');
-        tableBody.innerHTML = '';
-
-        // Step 1: Validate JS syntax
-        statusEl.className = 'running';
-        statusEl.textContent = '⏳ Validating code syntax...';
-
-        try {
-            new Function('api', code);
-        } catch (e) {
-            statusEl.className = 'error';
-            statusEl.textContent = `❌ Syntax Error: ${e.message}`;
-            return;
-        }
-
-        statusEl.textContent = '✓ Syntax valid. Starting benchmark...';
-        testAIBtn.textContent = '⏳ Running...';
-        testAIBtn.disabled = true;
-
-        // Step 2: Get all opponent AIs
-        const allAIs = [
-            aiRegistry.getAI('easy'),
-            aiRegistry.getAI('medium'),
-            aiRegistry.getAI('hard'),
-            ...Array.from(aiRegistry.custom.values())
-        ].filter(Boolean);
-
-        // Create temp AI definition for testing
-        const testAI = {
-            id: 'test_' + Date.now(),
-            name: aiName,
-            code: code
-        };
-
-        const results = [];
-
-        // Step 3: Run games against each opponent
-        const runGame = async (ai1, ai2) => {
-            const testGame = new Game();
-            testGame.startGame({
-                humanCount: 0,
-                botCount: 2,
-                mapWidth: 5,
-                mapHeight: 5,
-                maxDice: 9,
-                diceSides: 6,
-                mapStyle: 'fullgrid',
-                gameMode: 'classic'
-            });
-
-            const ids = [ai1.id, ai2.id];
-            const codes = [ai1.code, ai2.code];
-            testGame.players.forEach((p, idx) => {
-                p.id = idx; // Ensure predictable IDs for simulation
-                p.aiId = ids[idx];
-                p.aiCode = codes[idx];
-            });
-
-            let turns = 0;
-            const maxTurns = 1000;
-
-            // Instantiate AI instances once
-            const aiInstances = testGame.players.map((p, idx) => {
-                try {
-                    const factory = new Function('api', codes[idx]);
-                    const AIClass = factory({}); // Empty api for factory call
-                    return new AIClass();
-                } catch (e) {
-                    console.error("AI Factory Error:", e);
-                    return null;
-                }
-            });
-
-            // Initialize AI instances
-            await Promise.all(aiInstances.map((inst, idx) => {
-                if (inst && inst.init) {
-                    const p = testGame.players[idx];
-                    // Create mini API for init
-                    const api = { myId: p.id, log: () => { } };
-                    return inst.init(api);
-                }
-                return Promise.resolve();
-            }));
-
-            while (testGame.players.filter(p => p.alive).length > 1 && turns < maxTurns) {
-                const p = testGame.currentPlayer;
-                if (p.alive) {
-                    const w = testGame.map.width;
-                    const tilesWithCoords = testGame.map.tiles.map((t, idx) => ({ ...t, x: idx % w, y: Math.floor(idx / w) }));
-
-                    const api = {
-                        getMyTiles: () => tilesWithCoords.filter(t => t.owner === p.id && !t.blocked),
-                        getEnemyTiles: () => tilesWithCoords.filter(t => t.owner !== p.id && !t.blocked),
-                        getAllTiles: () => tilesWithCoords.filter(t => !t.blocked),
-                        getAdjacentTiles: (x, y) => testGame.map.getAdjacentTiles(x, y),
-                        getTileAt: (x, y) => testGame.map.getTile(x, y),
-                        getLargestConnectedRegion: (pid) => testGame.map.findLargestConnectedRegion(pid),
-                        getReinforcements: (pid) => {
-                            const r = testGame.map.findLargestConnectedRegion(pid);
-                            const pl = testGame.players.find(pp => pp.id === pid);
-                            return r + (pl ? (pl.storedDice || 0) : 0);
-                        },
-                        getPlayerInfo: (pid) => testGame.players.find(pp => pp.id === pid) || null,
-                        get players() { return testGame.players; },
-                        simulateAttack: (fromX, fromY, toX, toY) => {
-                            const fromT = testGame.map.getTile(fromX, fromY);
-                            const toT = testGame.map.getTile(toX, toY);
-                            if (!fromT || !toT || fromT.owner !== p.id || fromT.dice <= 1) return { success: false };
-                            const eWin = fromT.dice > toT.dice;
-                            const origFromD = fromT.dice;
-                            const origToD = toT.dice;
-                            const origToO = toT.owner;
-                            let mR = 0, eR = 0;
-
-                            if (eWin) {
-                                fromT.dice = 1;
-                                toT.owner = p.id;
-                                toT.dice = origFromD - 1;
-                                mR = testGame.map.findLargestConnectedRegion(p.id) + (p.storedDice || 0);
-                                if (origToO !== null) eR = testGame.map.findLargestConnectedRegion(origToO);
-                                fromT.dice = origFromD;
-                                toT.owner = origToO;
-                                toT.dice = origToD;
-                            } else {
-                                mR = testGame.map.findLargestConnectedRegion(p.id) + (p.storedDice || 0);
-                                if (origToO !== null) eR = testGame.map.findLargestConnectedRegion(origToO);
-                            }
-                            return { success: true, expectedWin: eWin, myPredictedReinforcements: mR, enemyPredictedReinforcements: eR };
-                        },
-                        get myId() { return p.id; },
-                        get maxDice() { return testGame.maxDice; },
-                        get diceSides() { return testGame.diceSides; },
-                        get mapWidth() { return testGame.map.width; },
-                        get mapHeight() { return testGame.map.height; },
-                        attack: (fx, fy, tx, ty) => {
-                            const res = testGame.attack(fx, fy, tx, ty);
-                            if (res.error) return { success: false, reason: res.error };
-                            return { success: true, expectedWin: res.won };
-                        },
-                        endTurn: () => { },
-                        load: () => null,
-                        save: () => null,
-                        log: () => { },
-                        getWinProbability: (a, d) => 1 / (1 + Math.exp(-(a * 3.5 - d * 3.5) / 2))
-                    };
-
-                    try {
-                        const instance = aiInstances[p.id];
-                        if (instance && instance.endTurn) {
-                            await instance.endTurn(api);
-                        }
-                    } catch (e) {
-                        console.error("AI Turn Error:", e);
-                    }
-                }
-                testGame.endTurn();
-                turns++;
-            }
-            return testGame.winner ? testGame.winner.id : -1;
-        };
-
-        // Run benchmark for each opponent
-        for (const opponent of allAIs) {
-            statusEl.textContent = `⏳ Testing vs ${opponent.name}...`;
-            let wins = 0;
-            let draws = 0;
-
-            for (let g = 0; g < 10; g++) {
-                const reversed = g % 2 === 1;
-                const winnerId = await runGame(
-                    reversed ? opponent : testAI,
-                    reversed ? testAI : opponent
-                );
-
-                if (winnerId === -1) {
-                    // Draw (max turns reached)
-                    draws++;
-                } else {
-                    // Determine if testAI won
-                    const testAIIsP0 = !reversed;
-                    const winnerIsP0 = winnerId === 0;
-                    if (winnerIsP0 === testAIIsP0) wins++;
-                }
-
-                await new Promise(r => setTimeout(r, 0));
-            }
-
-            const losses = 10 - wins - draws;
-            const winRate = Math.round(wins * 10);
-
-            results.push({ opponent: opponent.name, wins, draws, losses, winRate });
-
-            // Update table incrementally
-            const row = document.createElement('tr');
-            const winRateClass = winRate >= 60 ? 'win-rate-good' : (winRate >= 40 ? 'win-rate-ok' : 'win-rate-bad');
-            row.innerHTML = `
-                <td>${opponent.name}</td>
-                <td>${wins}</td>
-                <td>${draws}</td>
-                <td>${losses}</td>
-                <td class="${winRateClass}">${winRate}%</td>
-            `;
-            tableBody.appendChild(row);
-        }
-
-        // Compute overall stats
-        const totalWins = results.reduce((s, r) => s + r.wins, 0);
-        const totalGames = results.length * 10;
-        const overallRate = Math.round(totalWins / totalGames * 100);
-
-        statusEl.className = '';
-        statusEl.textContent = `✅ Benchmark complete! Overall: ${totalWins}/${totalGames} wins (${overallRate}%) on 5x5 full grid`;
-
-        testAIBtn.textContent = '▶ Test';
-        testAIBtn.disabled = false;
-    };
-
-    const generatePrompt = () => {
-        const userStrategy = aiPromptInput.value.trim() || 'Create an AI that plays well';
-
-        const prompt = `Create a JavaScript class for a DICEPTION game AI bot.
-
-### STRICT FORMATTING RULES:
-1. You MUST return the class definition using a return statement at the end of the script.
-2. The class MUST have an 'async endTurn(api)' method which contains the main turn logic.
-3. The class CAN have an 'async init(api)' method for one-time initialization.
-4. DO NOT call 'api.endTurn()' yourself; the game runner calls it automatically after 'endTurn(api)' resolves.
-5. You CAN use 'async/await' for complex logic or simulations.
-6. Access all functionality via the provided 'api' object.
-
-### TEMPLATE:
-return class MyAI {
-  async init(api) {
-    // One-time setup (optional)
-  }
-
-  async endTurn(api) {
-    // Main turn logic
-    // Example: const tiles = api.getMyTiles();
-    // ...
-  }
-}
-
-AVAILABLE API:
-Game State:
-- api.getMyTiles() → [{x, y, dice, owner}] - Get all tiles owned by this AI
-- api.getEnemyTiles() → [{x, y, dice, owner}] - Get all enemy tiles
-- api.getAllTiles() → All playable tiles on the map
-- api.getAdjacentTiles(x, y) → [{x, y, dice, owner}] - Get neighboring tiles
-- api.getTileAt(x, y) → Get specific tile or null
-- api.myId → This AI's player ID
-- api.maxDice → Maximum dice per tile (usually 9)
-- api.diceSides → Number of sides on each die (usually 6)
-- api.mapWidth, api.mapHeight → Map dimensions
-- api.players → Array of all players [{id, alive, storedDice}]
-
-Strategy Helpers:
-- api.getLargestConnectedRegion(playerId) → Size of largest connected territory
-- api.getReinforcements(playerId) → Total reinforcements player will receive (region size + stored dice)
-- api.getPlayerInfo(playerId) → Player object {id, alive, storedDice} or null
-- api.simulateAttack(fromX, fromY, toX, toY) → Predict attack WITHOUT executing:
-    Returns {success, expectedWin, myPredictedReinforcements, enemyPredictedReinforcements}
-    Use this to evaluate which moves would most improve your position!
-
-Actions:
-- api.attack(fromX, fromY, toX, toY) → {success: boolean, expectedWin: boolean}
-
-Utilities:
-- api.save(key, value) → Persist data between games
-- api.load(key) → Load persisted data
-- api.log(msg) → Debug output to console
-- api.getWinProbability(attackDice, defenderDice) → 0-1 probability
-
-GAME RULES:
-- The game is turn based and the rules similar to risk, kdice or dicewars.
-- Attacker must have dice > 1 to attack.
-- Both sides roll all their dice, highest sum wins.
-- On win: attacker moves to captured tile with (dice-1), leaving 1 behind.
-- On loss: attacker drops to 1 die. Turn ends when your endTurn() method returns.
-- At end of turn, player gets reinforcements equal to largest connected region size.
-
-USER'S STRATEGY REQUEST:
-${userStrategy}
-
-Final Reminder: Return ONLY raw JavaScript code starting with the class or ending with "return YourClass;". No markdown code blocks, no explanations. Just the code.`;
-
-        navigator.clipboard.writeText(prompt).then(() => {
-            generatePromptBtn.textContent = '✓ Copied!';
-            setTimeout(() => {
-                generatePromptBtn.textContent = '📋 Copy Prompt to Clipboard';
-            }, 2000);
-        }).catch(() => {
-            alert('Could not copy to clipboard. Please manually select and copy the text.');
-        });
-    };
-
-    const exportAI = () => {
-        if (!currentEditingAI) {
-            alert('Select an AI to export');
-            return;
-        }
-        const data = aiRegistry.exportAI(currentEditingAI);
-        if (data) {
-            // Create and download JSON file
-            const json = JSON.stringify(data, null, 2);
-            const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${data.name.replace(/[^a-z0-9]/gi, '_')}_ai.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            exportAIBtn.textContent = '✓ Downloaded!';
-            setTimeout(() => {
-                exportAIBtn.textContent = '📤 Export';
-            }, 2000);
-        }
-    };
-
-    const importAI = () => {
-        // Create hidden file input
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-
-        input.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            try {
-                const text = await file.text();
-                const data = JSON.parse(text);
-
-                const result = aiRegistry.importAI(data);
-                if (result.success) {
-                    updateAIList();
-                    updateAIDropdown();
-                    loadAIForEditing(result.id);
-
-                    if (result.replaced) {
-                        importAIBtn.textContent = '✓ Updated!';
-                    } else {
-                        importAIBtn.textContent = '✓ Imported!';
-                    }
-                    setTimeout(() => {
-                        importAIBtn.textContent = '📥 Import';
-                    }, 2000);
-                } else {
-                    alert('Import failed: ' + result.error);
-                }
-            } catch (err) {
-                alert('Failed to read file: ' + err.message);
-            }
-        };
-
-        input.click();
-    };
-
-    // Event handlers
-    manageAIsBtn.addEventListener('click', () => {
-        setupModal.classList.add('hidden');
-        aiEditorModal.classList.remove('hidden');
-        updateAIList();
-        if (!currentEditingAI) {
-            loadAIForEditing('easy');
-        }
-    });
-
-    aiEditorCloseBtn.addEventListener('click', () => {
-        aiEditorModal.classList.add('hidden');
-        setupModal.classList.remove('hidden');
-        // Hide test results when closing editor
-        const resultsContainer = document.getElementById('ai-test-results');
-        if (resultsContainer) resultsContainer.classList.add('hidden');
-    });
-
-    // Close button for test results
-    document.getElementById('ai-test-close-btn').addEventListener('click', () => {
-        document.getElementById('ai-test-results').classList.add('hidden');
-    });
-
-    newAIBtn.addEventListener('click', createNewAI);
-    saveAIBtn.addEventListener('click', saveCurrentAI);
-    deleteAIBtn.addEventListener('click', deleteCurrentAI);
-    testAIBtn.addEventListener('click', testCurrentAI);
-    exportAIBtn.addEventListener('click', exportAI);
-    importAIBtn.addEventListener('click', importAI);
-    generatePromptBtn.addEventListener('click', generatePrompt);
-
-    aiCodeInput.addEventListener('input', updateAIEditorUI);
-    aiPromptInput.addEventListener('input', updateAIEditorUI);
-
-    // API docs toggle
-    apiDocsHeader.addEventListener('click', () => {
-        apiDocs.classList.toggle('open');
-    });
-
-    // Per-player AI config DOM elements
-    const perPlayerAIConfigEl = document.getElementById('per-player-ai-config');
-    const perPlayerAIList = document.getElementById('per-player-ai-list');
-
-    // Generate AI dropdown options HTML
-    const getAIOptionsHTML = (selectedValue = 'easy') => {
-        const ais = aiRegistry.getAllAIs();
-        let html = '';
-        for (const ai of ais) {
-            const selected = ai.id === selectedValue ? ' selected' : '';
-            html += `<option value="${ai.id}"${selected}>${ai.name}</option>`;
-        }
-        return html;
-    };
-
-    // Update per-player AI config based on bot count
-    const updatePerPlayerConfig = () => {
-        const botCount = parseInt(botCountInput.value);
-        const humanCount = parseInt(humanCountInput.value);
-
-        perPlayerAIList.innerHTML = '';
-
-        for (let i = 0; i < botCount; i++) {
-            // Use bot index (0, 1, 2...) as config key instead of global player ID
-            const botIndex = i;
-            const savedAI = perPlayerAIConfig[botIndex] || 'easy';
-
-            const row = document.createElement('div');
-            row.className = 'per-player-ai-row';
-            row.innerHTML = `
-                <span class="bot-label">Bot ${i + 1}</span>
-                <select class="per-player-ai-select" data-bot-index="${botIndex}">
-                    ${getAIOptionsHTML(savedAI)}
-                </select>
-            `;
-            perPlayerAIList.appendChild(row);
-        }
-
-        // Hide/Show per-player config based on whether bots exist and custom is selected
-        if (botCount > 0 && selectedBotAI === 'custom') {
-            perPlayerAIConfigEl.style.display = 'flex';
-        } else {
-            perPlayerAIConfigEl.style.display = 'none';
-        }
-
-
-        // Add change listeners
-        perPlayerAIList.querySelectorAll('.per-player-ai-select').forEach(select => {
-            select.addEventListener('change', () => {
-                perPlayerAIConfig[select.dataset.botIndex] = select.value;
-                localStorage.setItem('dicy_perPlayerAIConfig', JSON.stringify(perPlayerAIConfig));
-            });
-        });
-    };
-
-    // AI selection change - show/hide per-player config
+    // AI selection change handler
     botAISelect.addEventListener('change', () => {
         selectedBotAI = botAISelect.value;
         localStorage.setItem('dicy_botAI', selectedBotAI);
-
-        if (selectedBotAI === 'custom') {
-            perPlayerAIConfigEl.style.display = 'flex';
-            updatePerPlayerConfig();
-        } else {
-            perPlayerAIConfigEl.style.display = 'none';
-        }
     });
 
-    // Update per-player config when bot count changes
-    botCountInput.addEventListener('change', () => {
-        if (selectedBotAI === 'custom') {
-            updatePerPlayerConfig();
-        }
-    });
-
-    // Load saved AI selection (per-player config updated later after bot count is loaded)
-    if (selectedBotAI) {
+    // Load saved AI selection
+    if (selectedBotAI && Array.from(botAISelect.options).some(o => o.value === selectedBotAI)) {
         botAISelect.value = selectedBotAI;
     }
-    updateAIDropdown();
 
     // === Tournament Mode ===
     const tournamentConfig = document.getElementById('tournament-config');
@@ -1456,14 +804,9 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
 
         const results = {};
 
-        // Helper to get AI id for a player
-        const getPlayerAIId = (playerId) => {
-            if (selectedBotAI === 'custom') {
-                // In tournaments, all players are bots, so ID is the index
-                return perPlayerAIConfig[playerId] || 'easy';
-            }
-            return selectedBotAI;
-        };
+        // AI difficulty name mapping
+        const aiNames = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+        const getAIName = (aiId) => aiNames[aiId] || aiId;
 
         for (let i = 0; i < gameCount; i++) {
             // Create a headless game
@@ -1479,107 +822,27 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
                 gameMode: gameModeInput.value
             });
 
-            // Assign names for API
+            // Assign names and create AI instances for each player
+            const aiInstances = new Map();
             tourneyGame.players.forEach(p => {
-                const aiId = getPlayerAIId(p.id);
-                const aiDef = aiRegistry.getAI(aiId);
-                const aiName = aiDef ? aiDef.name : aiId;
-                p.name = `${aiName} ${p.id}`;
+                const aiId = selectedBotAI || 'easy';
+                const ai = createAI(aiId, tourneyGame, p.id);
+                aiInstances.set(p.id, ai);
+                p.name = `${ai.name} ${p.id}`;
+                p.aiId = aiId;
             });
 
-            // Run game to completion using simple direct AI (no Web Workers for speed)
+            // Run game to completion (fast mode - no delays)
             let turns = 0;
             const maxTurns = 2000;
 
-            // Instantiate AI instances for each player
-            const aiInstances = new Map();
-            for (const p of tourneyGame.players) {
-                const aiId = getPlayerAIId(p.id);
-                try {
-                    const aiDef = aiRegistry.getAI(aiId);
-                    if (aiDef) {
-                        const factory = new Function('api', aiDef.code);
-                        const AIClass = factory({});
-                        const inst = new AIClass();
-                        if (inst.init) await inst.init({
-                            myId: p.id,
-                            log: (...args) => { if (i === 0) console.log(`[Tourney Game 1] AI ${p.id}:`, ...args); }
-                        });
-                        aiInstances.set(p.id, inst);
-                    }
-                } catch (e) {
-                    console.error("Tournament AI Init Error:", e);
-                }
-            }
-
             while (!tourneyGame.gameOver && turns < maxTurns) {
                 const currentPlayer = tourneyGame.currentPlayer;
-                const instance = aiInstances.get(currentPlayer.id);
+                const ai = aiInstances.get(currentPlayer.id);
 
-                if (instance) {
-                    let turnEnded = false;
-                    let moveCount = 0;
-                    const maxMoves = 200;
-
-                    const api = {
-                        getMyTiles: () => tourneyGame.map.tiles.filter(t => t.owner === currentPlayer.id && !t.blocked).map(t => ({
-                            ...t,
-                            x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width,
-                            y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width)
-                        })),
-                        getEnemyTiles: () => tourneyGame.map.tiles.filter(t => t.owner !== currentPlayer.id && !t.blocked).map(t => ({
-                            ...t,
-                            x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width,
-                            y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width)
-                        })),
-                        getAllTiles: () => tourneyGame.map.tiles.filter(t => !t.blocked).map(t => ({
-                            ...t,
-                            x: tourneyGame.map.tiles.indexOf(t) % tourneyGame.map.width,
-                            y: Math.floor(tourneyGame.map.tiles.indexOf(t) / tourneyGame.map.width)
-                        })),
-                        getAdjacentTiles: (x, y) => tourneyGame.map.getAdjacentTiles(x, y),
-                        getTileAt: (x, y) => tourneyGame.map.getTile(x, y),
-                        getLargestConnectedRegion: (playerId) => tourneyGame.map.findLargestConnectedRegion(playerId),
-                        getReinforcements: (playerId) => {
-                            const region = tourneyGame.map.findLargestConnectedRegion(playerId);
-                            const player = tourneyGame.players.find(p => p.id === playerId);
-                            const stored = player ? (player.storedDice || 0) : 0;
-                            return region + stored;
-                        },
-                        getPlayerInfo: (playerId) => tourneyGame.players.find(p => p.id === playerId) || null,
-                        get players() { return tourneyGame.players; },
-                        simulateAttack: (fromX, fromY, toX, toY) => {
-                            const fromTile = tourneyGame.map.getTile(fromX, fromY);
-                            const toTile = tourneyGame.map.getTile(toX, toY);
-                            if (!fromTile || !toTile || fromTile.owner !== currentPlayer.id || fromTile.dice <= 1) return { success: false };
-                            return { success: true, expectedWin: fromTile.dice > toTile.dice };
-                        },
-                        getMyId: () => currentPlayer.id,
-                        get myId() { return currentPlayer.id; },
-                        get maxDice() { return tourneyGame.maxDice; },
-                        get diceSides() { return tourneyGame.diceSides; },
-                        get mapWidth() { return tourneyGame.map.width; },
-                        get mapHeight() { return tourneyGame.map.height; },
-                        attack: (fromX, fromY, toX, toY) => {
-                            if (turnEnded || moveCount >= maxMoves) return { success: false };
-                            moveCount++;
-                            try {
-                                const res = tourneyGame.attack(fromX, fromY, toX, toY);
-                                if (res.error) return { success: false, reason: res.error };
-                                return { success: true, expectedWin: res.won };
-                            } catch (e) {
-                                return { success: false, reason: e.message };
-                            }
-                        },
-                        endTurn: () => { turnEnded = true; },
-                        log: (...args) => { if (i === 0) console.log(`[Tourney Game 1] AI ${currentPlayer.id}:`, ...args); },
-                        save: () => { },
-                        load: () => null,
-                        getWinProbability: (att, def) => 1 / (1 + Math.exp(-(att - def) / 2))
-                    };
-
+                if (ai) {
                     try {
-                        if (instance.endTurn) await instance.endTurn(api);
+                        await ai.takeTurn('fast');
                     } catch (e) {
                         console.warn(`Tournament AI Turn Error:`, e);
                     }
@@ -1591,12 +854,8 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
             // Record result
             if (tourneyGame.winner) {
                 const winnerId = tourneyGame.winner.id;
-                const aiId = getPlayerAIId(winnerId);
-                const aiDef = aiRegistry.getAI(aiId);
-                const aiName = aiDef ? aiDef.name : aiId;
-
-                // Consistent naming with main game (e.g. "Easy 1" instead of "Easy (Player 1)")
-                const key = `${aiName} ${winnerId}`;
+                const ai = aiInstances.get(winnerId);
+                const key = `${ai?.name || 'Bot'} ${winnerId}`;
                 results[key] = (results[key] || 0) + 1;
             }
 
@@ -1759,10 +1018,7 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
             game.players.forEach(p => {
                 if (p.isBot) {
                     const aiId = p.aiId || 'easy';
-                    const aiDef = aiRegistry.getAI(aiId);
-                    if (aiDef) {
-                        playerAIs.set(p.id, new AIRunner(aiDef));
-                    }
+                    playerAIs.set(p.id, createAI(aiId, game, p.id));
                 }
                 // Ensure name is set
                 p.name = p.name || getPlayerName(p);
@@ -1805,12 +1061,6 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
     // Tournament config - show if humans = 0
     if (parseInt(savedHumanCount) === 0) {
         tournamentConfig.style.display = 'block';
-    }
-
-    // Per-player AI config - update after bot count is set
-    if (selectedBotAI === 'custom') {
-        perPlayerAIConfigEl.style.display = 'flex';
-        updatePerPlayerConfig();
     }
 
     const getMapSize = (sliderValue) => {
@@ -1872,11 +1122,9 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
     });
     humanCountInput.addEventListener('change', () => {
         localStorage.setItem('dicy_humanCount', humanCountInput.value);
-        if (selectedBotAI === 'custom') updatePerPlayerConfig();
     });
     botCountInput.addEventListener('change', () => {
         localStorage.setItem('dicy_botCount', botCountInput.value);
-        if (selectedBotAI === 'custom') updatePerPlayerConfig();
     });
     gameSpeedInput.addEventListener('change', () => {
         localStorage.setItem('dicy_gameSpeed', gameSpeedInput.value);
@@ -2004,20 +1252,9 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
                 continue;
             }
 
-            // Get AI config for this player
-            let aiId;
-            if (selectedBotAI === 'custom') {
-                // Map global player ID back to 0-based bot index
-                const botIndex = player.id - humanCount;
-                aiId = perPlayerAIConfig[botIndex] || 'easy';
-            } else {
-                // Same AI for all
-                aiId = selectedBotAI;
-            }
-            const aiDef = aiRegistry.getAI(aiId);
-            if (aiDef) {
-                playerAIs.set(player.id, new AIRunner(aiDef));
-            }
+            // Use selected AI difficulty for all bots
+            const aiId = selectedBotAI || 'easy';
+            playerAIs.set(player.id, createAI(aiId, game, player.id));
             player.aiId = aiId;
             player.name = getPlayerName(player);
         }
@@ -2631,30 +1868,14 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
             if (humanCountInput) humanCountInput.value = humans;
             if (botCountInput) botCountInput.value = bots;
 
-            // Update AI Selection
-            if (botAIs.size === 1) {
-                // All same AI
+            // Update AI Selection - use the first bot's AI or keep current selection
+            if (botAIs.size >= 1) {
                 const ai = [...botAIs][0];
-                if (botAISelect) {
+                if (botAISelect && ['easy', 'medium', 'hard'].includes(ai)) {
                     botAISelect.value = ai;
                     selectedBotAI = ai;
-                    perPlayerAIConfigEl.style.display = 'none';
-                }
-            } else if (botAIs.size > 1) {
-                // Mixed AIs -> Custom
-                if (botAISelect) {
-                    botAISelect.value = 'custom';
-                    selectedBotAI = 'custom';
-
-                    // Populate the global config object
-                    Object.assign(perPlayerAIConfig, newPerPlayerConfig);
-
-                    // Show UI and update
-                    perPlayerAIConfigEl.style.display = 'flex';
-                    updatePerPlayerConfig();
                 }
             }
-            // If 0 bots, doesn't matter much, keep previous or default
         }
     };
 
@@ -2855,168 +2076,66 @@ Final Reminder: Return ONLY raw JavaScript code starting with the class or endin
 }
 
 
-// --- Benchmark Tool ---
+// --- Benchmark Tool (console only) ---
+// Usage: window.benchmarkAI() in browser console
 window.benchmarkAI = async () => {
-    // Create local registry instance
-    const aiRegistry = new AIRegistry();
-    aiRegistry.loadCustomAIs();
+    const { createAI } = await import('./core/ai/index.js');
+    const aiTypes = ['easy', 'medium', 'hard'];
 
-    // Gather all AIs
-    const allAIs = [
-        aiRegistry.getAI('easy'),
-        aiRegistry.getAI('medium'),
-        aiRegistry.getAI('hard'),
-        ...Array.from(aiRegistry.custom.values())
-    ].filter(Boolean);
+    console.log(`%c🤖 AI Round Robin: ${aiTypes.join(', ')}`, "font-weight:bold; font-size:16px; color:#0ff");
 
-    console.log(`%c🤖 AI Round Robin: ${allAIs.map(a => a.name).join(', ')}`, "font-weight:bold; font-size:16px; color:#0ff");
-
-    // Initialize Data Table (Object for console.table)
     const tableData = {};
-    allAIs.forEach(rowAI => {
-        tableData[rowAI.name] = {};
-        allAIs.forEach(colAI => {
-            tableData[rowAI.name][colAI.name] = '0/10';
+    aiTypes.forEach(row => {
+        tableData[row] = {};
+        aiTypes.forEach(col => {
+            tableData[row][col] = '0/10';
         });
     });
 
-    const updateCell = (ai1Name, ai2Name, wins, losses) => {
-        if (tableData[ai1Name]) tableData[ai1Name][ai2Name] = `${wins}/${losses}`;
-    };
-
-    const runGame = async (ai1, ai2) => {
+    const runGame = async (ai1Type, ai2Type) => {
         const game = new Game();
         game.startGame({
-            humanCount: 0,
-            botCount: 2,
-            mapWidth: 4,
-            mapHeight: 4,
-            maxDice: 9,
-            diceSides: 6,
-            mapStyle: 'random',
-            gameMode: 'classic'
+            humanCount: 0, botCount: 2,
+            mapWidth: 4, mapHeight: 4,
+            maxDice: 9, diceSides: 6,
+            mapStyle: 'random', gameMode: 'classic'
         });
 
-        // Config players
-        const ids = [ai1.id, ai2.id];
+        const aiInstances = new Map();
         game.players.forEach((p, idx) => {
-            p.aiId = ids[idx];
-            p.name = `${aiRegistry.getAI(p.aiId).name} ${p.id}`;
+            const aiType = idx === 0 ? ai1Type : ai2Type;
+            aiInstances.set(p.id, createAI(aiType, game, p.id));
+            p.aiId = aiType;
         });
 
         let turns = 0;
-        const maxTurns = 500;
-
-        while (game.players.filter(p => p.alive).length > 1 && turns < maxTurns) {
-            const p = game.currentPlayer;
-            if (p.alive) {
-                const aiDef = aiRegistry.getAI(p.aiId);
-                const w = game.map.width;
-                const tilesWithCoords = game.map.tiles.map((t, idx) => ({ ...t, x: idx % w, y: Math.floor(idx / w) }));
-
-                const api = {
-                    getMyTiles: () => tilesWithCoords.filter(t => t.owner === p.id && !t.blocked),
-                    getEnemyTiles: () => tilesWithCoords.filter(t => t.owner !== p.id && !t.blocked),
-                    getAllTiles: () => tilesWithCoords.filter(t => !t.blocked),
-                    getAdjacentTiles: (x, y) => game.map.getAdjacentTiles(x, y),
-                    getTileAt: (x, y) => game.map.getTile(x, y),
-                    getLargestConnectedRegion: (pid) => game.map.findLargestConnectedRegion(pid),
-                    getReinforcements: (pid) => {
-                        const r = game.map.findLargestConnectedRegion(pid);
-                        const pl = game.players.find(pp => pp.id === pid);
-                        return r + (pl ? (pl.storedDice || 0) : 0);
-                    },
-                    getPlayerInfo: (pid) => game.players.find(pp => pp.id === pid) || null,
-                    get players() { return game.players; },
-                    simulateAttack: (fromX, fromY, toX, toY) => {
-                        const fromT = game.map.getTile(fromX, fromY);
-                        const toT = game.map.getTile(toX, toY);
-                        if (!fromT || !toT || fromT.owner !== p.id || fromT.dice <= 1) return { success: false };
-                        const eWin = fromT.dice > toT.dice;
-                        const origFromD = fromT.dice;
-                        const origFromO = fromT.owner;
-                        const origToD = toT.dice;
-                        const origToO = toT.owner;
-                        const eId = origToO;
-                        let mR = 0, eR = 0;
-
-                        if (eWin) {
-                            fromT.dice = 1;
-                            toT.owner = p.id;
-                            toT.dice = origFromD - 1;
-                            mR = game.map.findLargestConnectedRegion(p.id) + (p.storedDice || 0);
-                            if (eId !== null) eR = game.map.findLargestConnectedRegion(eId) + (game.players.find(pp => pp.id === eId)?.storedDice || 0);
-                            fromT.dice = origFromD;
-                            toT.owner = origToO;
-                            toT.dice = origToD;
-                        } else {
-                            mR = game.map.findLargestConnectedRegion(p.id) + (p.storedDice || 0);
-                            if (eId !== null) eR = game.map.findLargestConnectedRegion(eId) + (game.players.find(pp => pp.id === eId)?.storedDice || 0);
-                        }
-                        return { success: true, expectedWin: eWin, myPredictedReinforcements: mR, enemyPredictedReinforcements: eR };
-                    },
-                    get myId() { return p.id; },
-                    get maxDice() { return game.maxDice; },
-                    get diceSides() { return game.diceSides; },
-                    get mapWidth() { return game.map.width; },
-                    get mapHeight() { return game.map.height; },
-                    attack: (fx, fy, tx, ty) => {
-                        const ft = game.map.getTile(fx, fy);
-                        const tt = game.map.getTile(tx, ty);
-                        if (ft && tt && ft.owner === p.id && ft.dice > tt.dice) {
-                            game.attack(fx, fy, tx, ty);
-                            return { success: true, expectedWin: true };
-                        }
-                        return { success: false };
-                    },
-                    endTurn: () => { /* no-op in sync loop */ },
-                    load: () => null,
-                    save: () => null,
-                    log: () => { },
-                    getWinProbability: (a, d) => 1 / (1 + Math.exp(-(a * 3.5 - d * 3.5) / 2))
-                };
-
-                if (aiDef) {
-                    try {
-                        const fn = new Function('api', aiDef.code);
-                        fn(api);
-                    } catch (e) { }
-                }
-            }
+        while (game.players.filter(p => p.alive).length > 1 && turns < 500) {
+            const ai = aiInstances.get(game.currentPlayer.id);
+            if (ai) await ai.takeTurn('fast');
             game.endTurn();
             turns++;
         }
         return game.winner ? game.winner.id : -1;
     };
 
-    // Round Robin
-    for (let i = 0; i < allAIs.length; i++) {
-        for (let j = i; j < allAIs.length; j++) {
-            const ai1 = allAIs[i];
-            const ai2 = allAIs[j];
+    for (let i = 0; i < aiTypes.length; i++) {
+        for (let j = i; j < aiTypes.length; j++) {
+            const ai1 = aiTypes[i], ai2 = aiTypes[j];
+            console.log(`Matchup: ${ai1} vs ${ai2}...`);
+            let wins1 = 0, wins2 = 0;
 
-            console.log(`Matchup: ${ai1.name} vs ${ai2.name}...`);
-            let wins1 = 0;
-            let wins2 = 0;
-
-            // Run 10 games
             for (let g = 0; g < 10; g++) {
-                // Alternate starting positions for fairness
                 const reversed = g % 2 === 1;
                 const winnerId = await runGame(reversed ? ai2 : ai1, reversed ? ai1 : ai2);
-
                 if (winnerId !== -1) {
-                    const ai1IsP0 = !reversed;
-                    const winnerIsP0 = winnerId === 0;
-                    if (winnerIsP0 === ai1IsP0) wins1++;
+                    if ((winnerId === 0) === !reversed) wins1++;
                     else wins2++;
                 }
-
                 await new Promise(r => setTimeout(r, 0));
             }
 
-            updateCell(ai1.name, ai2.name, wins1, 10 - wins1);
-            updateCell(ai2.name, ai1.name, wins2, 10 - wins2);
+            tableData[ai1][ai2] = `${wins1}/${10 - wins1}`;
+            tableData[ai2][ai1] = `${wins2}/${10 - wins2}`;
         }
     }
 
