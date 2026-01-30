@@ -241,11 +241,11 @@ export class AIRunner {
                      }
 
                      const expectedWin = fromTile.dice > toTile.dice;
+                     const enemyId = toTile.owner;
                      let myReinforcements = 0;
                      let enemyReinforcements = 0;
 
                      if (expectedWin) {
-                         const enemyId = toTile.owner;
                          // Simulate conquest
                          toTile.owner = myId;
                          toTile.dice = fromTile.dice - 1;

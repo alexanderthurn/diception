@@ -1,5 +1,6 @@
 import { Graphics, Container, Text, TextStyle, Sprite } from 'pixi.js';
 import { TileRenderer } from './tile-renderer.js';
+import { RENDER } from '../core/constants.js';
 
 export class GridRenderer {
     constructor(stage, game, animator) {
@@ -17,8 +18,8 @@ export class GridRenderer {
         this.animationContainer = new Container();
         this.stage.addChild(this.animationContainer);
 
-        this.tileSize = 60;
-        this.gap = 4;
+        this.tileSize = RENDER.DEFAULT_TILE_SIZE;
+        this.gap = RENDER.DEFAULT_GAP;
 
         // Styling
         this.textStyle = new TextStyle({
@@ -40,6 +41,7 @@ export class GridRenderer {
         // Shimmer animation for largest region border
         this.shimmerTime = 0;
         this.shimmerContainer = new Container();
+        this.shimmerGraphics = null; // Reusable shimmer graphics
         this.stage.addChild(this.shimmerContainer);
 
         // Cache for current player's largest region edges
@@ -47,6 +49,51 @@ export class GridRenderer {
 
         // Editor paint mode (neutral rendering)
         this.paintMode = false;
+
+        // === PERFORMANCE: Tile caching ===
+        // Pool of tile containers indexed by tile index
+        this.tileCache = new Map();
+        // Track last known state for dirty checking
+        this.lastTileStates = new Map();
+        // Track last current player for region highlighting changes
+        this.lastCurrentPlayerId = null;
+        // Track if full redraw is needed
+        this.needsFullRedraw = true;
+    }
+
+    /**
+     * Mark the grid as needing a full redraw (e.g., after map change)
+     */
+    invalidate() {
+        this.needsFullRedraw = true;
+        this.lastTileStates.clear();
+    }
+
+    /**
+     * Check if a tile needs redrawing based on its current state
+     */
+    isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isInLargestRegion) {
+        const lastState = this.lastTileStates.get(tileIdx);
+        if (!lastState) return true;
+
+        return lastState.owner !== tileRaw.owner ||
+               lastState.dice !== tileRaw.dice ||
+               lastState.blocked !== tileRaw.blocked ||
+               lastState.isCurrentPlayer !== isCurrentPlayer ||
+               lastState.isInLargestRegion !== isInLargestRegion;
+    }
+
+    /**
+     * Store the current state of a tile for future dirty checking
+     */
+    saveTileState(tileIdx, tileRaw, isCurrentPlayer, isInLargestRegion) {
+        this.lastTileStates.set(tileIdx, {
+            owner: tileRaw.owner,
+            dice: tileRaw.dice,
+            blocked: tileRaw.blocked,
+            isCurrentPlayer,
+            isInLargestRegion
+        });
     }
 
     setPaintMode(enabled) {
@@ -84,21 +131,39 @@ export class GridRenderer {
     }
 
     draw() {
-        this.container.removeChildren();
-
         const map = this.game.map;
+        const currentPlayer = this.game.currentPlayer;
+        const currentPlayerId = currentPlayer?.id;
+
+        // Check if current player changed (requires full region recalculation)
+        const playerChanged = this.lastCurrentPlayerId !== currentPlayerId;
+        if (playerChanged) {
+            this.lastCurrentPlayerId = currentPlayerId;
+        }
+
+        // Full redraw needed if map structure changed or it's the first draw
+        const needsFullRedraw = this.needsFullRedraw || 
+                                this.tileCache.size === 0 || 
+                                this.tileCache.size !== map.width * map.height;
+
+        if (needsFullRedraw) {
+            // Clear everything for full redraw
+            this.container.removeChildren();
+            this.tileCache.clear();
+            this.lastTileStates.clear();
+            this.needsFullRedraw = false;
+        }
 
         const mapPixelWidth = map.width * (this.tileSize + this.gap);
         const mapPixelHeight = map.height * (this.tileSize + this.gap);
 
         this.container.x = 0;
         this.container.y = 0;
-
         this.overlayContainer.x = 0;
         this.overlayContainer.y = 0;
 
-        if (this.paintMode) {
-            // Draw map boundary border
+        // Paint mode border (only on full redraw)
+        if (this.paintMode && needsFullRedraw) {
             const borderGfx = new Graphics();
             borderGfx.rect(-2, -2, mapPixelWidth + 4 - this.gap, mapPixelHeight + 4 - this.gap);
             borderGfx.stroke({ width: 2, color: 0xFFFFFF, alpha: 0.3 });
@@ -113,134 +178,184 @@ export class GridRenderer {
             }
         }
 
-        const currentPlayer = this.game.currentPlayer;
-
         // Clear and recollect edges for current player's shimmer effect
         this.currentPlayerRegionEdges = [];
 
         for (let y = 0; y < map.height; y++) {
             for (let x = 0; x < map.width; x++) {
-                const tileRaw = map.getTileRaw(x, y);
-                const tileContainer = new Container();
-                tileContainer.x = x * (this.tileSize + this.gap);
-                tileContainer.y = y * (this.tileSize + this.gap);
-
-                const tileGfx = new Graphics();
-
-                // Handle blocked tiles
-                if (tileRaw.blocked) {
-                    tileGfx.rect(0, 0, this.tileSize, this.tileSize);
-                    tileGfx.fill({ color: 0x080818, alpha: 0.5 });
-                    tileContainer.addChild(tileGfx);
-                    this.container.addChild(tileContainer);
-                    continue;
-                }
-
-                const owner = this.game.players.find(p => p.id === tileRaw.owner);
-                const color = owner ? owner.color : 0x333333;
-                const isCurrentPlayer = tileRaw.owner === currentPlayer?.id;
                 const tileIdx = map.getTileIndex(x, y);
-
-                // Check if this tile is in ANY player's largest region
+                const tileRaw = map.getTileRaw(x, y);
+                const isCurrentPlayer = tileRaw.owner === currentPlayerId;
                 const ownerLargestRegion = largestRegions.get(tileRaw.owner);
                 const isInLargestRegion = ownerLargestRegion?.has(tileIdx) || false;
 
-                // Tron style: Bright fill
-                const fillAlpha = isCurrentPlayer ? 0.6 : 0.3;
+                // Check if this tile needs redrawing
+                const isDirty = needsFullRedraw || 
+                                playerChanged || 
+                                this.isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isInLargestRegion);
 
-                tileGfx.rect(0, 0, this.tileSize, this.tileSize);
-
-                if (this.paintMode) {
-                    // Paint mode: Neutral gray, no numbers, simple border
-                    tileGfx.fill({ color: 0x444444, alpha: 0.8 });
-                    tileGfx.stroke({ width: 1, color: 0x666666, alpha: 0.8 });
-                } else {
-                    // Normal game mode
-                    tileGfx.fill({ color: color, alpha: fillAlpha });
-
-                    // Border logic
-                    if (isCurrentPlayer) {
-                        // Use white border for human players, player color for bots
-                        const borderColor = currentPlayer.isBot ? color : 0xffffff;
-                        if (tileRaw.dice > 1) {
-                            tileGfx.stroke({ width: 2, color: borderColor, alpha: 1.0 });
-                        } else {
-                            tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.8 });
-                        }
-                    } else {
-                        tileGfx.stroke({ width: 1, color: color, alpha: 0.6 });
+                if (isDirty) {
+                    // Remove old cached tile if it exists
+                    const oldTile = this.tileCache.get(tileIdx);
+                    if (oldTile) {
+                        oldTile.destroy({ children: true });
+                        this.tileCache.delete(tileIdx);
                     }
 
-                    // Draw OUTER borders for largest region tiles
-                    if (isInLargestRegion) {
-                        const edgeDefs = [
-                            { dx: 0, dy: -1, x1: 0, y1: 0, x2: this.tileSize, y2: 0 },
-                            { dx: 0, dy: 1, x1: 0, y1: this.tileSize, x2: this.tileSize, y2: this.tileSize },
-                            { dx: -1, dy: 0, x1: 0, y1: 0, x2: 0, y2: this.tileSize },
-                            { dx: 1, dy: 0, x1: this.tileSize, y1: 0, x2: this.tileSize, y2: this.tileSize }
-                        ];
+                    // Create new tile
+                    const tileContainer = this.createTileContainer(x, y, tileRaw, currentPlayer, isCurrentPlayer, isInLargestRegion, largestRegions, map);
+                    this.container.addChild(tileContainer);
+                    this.tileCache.set(tileIdx, tileContainer);
 
-                        for (const edge of edgeDefs) {
-                            const nx = x + edge.dx;
-                            const ny = y + edge.dy;
-                            const neighbor = map.getTileRaw(nx, ny);
-
-                            const isOuterEdge = !neighbor || neighbor.blocked || neighbor.owner !== tileRaw.owner;
-
-                            if (isOuterEdge) {
-                                let borderColor;
-                                if (isCurrentPlayer) {
-                                    // Use white for human players, player color for bots
-                                    borderColor = currentPlayer.isBot ? color : 0xffffff;
-                                } else {
-                                    // Non-current players get dimmed color
-                                    const r = (color >> 16) & 0xFF;
-                                    const g = (color >> 8) & 0xFF;
-                                    const b = color & 0xFF;
-                                    borderColor = ((r * 0.6) << 16) | ((g * 0.6) << 8) | (b * 0.6);
-                                }
-
-                                tileGfx.moveTo(edge.x1, edge.y1);
-                                tileGfx.lineTo(edge.x2, edge.y2);
-                                tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.85 });
-
-                                // Collect edges for current player's shimmer effect
-                                // Orient edges for CLOCKWISE flow
-                                if (isCurrentPlayer) {
-                                    const pixelX = x * (this.tileSize + this.gap);
-                                    const pixelY = y * (this.tileSize + this.gap);
-
-                                    let ex1 = pixelX + edge.x1;
-                                    let ey1 = pixelY + edge.y1;
-                                    let ex2 = pixelX + edge.x2;
-                                    let ey2 = pixelY + edge.y2;
-
-                                    if (edge.dy === 1) [ex1, ex2] = [ex2, ex1];
-                                    else if (edge.dx === -1) [ey1, ey2] = [ey2, ey1];
-
-                                    this.currentPlayerRegionEdges.push({
-                                        x1: ex1, y1: ey1,
-                                        x2: ex2, y2: ey2
-                                    });
-                                }
-                            }
-                        }
-                    }
+                    // Save state for future dirty checking
+                    this.saveTileState(tileIdx, tileRaw, isCurrentPlayer, isInLargestRegion);
                 }
 
-                tileContainer.addChild(tileGfx);
-
-                // Dice rendering (skip in paint mode)
-                if (!this.paintMode) {
-                    const diceColor = isCurrentPlayer ? null : color;
-                    this.renderDice(tileContainer, tileRaw.dice, diceColor);
+                // Always collect shimmer edges for current player (even if tile not dirty)
+                if (!tileRaw.blocked && isCurrentPlayer && isInLargestRegion && !this.paintMode) {
+                    this.collectShimmerEdges(x, y, tileRaw, map);
                 }
-
-                this.container.addChild(tileContainer);
             }
         }
 
         this.drawOverlay();
+    }
+
+    /**
+     * Create a tile container with all graphics
+     */
+    createTileContainer(x, y, tileRaw, currentPlayer, isCurrentPlayer, isInLargestRegion, largestRegions, map) {
+        const tileContainer = new Container();
+        tileContainer.x = x * (this.tileSize + this.gap);
+        tileContainer.y = y * (this.tileSize + this.gap);
+
+        const tileGfx = new Graphics();
+
+        // Handle blocked tiles
+        if (tileRaw.blocked) {
+            tileGfx.rect(0, 0, this.tileSize, this.tileSize);
+            tileGfx.fill({ color: 0x080818, alpha: 0.5 });
+            tileContainer.addChild(tileGfx);
+            return tileContainer;
+        }
+
+        const owner = this.game.players.find(p => p.id === tileRaw.owner);
+        const color = owner ? owner.color : 0x333333;
+
+        // Tron style: Bright fill
+        const fillAlpha = isCurrentPlayer ? 0.6 : 0.3;
+
+        tileGfx.rect(0, 0, this.tileSize, this.tileSize);
+
+        if (this.paintMode) {
+            // Paint mode: Neutral gray, no numbers, simple border
+            tileGfx.fill({ color: 0x444444, alpha: 0.8 });
+            tileGfx.stroke({ width: 1, color: 0x666666, alpha: 0.8 });
+        } else {
+            // Normal game mode
+            tileGfx.fill({ color: color, alpha: fillAlpha });
+
+            // Border logic
+            if (isCurrentPlayer) {
+                const borderColor = currentPlayer.isBot ? color : 0xffffff;
+                if (tileRaw.dice > 1) {
+                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 1.0 });
+                } else {
+                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.8 });
+                }
+            } else {
+                tileGfx.stroke({ width: 1, color: color, alpha: 0.6 });
+            }
+
+            // Draw OUTER borders for largest region tiles
+            if (isInLargestRegion) {
+                this.drawRegionBorders(tileGfx, x, y, tileRaw, currentPlayer, isCurrentPlayer, color, map);
+            }
+        }
+
+        tileContainer.addChild(tileGfx);
+
+        // Dice rendering (skip in paint mode)
+        if (!this.paintMode) {
+            const diceColor = isCurrentPlayer ? null : color;
+            this.renderDice(tileContainer, tileRaw.dice, diceColor);
+        }
+
+        return tileContainer;
+    }
+
+    /**
+     * Draw outer borders for tiles in the largest connected region
+     */
+    drawRegionBorders(tileGfx, x, y, tileRaw, currentPlayer, isCurrentPlayer, color, map) {
+        const edgeDefs = [
+            { dx: 0, dy: -1, x1: 0, y1: 0, x2: this.tileSize, y2: 0 },
+            { dx: 0, dy: 1, x1: 0, y1: this.tileSize, x2: this.tileSize, y2: this.tileSize },
+            { dx: -1, dy: 0, x1: 0, y1: 0, x2: 0, y2: this.tileSize },
+            { dx: 1, dy: 0, x1: this.tileSize, y1: 0, x2: this.tileSize, y2: this.tileSize }
+        ];
+
+        for (const edge of edgeDefs) {
+            const nx = x + edge.dx;
+            const ny = y + edge.dy;
+            const neighbor = map.getTileRaw(nx, ny);
+
+            const isOuterEdge = !neighbor || neighbor.blocked || neighbor.owner !== tileRaw.owner;
+
+            if (isOuterEdge) {
+                let borderColor;
+                if (isCurrentPlayer) {
+                    borderColor = currentPlayer.isBot ? color : 0xffffff;
+                } else {
+                    const r = (color >> 16) & 0xFF;
+                    const g = (color >> 8) & 0xFF;
+                    const b = color & 0xFF;
+                    borderColor = ((r * 0.6) << 16) | ((g * 0.6) << 8) | (b * 0.6);
+                }
+
+                tileGfx.moveTo(edge.x1, edge.y1);
+                tileGfx.lineTo(edge.x2, edge.y2);
+                tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.85 });
+            }
+        }
+    }
+
+    /**
+     * Collect shimmer effect edges for a tile
+     */
+    collectShimmerEdges(x, y, tileRaw, map) {
+        const edgeDefs = [
+            { dx: 0, dy: -1, x1: 0, y1: 0, x2: this.tileSize, y2: 0 },
+            { dx: 0, dy: 1, x1: 0, y1: this.tileSize, x2: this.tileSize, y2: this.tileSize },
+            { dx: -1, dy: 0, x1: 0, y1: 0, x2: 0, y2: this.tileSize },
+            { dx: 1, dy: 0, x1: this.tileSize, y1: 0, x2: this.tileSize, y2: this.tileSize }
+        ];
+
+        for (const edge of edgeDefs) {
+            const nx = x + edge.dx;
+            const ny = y + edge.dy;
+            const neighbor = map.getTileRaw(nx, ny);
+
+            const isOuterEdge = !neighbor || neighbor.blocked || neighbor.owner !== tileRaw.owner;
+
+            if (isOuterEdge) {
+                const pixelX = x * (this.tileSize + this.gap);
+                const pixelY = y * (this.tileSize + this.gap);
+
+                let ex1 = pixelX + edge.x1;
+                let ey1 = pixelY + edge.y1;
+                let ex2 = pixelX + edge.x2;
+                let ey2 = pixelY + edge.y2;
+
+                if (edge.dy === 1) [ex1, ex2] = [ex2, ex1];
+                else if (edge.dx === -1) [ey1, ey2] = [ey2, ey1];
+
+                this.currentPlayerRegionEdges.push({
+                    x1: ex1, y1: ey1,
+                    x2: ex2, y2: ey2
+                });
+            }
+        }
     }
 
     getLargestConnectedRegionTiles(playerId) {
@@ -285,32 +400,44 @@ export class GridRenderer {
     /**
      * Updates the animated shimmer effect on the current player's largest region border.
      * Call this every frame for smooth animation.
+     * Optimized to reuse Graphics object instead of recreating every frame.
      */
     updateShimmer(deltaTime = 1 / 60) {
-        this.shimmerContainer.removeChildren();
-
         // Skip shimmer if effects are off
         if (this.effectsQuality === 'off') {
+            if (this.shimmerGraphics) {
+                this.shimmerGraphics.clear();
+            }
             return;
         }
 
         // Show shimmer for current player (human or bot)
         const currentPlayer = this.game.currentPlayer;
         if (!currentPlayer || this.currentPlayerRegionEdges.length === 0) {
+            if (this.shimmerGraphics) {
+                this.shimmerGraphics.clear();
+            }
             return;
         }
 
+        // Create or reuse shimmer graphics
+        if (!this.shimmerGraphics) {
+            this.shimmerGraphics = new Graphics();
+            this.shimmerContainer.addChild(this.shimmerGraphics);
+        }
+
+        // Clear and redraw (Graphics.clear() is much faster than removeChildren + new)
+        this.shimmerGraphics.clear();
+
         // === ANIMATION CONFIG ===
-        const CYCLE_DURATION = 2; // Seconds for one complete cycle (0 to 1 and back)
-        const TRAIL_SEGMENTS = 1; // Number of trail segments behind the head
+        const CYCLE_DURATION = RENDER.SHIMMER_CYCLE_DURATION;
+        const TRAIL_SEGMENTS = RENDER.SHIMMER_TRAIL_SEGMENTS;
 
         // Update time consistently
         this.shimmerTime += deltaTime;
 
         // Calculate animation progress (0 to 1, loops)
         const cycleProgress = (this.shimmerTime / CYCLE_DURATION) % 1;
-
-        const shimmerGfx = new Graphics();
 
         // Draw one comet on EACH edge, all in sync
         for (const edge of this.currentPlayerRegionEdges) {
@@ -343,25 +470,23 @@ export class GridRenderer {
                     if (seg === 0) {
                         // Bright head with glow
                         const s1 = size + 3;
-                        shimmerGfx.rect(x - s1, y - s1, s1 * 2, s1 * 2);
-                        shimmerGfx.fill({ color: 0xffffff, alpha: alpha * 0.15 });
+                        this.shimmerGraphics.rect(x - s1, y - s1, s1 * 2, s1 * 2);
+                        this.shimmerGraphics.fill({ color: 0xffffff, alpha: alpha * 0.15 });
 
                         const s2 = size + 1.5;
-                        shimmerGfx.rect(x - s2, y - s2, s2 * 2, s2 * 2);
-                        shimmerGfx.fill({ color: 0xffffff, alpha: alpha * 0.4 });
+                        this.shimmerGraphics.rect(x - s2, y - s2, s2 * 2, s2 * 2);
+                        this.shimmerGraphics.fill({ color: 0xffffff, alpha: alpha * 0.4 });
 
-                        shimmerGfx.rect(x - size, y - size, size * 2, size * 2);
-                        shimmerGfx.fill({ color: 0xffffff, alpha: alpha });
+                        this.shimmerGraphics.rect(x - size, y - size, size * 2, size * 2);
+                        this.shimmerGraphics.fill({ color: 0xffffff, alpha: alpha });
                     } else {
                         // Trail particles
-                        shimmerGfx.rect(x - size, y - size, size * 2, size * 2);
-                        shimmerGfx.fill({ color: 0xffffff, alpha: alpha });
+                        this.shimmerGraphics.rect(x - size, y - size, size * 2, size * 2);
+                        this.shimmerGraphics.fill({ color: 0xffffff, alpha: alpha });
                     }
                 }
             }
         }
-
-        this.shimmerContainer.addChild(shimmerGfx);
     }
 
     drawOverlay() {
@@ -670,6 +795,10 @@ export class GridRenderer {
             plusText.alpha = 0;
             this.animationContainer.addChild(plusText);
 
+            // Store the base scale after width/height are set
+            const baseScaleX = plusText.scale.x;
+            const baseScaleY = plusText.scale.y;
+
             // Animate the flash
             this.animator.addTween({
                 duration: 12,
@@ -677,7 +806,9 @@ export class GridRenderer {
                     if (p < 0.3) {
                         flash.alpha = p / 0.3;
                         plusText.alpha = p / 0.3;
-                        plusText.scale.set(0.5 + p * 1.5);
+                        // Apply scale multiplier relative to base scale
+                        const scaleMult = 0.5 + p * 1.5;
+                        plusText.scale.set(baseScaleX * scaleMult, baseScaleY * scaleMult);
                     } else {
                         flash.alpha = (1 - p) / 0.7;
                         plusText.alpha = (1 - p) / 0.7;

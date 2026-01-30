@@ -22,6 +22,12 @@ export class InputManager {
         // Pan state for continuous panning
         this.panState = { x: 0, y: 0 }; // -1, 0, or 1 for each axis
 
+        // Track animation frame and bound handlers for cleanup
+        this.animationFrameId = null;
+        this.boundKeyDown = (e) => this.onKeyDown(e);
+        this.boundKeyUp = (e) => this.onKeyUp(e);
+        this.disposed = false;
+
         // Bind keyboard events
         this.setupKeyboard();
 
@@ -46,8 +52,8 @@ export class InputManager {
     }
 
     setupKeyboard() {
-        document.addEventListener('keydown', (e) => this.onKeyDown(e));
-        document.addEventListener('keyup', (e) => this.onKeyUp(e));
+        document.addEventListener('keydown', this.boundKeyDown);
+        document.addEventListener('keyup', this.boundKeyUp);
     }
 
     onKeyDown(e) {
@@ -159,10 +165,36 @@ export class InputManager {
     pollGamepads() {
         // Set up animation frame loop for gamepad polling
         const poll = () => {
+            if (this.disposed) return;
             this.update();
-            requestAnimationFrame(poll);
+            this.animationFrameId = requestAnimationFrame(poll);
         };
-        requestAnimationFrame(poll);
+        this.animationFrameId = requestAnimationFrame(poll);
+    }
+
+    /**
+     * Clean up all event listeners and stop polling loops.
+     * Call this when the InputManager is no longer needed.
+     */
+    dispose() {
+        this.disposed = true;
+
+        // Stop animation frame loop
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+
+        // Remove keyboard event listeners
+        document.removeEventListener('keydown', this.boundKeyDown);
+        document.removeEventListener('keyup', this.boundKeyUp);
+
+        // Clear all state
+        this.listeners = {};
+        this.gamepadStates.clear();
+        this.heldDirections.clear();
+        this.heldKeys.clear();
+        this.panState = { x: 0, y: 0 };
     }
 
     processGamepads() {

@@ -129,6 +129,7 @@ export class Renderer {
 
     forceUpdate() {
         // Force complete redraw - used when loading scenarios
+        this.grid.invalidate(); // Clear tile cache for full redraw
         this.draw();
         this.autoFitCamera();
     }

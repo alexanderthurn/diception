@@ -5,6 +5,8 @@ export class SoundManager {
         this.enabled = true;
         this.volume = 0.5;
         this.winStreak = 0;
+        // Track pending timeouts for cleanup
+        this.pendingTimeouts = [];
     }
 
     init() {
@@ -53,10 +55,46 @@ export class SoundManager {
     // Play a sequence of tones
     playSequence(notes, baseDelay = 0.1) {
         notes.forEach((note, i) => {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                // Remove from pending list
+                const idx = this.pendingTimeouts.indexOf(timeoutId);
+                if (idx > -1) this.pendingTimeouts.splice(idx, 1);
+                
                 this.playTone(note.freq, note.type || 'square', note.duration || 0.12);
             }, i * baseDelay * 1000);
+            
+            // Track for cleanup
+            this.pendingTimeouts.push(timeoutId);
         });
+    }
+
+    /**
+     * Cancel all pending sound sequences
+     */
+    cancelAllPending() {
+        for (const timeoutId of this.pendingTimeouts) {
+            clearTimeout(timeoutId);
+        }
+        this.pendingTimeouts = [];
+    }
+
+    /**
+     * Clean up the sound manager.
+     * Cancels pending sequences and closes the audio context.
+     */
+    dispose() {
+        this.enabled = false;
+        this.cancelAllPending();
+        
+        if (this.audioContext) {
+            // Close the audio context if supported
+            if (this.audioContext.close) {
+                this.audioContext.close().catch(() => {
+                    // Ignore errors on close
+                });
+            }
+            this.audioContext = null;
+        }
     }
 
     // === GAME SOUND EFFECTS ===

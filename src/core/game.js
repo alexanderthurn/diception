@@ -35,7 +35,7 @@ export class Game {
         this.players = [];
         this.currentPlayerIndex = 0;
         this.turn = 1;
-        this.gameOver = true;
+        this.gameOver = false;
         this.winner = null;
         // Reset map to empty
         this.map.generateMap(0, 0, [], this.maxDice, 'empty');
@@ -186,15 +186,18 @@ export class Game {
         if (this.gameOver) return;
 
         try {
-            const result = this.combat.resolveAttack(this, fromX, fromY, toX, toY);
+            // Use the new decoupled interface
+            const result = this.combat.resolveAttack({
+                map: this.map,
+                currentPlayerId: this.currentPlayer.id,
+                diceSides: this.diceSides
+            }, fromX, fromY, toX, toY);
+            
             this.emit('attackResult', result);
             this.checkWinCondition();
             if (result.won) {
                 // this.checkRowColumnCompletion(result.to.x, result.to.y, result.attackerId);
             }
-
-            // If still active and attacker lost dice, maybe they can't attack anymore?
-            // User decides when to end turn.
 
             return result;
         } catch (e) {
@@ -206,8 +209,12 @@ export class Game {
     endTurn() {
         if (this.gameOver) return;
 
-        // 1. Reinforce current player
-        const reinforceResult = this.reinforcement.distributeReinforcements(this, this.currentPlayer.id);
+        // 1. Reinforce current player (use new decoupled interface)
+        const reinforceResult = this.reinforcement.distributeReinforcements({
+            map: this.map,
+            player: this.currentPlayer,
+            maxDice: this.maxDice
+        }, this.currentPlayer.id);
         this.emit('reinforcements', { player: this.currentPlayer, ...reinforceResult });
 
         // 2. Switch player

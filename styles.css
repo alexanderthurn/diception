@@ -883,8 +883,9 @@ input[type="range"] {
         display: flex;
         flex-direction: row;
         align-items: center;
-        width: 40px;
-        /* Only button width by default */
+        justify-content: flex-end;
+        width: auto;
+        /* Allow natural width */
         position: relative;
         /* For absolute slider positioning */
     }

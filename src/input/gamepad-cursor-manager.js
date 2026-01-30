@@ -25,94 +25,98 @@ export class GamepadCursorManager {
         this.container.style.zIndex = '9999';
         document.body.appendChild(this.container);
 
+        // Track animation frame and disposed state for cleanup
+        this.animationFrameId = null;
+        this.disposed = false;
+
+        // Bound event handlers for cleanup
+        this.boundEventHandlers = {
+            gamepadButtonDown: null,
+            gamepadButtonUp: null,
+            gamepadCursorMoveRequest: null
+        };
+
         // Update loop for movement
         this.update = this.update.bind(this);
-        requestAnimationFrame(this.update);
+        this.animationFrameId = requestAnimationFrame(this.update);
 
         // Listen for button events from input manager
         this.setupEventListeners();
     }
 
     setupEventListeners() {
-        this.inputManager.on('gamepadButtonDown', ({ index, button }) => {
+        // Define and store bound handlers for cleanup
+        this.boundEventHandlers.gamepadButtonDown = ({ index, button }) => {
             const cursor = this.cursors.get(index);
             if (!cursor) return;
 
-            // Check if any menu/modal is open
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
-
-            // Mapping gamepad buttons:
-            // 0: A (South) -> Left Click
-            // 1: B (East)  -> Middle Click (Drag Map)
-            // 2: X (West)  -> Right Click / Cancel
-            // 3: Y (North) -> End Turn
-            // 6: L2 -> Zoom Out
-            // 7: R2 -> Zoom In
 
             // In menus, only the A button (0), X button (2) and Start button (9) are allowed to work
             if (isMenuOpen && button !== 0 && button !== 9 && button !== 2) return;
 
             if (button === 0) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
-            } else if (button === 2) { // X (West)
+            } else if (button === 2) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
-            } else if (button === 3) { // Y (North)
-                // Find and click end turn button if visible
+            } else if (button === 3) {
                 const endTurnBtn = document.getElementById('end-turn-btn');
                 if (endTurnBtn && !endTurnBtn.classList.contains('hidden')) {
                     endTurnBtn.click();
                 } else {
                     this.inputManager.emit('endTurn');
                 }
-            } else if (button === 1) { // B (East)
+            } else if (button === 1) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
-            } else if (button === 6) { // L2
-                this.inputManager.emit('panAnalog', { x: 0, y: 0, zoom: 1 }); // Zoom Out
+            } else if (button === 6) {
+                this.inputManager.emit('panAnalog', { x: 0, y: 0, zoom: 1 });
                 const zoomOutBtn = document.getElementById('zoom-out-btn');
                 if (zoomOutBtn) zoomOutBtn.click();
-            } else if (button === 7) { // R2
-                this.inputManager.emit('panAnalog', { x: 0, y: 0, zoom: -1 }); // Zoom In
+            } else if (button === 7) {
+                this.inputManager.emit('panAnalog', { x: 0, y: 0, zoom: -1 });
                 const zoomInBtn = document.getElementById('zoom-in-btn');
                 if (zoomInBtn) zoomInBtn.click();
             }
-        });
+        };
 
-        this.inputManager.on('gamepadButtonUp', ({ index, button }) => {
+        this.boundEventHandlers.gamepadButtonUp = ({ index, button }) => {
             const cursor = this.cursors.get(index);
             if (!cursor) return;
 
-            // Check if any menu/modal is open
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
             if (isMenuOpen && button !== 0 && button !== 2) return;
 
             if (button === 0) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
                 this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
-            } else if (button === 2) { // X (West)
+            } else if (button === 2) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
                 this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
-            } else if (button === 1) { // B (East)
+            } else if (button === 1) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 1, index);
             }
-        });
+        };
 
-        this.inputManager.on('gamepadCursorMoveRequest', ({ index, x, y }) => {
+        this.boundEventHandlers.gamepadCursorMoveRequest = ({ index, x, y }) => {
             const cursor = this.cursors.get(index);
             if (!cursor) return;
 
             cursor.x = x;
             cursor.y = y;
-
-            // Update DOM element
             cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
-            cursor.element.style.opacity = '0.35'; // Reduced opacity for d-pad movement
-
-            // Trigger mousemove on new position to update hover highlights in game
+            cursor.element.style.opacity = '0.35';
             this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, index);
-        });
+        };
+
+        // Register the handlers
+        this.inputManager.on('gamepadButtonDown', this.boundEventHandlers.gamepadButtonDown);
+        this.inputManager.on('gamepadButtonUp', this.boundEventHandlers.gamepadButtonUp);
+        this.inputManager.on('gamepadCursorMoveRequest', this.boundEventHandlers.gamepadCursorMoveRequest);
     }
 
     update() {
+        if (this.disposed) return;
+
         const gamepads = navigator.getGamepads();
 
         for (let i = 0; i < gamepads.length; i++) {
@@ -190,7 +194,48 @@ export class GamepadCursorManager {
             this.updateCursorColor(cursor, i);
         }
 
-        requestAnimationFrame(this.update);
+        this.animationFrameId = requestAnimationFrame(this.update);
+    }
+
+    /**
+     * Clean up the cursor manager.
+     * Removes all cursors, DOM elements, and event listeners.
+     */
+    dispose() {
+        this.disposed = true;
+
+        // Stop animation frame loop
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+
+        // Remove event listeners from input manager
+        if (this.inputManager) {
+            if (this.boundEventHandlers.gamepadButtonDown) {
+                this.inputManager.off('gamepadButtonDown', this.boundEventHandlers.gamepadButtonDown);
+            }
+            if (this.boundEventHandlers.gamepadButtonUp) {
+                this.inputManager.off('gamepadButtonUp', this.boundEventHandlers.gamepadButtonUp);
+            }
+            if (this.boundEventHandlers.gamepadCursorMoveRequest) {
+                this.inputManager.off('gamepadCursorMoveRequest', this.boundEventHandlers.gamepadCursorMoveRequest);
+            }
+        }
+
+        // Remove all cursor elements
+        for (const [index, cursor] of this.cursors) {
+            if (cursor.element) {
+                cursor.element.remove();
+            }
+        }
+        this.cursors.clear();
+
+        // Remove container from DOM
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
+        this.container = null;
     }
 
     createCursor(index) {
