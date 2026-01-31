@@ -1090,6 +1090,7 @@ async function init() {
     loadedScenarioName.addEventListener('click', () => {
         pendingScenario = null;
         localStorage.removeItem('dicy_loadedScenario');
+        localStorage.removeItem('dicy_onlineMapCache');
         updateLoadedScenarioDisplay(null);
         // Reset map size display to current slider value
         updateMapSizeDisplay();
@@ -1191,6 +1192,20 @@ async function init() {
             if (!pendingScenario) {
                 const savedScenarioName = localStorage.getItem('dicy_loadedScenario');
                 if (savedScenarioName) {
+                    // Check online map cache first
+                    const onlineCache = localStorage.getItem('dicy_onlineMapCache');
+                    if (onlineCache) {
+                        try {
+                            const scenario = JSON.parse(onlineCache);
+                            if (scenario && scenario.name === savedScenarioName) {
+                                pendingScenario = scenario;
+                                return;
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse online map cache', e);
+                        }
+                    }
+
                     const scenario = scenarioManager.loadScenario(savedScenarioName);
                     if (scenario) {
                         pendingScenario = scenario;
@@ -1207,7 +1222,8 @@ async function init() {
             scenarioManager.applyScenarioToGame(game, pendingScenario);
             game.emit('gameStart', { players: game.players, map: game.map });
             game.startTurn();
-            pendingScenario = null;
+            // Sticky behavior: DON'T clear pendingScenario here, so it persists if user clicks Start again
+            // pendingScenario = null;
             // Keep scenario loaded for reuse - don't clear localStorage
             // Reset map size display but keep scenario name visible
             mapSizeVal.textContent = sizePreset.label;
@@ -1229,7 +1245,8 @@ async function init() {
                 config.predefinedMap = pendingScenario;
                 config.mapWidth = pendingScenario.width;
                 config.mapHeight = pendingScenario.height;
-                pendingScenario = null;
+                // Sticky behavior: DON'T clear pendingScenario here, so it persists if user clicks Start again
+                // pendingScenario = null;
                 // Keep scenario loaded for reuse - don't clear display or localStorage
             }
 
@@ -1396,6 +1413,11 @@ async function init() {
             scenarioBrowserModal.classList.add('hidden');
             setupModal.classList.remove('hidden');
             updateConfigFromScenario(scenario);
+
+            // For online maps, we cache the whole scenario data as they aren't in ScenarioManager's local storage
+            localStorage.setItem('dicy_loadedScenario', scenario.name);
+            localStorage.setItem('dicy_onlineMapCache', JSON.stringify(scenario));
+
             updateLoadedScenarioDisplay(scenario.name);
             return;
         }
@@ -1409,6 +1431,7 @@ async function init() {
 
             // Save loaded scenario to localStorage
             localStorage.setItem('dicy_loadedScenario', selectedScenarioName);
+            localStorage.removeItem('dicy_onlineMapCache'); // Clear online cache when loading local
             updateLoadedScenarioDisplay(scenario.name);
         }
     };
