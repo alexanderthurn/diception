@@ -521,7 +521,7 @@ function setupHowToPlay(effectsManager) {
 
 // --- Benchmark Tool (console only) ---
 window.benchmarkAI = async () => {
-    const { createAI } = await import('./core/ai/index.js');
+
     const aiTypes = ['easy', 'medium', 'hard'];
 
     console.log(`%c🤖 AI Round Robin: ${aiTypes.join(', ')}`, "font-weight:bold; font-size:16px; color:#0ff");

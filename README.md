@@ -19,7 +19,7 @@ Take control of the map by rolling dice to attack neighboring territories. The p
 
 The game uses **[Rajdhani](https://fonts.google.com/specimen/Rajdhani)** as its primary typeface to achieve a technical, futuristic look.
 -   **Weights**: 300 (Light), 400 (Regular), 500 (Medium), 600 (SemiBold), 700 (Bold).
--   **Local Hosting**: Font files are bundled locally in `public/fonts/` for offline support and zero external dependencies.
+-   **Local Hosting**: Font files are bundled locally in `src/assets/fonts/` for offline support and zero external dependencies.
 
 ## How to Play
 

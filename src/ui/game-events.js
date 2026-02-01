@@ -1,4 +1,5 @@
 import { Dialog } from './dialog.js';
+import { createAI } from '../core/ai/index.js';
 
 /**
  * GameEventManager - Handles all game event subscriptions and turn flow
@@ -141,7 +142,7 @@ export class GameEventManager {
         setTimeout(async () => {
             // Ensure autoplay AI exists for human players with autoplay enabled
             if (!player.isBot && autoplayPlayers.has(player.id) && !playerAIs.has(player.id)) {
-                const { createAI } = await import('../core/ai/index.js');
+
                 playerAIs.set(player.id, createAI('autoplay', this.game, player.id));
             }
 
