@@ -32,8 +32,6 @@ export class Renderer {
             preference: 'high-performance'
         });
 
-        this.app.canvas.style.width = '100vw';
-        this.app.canvas.style.height = '100vh';
         this.app.ticker.maxFPS = 120;
 
         this.container.appendChild(this.app.canvas);
