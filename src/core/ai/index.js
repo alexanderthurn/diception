@@ -11,10 +11,11 @@ import { BaseAI } from './base-ai.js';
 import { EasyAI } from './easy-ai.js';
 import { MediumAI } from './medium-ai.js';
 import { HardAI } from './hard-ai.js';
+import { AutoplayAI } from './autoplay-ai.js';
 
 /**
  * Factory function to create an AI instance by difficulty name
- * @param {string} difficulty - 'easy', 'medium', or 'hard'
+ * @param {string} difficulty - 'easy', 'medium', 'hard', or 'autoplay'
  * @param {Game} game - The game instance
  * @param {number} playerId - The player ID this AI controls
  * @returns {BaseAI} An AI instance
@@ -25,10 +26,12 @@ export function createAI(difficulty, game, playerId) {
             return new MediumAI(game, playerId);
         case 'hard':
             return new HardAI(game, playerId);
+        case 'autoplay':
+            return new AutoplayAI(game, playerId);
         case 'easy':
         default:
             return new EasyAI(game, playerId);
     }
 }
 
-export { BaseAI, EasyAI, MediumAI, HardAI };
+export { BaseAI, EasyAI, MediumAI, HardAI, AutoplayAI };

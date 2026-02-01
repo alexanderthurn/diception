@@ -213,8 +213,17 @@ async function init() {
 
         if (newState) {
             autoplayPlayers.add(playerId);
+            // Create autoplay AI for this player if they don't have one (human players)
+            if (!playerAIs.has(playerId)) {
+                playerAIs.set(playerId, createAI('autoplay', game, playerId));
+            }
         } else {
             autoplayPlayers.delete(playerId);
+            // Remove autoplay AI for human players (keep bot AIs)
+            const player = game.players.find(p => p.id === playerId);
+            if (player && !player.isBot) {
+                playerAIs.delete(playerId);
+            }
         }
 
         playerDashboard.update();
