@@ -6,6 +6,8 @@
  */
 
 // No longer using generateScenarioId
+import { Dialog } from '../ui/dialog.js';
+
 
 // Default player colors
 const DEFAULT_COLORS = [
@@ -1191,7 +1193,7 @@ export class MapEditor {
     /**
      * Save as map (tiles only, no ownership)
      */
-    saveAsMap() {
+    async saveAsMap() {
         if (this.state.tiles.size === 0) {
             this.showStatus('Add at least one tile first', 'error');
             return null;
@@ -1206,7 +1208,7 @@ export class MapEditor {
 
         // Check for collision 
         const existing = this.scenarioManager.getScenario(name);
-        if (existing && !confirm(`A map with name "${name}" already exists. Overwrite?`)) {
+        if (existing && !(await Dialog.confirm(`A map with name "${name}" already exists. Overwrite?`))) {
             return null;
         }
 
@@ -1240,7 +1242,7 @@ export class MapEditor {
     /**
      * Save as scenario (includes players, ownership, dice)
      */
-    saveAsScenario() {
+    async saveAsScenario() {
         if (this.state.tiles.size === 0) {
             this.showStatus('Add at least one tile first', 'error');
             return null;
@@ -1285,7 +1287,7 @@ export class MapEditor {
 
         // Check for collision
         const existing = this.scenarioManager.getScenario(name);
-        if (existing && !confirm(`A scenario with name "${name}" already exists. Overwrite?`)) {
+        if (existing && !(await Dialog.confirm(`A scenario with name "${name}" already exists. Overwrite?`))) {
             return null;
         }
 

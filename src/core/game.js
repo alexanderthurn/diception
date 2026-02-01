@@ -183,7 +183,7 @@ export class Game {
     }
 
     attack(fromX, fromY, toX, toY) {
-        if (this.gameOver) return;
+        if (this.gameOver || this.players.length === 0) return;
 
         try {
             // Use the new decoupled interface
@@ -192,7 +192,7 @@ export class Game {
                 currentPlayerId: this.currentPlayer.id,
                 diceSides: this.diceSides
             }, fromX, fromY, toX, toY);
-            
+
             this.emit('attackResult', result);
             this.checkWinCondition();
             if (result.won) {
@@ -207,7 +207,7 @@ export class Game {
     }
 
     endTurn() {
-        if (this.gameOver) return;
+        if (this.gameOver || this.players.length === 0) return;
 
         // 1. Reinforce current player (use new decoupled interface)
         const reinforceResult = this.reinforcement.distributeReinforcements({

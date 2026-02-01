@@ -14,6 +14,7 @@ export class GameLog {
         // Callbacks
         this.getPlayerName = null; // Set by main
         this.diceDataURL = null; // Set by main
+        this.onSaveScenario = null; // Set by main
     }
 
     setPlayerNameGetter(fn) {
@@ -22,6 +23,10 @@ export class GameLog {
 
     setDiceDataURL(url) {
         this.diceDataURL = url;
+    }
+
+    setSaveScenarioCallback(fn) {
+        this.onSaveScenario = fn;
     }
 
     clear() {
@@ -76,11 +81,9 @@ export class GameLog {
         // Handle action button clicks
         header.querySelector('[data-action="save"]').addEventListener('click', (e) => {
             e.stopPropagation();
-            const saveScenarioModal = document.getElementById('save-scenario-modal');
-            const scenarioNameInput = document.getElementById('scenario-name-input');
-            saveScenarioModal.dataset.snapshotIndex = wrapper.dataset.snapshotIndex;
-            scenarioNameInput.value = `Turn ${snapshot.turn} - ${playerName}`;
-            saveScenarioModal.classList.remove('hidden');
+            if (this.onSaveScenario) {
+                this.onSaveScenario(wrapper.dataset.snapshotIndex, `Turn ${snapshot.turn} - ${playerName}`);
+            }
         });
 
         // Toggle expand/collapse

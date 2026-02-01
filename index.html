@@ -330,19 +330,6 @@
             </div>
         </div>
 
-        <div id="game-over-modal" class="modal hidden">
-            <h1>GAME OVER</h1>
-            <p id="winner-text"></p>
-            <div id="highscore-section">
-                <h3 class="highscore-title">🏆 PLAYER STATS</h3>
-                <div id="highscore-list"></div>
-                <div id="total-games-played" class="total-games"></div>
-            </div>
-            <div class="game-over-actions">
-                <button id="restart-btn" class="tron-btn">New Game</button>
-                <button id="clone-game-btn" class="tron-btn">Try Again</button>
-            </div>
-        </div>
 
         <!-- Tournament Results Modal -->
         <div id="tournament-results-modal" class="modal hidden">
@@ -524,42 +511,7 @@
             </div>
         </div>
 
-        <!-- Quit Confirmation Modal -->
-        <div id="quit-confirm-modal" class="modal hidden">
-            <h1 class="tron-title">QUIT GAME?</h1>
-            <p style="margin-bottom: 20px;">Are you sure you want to exit to desktop?</p>
-            <div class="control-row" style="justify-content: center; gap: 20px;">
-                <button id="quit-confirm-btn" class="tron-btn large danger"
-                    style="width: 140px; border-color: #ff3333; color: #ff3333;">QUIT</button>
-                <button id="quit-cancel-btn" class="tron-btn large" style="width: 140px;">CANCEL</button>
-            </div>
-        </div>
 
-        <!-- Save Scenario Modal -->
-        <div id="save-scenario-modal" class="modal hidden">
-            <div class="modal-header">
-                <h2 class="tron-title small">SAVE SCENARIO</h2>
-                <button id="save-scenario-close-btn" class="close-btn">×</button>
-            </div>
-            <div class="save-scenario-content">
-                <div class="control-group">
-                    <label>Scenario Name</label>
-                    <input type="text" id="scenario-name-input" placeholder="My Epic Battle" maxlength="40">
-                </div>
-                <div class="save-scenario-info">
-                    <p>This will save the current game state including:</p>
-                    <ul>
-                        <li>Map layout and size</li>
-                        <li>All player positions and dice counts</li>
-                        <li>Player colors and types</li>
-                    </ul>
-                </div>
-                <div class="save-scenario-actions">
-                    <button id="save-scenario-confirm-btn" class="tron-btn">💾 Save</button>
-                    <button id="save-scenario-cancel-btn" class="tron-btn small">Cancel</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script type="module" src="src/main.js"></script>
