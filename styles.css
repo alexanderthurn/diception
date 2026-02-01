@@ -1173,24 +1173,18 @@ input[type="range"] {
 
 .loading-icons {
     position: absolute;
-    top: calc(50% + 100px);
+    top: calc(50% + 60px);
     left: 0;
     width: 100%;
     display: flex;
     justify-content: center;
-    gap: 60px;
-    font-size: 5rem;
+    gap: 30px;
+    font-size: 2.5rem;
     opacity: 0.8;
-    filter: drop-shadow(0 0 20px var(--accent-color));
+    filter: drop-shadow(0 0 10px var(--accent-color));
     animation: pulse-opacity 2s infinite ease-in-out;
-}
-
-.loading-icons span {
-    transition: transform 0.3s ease;
-}
-
-.loading-icons span:hover {
-    transform: scale(1.2);
+    pointer-events: none;
+    user-select: none;
 }
 
 /* Deskstop scale for loading prompt */
@@ -1201,9 +1195,9 @@ input[type="range"] {
     }
 
     .loading-icons {
-        font-size: 8rem;
-        gap: 100px;
-        top: calc(50% + 150px);
+        font-size: 4rem;
+        gap: 50px;
+        top: calc(50% + 120px);
     }
 }
 

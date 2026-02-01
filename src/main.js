@@ -156,6 +156,7 @@ async function init() {
         // Cleanup
         window.removeEventListener('mousedown', dismissLoadingScreen);
         window.removeEventListener('touchstart', dismissLoadingScreen);
+        window.removeEventListener('keydown', dismissLoadingScreen);
         inputManager.off('confirm', dismissLoadingScreen);
     };
 
@@ -170,8 +171,9 @@ async function init() {
                 window.addEventListener('touchstart', dismissLoadingScreen);
                 if (loadingIcons) loadingIcons.classList.add('hidden');
             } else {
-                loadingPrompt.textContent = 'Press left mouse button, "A" on controller or "ENTER" on keyboard';
+                loadingPrompt.textContent = 'Press any key to start';
                 window.addEventListener('mousedown', dismissLoadingScreen);
+                window.addEventListener('keydown', dismissLoadingScreen);
                 if (loadingIcons) loadingIcons.classList.remove('hidden');
             }
             loadingPrompt.classList.remove('hidden');
