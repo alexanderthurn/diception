@@ -544,7 +544,7 @@ select {
     background: #000;
     border: 2px solid var(--border-color);
     box-shadow: 0 0 20px var(--border-color);
-    padding: 40px;
+    padding: 0px 20px 20px 20px;
     text-align: center;
     pointer-events: auto;
     min-width: 300px;
@@ -565,9 +565,11 @@ select {
 }
 
 .tron-title {
-    margin-bottom: 30px;
+    margin-top: 0px;
+    margin-bottom: 10px;
     letter-spacing: 4px;
     display: inline-block;
+    font-size: 4rem;
 }
 
 .tron-title span {
@@ -1105,7 +1107,6 @@ input[type="range"] {
 
     .tron-title {
         font-size: 24px;
-        margin-bottom: 20px;
     }
 
     .control-row {
