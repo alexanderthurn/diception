@@ -64,7 +64,7 @@ export class InputManager {
 
         // Prevent default for game keys
         const gameKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright',
-            'e', 'q', ' ', 'escape', 'enter', 'i', 'j', 'k', 'l'];
+            'e', 'q', ' ', 'escape', 'enter', 'i', 'j', 'k', 'l', 'shift'];
         if (gameKeys.includes(key)) {
             e.preventDefault();
         }
@@ -104,11 +104,11 @@ export class InputManager {
             });
         } else if (panMap[key]) {
             this.updatePanState(panMap[key].x, panMap[key].y, true);
-        } else if (key === 'e' || key === 'enter') {
+        } else if (key === 'e' || e.code === 'ShiftRight') {
             this.emit('confirm');
         } else if (key === 'q') {
             this.emit('cancel');
-        } else if (key === ' ') {
+        } else if (key === ' ' || key === 'enter') {
             this.emit('endTurn');
         } else if (key === 'escape') {
             this.emit('menu');
