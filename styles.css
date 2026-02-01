@@ -147,7 +147,7 @@ select {
     -webkit-appearance: none;
     appearance: none;
     background: #000;
-    border-radius: 2px;
+    border-radius: 0;
     opacity: 0.7;
 }
 
@@ -155,7 +155,10 @@ select {
     -webkit-appearance: none;
     width: 14px;
     height: 14px;
-    border-radius: 50%;
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 0;
     background: var(--accent-color);
     cursor: pointer;
 }
@@ -181,7 +184,7 @@ select {
     -webkit-appearance: none;
     appearance: none;
     background: #000;
-    border-radius: 2px;
+    border-radius: 0;
     opacity: 0.7;
 }
 
@@ -189,7 +192,10 @@ select {
     -webkit-appearance: none;
     width: 12px;
     height: 12px;
-    border-radius: 50%;
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 0;
     background: #fff;
     cursor: pointer;
 }
@@ -217,7 +223,9 @@ select {
     box-shadow: 0 0 15px var(--accent-color);
     border-color: var(--accent-color);
     border-width: 2px;
-    border-radius: 30px;
+    border-color: var(--accent-color);
+    border-width: 2px;
+    border-radius: 0;
 }
 
 #auto-win-btn {
@@ -233,7 +241,9 @@ select {
     text-align: center;
     background: rgba(0, 0, 0, 0.9);
     border-width: 2px;
-    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.9);
+    border-width: 2px;
+    border-radius: 0;
 }
 
 #auto-win-btn.active {
@@ -252,7 +262,10 @@ select {
     font-weight: bold;
     color: #ffffff;
     background: rgba(0, 0, 0, 0.9);
-    border-radius: 30px;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 0;
+    text-align: center;
     text-align: center;
     white-space: nowrap;
 }
@@ -267,7 +280,10 @@ select {
     padding: 6px 16px;
     background: rgba(0, 0, 0, 0.9);
     border: 1px solid var(--accent-color);
-    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid var(--accent-color);
+    border-radius: 0;
+    font-family: inherit;
     font-family: inherit;
     font-size: 14px;
     text-align: center;
@@ -487,7 +503,10 @@ select {
     font-size: 12px;
     padding: 2px 6px;
     cursor: pointer;
-    border-radius: 3px;
+    padding: 2px 6px;
+    cursor: pointer;
+    border-radius: 0;
+    transition: all 0.2s;
     transition: all 0.2s;
 }
 
@@ -693,12 +712,19 @@ select {
 
 select,
 input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
     width: 100%;
     background: #000;
     border: 1px solid var(--border-color);
     color: #fff;
     padding: 5px;
     font-family: inherit;
+    border-radius: 0;
+}
+
+select {
+    background-image: none;
 }
 
 /* Checkbox toggle styling */
@@ -771,7 +797,10 @@ input[type="range"] {
     align-items: center;
     background: rgba(255, 255, 255, 0.05);
     padding: 8px 12px;
-    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 12px;
+    border-radius: 0;
+    border-left: 3px solid var(--border-color);
     border-left: 3px solid var(--border-color);
 }
 
@@ -834,7 +863,7 @@ input[type="range"] {
 .turn-group {
     margin-bottom: 8px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -976,7 +1005,7 @@ input[type="range"] {
         z-index: 210;
         background: rgba(0, 0, 0, 0.9);
         border: 1px solid var(--border-color);
-        border-radius: 5px;
+        border-radius: 0;
         padding: 0 5px;
     }
 
@@ -1019,7 +1048,7 @@ input[type="range"] {
         /* Leave room for music controls on right */
         width: auto;
         max-height: 70vh;
-        border-radius: 10px;
+        border-radius: 0;
     }
 
     #player-dashboard.collapsed {
@@ -1148,7 +1177,7 @@ input[type="range"] {
         left: auto;
         background: rgba(0, 0, 0, 0.8);
         border: 1px solid var(--accent-color);
-        border-radius: 50%;
+        border-radius: 0;
         width: 50px;
         height: 50px;
         display: flex;
@@ -1423,7 +1452,7 @@ input[type="range"] {
 
 .howto-content::-webkit-scrollbar-thumb {
     background: var(--border-color);
-    border-radius: 3px;
+    border-radius: 0;
 }
 
 /* Credits on Setup Screen */
@@ -1502,7 +1531,7 @@ input[type="range"] {
     padding: 10px;
     margin-bottom: 5px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
+    border-radius: 0;
 }
 
 .tournament-result-row.winner {
@@ -1546,7 +1575,7 @@ input[type="range"] {
     margin-bottom: 20px;
     background: rgba(0, 0, 0, 0.3);
     padding: 8px;
-    border-radius: 4px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -1558,7 +1587,7 @@ input[type="range"] {
 .tournament-progress-bar {
     height: 4px;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
+    border-radius: 0;
     overflow: hidden;
     margin-top: 10px;
 }
@@ -1679,9 +1708,9 @@ input[type="range"] {
 
 .header-tabs .scenario-tab:first-child {
     margin-left: 0;
-    border-top-left-radius: 4px;
+    border-top-left-radius: 0;
     /* Optional: Keep outer corner slight round? User said "no rounded corners". I'll keep 0. */
-    border-bottom-left-radius: 4px;
+    border-bottom-left-radius: 0;
     border-radius: 0;
     /* Explicitly 0 as requested */
 }
@@ -1828,7 +1857,7 @@ input[type="range"] {
     min-height: 0;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    border-radius: 0;
     padding: 20px;
     overflow-y: auto;
 }
@@ -1954,7 +1983,7 @@ input[type="range"] {
 .preview-map {
     background: #000;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 0;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     image-rendering: pixelated;
     /* Keep it crisp */
@@ -2009,7 +2038,7 @@ input[type="range"] {
     line-height: 1.4;
     background: rgba(0, 0, 0, 0.2);
     padding: 10px;
-    border-radius: 6px;
+    border-radius: 0;
 }
 
 .scenario-table tr.selected {
@@ -2047,8 +2076,9 @@ input[type="range"] {
     background: var(--accent-color);
     color: #000;
     font-size: 0.7em;
+    font-size: 0.7em;
     padding: 2px 4px;
-    border-radius: 4px;
+    border-radius: 0;
     margin-left: 6px;
     white-space: nowrap;
 }
@@ -2080,7 +2110,7 @@ input[type="range"] {
     margin: 20px 0;
     padding: 15px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    border-radius: 0;
     font-size: 12px;
     color: #aaa;
 }
@@ -2119,7 +2149,7 @@ input[type="range"] {
     padding: 2px 6px;
     font-size: 10px;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: 0;
     transition: all 0.2s;
 }
 
@@ -2265,7 +2295,7 @@ input[type="range"] {
     min-height: 50px;
     padding: 12px 15px;
     background: rgba(0, 0, 0, 0.4);
-    border-radius: 8px;
+    border-radius: 0;
     border: 1px solid rgba(100, 100, 120, 0.3);
 }
 
@@ -2293,7 +2323,7 @@ input[type="range"] {
 .paint-swatch {
     width: 32px;
     height: 32px;
-    border-radius: 4px;
+    border-radius: 0;
     cursor: pointer;
     border: 2px solid transparent;
     display: flex;
@@ -2333,7 +2363,7 @@ input[type="range"] {
 .dice-swatch {
     width: 28px;
     height: 28px;
-    border-radius: 4px;
+    border-radius: 0;
     cursor: pointer;
     border: 2px solid transparent;
     display: flex;
@@ -2365,7 +2395,7 @@ input[type="range"] {
 .player-swatch {
     width: 36px;
     height: 36px;
-    border-radius: 6px;
+    border-radius: 0;
     cursor: pointer;
     border: 2px solid transparent;
     display: flex;

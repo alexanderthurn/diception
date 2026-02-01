@@ -76,7 +76,7 @@ export class TileRenderer {
         const g = new Graphics();
         const scale = size / 60;
 
-        g.roundRect(0, 0, size, size, 4 * scale);
+        g.rect(0, 0, size, size);
         g.fill({ color: 0xffffff, alpha: 1 });
 
         if (withBorder) {
@@ -235,7 +235,7 @@ export class TileRenderer {
         // Background
         const bg = new Graphics();
         const scale = size / 60;
-        bg.roundRect(0, 0, size, size, 4 * scale);
+        bg.rect(0, 0, size, size);
         bg.fill({ color: color, alpha: fillAlpha });
 
         if (showBorder) {
