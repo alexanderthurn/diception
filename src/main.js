@@ -385,6 +385,7 @@ async function init() {
         resetGameSession();
         setupModal.classList.remove('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
+        effectsManager.startIntroMode();
     };
 
     const restartCurrentGame = () => {
@@ -718,6 +719,7 @@ async function init() {
     howtoCloseBtn.addEventListener('click', () => {
         howtoModal.classList.add('hidden');
         setupModal.classList.remove('hidden');
+        effectsManager.startIntroMode();
     });
 
     // === Bot AI Selection ===
@@ -1331,9 +1333,7 @@ async function init() {
         });
 
         if (choice === 'restart') {
-            resetGameSession();
-            setupModal.classList.remove('hidden');
-            document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
+            quitToMainMenu();
         } else if (choice === 'clone') {
             restartCurrentGame();
         }
@@ -1922,6 +1922,7 @@ async function init() {
     scenarioBrowserCloseBtn.addEventListener('click', () => {
         scenarioBrowserModal.classList.add('hidden');
         setupModal.classList.remove('hidden');
+        effectsManager.startIntroMode();
     });
 
     // New Map/Scenario Button
