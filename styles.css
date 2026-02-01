@@ -534,7 +534,7 @@ select {
 .tron-title span {
     display: inline-block;
     color: #00ffff;
-    animation: titleGlow 4s linear infinite, tron-color-cycle 5s infinite;
+    animation: titleGlow 4s linear infinite, tron-color-cycle 96s infinite;
     animation-delay: calc(var(--index) * -0.5s);
 }
 
