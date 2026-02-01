@@ -72,13 +72,14 @@ window.exportDiceIcon = async (options = {}) => {
 };
 
 async function init() {
-    // Show package version on loading screen early
-    try {
-        const loadingVersionEl = document.getElementById('loading-version');
-        if (loadingVersionEl) loadingVersionEl.textContent = `v${import.meta.env.VITE_APP_VERSION}`;
-    } catch (e) {
-        console.warn('Failed to show loading version', e);
-    }
+    // Show package version on loading screen and setup menu
+    const version = import.meta.env.VITE_APP_VERSION || '1.0.0';
+    const setVersionText = (id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = `v${version}`;
+    };
+    setVersionText('loading-version');
+    setVersionText('setup-version');
 
     // 0. Steam Integration
     if (window.steam) {
@@ -136,17 +137,45 @@ async function init() {
     // 3. Initialize Input Manager (unified keyboard/gamepad)
     const inputManager = new InputManager();
 
-    // Hide loading screen after initialization
+    // 4. Initialize Input Controller (handles game input logic)
+    const input = new InputController(game, renderer, inputManager);
+
+    // Interaction-based loading screen dismissal
     const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
+    const loadingPrompt = document.getElementById('loading-prompt');
+
+    const dismissLoadingScreen = () => {
+        if (!loadingScreen || loadingScreen.classList.contains('fade-out')) return;
+
         loadingScreen.classList.add('fade-out');
         setTimeout(() => {
             loadingScreen.style.display = 'none';
         }, 800);
-    }
 
-    // 4. Initialize Input Controller (handles game input logic)
-    const input = new InputController(game, renderer, inputManager);
+        // Cleanup
+        window.removeEventListener('mousedown', dismissLoadingScreen);
+        window.removeEventListener('touchstart', dismissLoadingScreen);
+        inputManager.off('confirm', dismissLoadingScreen);
+    };
+
+    if (loadingScreen) {
+        if (loadingPrompt) {
+            // Detect mobile/iPad
+            const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+            const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document; // Modern iPad detection
+
+            if (isTouch || isIPad) {
+                loadingPrompt.textContent = 'Touch to Start';
+                window.addEventListener('touchstart', dismissLoadingScreen);
+            } else {
+                loadingPrompt.textContent = 'Press left mouse button, "A" on controller or "ENTER" on keyboard';
+                window.addEventListener('mousedown', dismissLoadingScreen);
+            }
+            loadingPrompt.classList.remove('hidden');
+        }
+
+        inputManager.on('confirm', dismissLoadingScreen);
+    }
 
     // 4.5 Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);

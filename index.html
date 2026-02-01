@@ -17,8 +17,11 @@
 <body>
     <div id="loading-screen">
         <h1 class="tron-title">DICEPTION</h1>
-        <div class="loading-status">INITIALIZING SYSTEM...</div>
+        <div class="credits">by Alexander Thurn</div>
+        <div id="loading-prompt" class="loading-prompt hidden">Press left mouse button, "A" on controller or "ENTER" on
+            keyboard</div>
         <div id="loading-version" class="loading-version"></div>
+        <div class="loading-footer">feuerware.com</div>
     </div>
 
     <div id="game-container"></div>
@@ -192,6 +195,7 @@
                         title="Quit Game">EXIT</button>
                 </div>
             </div>
+            <div id="setup-version" class="setup-version"></div>
         </div>
 
 
@@ -399,7 +403,8 @@
                 <div class="editor-mode-tabs">
                     <button class="editor-tab active" data-mode="paint">🖌️ Paint</button>
                     <button class="editor-tab" data-mode="assign">👤 Assign</button>
-                    <button class="editor-tab" data-mode="dice"><span class="dice-icon-sprite mini" style="background-color: #888;"></span> Dice</button>
+                    <button class="editor-tab" data-mode="dice"><span class="dice-icon-sprite mini"
+                            style="background-color: #888;"></span> Dice</button>
                 </div>
 
                 <!-- Mode-specific toolbar -->
