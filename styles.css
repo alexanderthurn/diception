@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&display=swap');
 
 :root {
     --bg-color: #050510;
@@ -17,7 +17,7 @@ body {
     overflow: hidden;
     overscroll-behavior: none;
     background-color: var(--bg-color);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     color: var(--text-color);
     /* Disable all browser gestures (zoom, pan) by default */
     touch-action: none;
@@ -209,7 +209,7 @@ select {
     right: 20px;
     z-index: 100;
     padding: 12px 25px;
-    font-family: 'Outfit', sans-serif;
+    font-family: inherit;
     font-size: 16px;
     font-weight: bold;
     color: #ffffff;
@@ -230,7 +230,7 @@ select {
     background: rgba(0, 0, 0, 0.9);
     border: 1px solid var(--accent-color);
     border-radius: 10px;
-    font-family: 'Outfit', sans-serif;
+    font-family: inherit;
     font-size: 14px;
     text-align: center;
     white-space: nowrap;
@@ -472,6 +472,7 @@ select {
 }
 
 .tron-btn {
+    font-family: 'Rajdhani', sans-serif;
     background: transparent;
     border: 1px solid var(--border-color);
     color: var(--border-color);
@@ -867,7 +868,7 @@ input[type="range"] {
 }
 
 .dice-roll {
-    font-family: monospace;
+    font-family: 'Rajdhani', monospace;
     color: #fff;
 }
 
@@ -1145,7 +1146,7 @@ input[type="range"] {
 
 .loading-status {
     color: var(--border-color);
-    font-family: monospace;
+    font-family: 'Rajdhani', monospace;
     font-size: 1.2rem;
     letter-spacing: 2px;
     margin-top: 20px;
@@ -1157,7 +1158,7 @@ input[type="range"] {
     bottom: 10px;
     right: 20px;
     color: var(--border-color);
-    font-family: monospace;
+    font-family: 'Rajdhani', monospace;
     font-size: 0.75rem;
     opacity: 0.6;
     margin: 0;
@@ -1168,7 +1169,7 @@ input[type="range"] {
     bottom: 5px;
     right: 10px;
     color: var(--border-color);
-    font-family: monospace;
+    font-family: 'Rajdhani', monospace;
     font-size: 0.65rem;
     opacity: 0.4;
     pointer-events: none;
@@ -1181,7 +1182,7 @@ input[type="range"] {
     width: 100%;
     text-align: center;
     color: #fff;
-    font-family: 'Outfit', sans-serif;
+    font-family: inherit;
     font-size: 1.1rem;
     letter-spacing: 1px;
     padding: 0 40px;
@@ -1227,7 +1228,7 @@ input[type="range"] {
     width: 100%;
     text-align: center;
     color: var(--border-color);
-    font-family: 'Outfit', sans-serif;
+    font-family: inherit;
     font-size: 0.8rem;
     letter-spacing: 2px;
     opacity: 0.4;
@@ -2706,7 +2707,7 @@ input[type="range"] {
     left: 50%;
     transform: translateX(-50%);
     color: #00ff00;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Rajdhani', monospace;
     font-size: 20px;
     z-index: 1000;
     pointer-events: none;
