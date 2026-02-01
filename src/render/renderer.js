@@ -24,14 +24,17 @@ export class Renderer {
         this.app = new Application();
         await this.app.init({
             background: '#050510',
-            resizeTo: window,
+            resizeTo: this.container,
             antialias: true,
             resolution: realRes,
-            autoDensity: true,
+            autoDensity: false,
             roundPixels: true,
             preference: 'high-performance'
         });
 
+        this.app.canvas.style.width = '100%';
+        this.app.canvas.style.height = '100%';
+        this.app.canvas.style.display = 'block';
         this.app.ticker.maxFPS = 120;
 
         this.container.appendChild(this.app.canvas);
