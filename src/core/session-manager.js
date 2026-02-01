@@ -123,7 +123,7 @@ export class SessionManager {
      * @param {Function} addLog - Function to add log entries
      * @param {string} gameSpeed - Current game speed setting
      */
-    checkResume(createAI, clearPlayerAIs, playerAIs, getPlayerName, addLog, gameSpeed) {
+    checkResume(createAI, clearPlayerAIs, playerAIs, getPlayerName, addLog, gameSpeed, effectsQuality) {
         if (!this.turnHistory.hasAutoSave() || this.game.players.length > 0) return false;
 
         const snapshot = this.turnHistory.loadAutoSave();
@@ -145,10 +145,16 @@ export class SessionManager {
                 p.name = p.name || getPlayerName(p);
             });
 
-            // Restore settings - use the gameSpeed from config (passed as parameter)
+            // Restore settings - match what happens in gameStarter.startGame()
             console.log('checkResume: Setting gameSpeed to', gameSpeed);
             this.renderer.setGameSpeed(gameSpeed);
             this.renderer.setDiceSides(this.game.diceSides || 6);
+
+            // Apply effects quality settings
+            if (effectsQuality && this.effectsManager) {
+                this.effectsManager.setQuality(effectsQuality);
+                this.renderer.setEffectsQuality(effectsQuality);
+            }
             if (this.effectsManager) this.effectsManager.stopIntroMode();
 
             // Trigger start

@@ -253,12 +253,12 @@ async function init() {
 
     // Check for auto-resume
     setTimeout(() => {
-        const resumeGameSpeed = configManager.getGameConfig().gameSpeed;
-        console.log('Auto-resume: gameSpeed from config =', resumeGameSpeed);
+        const config = configManager.getGameConfig();
+        console.log('Auto-resume: gameSpeed from config =', config.gameSpeed);
 
-        // Initialize gameStarter's gameSpeed so it's available during turn handlers
-        // This is needed because game-events.js calls gameStarter.getGameSpeed()
-        gameStarter.gameSpeed = resumeGameSpeed;
+        // Initialize gameStarter's state so it's available during turn handlers
+        // This matches what happens in gameStarter.startGame()
+        gameStarter.gameSpeed = config.gameSpeed;
 
         sessionManager.checkResume(
             createAI,
@@ -266,7 +266,8 @@ async function init() {
             gameStarter.getPlayerAIs(),
             getPlayerName,
             addLog,
-            resumeGameSpeed // Use config, not gameStarter which isn't initialized yet
+            config.gameSpeed,
+            config.effectsQuality
         );
     }, 100);
 
