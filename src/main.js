@@ -145,7 +145,11 @@ async function init() {
     const loadingPrompt = document.getElementById('loading-prompt');
     const loadingIcons = document.getElementById('loading-icons');
 
-    const dismissLoadingScreen = () => {
+    const dismissLoadingScreen = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         if (!loadingScreen || loadingScreen.classList.contains('fade-out')) return;
 
         loadingScreen.classList.add('fade-out');
@@ -160,11 +164,19 @@ async function init() {
         inputManager.off('confirm', dismissLoadingScreen);
     };
 
-    if (loadingScreen) {
-        if (loadingPrompt) {
-            // Detect mobile/iPad
-            const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
-            const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document; // Modern iPad detection
+    if (loadingScreen && loadingPrompt) {
+        // Start with blinking for the initialization phase
+        loadingPrompt.style.animation = 'loading-status-blink 1.5s infinite';
+
+        // Detect mobile/iPad
+        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+        const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document; // Modern iPad detection
+
+        // The "Ready" phase (triggered during init sequence)
+        // We'll update this once all components are initialized
+        const setReady = () => {
+            // Stop blinking and switch to pulse
+            loadingPrompt.style.animation = 'pulse-opacity 2s infinite ease-in-out';
 
             if (isTouch || isIPad) {
                 loadingPrompt.textContent = 'Touch to Start';
@@ -176,8 +188,12 @@ async function init() {
                 window.addEventListener('keydown', dismissLoadingScreen);
                 if (loadingIcons) loadingIcons.classList.remove('hidden');
             }
-            loadingPrompt.classList.remove('hidden');
-        }
+        };
+
+        // We can call setReady immediately if we're at the end of init,
+        // or keep it available for a staggered reveal.
+        // For now, call it at the end of the init logic block
+        setReady();
 
         inputManager.on('confirm', dismissLoadingScreen);
     }

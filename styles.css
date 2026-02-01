@@ -1203,15 +1203,16 @@ input[type="range"] {
 
 .loading-footer {
     position: absolute;
-    bottom: 30px;
+    bottom: 10px;
     left: 0;
     width: 100%;
     text-align: center;
     color: var(--border-color);
-    font-family: monospace;
-    font-size: 0.9rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
     letter-spacing: 2px;
-    opacity: 0.6;
+    opacity: 0.4;
+    text-transform: uppercase;
 }
 
 @keyframes pulse-opacity {
