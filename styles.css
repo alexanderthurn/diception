@@ -1171,11 +1171,39 @@ input[type="range"] {
     animation: pulse-opacity 2s infinite ease-in-out;
 }
 
+.loading-icons {
+    position: absolute;
+    top: calc(50% + 100px);
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    font-size: 5rem;
+    opacity: 0.8;
+    filter: drop-shadow(0 0 20px var(--accent-color));
+    animation: pulse-opacity 2s infinite ease-in-out;
+}
+
+.loading-icons span {
+    transition: transform 0.3s ease;
+}
+
+.loading-icons span:hover {
+    transform: scale(1.2);
+}
+
 /* Deskstop scale for loading prompt */
 @media (min-width: 1024px) {
     .loading-prompt {
         font-size: 2.2rem;
         padding: 0 100px;
+    }
+
+    .loading-icons {
+        font-size: 8rem;
+        gap: 100px;
+        top: calc(50% + 150px);
     }
 }
 

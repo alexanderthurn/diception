@@ -143,6 +143,7 @@ async function init() {
     // Interaction-based loading screen dismissal
     const loadingScreen = document.getElementById('loading-screen');
     const loadingPrompt = document.getElementById('loading-prompt');
+    const loadingIcons = document.getElementById('loading-icons');
 
     const dismissLoadingScreen = () => {
         if (!loadingScreen || loadingScreen.classList.contains('fade-out')) return;
@@ -167,9 +168,11 @@ async function init() {
             if (isTouch || isIPad) {
                 loadingPrompt.textContent = 'Touch to Start';
                 window.addEventListener('touchstart', dismissLoadingScreen);
+                if (loadingIcons) loadingIcons.classList.add('hidden');
             } else {
                 loadingPrompt.textContent = 'Press left mouse button, "A" on controller or "ENTER" on keyboard';
                 window.addEventListener('mousedown', dismissLoadingScreen);
+                if (loadingIcons) loadingIcons.classList.remove('hidden');
             }
             loadingPrompt.classList.remove('hidden');
         }
