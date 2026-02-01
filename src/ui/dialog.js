@@ -38,7 +38,15 @@ export class Dialog {
             // Header
             const header = document.createElement('h1');
             header.className = 'tron-title small';
-            header.textContent = title;
+
+            // Wrap letters in spans for per-character animation
+            [...title].forEach((char, i) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.style.setProperty('--index', i);
+                header.appendChild(span);
+            });
+
             dialog.appendChild(header);
 
             // Body

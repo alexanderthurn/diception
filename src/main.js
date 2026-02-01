@@ -81,6 +81,24 @@ async function init() {
     setVersionText('loading-version');
     setVersionText('setup-version');
 
+    // Helper to wrap letters in spans for per-character animation
+    const wrapLetters = (selector) => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(el => {
+            const text = el.textContent;
+            el.innerHTML = '';
+            [...text].forEach((char, i) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.style.setProperty('--index', i);
+                el.appendChild(span);
+            });
+        });
+    };
+
+    // Wrap letters for all main titles
+    wrapLetters('.tron-title');
+
     // 0. Steam Integration
     if (window.steam) {
         // Show Steam-only Quit button

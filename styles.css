@@ -526,49 +526,68 @@ select {
 }
 
 .tron-title {
-    background: linear-gradient(90deg,
-            #00ffff 0%,
-            /* Start with long teal section */
-            #00ffff 50%,
-            #AA00FF 55%,
-            /* Human 1 */
-            #FF00AA 60%,
-            /* Human 2 */
-            #FF0055 65%,
-            /* Bot 1 */
-            #55FF00 70%,
-            /* Bot 2 */
-            #FFDD00 75%,
-            /* Bot 3 */
-            #FF8800 80%,
-            /* Bot 4 */
-            #00AAFF 85%,
-            /* Bot 5 */
-            #88FF88 90%,
-            /* Bot 6 */
-            #FFAA55 95%,
-            /* Bot 7 */
-            #00ffff 100%
-            /* Loop back to teal */
-        );
-    background-size: 200% auto;
-    /* 200% combined with 50% teal ensures all letters can be teal */
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
     margin-bottom: 30px;
     letter-spacing: 4px;
-    animation: titleGlow 4s linear infinite, tron-title-move 10s linear infinite;
     display: inline-block;
 }
 
-@keyframes tron-title-move {
-    0% {
-        background-position: 0% 50%;
+.tron-title span {
+    display: inline-block;
+    color: #00ffff;
+    animation: titleGlow 4s linear infinite, tron-color-cycle 5s infinite;
+    animation-delay: calc(var(--index) * -0.5s);
+}
+
+@keyframes tron-color-cycle {
+
+    0%,
+    10% {
+        color: #00ffff;
     }
 
+    10.0001%,
+    20% {
+        color: #AA00FF;
+    }
+
+    20.0001%,
+    30% {
+        color: #FF00AA;
+    }
+
+    30.0001%,
+    40% {
+        color: #FF0055;
+    }
+
+    40.0001%,
+    50% {
+        color: #55FF00;
+    }
+
+    50.0001%,
+    60% {
+        color: #FFDD00;
+    }
+
+    60.0001%,
+    70% {
+        color: #FF8800;
+    }
+
+    70.0001%,
+    80% {
+        color: #00AAFF;
+    }
+
+    80.0001%,
+    90% {
+        color: #88FF88;
+    }
+
+    90.0001%,
     100% {
-        background-position: 150% 50%;
+        color: #FFAA55;
     }
 }
 
