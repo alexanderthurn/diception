@@ -145,7 +145,8 @@ export class SessionManager {
                 p.name = p.name || getPlayerName(p);
             });
 
-            // Restore settings
+            // Restore settings - use the gameSpeed from config (passed as parameter)
+            console.log('checkResume: Setting gameSpeed to', gameSpeed);
             this.renderer.setGameSpeed(gameSpeed);
             this.renderer.setDiceSides(this.game.diceSides || 6);
             if (this.effectsManager) this.effectsManager.stopIntroMode();

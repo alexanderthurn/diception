@@ -147,6 +147,7 @@ export class Renderer {
     }
 
     setGameSpeed(speed) {
+        console.log('renderer.setGameSpeed called with:', speed);
         this.gameSpeed = speed;
         if (this.animator) {
             this.animator.setGameSpeed(speed);

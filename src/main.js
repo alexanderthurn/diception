@@ -250,15 +250,23 @@ async function init() {
     // How to Play Modal
     setupHowToPlay(effectsManager);
 
+
     // Check for auto-resume
     setTimeout(() => {
+        const resumeGameSpeed = configManager.getGameConfig().gameSpeed;
+        console.log('Auto-resume: gameSpeed from config =', resumeGameSpeed);
+
+        // Initialize gameStarter's gameSpeed so it's available during turn handlers
+        // This is needed because game-events.js calls gameStarter.getGameSpeed()
+        gameStarter.gameSpeed = resumeGameSpeed;
+
         sessionManager.checkResume(
             createAI,
             () => gameStarter.clearPlayerAIs(),
             gameStarter.getPlayerAIs(),
             getPlayerName,
             addLog,
-            gameStarter.getGameSpeed()
+            resumeGameSpeed // Use config, not gameStarter which isn't initialized yet
         );
     }, 100);
 
