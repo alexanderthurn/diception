@@ -276,7 +276,7 @@ export class ConfigManager {
             // Update AI Selection - use the first bot's AI or keep current selection
             if (botAIs.size >= 1) {
                 const ai = [...botAIs][0];
-                if (el.botAISelect && ['easy', 'medium', 'hard'].includes(ai)) {
+                if (el.botAISelect && ['easy', 'medium', 'hard', 'custom'].includes(ai)) {
                     el.botAISelect.value = ai;
                     this.selectedBotAI = ai;
                 }

@@ -78,7 +78,7 @@ export class GameEventManager {
         // Auto-save at start of turn
         this.turnHistory.saveAutoSave(this.game);
 
-        const name = data.player.isBot ? `Bot ${data.player.id}` : `Player ${data.player.id}`;
+        const name = this.getPlayerName ? this.getPlayerName(data.player) : (data.player.isBot ? `Bot ${data.player.id}` : `Player ${data.player.id}`);
         this.playerText.textContent = `${name}'s Turn`;
         this.playerText.style.color = '#' + data.player.color.toString(16).padStart(6, '0');
 
@@ -237,7 +237,7 @@ export class GameEventManager {
     }
 
     handlePlayerEliminated(player) {
-        const name = player.isBot ? `Bot ${player.id}` : `Player ${player.id}`;
+        const name = this.getPlayerName ? this.getPlayerName(player) : (player.isBot ? `Bot ${player.id}` : `Player ${player.id}`);
         if (this.addLog) this.addLog(`☠️ ${name} has been eliminated!`, 'death');
         if (this.sfx) this.sfx.playerEliminated();
         if (this.playerDashboard) this.playerDashboard.update();
