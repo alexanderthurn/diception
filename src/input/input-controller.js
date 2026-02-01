@@ -300,6 +300,12 @@ export class InputController {
     onPointerUp(e) {
         this.isDragging = false;
 
+        // Guard against missing startDragPos (can happen if pointerup fires without pointerdown)
+        if (!this.startDragPos) {
+            this.clickTarget = null;
+            return;
+        }
+
         // Check if it was a click (little movement)
         const dist = Math.abs(e.global.x - this.startDragPos.x) + Math.abs(e.global.y - this.startDragPos.y);
 
