@@ -623,13 +623,11 @@ async function init() {
         const defender = game.players.find(p => p.id === result.defenderId);
         const defenderName = defender ? getPlayerName(defender) : `Player ${result.defenderId}`;
 
-        const attackRoll = result.attackerRolls?.join('+') || '?';
-        const defendRoll = result.defenderRolls?.join('+') || '?';
-        const attackSum = result.attackerRolls?.reduce((a, b) => a + b, 0) || '?';
-        const defendSum = result.defenderRolls?.reduce((a, b) => a + b, 0) || '?';
-
+        const attackRollStr = result.attackerRolls.join('+');
+        const defendRollStr = result.defenderRolls.join('+');
         const outcome = result.won ? '✓' : '✗';
-        addLog(`→ ${defenderName}: [${attackSum}] vs [${defendSum}] ${outcome}`, result.won ? 'attack-win' : 'attack-loss');
+        const operator = result.won ? '>' : '≤';
+        addLog(`${attackRollStr}=${result.attackerSum}${operator}${result.defenderSum}=${defendRollStr} → ${defenderName} ${outcome}`, result.won ? 'attack-win' : 'attack-loss');
 
         // Show dice result in HUD (using DiceHUD module)
         const isHumanAttacker = attacker && !attacker.isBot && !autoplayPlayers.has(attacker.id);
