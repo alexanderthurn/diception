@@ -3,7 +3,8 @@
  * 
  * Strategy:
  * - Targets territories with the smallest number of dice
- * - Only attacks if own dice > defender dice (fallback to >= if no moves)
+ * - Only attacks if own dice > defender dice
+ * - Fallback: Same dice attacks (>=) only allowed if no attacks made yet this turn
  * - Prefers non-human targets when dice counts are equal
  */
 import { BaseAI } from './base-ai.js';
@@ -16,6 +17,7 @@ export class EasyAI extends BaseAI {
 
     async takeTurn(gameSpeed = 'normal') {
         let safety = 0;
+        let hasAttacked = false; // Track if any attack has been made
         const delay = this.getAttackDelay(gameSpeed);
 
         while (safety < 500) {
@@ -63,8 +65,8 @@ export class EasyAI extends BaseAI {
                 }
             }
 
-            // If no attack found with >, use >= rule
-            if (!selectedMove) {
+            // If no attack found with > and no attacks made yet, allow same dice (>=)
+            if (!selectedMove && !hasAttacked) {
                 for (const option of attackOptions) {
                     if (option.from.dice >= option.defenderDice) {
                         selectedMove = option;
@@ -84,6 +86,7 @@ export class EasyAI extends BaseAI {
             );
 
             if (res.success) {
+                hasAttacked = true; // Mark that we've attacked
                 if (delay > 0) {
                     await new Promise(r => setTimeout(r, delay));
                 }

@@ -4,7 +4,7 @@
  * Strategy:
  * - Priority 1: Attacks where own dice - defender dice >= 2 (strong advantage)
  * - Priority 2: Attacks where own dice - defender dice == 1 (moderate advantage)
- * - Priority 3: Attacks where own dice == defender dice (fallback, same dice)
+ * - Priority 3: Same dice attacks only allowed if no attacks made yet this turn
  * - No human/bot preference
  */
 import { BaseAI } from './base-ai.js';
@@ -17,6 +17,7 @@ export class MediumAI extends BaseAI {
 
     async takeTurn(gameSpeed = 'normal') {
         let safety = 0;
+        let hasAttacked = false; // Track if any attack has been made
         const delay = this.getAttackDelay(gameSpeed);
 
         while (safety < 500) {
@@ -61,8 +62,8 @@ export class MediumAI extends BaseAI {
                 }
             }
 
-            // If no -1 advantage, use same dice (>= 0) as fallback
-            if (!selectedMove) {
+            // If no -1 advantage and no attacks made yet, allow same dice (>= 0) as fallback
+            if (!selectedMove && !hasAttacked) {
                 for (const option of attackOptions) {
                     if (option.diceDiff >= 0) {
                         selectedMove = option;
@@ -82,6 +83,7 @@ export class MediumAI extends BaseAI {
             );
 
             if (res.success) {
+                hasAttacked = true; // Mark that we've attacked
                 if (delay > 0) {
                     await new Promise(r => setTimeout(r, delay));
                 }
