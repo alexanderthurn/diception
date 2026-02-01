@@ -4,7 +4,7 @@
 export class AudioController {
     constructor(sfxManager) {
         this.sfx = sfxManager;
-        
+
         // Available songs
         this.availableSongs = [
             'Neon Dice Offensive.mp3',
@@ -23,7 +23,7 @@ export class AudioController {
         this.musicPlaying = false;
         this.shouldAutoplayMusic = false;
         this.music = null;
-        
+
         // Timeouts for mobile slider auto-hide
         this.musicTimeout = null;
         this.sfxTimeout = null;
@@ -44,10 +44,23 @@ export class AudioController {
         } else {
             this.currentSongIndex = parseInt(storedIndex, 10);
         }
+
+        // Validate index
+        if (isNaN(this.currentSongIndex) || this.currentSongIndex < 0 || this.currentSongIndex >= this.availableSongs.length) {
+            console.warn('Resetting invalid song index:', this.currentSongIndex);
+            this.currentSongIndex = 0;
+        }
+
         localStorage.setItem('dicy_currentSongIndex', this.currentSongIndex.toString());
 
         // Create audio element
-        this.music = new Audio('./' + this.availableSongs[this.currentSongIndex]);
+        const songPath = '/' + encodeURIComponent(this.availableSongs[this.currentSongIndex]);
+        console.log('Loading audio:', songPath);
+        this.music = new Audio(songPath);
+
+        this.music.addEventListener('error', (e) => {
+            console.error('Audio load error for:', this.music.src, e);
+        });
 
         // Load volume/enabled settings
         const savedMusicEnabled = localStorage.getItem('dicy_musicEnabled') !== 'false';
@@ -124,7 +137,7 @@ export class AudioController {
 
     loadNextSong() {
         this.currentSongIndex = (this.currentSongIndex + 1) % this.availableSongs.length;
-        this.music.src = './' + this.availableSongs[this.currentSongIndex];
+        this.music.src = '/' + encodeURIComponent(this.availableSongs[this.currentSongIndex]);
         localStorage.setItem('dicy_currentSongIndex', this.currentSongIndex.toString());
 
         if (this.musicPlaying) {
@@ -145,7 +158,7 @@ export class AudioController {
     showSliderWithTimeout(slider, timeoutKey) {
         document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
         slider.classList.add('visible');
-        
+
         this[timeoutKey] = setTimeout(() => {
             slider.classList.remove('visible');
         }, 3000);
