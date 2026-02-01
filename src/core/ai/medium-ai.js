@@ -1,12 +1,11 @@
 /**
- * MediumAI - Strategic AI that optimizes attacks for efficiency
+ * MediumAI - Strategic AI that prioritizes dice advantage
  * 
  * Strategy:
- * - 80% aggression quota
- * - Prioritizes optimal dice margins:
- *   - For small stacks (<4 dice): prefers diff=1, then diff=2
- *   - For larger stacks: prefers diff=2 (stable margin), then diff=1
- * - Within same priority, targets stronger enemies
+ * - Priority 1: Attacks where own dice - defender dice >= 2 (strong advantage)
+ * - Priority 2: Attacks where own dice - defender dice == 1 (moderate advantage)
+ * - Priority 3: Attacks where own dice == defender dice (fallback, same dice)
+ * - No human/bot preference
  */
 import { BaseAI } from './base-ai.js';
 
@@ -17,60 +16,78 @@ export class MediumAI extends BaseAI {
     }
 
     async takeTurn(gameSpeed = 'normal') {
-        const allMyTiles = this.getMyTiles();
-        const minAttacks = Math.ceil(allMyTiles.length * 0.8);
-        let attacksDone = 0;
         let safety = 0;
         const delay = this.getAttackDelay(gameSpeed);
 
         while (safety < 500) {
             safety++;
+
+            // Get all attackable territories
             const attackers = this.getMyTiles().filter(t => t.dice > 1);
-            const moves = [];
+            const attackOptions = [];
 
             for (const tile of attackers) {
                 const neighbors = this.getAdjacentTiles(tile.x, tile.y);
                 for (const target of neighbors) {
                     if (target.owner !== this.playerId) {
-                        const diff = tile.dice - target.dice;
-                        let priority = 0;
-
-                        if (tile.dice < 4) {
-                            if (diff === 1) priority = 5;      // High aggression for small stacks
-                            else if (diff === 2) priority = 4;
-                            else if (diff > 2) priority = 2;
-                            else if (diff === 0) priority = 1;
-                        } else {
-                            if (diff === 2) priority = 4;      // Optimal stable margin
-                            else if (diff === 1) priority = 3; // Efficient but riskier
-                            else if (diff > 2) priority = 2;   // Overkill
-                            else if (diff === 0) priority = 1; // Last resort flip
-                        }
-
-                        if (priority > 0) {
-                            // Score by strongest neighbor within priority
-                            const score = (priority * 100) + target.dice;
-                            moves.push({ from: tile, to: target, score });
-                        }
+                        const diceDiff = tile.dice - target.dice;
+                        attackOptions.push({
+                            from: tile,
+                            to: target,
+                            diceDiff: diceDiff
+                        });
                     }
                 }
             }
 
-            if (moves.length === 0) break;
-            moves.sort((a, b) => b.score - a.score);
+            if (attackOptions.length === 0) break;
 
-            const move = moves[0];
-            const res = this.attack(move.from.x, move.from.y, move.to.x, move.to.y);
+            // Try to find an attack with dice advantage >= 2 (highest priority)
+            let selectedMove = null;
+            for (const option of attackOptions) {
+                if (option.diceDiff >= 2) {
+                    selectedMove = option;
+                    break;
+                }
+            }
+
+            // If no -2+ advantage, try dice advantage == 1
+            if (!selectedMove) {
+                for (const option of attackOptions) {
+                    if (option.diceDiff === 1) {
+                        selectedMove = option;
+                        break;
+                    }
+                }
+            }
+
+            // If no -1 advantage, use same dice (>= 0) as fallback
+            if (!selectedMove) {
+                for (const option of attackOptions) {
+                    if (option.diceDiff >= 0) {
+                        selectedMove = option;
+                        break;
+                    }
+                }
+            }
+
+            // If still no valid move, stop
+            if (!selectedMove) break;
+
+            const res = this.attack(
+                selectedMove.from.x,
+                selectedMove.from.y,
+                selectedMove.to.x,
+                selectedMove.to.y
+            );
+
             if (res.success) {
-                attacksDone++;
                 if (delay > 0) {
                     await new Promise(r => setTimeout(r, delay));
                 }
             } else {
                 break;
             }
-
-            if (attacksDone >= minAttacks) break;
         }
     }
 }
