@@ -708,8 +708,7 @@ select {
     text-transform: uppercase;
 }
 
-select,
-input[type="range"] {
+select {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
@@ -717,6 +716,18 @@ input[type="range"] {
     border: 1px solid var(--border-color);
     color: #fff;
     padding: 5px;
+    font-family: inherit;
+    border-radius: 0;
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: #000;
+    border: 0px solid var(--border-color);
+    color: #fff;
+    padding: 0px;
     font-family: inherit;
     border-radius: 0;
 }
