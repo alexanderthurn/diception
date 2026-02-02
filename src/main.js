@@ -148,6 +148,8 @@ async function init() {
 
     // Initialize Sound & Audio
     const sfxManager = new SoundManager();
+    // Pre-render all sound effects during loading for instant playback
+    sfxManager.preloadAll().catch(e => console.warn('Sound preload failed:', e));
     const audioController = new AudioController(sfxManager);
     audioController.init();
 
