@@ -562,10 +562,8 @@ select {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #000;
-    border: 2px solid var(--border-color);
-    box-shadow: 0 0 20px var(--border-color);
-    padding: 0px 20px 20px 20px;
+
+    padding: 0px;
     text-align: center;
     pointer-events: auto;
     min-width: 300px;

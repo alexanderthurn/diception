@@ -100,7 +100,7 @@ export class Dialog {
      * @param {string} message 
      * @param {string} title 
      */
-    static alert(message, title = 'SYSTEM MESSAGE') {
+    static alert(message, title = 'SYSTEM') {
         return this.show({
             title,
             message,
