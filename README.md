@@ -76,6 +76,10 @@ npm run steam:build:win
   - The AppID in `electron-main.cjs` (line 12).
 - **Features**: The desktop version supports native features like Steam user identification and achievements (via `window.steam` in the frontend).
 
+## Documentation
+
+- **[Campaign & Scenario Creation](docs/CAMPAIGNS.md)**: Guide for creating custom campaigns, scenarios, and maps.
+
 ## Credits
 
 Created as a Dice Wars inspired strategy game.

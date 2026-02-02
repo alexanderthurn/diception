@@ -15,6 +15,7 @@ import { GameLog } from './ui/game-log.js';
 import { PlayerDashboard } from './ui/player-dashboard.js';
 import { DiceHUD } from './ui/dice-hud.js';
 import { HighscoreManager } from './ui/highscore-manager.js';
+import { GameStatsTracker } from './ui/game-stats-tracker.js';
 import { Dialog } from './ui/dialog.js';
 
 // New modular components
@@ -155,6 +156,7 @@ async function init() {
 
     // Initialize UI Components
     const highscoreManager = new HighscoreManager();
+    const gameStatsTracker = new GameStatsTracker(game);
     const diceHUD = new DiceHUD();
     diceHUD.setDiceDataURL(TileRenderer.diceDataURL);
 
@@ -193,7 +195,7 @@ async function init() {
     const gameEventManager = new GameEventManager(
         game, renderer, gameStarter, sessionManager, turnHistory, scenarioManager
     );
-    gameEventManager.setUIComponents(diceHUD, gameLog, playerDashboard, highscoreManager, sfxManager, effectsManager);
+    gameEventManager.setUIComponents(diceHUD, gameLog, playerDashboard, highscoreManager, sfxManager, effectsManager, gameStatsTracker);
     gameEventManager.setCallbacks(getPlayerName, addLog, startTurnLog, finalizeTurnLog);
     gameEventManager.init();
 

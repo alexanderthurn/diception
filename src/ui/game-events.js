@@ -20,6 +20,7 @@ export class GameEventManager {
         this.highscoreManager = null;
         this.sfx = null;
         this.effectsManager = null;
+        this.gameStatsTracker = null;
 
         // DOM elements
         this.playerText = document.getElementById('player-turn');
@@ -37,13 +38,14 @@ export class GameEventManager {
     /**
      * Set UI components
      */
-    setUIComponents(diceHUD, gameLog, playerDashboard, highscoreManager, sfx, effectsManager) {
+    setUIComponents(diceHUD, gameLog, playerDashboard, highscoreManager, sfx, effectsManager, gameStatsTracker) {
         this.diceHUD = diceHUD;
         this.gameLog = gameLog;
         this.playerDashboard = playerDashboard;
         this.highscoreManager = highscoreManager;
         this.sfx = sfx;
         this.effectsManager = effectsManager;
+        this.gameStatsTracker = gameStatsTracker;
     }
 
     /**
@@ -274,8 +276,14 @@ export class GameEventManager {
         const name = this.getPlayerName(data.winner);
         if (this.addLog) this.addLog(`🏆 ${name} wins the game!`, 'death');
 
-        // Record the win
-        if (this.highscoreManager) this.highscoreManager.recordWin(name);
+        // Determine if human played and won
+        const humanPlayed = this.game.players.some(p => !p.isBot);
+        const humanWon = !data.winner.isBot;
+
+        // Record the win with human stats
+        if (this.highscoreManager) {
+            this.highscoreManager.recordWin(name, humanPlayed, humanWon);
+        }
 
         // Play victory or defeat sound
         if (this.sfx) {
@@ -286,26 +294,94 @@ export class GameEventManager {
             }
         }
 
+        // Get game stats
+        const gameStats = this.gameStatsTracker?.getGameStats();
+
         // Prepare content for Dialog
         const content = document.createElement('div');
+        content.className = 'game-over-content';
 
+        // Winner announcement
         const winnerP = document.createElement('p');
         winnerP.id = 'winner-text';
         winnerP.textContent = `${name} Wins!`;
         content.appendChild(winnerP);
 
-        const highscoreSection = document.createElement('div');
-        highscoreSection.id = 'highscore-section';
-        highscoreSection.innerHTML = `
-            <h3 class="highscore-title">🏆 PLAYER STATS</h3>
-            <div id="highscore-list"></div>
-            <div id="total-games-played" class="total-games"></div>
-        `;
-        content.appendChild(highscoreSection);
+        // === LAST GAME STATS (always shown) ===
+        if (gameStats) {
+            const lastGameSection = document.createElement('div');
+            lastGameSection.className = 'last-game-section';
 
-        setTimeout(() => {
-            if (this.highscoreManager) this.highscoreManager.display(name);
-        }, 10);
+            let statsHtml = '<div class="game-stats-grid">';
+
+            // Game duration and combat summary
+            statsHtml += `
+                <div class="stat-item">
+                    <span class="stat-label">Turns</span>
+                    <span class="stat-value">${gameStats.gameDuration}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Attacks</span>
+                    <span class="stat-value">${gameStats.totalAttacks}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Conquests</span>
+                    <span class="stat-value">${gameStats.totalTerritoryChanges}</span>
+                </div>
+            `;
+
+            statsHtml += '</div>';
+
+            // Luck badges
+            if (gameStats.luckiest && gameStats.unluckiest && gameStats.luckiest.playerId !== gameStats.unluckiest.playerId) {
+                statsHtml += '<div class="luck-badges">';
+                if (Math.abs(gameStats.luckiest.luck) >= 1) {
+                    statsHtml += `<span class="luck-badge lucky">🍀 ${gameStats.luckiest.name} <small>(+${gameStats.luckiest.luck.toFixed(0)})</small></span>`;
+                }
+                if (Math.abs(gameStats.unluckiest.luck) >= 1) {
+                    statsHtml += `<span class="luck-badge unlucky">💀 ${gameStats.unluckiest.name} <small>(${gameStats.unluckiest.luck.toFixed(0)})</small></span>`;
+                }
+                statsHtml += '</div>';
+            }
+
+            // Elimination timeline (if any players were eliminated)
+            if (gameStats.eliminationOrder.length > 0) {
+                statsHtml += '<div class="elimination-timeline">';
+                statsHtml += '<span class="timeline-label">Eliminated:</span> ';
+                statsHtml += gameStats.eliminationOrder
+                    .map(e => `${e.name} (T${e.turn})`)
+                    .join(' → ');
+                statsHtml += '</div>';
+            }
+
+            lastGameSection.innerHTML = statsHtml;
+            content.appendChild(lastGameSection);
+        }
+
+        // === HUMAN STATS SECTION (only if human played) ===
+        if (humanPlayed && this.highscoreManager) {
+            const humanStats = this.highscoreManager.getHumanStats();
+
+            const humanSection = document.createElement('div');
+            humanSection.className = 'human-stats-section';
+            humanSection.innerHTML = `
+                <div class="human-stats-row">
+                    <span class="human-stat">
+                        <span class="stat-label">Games</span>
+                        <span class="stat-value">${humanStats.gamesPlayed}</span>
+                    </span>
+                    <span class="human-stat">
+                        <span class="stat-label">Wins</span>
+                        <span class="stat-value">${humanStats.wins}</span>
+                    </span>
+                    <span class="human-stat">
+                        <span class="stat-label">Win Rate</span>
+                        <span class="stat-value">${humanStats.winRate}%</span>
+                    </span>
+                </div>
+            `;
+            content.appendChild(humanSection);
+        }
 
         const buttons = [
             { text: 'New Game', value: 'restart', className: 'tron-btn' }
