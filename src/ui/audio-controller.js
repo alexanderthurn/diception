@@ -53,8 +53,8 @@ export class AudioController {
 
         localStorage.setItem('dicy_currentSongIndex', this.currentSongIndex.toString());
 
-        // Create audio element
-        const songPath = '/' + encodeURIComponent(this.availableSongs[this.currentSongIndex]);
+        // Create audio element - use relative path for subpath deployment
+        const songPath = './' + encodeURIComponent(this.availableSongs[this.currentSongIndex]);
         console.log('Loading audio:', songPath);
         this.music = new Audio(songPath);
 
@@ -137,7 +137,7 @@ export class AudioController {
 
     loadNextSong() {
         this.currentSongIndex = (this.currentSongIndex + 1) % this.availableSongs.length;
-        this.music.src = '/' + encodeURIComponent(this.availableSongs[this.currentSongIndex]);
+        this.music.src = './' + encodeURIComponent(this.availableSongs[this.currentSongIndex]);
         localStorage.setItem('dicy_currentSongIndex', this.currentSongIndex.toString());
 
         if (this.musicPlaying) {
