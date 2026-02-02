@@ -230,8 +230,8 @@ export class GridRenderer {
                     this.saveTileState(tileIdx, tileRaw, isCurrentPlayer, isInLargestRegion);
                 }
 
-                // Always collect shimmer edges for current player (even if tile not dirty)
-                if (!tileRaw.blocked && isCurrentPlayer && isInLargestRegion && !this.paintMode) {
+                // Always collect shimmer edges for current human player
+                if (!tileRaw.blocked && isCurrentPlayer && isInLargestRegion && !this.paintMode && !currentPlayer.isBot) {
                     this.collectShimmerEdges(x, y, tileRaw, map);
                 }
             }
@@ -430,9 +430,9 @@ export class GridRenderer {
             return;
         }
 
-        // Show shimmer for current player (human or bot)
+        // Show shimmer for current human player only
         const currentPlayer = this.game.currentPlayer;
-        if (!currentPlayer || this.currentPlayerRegionEdges.length === 0) {
+        if (!currentPlayer || currentPlayer.isBot || this.currentPlayerRegionEdges.length === 0) {
             if (this.shimmerGraphics) {
                 this.shimmerGraphics.clear();
             }
@@ -448,6 +448,11 @@ export class GridRenderer {
         // Clear and redraw (Graphics.clear() is much faster than removeChildren + new)
         this.shimmerGraphics.clear();
         this.shimmerGraphics.blendMode = 'add';
+
+        // Ensure shimmer is on top of everything else (especially background effects)
+        if (this.stage.children[this.stage.children.length - 1] !== this.shimmerContainer) {
+            this.stage.addChild(this.shimmerContainer);
+        }
 
         // === ANIMATION CONFIG ===
         const CYCLE_DURATION = RENDER.SHIMMER_CYCLE_DURATION;
@@ -471,39 +476,22 @@ export class GridRenderer {
             const headT = cycleProgress;
 
             // Draw trail segments (including head at seg 0)
-            for (let seg = 0; seg <= TRAIL_SEGMENTS; seg++) {
-                // Trail position (behind head)
-                const segT = headT - (seg * 0.08); // Each segment is 8% behind
+            const segmentOffset = RENDER.SHIMMER_SEGMENT_OFFSET || 0.08;
 
-                // Wrap around if needed (trail goes off start of edge)
-                if (segT < 0) continue; // Don't draw trail that's off the edge
+            for (let seg = 0; seg <= TRAIL_SEGMENTS; seg++) {
+                const segT = headT - (seg * segmentOffset);
+                if (segT < 0) continue;
 
                 const x = edge.x1 + dx * segT;
                 const y = edge.y1 + dy * segT;
 
-                // Fade: head is brightest
                 const fadeProgress = seg / TRAIL_SEGMENTS;
-                const alpha = Math.max(0.01, (1 - fadeProgress) * 0.8);
-                const size = Math.max(1.0, 2.5 - fadeProgress * 1.5);
+                const alpha = seg === 0 ? 1.0 : (1 - fadeProgress) * 0.5; // Solid head
+                const size = 3.141592;
 
-                if (size > 0.1 && alpha > 0.005) {
-                    if (seg === 0) {
-                        // Bright head with glow
-                        const s1 = size + 3;
-                        this.shimmerGraphics.rect(x - s1, y - s1, s1 * 2, s1 * 2);
-                        this.shimmerGraphics.fill({ color: 0xffffff, alpha: alpha * 0.15 });
-
-                        const s2 = size + 1.5;
-                        this.shimmerGraphics.rect(x - s2, y - s2, s2 * 2, s2 * 2);
-                        this.shimmerGraphics.fill({ color: 0xffffff, alpha: alpha * 0.4 });
-
-                        this.shimmerGraphics.rect(x - size, y - size, size * 2, size * 2);
-                        this.shimmerGraphics.fill({ color: 0xffffff, alpha: alpha });
-                    } else {
-                        // Trail particles
-                        this.shimmerGraphics.rect(x - size, y - size, size * 2, size * 2);
-                        this.shimmerGraphics.fill({ color: 0xffffff, alpha: alpha });
-                    }
+                if (alpha > 0.05) {
+                    this.shimmerGraphics.rect(x - size, y - size, size * 2, size * 2);
+                    this.shimmerGraphics.fill({ color: 0xffffff, alpha: alpha });
                 }
             }
         }

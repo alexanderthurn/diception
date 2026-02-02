@@ -65,9 +65,9 @@ export const RENDER = {
     DEFAULT_GAP: 4,
 
     // Shimmer animation
-    SHIMMER_CYCLE_DURATION: 2, // seconds
-    SHIMMER_TRAIL_SEGMENTS: 1,
-    SHIMMER_SEGMENT_OFFSET: 0.08, // 8% behind per segment
+    SHIMMER_CYCLE_DURATION: 2.5, // seconds (slower, more elegant)
+    SHIMMER_TRAIL_SEGMENTS: 1,   // Fewer segments = less clutter
+    SHIMMER_SEGMENT_OFFSET: 0.12, // More spacing between segments
 
     // Attack animation
     ATTACK_FLASH_DURATION: 20, // frames

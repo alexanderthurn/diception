@@ -30,7 +30,8 @@ export class Renderer {
             resolution: realRes,
             autoDensity: true,
             roundPixels: false,
-            preference: 'webgl'
+            preference: 'webgl',
+            hello: false // Minor performance boost by skipping splash
         });
 
         this.app.canvas.style.width = '100%';
