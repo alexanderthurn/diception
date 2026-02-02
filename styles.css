@@ -727,7 +727,7 @@ input[type="range"] {
     appearance: none;
     width: 100%;
     background: #000;
-    border: 0px solid var(--border-color);
+    border: 2px solid var(--border-color);
     color: #fff;
     padding: 0px;
     font-family: inherit;
