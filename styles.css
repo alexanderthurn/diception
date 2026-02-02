@@ -145,26 +145,6 @@ select {
     text-align: center;
 }
 
-#music-volume {
-    width: 80px;
-    height: 4px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: #000;
-    border-radius: 0;
-    opacity: 0.7;
-}
-
-#music-volume::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 14px;
-    height: 14px;
-    border-radius: 0;
-    background: var(--accent-color);
-    cursor: pointer;
-    margin-top: -5px;
-    /* Center thumb on track */
-}
 
 .tron-btn.small {
     padding: 4px 8px;
@@ -181,26 +161,6 @@ select {
     padding: 0 5px;
 }
 
-#sfx-volume {
-    width: 60px;
-    height: 4px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: #000;
-    border-radius: 0;
-    opacity: 0.7;
-}
-
-#sfx-volume::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
-    border-radius: 0;
-    background: #fff;
-    cursor: pointer;
-    margin-top: -4px;
-    /* Center thumb on track */
-}
 
 #player-dashboard {
     position: absolute;
@@ -1133,7 +1093,7 @@ select {
         transform: translateY(-50%);
         z-index: 210;
         background: rgba(0, 0, 0, 0.9);
-        border: 1px solid var(--border-color);
+        border: 2px solid var(--border-color);
         border-radius: 0;
         padding: 0 5px;
     }
