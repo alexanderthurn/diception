@@ -128,6 +128,28 @@ export class SessionManager {
 
         const snapshot = this.turnHistory.loadAutoSave();
         if (snapshot) {
+            // Guard against resuming finished games
+            let isFinished = snapshot.gameState && snapshot.gameState.gameOver;
+
+            // Robust check: If gameOver flag is false but only one owner remains, it's finished
+            if (!isFinished && snapshot.gameState && snapshot.gameState.map && snapshot.gameState.map.tiles) {
+                const owners = new Set();
+                snapshot.gameState.map.tiles.forEach(t => {
+                    if (!t.blocked && t.owner !== undefined && t.owner !== null) {
+                        owners.add(t.owner);
+                    }
+                });
+                if (owners.size === 1) {
+                    isFinished = true;
+                }
+            }
+
+            if (isFinished) {
+                console.log('checkResume: Skipping resume for finished game (determined by gameOver flag or map state)');
+                this.turnHistory.clearAutoSave();
+                return false;
+            }
+
             this.setupModal.classList.add('hidden');
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
 

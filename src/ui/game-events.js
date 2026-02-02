@@ -273,6 +273,9 @@ export class GameEventManager {
     }
 
     async handleGameOver(data) {
+        // Clear auto-save IMMEDIATELY on game over
+        this.turnHistory.clearAutoSave();
+
         const name = this.getPlayerName(data.winner);
         if (this.addLog) this.addLog(`🏆 ${name} wins the game!`, 'death');
 
@@ -381,9 +384,6 @@ export class GameEventManager {
         } else if (choice === 'clone') {
             this.sessionManager.restartCurrentGame(this.addLog, this.gameStarter.getAutoplayPlayers());
         }
-
-        // Clear auto-save on normal completion
-        this.turnHistory.clearAutoSave();
     }
 
     handleGameStart() {

@@ -193,8 +193,8 @@ export class Game {
                 diceSides: this.diceSides
             }, fromX, fromY, toX, toY);
 
-            this.emit('attackResult', result);
             this.checkWinCondition();
+            this.emit('attackResult', result);
             if (result.won) {
                 // this.checkRowColumnCompletion(result.to.x, result.to.y, result.attackerId);
             }
