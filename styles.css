@@ -99,6 +99,10 @@ select {
     pointer-events: none;
 }
 
+#ui-overlay.interaction-shield * {
+    pointer-events: none !important;
+}
+
 .panel {
     pointer-events: auto;
     /*background: var(--panel-bg);

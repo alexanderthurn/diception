@@ -327,11 +327,16 @@ function setupLoadingScreen(inputManager) {
     const loadingIcons = document.getElementById('loading-icons');
 
     const dismissLoadingScreen = (e) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
         if (!loadingScreen || loadingScreen.classList.contains('fade-out')) return;
+
+        // Block UI interactions for a brief moment to prevent accidental clicks on underlying buttons
+        const uiOverlay = document.getElementById('ui-overlay');
+        if (uiOverlay) {
+            uiOverlay.classList.add('interaction-shield');
+            setTimeout(() => {
+                uiOverlay.classList.remove('interaction-shield');
+            }, 250);
+        }
 
         loadingScreen.classList.add('fade-out');
         setTimeout(() => {
