@@ -50,10 +50,36 @@ export class GamepadCursorManager {
             const cursor = this.cursors.get(index);
             if (!cursor) return;
 
+            // Visual feedback
+            const buttonLabels = {
+                0: 'Select',
+                1: 'Hold to move map',
+                2: 'Deselect',
+                3: 'End Turn',
+                4: 'Cursor Speed -',
+                5: 'Cursor Speed +',
+                6: 'Zoom out',
+                7: 'Zoom in',
+                9: 'New Game',
+                12: 'Attack Up',
+                13: 'Attack Down',
+                14: 'Attack Left',
+                15: 'Attack Right'
+            };
+
+            const label = buttonLabels[button];
+            if (label) {
+                const gameSpeed = localStorage.getItem('dicy_gameSpeed') || 'beginner';
+                const showAlways = [4, 5, 6, 7].includes(button);
+                const isBeginner = gameSpeed === 'beginner';
+
+                if (showAlways || isBeginner) {
+                    this.showFeedback(index, label);
+                }
+            }
+
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
 
-            // In menus, only some buttons are allowed to work
-            // 0: A, 2: X, 9: Start, 4: L1 (Speed), 5: R1 (Speed), 6: L2 (Zoom), 7: R2 (Zoom)
             const allowedInMenu = [0, 2, 4, 5, 6, 7, 9];
             if (isMenuOpen && !allowedInMenu.includes(button)) return;
 
@@ -464,5 +490,46 @@ export class GamepadCursorManager {
         }
 
         return document.documentElement; // Fallback to root scroll
+    }
+
+    /**
+     * Shows a temporary floating feedback label near the cursor.
+     */
+    showFeedback(index, text) {
+        const cursor = this.cursors.get(index);
+        if (!cursor) return;
+
+        const feedback = document.createElement('div');
+        feedback.className = 'gamepad-feedback';
+        feedback.textContent = text;
+        feedback.style.position = 'fixed';
+        feedback.style.left = `${cursor.x}px`;
+        feedback.style.top = `${cursor.y - 40}px`;
+        feedback.style.transform = 'translateX(-50%)';
+        feedback.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
+        feedback.style.color = 'white';
+        feedback.style.padding = '4px 10px';
+        feedback.style.borderRadius = '12px';
+        feedback.style.fontSize = '12px';
+        feedback.style.fontWeight = 'bold';
+        feedback.style.pointerEvents = 'none';
+        feedback.style.zIndex = '10000';
+        feedback.style.transition = 'all 2s cubic-bezier(0.2, 0.8, 0.2, 1)';
+        feedback.style.whiteSpace = 'nowrap';
+        feedback.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+        feedback.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+        feedback.style.opacity = '1';
+
+        document.body.appendChild(feedback);
+
+        // Animate and remove
+        requestAnimationFrame(() => {
+            feedback.style.top = `${cursor.y - 80}px`;
+            feedback.style.opacity = '0';
+        });
+
+        setTimeout(() => {
+            feedback.remove();
+        }, 2000);
     }
 }
