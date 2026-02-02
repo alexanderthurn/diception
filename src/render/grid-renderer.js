@@ -1,6 +1,7 @@
 import { Graphics, Container, Text, TextStyle, Sprite } from 'pixi.js';
 import { TileRenderer } from './tile-renderer.js';
 import { RENDER } from '../core/constants.js';
+import { calculateWinProbability, getProbabilityHexColor } from '../core/probability.js';
 
 export class GridRenderer {
     constructor(stage, game, animator) {
@@ -59,6 +60,14 @@ export class GridRenderer {
         this.lastCurrentPlayerId = null;
         // Track if full redraw is needed
         this.needsFullRedraw = true;
+
+        // Text style for probability badges
+        this.probabilityTextStyle = new TextStyle({
+            fontFamily: 'Arial',
+            fontSize: 12,
+            fontWeight: 'bold',
+            fill: '#ffffff',
+        });
     }
 
     /**
@@ -77,10 +86,10 @@ export class GridRenderer {
         if (!lastState) return true;
 
         return lastState.owner !== tileRaw.owner ||
-               lastState.dice !== tileRaw.dice ||
-               lastState.blocked !== tileRaw.blocked ||
-               lastState.isCurrentPlayer !== isCurrentPlayer ||
-               lastState.isInLargestRegion !== isInLargestRegion;
+            lastState.dice !== tileRaw.dice ||
+            lastState.blocked !== tileRaw.blocked ||
+            lastState.isCurrentPlayer !== isCurrentPlayer ||
+            lastState.isInLargestRegion !== isInLargestRegion;
     }
 
     /**
@@ -142,9 +151,9 @@ export class GridRenderer {
         }
 
         // Full redraw needed if map structure changed or it's the first draw
-        const needsFullRedraw = this.needsFullRedraw || 
-                                this.tileCache.size === 0 || 
-                                this.tileCache.size !== map.width * map.height;
+        const needsFullRedraw = this.needsFullRedraw ||
+            this.tileCache.size === 0 ||
+            this.tileCache.size !== map.width * map.height;
 
         if (needsFullRedraw) {
             // Clear everything for full redraw
@@ -190,9 +199,9 @@ export class GridRenderer {
                 const isInLargestRegion = ownerLargestRegion?.has(tileIdx) || false;
 
                 // Check if this tile needs redrawing
-                const isDirty = needsFullRedraw || 
-                                playerChanged || 
-                                this.isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isInLargestRegion);
+                const isDirty = needsFullRedraw ||
+                    playerChanged ||
+                    this.isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isInLargestRegion);
 
                 if (isDirty) {
                     // Remove old cached tile if it exists
@@ -541,6 +550,103 @@ export class GridRenderer {
             gfx.y = this.selectedTile.y * (this.tileSize + this.gap);
             this.overlayContainer.addChild(gfx);
 
+            // Get selected tile info for probability calculation
+            const selectedTileData = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
+            const attackerDice = selectedTileData ? selectedTileData.dice : 0;
+
+            // Collect probability badges to add after hover/attack indicator (for z-order)
+            const probabilityBadges = [];
+
+            // Draw attackable neighbor indicators (Beginner: highlight + probability, Normal: probability only)
+            if (this.gameSpeed !== 'expert' && attackerDice > 1) {
+                const neighbors = [
+                    { x: this.selectedTile.x, y: this.selectedTile.y - 1, edge: 'top' },
+                    { x: this.selectedTile.x, y: this.selectedTile.y + 1, edge: 'bottom' },
+                    { x: this.selectedTile.x - 1, y: this.selectedTile.y, edge: 'left' },
+                    { x: this.selectedTile.x + 1, y: this.selectedTile.y, edge: 'right' }
+                ];
+
+                for (const neighbor of neighbors) {
+                    const neighborTile = this.game.map.getTile(neighbor.x, neighbor.y);
+
+                    // Only show for enemy tiles that exist
+                    if (!neighborTile || neighborTile.owner === this.game.currentPlayer?.id) continue;
+
+                    const neighborPixelX = neighbor.x * (this.tileSize + this.gap);
+                    const neighborPixelY = neighbor.y * (this.tileSize + this.gap);
+
+                    // Beginner mode: show pulsing dashed highlight on attackable neighbors
+                    if (this.gameSpeed === 'beginner') {
+                        const highlightGfx = new Graphics();
+                        const inset = 4;
+
+                        // Draw pulsing border
+                        const pulseAlpha = 0.4 + Math.sin(this.cursorPulse * 1.5) * 0.2;
+                        highlightGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
+                        highlightGfx.stroke({ width: 2, color: 0x00ffff, alpha: pulseAlpha });
+
+                        highlightGfx.x = neighborPixelX;
+                        highlightGfx.y = neighborPixelY;
+                        this.overlayContainer.addChild(highlightGfx);
+                    }
+
+                    // Calculate win probability
+                    const defenderDice = neighborTile.dice;
+                    const probability = calculateWinProbability(attackerDice, defenderDice, this.diceSides);
+                    const probabilityPercent = Math.round(probability * 100);
+                    const probColor = getProbabilityHexColor(probability);
+
+                    // Calculate badge position (at edge between attacker and defender)
+                    let badgeX, badgeY;
+                    const selectedPixelX = this.selectedTile.x * (this.tileSize + this.gap);
+                    const selectedPixelY = this.selectedTile.y * (this.tileSize + this.gap);
+
+                    switch (neighbor.edge) {
+                        case 'top':
+                            badgeX = selectedPixelX + this.tileSize / 2;
+                            badgeY = selectedPixelY - this.gap / 2;
+                            break;
+                        case 'bottom':
+                            badgeX = selectedPixelX + this.tileSize / 2;
+                            badgeY = selectedPixelY + this.tileSize + this.gap / 2;
+                            break;
+                        case 'left':
+                            badgeX = selectedPixelX - this.gap / 2;
+                            badgeY = selectedPixelY + this.tileSize / 2;
+                            break;
+                        case 'right':
+                            badgeX = selectedPixelX + this.tileSize + this.gap / 2;
+                            badgeY = selectedPixelY + this.tileSize / 2;
+                            break;
+                    }
+
+                    // Create probability badge
+                    const badgeContainer = new Container();
+                    badgeContainer.x = badgeX;
+                    badgeContainer.y = badgeY;
+
+                    // Background pill
+                    const badgeWidth = 28;
+                    const badgeHeight = 16;
+                    const badgeBg = new Graphics();
+                    badgeBg.roundRect(-badgeWidth / 2, -badgeHeight / 2, badgeWidth, badgeHeight, 3);
+                    badgeBg.fill({ color: probColor, alpha: 0.9 });
+                    badgeBg.stroke({ width: 1, color: 0x000000, alpha: 0.3 });
+                    badgeContainer.addChild(badgeBg);
+
+                    // Probability text
+                    const probText = new Text({
+                        text: `${probabilityPercent}%`,
+                        style: this.probabilityTextStyle
+                    });
+                    probText.anchor.set(0.5, 0.5);
+                    badgeContainer.addChild(probText);
+
+                    // Collect badge to add later (after attack indicator)
+                    probabilityBadges.push(badgeContainer);
+                }
+            }
+
             // Draw Target Hover or Cursor target
             const isCursorOnDifferentTile = this.cursorTile && (this.cursorTile.x !== this.selectedTile.x || this.cursorTile.y !== this.selectedTile.y);
             const targetTile = this.hoverTile || (isCursorOnDifferentTile ? this.cursorTile : null);
@@ -565,6 +671,11 @@ export class GridRenderer {
                     hGfx.y = targetTile.y * (this.tileSize + this.gap);
                     this.overlayContainer.addChild(hGfx);
                 }
+            }
+
+            // Add probability badges last (on top of attack indicator)
+            for (const badge of probabilityBadges) {
+                this.overlayContainer.addChild(badge);
             }
         } else if (this.hoverTile) {
             // Just hovering without selection - show subtle highlight for any tile

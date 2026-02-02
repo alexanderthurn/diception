@@ -24,6 +24,7 @@ import { TournamentRunner } from './core/tournament-runner.js';
 import { ScenarioBrowser } from './ui/scenario-browser.js';
 import { GameStarter } from './core/game-starter.js';
 import { GameEventManager } from './ui/game-events.js';
+import { ProbabilityCalculator } from './ui/probability-calculator.js';
 
 
 // Global Dice Export Function
@@ -507,9 +508,17 @@ function setupHowToPlay(effectsManager) {
     const howtoCloseBtn = document.getElementById('howto-close-btn');
     const setupModal = document.getElementById('setup-modal');
 
+    // Initialize probability calculator (once)
+    let probabilityCalculator = null;
+
     howtoBtn.addEventListener('click', () => {
         setupModal.classList.add('hidden');
         howtoModal.classList.remove('hidden');
+
+        // Initialize probability calculator on first open
+        if (!probabilityCalculator) {
+            probabilityCalculator = new ProbabilityCalculator();
+        }
     });
 
     howtoCloseBtn.addEventListener('click', () => {

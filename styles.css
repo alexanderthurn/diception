@@ -2891,3 +2891,126 @@ canvas {
         transform: scale(1);
     }
 }
+
+/* ========== PROBABILITY CALCULATOR ========== */
+
+.probability-controls {
+    margin: 15px 0;
+    text-align: left;
+}
+
+.probability-controls label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--accent-color);
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.probability-controls select {
+    width: auto;
+    min-width: 150px;
+}
+
+.prob-legend {
+    display: inline-flex;
+    gap: 12px;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.prob-high-text {
+    color: #00b400;
+}
+
+.prob-medium-text {
+    color: #ffa500;
+}
+
+.prob-low-text {
+    color: #dc5050;
+}
+
+.probability-table-wrapper {
+    overflow-x: auto;
+    margin: 10px 0 20px 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.probability-table {
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 100%;
+}
+
+.probability-table th,
+.probability-table td {
+    padding: 6px 8px;
+    text-align: center;
+    border: 1px solid #333;
+    min-width: 36px;
+}
+
+.probability-table th {
+    background: rgba(0, 255, 255, 0.1);
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+.probability-table th.sticky-col,
+.probability-table td.sticky-col {
+    position: sticky;
+    left: 0;
+    background: #111;
+    z-index: 1;
+    border-right: 2px solid var(--accent-color);
+}
+
+.probability-table td.sticky-col {
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.probability-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Probability cell color classes */
+.prob-high {
+    background: rgba(0, 180, 0, 0.7);
+    color: #fff;
+}
+
+.prob-medium {
+    background: rgba(200, 140, 0, 0.7);
+    color: #fff;
+}
+
+.prob-low {
+    background: rgba(180, 40, 40, 0.7);
+    color: #fff;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 600px) {
+    .probability-table {
+        font-size: 11px;
+    }
+
+    .probability-table th,
+    .probability-table td {
+        padding: 4px 5px;
+        min-width: 28px;
+    }
+
+    .prob-legend {
+        display: block;
+        margin: 8px 0 0 0;
+    }
+
+    .prob-legend span {
+        display: inline-block;
+        margin-right: 8px;
+    }
+}
