@@ -147,9 +147,9 @@ export class GamepadCursorManager {
                 // R1 (Button 5) -> Super Fast (5x boost)
                 let speedMultiplier = 1.0;
                 if (gp.buttons[5]?.pressed) {
-                    speedMultiplier = 5.0; // R1 Super Fast
+                    speedMultiplier = 2.0; // R1 Super Fast
                 } else if (gp.buttons[4]?.pressed) {
-                    speedMultiplier = 2.0; // L1 Faster
+                    speedMultiplier = 0.5; // L1 Faster
                 }
 
                 // Apply speed and update position
