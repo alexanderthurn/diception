@@ -447,6 +447,7 @@ export class GridRenderer {
 
         // Clear and redraw (Graphics.clear() is much faster than removeChildren + new)
         this.shimmerGraphics.clear();
+        this.shimmerGraphics.blendMode = 'add';
 
         // === ANIMATION CONFIG ===
         const CYCLE_DURATION = RENDER.SHIMMER_CYCLE_DURATION;
@@ -482,10 +483,10 @@ export class GridRenderer {
 
                 // Fade: head is brightest
                 const fadeProgress = seg / TRAIL_SEGMENTS;
-                const alpha = (1 - fadeProgress) * 0.8;
-                const size = 2.5 - fadeProgress * 1.5;
+                const alpha = Math.max(0.01, (1 - fadeProgress) * 0.8);
+                const size = Math.max(1.0, 2.5 - fadeProgress * 1.5);
 
-                if (size > 0.5 && alpha > 0.05) {
+                if (size > 0.1 && alpha > 0.005) {
                     if (seg === 0) {
                         // Bright head with glow
                         const s1 = size + 3;

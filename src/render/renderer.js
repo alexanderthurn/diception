@@ -28,9 +28,9 @@ export class Renderer {
             resizeTo: this.container,
             antialias: true,
             resolution: realRes,
-            autoDensity: false,
-            roundPixels: true,
-            preference: 'high-performance'
+            autoDensity: true,
+            roundPixels: false,
+            preference: 'webgl'
         });
 
         this.app.canvas.style.width = '100%';

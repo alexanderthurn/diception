@@ -88,7 +88,7 @@ export class BackgroundRenderer {
         const gridGfx = new Graphics();
         const spacing = 80;
         const color = 0x00ffff;
-        const alpha = 0.08;
+        const alpha = 0.12;
 
         // Horizontal lines
         for (let y = 0; y < this.height + spacing; y += spacing) {
@@ -121,7 +121,7 @@ export class BackgroundRenderer {
             accentGfx.lineTo(x, this.height);
         }
 
-        accentGfx.stroke({ width: 1, color: color, alpha: 0.15 });
+        accentGfx.stroke({ width: 1, color: color, alpha: 0.22 });
         accentGfx.blendMode = 'add';
 
         this.gridContainer.addChild(accentGfx);
