@@ -2,6 +2,8 @@
  * ConfigManager - Handles settings persistence and UI synchronization
  * Manages localStorage settings, map size presets, and config sliders
  */
+import { GAME } from '../core/constants.js';
+
 export class ConfigManager {
     constructor() {
         // Map size presets: slider value -> {width, height, label}
@@ -51,6 +53,14 @@ export class ConfigManager {
      */
     loadSavedSettings() {
         const el = this.elements;
+
+        // Set slider limits from GAME constants
+        if (el.maxDiceInput) {
+            el.maxDiceInput.max = GAME.MAX_DICE_PER_TERRITORY;
+        }
+        if (el.diceSidesInput) {
+            el.diceSidesInput.max = GAME.MAX_DICE_SIDES;
+        }
 
         // Load saved map size (convert old index format if needed)
         const savedMapSizeRaw = localStorage.getItem('dicy_mapSize');

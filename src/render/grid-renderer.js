@@ -1,7 +1,7 @@
 import { Graphics, Container, Text, TextStyle, Sprite } from 'pixi.js';
 import { TileRenderer } from './tile-renderer.js';
 import { RENDER } from '../core/constants.js';
-import { calculateWinProbability, getProbabilityHexColor } from '../core/probability.js';
+import { getWinProbability, getProbabilityHexColor } from '../core/probability.js';
 
 export class GridRenderer {
     constructor(stage, game, animator) {
@@ -592,8 +592,12 @@ export class GridRenderer {
 
                     // Calculate win probability
                     const defenderDice = neighborTile.dice;
-                    const probability = calculateWinProbability(attackerDice, defenderDice, this.diceSides);
-                    const probabilityPercent = Math.round(probability * 100);
+                    const probability = getWinProbability(attackerDice, defenderDice, this.diceSides);
+                    // Cap at 99% only if rounded to 100 but not actually 100%
+                    let probabilityPercent = Math.round(probability * 100);
+                    if (probabilityPercent === 100 && probability < 1.0) {
+                        probabilityPercent = 99;
+                    }
                     const probColor = getProbabilityHexColor(probability);
 
                     // Calculate badge position (at edge between attacker and defender)

@@ -7,6 +7,8 @@
 export const GAME = {
     DEFAULT_MAX_DICE: 9,
     DEFAULT_DICE_SIDES: 6,
+    MAX_DICE_SIDES: 16,          // Maximum dice sides for probability tables (1-16)
+    MAX_DICE_PER_TERRITORY: 16,  // Maximum dice per territory for probability tables (1-16)
     MIN_PLAYERS: 2,
     MIN_TILES_PER_PLAYER: 4,
     INITIAL_DICE_MULTIPLIER: 2.5, // Average dice per tile at start
@@ -61,16 +63,16 @@ export const MAP_GENERATION = {
 export const RENDER = {
     DEFAULT_TILE_SIZE: 60,
     DEFAULT_GAP: 4,
-    
+
     // Shimmer animation
     SHIMMER_CYCLE_DURATION: 2, // seconds
     SHIMMER_TRAIL_SEGMENTS: 1,
     SHIMMER_SEGMENT_OFFSET: 0.08, // 8% behind per segment
-    
+
     // Attack animation
     ATTACK_FLASH_DURATION: 20, // frames
     ATTACK_FLASH_ALPHA: 0.8,
-    
+
     // Reinforcement animation
     REINFORCE_FLASH_DURATION: 12, // frames
 };
@@ -97,7 +99,7 @@ export const INPUT = {
 export const AUDIO = {
     DEFAULT_VOLUME: 0.5,
     TONE_VOLUME_SCALE: 0.2, // Volume multiplier for generated tones
-    
+
     // Frequencies (Hz)
     FREQ_TURN_START: [440, 550],
     FREQ_ATTACK: 220,
@@ -105,7 +107,7 @@ export const AUDIO = {
     FREQ_ATTACK_LOSE: [300, 200],
     FREQ_REINFORCE: [330, 392, 523],
     FREQ_ELIMINATED: [200, 150, 100],
-    
+
     // Durations (seconds)
     TONE_DURATION_SHORT: 0.1,
     TONE_DURATION_MEDIUM: 0.15,

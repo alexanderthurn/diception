@@ -1,58 +1,126 @@
 /**
  * Probability calculation for dice combat
- * Uses Monte Carlo simulation for accurate win probability estimation
+ * Uses analytical calculation with pre-computed lookup tables
  */
 
-// Cache for computed probabilities to avoid recalculating
-const probabilityCache = new Map();
+import { GAME } from './constants.js';
+
+// Pre-computed probability lookup tables indexed by dice sides
+// Structure: probabilityTables[diceSides][attackerDice][defenderDice]
+const probabilityTables = new Map();
 
 /**
- * Calculate the probability of attacker winning against defender
- * @param {number} attackerDice - Number of dice the attacker has
- * @param {number} defenderDice - Number of dice the defender has
- * @param {number} diceSides - Number of sides per die (default 6)
- * @returns {number} Win probability as a decimal (0-1)
+ * Calculate the probability distribution of sums for N dice with S sides
+ * @param {number} n - Number of dice
+ * @param {number} sides - Number of sides per die
+ * @returns {number[]} Array where index = sum, value = probability
  */
-export function calculateWinProbability(attackerDice, defenderDice, diceSides = 6) {
-    // Create cache key
-    const cacheKey = `${attackerDice}-${defenderDice}-${diceSides}`;
+function getSumDistribution(n, sides) {
+    // Array where index = sum, value = count of ways to get that sum
+    let dist = new Array(n * sides + 1).fill(0);
+    dist[0] = 1;
 
-    if (probabilityCache.has(cacheKey)) {
-        return probabilityCache.get(cacheKey);
-    }
-
-    // Monte Carlo simulation with 10,000 iterations
-    const ITERATIONS = 10000;
-    let wins = 0;
-
-    for (let i = 0; i < ITERATIONS; i++) {
-        const attackSum = rollDice(attackerDice, diceSides);
-        const defenseSum = rollDice(defenderDice, diceSides);
-
-        // Attacker wins only if strictly greater
-        if (attackSum > defenseSum) {
-            wins++;
+    for (let i = 0; i < n; i++) {
+        const nextDist = new Array(n * sides + 1).fill(0);
+        for (let s = 0; s <= i * sides; s++) {
+            if (dist[s] > 0) {
+                for (let face = 1; face <= sides; face++) {
+                    nextDist[s + face] += dist[s];
+                }
+            }
         }
+        dist = nextDist;
     }
 
-    const probability = wins / ITERATIONS;
-    probabilityCache.set(cacheKey, probability);
-
-    return probability;
+    // Convert to probabilities
+    const totalOutcomes = Math.pow(sides, n);
+    return dist.map(count => count / totalOutcomes);
 }
 
 /**
- * Simulate rolling multiple dice and return the sum
- * @param {number} count - Number of dice to roll
- * @param {number} sides - Number of sides per die
- * @returns {number} Sum of all dice
+ * Calculate exact win probability for attacker vs defender
+ * @param {number} attackerDice - Number of dice for attacker
+ * @param {number} defenderDice - Number of dice for defender
+ * @param {number} diceSides - Number of sides per die
+ * @returns {number} Win probability (0-1)
  */
-function rollDice(count, sides) {
-    let sum = 0;
-    for (let i = 0; i < count; i++) {
-        sum += Math.floor(Math.random() * sides) + 1;
+function computeWinProbability(attackerDice, defenderDice, diceSides) {
+    const attackDist = getSumDistribution(attackerDice, diceSides);
+    const defenseDist = getSumDistribution(defenderDice, diceSides);
+
+    let winProb = 0;
+
+    // Sum all cases where attacker sum > defender sum
+    for (let a = 0; a < attackDist.length; a++) {
+        if (attackDist[a] === 0) continue;
+        for (let d = 0; d < defenseDist.length; d++) {
+            if (defenseDist[d] === 0) continue;
+            if (a > d) {
+                winProb += attackDist[a] * defenseDist[d];
+            }
+        }
     }
-    return sum;
+
+    return winProb;
+}
+
+/**
+ * Pre-compute all probability tables for all dice sides (1 to MAX_DICE_SIDES)
+ * and dice counts (1 to MAX_DICE_PER_TERRITORY)
+ * Call this once at game startup
+ */
+export function initializeProbabilityTables() {
+    const maxSides = GAME.MAX_DICE_SIDES;
+    const maxDice = GAME.MAX_DICE_PER_TERRITORY;
+
+    console.log(`Pre-computing probability tables (sides: 1-${maxSides}, dice: 1-${maxDice})...`);
+    const startTime = performance.now();
+
+    for (let sides = 1; sides <= maxSides; sides++) {
+        const table = [];
+        for (let attacker = 1; attacker <= maxDice; attacker++) {
+            const row = [];
+            for (let defender = 1; defender <= maxDice; defender++) {
+                row.push(computeWinProbability(attacker, defender, sides));
+            }
+            table.push(row);
+        }
+        probabilityTables.set(sides, table);
+    }
+
+    const elapsed = (performance.now() - startTime).toFixed(1);
+    console.log(`Probability tables computed in ${elapsed}ms`);
+}
+
+/**
+ * Get win probability from pre-computed table (fast lookup)
+ * @param {number} attackerDice - Number of dice the attacker has
+ * @param {number} defenderDice - Number of dice the defender has
+ * @param {number} diceSides - Number of sides per die
+ * @returns {number} Win probability (0-1)
+ */
+export function getWinProbability(attackerDice, defenderDice, diceSides = 6) {
+    const table = probabilityTables.get(diceSides);
+    if (!table) {
+        console.warn(`Probability table not computed for ${diceSides}-sided dice`);
+        return 0.5; // Fallback
+    }
+
+    const maxDice = GAME.MAX_DICE_PER_TERRITORY;
+    // Tables are 0-indexed, dice counts are 1-indexed
+    const attackIdx = Math.max(0, Math.min(maxDice - 1, attackerDice - 1));
+    const defendIdx = Math.max(0, Math.min(maxDice - 1, defenderDice - 1));
+
+    return table[attackIdx][defendIdx];
+}
+
+/**
+ * Get the pre-computed probability table for a given dice type
+ * @param {number} diceSides - Number of sides per die
+ * @returns {number[][]} 2D array of probabilities [attacker-1][defender-1]
+ */
+export function getProbabilityTable(diceSides = 6) {
+    return probabilityTables.get(diceSides) || [];
 }
 
 /**
@@ -77,29 +145,6 @@ export function getProbabilityHexColor(probability) {
     return 0xdc0000; // Red
 }
 
-/**
- * Pre-calculate probabilities for a full table (for how-to modal)
- * @param {number} maxDice - Maximum dice count for rows/columns
- * @param {number} diceSides - Number of sides per die
- * @returns {number[][]} 2D array of probabilities [attacker][defender]
- */
-export function generateProbabilityTable(maxDice = 9, diceSides = 6) {
-    const table = [];
-
-    for (let attacker = 1; attacker <= maxDice; attacker++) {
-        const row = [];
-        for (let defender = 1; defender <= maxDice; defender++) {
-            row.push(calculateWinProbability(attacker, defender, diceSides));
-        }
-        table.push(row);
-    }
-
-    return table;
-}
-
-/**
- * Clear the probability cache (useful when dice sides change)
- */
-export function clearProbabilityCache() {
-    probabilityCache.clear();
-}
+// Legacy alias for backwards compatibility
+export const calculateWinProbability = getWinProbability;
+export const generateProbabilityTable = getProbabilityTable;

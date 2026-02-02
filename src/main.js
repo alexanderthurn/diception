@@ -25,9 +25,10 @@ import { ScenarioBrowser } from './ui/scenario-browser.js';
 import { GameStarter } from './core/game-starter.js';
 import { GameEventManager } from './ui/game-events.js';
 import { ProbabilityCalculator } from './ui/probability-calculator.js';
+import { initializeProbabilityTables } from './core/probability.js';
 
-
-// Global Dice Export Function
+// Pre-compute probability tables at startup
+initializeProbabilityTables();
 
 
 async function init() {

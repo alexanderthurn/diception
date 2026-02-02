@@ -7,6 +7,7 @@
 
 // No longer using generateScenarioId
 import { Dialog } from '../ui/dialog.js';
+import { GAME } from '../core/constants.js';
 
 
 // Default player colors
@@ -712,6 +713,14 @@ export class MapEditor {
         this.elements.aiToggleBtn?.classList.add('hidden');
         this.elements.setupModal?.classList.add('hidden');
         this.elements.overlay?.classList.remove('hidden');
+
+        // Set slider limits from GAME constants
+        if (this.elements.maxDiceSelect) {
+            this.elements.maxDiceSelect.max = GAME.MAX_DICE_PER_TERRITORY;
+        }
+        if (this.elements.diceSidesSelect) {
+            this.elements.diceSidesSelect.max = GAME.MAX_DICE_SIDES;
+        }
 
         // Update UI to match state
         this.updateUIFromState();
