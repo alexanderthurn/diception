@@ -1143,9 +1143,9 @@ select {
     }
 
     #music-controls input[type="range"]::-webkit-slider-thumb {
-        width: 20px;
-        height: 20px;
-        margin-top: -5px;
+        width: 32px;
+        height: 32px;
+        margin-top: -12px;
         /* Center thumb */
     }
 
@@ -1248,7 +1248,20 @@ select {
     }
 
     input[type="range"] {
-        margin: 5px 0;
+        margin: 10px 0;
+        height: 32px;
+        /* Ensure container is tall enough for larger thumb */
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+        height: 8px !important;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        width: 32px !important;
+        height: 32px !important;
+        margin-top: -13px !important;
+        /* (8/2) - (32/2) = 4 - 16 = -12px, but let's use -13 for visual alignment */
     }
 
     select {
@@ -2940,8 +2953,6 @@ canvas {
     transform: none;
     min-width: 320px;
     max-width: 500px;
-    background: #000 !important;
-    box-shadow: 0 0 30px var(--border-color);
     animation: dialog-zoom-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -3110,4 +3121,9 @@ canvas {
         display: inline-block;
         margin-right: 8px;
     }
+}
+
+#scenario-browser-modal {
+    background: #000 !important;
+    box-shadow: 0 0 30px var(--border-color);
 }

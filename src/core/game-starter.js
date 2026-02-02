@@ -86,7 +86,7 @@ export class GameStarter {
         const config = this.configManager.getGameConfig();
 
         if (config.humanCount + config.botCount < 2) {
-            Dialog.alert('A game must have at least 2 players in total!');
+            Dialog.alert('A game must have at least 2 players!');
             return;
         }
 
