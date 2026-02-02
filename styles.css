@@ -1248,7 +1248,7 @@ select {
     }
 
     input[type="range"] {
-        margin: 10px 0;
+        margin: 0px 0;
         height: 32px;
         /* Ensure container is tall enough for larger thumb */
     }
@@ -1449,8 +1449,8 @@ select {
 
 /* How to Play Modal Styling */
 .modal.large-modal {
-    width: 600px;
-    max-width: 90vw;
+    width: 1024px;
+    max-width: 100vw;
     text-align: left;
     padding: 30px;
 }

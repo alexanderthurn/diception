@@ -40,7 +40,7 @@ export class ProbabilityCalculator {
         for (let i = 1; i <= GAME.MAX_DICE_SIDES; i++) {
             const option = document.createElement('option');
             option.value = i;
-            option.textContent = `D${i} (${i}-sided)`;
+            option.textContent = `${i}-sided`;
             if (i === 6) option.selected = true; // Default to D6
             this.diceSidesSelect.appendChild(option);
         }
