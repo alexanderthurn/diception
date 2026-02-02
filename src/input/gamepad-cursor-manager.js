@@ -80,7 +80,7 @@ export class GamepadCursorManager {
 
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
 
-            const allowedInMenu = [0, 2, 4, 5, 6, 7, 9];
+            const allowedInMenu = [0, 1, 2, 4, 5, 6, 7, 9];
             if (isMenuOpen && !allowedInMenu.includes(button)) return;
 
             if (button === 0) {
@@ -120,7 +120,7 @@ export class GamepadCursorManager {
             if (!cursor) return;
 
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
-            if (isMenuOpen && button !== 0 && button !== 2) return;
+            if (isMenuOpen && button !== 0 && button !== 1 && button !== 2) return;
 
             if (button === 0) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);

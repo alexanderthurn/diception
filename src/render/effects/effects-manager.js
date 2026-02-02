@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import { ParticleSystem, EffectPresets } from './particle-system.js';
 import { BackgroundRenderer } from './background-renderer.js';
 
@@ -49,6 +49,9 @@ export class EffectsManager {
         this.winStreak = 0;
         this.lastWinTime = 0;
         this.streakDecayTimer = null;
+
+        // Preview map for intro mode
+        this.previewMap = null;
     }
 
     bindEvents() {
@@ -80,9 +83,8 @@ export class EffectsManager {
      */
     setWorldTransform(rootContainer) {
         this.worldTransform = rootContainer;
-        // Make particles follow world transform
+        // Make particles and preview map follow world transform
         if (rootContainer) {
-            // Remove from stage, add to world container so particles move with camera
             this.stage.removeChild(this.container);
             rootContainer.addChild(this.container);
         }
@@ -142,6 +144,31 @@ export class EffectsManager {
         this.introModeActive = true;
         this.background.setIntroMode(true);
 
+        // Create a minimalistic map preview for visual feedback during zoom/pan in menu
+        if (!this.previewMap) {
+            this.previewMap = new Container();
+            const size = 4;
+            const tilePixelSize = this.tileSize;
+            for (let x = 0; x < size; x++) {
+                for (let y = 0; y < size; y++) {
+                    const g = new Graphics();
+                    g.rect(x * (tilePixelSize + this.gap), y * (tilePixelSize + this.gap), tilePixelSize, tilePixelSize);
+                    g.fill({ color: 0x333344, alpha: 0.3 });
+                    g.stroke({ width: 2, color: 0x00ffff, alpha: 0.15 });
+                    this.previewMap.addChild(g);
+                }
+            }
+            // Center the preview map
+            this.previewMap.pivot.set(
+                (size * (this.tileSize + this.gap)) / 2,
+                (size * (this.tileSize + this.gap)) / 2
+            );
+            // Position it at the center of the initial screen area in the world
+            this.previewMap.x = window.innerWidth * 0.5;
+            this.previewMap.y = window.innerHeight * 0.75;
+            this.container.addChild(this.previewMap);
+        }
+
         // Spawn periodic particle streams
         this.introInterval = setInterval(() => {
             if (this.quality === 'off') return;
@@ -191,6 +218,11 @@ export class EffectsManager {
         if (this.introInterval) {
             clearInterval(this.introInterval);
             this.introInterval = null;
+        }
+
+        if (this.previewMap) {
+            this.previewMap.destroy({ children: true });
+            this.previewMap = null;
         }
 
         // Clear any remaining screen particles
