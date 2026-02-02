@@ -691,7 +691,7 @@ input[type="range"] {
     appearance: none;
     width: 100%;
     background: #000;
-    border: 2px solid var(--border-color);
+    border: 0px solid var(--border-color);
     color: #fff;
     padding: 0px;
     font-family: inherit;
@@ -700,40 +700,22 @@ input[type="range"] {
 
 input[type="range"]::-webkit-slider-runnable-track {
     width: 100%;
-    height: 4px;
+    height: 8px;
     cursor: pointer;
     background: var(--border-color);
     border-radius: 0;
-    border: 1px solid var(--border-color);
 }
 
 input[type="range"]::-moz-range-track {
-    width: 100%;
-    height: 4px;
-    cursor: pointer;
-    background: var(--border-color);
     border-radius: 0;
-    border: 1px solid var(--border-color);
 }
 
 input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    border: 1px solid var(--border-color);
-    height: 16px;
-    width: 16px;
     border-radius: 0;
-    background: var(--border-color);
-    cursor: pointer;
-    margin-top: -7px;
 }
 
 input[type="range"]::-moz-range-thumb {
-    border: 1px solid var(--border-color);
-    height: 16px;
-    width: 16px;
     border-radius: 0;
-    background: var(--border-color);
-    cursor: pointer;
 }
 
 select {

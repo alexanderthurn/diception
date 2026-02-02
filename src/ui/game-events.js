@@ -401,7 +401,7 @@ export class GameEventManager {
         }
 
         const choice = await Dialog.show({
-            title: `${name.toUpperCase()} WINS!`,
+            title: `${name.toUpperCase()}  WINS!`,
             content: content,
             buttons: buttons
         });
