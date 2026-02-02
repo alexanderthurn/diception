@@ -335,7 +335,7 @@ function setupLoadingScreen(inputManager) {
             uiOverlay.classList.add('interaction-shield');
             setTimeout(() => {
                 uiOverlay.classList.remove('interaction-shield');
-            }, 250);
+            }, 500);
         }
 
         loadingScreen.classList.add('fade-out');

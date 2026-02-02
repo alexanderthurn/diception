@@ -1227,26 +1227,15 @@ select {
     }
 
     .modal {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        transform: none !important;
-        border-radius: 0 !important;
-        border: none !important;
-        padding: 20px;
-        padding-top: max(20px, env(safe-area-inset-top));
-        padding-bottom: max(20px, env(safe-area-inset-bottom));
-        padding-left: max(20px, env(safe-area-inset-left));
-        padding-right: max(20px, env(safe-area-inset-right));
-        min-width: auto;
-        max-width: none !important;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+
         max-height: none !important;
         overflow-y: auto;
         box-sizing: border-box;
         box-shadow: none !important;
-        background: #000;
     }
 
     .tron-title {
