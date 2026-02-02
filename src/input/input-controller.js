@@ -441,9 +441,19 @@ export class InputController {
     onTurnStart() {
         if (this.selectedTile) {
             const tile = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
+
+            // If the current player is a bot, just hide the selection visually (keep it internally)
+            if (this.game.currentPlayer.isBot) {
+                this.renderer.setSelection(null, null);
+                return;
+            }
+
             // Deselect if tile doesn't exist or is not owned by the CURRENT player
             if (!tile || tile.owner !== this.game.currentPlayer.id) {
                 this.deselect();
+            } else {
+                // Restore the visual selection for the human player
+                this.renderer.setSelection(this.selectedTile.x, this.selectedTile.y);
             }
         }
 
