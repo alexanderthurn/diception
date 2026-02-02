@@ -78,10 +78,13 @@ async function init() {
         });
     }
 
+    // Initialize Input System (create before renderer needs it)
+    const inputManager = new InputManager();
+
     // Initialize Core Components
     const game = new Game();
     const container = document.getElementById('game-container');
-    const renderer = new Renderer(container, game);
+    const renderer = new Renderer(container, game, inputManager);
     await renderer.init();
 
     window.gameApp = renderer.app;
@@ -101,8 +104,6 @@ async function init() {
     effectsManager.setWorldTransform(renderer.rootContainer);
     effectsManager.startIntroMode();
 
-    // Initialize Input System
-    const inputManager = new InputManager();
     const input = new InputController(game, renderer, inputManager);
 
     // Loading Screen

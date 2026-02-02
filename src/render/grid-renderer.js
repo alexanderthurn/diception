@@ -2,12 +2,14 @@ import { Graphics, Container, Text, TextStyle, Sprite } from 'pixi.js';
 import { TileRenderer } from './tile-renderer.js';
 import { RENDER } from '../core/constants.js';
 import { getWinProbability, getProbabilityHexColor } from '../core/probability.js';
+import { shouldShowInputHints, getInputHint, ACTION_MOVE_UP, ACTION_MOVE_DOWN, ACTION_MOVE_LEFT, ACTION_MOVE_RIGHT } from '../ui/input-hints.js';
 
 export class GridRenderer {
-    constructor(stage, game, animator) {
+    constructor(stage, game, animator, inputManager = null) {
         this.stage = stage;
         this.game = game;
         this.animator = animator;
+        this.inputManager = inputManager;
         this.container = new Container();
         this.stage.addChild(this.container);
 
@@ -67,6 +69,14 @@ export class GridRenderer {
             fontSize: 12,
             fontWeight: 'bold',
             fill: '#ffffff',
+        });
+
+        // Text style for input hints
+        this.hintTextStyle = new TextStyle({
+            fontFamily: 'Arial',
+            fontSize: 11,
+            fontWeight: 'bold',
+            fill: '#00ffff',
         });
     }
 
@@ -645,6 +655,56 @@ export class GridRenderer {
                     });
                     probText.anchor.set(0.5, 0.5);
                     badgeContainer.addChild(probText);
+
+                    // Add input hint if beginner mode and input type supports it
+                    if (this.gameSpeed === 'beginner' && shouldShowInputHints(this.inputManager)) {
+                        // Determine which action corresponds to this direction
+                        let hintAction = null;
+                        switch (neighbor.edge) {
+                            case 'top': hintAction = ACTION_MOVE_UP; break;
+                            case 'bottom': hintAction = ACTION_MOVE_DOWN; break;
+                            case 'left': hintAction = ACTION_MOVE_LEFT; break;
+                            case 'right': hintAction = ACTION_MOVE_RIGHT; break;
+                        }
+
+                        if (hintAction) {
+                            const hint = getInputHint(hintAction, this.inputManager);
+                            if (hint) {
+                                // Position hint above probability badge
+                                const hintContainer = new Container();
+                                hintContainer.y = -14; // Above the probability badge
+
+                                // Create hint badge
+                                const hintBg = new Graphics();
+                                const hintWidth = hint.type === 'gamepad' ? 16 : (hint.label.length * 7 + 6);
+                                const hintHeight = 14;
+
+                                if (hint.style === 'gamepad-dpad') {
+                                    // Circular gamepad button
+                                    hintBg.circle(0, 0, 8);
+                                    hintBg.fill({ color: 0x666666, alpha: 0.9 });
+                                    hintBg.stroke({ width: 1, color: 0x000000, alpha: 0.5 });
+                                } else if (hint.style === 'keyboard') {
+                                    // Rectangular keyboard key
+                                    hintBg.roundRect(-hintWidth / 2, -hintHeight / 2, hintWidth, hintHeight, 3);
+                                    hintBg.fill({ color: 0x000000, alpha: 0.8 });
+                                    hintBg.stroke({ width: 1, color: 0x00ffff, alpha: 0.6 });
+                                }
+                                hintContainer.addChild(hintBg);
+
+                                // Hint text/symbol
+                                const hintText = new Text({
+                                    text: hint.label,
+                                    style: this.hintTextStyle
+                                });
+                                hintText.anchor.set(0.5, 0.5);
+                                hintText.style.fontSize = hint.type === 'gamepad' ? 10 : 11;
+                                hintContainer.addChild(hintText);
+
+                                badgeContainer.addChild(hintContainer);
+                            }
+                        }
+                    }
 
                     // Collect badge to add later (after attack indicator)
                     probabilityBadges.push(badgeContainer);

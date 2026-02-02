@@ -4,9 +4,10 @@ import { AnimationManager } from './animation-manager.js';
 import { TileRenderer } from './tile-renderer.js';
 
 export class Renderer {
-    constructor(containerElement, game) {
+    constructor(containerElement, game, inputManager = null) {
         this.container = containerElement;
         this.game = game;
+        this.inputManager = inputManager;
         this.app = null;
         this.grid = null;
         this.rootContainer = null;
@@ -50,7 +51,7 @@ export class Renderer {
         this.animator = new AnimationManager(this);
 
         // Initialize sub-renderers
-        this.grid = new GridRenderer(this.rootContainer, this.game, this.animator);
+        this.grid = new GridRenderer(this.rootContainer, this.game, this.animator, this.inputManager);
 
         // Center the grid initially
         this.centerGrid();

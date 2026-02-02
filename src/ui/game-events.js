@@ -1,5 +1,6 @@
 import { Dialog } from './dialog.js';
 import { createAI } from '../core/ai/index.js';
+import { shouldShowInputHints, getInputHint, ACTION_END_TURN } from './input-hints.js';
 
 /**
  * GameEventManager - Handles all game event subscriptions and turn flow
@@ -26,6 +27,8 @@ export class GameEventManager {
         this.playerText = document.getElementById('player-turn');
         this.turnIndicator = document.getElementById('turn-indicator');
         this.endTurnBtn = document.getElementById('end-turn-btn');
+        this.endTurnText = document.getElementById('end-turn-text');
+        this.endTurnHint = document.getElementById('end-turn-hint');
         this.autoWinBtn = document.getElementById('auto-win-btn');
 
         // Callbacks
@@ -129,7 +132,7 @@ export class GameEventManager {
         } else {
             this.autoWinBtn.classList.add('hidden');
         }
-        this.endTurnBtn.textContent = 'END TURN';
+        this.endTurnText.textContent = 'END TURN';
 
         // Calculate delay based on game speed
         let delay = 500;
@@ -164,7 +167,7 @@ export class GameEventManager {
         // Show expected dice reinforcement on button
         const regionDice = this.game.map.findLargestConnectedRegion(player.id);
         const storedDice = player.storedDice || 0;
-        this.endTurnBtn.textContent = `END TURN (+${regionDice + storedDice})`;
+        this.endTurnText.textContent = `END TURN (+${regionDice + storedDice})`;
 
         // Set button glow to player color
         const playerColorHex = '#' + player.color.toString(16).padStart(6, '0');
@@ -184,6 +187,30 @@ export class GameEventManager {
         } else {
             this.autoWinBtn.classList.add('hidden');
         }
+
+        // Update input hint on End Turn button
+        this.updateEndTurnHint(gameSpeed);
+    }
+
+    /** 
+     * Update End Turn button hint based on game speed and input type
+     */
+    updateEndTurnHint(gameSpeed) {
+        if (!this.endTurnHint || !this.endTurnText) return;
+
+        // Only show hint in beginner mode
+        if (gameSpeed === 'beginner' && shouldShowInputHints(this.renderer.inputManager)) {
+            const hint = getInputHint(ACTION_END_TURN, this.renderer.inputManager);
+            if (hint) {
+                this.endTurnHint.textContent = hint.label;
+                this.endTurnHint.className = 'input-hint ' + hint.style;
+                this.endTurnHint.classList.remove('hidden');
+                return;
+            }
+        }
+
+        // Hide hint if not in beginner mode or no input device
+        this.endTurnHint.classList.add('hidden');
     }
 
     handleAttackResult(result) {
@@ -233,7 +260,7 @@ export class GameEventManager {
         if (isHumanAttacker) {
             const regionDice = this.game.map.findLargestConnectedRegion(attacker.id);
             const storedDice = attacker.storedDice || 0;
-            this.endTurnBtn.textContent = `END TURN (+${regionDice + storedDice})`;
+            this.endTurnText.textContent = `END TURN (+${regionDice + storedDice})`;
         }
 
         if (this.playerDashboard) this.playerDashboard.update();

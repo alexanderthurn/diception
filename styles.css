@@ -3087,3 +3087,49 @@ canvas {
     background: #000 !important;
     box-shadow: 0 0 30px var(--border-color);
 }
+
+/* Input Hints for Beginner Mode */
+.input-hint {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+/* Keyboard hint styling */
+.input-hint.keyboard {
+    background: rgba(0, 0, 0, 0.8);
+    color: #00ffff;
+    border: 1px solid rgba(0, 255, 255, 0.6);
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+/* Gamepad D-pad hint styling */
+.input-hint.gamepad-dpad {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    padding: 0;
+    color: white;
+    font-size: 10px;
+    background: #666666;
+    border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+/* Gamepad Y button styling (yellow/gold like Xbox) */
+.input-hint.gamepad-y {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    padding: 0;
+    color: #000;
+    font-size: 11px;
+    font-weight: bold;
+    background: #FFD700;
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    text-shadow: none;
+}
