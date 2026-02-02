@@ -127,6 +127,10 @@ select {
     display: contents;
 }
 
+#music-controls input[type="range"] {
+    width: 80px;
+}
+
 /* Hide zoom controls on desktop */
 @media (min-width: 769px) and (min-height: 721px) {
     .zoom-control {
@@ -1101,39 +1105,19 @@ select {
     #music-controls input[type="range"] {
         display: none;
         /* Hidden by default */
-        width: 100px;
-        height: 10px;
-        margin: 0;
+        width: 120px;
         position: absolute;
         right: 45px;
         /* To the left of the button */
         top: 50%;
         transform: translateY(-50%);
         z-index: 210;
-        background: rgba(0, 0, 0, 0.9);
-        border: 2px solid var(--border-color);
-        border-radius: 0;
+        background: rgba(0, 0, 0, 0.95);
         padding: 0 5px;
     }
 
     #music-controls input[type="range"].visible {
         display: block;
-    }
-
-    #music-controls input[type="range"]::-webkit-slider-thumb {
-        width: 32px;
-        height: 32px;
-        margin-top: -12px;
-        /* Center thumb */
-        background: var(--border-color);
-    }
-
-    #music-controls input[type="range"]::-moz-range-thumb {
-        width: 32px;
-        height: 32px;
-        border: none;
-        background: var(--border-color);
-        cursor: pointer;
     }
 
     /* Hide text, show icon on mobile */
@@ -1235,35 +1219,33 @@ select {
     }
 
     input[type="range"] {
-        margin: 0px 0;
-        height: 32px;
+        margin: 0;
+        height: 36px;
         /* Ensure container is tall enough for larger thumb */
     }
 
-    input[type="range"]::-webkit-slider-runnable-track {
-        height: 8px !important;
-    }
-
+    input[type="range"]::-webkit-slider-runnable-track,
     input[type="range"]::-moz-range-track {
-        height: 8px !important;
+        height: 10px;
         background: var(--border-color);
         border: 1px solid var(--border-color);
     }
 
     input[type="range"]::-webkit-slider-thumb {
-        width: 32px !important;
-        height: 32px !important;
-        margin-top: -13px !important;
-        /* (8/2) - (32/2) = 4 - 16 = -12px, but let's use -13 for visual alignment */
-        background: var(--border-color) !important;
+        width: 32px;
+        height: 32px;
+        margin-top: -12px;
+        /* (10/2) - (32/2) = 5 - 16 = -11, but let's use -12 for alignment */
+        background: var(--border-color);
+        -webkit-appearance: none;
     }
 
     input[type="range"]::-moz-range-thumb {
-        width: 32px !important;
-        height: 32px !important;
-        border: 1px solid var(--border-color) !important;
-        background: var(--border-color) !important;
-        cursor: pointer !important;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border-color);
+        background: var(--border-color);
+        cursor: pointer;
     }
 
     select {
