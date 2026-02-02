@@ -350,14 +350,15 @@ function setupLoadingScreen(inputManager) {
 
         if (isTouch || isIPad) {
             loadingPrompt.textContent = 'Touch to Start';
-            window.addEventListener('touchstart', dismissLoadingScreen);
             if (loadingIcons) loadingIcons.classList.add('hidden');
         } else {
             loadingPrompt.textContent = 'Press any key to start';
-            window.addEventListener('mousedown', dismissLoadingScreen);
-            window.addEventListener('keydown', dismissLoadingScreen);
             if (loadingIcons) loadingIcons.classList.remove('hidden');
         }
+
+        window.addEventListener('touchstart', dismissLoadingScreen);
+        window.addEventListener('mousedown', dismissLoadingScreen);
+        window.addEventListener('keydown', dismissLoadingScreen);
 
         inputManager.on('confirm', dismissLoadingScreen);
     }
