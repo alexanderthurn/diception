@@ -301,58 +301,36 @@ export class GameEventManager {
         const content = document.createElement('div');
         content.className = 'game-over-content';
 
-        // Winner announcement
-        const winnerP = document.createElement('p');
-        winnerP.id = 'winner-text';
-        winnerP.textContent = `${name} Wins!`;
-        content.appendChild(winnerP);
-
         // === LAST GAME STATS (always shown) ===
         if (gameStats) {
             const lastGameSection = document.createElement('div');
             lastGameSection.className = 'last-game-section';
 
-            let statsHtml = '<div class="game-stats-grid">';
+            // Calculate total dice lost across all players
+            let totalDiceLost = 0;
+            Object.values(gameStats.playerStats).forEach(ps => {
+                totalDiceLost += ps.diceLost;
+            });
 
-            // Game duration and combat summary
-            statsHtml += `
-                <div class="stat-item">
-                    <span class="stat-label">Turns</span>
-                    <span class="stat-value">${gameStats.gameDuration}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Attacks</span>
-                    <span class="stat-value">${gameStats.totalAttacks}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Conquests</span>
-                    <span class="stat-value">${gameStats.totalTerritoryChanges}</span>
-                </div>
+            let statsHtml = `
+                <p class="dice-obituary">A total of <strong>${totalDiceLost}</strong> dice lost their lives in this battle in <strong>${gameStats.gameDuration}</strong> rounds.</p>
             `;
 
+            // Elimination timeline (redesigned to horizontal sentence)
+            statsHtml += '<div class="timeline-section-horizontal">';
+            statsHtml += '<h4 class="timeline-title">Timeline</h4>';
+            statsHtml += '<div class="timeline-sentence">';
+
+            // Show eliminated players with red symbol
+            gameStats.eliminationOrder.forEach(e => {
+                statsHtml += `<span class="timeline-entry eliminated"><span class="symbol">✗</span> ${e.name}</span> `;
+            });
+
+            // Show winner with green check
+            statsHtml += `<span class="timeline-entry winner"><span class="symbol">✓</span> ${name}</span>`;
+
             statsHtml += '</div>';
-
-            // Luck badges
-            if (gameStats.luckiest && gameStats.unluckiest && gameStats.luckiest.playerId !== gameStats.unluckiest.playerId) {
-                statsHtml += '<div class="luck-badges">';
-                if (Math.abs(gameStats.luckiest.luck) >= 1) {
-                    statsHtml += `<span class="luck-badge lucky">🍀 ${gameStats.luckiest.name} <small>(+${gameStats.luckiest.luck.toFixed(0)})</small></span>`;
-                }
-                if (Math.abs(gameStats.unluckiest.luck) >= 1) {
-                    statsHtml += `<span class="luck-badge unlucky">💀 ${gameStats.unluckiest.name} <small>(${gameStats.unluckiest.luck.toFixed(0)})</small></span>`;
-                }
-                statsHtml += '</div>';
-            }
-
-            // Elimination timeline (if any players were eliminated)
-            if (gameStats.eliminationOrder.length > 0) {
-                statsHtml += '<div class="elimination-timeline">';
-                statsHtml += '<span class="timeline-label">Eliminated:</span> ';
-                statsHtml += gameStats.eliminationOrder
-                    .map(e => `${e.name} (T${e.turn})`)
-                    .join(' → ');
-                statsHtml += '</div>';
-            }
+            statsHtml += '</div>';
 
             lastGameSection.innerHTML = statsHtml;
             content.appendChild(lastGameSection);
@@ -365,6 +343,7 @@ export class GameEventManager {
             const humanSection = document.createElement('div');
             humanSection.className = 'human-stats-section';
             humanSection.innerHTML = `
+                <h3 class="highscore-title">TOTAL</h3>
                 <div class="human-stats-row">
                     <span class="human-stat">
                         <span class="stat-label">Games</span>
@@ -392,7 +371,7 @@ export class GameEventManager {
         }
 
         const choice = await Dialog.show({
-            title: 'GAME OVER',
+            title: `${name.toUpperCase()} WINS!`,
             content: content,
             buttons: buttons
         });

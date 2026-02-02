@@ -24,6 +24,7 @@ export class GameStatsTracker {
         this.game.on('gameStart', () => this.onGameStart());
         this.game.on('attackResult', (result) => this.onAttackResult(result));
         this.game.on('playerEliminated', (player) => this.onPlayerEliminated(player));
+        this.game.on('reinforcements', (data) => this.onReinforcements(data));
     }
 
     onGameStart() {
@@ -41,6 +42,8 @@ export class GameStatsTracker {
                 totalRolled: 0,      // Sum of all dice rolled
                 expectedRoll: 0,     // Expected sum based on dice count
                 rollCount: 0,        // Number of roll events
+                diceProduced: 0,
+                diceLost: 0,
                 isBot: player.isBot,
                 name: player.name || (player.isBot ? `Bot ${player.id}` : `Player ${player.id}`)
             });
@@ -70,6 +73,9 @@ export class GameStatsTracker {
         // Track defender stats
         if (result.won) {
             defenderStats.territoriesLost++;
+            defenderStats.diceLost += result.defenderRolls.length; // Lost all dice on that tile
+        } else {
+            attackerStats.diceLost += (result.attackerRolls.length - 1); // Lost all but 1 die
         }
 
         // Track luck (actual roll vs expected)
@@ -91,8 +97,16 @@ export class GameStatsTracker {
         this.eliminationOrder.push({
             playerId: player.id,
             turn: this.game.turn,
-            name: player.name || (player.isBot ? `Bot ${player.id}` : `Player ${player.id}`)
+            name: player.name || (player.isBot ? `Bot ${player.id}` : `Player ${player.id}`),
+            winner: false
         });
+    }
+
+    onReinforcements(data) {
+        const stats = this.playerStats.get(data.player.id);
+        if (stats) {
+            stats.diceProduced += data.earned;
+        }
     }
 
     /**
