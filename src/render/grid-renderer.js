@@ -509,6 +509,12 @@ export class GridRenderer {
     }
 
     drawOverlay() {
+        // Hide all human-centric overlay elements during bot turns
+        if (this.game.currentPlayer?.isBot) {
+            this.overlayContainer.removeChildren();
+            return;
+        }
+
         this.overlayContainer.removeChildren();
 
         // Draw keyboard/gamepad cursor (distinct from hover)

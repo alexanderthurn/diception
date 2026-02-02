@@ -55,6 +55,9 @@ export class InputController {
 
         // Subscribe to InputManager events
         this.setupInputManager();
+
+        // Listen for turn transitions
+        this.game.on('turnStart', () => this.onTurnStart());
     }
 
 
@@ -438,8 +441,8 @@ export class InputController {
     onTurnStart() {
         if (this.selectedTile) {
             const tile = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
-            const owner = this.game.players.find(p => p.id === tile?.owner);
-            if (!tile || !owner || owner.isBot) {
+            // Deselect if tile doesn't exist or is not owned by the CURRENT player
+            if (!tile || tile.owner !== this.game.currentPlayer.id) {
                 this.deselect();
             }
         }
