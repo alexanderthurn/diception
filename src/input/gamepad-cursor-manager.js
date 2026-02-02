@@ -68,6 +68,14 @@ export class GamepadCursorManager {
                 }
             } else if (button === 1) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
+            } else if (button === 4) {
+                // Persistent Speed: L1 -> slower (0.5x)
+                cursor.speedMultiplier *= 0.5;
+                localStorage.setItem('dicy_gamepad_speed_' + index, cursor.speedMultiplier);
+            } else if (button === 5) {
+                // Persistent Speed: R1 -> faster (2x)
+                cursor.speedMultiplier *= 2.0;
+                localStorage.setItem('dicy_gamepad_speed_' + index, cursor.speedMultiplier);
             } else if (button === 6) {
                 this.inputManager.emit('panAnalog', { x: 0, y: 0, zoom: 1 });
                 const zoomOutBtn = document.getElementById('zoom-out-btn');
@@ -142,15 +150,8 @@ export class GamepadCursorManager {
             if (Math.abs(dy) < this.deadZone) dy = 0;
 
             if (dx !== 0 || dy !== 0) {
-                // Speed Boost Logic:
-                // L1 (Button 4) -> Faster (2x boost)
-                // R1 (Button 5) -> Super Fast (5x boost)
-                let speedMultiplier = 1.0;
-                if (gp.buttons[5]?.pressed) {
-                    speedMultiplier = 2.0; // R1 Super Fast
-                } else if (gp.buttons[4]?.pressed) {
-                    speedMultiplier = 0.5; // L1 Faster
-                }
+                // Use persistent speed multiplier
+                let speedMultiplier = cursor.speedMultiplier || 1.0;
 
                 // Apply speed and update position
                 const scale = (val) => Math.sign(val) * Math.pow(Math.abs(val), 1.5);
@@ -266,7 +267,8 @@ export class GamepadCursorManager {
             x: window.innerWidth / 2,
             y: window.innerHeight / 2,
             element: el,
-            lastPlayerId: -1
+            lastPlayerId: -1,
+            speedMultiplier: parseFloat(localStorage.getItem('dicy_gamepad_speed_' + index)) || 1.0
         };
 
         this.container.appendChild(el);
