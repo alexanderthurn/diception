@@ -52,8 +52,10 @@ export class GamepadCursorManager {
 
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
 
-            // In menus, only the A button (0), X button (2) and Start button (9) are allowed to work
-            if (isMenuOpen && button !== 0 && button !== 9 && button !== 2) return;
+            // In menus, only some buttons are allowed to work
+            // 0: A, 2: X, 9: Start, 4: L1 (Speed), 5: R1 (Speed), 6: L2 (Zoom), 7: R2 (Zoom)
+            const allowedInMenu = [0, 2, 4, 5, 6, 7, 9];
+            if (isMenuOpen && !allowedInMenu.includes(button)) return;
 
             if (button === 0) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
