@@ -378,7 +378,7 @@ function setupLoadingScreen(inputManager) {
 function setupFPSCounter(renderer) {
     const fpsCounter = document.getElementById('fps-counter');
     const urlParams = new URLSearchParams(window.location.search);
-    const showFPS = urlParams.get('fps') !== 'false';
+    const showFPS = urlParams.get('fps') === 'true';
 
     if (showFPS && fpsCounter && renderer.app) {
         fpsCounter.classList.remove('hidden');

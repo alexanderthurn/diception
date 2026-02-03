@@ -107,7 +107,6 @@ select {
     pointer-events: auto;
     /*background: var(--panel-bg);
     border: 1px solid var(--border-color);
-    box-shadow: 0 0 10px var(--border-color);
     padding: 10px 20px;
     border-radius: 5px;*/
 }
@@ -141,7 +140,6 @@ select {
 .music-display {
     font-size: 12px;
     color: #00ffff;
-    text-shadow: 0 0 5px #00ffff;
     white-space: nowrap;
     max-width: 120px;
     overflow: hidden;
@@ -186,7 +184,6 @@ select {
     padding: 12px 25px;
     font-size: 16px;
     background: rgba(0, 0, 0, 0.9);
-    box-shadow: 0 0 15px var(--accent-color);
     border-color: var(--accent-color);
     border-width: 2px;
     border-color: var(--accent-color);
@@ -504,7 +501,6 @@ select {
     cursor: pointer;
     font-weight: bold;
     transition: all 0.2s;
-    box-shadow: 0 0 5px var(--border-color);
     pointer-events: auto;
 }
 
@@ -512,7 +508,6 @@ select {
     background: rgba(0, 255, 255, 0.15);
     color: #fff;
     border-color: #fff;
-    box-shadow: 0 0 20px var(--border-color), inset 0 0 10px rgba(0, 255, 255, 0.2);
 }
 
 .tron-btn.large {
@@ -558,7 +553,7 @@ select {
 .tron-title span {
     display: inline-block;
     color: #00ffff;
-    animation: titleGlow 4s linear infinite, tron-color-cycle 96s infinite;
+    animation: tron-color-cycle 96s infinite;
     animation-delay: calc(var(--index) * -0.5s);
 }
 
@@ -615,17 +610,7 @@ select {
     }
 }
 
-@keyframes titleGlow {
 
-    0%,
-    100% {
-        filter: drop-shadow(0 0 10px rgba(170, 0, 255, 0.5)) drop-shadow(0 0 20px rgba(170, 0, 255, 0.3));
-    }
-
-    50% {
-        filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.6)) drop-shadow(0 0 30px rgba(0, 255, 255, 0.4));
-    }
-}
 
 .control-group {
     margin: 20px 0;
@@ -711,11 +696,29 @@ input[type="range"]::-moz-range-track {
 }
 
 input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    background: #00f2ff;
     border-radius: 0;
+    cursor: pointer;
+    margin-top: -8px;
+    border: none;
+
+    /* Neon-Effekt box-shadow: 0 0 15px #00f2ff; */
+
+
 }
 
 input[type="range"]::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    background: #00f2ff;
     border-radius: 0;
+    /* Dein gewünschtes eckiges Design */
+    cursor: pointer;
+    border: none;
 }
 
 select {
@@ -759,7 +762,6 @@ select {
     font-size: 24px;
     margin: 20px 0;
     color: var(--border-color);
-    text-shadow: 0 0 10px var(--border-color);
 }
 
 /* Highscore Section in Game Over Modal */
@@ -802,7 +804,6 @@ select {
 .highscore-item.highlighted {
     background: rgba(0, 255, 255, 0.15);
     border-left-color: var(--accent-color);
-    box-shadow: 0 0 10px rgba(170, 0, 255, 0.3);
 }
 
 .highscore-player-name {
@@ -819,7 +820,6 @@ select {
     font-size: 14px;
     font-weight: bold;
     color: var(--border-color);
-    text-shadow: 0 0 5px var(--border-color);
 }
 
 .total-games {
@@ -851,7 +851,6 @@ select {
 
 .dice-obituary strong {
     color: var(--accent-color);
-    text-shadow: 0 0 5px var(--accent-color);
 }
 
 .timeline-section-horizontal {
@@ -893,7 +892,6 @@ select {
 .timeline-entry.winner {
     color: #55ff00;
     font-weight: bold;
-    text-shadow: 0 0 10px rgba(85, 255, 0, 0.5);
 }
 
 .human-stats-section .highscore-title {
@@ -925,7 +923,6 @@ select {
 
 .human-stat .stat-value {
     color: #AA00FF;
-    text-shadow: 0 0 10px rgba(170, 0, 255, 0.5);
 }
 
 #game-log {
@@ -1061,7 +1058,6 @@ select {
         padding: 0;
         background: transparent;
         border: none;
-        box-shadow: none;
         z-index: 200;
         /* Above modal */
     }
@@ -1188,7 +1184,6 @@ select {
         max-height: none !important;
         overflow-y: auto;
         box-sizing: border-box;
-        box-shadow: none !important;
     }
 
     .tron-title {
@@ -1258,7 +1253,6 @@ select {
         justify-content: center;
         font-size: 30px;
         z-index: 205;
-        box-shadow: 0 0 10px var(--accent-color);
     }
 }
 
@@ -1328,7 +1322,6 @@ select {
     letter-spacing: 1px;
     padding: 0 40px;
     box-sizing: border-box;
-    text-shadow: 0 0 10px var(--accent-color);
     animation: pulse-opacity 2s infinite ease-in-out;
 }
 
@@ -1342,7 +1335,6 @@ select {
     gap: 30px;
     font-size: 2.5rem;
     opacity: 0.8;
-    filter: drop-shadow(0 0 10px var(--accent-color));
     animation: pulse-opacity 2s infinite ease-in-out;
     pointer-events: none;
     user-select: none;
@@ -1455,7 +1447,6 @@ select {
 
 .close-btn:hover {
     color: #fff;
-    text-shadow: 0 0 10px #fff;
 }
 
 .howto-content {
@@ -1561,7 +1552,6 @@ select {
 .about-link:hover {
     color: #fff;
     border-bottom-color: #fff;
-    text-shadow: 0 0 5px var(--accent-color);
 }
 
 .highlight-link {
@@ -1721,7 +1711,6 @@ select {
 .loaded-scenario-text:hover {
     background: rgba(0, 255, 255, 0.2);
     border-color: #fff;
-    box-shadow: 0 0 10px var(--border-color);
 }
 
 /* Scenario Browser Modal */
@@ -1815,7 +1804,6 @@ select {
     border-color: var(--primary-color);
     font-weight: bold;
     z-index: 10;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
 }
 
 
@@ -1869,7 +1857,6 @@ select {
     overflow-y: auto;
     border: 1px solid var(--border-color);
     background: rgba(0, 0, 0, 0.4);
-    box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.1);
     margin-bottom: 10px;
     height: auto;
     /* Override fixed height from table view */
@@ -1900,7 +1887,6 @@ select {
 .scenario-list-item.selected {
     background: var(--accent-color);
     color: #000;
-    text-shadow: none;
     font-weight: bold;
 }
 
@@ -2068,7 +2054,6 @@ select {
     background: #000;
     border: 1px solid var(--border-color);
     border-radius: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     image-rendering: pixelated;
     /* Keep it crisp */
     max-width: 200px;
@@ -2127,12 +2112,10 @@ select {
 
 .scenario-table tr.selected {
     background: rgba(0, 255, 255, 0.2);
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
 }
 
 .scenario-table tr.selected td {
     color: #fff;
-    text-shadow: 0 0 5px var(--accent-color);
 }
 
 .cell-name {
@@ -2430,7 +2413,6 @@ select {
 
 .paint-swatch.selected {
     border-color: var(--border-color);
-    box-shadow: 0 0 8px var(--border-color);
 }
 
 .paint-swatch:hover {
@@ -2496,7 +2478,6 @@ select {
 
 .player-swatch.selected {
     border-color: white;
-    box-shadow: 0 0 15px currentColor;
     transform: scale(1.1);
 }
 
@@ -2782,7 +2763,6 @@ select {
     font-size: 10px;
     font-weight: bold;
     color: #aaa;
-    text-shadow: 0 0 2px #000;
     background: rgba(0, 0, 0, 0.5);
     padding: 1px 4px;
     border-radius: 2px;
@@ -2799,7 +2779,6 @@ select {
     font-weight: bold;
     font-size: 14px;
     border-radius: 4px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 .preview-box.secondary .preview-content {
@@ -2841,7 +2820,6 @@ select {
 .gamepad-cursor {
     pointer-events: none;
     z-index: 10000;
-    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.8));
     /* Default color if not set */
     color: #ffffff;
 }
@@ -2864,7 +2842,6 @@ select {
     font-size: 20px;
     z-index: 1000;
     pointer-events: none;
-    text-shadow: 1px 1px 1px #000;
     opacity: 0.8;
 }
 
@@ -2925,6 +2902,7 @@ canvas {
 .dialog-body {
     margin: 20px 0;
     text-align: center;
+    background-color: #000;
 }
 
 .dialog-actions {
@@ -3091,7 +3069,6 @@ canvas {
 
 #scenario-browser-modal {
     background: #000 !important;
-    box-shadow: 0 0 30px var(--border-color);
 }
 
 /* Input Hints for Beginner Mode */
@@ -3111,7 +3088,6 @@ canvas {
     background: rgba(0, 0, 0, 0.8);
     color: #00ffff;
     border: 1px solid rgba(0, 255, 255, 0.6);
-    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
 }
 
 /* Gamepad D-pad hint styling */
@@ -3137,5 +3113,4 @@ canvas {
     font-weight: bold;
     background: #FFD700;
     border: 1px solid rgba(0, 0, 0, 0.5);
-    text-shadow: none;
 }
