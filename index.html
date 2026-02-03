@@ -6,11 +6,32 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DICEPTION</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
+
+    <!-- App Description -->
+    <meta name="description"
+        content="A super fast dice conquest game. Conquer territories, roll dice, and dominate the grid.">
+
+    <!-- Theme Color for browser UI -->
+    <meta name="theme-color" content="#0a0a1a">
+
+    <!-- iOS Safari PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Diception">
+
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:title" content="DICEPTION">
+    <meta property="og:description"
+        content="A super fast dice conquest game. Conquer territories, roll dice, and dominate the grid.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="512x512.png">
+
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -445,11 +466,8 @@
 
         <!-- Map/Scenario Editor Overlay (uses main game canvas) -->
         <div id="editor-overlay" class="editor-overlay hidden">
-            <!-- Top bar with title and close -->
             <div class="editor-top-bar">
                 <button id="editor-back-btn" class="tron-btn small">← Back</button>
-                <h2 class="tron-title small">MAP EDITOR</h2>
-                <button id="editor-close-btn" class="close-btn">×</button>
             </div>
 
             <!-- Bottom toolbar -->
@@ -457,30 +475,24 @@
                 <!-- Mode tabs -->
                 <div class="editor-mode-tabs">
                     <button class="editor-tab active" data-mode="paint">🖌️ Paint</button>
-                    <button class="editor-tab" data-mode="assign">👤 Assign</button>
+                    <button class="editor-tab" data-mode="assign">👤 (A)ssign</button>
                     <button class="editor-tab" data-mode="dice"><span class="dice-icon-sprite mini"
-                            style="background-color: #888;"></span> Dice</button>
-                </div>
-
-                <!-- Mode-specific toolbar -->
-                <div class="editor-toolbar">
-                    <div id="paint-toolbar" class="toolbar-section">
-                        <label>Tile:</label>
-                        <div id="paint-palette" class="paint-palette"></div>
-                    </div>
-                    <div id="assign-toolbar" class="toolbar-section hidden">
-                        <label>Player:</label>
-                        <div id="player-palette" class="player-palette"></div>
-                    </div>
-                    <div id="dice-toolbar" class="toolbar-section hidden">
-                        <label>Dice:</label>
-                        <div id="dice-palette" class="dice-palette"></div>
-                    </div>
+                            style="background-color: #888;"></span> (D)ice</button>
                 </div>
             </div>
 
             <!-- Right settings panel -->
             <div class="editor-settings">
+
+                <div class="control-group editor-type-toggle">
+                    <label>Editor Type</label>
+                    <div class="toggle-buttons">
+                        <button id="editor-type-map" class="toggle-btn active">🗺️ Map</button>
+                        <button id="editor-type-scenario" class="toggle-btn">⭐ Scenario</button>
+                    </div>
+                </div>
+
+                <hr class="editor-divider">
 
                 <div class="control-group">
                     <label>Name</label>
@@ -546,8 +558,8 @@
                 <hr class="editor-divider">
 
                 <div class="editor-actions">
-                    <button id="save-as-map-btn" class="tron-btn">💾 Save as Map</button>
-                    <button id="save-as-scenario-btn" class="tron-btn">💾 Save as Scenario</button>
+                    <button id="save-as-map-btn" class="tron-btn">💾 SAVE MAP</button>
+                    <button id="save-as-scenario-btn" class="tron-btn hidden">💾 SAVE SCENARIO</button>
                 </div>
 
                 <div class="editor-quick-actions">

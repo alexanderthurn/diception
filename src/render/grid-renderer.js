@@ -498,13 +498,26 @@ export class GridRenderer {
     }
 
     drawOverlay() {
-        // Hide all human-centric overlay elements during bot turns
-        if (this.game.currentPlayer?.isBot) {
+        // Hide all human-centric overlay elements during bot turns (but allow in paint mode for editor)
+        if (!this.paintMode && this.game.currentPlayer?.isBot) {
             this.overlayContainer.removeChildren();
             return;
         }
 
         this.overlayContainer.removeChildren();
+
+        // In paint mode (editor), just show simple hover highlight
+        if (this.paintMode) {
+            if (this.hoverTile) {
+                const gfx = new Graphics();
+                gfx.rect(0, 0, this.tileSize, this.tileSize);
+                gfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8 });
+                gfx.x = this.hoverTile.x * (this.tileSize + this.gap);
+                gfx.y = this.hoverTile.y * (this.tileSize + this.gap);
+                this.overlayContainer.addChild(gfx);
+            }
+            return;
+        }
 
         // Draw keyboard/gamepad cursor (distinct from hover)
         if (this.cursorTile) {
@@ -737,22 +750,14 @@ export class GridRenderer {
                 this.overlayContainer.addChild(badge);
             }
         } else if (this.hoverTile) {
-            // Just hovering without selection - show subtle highlight for any tile
+            // Just hovering without selection - show clear white highlight
             if (this.game.currentPlayer?.isBot) return;
 
             const tileRaw = this.game.map.getTileRaw(this.hoverTile.x, this.hoverTile.y);
             if (tileRaw) {
                 const gfx = new Graphics();
                 gfx.rect(0, 0, this.tileSize, this.tileSize);
-
-                const tile = this.game.map.getTile(this.hoverTile.x, this.hoverTile.y);
-                const isOwnTile = tile && tile.owner === this.game.currentPlayer?.id && tile.dice > 1;
-
-                // Brighter highlight for own selectable tiles, subtle for others
-                const alpha = isOwnTile ? 0.6 : 0.2;
-                const color = isOwnTile ? 0xffffff : 0xaaaaaa;
-
-                gfx.stroke({ width: 2, color: color, alpha: alpha });
+                gfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8 });
                 gfx.x = this.hoverTile.x * (this.tileSize + this.gap);
                 gfx.y = this.hoverTile.y * (this.tileSize + this.gap);
                 this.overlayContainer.addChild(gfx);
