@@ -234,10 +234,10 @@ export class MapEditor {
             editorType: 'map', // 'map' or 'scenario'
             currentMode: 'paint',
             selectedPlayer: 0,
-            secondarySelectedPlayer: 1,
             paintMode: 'add', // 'add' or 'remove'
             diceBrushValue: 2,
-            secondaryDiceBrushValue: 1,
+            deletedTiles: new Map(), // Cache for deleted tile data (preserves dice/owner)
+            hoveredTile: null, // Currently hovered tile {x, y} for keyboard input
             isDirty: false
         };
     }
@@ -438,46 +438,72 @@ export class MapEditor {
                 this.close();
             } else if (e.key.toLowerCase() === 'y') {
                 this.setMode('paint');
-            } else if (e.key.toLowerCase() === 'x') {
+            } else if (e.key.toLowerCase() === 'a') {
                 this.setMode('assign');
-            } else if (e.key.toLowerCase() === 'c') {
+            } else if (e.key.toLowerCase() === 'd') {
                 this.setMode('dice');
-            } else if (/^[1-9]$/.test(e.key)) {
-                const num = parseInt(e.key);
-                this.handleNumberKey(num);
+            } else {
+                // Handle number/letter keys for direct value input
+                const keyMap = {
+                    '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+                    'q': 10, 'w': 11, 'e': 12, 'r': 13, 't': 14, 'z': 15, 'u': 16
+                };
+                const value = keyMap[e.key.toLowerCase()];
+                if (value !== undefined) {
+                    this.handleNumberKey(value);
+                }
             }
         });
     }
 
     /**
-     * Handle number key presses for tool selection
+     * Handle number key presses to directly set tile values
      */
-    handleNumberKey(num) {
-        switch (this.state.currentMode) {
-            case 'paint':
-                if (num === 1) {
-                    this.state.paintMode = 'add';
-                    this.renderPaintPalette();
-                } else if (num === 2) {
-                    this.state.paintMode = 'remove';
-                    this.renderPaintPalette();
-                }
-                break;
+    handleNumberKey(value) {
+        // Need a hovered tile to operate on
+        if (!this.state.hoveredTile) return;
 
+        const { x, y } = this.state.hoveredTile;
+        const key = `${x},${y}`;
+        const tile = this.state.tiles.get(key);
+
+        switch (this.state.currentMode) {
             case 'assign':
-                // Select player (1-indexed input to 0-indexed array)
-                const playerIndex = num - 1;
-                if (playerIndex >= 0 && playerIndex < this.state.players.length) {
-                    this.state.selectedPlayer = this.state.players[playerIndex].id;
-                    this.renderPlayerPalette();
+                // Set player directly (0-indexed, value is player ID)
+                if (value >= 0 && value < this.state.players.length) {
+                    if (!tile) {
+                        // Create tile if it doesn't exist
+                        const cached = this.state.deletedTiles.get(key);
+                        this.state.tiles.set(key, {
+                            owner: value,
+                            dice: cached?.dice || 1
+                        });
+                        this.state.deletedTiles.delete(key);
+                    } else {
+                        tile.owner = value;
+                    }
+                    this.state.isDirty = true;
+                    this.renderToCanvas();
                 }
                 break;
 
             case 'dice':
-                // Select dice brush value
-                if (num <= this.state.maxDice) {
-                    this.state.diceBrushValue = num;
-                    this.renderDicePalette();
+                // Set dice directly (1-indexed, 0 means 1 die)
+                const diceValue = value === 0 ? 1 : value;
+                if (diceValue >= 1 && diceValue <= this.state.maxDice) {
+                    if (!tile) {
+                        // Create tile if it doesn't exist
+                        const cached = this.state.deletedTiles.get(key);
+                        this.state.tiles.set(key, {
+                            owner: cached?.owner ?? 0,
+                            dice: diceValue
+                        });
+                        this.state.deletedTiles.delete(key);
+                    } else {
+                        tile.dice = diceValue;
+                    }
+                    this.state.isDirty = true;
+                    this.renderToCanvas();
                 }
                 break;
         }
@@ -498,9 +524,6 @@ export class MapEditor {
             // Determine effective values
             let player = this.state.selectedPlayer;
             let dice = this.state.diceBrushValue;
-
-            if (mode === 'assign' && isSecondary) player = this.state.secondarySelectedPlayer;
-            if (mode === 'dice' && isSecondary) dice = this.state.secondaryDiceBrushValue;
 
             // Handle Paint mode logic
             let action = 'add';
@@ -575,7 +598,8 @@ export class MapEditor {
         // onCanvasMouseOut handler for hiding cursor and clearing hover
         this.handleCanvasMouseOut = () => {
             this.elements.cursorPreview?.classList.add('hidden');
-            // Clear hover tile highlight
+            // Clear hover tile highlight and state
+            this.state.hoveredTile = null;
             if (this.renderer && this.renderer.grid) {
                 this.renderer.grid.setHover(null, null);
                 this.renderToCanvas();
@@ -638,6 +662,9 @@ export class MapEditor {
         if (!this.isOpen) return;
 
         const tile = this.screenToTile(e.clientX, e.clientY);
+
+        // Update hovered tile state for keyboard input
+        this.state.hoveredTile = tile;
 
         // Update hover tile highlight
         if (this.renderer && this.renderer.grid) {
@@ -886,16 +913,9 @@ export class MapEditor {
             btn.className = 'dice-swatch';
             btn.textContent = i;
             if (this.state.diceBrushValue === i) btn.classList.add('selected');
-            if (this.state.secondaryDiceBrushValue === i) btn.classList.add('secondary-selected');
 
             btn.addEventListener('click', () => {
                 this.state.diceBrushValue = i;
-                this.renderDicePalette();
-            });
-
-            btn.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                this.state.secondaryDiceBrushValue = i;
                 this.renderDicePalette();
             });
 
@@ -927,28 +947,87 @@ export class MapEditor {
             }
         } else {
             // Scenario mode: depends on current mode (assign/dice)
-            if (!tile) {
-                // No tile here, nothing to do in scenario mode
-                return;
-            }
+            // Cycling includes "no tile" state at the boundary
 
             switch (this.state.currentMode) {
                 case 'assign':
-                    // Cycle through players
+                    // Cycle: player0 -> player1 -> ... -> lastPlayer -> (no tile) -> player0
                     const playerCount = this.state.players.length;
-                    if (isDecrease) {
-                        tile.owner = (tile.owner - 1 + playerCount) % playerCount;
+                    if (!tile) {
+                        // No tile - create one, restore cached data if available
+                        const cached = this.state.deletedTiles.get(key);
+                        if (isDecrease) {
+                            // Decrease from "no tile" = last player
+                            this.state.tiles.set(key, {
+                                owner: playerCount - 1,
+                                dice: cached?.dice || 1
+                            });
+                        } else {
+                            // Increase from "no tile" = first player
+                            this.state.tiles.set(key, {
+                                owner: 0,
+                                dice: cached?.dice || 1
+                            });
+                        }
+                        this.state.deletedTiles.delete(key);
                     } else {
-                        tile.owner = (tile.owner + 1) % playerCount;
+                        if (isDecrease) {
+                            if (tile.owner <= 0) {
+                                // At first player, decrease = remove tile (cache it)
+                                this.state.deletedTiles.set(key, { ...tile });
+                                this.state.tiles.delete(key);
+                            } else {
+                                tile.owner = tile.owner - 1;
+                            }
+                        } else {
+                            if (tile.owner >= playerCount - 1) {
+                                // At last player, increase = remove tile (cache it)
+                                this.state.deletedTiles.set(key, { ...tile });
+                                this.state.tiles.delete(key);
+                            } else {
+                                tile.owner = tile.owner + 1;
+                            }
+                        }
                     }
                     break;
 
                 case 'dice':
-                    // Cycle through dice values (1 to maxDice)
-                    if (isDecrease) {
-                        tile.dice = tile.dice <= 1 ? this.state.maxDice : tile.dice - 1;
+                    // Cycle: 1 -> 2 -> ... -> maxDice -> (no tile) -> 1
+                    if (!tile) {
+                        // No tile - create one, restore cached data if available
+                        const cached = this.state.deletedTiles.get(key);
+                        if (isDecrease) {
+                            // Decrease from "no tile" = max dice
+                            this.state.tiles.set(key, {
+                                owner: cached?.owner ?? 0,
+                                dice: this.state.maxDice
+                            });
+                        } else {
+                            // Increase from "no tile" = 1 dice
+                            this.state.tiles.set(key, {
+                                owner: cached?.owner ?? 0,
+                                dice: 1
+                            });
+                        }
+                        this.state.deletedTiles.delete(key);
                     } else {
-                        tile.dice = tile.dice >= this.state.maxDice ? 1 : tile.dice + 1;
+                        if (isDecrease) {
+                            if (tile.dice <= 1) {
+                                // At 1 dice, decrease = remove tile (cache it)
+                                this.state.deletedTiles.set(key, { ...tile });
+                                this.state.tiles.delete(key);
+                            } else {
+                                tile.dice = tile.dice - 1;
+                            }
+                        } else {
+                            if (tile.dice >= this.state.maxDice) {
+                                // At max dice, increase = remove tile (cache it)
+                                this.state.deletedTiles.set(key, { ...tile });
+                                this.state.tiles.delete(key);
+                            } else {
+                                tile.dice = tile.dice + 1;
+                            }
+                        }
                     }
                     break;
 
@@ -1182,9 +1261,6 @@ export class MapEditor {
             if (player.id === this.state.selectedPlayer) {
                 swatch.classList.add('selected');
             }
-            if (player.id === this.state.secondarySelectedPlayer) {
-                swatch.classList.add('secondary-selected');
-            }
 
             const colorHex = '#' + player.color.toString(16).padStart(6, '0');
             swatch.style.backgroundColor = colorHex;
@@ -1193,12 +1269,6 @@ export class MapEditor {
 
             swatch.addEventListener('click', () => {
                 this.state.selectedPlayer = player.id;
-                this.renderPlayerPalette();
-            });
-
-            swatch.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                this.state.secondarySelectedPlayer = player.id;
                 this.renderPlayerPalette();
             });
 
