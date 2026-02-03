@@ -1,6 +1,6 @@
 # DICEPTION
 
-A neon-styled, turn-based dice strategy game inspired by Dice Wars / Risk.
+A super fast dice conquest game. Conquer territories, roll dice, and dominate the grid. Inspired by Dice Wars / Risk.
 
 **[🎮 LIVE PREVIEW](https://diception.feuerware.com/)**
 
