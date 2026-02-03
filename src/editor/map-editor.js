@@ -231,6 +231,7 @@ export class MapEditor {
             diceSides: 6,
 
             // Editor-only state
+            editorType: 'map', // 'map' or 'scenario'
             currentMode: 'paint',
             selectedPlayer: 0,
             secondarySelectedPlayer: 1,
@@ -279,8 +280,11 @@ export class MapEditor {
         // Cache elements
         this.elements = {
             overlay: document.getElementById('editor-overlay'),
-            closeBtn: document.getElementById('editor-close-btn'),
             backBtn: document.getElementById('editor-back-btn'),
+
+            // Editor type toggle
+            editorTypeMapBtn: document.getElementById('editor-type-map'),
+            editorTypeScenarioBtn: document.getElementById('editor-type-scenario'),
 
             // Settings
             nameInput: document.getElementById('editor-name'),
@@ -295,7 +299,8 @@ export class MapEditor {
             diceSidesSelect: document.getElementById('editor-dice-sides'),
             diceSidesVal: document.getElementById('editor-dice-sides-val'),
 
-            // Mode tabs
+            // Mode tabs and bottom bar
+            bottomBar: document.querySelector('.editor-bottom-bar'),
             modeTabs: document.querySelectorAll('.editor-tab'),
             paintToolbar: document.getElementById('paint-toolbar'),
             assignToolbar: document.getElementById('assign-toolbar'),
@@ -342,9 +347,12 @@ export class MapEditor {
      * Bind all event handlers
      */
     bindEvents() {
-        // Close buttons
-        this.elements.closeBtn?.addEventListener('click', () => this.close());
+        // Close/back button
         this.elements.backBtn?.addEventListener('click', () => this.close());
+
+        // Editor type toggle
+        this.elements.editorTypeMapBtn?.addEventListener('click', () => this.setEditorType('map'));
+        this.elements.editorTypeScenarioBtn?.addEventListener('click', () => this.setEditorType('scenario'));
 
         // Settings changes
 
@@ -476,14 +484,11 @@ export class MapEditor {
     }
 
     /**
-     * Update cursor preview position and content
+     * Update cursor preview position and content (disabled)
      */
     updateCursorPreview(x, y) {
-        if (!this.elements.cursorPreview) return;
-
-        // Position
-        this.elements.cursorPreview.style.transform = `translate(${x + 20}px, ${y + 20}px)`;
-        this.elements.cursorPreview.classList.remove('hidden');
+        // Cursor preview disabled
+        return;
 
         // Helper to render box content
         const renderBox = (element, type, mode, isSecondary) => {
@@ -567,9 +572,14 @@ export class MapEditor {
         this.handleCanvasTouchMove = this.onCanvasTouchMove.bind(this);
         this.handleCanvasTouchEnd = this.onCanvasTouchEnd.bind(this);
 
-        // onCanvasMouseOut handler for hiding cursor
+        // onCanvasMouseOut handler for hiding cursor and clearing hover
         this.handleCanvasMouseOut = () => {
             this.elements.cursorPreview?.classList.add('hidden');
+            // Clear hover tile highlight
+            if (this.renderer && this.renderer.grid) {
+                this.renderer.grid.setHover(null, null);
+                this.renderToCanvas();
+            }
         };
 
         // Add listeners
@@ -627,14 +637,23 @@ export class MapEditor {
     onCanvasMouseMove(e) {
         if (!this.isOpen) return;
 
-        if (this.isPainting) {
-            const tile = this.screenToTile(e.clientX, e.clientY);
+        const tile = this.screenToTile(e.clientX, e.clientY);
+
+        // Update hover tile highlight
+        if (this.renderer && this.renderer.grid) {
             if (tile) {
-                const key = `${tile.x},${tile.y}`;
-                if (this.lastPaintedTile !== key) {
-                    this.handleTileInteraction(tile.x, tile.y, this.currentInteractionButton, this.currentInteractionShift);
-                    this.lastPaintedTile = key;
-                }
+                this.renderer.grid.setHover(tile.x, tile.y);
+            } else {
+                this.renderer.grid.setHover(null, null);
+            }
+            this.renderToCanvas();
+        }
+
+        if (this.isPainting && tile) {
+            const key = `${tile.x},${tile.y}`;
+            if (this.lastPaintedTile !== key) {
+                this.handleTileInteraction(tile.x, tile.y, this.currentInteractionButton, this.currentInteractionShift);
+                this.lastPaintedTile = key;
             }
         }
 
@@ -728,7 +747,7 @@ export class MapEditor {
         this.renderPaintPalette();
         this.renderPlayerPalette();
         this.renderDicePalette();
-        this.setMode('paint');
+        this.setEditorType(this.state.editorType);
 
         // Render to canvas and fit camera on initial open
         this.renderToCanvas(true);
@@ -737,11 +756,6 @@ export class MapEditor {
         this.setupCanvasEvents();
 
         this.isOpen = true;
-
-        // Initial paint mode set
-        if (this.renderer && this.renderer.grid) {
-            this.renderer.grid.setPaintMode(true);
-        }
     }
 
     /**
@@ -895,43 +909,53 @@ export class MapEditor {
     handleTileInteraction(x, y, button = 0, shiftKey = false) {
         const key = `${x},${y}`;
         const tile = this.state.tiles.get(key);
-
-        let mode = this.state.currentMode;
-        // Shift key temporarily enables paint mode logic
-        if (shiftKey) {
-            mode = 'paint';
-        }
-
         const isRightClick = button === 2;
+        const isDecrease = isRightClick; // Right click = decrease action
 
-        switch (mode) {
-            case 'paint':
-                // Left click = Add, Right click = Remove
-                const shouldRemove = isRightClick || (this.state.paintMode === 'remove' && !isRightClick);
+        // Check if we're in map mode or scenario mode
+        if (this.state.editorType === 'map') {
+            // Map mode: Simple toggle - click toggles tile existence
+            if (tile) {
+                // Tile exists - remove it
+                this.state.tiles.delete(key);
+            } else {
+                // No tile - add one with default values
+                this.state.tiles.set(key, {
+                    owner: 0,
+                    dice: 1
+                });
+            }
+        } else {
+            // Scenario mode: depends on current mode (assign/dice)
+            if (!tile) {
+                // No tile here, nothing to do in scenario mode
+                return;
+            }
 
-                if (!shouldRemove) {
-                    this.state.tiles.set(key, {
-                        owner: this.state.selectedPlayer,
-                        dice: this.state.diceBrushValue
-                    });
-                } else {
-                    this.state.tiles.delete(key);
-                }
-                break;
+            switch (this.state.currentMode) {
+                case 'assign':
+                    // Cycle through players
+                    const playerCount = this.state.players.length;
+                    if (isDecrease) {
+                        tile.owner = (tile.owner - 1 + playerCount) % playerCount;
+                    } else {
+                        tile.owner = (tile.owner + 1) % playerCount;
+                    }
+                    break;
 
-            case 'assign':
-                const targetOwner = isRightClick ? this.state.secondarySelectedPlayer : this.state.selectedPlayer;
-                if (tile) {
-                    tile.owner = targetOwner;
-                }
-                break;
+                case 'dice':
+                    // Cycle through dice values (1 to maxDice)
+                    if (isDecrease) {
+                        tile.dice = tile.dice <= 1 ? this.state.maxDice : tile.dice - 1;
+                    } else {
+                        tile.dice = tile.dice >= this.state.maxDice ? 1 : tile.dice + 1;
+                    }
+                    break;
 
-            case 'dice':
-                const targetDice = isRightClick ? this.state.secondaryDiceBrushValue : this.state.diceBrushValue;
-                if (tile) {
-                    tile.dice = targetDice;
-                }
-                break;
+                case 'paint':
+                    // Should not happen in scenario mode, but handle gracefully
+                    break;
+            }
         }
 
         this.state.isDirty = true;
@@ -939,7 +963,70 @@ export class MapEditor {
     }
 
     /**
-     * Switch editor mode
+     * Switch editor type (map vs scenario)
+     */
+    setEditorType(type) {
+        this.state.editorType = type;
+
+        // Update toggle button active states
+        this.elements.editorTypeMapBtn?.classList.toggle('active', type === 'map');
+        this.elements.editorTypeScenarioBtn?.classList.toggle('active', type === 'scenario');
+
+        // Get mode tab buttons
+        const paintTab = document.querySelector('.editor-tab[data-mode="paint"]');
+        const assignTab = document.querySelector('.editor-tab[data-mode="assign"]');
+        const diceTab = document.querySelector('.editor-tab[data-mode="dice"]');
+
+        if (type === 'map') {
+            // Map mode: hide entire bottom bar
+            this.elements.bottomBar?.classList.add('hidden');
+
+            // Hide scenario-specific sections
+            this.elements.playersSection?.classList.add('hidden');
+            this.elements.diceSettingsSection?.classList.add('hidden');
+
+            // Show map save button, hide scenario save button
+            this.elements.saveAsMapBtn?.classList.remove('hidden');
+            this.elements.saveAsScenarioBtn?.classList.add('hidden');
+
+            // Switch to paint mode internally
+            this.state.currentMode = 'paint';
+
+            // Enable paint mode on renderer (tiles render gray)
+            if (this.renderer && this.renderer.grid) {
+                this.renderer.grid.invalidate(); // Force full redraw
+                this.renderer.grid.setPaintMode(true);
+            }
+        } else {
+            // Scenario mode: show bottom bar with Assign and Dice tabs only
+            this.elements.bottomBar?.classList.remove('hidden');
+            paintTab?.classList.add('hidden');
+            assignTab?.classList.remove('hidden');
+            diceTab?.classList.remove('hidden');
+
+            // Show scenario-specific sections
+            this.elements.playersSection?.classList.remove('hidden');
+            this.elements.diceSettingsSection?.classList.remove('hidden');
+
+            // Hide map save button, show scenario save button
+            this.elements.saveAsMapBtn?.classList.add('hidden');
+            this.elements.saveAsScenarioBtn?.classList.remove('hidden');
+
+            // Switch to assign mode
+            this.setMode('assign');
+
+            // Disable paint mode on renderer (tiles render with colors)
+            if (this.renderer && this.renderer.grid) {
+                this.renderer.grid.invalidate(); // Force full redraw
+                this.renderer.grid.setPaintMode(false);
+            }
+        }
+
+        this.renderToCanvas();
+    }
+
+    /**
+     * Switch editor mode (paint, assign, dice)
      */
     setMode(mode) {
         this.state.currentMode = mode;
@@ -952,27 +1039,9 @@ export class MapEditor {
         this.elements.assignToolbar?.classList.toggle('hidden', mode !== 'assign');
         this.elements.diceToolbar?.classList.toggle('hidden', mode !== 'dice');
 
-        // Toggle Right Pane Elements based on Mode
-        if (mode === 'paint') {
-            // Paint Mode: Hide players stuff, dice settings, save as scenario
-            this.elements.playersSection?.classList.add('hidden');
-            this.elements.diceSettingsSection?.classList.add('hidden');
-            this.elements.saveAsScenarioBtn?.classList.add('hidden');
-            this.elements.saveAsMapBtn?.classList.remove('hidden');
-        } else {
-            // Assign/Dice Mode: Show players stuff, dice settings, save as scenario. Hide save as map
-            this.elements.playersSection?.classList.remove('hidden');
-            this.elements.diceSettingsSection?.classList.remove('hidden');
-            this.elements.saveAsScenarioBtn?.classList.remove('hidden');
-            this.elements.saveAsMapBtn?.classList.add('hidden');
-        }
-
-        // Update renderer paint mode (only in paint mode do we hide details)
-        if (this.renderer && this.renderer.grid) {
-            this.renderer.grid.setPaintMode(mode === 'paint');
-            this.renderToCanvas();
-        }
+        this.renderToCanvas();
     }
+
 
     /**
      * Add a new player

@@ -498,13 +498,26 @@ export class GridRenderer {
     }
 
     drawOverlay() {
-        // Hide all human-centric overlay elements during bot turns
-        if (this.game.currentPlayer?.isBot) {
+        // Hide all human-centric overlay elements during bot turns (but allow in paint mode for editor)
+        if (!this.paintMode && this.game.currentPlayer?.isBot) {
             this.overlayContainer.removeChildren();
             return;
         }
 
         this.overlayContainer.removeChildren();
+
+        // In paint mode (editor), just show simple hover highlight
+        if (this.paintMode) {
+            if (this.hoverTile) {
+                const gfx = new Graphics();
+                gfx.rect(0, 0, this.tileSize, this.tileSize);
+                gfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8 });
+                gfx.x = this.hoverTile.x * (this.tileSize + this.gap);
+                gfx.y = this.hoverTile.y * (this.tileSize + this.gap);
+                this.overlayContainer.addChild(gfx);
+            }
+            return;
+        }
 
         // Draw keyboard/gamepad cursor (distinct from hover)
         if (this.cursorTile) {

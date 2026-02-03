@@ -2500,6 +2500,42 @@ select {
     z-index: 10;
 }
 
+/* Editor Type Toggle */
+.editor-type-toggle {
+    margin-bottom: 0;
+}
+
+.toggle-buttons {
+    display: flex;
+    gap: 0;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 10px 15px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(100, 100, 120, 0.4);
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+}
+
+.toggle-btn:first-child {
+    border-right: none;
+}
+
+.toggle-btn:hover {
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.toggle-btn.active {
+    background: var(--border-color);
+    color: #000;
+    font-weight: bold;
+    border-color: var(--border-color);
+}
+
 .editor-settings .control-group {
     margin-bottom: 0;
 }
