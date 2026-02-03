@@ -66,11 +66,12 @@ export class GamepadCursorManager {
                 14: 'Attack Left',
                 15: 'Attack Right'
             };
+            const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
 
             const label = buttonLabels[button];
             if (label) {
                 const gameSpeed = localStorage.getItem('dicy_gameSpeed') || 'beginner';
-                const showAlways = [4, 5, 6, 7].includes(button);
+                const showAlways = [4, 5, 6, 7].includes(button) || isMenuOpen;
                 const isBeginner = gameSpeed === 'beginner';
 
                 if (showAlways || isBeginner) {
@@ -78,8 +79,7 @@ export class GamepadCursorManager {
                 }
             }
 
-            const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
-
+           
             const allowedInMenu = [0, 1, 2, 4, 5, 6, 7, 9];
             if (isMenuOpen && !allowedInMenu.includes(button)) return;
 
