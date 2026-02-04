@@ -28,6 +28,7 @@ export class GameEventManager {
         this.turnIndicator = document.getElementById('turn-indicator');
         this.endTurnBtn = document.getElementById('end-turn-btn');
         this.endTurnText = document.getElementById('end-turn-text');
+        this.endTurnReinforcement = document.getElementById('end-turn-reinforcement');
         this.endTurnHint = document.getElementById('end-turn-hint');
         this.autoWinBtn = document.getElementById('auto-win-btn');
 
@@ -132,7 +133,8 @@ export class GameEventManager {
         } else {
             this.autoWinBtn.classList.add('hidden');
         }
-        this.endTurnText.textContent = 'END TURN';
+        if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+        if (this.endTurnReinforcement) this.endTurnReinforcement.textContent = '';
 
         // Calculate delay based on game speed
         let delay = 500;
@@ -167,7 +169,12 @@ export class GameEventManager {
         // Show expected dice reinforcement on button
         const regionDice = this.game.map.findLargestConnectedRegion(player.id);
         const storedDice = player.storedDice || 0;
-        this.endTurnText.textContent = `END TURN (+${regionDice + storedDice})`;
+
+        if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+        if (this.endTurnReinforcement) {
+            this.endTurnReinforcement.textContent = `(+${regionDice + storedDice})`;
+            this.endTurnReinforcement.classList.remove('hidden');
+        }
 
         // Set button glow to player color
         const playerColorHex = '#' + player.color.toString(16).padStart(6, '0');
@@ -260,7 +267,11 @@ export class GameEventManager {
         if (isHumanAttacker) {
             const regionDice = this.game.map.findLargestConnectedRegion(attacker.id);
             const storedDice = attacker.storedDice || 0;
-            this.endTurnText.textContent = `END TURN (+${regionDice + storedDice})`;
+
+            if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+            if (this.endTurnReinforcement) {
+                this.endTurnReinforcement.textContent = `(+${regionDice + storedDice})`;
+            }
         }
 
         if (this.playerDashboard) this.playerDashboard.update();

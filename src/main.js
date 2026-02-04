@@ -242,16 +242,36 @@ async function init() {
 
         playerDashboard.update();
 
-        if (newState && game.currentPlayer.id === playerId && !game.gameOver) {
-            endTurnBtn.disabled = true;
-            endTurnBtn.textContent = 'END TURN';
-            setTimeout(async () => {
-                const playerAI = playerAIs.get(playerId);
-                if (playerAI) {
-                    await playerAI.takeTurn(gameSpeed);
+        if (game.currentPlayer.id === playerId && !game.gameOver) {
+            const endTurnText = document.getElementById('end-turn-text');
+            const endTurnReinforcement = document.getElementById('end-turn-reinforcement');
+
+            if (newState) {
+                // Now on autoplay: disable button
+                endTurnBtn.disabled = true;
+                if (endTurnText) endTurnText.textContent = 'END TURN';
+                if (endTurnReinforcement) endTurnReinforcement.textContent = '';
+
+                setTimeout(async () => {
+                    const playerAI = playerAIs.get(playerId);
+                    if (playerAI) {
+                        await playerAI.takeTurn(gameSpeed);
+                    }
+                    game.endTurn();
+                }, 500);
+            } else {
+                // Returning to human: enable button and show reinforcements
+                endTurnBtn.disabled = false;
+                const player = game.players.find(p => p.id === playerId);
+                if (player) {
+                    const regionDice = game.map.findLargestConnectedRegion(player.id);
+                    const storedDice = player.storedDice || 0;
+                    if (endTurnText) endTurnText.textContent = 'END TURN';
+                    if (endTurnReinforcement) {
+                        endTurnReinforcement.textContent = `(+${regionDice + storedDice})`;
+                    }
                 }
-                game.endTurn();
-            }, 500);
+            }
         }
     };
 

@@ -8,6 +8,8 @@ export class TurnIndicator {
         this.endTurnBtn = document.getElementById('end-turn-btn');
         this.autoWinBtn = document.getElementById('auto-win-btn');
         this.playerText = document.getElementById('player-turn');
+        this.endTurnText = document.getElementById('end-turn-text');
+        this.endTurnReinforcement = document.getElementById('end-turn-reinforcement');
     }
 
     updatePlayerText(player) {
@@ -29,7 +31,8 @@ export class TurnIndicator {
     showEndTurnButton(player, expectedReinforcements) {
         this.endTurnBtn.classList.remove('hidden');
         this.endTurnBtn.disabled = false;
-        this.endTurnBtn.textContent = `END TURN (+${expectedReinforcements})`;
+        if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+        if (this.endTurnReinforcement) this.endTurnReinforcement.textContent = `(+${expectedReinforcements})`;
 
         const playerColorHex = '#' + player.color.toString(16).padStart(6, '0');
         this.endTurnBtn.style.boxShadow = `0 0 15px ${playerColorHex}`;
@@ -39,11 +42,13 @@ export class TurnIndicator {
     hideEndTurnButton() {
         this.endTurnBtn.classList.add('hidden');
         this.endTurnBtn.disabled = true;
-        this.endTurnBtn.textContent = 'END TURN';
+        if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+        if (this.endTurnReinforcement) this.endTurnReinforcement.textContent = '';
     }
 
     updateEndTurnButton(expectedReinforcements) {
-        this.endTurnBtn.textContent = `END TURN (+${expectedReinforcements})`;
+        if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+        if (this.endTurnReinforcement) this.endTurnReinforcement.textContent = `(+${expectedReinforcements})`;
     }
 
     showAutoWinButton(player, isActive) {
@@ -51,7 +56,7 @@ export class TurnIndicator {
         this.autoWinBtn.classList.remove('hidden');
         this.autoWinBtn.style.boxShadow = `0 0 15px ${playerColorHex}`;
         this.autoWinBtn.style.borderColor = playerColorHex;
-        
+
         if (isActive) {
             this.autoWinBtn.classList.add('active');
         } else {
