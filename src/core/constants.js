@@ -12,6 +12,21 @@ export const GAME = {
     MIN_PLAYERS: 2,
     MIN_TILES_PER_PLAYER: 4,
     INITIAL_DICE_MULTIPLIER: 2.5, // Average dice per tile at start
+    HUMAN_COLORS: [
+        0xAA00FF, // Purple (Human 1)
+        0x0088FF, // Azure Blue (Human 2)
+        0xFFCC00, // Gold/Dark Yellow (Human 3)
+        0x00AA44  // Dark Green (Human 4)
+    ],
+    BOT_COLORS: [
+        0xFF0055, // Red/Pink
+        0x55FF00, // Lime
+        0xFF00AA, // Pink (Bot 3)
+        0xFF8800, // Orange
+        0x00AAFF, // Light Blue (Bot 5)
+        0xFFFF00, // Bright Yellow (Bot 6)
+        0xFFFFFF  // White (Bot 7)
+    ],
 };
 
 // === MAP GENERATION ===

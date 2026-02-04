@@ -1,6 +1,7 @@
 import { MapManager } from './map.js';
 import { CombatManager } from './combat.js';
 import { ReinforcementManager } from './reinforcement.js';
+import { GAME } from './constants.js';
 
 export class Game {
     constructor() {
@@ -153,29 +154,10 @@ export class Game {
     }
 
     getPlayerColor(index, isBot = false) {
-        // Human colors: Purple first, then cool/neutral tones
-        const humanColors = [
-            0xAA00FF, // Purple (Human 1)
-            0xFF00AA, // Magenta (Human 2)
-            0x00FFFF, // Cyan (Human 3)
-            0xFFFFFF  // White (Human 4)
-        ];
-
-        // Bot colors: Warm tones to contrast with humans
-        const botColors = [
-            0xFF0055, // Red/Pink
-            0x55FF00, // Lime
-            0xFFDD00, // Yellow
-            0xFF8800, // Orange
-            0x00AAFF, // Light Blue
-            0x88FF88, // Light Green
-            0xFFAA55  // Peach
-        ];
-
         if (isBot) {
-            return botColors[index % botColors.length];
+            return GAME.BOT_COLORS[index % GAME.BOT_COLORS.length];
         }
-        return humanColors[index % humanColors.length];
+        return GAME.HUMAN_COLORS[index % GAME.HUMAN_COLORS.length];
     }
 
     get currentPlayer() {

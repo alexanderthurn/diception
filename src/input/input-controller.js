@@ -184,7 +184,7 @@ export class InputController {
         }
 
         // If something selected, handle like a click on cursor position
-        this.handleTileClick(tile, this.cursorX, this.cursorY);
+        this.handleTileClick(tile, this.cursorX, this.cursorY, index);
     }
 
     onCancel() {
@@ -319,8 +319,12 @@ export class InputController {
             e.isGamepadSimulated;
         if ((dist < 10 || isSimulated) && e.button === 0) {
             // It's a click
+            const gamepadIndex = (e.nativeEvent && e.nativeEvent.gamepadIndex !== undefined) ? e.nativeEvent.gamepadIndex :
+                (e.originalEvent && e.originalEvent.gamepadIndex !== undefined) ? e.originalEvent.gamepadIndex :
+                    e.gamepadIndex;
+
             if (this.clickTarget) {
-                this.handleTileClick(this.clickTarget.tile, this.clickTarget.x, this.clickTarget.y);
+                this.handleTileClick(this.clickTarget.tile, this.clickTarget.x, this.clickTarget.y, gamepadIndex);
             } else {
                 this.deselect();
             }
@@ -329,15 +333,22 @@ export class InputController {
         this.clickTarget = null;
     }
 
-    handleTileClick(tile, x, y) {
+    handleTileClick(tile, x, y, restrictivePlayerId = undefined) {
         if (this.game.gameOver) return;
         if (this.game.currentPlayer.isBot) return;
+
+        // If we have a restrictive player ID (from gamepad), ensure it matches human index
+        // Gamepad index 0 -> Human ID 0, Gamepad index 1 -> Human ID 1, etc.
+        // If restrictivePlayerId is undefined, it's likely keyboard/mouse, which defaults to controlling any human (or specifically Human 0)
 
         // 1. If nothing selected, try to select
         if (!this.selectedTile) {
             const owner = this.game.players.find(p => p.id === tile?.owner);
             // Allow any human player to select any of their tiles (regardless of dice count or turn)
             if (owner && !owner.isBot) {
+                if (restrictivePlayerId !== undefined && restrictivePlayerId !== -1 && owner.id !== restrictivePlayerId) {
+                    return; // Strictly enforce gamepad -> player mapping
+                }
                 this.select(x, y);
             }
             return;
@@ -363,12 +374,18 @@ export class InputController {
         // A. Clicked another tile owned by a human (not necessarily the current one) -> Change selection
         const targetOwner = this.game.players.find(p => p.id === tile.owner);
         if (targetOwner && !targetOwner.isBot && tile.owner === fromTile.owner) {
+            if (restrictivePlayerId !== undefined && restrictivePlayerId !== -1 && targetOwner.id !== restrictivePlayerId) {
+                return; // Strictly enforce gamepad -> player mapping
+            }
             this.select(x, y);
             return;
         }
 
         // B. Try Attack (if it's the current player's turn and tile is a neighbor)
         if (fromTile.owner === this.game.currentPlayer.id) {
+            if (restrictivePlayerId !== undefined && restrictivePlayerId !== -1 && fromTile.owner !== restrictivePlayerId) {
+                return; // Strictly enforce gamepad -> player mapping
+            }
             const isAdjacent = Math.abs(this.selectedTile.x - x) + Math.abs(this.selectedTile.y - y) === 1;
 
             if (isAdjacent && tile.owner !== fromTile.owner && fromTile.dice > 1) {
@@ -398,7 +415,7 @@ export class InputController {
         const targetTile = this.game.map.getTile(targetX, targetY);
         if (!targetTile) return;
 
-        this.handleTileClick(targetTile, targetX, targetY);
+        this.handleTileClick(targetTile, targetX, targetY, gamepadIndex);
 
         // Update cursor position to the target of the attack/click
         if (gamepadIndex !== -1) {

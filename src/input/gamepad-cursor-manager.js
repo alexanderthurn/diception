@@ -1,3 +1,4 @@
+import { GAME } from '../core/constants.js';
 
 /**
  * GamepadCursorManager - Handles artificial cursors for gamepad players.
@@ -79,7 +80,7 @@ export class GamepadCursorManager {
                 }
             }
 
-           
+
             const allowedInMenu = [0, 1, 2, 4, 5, 6, 7, 9];
             if (isMenuOpen && !allowedInMenu.includes(button)) return;
 
@@ -296,6 +297,7 @@ export class GamepadCursorManager {
             y: window.innerHeight / 2,
             element: el,
             lastPlayerId: -1,
+            lastColor: '',
             speedMultiplier: parseFloat(localStorage.getItem('dicy_gamepad_speed_' + index)) || 1.0
         };
 
@@ -315,23 +317,13 @@ export class GamepadCursorManager {
     }
 
     updateCursorColor(cursor, index) {
-        if (!this.game || !this.game.players) {
-            cursor.element.style.color = '#ffffff';
-            return;
-        }
+        // Fixed human index for gamepads: index 0 is Human 1 (Purple), etc.
+        const color = GAME.HUMAN_COLORS[index % GAME.HUMAN_COLORS.length];
+        const colorHex = '#' + color.toString(16).padStart(6, '0');
 
-        const humanPlayers = this.game.players.filter(p => !p.isBot);
-        const player = humanPlayers[index];
-
-        if (player) {
-            if (cursor.lastPlayerId !== player.id) {
-                const colorHex = '#' + player.color.toString(16).padStart(6, '0');
-                cursor.element.style.color = colorHex;
-                cursor.lastPlayerId = player.id;
-            }
-        } else {
-            cursor.element.style.color = '#ffffff';
-            cursor.lastPlayerId = -1;
+        if (cursor.lastColor !== colorHex) {
+            cursor.element.style.color = colorHex;
+            cursor.lastColor = colorHex;
         }
     }
 
@@ -377,6 +369,7 @@ export class GamepadCursorManager {
 
             // Tag for identification
             event.isGamepadSimulated = true;
+            event.gamepadIndex = gamepadIndex;
             Object.defineProperty(event, 'isGamepadSimulated', {
                 value: true,
                 enumerable: true,
@@ -395,6 +388,7 @@ export class GamepadCursorManager {
 
         const mouseEvent = new MouseEvent(type, mouseEventInit);
         mouseEvent.isGamepadSimulated = true;
+        mouseEvent.gamepadIndex = gamepadIndex;
         Object.defineProperty(mouseEvent, 'isGamepadSimulated', {
             value: true,
             enumerable: true,

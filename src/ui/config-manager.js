@@ -194,6 +194,21 @@ export class ConfigManager {
     }
 
     /**
+     * Update UI to show connected gamepads and their assigned colors
+     */
+    updateGamepadStatus(indices) {
+        const el = this.elements;
+
+
+        // Auto-adjust human count if more gamepads are connected than currently selected
+        // (but only if we aren't already in a game/scenario context which usually locks counts)
+        const currentHumans = parseInt(el.humanCountInput.value);
+        if (indices.length > currentHumans) {
+            el.humanCountInput.value = indices.length;
+            localStorage.setItem('dicy_humanCount', indices.length.toString());
+        }
+    }
+    /**
      * Get map size preset from slider value
      */
     getMapSize(sliderValue) {

@@ -8,6 +8,7 @@ export class InputManager {
 
         // Gamepad state
         this.gamepadStates = new Map();
+        this.connectedGamepadIndices = new Set();
         this.deadZone = 0.4;
 
         // Steam version often has higher polling rates or different timing, adjust accordingly
@@ -196,12 +197,13 @@ export class InputManager {
         this.heldKeys.clear();
         this.panState = { x: 0, y: 0 };
     }
-
     processGamepads() {
         const gamepads = navigator.getGamepads();
+        const currentIndices = new Set();
 
         for (const gp of gamepads) {
             if (!gp) continue;
+            currentIndices.add(gp.index);
 
             const prevState = this.gamepadStates.get(gp.index) || {
                 buttons: new Array(gp.buttons.length).fill(false),
@@ -224,6 +226,24 @@ export class InputManager {
                 axes: [...gp.axes],
                 moveRepeat: prevState.moveRepeat
             });
+        }
+
+        // Check for changes in connected gamepads
+        let changed = false;
+        if (currentIndices.size !== this.connectedGamepadIndices.size) {
+            changed = true;
+        } else {
+            for (const idx of currentIndices) {
+                if (!this.connectedGamepadIndices.has(idx)) {
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        if (changed) {
+            this.connectedGamepadIndices = currentIndices;
+            this.emit('gamepadChange', Array.from(this.connectedGamepadIndices));
         }
     }
 

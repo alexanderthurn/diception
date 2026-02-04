@@ -138,6 +138,13 @@ async function init() {
     configManager.loadSavedSettings();
     configManager.setupInputListeners(effectsManager, renderer);
 
+    // Update gamepad status in menu
+    inputManager.on('gamepadChange', (indices) => {
+        configManager.updateGamepadStatus(indices);
+    });
+    // Initial update in case gamepads are already connected
+    configManager.updateGamepadStatus(Array.from(inputManager.connectedGamepadIndices || []));
+
     const sessionManager = new SessionManager(game, renderer, effectsManager, turnHistory, mapEditor);
     const scenarioBrowser = new ScenarioBrowser(scenarioManager, configManager, mapEditor);
     scenarioBrowser.setEffectsManager(effectsManager);

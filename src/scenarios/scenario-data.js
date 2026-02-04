@@ -138,12 +138,11 @@ export function validateScenario(scenario) {
  * @param {number} playerCount
  * @returns {Object}
  */
+import { GAME } from '../core/constants.js';
+
 export function createEmptyScenario(width, height, playerCount = 2) {
     const players = [];
-    const defaultColors = [
-        0xAA00FF, 0xFF00AA, 0x00FFFF, 0xFFFFFF,
-        0xFF0055, 0x55FF00, 0xFFDD00, 0xFF8800
-    ];
+    const defaultColors = [...GAME.HUMAN_COLORS, ...GAME.BOT_COLORS];
 
     for (let i = 0; i < playerCount; i++) {
         players.push({

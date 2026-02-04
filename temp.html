@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dicy Color Palette</title>
+    <style>
+        body {
+            background-color: #0a0a1a;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            margin-bottom: 40px;
+        }
+
+        .section {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .color-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .color-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .swatch {
+            width: 100%;
+            height: 100px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .color-info {
+            text-align: center;
+        }
+
+        .color-name {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .color-hex {
+            opacity: 0.6;
+            font-size: 0.9rem;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>DICEPTION COLOR PALETTE</h1>
+
+    <div class="section">
+        <div class="section-title">Human Players</div>
+        <div class="color-grid">
+            <div class="color-card">
+                <div class="swatch" style="background-color: #AA00FF; color: white;">A</div>
+                <div class="color-info">
+                    <div class="color-name">Human 1 (Purple)</div>
+                    <div class="color-hex">#AA00FF</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="swatch" style="background-color: #0088FF; color: white;">A</div>
+                <div class="color-info">
+                    <div class="color-name">Human 2 (Azure Blue)</div>
+                    <div class="color-hex">#0088FF</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="swatch" style="background-color: #FFCC00; color: black;">A</div>
+                <div class="color-info">
+                    <div class="color-name">Human 3 (Gold/Yellow)</div>
+                    <div class="color-hex">#FFCC00</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="swatch" style="background-color: #00AA44; color: white;">A</div>
+                <div class="color-info">
+                    <div class="color-name">Human 4 (Dark Green)</div>
+                    <div class="color-hex">#00AA44</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Bot Players</div>
+        <div class="color-grid">
+            <div class="color-card">
+                <div class="swatch" style="background-color: #FF0055; color: white;">A</div>
+                <div class="color-info">
+                    <div class="color-name">Bot 1 (Red/Pink)</div>
+                    <div class="color-hex">#FF0055</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="swatch" style="background-color: #55FF00; color: black;">A</div>
+                <div class="color-info">
+                    <div class="color-name">Bot 2 (Lime)</div>
+                    <div class="color-hex">#55FF00</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="swatch" style="background-color: #FF00AA; color: white;">A</div>
+                <div class="color-info">
+                    <div class="color-name">Bot 3 (Pink)</div>
+                    <div class="color-hex">#FF00AA</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="swatch" style="background-color: #FF8800; color: black;">A</div>
+                <div class="color-info">
+                    <div class="color-name">Bot 4 (Orange)</div>
+                    <div class="color-hex">#FF8800</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="swatch" style="background-color: #00AAFF; color: black;">A</div>
+                <div class="color-info">
+                    <div class="color-name">Bot 5 (Light Blue)</div>
+                    <div class="color-hex">#00AAFF</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="swatch" style="background-color: #FFFF00; color: black;">A</div>
+                <div class="color-info">
+                    <div class="color-name">Bot 6 (Bright Yellow)</div>
+                    <div class="color-hex">#FFFF00</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="swatch" style="background-color: #FFFFFF; color: black;">A</div>
+                <div class="color-info">
+                    <div class="color-name">Bot 7 (White)</div>
+                    <div class="color-hex">#FFFFFF</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

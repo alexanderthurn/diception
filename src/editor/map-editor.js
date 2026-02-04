@@ -11,10 +11,7 @@ import { GAME } from '../core/constants.js';
 
 
 // Default player colors
-const DEFAULT_COLORS = [
-    0xAA00FF, 0xFF00AA, 0x00FFFF, 0xFFFFFF,
-    0xFF0055, 0x55FF00, 0xFFDD00, 0xFF8800
-];
+const DEFAULT_COLORS = [...GAME.HUMAN_COLORS, ...GAME.BOT_COLORS];
 
 /**
  * Helper to decide black or white text based on background color
