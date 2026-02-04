@@ -768,6 +768,7 @@ input[type="range"]::-webkit-slider-runnable-track {
     cursor: pointer;
     background: var(--border-color);
     border-radius: 0;
+    box-shadow: var(--button-glow);
 }
 
 input[type="range"]::-moz-range-track {
@@ -784,6 +785,7 @@ input[type="range"]::-webkit-slider-thumb {
     cursor: pointer;
     margin-top: -8px;
     border: none;
+    box-shadow: var(--button-glow);
 
     /* Neon-Effekt box-shadow: 0 0 15px #00f2ff; */
 
@@ -798,6 +800,7 @@ input[type="range"]::-moz-range-thumb {
     /* Dein gewünschtes eckiges Design */
     cursor: pointer;
     border: none;
+    box-shadow: var(--button-glow);
 }
 
 select {
@@ -1417,6 +1420,10 @@ select {
     animation: pulse-opacity 2s infinite ease-in-out;
     pointer-events: none;
     user-select: none;
+}
+
+.loading-icons span {
+    text-shadow: var(--title-glow);
 }
 
 /* Deskstop scale for loading prompt */
