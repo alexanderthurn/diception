@@ -86,6 +86,8 @@ export class AudioController {
         this.sfxVolume.value = savedSfxVolume * 100;
         this.sfxToggle.textContent = savedSfxEnabled ? '🔔' : '🔕';
         this.sfxToggle.classList.toggle('active', savedSfxEnabled);
+        this.musicToggle.textContent = savedMusicEnabled ? '🔊' : '🔇';
+        this.musicToggle.classList.toggle('active', savedMusicEnabled);
 
         // Bind events
         this.bindEvents();
@@ -129,6 +131,7 @@ export class AudioController {
             if (this.shouldAutoplayMusic && !this.musicPlaying) {
                 this.music.play();
                 this.musicToggle.textContent = '🔊';
+                this.musicToggle.classList.add('active');
                 this.musicPlaying = true;
             }
             this.shouldAutoplayMusic = false;
@@ -189,6 +192,7 @@ export class AudioController {
                     this.loadNextSong();
                 }
                 this.musicToggle.textContent = '🔊';
+                this.musicToggle.classList.add('active');
                 localStorage.setItem('dicy_musicEnabled', 'true');
             }
             return;
@@ -216,6 +220,7 @@ export class AudioController {
             this.musicToggle.textContent = '🔊';
         }
         localStorage.setItem('dicy_musicEnabled', this.musicPlaying.toString());
+        this.musicToggle.classList.toggle('active', this.musicPlaying);
     }
 
     handleSfxToggle() {
