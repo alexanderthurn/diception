@@ -32,26 +32,12 @@ export class InputController {
             this.renderer.zoom(e.deltaY, e.clientX, e.clientY);
         }, { passive: false });
 
-        // === Touches ===
-        // We only care about single touch for dragging/clicking.
-        // Pinch-to-zoom is removed in favor of UI buttons.
-
-        this.renderer.app.canvas.addEventListener('touchstart', (e) => {
-            // Prevent browser zoom/scroll if multiple touches
-            if (e.touches.length > 1) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        this.renderer.app.canvas.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 1) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        // Zoom/Pan state
+        // Multi-touch state
+        this.activePointers = new Map(); // pointerId -> { x, y }
+        this.lastPinchDistance = null;
         this.isDragging = false;
         this.lastPos = null;
+        this.panPointerId = null;
 
         // Subscribe to InputManager events
         this.setupInputManager();
@@ -227,6 +213,9 @@ export class InputController {
     }
 
     onPointerDown(e) {
+        // Track the pointer
+        this.activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
+
         // Mouse interaction hides keyboard cursor
         this.cursorVisible = false;
         this.renderer.setCursor(null, null);
@@ -234,54 +223,88 @@ export class InputController {
         // Check input types
         const isRightClick = e.button === 2;
         const isMiddleClick = e.button === 1;
-
-        // Fix: Check modifiers correctly on Pixi FederatedPointerEvent
-        // It has .shiftKey directly, or we fall back to originalEvent
         const isShiftHeld = e.shiftKey || (e.originalEvent && e.originalEvent.shiftKey);
 
-        if (isRightClick) { // Right click
+        if (isRightClick) {
             this.deselect();
             return;
         }
 
-        // Drag Logic:
-        // - Allow Middle Click
-        // - Allow Left Click (if NOT holding Shift AND NOT a simulated gamepad event)
-        // - If Shift is held, we NEVER drag (it's for editor painting or other interactions)
-        // - We also don't drag for gamepad simulated clicks, as they have right-stick for panning
-        const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
-            (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
-            e.isGamepadSimulated;
-        const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0 && !isSimulated);
+        // Handle initial pinch state
+        if (this.activePointers.size === 2) {
+            this.lastPinchDistance = this.calculatePinchDistance();
+            this.isDragging = false; // Stop dragging when pinch starts
+            this.panPointerId = null;
+        } else if (this.activePointers.size === 1) {
+            // Drag Logic:
+            // - Allow Middle Click
+            // - Allow Left Click (if NOT holding Shift AND NOT a simulated gamepad event)
+            const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
+                (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
+                e.isGamepadSimulated;
+            const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0 && !isSimulated);
 
-        if (canDrag) {
-            this.isDragging = true;
-            this.lastPos = { x: e.global.x, y: e.global.y };
+            if (canDrag) {
+                this.isDragging = true;
+                this.lastPos = { x: e.global.x, y: e.global.y };
+                this.panPointerId = e.pointerId;
+            }
         }
 
         const globalPos = e.global;
-        // Convert to local grid coordinates
         const localPos = this.renderer.grid.container.toLocal(globalPos);
-
         const tileX = Math.floor(localPos.x / (this.renderer.grid.tileSize + this.renderer.grid.gap));
         const tileY = Math.floor(localPos.y / (this.renderer.grid.tileSize + this.renderer.grid.gap));
-
         const tile = this.game.map.getTile(tileX, tileY);
 
-        // Store potential click target (don't select yet, wait for Up to distinguish click vs drag)
         this.clickTarget = tile ? { tile, x: tileX, y: tileY } : null;
         this.startDragPos = { x: e.global.x, y: e.global.y };
     }
 
     onPointerMove(e) {
-        if (this.isDragging) {
+        // Update pointer position
+        if (this.activePointers.has(e.pointerId)) {
+            this.activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
+        }
+
+        if (this.activePointers.size === 2) {
+            // Handle Pinch-to-Zoom
+            const currentDistance = this.calculatePinchDistance();
+            if (this.lastPinchDistance !== null && currentDistance > 0) {
+                // Pinched distance changed?
+                const diff = Math.abs(currentDistance - this.lastPinchDistance);
+
+                // Only zoom if the movement is significant (at least 2 pixels)
+                if (diff > 2) {
+                    const ratio = this.lastPinchDistance / currentDistance;
+
+                    // Use the center of the fingers as the zoom anchor
+                    const pointers = Array.from(this.activePointers.values());
+                    const centerX = (pointers[0].x + pointers[1].x) / 2;
+                    const centerY = (pointers[0].y + pointers[1].y) / 2;
+
+                    // Zoom factor is inverted because deltaY > 0 means zoom out in renderer.zoom
+                    // Reduced sensitivity: only trigger zoom if ratio is far enough from 1
+                    if (ratio > 1.02) { // Fingers moved closer - Zoom Out
+                        this.renderer.zoom(1, centerX, centerY);
+                        this.lastPinchDistance = currentDistance;
+                    } else if (ratio < 0.98) { // Fingers moved apart - Zoom In
+                        this.renderer.zoom(-1, centerX, centerY);
+                        this.lastPinchDistance = currentDistance;
+                    }
+                }
+            } else {
+                this.lastPinchDistance = currentDistance;
+            }
+        } else if (this.isDragging && e.pointerId === this.panPointerId) {
+            // Stable Panning: only follow the first finger
             const dx = e.global.x - this.lastPos.x;
             const dy = e.global.y - this.lastPos.y;
 
             this.renderer.pan(dx, dy);
             this.lastPos = { x: e.global.x, y: e.global.y };
-        } else {
-            // Hover Logic - only if cursor not in keyboard mode
+        } else if (this.activePointers.size <= 1) {
+            // Hover Logic - only if cursor not in keyboard mode and NOT dragging
             if (this.cursorVisible) return;
 
             const globalPos = e.global;
@@ -290,7 +313,6 @@ export class InputController {
             const tileX = Math.floor(localPos.x / (this.renderer.grid.tileSize + this.renderer.grid.gap));
             const tileY = Math.floor(localPos.y / (this.renderer.grid.tileSize + this.renderer.grid.gap));
 
-            // Use getTileRaw to keep hover active even on blocked tiles
             const tileRaw = this.game.map.getTileRaw(tileX, tileY);
             if (tileRaw) {
                 this.renderer.setHover(tileX, tileY);
@@ -301,9 +323,18 @@ export class InputController {
     }
 
     onPointerUp(e) {
-        this.isDragging = false;
+        this.activePointers.delete(e.pointerId);
 
-        // Guard against missing startDragPos (can happen if pointerup fires without pointerdown)
+        if (this.activePointers.size < 2) {
+            this.lastPinchDistance = null;
+        }
+
+        if (e.pointerId === this.panPointerId) {
+            this.isDragging = false;
+            this.panPointerId = null;
+        }
+
+        // Guard against missing startDragPos
         if (!this.startDragPos) {
             this.clickTarget = null;
             return;
@@ -435,6 +466,14 @@ export class InputController {
                 y: screenPos.y
             });
         }
+    }
+
+    calculatePinchDistance() {
+        const pointers = Array.from(this.activePointers.values());
+        if (pointers.length < 2) return 0;
+        const dx = pointers[0].x - pointers[1].x;
+        const dy = pointers[0].y - pointers[1].y;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     deselect() {
