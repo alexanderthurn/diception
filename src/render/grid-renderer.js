@@ -78,6 +78,21 @@ export class GridRenderer {
             fontWeight: 'bold',
             fill: '#00ffff',
         });
+
+        // === PERFORMANCE: Caching & Reuse ===
+        this.largestRegionsCache = new Map();
+        this.regionsValid = false;
+
+        // Persistent overlay elements
+        this.selectionGfx = new Graphics();
+        this.hoverGfx = new Graphics();
+        this.cursorGfx = new Graphics();
+        this.neighborHighlighters = []; // Pool of Graphics
+        this.probabilityBadges = []; // Pool of Containers
+
+        this.overlayContainer.addChild(this.selectionGfx);
+        this.overlayContainer.addChild(this.hoverGfx);
+        this.overlayContainer.addChild(this.cursorGfx);
     }
 
     /**
@@ -86,6 +101,15 @@ export class GridRenderer {
     invalidate() {
         this.needsFullRedraw = true;
         this.lastTileStates.clear();
+        this.invalidateRegions();
+    }
+
+    /**
+     * Mark regions as needing recalculation
+     */
+    invalidateRegions() {
+        this.regionsValid = false;
+        this.largestRegionsCache.clear();
     }
 
     /**
@@ -189,13 +213,17 @@ export class GridRenderer {
             this.container.addChild(borderGfx);
         }
 
-        // Get largest connected regions for ALL alive players
-        const largestRegions = new Map();
-        for (const player of this.game.players) {
-            if (player.alive) {
-                largestRegions.set(player.id, this.getLargestConnectedRegionTiles(player.id));
+        // Get largest connected regions for ALL alive players (cached)
+        if (!this.regionsValid) {
+            this.largestRegionsCache.clear();
+            for (const player of this.game.players) {
+                if (player.alive) {
+                    this.largestRegionsCache.set(player.id, this.getLargestConnectedRegionTiles(player.id));
+                }
             }
+            this.regionsValid = true;
         }
+        const largestRegions = this.largestRegionsCache;
 
         // Clear and recollect edges for current player's shimmer effect
         this.currentPlayerRegionEdges = [];
@@ -500,21 +528,28 @@ export class GridRenderer {
     drawOverlay() {
         // Hide all human-centric overlay elements during bot turns (but allow in paint mode for editor)
         if (!this.paintMode && this.game.currentPlayer?.isBot) {
-            this.overlayContainer.removeChildren();
+            this.selectionGfx.visible = false;
+            this.hoverGfx.visible = false;
+            this.cursorGfx.visible = false;
+            this.hidePools();
             return;
         }
 
-        this.overlayContainer.removeChildren();
-
         // In paint mode (editor), just show simple hover highlight
         if (this.paintMode) {
+            this.selectionGfx.visible = false;
+            this.cursorGfx.visible = false;
+            this.hidePools();
+
             if (this.hoverTile) {
-                const gfx = new Graphics();
-                gfx.rect(0, 0, this.tileSize, this.tileSize);
-                gfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8 });
-                gfx.x = this.hoverTile.x * (this.tileSize + this.gap);
-                gfx.y = this.hoverTile.y * (this.tileSize + this.gap);
-                this.overlayContainer.addChild(gfx);
+                this.hoverGfx.clear();
+                this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
+                this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8 });
+                this.hoverGfx.x = this.hoverTile.x * (this.tileSize + this.gap);
+                this.hoverGfx.y = this.hoverTile.y * (this.tileSize + this.gap);
+                this.hoverGfx.visible = true;
+            } else {
+                this.hoverGfx.visible = false;
             }
             return;
         }
@@ -525,55 +560,58 @@ export class GridRenderer {
             this.cursorPulse = (this.cursorPulse + 0.1) % (Math.PI * 2);
             const pulseAlpha = 0.5 + Math.sin(this.cursorPulse) * 0.3;
 
-            const cursorGfx = new Graphics();
+            this.cursorGfx.clear();
             const inset = 3; // Draw cursor slightly inside tile
 
             // Draw pulsing diamond/crosshair cursor
-            cursorGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
-            cursorGfx.stroke({ width: 3, color: 0x00ffff, alpha: pulseAlpha }); // Cyan cursor
+            this.cursorGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
+            this.cursorGfx.stroke({ width: 3, color: 0x00ffff, alpha: pulseAlpha }); // Cyan cursor
 
             // Corner brackets for extra visibility
             const bracketSize = 10;
             // Top-left
-            cursorGfx.moveTo(0, bracketSize);
-            cursorGfx.lineTo(0, 0);
-            cursorGfx.lineTo(bracketSize, 0);
+            this.cursorGfx.moveTo(0, bracketSize);
+            this.cursorGfx.lineTo(0, 0);
+            this.cursorGfx.lineTo(bracketSize, 0);
             // Top-right
-            cursorGfx.moveTo(this.tileSize - bracketSize, 0);
-            cursorGfx.lineTo(this.tileSize, 0);
-            cursorGfx.lineTo(this.tileSize, bracketSize);
+            this.cursorGfx.moveTo(this.tileSize - bracketSize, 0);
+            this.cursorGfx.lineTo(this.tileSize, 0);
+            this.cursorGfx.lineTo(this.tileSize, bracketSize);
             // Bottom-right
-            cursorGfx.moveTo(this.tileSize, this.tileSize - bracketSize);
-            cursorGfx.lineTo(this.tileSize, this.tileSize);
-            cursorGfx.lineTo(this.tileSize - bracketSize, this.tileSize);
+            this.cursorGfx.moveTo(this.tileSize, this.tileSize - bracketSize);
+            this.cursorGfx.lineTo(this.tileSize, this.tileSize);
+            this.cursorGfx.lineTo(this.tileSize - bracketSize, this.tileSize);
             // Bottom-left
-            cursorGfx.moveTo(bracketSize, this.tileSize);
-            cursorGfx.lineTo(0, this.tileSize);
-            cursorGfx.lineTo(0, this.tileSize - bracketSize);
-            cursorGfx.stroke({ width: 2, color: 0x00ffff, alpha: 1.0 });
+            this.cursorGfx.moveTo(bracketSize, this.tileSize);
+            this.cursorGfx.lineTo(0, this.tileSize);
+            this.cursorGfx.lineTo(0, this.tileSize - bracketSize);
+            this.cursorGfx.stroke({ width: 2, color: 0x00ffff, alpha: 1.0 });
 
-            cursorGfx.x = this.cursorTile.x * (this.tileSize + this.gap);
-            cursorGfx.y = this.cursorTile.y * (this.tileSize + this.gap);
-            this.overlayContainer.addChild(cursorGfx);
+            this.cursorGfx.x = this.cursorTile.x * (this.tileSize + this.gap);
+            this.cursorGfx.y = this.cursorTile.y * (this.tileSize + this.gap);
+            this.cursorGfx.visible = true;
+        } else {
+            this.cursorGfx.visible = false;
         }
+
+        this.hidePools();
+        let neighborIdx = 0;
+        let badgeIdx = 0;
 
         // Draw Selection
         if (this.selectedTile) {
-            const gfx = new Graphics();
-            gfx.rect(0, 0, this.tileSize, this.tileSize);
-            gfx.stroke({ width: 4, color: 0xffffff, alpha: 1.0 });
-            gfx.fill({ color: 0xffffff, alpha: 0.4 });
+            this.selectionGfx.clear();
+            this.selectionGfx.rect(0, 0, this.tileSize, this.tileSize);
+            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 1.0 });
+            this.selectionGfx.fill({ color: 0xffffff, alpha: 0.4 });
 
-            gfx.x = this.selectedTile.x * (this.tileSize + this.gap);
-            gfx.y = this.selectedTile.y * (this.tileSize + this.gap);
-            this.overlayContainer.addChild(gfx);
+            this.selectionGfx.x = this.selectedTile.x * (this.tileSize + this.gap);
+            this.selectionGfx.y = this.selectedTile.y * (this.tileSize + this.gap);
+            this.selectionGfx.visible = true;
 
             // Get selected tile info for probability calculation
             const selectedTileData = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
             const attackerDice = selectedTileData ? selectedTileData.dice : 0;
-
-            // Collect probability badges to add after hover/attack indicator (for z-order)
-            const probabilityBadges = [];
 
             // Draw attackable neighbor indicators (Beginner: highlight + probability, Normal: probability only)
             if (this.gameSpeed !== 'expert' && attackerDice > 1) {
@@ -595,17 +633,18 @@ export class GridRenderer {
 
                     // Beginner mode: show pulsing dashed highlight on attackable neighbors
                     if (this.gameSpeed === 'beginner') {
-                        const highlightGfx = new Graphics();
+                        const hGfx = this.getNeighborHighlighter(neighborIdx++);
                         const inset = 4;
 
+                        hGfx.clear();
                         // Draw pulsing border
                         const pulseAlpha = 0.4 + Math.sin(this.cursorPulse * 1.5) * 0.2;
-                        highlightGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
-                        highlightGfx.stroke({ width: 2, color: 0x00ffff, alpha: pulseAlpha });
+                        hGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
+                        hGfx.stroke({ width: 2, color: 0x00ffff, alpha: pulseAlpha });
 
-                        highlightGfx.x = neighborPixelX;
-                        highlightGfx.y = neighborPixelY;
-                        this.overlayContainer.addChild(highlightGfx);
+                        hGfx.x = neighborPixelX;
+                        hGfx.y = neighborPixelY;
+                        hGfx.visible = true;
                     }
 
                     // Calculate win probability
@@ -642,80 +681,8 @@ export class GridRenderer {
                             break;
                     }
 
-                    // Create probability badge
-                    const badgeContainer = new Container();
-                    badgeContainer.x = badgeX;
-                    badgeContainer.y = badgeY;
-
-                    // Background pill
-                    const badgeWidth = 28;
-                    const badgeHeight = 16;
-                    const badgeBg = new Graphics();
-                    badgeBg.roundRect(-badgeWidth / 2, -badgeHeight / 2, badgeWidth, badgeHeight, 3);
-                    badgeBg.fill({ color: probColor, alpha: 0.9 });
-                    badgeBg.stroke({ width: 1, color: 0x000000, alpha: 0.3 });
-                    badgeContainer.addChild(badgeBg);
-
-                    // Probability text
-                    const probText = new Text({
-                        text: `${probabilityPercent}%`,
-                        style: this.probabilityTextStyle
-                    });
-                    probText.anchor.set(0.5, 0.5);
-                    badgeContainer.addChild(probText);
-
-                    // Add input hint if beginner mode and input type supports it
-                    if (this.gameSpeed === 'beginner' && shouldShowInputHints(this.inputManager)) {
-                        // Determine which action corresponds to this direction
-                        let hintAction = null;
-                        switch (neighbor.edge) {
-                            case 'top': hintAction = ACTION_MOVE_UP; break;
-                            case 'bottom': hintAction = ACTION_MOVE_DOWN; break;
-                            case 'left': hintAction = ACTION_MOVE_LEFT; break;
-                            case 'right': hintAction = ACTION_MOVE_RIGHT; break;
-                        }
-
-                        if (hintAction) {
-                            const hint = getInputHint(hintAction, this.inputManager);
-                            if (hint) {
-                                // Position hint above probability badge
-                                const hintContainer = new Container();
-                                hintContainer.y = -14; // Above the probability badge
-
-                                // Create hint badge
-                                const hintBg = new Graphics();
-                                const hintWidth = hint.type === 'gamepad' ? 16 : (hint.label.length * 7 + 6);
-                                const hintHeight = 14;
-
-                                if (hint.style === 'gamepad-dpad') {
-                                    // Circular gamepad button
-                                    hintBg.circle(0, 0, 8);
-                                    hintBg.fill({ color: 0x666666, alpha: 0.9 });
-                                    hintBg.stroke({ width: 1, color: 0x000000, alpha: 0.5 });
-                                } else if (hint.style === 'keyboard') {
-                                    // Rectangular keyboard key
-                                    hintBg.roundRect(-hintWidth / 2, -hintHeight / 2, hintWidth, hintHeight, 3);
-                                    hintBg.fill({ color: 0x000000, alpha: 0.8 });
-                                    hintBg.stroke({ width: 1, color: 0x00ffff, alpha: 0.6 });
-                                }
-                                hintContainer.addChild(hintBg);
-
-                                // Hint text/symbol
-                                const hintText = new Text({
-                                    text: hint.label,
-                                    style: this.hintTextStyle
-                                });
-                                hintText.anchor.set(0.5, 0.5);
-                                hintText.style.fontSize = hint.type === 'gamepad' ? 10 : 11;
-                                hintContainer.addChild(hintText);
-
-                                badgeContainer.addChild(hintContainer);
-                            }
-                        }
-                    }
-
-                    // Collect badge to add later (after attack indicator)
-                    probabilityBadges.push(badgeContainer);
+                    // Update probability badge
+                    this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, `${probabilityPercent}%`, probColor, neighbor.edge);
                 }
             }
 
@@ -728,39 +695,144 @@ export class GridRenderer {
                 const isAdjacent = Math.abs(this.selectedTile.x - targetTile.x) + Math.abs(this.selectedTile.y - targetTile.y) === 1;
 
                 if (isAdjacent) {
-                    const hGfx = new Graphics();
+                    const hGfx = this.getNeighborHighlighter(neighborIdx++);
+                    hGfx.clear();
                     hGfx.rect(0, 0, this.tileSize, this.tileSize);
 
-                    const tile = this.game.map.getTile(targetTile.x, targetTile.y);
-                    const isEnemy = tile && tile.owner !== this.game.currentPlayer.id;
+                    const tileContent = this.game.map.getTile(targetTile.x, targetTile.y);
+                    const isEnemy = tileContent && tileContent.owner !== this.game.currentPlayer.id;
 
                     if (isEnemy) {
-                        // Attack cursor
                         hGfx.stroke({ width: 4, color: 0xff0000, alpha: 0.8 }); // Red
+                    } else {
+                        hGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8 }); // Neutral
                     }
 
                     hGfx.x = targetTile.x * (this.tileSize + this.gap);
                     hGfx.y = targetTile.y * (this.tileSize + this.gap);
-                    this.overlayContainer.addChild(hGfx);
+                    hGfx.visible = true;
                 }
             }
-
-            // Add probability badges last (on top of attack indicator)
-            for (const badge of probabilityBadges) {
-                this.overlayContainer.addChild(badge);
-            }
+            this.hoverGfx.visible = false;
         } else if (this.hoverTile) {
+            this.selectionGfx.visible = false;
             // Just hovering without selection - show clear white highlight
-            if (this.game.currentPlayer?.isBot) return;
+            if (this.game.currentPlayer?.isBot) {
+                this.hoverGfx.visible = false;
+            } else {
+                const tileRaw = this.game.map.getTileRaw(this.hoverTile.x, this.hoverTile.y);
+                if (tileRaw) {
+                    this.hoverGfx.clear();
+                    this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
+                    this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8 });
+                    this.hoverGfx.x = this.hoverTile.x * (this.tileSize + this.gap);
+                    this.hoverGfx.y = this.hoverTile.y * (this.tileSize + this.gap);
+                    this.hoverGfx.visible = true;
+                } else {
+                    this.hoverGfx.visible = false;
+                }
+            }
+        } else {
+            this.selectionGfx.visible = false;
+            this.hoverGfx.visible = false;
+        }
+    }
 
-            const tileRaw = this.game.map.getTileRaw(this.hoverTile.x, this.hoverTile.y);
-            if (tileRaw) {
-                const gfx = new Graphics();
-                gfx.rect(0, 0, this.tileSize, this.tileSize);
-                gfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8 });
-                gfx.x = this.hoverTile.x * (this.tileSize + this.gap);
-                gfx.y = this.hoverTile.y * (this.tileSize + this.gap);
-                this.overlayContainer.addChild(gfx);
+    hidePools() {
+        for (const h of this.neighborHighlighters) h.visible = false;
+        for (const b of this.probabilityBadges) b.visible = false;
+    }
+
+    getNeighborHighlighter(index) {
+        if (!this.neighborHighlighters[index]) {
+            const gfx = new Graphics();
+            this.overlayContainer.addChild(gfx);
+            this.neighborHighlighters[index] = gfx;
+        }
+        return this.neighborHighlighters[index];
+    }
+
+    updateProbabilityBadge(index, x, y, text, color, edge) {
+        if (!this.probabilityBadges[index]) {
+            const container = new Container();
+
+            // Background pill
+            const badgeBg = new Graphics();
+            container.addChild(badgeBg);
+            container.badgeBg = badgeBg;
+
+            // Probability text
+            const probText = new Text({
+                text: '',
+                style: this.probabilityTextStyle
+            });
+            probText.anchor.set(0.5, 0.5);
+            container.addChild(probText);
+            container.probText = probText;
+
+            // Input hint container
+            const hintContainer = new Container();
+            hintContainer.y = -14;
+            container.addChild(hintContainer);
+            container.hintContainer = hintContainer;
+
+            this.overlayContainer.addChild(container);
+            this.probabilityBadges[index] = container;
+        }
+
+        const container = this.probabilityBadges[index];
+        container.x = x;
+        container.y = y;
+        container.visible = true;
+
+        // Update Background
+        const badgeWidth = 28;
+        const badgeHeight = 16;
+        container.badgeBg.clear();
+        container.badgeBg.roundRect(-badgeWidth / 2, -badgeHeight / 2, badgeWidth, badgeHeight, 3);
+        container.badgeBg.fill({ color: color, alpha: 0.9 });
+        container.badgeBg.stroke({ width: 1, color: 0x000000, alpha: 0.3 });
+
+        // Update Text
+        container.probText.text = text;
+
+        // Update Hint
+        container.hintContainer.removeChildren();
+        if (this.gameSpeed === 'beginner' && shouldShowInputHints(this.inputManager)) {
+            let hintAction = null;
+            switch (edge) {
+                case 'top': hintAction = ACTION_MOVE_UP; break;
+                case 'bottom': hintAction = ACTION_MOVE_DOWN; break;
+                case 'left': hintAction = ACTION_MOVE_LEFT; break;
+                case 'right': hintAction = ACTION_MOVE_RIGHT; break;
+            }
+
+            if (hintAction) {
+                const hint = getInputHint(hintAction, this.inputManager);
+                if (hint) {
+                    const hintBg = new Graphics();
+                    const hintWidth = hint.type === 'gamepad' ? 16 : (hint.label.length * 7 + 6);
+                    const hintHeight = 14;
+
+                    if (hint.style === 'gamepad-dpad') {
+                        hintBg.circle(0, 0, 8);
+                        hintBg.fill({ color: 0x666666, alpha: 0.9 });
+                        hintBg.stroke({ width: 1, color: 0x000000, alpha: 0.5 });
+                    } else if (hint.style === 'keyboard') {
+                        hintBg.roundRect(-hintWidth / 2, -hintHeight / 2, hintWidth, hintHeight, 3);
+                        hintBg.fill({ color: 0x000000, alpha: 0.8 });
+                        hintBg.stroke({ width: 1, color: 0x00ffff, alpha: 0.6 });
+                    }
+                    container.hintContainer.addChild(hintBg);
+
+                    const hintText = new Text({
+                        text: hint.label,
+                        style: this.hintTextStyle
+                    });
+                    hintText.anchor.set(0.5, 0.5);
+                    hintText.style.fontSize = hint.type === 'gamepad' ? 10 : 11;
+                    container.hintContainer.addChild(hintText);
+                }
             }
         }
     }

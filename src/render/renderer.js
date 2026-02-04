@@ -21,7 +21,8 @@ export class Renderer {
 
 
     async init() {
-        const realRes = window.devicePixelRatio || 1;
+        // Cap resolution to 1.5 to avoid extreme overhead on Retina/4K displays while keeping it crisp
+        const realRes = Math.min(window.devicePixelRatio || 1, 1.5);
         this.app = new Application();
         await this.app.init({
             background: '#050510',
@@ -29,7 +30,7 @@ export class Renderer {
             antialias: true,
             resolution: realRes,
             autoDensity: true,
-            roundPixels: false,
+            roundPixels: true,
             preference: 'webgl',
             hello: false // Minor performance boost by skipping splash
         });
@@ -37,7 +38,9 @@ export class Renderer {
         this.app.canvas.style.width = '100%';
         this.app.canvas.style.height = '100%';
         this.app.canvas.style.display = 'block';
-        this.app.ticker.maxFPS = 120;
+
+        // Ensure smooth rendering but don't overwork the CPU/GPU
+        this.app.ticker.maxFPS = Math.min(window.screen.refreshRate || 60, 120);
 
         this.container.appendChild(this.app.canvas);
 
@@ -59,11 +62,15 @@ export class Renderer {
 
         // Listen to game events to trigger redraws
         this.game.on('gameStart', () => {
+            this.grid.invalidateRegions();
             this.draw();
             this.autoFitCamera();
         });
 
         this.game.on('attackResult', (result) => {
+            if (result.won) {
+                this.grid.invalidateRegions();
+            }
             // Trigger animation
             this.grid.animateAttack(result, () => {
                 // Callback when animation finishes (optional if we draw immediately)
