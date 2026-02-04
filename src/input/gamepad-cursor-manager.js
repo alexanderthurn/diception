@@ -51,6 +51,9 @@ export class GamepadCursorManager {
             const cursor = this.cursors.get(index);
             if (!cursor) return;
 
+            // Ensure cursor is visible on button press
+            cursor.element.style.opacity = '1.0';
+
             // Visual feedback
             const buttonLabels = {
                 0: 'Select',
@@ -290,16 +293,37 @@ export class GamepadCursorManager {
             </svg>
         `;
 
-        el.style.transition = 'opacity 0.2s ease';
+        // Initial position: Corners depending on index
+        const padding = 0;
+        let initialX = window.innerWidth / 2;
+        let initialY = window.innerHeight / 2;
+
+        if (index % 4 === 0) { // Top-left
+            initialX = padding;
+            initialY = padding;
+        } else if (index % 4 === 1) { // Top-right
+            initialX = window.innerWidth - padding;
+            initialY = padding;
+        } else if (index % 4 === 2) { // Bottom-left
+            initialX = padding;
+            initialY = window.innerHeight - padding;
+        } else if (index % 4 === 3) { // Bottom-right
+            initialX = window.innerWidth - padding;
+            initialY = window.innerHeight - padding;
+        }
 
         const cursor = {
-            x: window.innerWidth / 2,
-            y: window.innerHeight / 2,
+            x: initialX,
+            y: initialY,
             element: el,
             lastPlayerId: -1,
             lastColor: '',
             speedMultiplier: parseFloat(localStorage.getItem('dicy_gamepad_speed_' + index)) || 1.0
         };
+
+        // Set initial position and opacity
+        el.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+        el.style.opacity = '1.0';
 
         this.container.appendChild(el);
         this.cursors.set(index, cursor);
