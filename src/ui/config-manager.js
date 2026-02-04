@@ -115,6 +115,7 @@ export class ConfigManager {
         el.gameModeInput.value = savedGameMode;
         el.tournamentGamesInput.value = savedTournamentGames;
         el.effectsQualityInput.value = savedEffectsQuality;
+        this.updateEffectsQualityClass(savedEffectsQuality);
 
         // Load saved AI selection
         if (this.selectedBotAI && Array.from(el.botAISelect.options).some(o => o.value === this.selectedBotAI)) {
@@ -190,6 +191,7 @@ export class ConfigManager {
             localStorage.setItem('effectsQuality', newQuality);
             if (effectsManager) effectsManager.setQuality(newQuality);
             if (renderer) renderer.setEffectsQuality(newQuality);
+            this.updateEffectsQualityClass(newQuality);
         });
     }
 
@@ -358,5 +360,13 @@ export class ConfigManager {
             this.updateMapSizeDisplay();
             if (callback) callback();
         });
+    }
+
+    /**
+     * Update body class based on effects quality
+     */
+    updateEffectsQualityClass(quality) {
+        document.body.classList.remove('fx-high', 'fx-medium', 'fx-off');
+        document.body.classList.add(`fx-${quality}`);
     }
 }
