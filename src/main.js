@@ -25,7 +25,7 @@ import { TournamentRunner } from './core/tournament-runner.js';
 import { ScenarioBrowser } from './ui/scenario-browser.js';
 import { GameStarter } from './core/game-starter.js';
 import { GameEventManager } from './ui/game-events.js';
-import { ProbabilityCalculator } from './ui/probability-calculator.js';
+import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
 
 // Pre-compute probability tables at startup
@@ -107,7 +107,7 @@ async function init() {
     const input = new InputController(game, renderer, inputManager);
 
     // Loading Screen
-    setupLoadingScreen(inputManager);
+    new LoadingScreen(inputManager);
 
     // Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);
@@ -348,58 +348,7 @@ async function init() {
     };
 }
 
-// Helper: Setup Loading Screen
-function setupLoadingScreen(inputManager) {
-    const loadingScreen = document.getElementById('loading-screen');
-    const loadingPrompt = document.getElementById('loading-prompt');
-    const loadingIcons = document.getElementById('loading-icons');
-
-    const dismissLoadingScreen = (e) => {
-        if (!loadingScreen || loadingScreen.classList.contains('fade-out')) return;
-
-        // Block UI interactions for a brief moment to prevent accidental clicks on underlying buttons
-        const uiOverlay = document.getElementById('ui-overlay');
-        if (uiOverlay) {
-            uiOverlay.classList.add('interaction-shield');
-            setTimeout(() => {
-                uiOverlay.classList.remove('interaction-shield');
-            }, 500);
-        }
-
-        loadingScreen.classList.add('fade-out');
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-        }, 800);
-
-        window.removeEventListener('mousedown', dismissLoadingScreen);
-        window.removeEventListener('touchstart', dismissLoadingScreen);
-        window.removeEventListener('keydown', dismissLoadingScreen);
-        inputManager.off('confirm', dismissLoadingScreen);
-    };
-
-    if (loadingScreen && loadingPrompt) {
-        loadingPrompt.style.animation = 'loading-status-blink 1.5s infinite';
-
-        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-        const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
-
-        loadingPrompt.style.animation = 'pulse-opacity 2s infinite ease-in-out';
-
-        if (isTouch || isIPad) {
-            loadingPrompt.textContent = 'Touch to Start';
-            if (loadingIcons) loadingIcons.classList.add('hidden');
-        } else {
-            loadingPrompt.textContent = 'Press any key to start';
-            if (loadingIcons) loadingIcons.classList.remove('hidden');
-        }
-
-        window.addEventListener('touchstart', dismissLoadingScreen);
-        window.addEventListener('mousedown', dismissLoadingScreen);
-        window.addEventListener('keydown', dismissLoadingScreen);
-
-        inputManager.on('confirm', dismissLoadingScreen);
-    }
-}
+// Loading screen logic is now handled in LoadingScreen class in src/ui/loading-screen.js
 
 // Helper: Setup FPS Counter
 function setupFPSCounter(renderer) {

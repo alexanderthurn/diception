@@ -1406,6 +1406,15 @@ select {
     padding: 0 40px;
     box-sizing: border-box;
     animation: pulse-opacity 2s infinite ease-in-out;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease, visibility 1s ease;
+    transform: translateY(-50%);
+}
+
+.loading-prompt.visible {
+    opacity: 1;
+    visibility: visible;
 }
 
 .loading-icons {
@@ -1425,6 +1434,89 @@ select {
 
 .loading-icons span {
     text-shadow: var(--title-glow);
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+    margin-top: 5vh;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+}
+
+.loading-content.completed {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-20px);
+}
+
+.loading-bar-container {
+    width: 80%;
+    height: 4px;
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.loading-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-color);
+    box-shadow: 0 0 10px var(--accent-color);
+    transition: width 0.3s ease-out;
+}
+
+.system-logs {
+    width: 90%;
+    height: 100px;
+    font-family: 'Rajdhani', monospace;
+    font-size: 0.8rem;
+    color: #00ff00;
+    text-align: left;
+    overflow-y: hidden;
+    padding: 10px;
+    background: rgba(0, 20, 0, 0.3);
+    border-left: 2px solid #00ff00;
+    opacity: 0.8;
+}
+
+.log-entry {
+    margin-bottom: 2px;
+    opacity: 0;
+    transform: translateX(-5px);
+    animation: log-fade-in 0.3s forwards;
+}
+
+.log-prefix {
+    color: #666;
+    margin-right: 10px;
+}
+
+@keyframes log-fade-in {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.loading-start-btn {
+    margin-top: 30px;
+    display: none;
+    animation: fadeIn 0.5s forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* Deskstop scale for loading prompt */
