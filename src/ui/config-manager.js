@@ -99,7 +99,7 @@ export class ConfigManager {
         const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || '100';
 
         // Load effects quality
-        let savedEffectsQuality = localStorage.getItem('effectsQuality') || 'high';
+        let savedEffectsQuality = localStorage.getItem('effectsQuality') || 'medium';
         if (savedEffectsQuality === 'low') savedEffectsQuality = 'medium';
 
         // Apply to UI
