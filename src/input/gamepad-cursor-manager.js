@@ -92,11 +92,15 @@ export class GamepadCursorManager {
             } else if (button === 2) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
             } else if (button === 3) {
-                const endTurnBtn = document.getElementById('end-turn-btn');
-                if (endTurnBtn && !endTurnBtn.classList.contains('hidden')) {
-                    endTurnBtn.click();
-                } else {
-                    this.inputManager.emit('endTurn');
+                // Only allow end turn if it's actually this player's turn
+                const currentPlayer = this.game.currentPlayer;
+                if (currentPlayer && !currentPlayer.isBot && currentPlayer.id === index) {
+                    const endTurnBtn = document.getElementById('end-turn-btn');
+                    if (endTurnBtn && !endTurnBtn.classList.contains('hidden')) {
+                        endTurnBtn.click();
+                    } else {
+                        this.inputManager.emit('endTurn');
+                    }
                 }
             } else if (button === 1) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
