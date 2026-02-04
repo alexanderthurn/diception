@@ -26,7 +26,6 @@ export class ScenarioBrowser {
         this.scenarioTabs = document.querySelectorAll('.scenario-tab');
         this.newScenarioBtn = document.getElementById('new-scenario-btn');
         this.scenarioImportBtn = document.getElementById('scenario-import-btn');
-        this.scenarioExportBtn = document.getElementById('scenario-export-btn');
         this.scenarioEditorBtn = document.getElementById('scenario-editor-btn');
         this.setupModal = document.getElementById('setup-modal');
 
@@ -139,10 +138,6 @@ export class ScenarioBrowser {
             this.scenarioImportBtn.addEventListener('click', () => this.importScenario());
         }
 
-        // Export scenario
-        if (this.scenarioExportBtn) {
-            this.scenarioExportBtn.addEventListener('click', () => this.exportSelectedScenario());
-        }
 
         // Editor button
         if (this.scenarioEditorBtn) {
@@ -394,27 +389,6 @@ export class ScenarioBrowser {
         };
         actionsDiv.appendChild(editBtn);
 
-        // Export Button
-        const exportBtn = document.createElement('button');
-        exportBtn.className = 'tron-btn small';
-        exportBtn.innerHTML = '💾 <span class="btn-text">Export as file</span>';
-        exportBtn.title = 'Export as file';
-        exportBtn.onclick = (e) => {
-            e.stopPropagation();
-            const json = scenario.isOnline ? JSON.stringify(scenario, null, 2) : this.scenarioManager.exportScenario(scenario.name);
-            if (json) {
-                const blob = new Blob([json], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${scenario.name.replace(/[^a-z0-9]/gi, '_')}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-        };
-        actionsDiv.appendChild(exportBtn);
 
         // Delete/Upload buttons for local maps
         if (!scenario.isBuiltIn && !scenario.isOnline) {
@@ -533,7 +507,7 @@ export class ScenarioBrowser {
             document.getElementById('scenario-preview-content').innerHTML = '<div class="empty-message-large">Select a scenario to view details</div>';
             this.selectedScenarioName = null;
             this.selectedScenarioData = null;
-            if (this.scenarioExportBtn) this.scenarioExportBtn.disabled = true;
+
             return;
         }
 
@@ -562,7 +536,6 @@ export class ScenarioBrowser {
                 item.classList.add('selected');
                 this.selectedScenarioName = s.name;
                 this.selectedScenarioData = s;
-                if (this.scenarioExportBtn) this.scenarioExportBtn.disabled = false;
                 this.showScenarioPreview(s);
 
                 if (isDouble) {
@@ -641,22 +614,6 @@ export class ScenarioBrowser {
         input.click();
     }
 
-    exportSelectedScenario() {
-        if (!this.selectedScenarioName) return;
-
-        const json = this.scenarioManager.exportScenario(this.selectedScenarioName);
-        if (json) {
-            const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${this.selectedScenarioData.name.replace(/[^a-z0-9]/gi, '_')}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-    }
 
     /**
      * Get pending scenario for game start
