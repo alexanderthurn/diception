@@ -44,6 +44,33 @@
     --border-color: #00ffff;
     --text-color: #ffffff;
     --accent-color: #00FFFF;
+
+    /* Default Effect Variables (Medium) */
+    --glow-strength: 1;
+    --panel-glow: 0 0 10px rgba(0, 255, 255, 0.3);
+    --button-glow: 0 0 8px rgba(0, 255, 255, 0.5);
+    --button-hover-glow: 0 0 15px rgba(0, 255, 255, 0.8);
+    --text-glow: 0 0 5px rgba(0, 255, 255, 0.5);
+    --title-glow: 0 0 20px rgba(0, 255, 255, 0.4);
+}
+
+/* Effect Level Overrides */
+body.fx-off {
+    --glow-strength: 0;
+    --panel-glow: none;
+    --button-glow: none;
+    --button-hover-glow: none;
+    --text-glow: none;
+    --title-glow: none;
+}
+
+body.fx-high {
+    --glow-strength: 2;
+    --panel-glow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 15px rgba(0, 255, 255, 0.1);
+    --button-glow: 0 0 15px rgba(0, 255, 255, 0.6), 0 0 30px rgba(0, 255, 255, 0.2);
+    --button-hover-glow: 0 0 25px rgba(0, 255, 255, 0.9), 0 0 50px rgba(0, 255, 255, 0.4);
+    --text-glow: 0 0 8px rgba(0, 255, 255, 0.8), 0 0 15px rgba(0, 255, 255, 0.4);
+    --title-glow: 0 0 40px rgba(0, 255, 255, 0.6), 0 0 80px rgba(0, 255, 255, 0.2);
 }
 
 html,
@@ -63,6 +90,45 @@ body {
     -webkit-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+}
+
+/* Scanline Effect for High Quality */
+body.fx-high::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+    z-index: 1000;
+    background-size: 100% 4px, 3px 100%;
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+/* Pulse animation for High Quality */
+@keyframes tron-pulse {
+    0% {
+        opacity: 0.8;
+        box-shadow: var(--button-glow);
+    }
+
+    50% {
+        opacity: 1;
+        box-shadow: var(--button-hover-glow);
+    }
+
+    100% {
+        opacity: 0.8;
+        box-shadow: var(--button-glow);
+    }
+}
+
+body.fx-high .tron-btn {
+    animation: tron-pulse 4s infinite ease-in-out;
 }
 
 /* Restore scrolling/panning for specific elements */
@@ -260,6 +326,7 @@ select {
     font-size: 14px;
     text-align: center;
     white-space: nowrap;
+    box-shadow: var(--panel-glow);
 }
 
 #dice-result-content {
@@ -436,6 +503,7 @@ select {
 .player-item.active {
     background: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: var(--panel-glow);
 }
 
 .player-item.dead {
@@ -475,11 +543,9 @@ select {
     font-size: 12px;
     padding: 2px 6px;
     cursor: pointer;
-    padding: 2px 6px;
-    cursor: pointer;
     border-radius: 0;
     transition: all 0.2s;
-    transition: all 0.2s;
+    box-shadow: var(--button-glow);
 }
 
 .autoplay-toggle:hover {
@@ -511,12 +577,15 @@ select {
     font-weight: bold;
     transition: all 0.2s;
     pointer-events: auto;
+    box-shadow: var(--button-glow);
+    text-shadow: var(--text-glow);
 }
 
 .tron-btn:hover {
     background: rgba(0, 255, 255, 0.15);
     color: #fff;
     border-color: #fff;
+    box-shadow: var(--button-hover-glow);
 }
 
 .tron-btn.large {
@@ -537,7 +606,7 @@ select {
     min-width: 300px;
     max-width: calc(100vw - 40px);
     max-height: 90vh;
-    overflow-y: auto;
+    overflow: visible;
     scrollbar-width: none;
     /* Firefox */
     -ms-overflow-style: none;
@@ -678,6 +747,7 @@ select {
     padding: 5px;
     font-family: inherit;
     border-radius: 0;
+    box-shadow: var(--button-glow);
 }
 
 input[type="range"] {
@@ -1743,6 +1813,7 @@ select {
     cursor: pointer;
     transition: all 0.2s;
     font-family: inherit;
+    box-shadow: var(--button-glow);
 }
 
 .scenario-tab:hover {
@@ -3134,6 +3205,7 @@ canvas {
     background: rgba(0, 0, 0, 0.8);
     color: #00ffff;
     border: 1px solid rgba(0, 255, 255, 0.6);
+    box-shadow: var(--button-glow);
 }
 
 /* Gamepad D-pad hint styling */
