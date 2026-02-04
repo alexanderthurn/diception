@@ -48,9 +48,9 @@
     /* Default Effect Variables (Medium) */
     --glow-strength: 1;
     --panel-glow: 0 0 10px rgba(0, 255, 255, 0.3);
-    --button-glow: 0 0 8px rgba(0, 255, 255, 0.5);
-    --button-hover-glow: 0 0 15px rgba(0, 255, 255, 0.8);
-    --text-glow: 0 0 5px rgba(0, 255, 255, 0.5);
+    --button-glow: 0 0 8px currentColor;
+    --button-hover-glow: 0 0 15px currentColor;
+    --text-glow: 0 0 5px currentColor;
     --title-glow: 0 0 20px rgba(0, 255, 255, 0.4);
 }
 
@@ -67,9 +67,9 @@ body.fx-off {
 body.fx-high {
     --glow-strength: 2;
     --panel-glow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 15px rgba(0, 255, 255, 0.1);
-    --button-glow: 0 0 15px rgba(0, 255, 255, 0.6), 0 0 30px rgba(0, 255, 255, 0.2);
-    --button-hover-glow: 0 0 25px rgba(0, 255, 255, 0.9), 0 0 50px rgba(0, 255, 255, 0.4);
-    --text-glow: 0 0 8px rgba(0, 255, 255, 0.8), 0 0 15px rgba(0, 255, 255, 0.4);
+    --button-glow: 0 0 15px currentColor, 0 0 30px rgba(0, 255, 255, 0.1);
+    --button-hover-glow: 0 0 25px currentColor, 0 0 50px rgba(0, 255, 255, 0.2);
+    --text-glow: 0 0 8px currentColor, 0 0 15px rgba(0, 255, 255, 0.2);
     --title-glow: 0 0 40px rgba(0, 255, 255, 0.6), 0 0 80px rgba(0, 255, 255, 0.2);
 }
 
@@ -249,8 +249,9 @@ select {
     z-index: 100;
     padding: 12px 25px;
     font-size: 16px;
-    background: rgba(0, 0, 0, 0.9);
+    background: #000;
     border-color: var(--accent-color);
+    color: var(--accent-color);
     border-width: 2px;
     border-radius: 0;
     display: flex;
@@ -259,7 +260,8 @@ select {
 }
 
 .reinforcement-count {
-    color: var(--accent-color);
+    color: inherit;
+    /* Use parent button color (dynamic player color) */
     font-weight: bold;
     font-size: 1.1em;
     min-width: 45px;
@@ -277,11 +279,10 @@ select {
     font-size: 24px;
     line-height: 50px;
     text-align: center;
-    background: rgba(0, 0, 0, 0.9);
-    border-width: 2px;
-    background: rgba(0, 0, 0, 0.9);
+    background: #000;
     border-width: 2px;
     border-radius: 0;
+    box-shadow: var(--button-glow);
 }
 
 #auto-win-btn.active {
@@ -568,7 +569,7 @@ select {
 
 .tron-btn {
     font-family: 'Rajdhani', sans-serif;
-    background: transparent;
+    background: #000;
     border: 1px solid var(--border-color);
     color: var(--border-color);
     padding: 8px 20px;

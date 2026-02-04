@@ -35,8 +35,8 @@ export class TurnIndicator {
         if (this.endTurnReinforcement) this.endTurnReinforcement.textContent = `(+${expectedReinforcements})`;
 
         const playerColorHex = '#' + player.color.toString(16).padStart(6, '0');
-        this.endTurnBtn.style.boxShadow = `0 0 15px ${playerColorHex}`;
         this.endTurnBtn.style.borderColor = playerColorHex;
+        this.endTurnBtn.style.color = playerColorHex;
     }
 
     hideEndTurnButton() {
@@ -54,8 +54,8 @@ export class TurnIndicator {
     showAutoWinButton(player, isActive) {
         const playerColorHex = '#' + player.color.toString(16).padStart(6, '0');
         this.autoWinBtn.classList.remove('hidden');
-        this.autoWinBtn.style.boxShadow = `0 0 15px ${playerColorHex}`;
         this.autoWinBtn.style.borderColor = playerColorHex;
+        this.autoWinBtn.style.color = playerColorHex;
 
         if (isActive) {
             this.autoWinBtn.classList.add('active');
