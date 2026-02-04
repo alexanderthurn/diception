@@ -196,8 +196,9 @@ select {
     width: 80px;
 }
 
-/* Hide zoom controls on desktop */
-@media (min-width: 769px) and (min-height: 721px) {
+/* Hide zoom controls ONLY on devices with a hover-capable fine pointer (like a mouse/trackpad) */
+/* This ensures they remain visible on touch devices like tablets, even with large screens. */
+@media (hover: hover) and (pointer: fine) {
     .zoom-control {
         display: none !important;
     }
