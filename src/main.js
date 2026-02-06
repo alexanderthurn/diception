@@ -438,7 +438,8 @@ function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboar
         if (endTurnBtn.disabled) return;
 
         if (data && data.index !== undefined) {
-            if (game.currentPlayer.id !== data.index) {
+            const humanIndex = inputManager.getHumanIndex(data.index);
+            if (game.currentPlayer.id !== humanIndex) {
                 console.log(`Gamepad ${data.index} tried to end turn, but it's player ${game.currentPlayer.id}'s turn.`);
                 return;
             }

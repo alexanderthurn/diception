@@ -92,9 +92,10 @@ export class GamepadCursorManager {
             } else if (button === 2) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
             } else if (button === 3) {
-                // Only allow end turn if it's actually this player's turn
+                // Only allow end turn if it's actually this player's turn (use human index, not raw gamepad index)
                 const currentPlayer = this.game.currentPlayer;
-                if (currentPlayer && !currentPlayer.isBot && currentPlayer.id === index) {
+                const humanIndex = this.inputManager.getHumanIndex(index);
+                if (currentPlayer && !currentPlayer.isBot && currentPlayer.id === humanIndex) {
                     const endTurnBtn = document.getElementById('end-turn-btn');
                     if (endTurnBtn && !endTurnBtn.classList.contains('hidden')) {
                         endTurnBtn.click();
@@ -297,21 +298,22 @@ export class GamepadCursorManager {
             </svg>
         `;
 
-        // Initial position: Corners depending on index
+        // Initial position: Corners depending on human index (so Human 0 = top-left, etc.)
+        const humanIndex = this.inputManager.getHumanIndex(index);
         const padding = 0;
         let initialX = window.innerWidth / 2;
         let initialY = window.innerHeight / 2;
 
-        if (index % 4 === 0) { // Top-left
+        if (humanIndex % 4 === 0) { // Top-left
             initialX = padding;
             initialY = padding;
-        } else if (index % 4 === 1) { // Top-right
+        } else if (humanIndex % 4 === 1) { // Top-right
             initialX = window.innerWidth - padding;
             initialY = padding;
-        } else if (index % 4 === 2) { // Bottom-left
+        } else if (humanIndex % 4 === 2) { // Bottom-left
             initialX = padding;
             initialY = window.innerHeight - padding;
-        } else if (index % 4 === 3) { // Bottom-right
+        } else if (humanIndex % 4 === 3) { // Bottom-right
             initialX = window.innerWidth - padding;
             initialY = window.innerHeight - padding;
         }
@@ -345,8 +347,9 @@ export class GamepadCursorManager {
     }
 
     updateCursorColor(cursor, index) {
-        // Fixed human index for gamepads: index 0 is Human 1 (Purple), etc.
-        const color = GAME.HUMAN_COLORS[index % GAME.HUMAN_COLORS.length];
+        // Use mapped human index so cursor color matches player color (Human 0 = Purple, etc.)
+        const humanIndex = this.inputManager.getHumanIndex(index);
+        const color = GAME.HUMAN_COLORS[humanIndex % GAME.HUMAN_COLORS.length];
         const colorHex = '#' + color.toString(16).padStart(6, '0');
 
         if (cursor.lastColor !== colorHex) {

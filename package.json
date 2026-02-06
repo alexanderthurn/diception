@@ -1,6 +1,6 @@
 {
   "name": "dicy",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "A neon-styled, turn-based dice strategy game inspired by Dice Wars / Risk.",
   "main": "electron-main.cjs",
   "type": "module",

@@ -9,6 +9,7 @@ export class InputManager {
         // Gamepad state
         this.gamepadStates = new Map();
         this.connectedGamepadIndices = new Set();
+        this.gamepadToHumanMap = new Map(); // raw gamepad index -> human player index (0, 1, 2, ...)
         this.deadZone = 0.4;
 
         // Steam version often has higher polling rates or different timing, adjust accordingly
@@ -50,6 +51,15 @@ export class InputManager {
         if (this.listeners[event]) {
             this.listeners[event].forEach(cb => cb(data));
         }
+    }
+
+    /**
+     * Map raw gamepad index (from navigator.getGamepads()) to sequential human index (0, 1, 2, ...).
+     * Ensures first connected gamepad = Human 0, second = Human 1, etc., regardless of raw indices.
+     */
+    getHumanIndex(rawGamepadIndex) {
+        const mapped = this.gamepadToHumanMap.get(rawGamepadIndex);
+        return mapped !== undefined ? mapped : rawGamepadIndex;
     }
 
     setupKeyboard() {
@@ -193,6 +203,7 @@ export class InputManager {
         // Clear all state
         this.listeners = {};
         this.gamepadStates.clear();
+        this.gamepadToHumanMap.clear();
         this.heldDirections.clear();
         this.heldKeys.clear();
         this.panState = { x: 0, y: 0 };
@@ -243,6 +254,11 @@ export class InputManager {
 
         if (changed) {
             this.connectedGamepadIndices = currentIndices;
+            this.gamepadToHumanMap.clear();
+            const sorted = Array.from(currentIndices).sort((a, b) => a - b);
+            sorted.forEach((rawIdx, humanIdx) => {
+                this.gamepadToHumanMap.set(rawIdx, humanIdx);
+            });
             this.emit('gamepadChange', Array.from(this.connectedGamepadIndices));
         }
     }
