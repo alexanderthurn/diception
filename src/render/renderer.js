@@ -102,10 +102,17 @@ export class Renderer {
         const mapPixelWidth = map.width * (tileSize + gap);
         const mapPixelHeight = map.height * (tileSize + gap);
 
-        // Get screen dimensions with some padding
-        const padding = 120; // Leave room for UI elements
-        const screenWidth = window.innerWidth - padding;
-        const screenHeight = window.innerHeight - padding;
+        let screenWidth, screenHeight, padding;
+        if (this.editorActive) {
+            // Editor: right panel ~290px, top bar ~70px, bottom bar ~80px
+            screenWidth = window.innerWidth - 310;
+            screenHeight = window.innerHeight - 160;
+            padding = 0;
+        } else {
+            padding = 120;
+            screenWidth = window.innerWidth - padding;
+            screenHeight = window.innerHeight - padding;
+        }
 
         // Calculate scale to fit
         const scaleX = screenWidth / mapPixelWidth;
@@ -115,16 +122,22 @@ export class Renderer {
         // Apply scale
         this.rootContainer.scale.set(Math.max(0.2, scale)); // Allow slightly smaller scale
 
-        // Center the map with offset for left sidebar on desktop
         const scaledWidth = mapPixelWidth * this.rootContainer.scale.x;
         const scaledHeight = mapPixelHeight * this.rootContainer.scale.y;
 
-        // On desktop (>768px wide AND >720px high), offset to the right to account for the 280px sidebar
-        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 720;
-        const sidebarOffset = isMobile ? 0 : 140; // Half of sidebar width to shift center
-
-        this.rootContainer.x = (window.innerWidth - scaledWidth) / 2 + sidebarOffset;
-        this.rootContainer.y = (window.innerHeight - scaledHeight) / 2;
+        if (this.editorActive) {
+            // Position in lower-left: ~25% inset from left, bottom-aligned above bottom bar
+            const leftInset = window.innerWidth * 0.25;
+            const bottomInset = 100; // Space for bottom bar and padding
+            this.rootContainer.x = leftInset;
+            this.rootContainer.y = window.innerHeight - scaledHeight - bottomInset;
+        } else {
+            // Center the map with offset for left sidebar on desktop
+            const isMobile = window.innerWidth <= 768 || window.innerHeight <= 720;
+            const sidebarOffset = isMobile ? 0 : 140;
+            this.rootContainer.x = (window.innerWidth - scaledWidth) / 2 + sidebarOffset;
+            this.rootContainer.y = (window.innerHeight - scaledHeight) / 2;
+        }
     }
 
     centerGrid() {
