@@ -2171,6 +2171,17 @@ select {
     height: var(--preview-size, 80px) !important;
 }
 
+.level-hover-preview-info {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.75);
+    margin-top: 4px;
+    line-height: 1.2;
+    max-width: var(--preview-size, 80px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Level preview dialog - compact */
 .level-preview-dialog-content {
     display: flex;
@@ -2192,6 +2203,19 @@ select {
     margin: 0;
     font-size: 0.9em;
     color: #888;
+}
+
+.level-preview-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+}
+
+.level-preview-info .level-preview-info-line {
+    display: block;
 }
 
 .level-grid-tile .tile-add {
@@ -2889,8 +2913,40 @@ select {
     font-size: 13px;
 }
 
-.toggle-btn:first-child {
+.toggle-btn:not(:last-child) {
     border-right: none;
+}
+
+.toggle-buttons-stacked {
+    flex-wrap: wrap;
+}
+
+.toggle-buttons-stacked .toggle-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+}
+
+.toggle-buttons-stacked .toggle-icon {
+    display: block;
+    font-size: 1.2em;
+    line-height: 1;
+}
+
+.toggle-buttons-stacked .toggle-text {
+    font-size: 11px;
+}
+
+.editor-config-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.editor-config-section.hidden {
+    display: none !important;
 }
 
 .toggle-btn:hover {
@@ -3001,6 +3057,33 @@ select {
 
 .editor-player-ai.hidden {
     display: none;
+}
+
+.editor-color-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    font-size: 11px;
+    color: #888;
+    margin-top: 6px;
+}
+
+.editor-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.editor-legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.control-group.third {
+    flex: 1;
+    min-width: 0;
 }
 
 .editor-player-remove {

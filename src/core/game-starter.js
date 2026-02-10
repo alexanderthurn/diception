@@ -158,11 +158,14 @@ export class GameStarter {
                 gameMode: config.gameMode
             };
 
-            // If it's a map type level, pass as preset
+            // If it's a map type level, pass as preset and use level's game settings if present
             if (pendingLevel && pendingLevel.type === 'map') {
                 gameConfig.predefinedMap = pendingLevel;
                 gameConfig.mapWidth = pendingLevel.width;
                 gameConfig.mapHeight = pendingLevel.height;
+                if (pendingLevel.bots != null) gameConfig.botCount = pendingLevel.bots;
+                if (pendingLevel.maxDice != null) gameConfig.maxDice = pendingLevel.maxDice;
+                if (pendingLevel.diceSides != null) gameConfig.diceSides = pendingLevel.diceSides;
             }
 
             this.game.startGame(gameConfig);
@@ -170,7 +173,8 @@ export class GameStarter {
 
         // Initialize AI for map/random (config and scenario done above)
         if (!pendingLevel || pendingLevel.type === 'map') {
-            this.initializePlayerAIs(config.botAI);
+            const botAI = (pendingLevel?.type === 'map' && pendingLevel?.botAI) || config.botAI;
+            this.initializePlayerAIs(botAI);
         }
 
         // Save the initial state for "Play Again" functionality

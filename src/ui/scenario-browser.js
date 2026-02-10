@@ -229,6 +229,31 @@ export class ScenarioBrowser {
         }
     }
 
+    /**
+     * Build level info string for preview (maxDice, diceSides, bots, botAI, mapStyle)
+     */
+    getLevelInfoLines(level) {
+        const lines = [];
+        const maxDice = level.maxDice ?? 9;
+        const diceSides = level.diceSides ?? 6;
+        lines.push(`Max ${maxDice} · ${diceSides}‑sided`);
+        if (level.type === 'config') {
+            const bots = level.bots ?? 1;
+            const botAI = level.botAI || 'easy';
+            const mapStyle = level.mapStyle || 'full';
+            const mapSize = level.mapSize || '6x6';
+            lines.push(`${mapSize} · ${mapStyle}`);
+            lines.push(`${bots} bot${bots !== 1 ? 's' : ''} · ${botAI}`);
+        } else {
+            const bots = (level.players || []).filter(p => p.isBot).length;
+            const aiIds = [...new Set((level.players || []).filter(p => p.isBot).map(p => p.aiId || 'easy'))];
+            const botAIStr = aiIds.length ? aiIds.join(', ') : (bots ? 'easy' : '—');
+            lines.push(`${level.width || '?'}×${level.height || '?'}`);
+            if (bots > 0) lines.push(`${bots} bot${bots !== 1 ? 's' : ''} · ${botAIStr}`);
+        }
+        return lines;
+    }
+
     async showHoverPreview(level, tile) {
         this.hideHoverPreview();
         const previewLevel = await this.getLevelForPreview(level);
@@ -241,6 +266,10 @@ export class ScenarioBrowser {
         canvas.style.setProperty('--preview-size', size + 'px');
         this.renderMinimap(canvas, previewLevel);
         el.appendChild(canvas);
+        const info = document.createElement('div');
+        info.className = 'level-hover-preview-info';
+        info.textContent = this.getLevelInfoLines(level).join(' · ');
+        el.appendChild(info);
         document.body.appendChild(el);
         const rect = tile.getBoundingClientRect();
         el.style.left = Math.min(rect.left, window.innerWidth - size - 16) + 'px';
@@ -272,6 +301,15 @@ export class ScenarioBrowser {
         const typeLabel = level.type === 'config' ? 'Procedural' : (level.type === 'map' ? 'Map' : 'Scenario');
         p.textContent = `${typeLabel} · Level ${index + 1}`;
         content.appendChild(p);
+        const infoBlock = document.createElement('div');
+        infoBlock.className = 'level-preview-info';
+        this.getLevelInfoLines(level).forEach(line => {
+            const span = document.createElement('span');
+            span.className = 'level-preview-info-line';
+            span.textContent = line;
+            infoBlock.appendChild(span);
+        });
+        content.appendChild(infoBlock);
 
         const buttons = [
             { text: 'Play', value: 'play', className: 'tron-btn primary' },
@@ -425,8 +463,8 @@ export class ScenarioBrowser {
         this.scenarioBrowserModal.classList.add('hidden');
 
         const template = {
-            width: 10,
-            height: 10,
+            width: 20,
+            height: 20,
             type: 'map',
             tiles: []
         };

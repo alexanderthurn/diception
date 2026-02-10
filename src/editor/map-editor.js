@@ -178,6 +178,20 @@ class EditorGameAdapter {
     }
 }
 
+// Config map size presets (slider 1-10)
+const CONFIG_MAP_SIZE_PRESETS = [
+    { width: 3, height: 3, label: '3×3' },
+    { width: 4, height: 4, label: '4×4' },
+    { width: 5, height: 5, label: '5×5' },
+    { width: 6, height: 6, label: '6×6' },
+    { width: 7, height: 7, label: '7×7' },
+    { width: 8, height: 8, label: '8×8' },
+    { width: 9, height: 9, label: '9×9' },
+    { width: 10, height: 10, label: '10×10' },
+    { width: 11, height: 11, label: '11×11' },
+    { width: 12, height: 12, label: '12×12' }
+];
+
 // Available AI difficulties
 const AVAILABLE_AIS = [
     { id: 'easy', name: 'Easy' },
@@ -205,6 +219,9 @@ export class MapEditor {
         this.isPainting = false;
         this.lastPaintedTile = null;
 
+        // Config preview rotation
+        this.configPreviewInterval = null;
+
         // Callback for when editor closes
         this.onClose = null;
 
@@ -215,7 +232,30 @@ export class MapEditor {
         this.originalGame = null;
     }
 
-    createEmptyState(width = 7, height = 7) {
+    /**
+     * Compute minimal grid bounds from painted tiles.
+     * Returns { width, height, minX, minY } and normalized tile data.
+     */
+    computeMinimalBounds() {
+        const entries = Array.from(this.state.tiles.entries());
+        if (entries.length === 0) return null;
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const [key] of entries) {
+            const [x, y] = key.split(',').map(Number);
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        }
+        return {
+            width: maxX - minX + 1,
+            height: maxY - minY + 1,
+            minX,
+            minY
+        };
+    }
+
+    createEmptyState(width = 20, height = 20) {
         return {
             name: 'New Map',
             description: '',
@@ -229,9 +269,12 @@ export class MapEditor {
             ],
             maxDice: 9,
             diceSides: 6,
+            mapBots: 2,
+            mapBotAI: 'easy',
 
             // Editor-only state
-            editorType: 'map', // 'map' or 'scenario'
+            editorType: 'map', // 'map', 'scenario', or 'config'
+            configData: null, // For type=config: { mapSize, mapStyle, gameMode, bots, botAI, maxDice, diceSides }
             currentMode: 'paint',
             selectedPlayer: 0,
             paintMode: 'add', // 'add' or 'remove'
@@ -285,6 +328,21 @@ export class MapEditor {
             // Editor type toggle
             editorTypeMapBtn: document.getElementById('editor-type-map'),
             editorTypeScenarioBtn: document.getElementById('editor-type-scenario'),
+            editorTypeConfigBtn: document.getElementById('editor-type-config'),
+            configSection: document.getElementById('editor-config-section'),
+            mapScenarioSection: document.getElementById('editor-map-scenario-section'),
+            quickActions: document.getElementById('editor-quick-actions'),
+            saveAsConfigBtn: document.getElementById('save-as-config-btn'),
+            editorMapSize: document.getElementById('editor-map-size'),
+            editorMapSizeVal: document.getElementById('editor-map-size-val'),
+            editorMapStyle: document.getElementById('editor-map-style'),
+            editorGameMode: document.getElementById('editor-game-mode'),
+            editorBots: document.getElementById('editor-bots'),
+            editorBotAI: document.getElementById('editor-bot-ai'),
+            editorConfigMaxDice: document.getElementById('editor-config-max-dice'),
+            editorConfigMaxDiceVal: document.getElementById('editor-config-max-dice-val'),
+            editorConfigDiceSides: document.getElementById('editor-config-dice-sides'),
+            editorConfigDiceSidesVal: document.getElementById('editor-config-dice-sides-val'),
 
             // Settings
             nameInput: document.getElementById('editor-name'),
@@ -312,13 +370,19 @@ export class MapEditor {
             dicePalette: document.getElementById('dice-palette'),
 
             // New Sections
-            playersSection: document.getElementById('editor-players-section'),
+            mapSettingsSection: document.getElementById('editor-map-settings-section'),
+            scenarioPlayersSection: document.getElementById('editor-scenario-players-section'),
+            scenarioColorLegend: document.getElementById('editor-scenario-color-legend'),
             diceSettingsSection: document.getElementById('editor-dice-settings-section'),
 
-            // Players
-            playerList: document.getElementById('editor-player-list'),
-            playerCountDisplay: document.getElementById('player-count-display'),
-            addPlayerBtn: document.getElementById('add-player-btn'),
+            // Map settings
+            editorMapBots: document.getElementById('editor-map-bots'),
+            editorMapBotAI: document.getElementById('editor-map-bot-ai'),
+
+            // Scenario player config
+            editorScenarioHumans: document.getElementById('editor-scenario-humans'),
+            editorScenarioBots: document.getElementById('editor-scenario-bots'),
+            editorScenarioBotAI: document.getElementById('editor-scenario-bot-ai'),
 
             // Actions
             saveAsMapBtn: document.getElementById('save-as-map-btn'),
@@ -353,6 +417,7 @@ export class MapEditor {
         // Editor type toggle
         this.elements.editorTypeMapBtn?.addEventListener('click', () => this.setEditorType('map'));
         this.elements.editorTypeScenarioBtn?.addEventListener('click', () => this.setEditorType('scenario'));
+        this.elements.editorTypeConfigBtn?.addEventListener('click', () => this.setEditorType('config'));
 
         // Settings changes
 
@@ -415,12 +480,46 @@ export class MapEditor {
             });
         });
 
-        // Add player button
-        this.elements.addPlayerBtn?.addEventListener('click', () => this.addPlayer());
+        // Map settings
+        this.elements.editorMapBots?.addEventListener('change', () => this.onMapSettingsChange());
+        this.elements.editorMapBotAI?.addEventListener('change', () => this.onMapSettingsChange());
+
+        // Scenario player config
+        this.elements.editorScenarioHumans?.addEventListener('change', () => this.onScenarioPlayersChange());
+        this.elements.editorScenarioBots?.addEventListener('change', () => this.onScenarioPlayersChange());
+        this.elements.editorScenarioBotAI?.addEventListener('change', () => this.onScenarioPlayersChange());
 
         // Save buttons
         this.elements.saveAsMapBtn?.addEventListener('click', () => this.saveAsMap());
         this.elements.saveAsScenarioBtn?.addEventListener('click', () => this.saveAsScenario());
+        this.elements.saveAsConfigBtn?.addEventListener('click', () => this.saveAsConfig());
+
+        // Config inputs - use 'input' for immediate feedback
+        this.elements.editorMapSize?.addEventListener('input', (e) => {
+            const idx = parseInt(e.target.value) - 1;
+            const preset = CONFIG_MAP_SIZE_PRESETS[Math.max(0, Math.min(idx, CONFIG_MAP_SIZE_PRESETS.length - 1))];
+            if (this.elements.editorMapSizeVal) this.elements.editorMapSizeVal.textContent = preset.label;
+            this.onConfigChange();
+        });
+        this.elements.editorMapStyle?.addEventListener('change', () => this.onConfigChange());
+        this.elements.editorGameMode?.addEventListener('change', () => this.onConfigChange());
+        this.elements.editorBots?.addEventListener('change', () => this.onConfigChange());
+        this.elements.editorBotAI?.addEventListener('change', () => this.onConfigChange());
+        this.elements.editorConfigMaxDice?.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            this.state.configData = this.state.configData || {};
+            this.state.configData.maxDice = val;
+            if (this.elements.editorConfigMaxDiceVal) this.elements.editorConfigMaxDiceVal.textContent = val;
+            this.onConfigChange();
+        });
+        this.elements.editorConfigDiceSides?.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            this.state.configData = this.state.configData || {};
+            this.state.configData.diceSides = val;
+            if (this.elements.editorConfigDiceSidesVal) this.elements.editorConfigDiceSidesVal.textContent = val;
+            this.renderer?.setDiceSides(val);
+            this.onConfigChange();
+        });
 
         // Quick actions
         this.elements.clearBtn?.addEventListener('click', () => this.clearGrid());
@@ -782,7 +881,8 @@ export class MapEditor {
         // Update UI to match state
         this.updateUIFromState();
         this.updateCampaignModeUI();
-        this.renderPlayerList();
+        if (this.state.editorType === 'scenario') this.syncScenarioConfigToUI();
+        this.syncMapSettingsToUI();
         this.renderPaintPalette();
         this.renderPlayerPalette();
         this.renderDicePalette();
@@ -801,6 +901,7 @@ export class MapEditor {
      * Close editor
      */
     close() {
+        this.stopConfigPreview();
         // Disable paint mode in renderer
         if (this.renderer && this.renderer.grid) {
             this.renderer.grid.setPaintMode(false);
@@ -873,7 +974,10 @@ export class MapEditor {
     updateCampaignModeUI() {
         const inCampaign = !!this.editorOptions;
         const row = (id) => this.elements[id]?.closest('.control-group');
-        [row('nameInput'), row('descriptionInput'), row('authorInput')].forEach(el => {
+        const hideInCampaign = [row('nameInput'), row('descriptionInput'), row('authorInput')];
+        const sizeRow = this.elements.widthSlider?.closest('.control-row');
+        if (sizeRow) hideInCampaign.push(sizeRow);
+        hideInCampaign.forEach(el => {
             if (el) el.style.display = inCampaign ? 'none' : '';
         });
     }
@@ -950,6 +1054,8 @@ export class MapEditor {
      * Handle tile click/drag interaction
      */
     handleTileInteraction(x, y, button = 0, shiftKey = false) {
+        if (this.state.editorType === 'config') return; // No editing in config mode
+
         const key = `${x},${y}`;
         const tile = this.state.tiles.get(key);
         const isRightClick = button === 2;
@@ -1065,7 +1171,7 @@ export class MapEditor {
     }
 
     /**
-     * Switch editor type (map vs scenario)
+     * Switch editor type (map vs scenario vs config)
      */
     setEditorType(type) {
         this.state.editorType = type;
@@ -1073,23 +1179,49 @@ export class MapEditor {
         // Update toggle button active states
         this.elements.editorTypeMapBtn?.classList.toggle('active', type === 'map');
         this.elements.editorTypeScenarioBtn?.classList.toggle('active', type === 'scenario');
+        this.elements.editorTypeConfigBtn?.classList.toggle('active', type === 'config');
 
         // Get mode tab buttons
         const paintTab = document.querySelector('.editor-tab[data-mode="paint"]');
         const assignTab = document.querySelector('.editor-tab[data-mode="assign"]');
         const diceTab = document.querySelector('.editor-tab[data-mode="dice"]');
 
-        if (type === 'map') {
+        if (type === 'config') {
+            this.stopConfigPreview();
+            this.elements.bottomBar?.classList.add('hidden');
+            this.elements.configSection?.classList.remove('hidden');
+            this.elements.mapScenarioSection?.classList.add('hidden');
+            this.elements.mapSettingsSection?.classList.add('hidden');
+            this.elements.scenarioPlayersSection?.classList.add('hidden');
+            this.elements.diceSettingsSection?.classList.add('hidden');
+            this.elements.saveAsMapBtn?.classList.add('hidden');
+            this.elements.saveAsScenarioBtn?.classList.add('hidden');
+            this.elements.saveAsConfigBtn?.classList.remove('hidden');
+            this.elements.quickActions?.classList.add('hidden');
+            if (this.renderer?.grid) {
+                this.renderer.grid.setPaintMode(false);
+            }
+            if (!this.state.configData) {
+                this.state.configData = { mapSize: '6x6', mapStyle: 'full', gameMode: 'classic', bots: 2, botAI: 'easy', maxDice: 8, diceSides: 6 };
+            }
+            this.syncConfigToUI();
+            this.regenerateConfigPreview();
+            this.startConfigPreview();
+        } else if (type === 'map') {
+            this.elements.configSection?.classList.add('hidden');
+            this.elements.mapScenarioSection?.classList.remove('hidden');
+            this.elements.quickActions?.classList.remove('hidden');
+            this.stopConfigPreview();
             // Map mode: hide entire bottom bar
             this.elements.bottomBar?.classList.add('hidden');
 
-            // Hide scenario-specific sections
-            this.elements.playersSection?.classList.add('hidden');
-            this.elements.diceSettingsSection?.classList.add('hidden');
+            this.elements.mapSettingsSection?.classList.remove('hidden');
+            this.elements.scenarioPlayersSection?.classList.add('hidden');
+            this.elements.diceSettingsSection?.classList.remove('hidden');
 
-            // Show map save button, hide scenario save button
             this.elements.saveAsMapBtn?.classList.remove('hidden');
             this.elements.saveAsScenarioBtn?.classList.add('hidden');
+            this.elements.saveAsConfigBtn?.classList.add('hidden');
 
             // Switch to paint mode internally
             this.state.currentMode = 'paint';
@@ -1100,19 +1232,24 @@ export class MapEditor {
                 this.renderer.grid.setPaintMode(true);
             }
         } else {
-            // Scenario mode: show bottom bar with Assign and Dice tabs only
+            this.elements.configSection?.classList.add('hidden');
+            this.elements.mapScenarioSection?.classList.remove('hidden');
+            this.elements.quickActions?.classList.remove('hidden');
+            this.stopConfigPreview();
             this.elements.bottomBar?.classList.remove('hidden');
             paintTab?.classList.add('hidden');
             assignTab?.classList.remove('hidden');
             diceTab?.classList.remove('hidden');
 
-            // Show scenario-specific sections
-            this.elements.playersSection?.classList.remove('hidden');
+            this.elements.mapSettingsSection?.classList.add('hidden');
+            this.elements.scenarioPlayersSection?.classList.remove('hidden');
             this.elements.diceSettingsSection?.classList.remove('hidden');
 
-            // Hide map save button, show scenario save button
             this.elements.saveAsMapBtn?.classList.add('hidden');
             this.elements.saveAsScenarioBtn?.classList.remove('hidden');
+            this.rebuildPlayersFromScenarioConfig();
+            this.renderScenarioColorLegend();
+            this.elements.saveAsConfigBtn?.classList.add('hidden');
 
             // Switch to assign mode
             this.setMode('assign');
@@ -1122,9 +1259,175 @@ export class MapEditor {
                 this.renderer.grid.invalidate(); // Force full redraw
                 this.renderer.grid.setPaintMode(false);
             }
+            this.elements.configSection?.classList.add('hidden');
+            this.elements.mapScenarioSection?.classList.remove('hidden');
+            this.stopConfigPreview();
         }
 
         this.renderToCanvas();
+    }
+
+    syncMapSettingsToUI() {
+        const bots = this.state.mapBots ?? 2;
+        const botAI = this.state.mapBotAI ?? 'easy';
+        if (this.elements.editorMapBots) this.elements.editorMapBots.value = String(bots);
+        if (this.elements.editorMapBotAI) this.elements.editorMapBotAI.value = botAI;
+    }
+
+    onMapSettingsChange() {
+        this.state.mapBots = parseInt(this.elements.editorMapBots?.value || '2', 10);
+        this.state.mapBotAI = this.elements.editorMapBotAI?.value || 'easy';
+        this.state.isDirty = true;
+    }
+
+    onScenarioPlayersChange() {
+        this.rebuildPlayersFromScenarioConfig();
+        this.renderScenarioColorLegend();
+        this.renderPlayerPalette();
+        this.state.isDirty = true;
+        this.renderToCanvas();
+    }
+
+    rebuildPlayersFromScenarioConfig() {
+        const humans = parseInt(this.elements.editorScenarioHumans?.value || '1', 10);
+        const bots = parseInt(this.elements.editorScenarioBots?.value || '1', 10);
+        const botAI = this.elements.editorScenarioBotAI?.value || 'easy';
+        const total = Math.max(2, Math.min(8, humans + bots));
+
+        const players = [];
+        for (let i = 0; i < total; i++) {
+            const isHuman = i < humans;
+            players.push({
+                id: i,
+                isBot: !isHuman,
+                color: DEFAULT_COLORS[i % DEFAULT_COLORS.length],
+                aiId: isHuman ? null : botAI
+            });
+        }
+
+        const oldPlayers = this.state.players;
+        const ownerRemap = {};
+        oldPlayers.forEach((p, i) => { ownerRemap[p.id] = i < total ? i : 0; });
+
+        for (const [key, tile] of this.state.tiles) {
+            const newOwner = ownerRemap[tile.owner] ?? 0;
+            if (newOwner !== tile.owner) tile.owner = newOwner;
+        }
+
+        this.state.players = players;
+        if (this.state.selectedPlayer >= players.length) this.state.selectedPlayer = 0;
+    }
+
+    renderScenarioColorLegend() {
+        const el = this.elements.scenarioColorLegend;
+        if (!el) return;
+        el.innerHTML = '';
+        this.state.players.forEach((p, i) => {
+            const colorHex = '#' + DEFAULT_COLORS[i % DEFAULT_COLORS.length].toString(16).padStart(6, '0');
+            const label = p.isBot ? `P${i + 1} Bot` : `P${i + 1} Human`;
+            const span = document.createElement('span');
+            span.className = 'editor-legend-item';
+            span.innerHTML = `<span class="editor-legend-swatch" style="background:${colorHex}"></span> ${label}`;
+            el.appendChild(span);
+        });
+    }
+
+    syncConfigFromUI() {
+        const sliderVal = parseInt(this.elements.editorMapSize?.value || '4', 10);
+        const preset = CONFIG_MAP_SIZE_PRESETS[Math.max(0, Math.min(sliderVal - 1, CONFIG_MAP_SIZE_PRESETS.length - 1))];
+        const mapSize = `${preset.width}x${preset.height}`;
+        this.state.configData = {
+            mapSize,
+            mapStyle: this.elements.editorMapStyle?.value || 'full',
+            gameMode: this.elements.editorGameMode?.value || 'classic',
+            bots: parseInt(this.elements.editorBots?.value || '1', 10),
+            botAI: this.elements.editorBotAI?.value || 'easy',
+            maxDice: parseInt(this.elements.editorConfigMaxDice?.value || '8', 10),
+            diceSides: parseInt(this.elements.editorConfigDiceSides?.value || '6', 10)
+        };
+    }
+
+    syncConfigToUI() {
+        const cfg = this.state.configData || {};
+        const mapSize = cfg.mapSize || '6x6';
+        const [w, h] = mapSize.split('x').map(Number);
+        const presetIdx = CONFIG_MAP_SIZE_PRESETS.findIndex(p => p.width === w && p.height === h);
+        const sliderVal = presetIdx >= 0 ? presetIdx + 1 : 4;
+        if (this.elements.editorMapSize) {
+            this.elements.editorMapSize.value = sliderVal;
+            if (this.elements.editorMapSizeVal) {
+                this.elements.editorMapSizeVal.textContent = CONFIG_MAP_SIZE_PRESETS[sliderVal - 1]?.label || mapSize;
+            }
+        }
+        if (this.elements.editorMapStyle) this.elements.editorMapStyle.value = cfg.mapStyle || 'full';
+        if (this.elements.editorGameMode) this.elements.editorGameMode.value = cfg.gameMode || 'classic';
+        if (this.elements.editorBots) this.elements.editorBots.value = String(cfg.bots ?? 1);
+        if (this.elements.editorBotAI) this.elements.editorBotAI.value = cfg.botAI || 'easy';
+        if (this.elements.editorConfigMaxDice) {
+            this.elements.editorConfigMaxDice.value = cfg.maxDice ?? 8;
+            if (this.elements.editorConfigMaxDiceVal) this.elements.editorConfigMaxDiceVal.textContent = cfg.maxDice ?? 8;
+        }
+        if (this.elements.editorConfigDiceSides) {
+            this.elements.editorConfigDiceSides.value = cfg.diceSides ?? 6;
+            if (this.elements.editorConfigDiceSidesVal) this.elements.editorConfigDiceSidesVal.textContent = cfg.diceSides ?? 6;
+        }
+    }
+
+    async onConfigChange() {
+        this.syncConfigFromUI();
+        await this.regenerateConfigPreview();
+        this.renderToCanvas();
+        this.state.isDirty = true;
+    }
+
+    async regenerateConfigPreview() {
+        const cfg = this.state.configData;
+        if (!cfg) return;
+        const { MapManager } = await import('../core/map.js');
+        const [w, h] = (cfg.mapSize || '6x6').split('x').map(Number);
+        const botCount = Math.max(0, cfg.bots ?? 1);
+        const players = [
+            { id: 0, isBot: false, color: DEFAULT_COLORS[0], aiId: null },
+            ...Array.from({ length: botCount }, (_, i) => ({
+                id: i + 1, isBot: true, color: DEFAULT_COLORS[(i + 1) % DEFAULT_COLORS.length], aiId: cfg.botAI || 'easy'
+            }))
+        ];
+        const map = new MapManager();
+        map.generateMap(w, h, players, cfg.maxDice ?? 8, cfg.mapStyle || 'full');
+        this.state.width = map.width;
+        this.state.height = map.height;
+        this.state.maxDice = cfg.maxDice ?? 8;
+        this.state.diceSides = cfg.diceSides ?? 6;
+        this.state.players = players;
+        this.state.tiles.clear();
+        for (let y = 0; y < map.height; y++) {
+            for (let x = 0; x < map.width; x++) {
+                const t = map.tiles[y * map.width + x];
+                if (t && !t.blocked) {
+                    const key = `${x},${y}`;
+                    this.state.tiles.set(key, { owner: t.owner, dice: t.dice || 1 });
+                }
+            }
+        }
+        this.gameAdapter.syncFromState();
+        if (this.renderer?.grid) this.renderer.grid.invalidate();
+    }
+
+    startConfigPreview() {
+        this.stopConfigPreview();
+        this.configPreviewInterval = setInterval(() => {
+            if (this.state.editorType === 'config' && this.isOpen) {
+                this.regenerateConfigPreview();
+                this.renderToCanvas();
+            }
+        }, 1500);
+    }
+
+    stopConfigPreview() {
+        if (this.configPreviewInterval) {
+            clearInterval(this.configPreviewInterval);
+            this.configPreviewInterval = null;
+        }
     }
 
     /**
@@ -1145,129 +1448,13 @@ export class MapEditor {
     }
 
 
-    /**
-     * Add a new player
-     */
-    addPlayer() {
-        if (this.state.players.length >= 8) return;
-
-        const newId = this.state.players.length;
-        this.state.players.push({
-            id: newId,
-            isBot: true,
-            color: DEFAULT_COLORS[newId % DEFAULT_COLORS.length],
-            aiId: 'easy'
-        });
-
-        this.state.isDirty = true;
-        this.renderPlayerList();
-        this.renderPlayerPalette();
-    }
-
-    /**
-     * Remove a player
-     */
-    removePlayer(id) {
-        if (this.state.players.length <= 2) return;
-
-        for (const tile of this.state.tiles.values()) {
-            if (tile.owner === id) {
-                tile.owner = 0;
-            }
-        }
-
-        this.state.players = this.state.players.filter(p => p.id !== id);
-
-        this.state.players.forEach((p, i) => {
-            const oldId = p.id;
-            p.id = i;
-            for (const tile of this.state.tiles.values()) {
-                if (tile.owner === oldId) {
-                    tile.owner = i;
-                }
-            }
-        });
-
-        if (this.state.selectedPlayer >= this.state.players.length) {
-            this.state.selectedPlayer = 0;
-        }
-
-        this.state.isDirty = true;
-        this.renderPlayerList();
-        this.renderPlayerPalette();
-        this.renderToCanvas();
-    }
-
-    /**
-     * Update player properties
-     */
-    updatePlayer(id, changes) {
-        const player = this.state.players.find(p => p.id === id);
-        if (player) {
-            Object.assign(player, changes);
-            this.state.isDirty = true;
-            this.renderPlayerList();
-            this.renderPlayerPalette();
-            this.renderToCanvas();
-        }
-    }
-
-    /**
-     * Render the player list in settings panel
-     */
-    renderPlayerList() {
-        const container = this.elements.playerList;
-        if (!container) return;
-        container.innerHTML = '';
-
-        if (this.elements.playerCountDisplay) {
-            this.elements.playerCountDisplay.textContent = `(${this.state.players.length})`;
-        }
-
-        const ais = AVAILABLE_AIS;
-
-        this.state.players.forEach(player => {
-            const row = document.createElement('div');
-            row.className = 'editor-player-row';
-
-            const colorHex = '#' + player.color.toString(16).padStart(6, '0');
-
-            row.innerHTML = `
-                <div class="editor-player-color" style="background-color: ${colorHex}"></div>
-                <span class="editor-player-label">P${player.id + 1}</span>
-                <select class="editor-player-type" data-player-id="${player.id}">
-                    <option value="human" ${!player.isBot ? 'selected' : ''}>Human</option>
-                    <option value="bot" ${player.isBot ? 'selected' : ''}>Bot</option>
-                </select>
-                <select class="editor-player-ai ${!player.isBot ? 'hidden' : ''}" data-player-id="${player.id}">
-                    ${ais.map(ai => `<option value="${ai.id}" ${player.aiId === ai.id ? 'selected' : ''}>${ai.name}</option>`).join('')}
-                </select>
-                <span class="editor-player-remove" data-player-id="${player.id}" title="Remove player">×</span>
-            `;
-
-            container.appendChild(row);
-
-            const typeSelect = row.querySelector('.editor-player-type');
-            const aiSelect = row.querySelector('.editor-player-ai');
-            const removeBtn = row.querySelector('.editor-player-remove');
-
-            typeSelect.addEventListener('change', (e) => {
-                const isBot = e.target.value === 'bot';
-                this.updatePlayer(player.id, { isBot, aiId: isBot ? 'easy' : null });
-            });
-
-            aiSelect.addEventListener('change', (e) => {
-                this.updatePlayer(player.id, { aiId: e.target.value });
-            });
-
-            removeBtn.addEventListener('click', () => {
-                this.removePlayer(player.id);
-            });
-        });
-
-        if (this.elements.addPlayerBtn) {
-            this.elements.addPlayerBtn.style.display = this.state.players.length >= 8 ? 'none' : '';
-        }
+    syncScenarioConfigToUI() {
+        const humans = this.state.players.filter(p => !p.isBot).length;
+        const bots = this.state.players.filter(p => p.isBot).length;
+        const botAI = this.state.players.find(p => p.isBot)?.aiId || 'easy';
+        if (this.elements.editorScenarioHumans) this.elements.editorScenarioHumans.value = String(Math.max(1, humans));
+        if (this.elements.editorScenarioBots) this.elements.editorScenarioBots.value = String(Math.max(1, bots));
+        if (this.elements.editorScenarioBotAI) this.elements.editorScenarioBotAI.value = botAI;
     }
 
     /**
@@ -1370,13 +1557,20 @@ export class MapEditor {
             return null;
         }
 
+        const bounds = this.computeMinimalBounds();
+        if (!bounds) return null;
+
         const mapData = {
             type: 'map',
-            width: this.state.width,
-            height: this.state.height,
+            width: bounds.width,
+            height: bounds.height,
+            bots: this.state.mapBots ?? 2,
+            botAI: this.state.mapBotAI ?? 'easy',
+            maxDice: this.state.maxDice ?? 9,
+            diceSides: this.state.diceSides ?? 6,
             tiles: Array.from(this.state.tiles.entries()).map(([key]) => {
                 const [x, y] = key.split(',').map(Number);
-                return { x, y };
+                return { x: x - bounds.minX, y: y - bounds.minY };
             })
         };
 
@@ -1458,22 +1652,25 @@ export class MapEditor {
             this.renderToCanvas();
         }
 
+        const bounds = this.computeMinimalBounds();
+        if (!bounds) return null;
+
         const scenarioData = {
             type: 'scenario',
-            width: this.state.width,
-            height: this.state.height,
+            width: bounds.width,
+            height: bounds.height,
             maxDice: this.state.maxDice,
             diceSides: this.state.diceSides,
             players: this.state.players.map(p => ({
                 id: p.id,
                 isBot: p.isBot,
-                color: p.color,
+                color: DEFAULT_COLORS[p.id % DEFAULT_COLORS.length],
                 storedDice: 0,
                 aiId: p.aiId
             })),
             tiles: Array.from(this.state.tiles.entries()).map(([key, tile]) => {
                 const [x, y] = key.split(',').map(Number);
-                return { x, y, owner: tile.owner, dice: tile.dice || 1 };
+                return { x: x - bounds.minX, y: y - bounds.minY, owner: tile.owner, dice: tile.dice || 1 };
             })
         };
 
@@ -1517,12 +1714,63 @@ export class MapEditor {
     }
 
     /**
-     * Import from existing scenario/map
+     * Save as config (procedural level)
+     */
+    async saveAsConfig() {
+        this.syncConfigFromUI();
+        const cfg = this.state.configData;
+        if (!cfg) {
+            this.showStatus('Invalid config', 'error');
+            return null;
+        }
+        const configData = {
+            type: 'config',
+            mapSize: cfg.mapSize || '6x6',
+            mapStyle: cfg.mapStyle || 'full',
+            gameMode: cfg.gameMode || 'classic',
+            bots: Math.max(0, cfg.bots ?? 1),
+            botAI: cfg.botAI || 'easy',
+            maxDice: cfg.maxDice ?? 8,
+            diceSides: cfg.diceSides ?? 6
+        };
+        if (this.editorOptions?.onSave) {
+            try {
+                this.editorOptions.onSave(configData);
+                this.state.isDirty = false;
+                this.showStatus('Saved!', 'success');
+                this.close();
+                return configData;
+            } catch (e) {
+                this.showStatus('Failed to save', 'error');
+                return null;
+            }
+        }
+        this.showStatus('Config save only supported in campaign', 'error');
+        return null;
+    }
+
+    /**
+     * Import from existing scenario/map/config
      */
     importFromScenario(scenario) {
-        this.state = this.createEmptyState(scenario.width || 7, scenario.height || 7);
+        this.state = this.createEmptyState(20, 20);
 
-        this.state.editorType = scenario.type === 'scenario' ? 'scenario' : 'map';
+        if (scenario.type === 'config') {
+            this.state.editorType = 'config';
+            this.state.configData = {
+                mapSize: scenario.mapSize || '6x6',
+                mapStyle: scenario.mapStyle || 'full',
+                gameMode: scenario.gameMode || 'classic',
+                bots: scenario.bots ?? 1,
+                botAI: scenario.botAI || 'easy',
+                maxDice: scenario.maxDice ?? 8,
+                diceSides: scenario.diceSides ?? 6
+            };
+        } else {
+            this.state.editorType = scenario.type === 'scenario' ? 'scenario' : 'map';
+            this.state.mapBots = scenario.bots ?? 2;
+            this.state.mapBotAI = scenario.botAI ?? 'easy';
+        }
         if (!this.editorOptions) {
             this.state.name = scenario.isBuiltIn ? scenario.name + ' (Copy)' : (scenario.name || '');
             this.state.description = scenario.description || '';
@@ -1535,7 +1783,7 @@ export class MapEditor {
             this.state.players = scenario.players.map(p => ({
                 id: p.id,
                 isBot: p.isBot !== undefined ? p.isBot : true,
-                color: p.color || DEFAULT_COLORS[p.id % DEFAULT_COLORS.length],
+                color: DEFAULT_COLORS[p.id % DEFAULT_COLORS.length],
                 aiId: p.aiId || (p.isBot ? 'easy' : null)
             }));
         }

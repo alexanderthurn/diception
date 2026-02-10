@@ -483,14 +483,90 @@
 
                 <div class="control-group editor-type-toggle">
                     <label>Editor Type</label>
-                    <div class="toggle-buttons">
-                        <button id="editor-type-map" class="toggle-btn active">🗺️ Map</button>
-                        <button id="editor-type-scenario" class="toggle-btn">⭐ Scenario</button>
+                    <div class="toggle-buttons toggle-buttons-stacked">
+                        <button id="editor-type-map" class="toggle-btn active"><span class="toggle-icon">🗺️</span><span class="toggle-text">Map</span></button>
+                        <button id="editor-type-scenario" class="toggle-btn"><span class="toggle-icon">⭐</span><span class="toggle-text">Scenario</span></button>
+                        <button id="editor-type-config" class="toggle-btn"><span class="toggle-icon">🎲</span><span class="toggle-text">Config</span></button>
                     </div>
                 </div>
 
                 <hr class="editor-divider">
 
+                <!-- Config-specific (procedural) - shown only when type=config (no map editing) -->
+                <div id="editor-config-section" class="editor-config-section hidden">
+                    <div class="control-group">
+                        <label>Map Size</label>
+                        <div class="range-row">
+                            <input type="range" id="editor-map-size" min="1" max="10" value="4">
+                            <span id="editor-map-size-val">6×6</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>Map Style</label>
+                        <select id="editor-map-style">
+                            <option value="random">Random</option>
+                            <option value="full">Full Grid</option>
+                            <option value="continents">Continents</option>
+                            <option value="caves">Caves</option>
+                            <option value="islands">Islands</option>
+                            <option value="maze">Maze</option>
+                            <option value="tunnels">Tunnels</option>
+                            <option value="swiss">Swiss Cheese</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Start Mode</label>
+                        <select id="editor-game-mode">
+                            <option value="classic" selected>Classic</option>
+                            <option value="fair">Fair Start</option>
+                            <option value="madness">Full Madness</option>
+                            <option value="2of2">2 of 2</option>
+                        </select>
+                    </div>
+                    <div class="control-row">
+                        <div class="control-group half">
+                            <label>Bots</label>
+                            <select id="editor-bots">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2" selected>2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                            </select>
+                        </div>
+                        <div class="control-group half">
+                            <label>Bot AI</label>
+                            <select id="editor-bot-ai">
+                                <option value="easy" selected>Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="control-row">
+                        <div class="control-group half">
+                            <label>Max Dice</label>
+                            <div class="range-row">
+                                <input type="range" id="editor-config-max-dice" min="2" max="12" value="8">
+                                <span id="editor-config-max-dice-val">8</span>
+                            </div>
+                        </div>
+                        <div class="control-group half">
+                            <label>Dice Sides</label>
+                            <div class="range-row">
+                                <input type="range" id="editor-config-dice-sides" min="1" max="12" value="6">
+                                <span id="editor-config-dice-sides-val">6</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map/Scenario-specific - hidden when type=config -->
+                <div id="editor-map-scenario-section">
                 <div class="control-group">
                     <label>Name</label>
                     <input type="text" id="editor-name" placeholder="My Map" maxlength="40">
@@ -527,10 +603,75 @@
 
                 <hr class="editor-divider">
 
-                <div class="control-group" id="editor-players-section">
-                    <label>Players <span id="player-count-display">(2)</span></label>
-                    <div id="editor-player-list" class="editor-player-list"></div>
-                    <button id="add-player-btn" class="tron-btn small">+ Add Player</button>
+                <!-- Map type: Bots, Bot AI, Max Dice, Dice Sides -->
+                <div id="editor-map-settings-section" class="hidden">
+                    <div class="control-row">
+                        <div class="control-group half">
+                            <label>Bots</label>
+                            <select id="editor-map-bots">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2" selected>2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                            </select>
+                        </div>
+                        <div class="control-group half">
+                            <label>Bot AI</label>
+                            <select id="editor-map-bot-ai">
+                                <option value="easy" selected>Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scenario type: Humans, Bots, Bot AI + color legend -->
+                <div id="editor-scenario-players-section" class="hidden">
+                    <div class="control-row">
+                        <div class="control-group third">
+                            <label>Humans</label>
+                            <select id="editor-scenario-humans">
+                                <option value="0">0</option>
+                                <option value="1" selected>1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                            </select>
+                        </div>
+                        <div class="control-group third">
+                            <label>Bots</label>
+                            <select id="editor-scenario-bots">
+                                <option value="0">0</option>
+                                <option value="1" selected>1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                            </select>
+                        </div>
+                        <div class="control-group third">
+                            <label>Bot AI</label>
+                            <select id="editor-scenario-bot-ai">
+                                <option value="easy" selected>Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="editor-scenario-color-legend" class="editor-color-legend"></div>
                 </div>
 
                 <hr class="editor-divider">
@@ -551,15 +692,17 @@
                         </div>
                     </div>
                 </div>
+                </div>
 
                 <hr class="editor-divider">
 
                 <div class="editor-actions">
                     <button id="save-as-map-btn" class="tron-btn">💾 SAVE MAP</button>
                     <button id="save-as-scenario-btn" class="tron-btn hidden">💾 SAVE SCENARIO</button>
+                    <button id="save-as-config-btn" class="tron-btn hidden">💾 SAVE CONFIG</button>
                 </div>
 
-                <div class="editor-quick-actions">
+                <div class="editor-quick-actions" id="editor-quick-actions">
                     <button id="editor-clear-btn" class="tron-btn small">Clear</button>
                     <button id="editor-fill-btn" class="tron-btn small">Fill</button>
                 </div>
