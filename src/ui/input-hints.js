@@ -9,6 +9,8 @@ export const ACTION_MOVE_DOWN = 'move_down';
 export const ACTION_MOVE_LEFT = 'move_left';
 export const ACTION_MOVE_RIGHT = 'move_right';
 export const ACTION_END_TURN = 'end_turn';
+export const ACTION_ASSIGN = 'assign';
+export const ACTION_DICE = 'dice';
 
 /**
  * Detect active input type based on connected devices
@@ -63,7 +65,9 @@ export function getInputHint(action, inputManager) {
             [ACTION_MOVE_DOWN]: { label: 'S', type: 'keyboard', style: 'keyboard' },
             [ACTION_MOVE_LEFT]: { label: 'A', type: 'keyboard', style: 'keyboard' },
             [ACTION_MOVE_RIGHT]: { label: 'D', type: 'keyboard', style: 'keyboard' },
-            [ACTION_END_TURN]: { label: 'Space', type: 'keyboard', style: 'keyboard' }
+            [ACTION_END_TURN]: { label: 'Space', type: 'keyboard', style: 'keyboard' },
+            [ACTION_ASSIGN]: { label: 'R', type: 'keyboard', style: 'keyboard' },
+            [ACTION_DICE]: { label: 'F', type: 'keyboard', style: 'keyboard' }
         },
         gamepad: {
             // D-pad buttons for Xbox layout
@@ -71,8 +75,9 @@ export function getInputHint(action, inputManager) {
             [ACTION_MOVE_DOWN]: { label: '▼', type: 'gamepad', style: 'gamepad-dpad' },
             [ACTION_MOVE_LEFT]: { label: '◄', type: 'gamepad', style: 'gamepad-dpad' },
             [ACTION_MOVE_RIGHT]: { label: '►', type: 'gamepad', style: 'gamepad-dpad' },
-            // Y button (yellow) for end turn
-            [ACTION_END_TURN]: { label: 'Y', type: 'gamepad', style: 'gamepad-y' }
+            [ACTION_END_TURN]: { label: 'Y', type: 'gamepad', style: 'gamepad-y' },
+            [ACTION_ASSIGN]: { label: '◄', type: 'gamepad', style: 'gamepad-dpad' },
+            [ACTION_DICE]: { label: '►', type: 'gamepad', style: 'gamepad-dpad' }
         }
     };
 

@@ -133,6 +133,7 @@ async function init() {
     const turnHistory = new TurnHistory();
     const mapEditor = new MapEditor(scenarioManager);
     mapEditor.setRenderer(renderer);
+    mapEditor.setInputManager(inputManager);
     mapEditor.init();
 
     const configManager = new ConfigManager();
@@ -142,6 +143,7 @@ async function init() {
     // Update gamepad status in menu
     inputManager.on('gamepadChange', (indices) => {
         configManager.updateGamepadStatus(indices);
+        mapEditor.updateEditorInputHints?.();
     });
     // Initial update in case gamepads are already connected
     configManager.updateGamepadStatus(Array.from(inputManager.connectedGamepadIndices || []));

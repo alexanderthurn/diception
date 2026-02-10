@@ -8,6 +8,7 @@
 // No longer using generateScenarioId
 import { Dialog } from '../ui/dialog.js';
 import { GAME } from '../core/constants.js';
+import { getInputHint, ACTION_ASSIGN, ACTION_DICE } from '../ui/input-hints.js';
 
 
 // Default player colors
@@ -211,6 +212,7 @@ export class MapEditor {
 
         // Reference to the main renderer (will be set from main.js)
         this.renderer = null;
+        this.inputManager = null;
 
         // UI elements (cached after init)
         this.elements = {};
@@ -285,11 +287,28 @@ export class MapEditor {
         };
     }
 
-    /**
-     * Set the renderer reference (call from main.js)
-     */
     setRenderer(renderer) {
         this.renderer = renderer;
+    }
+
+    setInputManager(inputManager) {
+        this.inputManager = inputManager;
+    }
+
+    updateEditorInputHints() {
+        if (!this.inputManager) return;
+        const assignHint = getInputHint(ACTION_ASSIGN, this.inputManager);
+        const diceHint = getInputHint(ACTION_DICE, this.inputManager);
+        const assignEl = document.getElementById('editor-assign-hint');
+        const diceEl = document.getElementById('editor-dice-hint');
+        if (assignHint && assignEl) {
+            assignEl.textContent = assignHint.label;
+            assignEl.className = 'input-hint ' + assignHint.style;
+        }
+        if (diceHint && diceEl) {
+            diceEl.textContent = diceHint.label;
+            diceEl.className = 'input-hint ' + diceHint.style;
+        }
     }
 
     /**
@@ -491,33 +510,64 @@ export class MapEditor {
         this.elements.clearBtn?.addEventListener('click', () => this.clearGrid());
         this.elements.fillBtn?.addEventListener('click', () => this.fillGrid());
 
-        // Keyboard shortcuts
+        // Keyboard shortcuts (capture phase so we can handle WASD/arrows before InputManager)
         document.addEventListener('keydown', (e) => {
             if (!this.isOpen) return;
 
             // Ignore if typing in input fields
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
+            const key = e.key.toLowerCase();
+
+            // WASD and arrow keys: pan the map (inverted - W/Up pans down, etc.)
+            const panMap = {
+                'w': { x: 0, y: 1 }, 'arrowup': { x: 0, y: 1 },
+                's': { x: 0, y: -1 }, 'arrowdown': { x: 0, y: -1 },
+                'a': { x: 1, y: 0 }, 'arrowleft': { x: 1, y: 0 },
+                'd': { x: -1, y: 0 }, 'arrowright': { x: -1, y: 0 }
+            };
+            if (panMap[key] && this.renderer) {
+                const panSpeed = 15;
+                this.renderer.pan(panMap[key].x * panSpeed, panMap[key].y * panSpeed);
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return;
+            }
+
             if (e.key === 'Escape') {
                 this.close();
-            } else if (e.key.toLowerCase() === 'y') {
+            } else if (key === 'y') {
                 this.setMode('paint');
-            } else if (e.key.toLowerCase() === 'a') {
+            } else if (key === 'r') {
                 this.setMode('assign');
-            } else if (e.key.toLowerCase() === 'd') {
+            } else if (key === 'f') {
                 this.setMode('dice');
             } else {
                 // Handle number/letter keys for direct value input
                 const keyMap = {
                     '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
-                    'q': 10, 'w': 11, 'e': 12, 'r': 13, 't': 14, 'z': 15, 'u': 16
+                    'q': 10, 'e': 11, 't': 12, 'z': 13, 'u': 14, 'g': 15, 'b': 16
                 };
-                const value = keyMap[e.key.toLowerCase()];
+                const value = keyMap[key];
                 if (value !== undefined) {
                     this.handleNumberKey(value);
                 }
             }
-        });
+        }, true); // capture: true so we run before InputManager for WASD/arrows
+
+        // Gamepad: move event for pan and D-pad Left/Right for Assign/Dice
+        this.boundMoveHandler = (data) => {
+            if (!this.isOpen || !this.renderer) return;
+            const { x: dx, y: dy } = data;
+            const panSpeed = 15;
+            if (dx !== 0 && dy === 0) {
+                if (dx === -1) this.setMode('dice');
+                else if (dx === 1) this.setMode('assign');
+            } else if (dx !== 0 || dy !== 0) {
+                this.renderer.pan(-dx * panSpeed, -dy * panSpeed);
+            }
+        };
+        this.inputManager?.on('move', this.boundMoveHandler);
     }
 
     /**
@@ -714,16 +764,26 @@ export class MapEditor {
     onCanvasMouseDown(e) {
         if (!this.isOpen) return;
 
+        // Close Random dialog when user clicks on map
+        this.setRandomDialogOpen(false);
+
         // Middle click (1) is for panning (handled by InputController)
         if (e.button === 1) return;
 
         const tile = this.screenToTile(e.clientX, e.clientY);
         if (tile) {
             this.isPainting = true;
-            this.handleTileInteraction(tile.x, tile.y, e.button, e.shiftKey, true); // true = mouse/desktop
-            this.lastPaintedTile = `${tile.x},${tile.y}`;
+            this.mouseStrokeStartTile = { x: tile.x, y: tile.y };
+            this.mouseStrokeMovedToOther = false;
             this.currentInteractionButton = e.button;
             this.currentInteractionShift = e.shiftKey;
+            this.lastPaintedTile = `${tile.x},${tile.y}`;
+
+            const isScenarioLeft = this.state.editorType === 'scenario' && e.button === 0 &&
+                (this.state.currentMode === 'assign' || this.state.currentMode === 'dice');
+            if (e.button === 2 || !isScenarioLeft) {
+                this.handleTileInteraction(tile.x, tile.y, e.button, e.shiftKey, true);
+            }
         }
     }
 
@@ -748,6 +808,17 @@ export class MapEditor {
         if (this.isPainting && tile) {
             const key = `${tile.x},${tile.y}`;
             if (this.lastPaintedTile !== key) {
+                this.mouseStrokeMovedToOther = true;
+                if (this.state.editorType === 'scenario' && this.currentInteractionButton === 0 &&
+                    (this.state.currentMode === 'assign' || this.state.currentMode === 'dice')) {
+                    if (this.mouseBrushValue === null && this.mouseStrokeStartTile) {
+                        const sk = `${this.mouseStrokeStartTile.x},${this.mouseStrokeStartTile.y}`;
+                        const startTile = this.state.tiles.get(sk);
+                        this.mouseBrushValue = startTile
+                            ? { owner: startTile.owner, dice: startTile.dice || 1 }
+                            : { owner: 0, dice: 1 };
+                    }
+                }
                 this.handleTileInteraction(tile.x, tile.y, this.currentInteractionButton, this.currentInteractionShift, true);
                 this.lastPaintedTile = key;
             }
@@ -758,15 +829,25 @@ export class MapEditor {
     }
 
     onCanvasMouseUp() {
+        if (this.isPainting && this.mouseStrokeStartTile && !this.mouseStrokeMovedToOther &&
+            this.currentInteractionButton === 0 && this.state.editorType === 'scenario' &&
+            (this.state.currentMode === 'assign' || this.state.currentMode === 'dice')) {
+            const key = `${this.mouseStrokeStartTile.x},${this.mouseStrokeStartTile.y}`;
+            this.handleTileInteraction(this.mouseStrokeStartTile.x, this.mouseStrokeStartTile.y, 0, false, false);
+        }
         this.isPainting = false;
         this.lastPaintedTile = null;
+        this.mouseStrokeStartTile = null;
+        this.mouseStrokeMovedToOther = false;
         this.currentInteractionButton = null;
         this.currentInteractionShift = false;
-        this.mouseBrushValue = null; // Next mousedown will sample again
+        this.mouseBrushValue = null;
     }
 
     onCanvasTouchStart(e) {
         if (!this.isOpen) return;
+
+        this.setRandomDialogOpen(false);
 
         const touch = e.touches[0];
         const tile = this.screenToTile(touch.clientX, touch.clientY);
@@ -843,6 +924,8 @@ export class MapEditor {
         this.elements.setupModal?.classList.add('hidden');
         this.elements.overlay?.classList.remove('hidden');
         if (this.renderer) this.renderer.editorActive = true;
+
+        this.updateEditorInputHints();
 
         // Set slider limits from GAME constants
         if (this.elements.maxDiceSelect) {
@@ -1220,8 +1303,8 @@ export class MapEditor {
             this.rebuildPlayersFromScenarioConfig();
             this.renderColorLegend();
 
-            // Switch to assign mode
-            this.setMode('assign');
+            // Switch to dice mode (default for scenario)
+            this.setMode('dice');
 
             // Disable paint mode on renderer (tiles render with colors)
             if (this.renderer && this.renderer.grid) {

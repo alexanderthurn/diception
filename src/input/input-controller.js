@@ -60,6 +60,7 @@ export class InputController {
     }
 
     onMove(data) {
+        if (this.renderer.editorActive) return;
         const { x: dx, y: dy, index } = data;
         if (!this.game.players || this.game.players.length === 0) return;
         if (this.game.gameOver) return;
