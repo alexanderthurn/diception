@@ -456,7 +456,7 @@ export class GameEventManager {
             if (campaign) {
                 if (hasNextLevel) buttons.push({ text: 'Next Level', value: 'next', className: 'tron-btn primary' });
                 buttons.push({ text: 'Back to Campaign', value: 'campaign', className: 'tron-btn' });
-                buttons.push({ text: 'Main Menu', value: 'restart', className: 'tron-btn' });
+                /* No Main Menu when Back to Campaign is shown - user can reach it from campaign screen */
             }
         }
         if (buttons.length === 0) {

@@ -3693,6 +3693,13 @@ canvas {
     margin-top: 30px;
 }
 
+/* Game-over (winning) screen: less side padding on mobile */
+@media (max-width: 600px) {
+    .dialog-overlay:has(.game-over-content) .dialog-box {
+        max-width: calc(100vw - 20px);
+    }
+}
+
 .level-preview-actions {
     flex-direction: column;
     align-items: center;
