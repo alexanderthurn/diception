@@ -2345,6 +2345,16 @@ select {
     color: rgba(0, 0, 0, 0.6);
 }
 
+.list-item-campaign-check {
+    margin-right: 6px;
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+.scenario-list-item.selected .list-item-campaign-check {
+    color: #000;
+}
+
 .list-item-name {
     white-space: nowrap;
     overflow: hidden;

@@ -171,8 +171,10 @@ export class ScenarioBrowser {
                 const opt = document.createElement('option');
                 opt.value = c.owner;
                 const levelCount = c.levels?.length ?? 0;
+                const solvedCount = getSolvedLevels(c.owner).length;
+                const allComplete = levelCount > 0 && solvedCount >= levelCount;
                 const displayName = c.isUserCampaign ? 'Your Campaign' : c.owner;
-                opt.textContent = `${displayName} (${levelCount} levels)`;
+                opt.textContent = allComplete ? `✓ ${displayName} (${levelCount} levels)` : `${displayName} (${levelCount} levels)`;
                 this.campaignSelect.appendChild(opt);
             }
             );
@@ -193,8 +195,11 @@ export class ScenarioBrowser {
             item.className = 'scenario-list-item' + (this.selectedCampaign?.owner === c.owner ? ' selected' : '');
             item.dataset.owner = c.owner;
             const levelCount = c.levels?.length ?? 0;
+            const solvedCount = getSolvedLevels(c.owner).length;
+            const allComplete = levelCount > 0 && solvedCount >= levelCount;
             const displayName = c.isUserCampaign ? 'Your Campaign' : c.owner;
             item.innerHTML = `
+                <span class="list-item-campaign-check">${allComplete ? '✓' : ''}</span>
                 <span class="list-item-name">${displayName}</span>
                 <span class="list-item-date">${levelCount} levels</span>
             `;
