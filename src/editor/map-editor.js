@@ -406,7 +406,9 @@ export class MapEditor {
             // Cursor preview
             cursorPreview: document.getElementById('editor-cursor-preview'),
             cursorPreviewPrimary: document.querySelector('#editor-cursor-preview .preview-box.primary .preview-content'),
-            cursorPreviewSecondary: document.querySelector('#editor-cursor-preview .preview-box.secondary .preview-content')
+            cursorPreviewSecondary: document.querySelector('#editor-cursor-preview .preview-box.secondary .preview-content'),
+            hoverPreview: document.getElementById('editor-hover-preview'),
+            hoverPreviewContent: document.querySelector('#editor-hover-preview .editor-hover-preview-content')
         };
 
         this.bindEvents();
@@ -598,6 +600,7 @@ export class MapEditor {
                     }
                     this.state.isDirty = true;
                     this.renderToCanvas();
+                    this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
                 }
                 break;
 
@@ -618,9 +621,60 @@ export class MapEditor {
                     }
                     this.state.isDirty = true;
                     this.renderToCanvas();
+                    this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
                 }
                 break;
         }
+    }
+
+    /**
+     * Update hover preview: HTML overlay showing what left-click would do (assign/dice mode)
+     */
+    updateHoverPreview(clientX, clientY) {
+        const el = this.elements.hoverPreview;
+        const content = this.elements.hoverPreviewContent;
+        if (!el || !content) return;
+
+        const isScenarioAssignDice = this.state.editorType === 'scenario' &&
+            (this.state.currentMode === 'assign' || this.state.currentMode === 'dice');
+
+        if (!isScenarioAssignDice || !this.state.hoveredTile) {
+            el.classList.add('hidden');
+            return;
+        }
+
+        const preview = this.getLeftClickPreview(this.state.hoveredTile.x, this.state.hoveredTile.y);
+        if (!preview) {
+            el.classList.add('hidden');
+            return;
+        }
+
+        // Position offset from mouse (avoid covering cursor)
+        const offset = 24;
+        el.style.left = `${clientX + offset}px`;
+        el.style.top = `${clientY + offset}px`;
+
+        content.className = 'editor-hover-preview-content';
+        content.style.background = '';
+        content.style.borderColor = '#fff';
+        content.style.color = '#fff';
+
+        if (preview.remove) {
+            content.textContent = '✕';
+            content.style.background = 'rgba(180, 0, 0, 0.9)';
+        } else if (preview.mode === 'assign' && preview.owner != null) {
+            const owner = this.state.players.find(p => p.id === preview.owner);
+            const color = owner ? owner.color : 0x444444;
+            const hex = '#' + color.toString(16).padStart(6, '0');
+            content.textContent = '';
+            content.style.background = hex;
+            content.style.color = getContrastColor(color);
+        } else if (preview.mode === 'dice' && preview.dice != null) {
+            content.textContent = String(preview.dice);
+            content.style.background = 'rgba(0, 0, 0, 0.85)';
+        }
+
+        el.classList.remove('hidden');
     }
 
     /**
@@ -710,9 +764,14 @@ export class MapEditor {
         this.handleCanvasTouchMove = this.onCanvasTouchMove.bind(this);
         this.handleCanvasTouchEnd = this.onCanvasTouchEnd.bind(this);
 
+        // Default mouse position (e.g. for keyboard-driven preview refresh)
+        this.lastMouseX = window.innerWidth / 2;
+        this.lastMouseY = window.innerHeight / 2;
+
         // onCanvasMouseOut handler for hiding cursor and clearing hover
         this.handleCanvasMouseOut = () => {
             this.elements.cursorPreview?.classList.add('hidden');
+            this.elements.hoverPreview?.classList.add('hidden');
             // Clear hover tile highlight and state
             this.state.hoveredTile = null;
             if (this.renderer && this.renderer.grid) {
@@ -787,6 +846,33 @@ export class MapEditor {
         }
     }
 
+    /**
+     * Get what would happen on single left click (cycle increase) for assign/dice mode
+     */
+    getLeftClickPreview(x, y) {
+        const key = `${x},${y}`;
+        const tile = this.state.tiles.get(key);
+        const playerCount = this.state.players.length;
+
+        if (this.state.currentMode === 'assign') {
+            if (!tile) {
+                const cached = this.state.deletedTiles.get(key);
+                return { x, y, mode: 'assign', owner: 0, dice: cached?.dice || 1 };
+            }
+            if (tile.owner >= playerCount - 1) return { x, y, remove: true };
+            return { x, y, mode: 'assign', owner: tile.owner + 1, dice: tile.dice };
+        }
+        if (this.state.currentMode === 'dice') {
+            if (!tile) {
+                const cached = this.state.deletedTiles.get(key);
+                return { x, y, mode: 'dice', owner: cached?.owner ?? 0, dice: 1 };
+            }
+            if (tile.dice >= this.state.maxDice) return { x, y, remove: true };
+            return { x, y, mode: 'dice', owner: tile.owner, dice: (tile.dice || 1) + 1 };
+        }
+        return null;
+    }
+
     onCanvasMouseMove(e) {
         if (!this.isOpen) return;
 
@@ -794,6 +880,10 @@ export class MapEditor {
 
         // Update hovered tile state for keyboard input
         this.state.hoveredTile = tile;
+
+        // Store mouse position for hover preview refresh after actions
+        this.lastMouseX = e.clientX;
+        this.lastMouseY = e.clientY;
 
         // Update hover tile highlight
         if (this.renderer && this.renderer.grid) {
@@ -804,6 +894,9 @@ export class MapEditor {
             }
             this.renderToCanvas();
         }
+
+        // HTML hover preview (assign/dice mode)
+        this.updateHoverPreview(e.clientX, e.clientY);
 
         if (this.isPainting && tile) {
             const key = `${tile.x},${tile.y}`;
@@ -850,7 +943,10 @@ export class MapEditor {
         this.setRandomDialogOpen(false);
 
         const touch = e.touches[0];
+        this.lastMouseX = touch.clientX;
+        this.lastMouseY = touch.clientY;
         const tile = this.screenToTile(touch.clientX, touch.clientY);
+        this.state.hoveredTile = tile;
         if (tile) {
             e.preventDefault();
             this.isPainting = true;
@@ -866,7 +962,10 @@ export class MapEditor {
         if (!this.isOpen || !this.isPainting) return;
 
         const touch = e.touches[0];
+        this.lastMouseX = touch.clientX;
+        this.lastMouseY = touch.clientY;
         const tile = this.screenToTile(touch.clientX, touch.clientY);
+        this.state.hoveredTile = tile;
         if (tile) {
             e.preventDefault();
             const key = `${tile.x},${tile.y}`;
@@ -969,6 +1068,7 @@ export class MapEditor {
      */
     close() {
         this.stopConfigPreview();
+        this.elements.hoverPreview?.classList.add('hidden');
         if (this.renderer && this.renderer.grid) {
             this.renderer.grid.setPaintMode(false);
             this.renderer.grid.setShowMapBounds(false);
@@ -1187,6 +1287,7 @@ export class MapEditor {
             }
             this.state.isDirty = true;
             this.renderToCanvas();
+            this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
             return;
         }
 
@@ -1251,6 +1352,7 @@ export class MapEditor {
 
         this.state.isDirty = true;
         this.renderToCanvas();
+        this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
     }
 
     /**
