@@ -348,6 +348,10 @@ export class InputManager {
         if (Math.abs(rx) < this.deadZone) rx = 0;
         if (Math.abs(ry) < this.deadZone) ry = 0;
 
+        // Invert right stick (push right = pan right, push up = pan up)
+        rx = -rx;
+        ry = -ry;
+
         // Emit continuous pan (will be handled per-frame by consumer)
         if (rx !== 0 || ry !== 0) {
             this.emit('panAnalog', { x: rx, y: ry });
