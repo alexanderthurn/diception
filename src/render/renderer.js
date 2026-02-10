@@ -17,6 +17,7 @@ export class Renderer {
         this.shakeDuration = 0;
         this.originalX = 0;
         this.originalY = 0;
+        this.editorActive = false;
     }
 
 

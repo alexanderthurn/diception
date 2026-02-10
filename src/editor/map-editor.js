@@ -647,6 +647,7 @@ export class MapEditor {
         canvas.removeEventListener('mousedown', this.handleCanvasMouseDown);
         canvas.removeEventListener('mousemove', this.handleCanvasMouseMove);
         canvas.removeEventListener('mouseup', this.handleCanvasMouseUp);
+        if (this.handleCanvasMouseUpGlobal) window.removeEventListener('mouseup', this.handleCanvasMouseUpGlobal);
         canvas.removeEventListener('touchstart', this.handleCanvasTouchStart);
         canvas.removeEventListener('touchmove', this.handleCanvasTouchMove);
         canvas.removeEventListener('touchend', this.handleCanvasTouchEnd);
@@ -670,11 +671,15 @@ export class MapEditor {
             }
         };
 
-        // Add listeners
+        // Add listeners (window mouseup catches release outside canvas)
+        this.handleCanvasMouseUpGlobal = () => {
+            if (this.isPainting) this.onCanvasMouseUp();
+        };
         canvas.addEventListener('mousedown', this.handleCanvasMouseDown);
         canvas.addEventListener('mousemove', this.handleCanvasMouseMove);
         canvas.addEventListener('mouseup', this.handleCanvasMouseUp);
-        canvas.addEventListener('mouseout', this.handleCanvasMouseOut); // New listener
+        window.addEventListener('mouseup', this.handleCanvasMouseUpGlobal);
+        canvas.addEventListener('mouseout', this.handleCanvasMouseOut);
         canvas.addEventListener('touchstart', this.handleCanvasTouchStart, { passive: false });
         canvas.addEventListener('touchmove', this.handleCanvasTouchMove, { passive: false });
         canvas.addEventListener('touchend', this.handleCanvasTouchEnd);
@@ -715,7 +720,7 @@ export class MapEditor {
         const tile = this.screenToTile(e.clientX, e.clientY);
         if (tile) {
             this.isPainting = true;
-            this.handleTileInteraction(tile.x, tile.y, e.button, e.shiftKey);
+            this.handleTileInteraction(tile.x, tile.y, e.button, e.shiftKey, true); // true = mouse/desktop
             this.lastPaintedTile = `${tile.x},${tile.y}`;
             this.currentInteractionButton = e.button;
             this.currentInteractionShift = e.shiftKey;
@@ -743,7 +748,7 @@ export class MapEditor {
         if (this.isPainting && tile) {
             const key = `${tile.x},${tile.y}`;
             if (this.lastPaintedTile !== key) {
-                this.handleTileInteraction(tile.x, tile.y, this.currentInteractionButton, this.currentInteractionShift);
+                this.handleTileInteraction(tile.x, tile.y, this.currentInteractionButton, this.currentInteractionShift, true);
                 this.lastPaintedTile = key;
             }
         }
@@ -757,6 +762,7 @@ export class MapEditor {
         this.lastPaintedTile = null;
         this.currentInteractionButton = null;
         this.currentInteractionShift = false;
+        this.mouseBrushValue = null; // Next mousedown will sample again
     }
 
     onCanvasTouchStart(e) {
@@ -794,6 +800,7 @@ export class MapEditor {
         this.isPainting = false;
         this.lastPaintedTile = null;
         this.currentInteractionShift = false;
+        this.mouseBrushValue = null; // Desktop scenario mode: { owner, dice } sampled from first tile
     }
 
     /**
@@ -835,6 +842,7 @@ export class MapEditor {
         this.elements.aiToggleBtn?.classList.add('hidden');
         this.elements.setupModal?.classList.add('hidden');
         this.elements.overlay?.classList.remove('hidden');
+        if (this.renderer) this.renderer.editorActive = true;
 
         // Set slider limits from GAME constants
         if (this.elements.maxDiceSelect) {
@@ -891,6 +899,7 @@ export class MapEditor {
         }
 
         // Hide editor UI, show game UI
+        if (this.renderer) this.renderer.editorActive = false;
         this.elements.overlay?.classList.add('hidden');
         this.elements.gamePanel?.classList.remove('hidden');
         this.elements.endTurnBtn?.classList.remove('hidden');
@@ -1066,114 +1075,93 @@ export class MapEditor {
 
     /**
      * Handle tile click/drag interaction
+     * @param {boolean} isMouse - true for desktop mouse (new behavior), false/undefined for touch (legacy behavior)
      */
-    handleTileInteraction(x, y, button = 0, shiftKey = false) {
+    handleTileInteraction(x, y, button = 0, shiftKey = false, isMouse = false) {
         const key = `${x},${y}`;
         const tile = this.state.tiles.get(key);
         const isRightClick = button === 2;
-        const isDecrease = isRightClick; // Right click = decrease action
 
-        // Check if we're in map mode or scenario mode
-        if (this.state.editorType === 'map') {
-            // Map mode: Simple toggle - click toggles tile existence
-            if (tile) {
-                // Tile exists - remove it
+        // Desktop/mouse: simplified behavior
+        if (isMouse) {
+            if (isRightClick) {
                 this.state.tiles.delete(key);
+                this.state.deletedTiles.delete(key);
+            } else if (this.state.editorType === 'map') {
+                this.state.tiles.set(key, { owner: 0, dice: 1 });
             } else {
-                // No tile - add one with default values
-                this.state.tiles.set(key, {
-                    owner: 0,
-                    dice: 1
-                });
+                // Scenario mode: brush - sample from first tile, apply to all
+                if (this.state.currentMode === 'assign' || this.state.currentMode === 'dice') {
+                    if (this.mouseBrushValue === null) {
+                        this.mouseBrushValue = tile
+                            ? { owner: tile.owner, dice: tile.dice || 1 }
+                            : { owner: 0, dice: 1 };
+                    }
+                    const v = this.mouseBrushValue;
+                    this.state.tiles.set(key, { owner: v.owner, dice: Math.min(v.dice, this.state.maxDice) });
+                    this.state.deletedTiles.delete(key);
+                }
             }
-        } else {
-            // Scenario mode: depends on current mode (assign/dice)
-            // Cycling includes "no tile" state at the boundary
+            this.state.isDirty = true;
+            this.renderToCanvas();
+            return;
+        }
 
+        // Touch (legacy): cycle increase/decrease
+        const isDecrease = isRightClick;
+        if (this.state.editorType === 'map') {
+            if (tile) this.state.tiles.delete(key);
+            else this.state.tiles.set(key, { owner: 0, dice: 1 });
+        } else {
             switch (this.state.currentMode) {
                 case 'assign':
-                    // Cycle: player0 -> player1 -> ... -> lastPlayer -> (no tile) -> player0
                     const playerCount = this.state.players.length;
                     if (!tile) {
-                        // No tile - create one, restore cached data if available
                         const cached = this.state.deletedTiles.get(key);
                         if (isDecrease) {
-                            // Decrease from "no tile" = last player
-                            this.state.tiles.set(key, {
-                                owner: playerCount - 1,
-                                dice: cached?.dice || 1
-                            });
+                            this.state.tiles.set(key, { owner: playerCount - 1, dice: cached?.dice || 1 });
                         } else {
-                            // Increase from "no tile" = first player
-                            this.state.tiles.set(key, {
-                                owner: 0,
-                                dice: cached?.dice || 1
-                            });
+                            this.state.tiles.set(key, { owner: 0, dice: cached?.dice || 1 });
                         }
                         this.state.deletedTiles.delete(key);
                     } else {
                         if (isDecrease) {
                             if (tile.owner <= 0) {
-                                // At first player, decrease = remove tile (cache it)
                                 this.state.deletedTiles.set(key, { ...tile });
                                 this.state.tiles.delete(key);
-                            } else {
-                                tile.owner = tile.owner - 1;
-                            }
+                            } else tile.owner -= 1;
                         } else {
                             if (tile.owner >= playerCount - 1) {
-                                // At last player, increase = remove tile (cache it)
                                 this.state.deletedTiles.set(key, { ...tile });
                                 this.state.tiles.delete(key);
-                            } else {
-                                tile.owner = tile.owner + 1;
-                            }
+                            } else tile.owner += 1;
                         }
                     }
                     break;
-
                 case 'dice':
-                    // Cycle: 1 -> 2 -> ... -> maxDice -> (no tile) -> 1
                     if (!tile) {
-                        // No tile - create one, restore cached data if available
                         const cached = this.state.deletedTiles.get(key);
                         if (isDecrease) {
-                            // Decrease from "no tile" = max dice
-                            this.state.tiles.set(key, {
-                                owner: cached?.owner ?? 0,
-                                dice: this.state.maxDice
-                            });
+                            this.state.tiles.set(key, { owner: cached?.owner ?? 0, dice: this.state.maxDice });
                         } else {
-                            // Increase from "no tile" = 1 dice
-                            this.state.tiles.set(key, {
-                                owner: cached?.owner ?? 0,
-                                dice: 1
-                            });
+                            this.state.tiles.set(key, { owner: cached?.owner ?? 0, dice: 1 });
                         }
                         this.state.deletedTiles.delete(key);
                     } else {
                         if (isDecrease) {
                             if (tile.dice <= 1) {
-                                // At 1 dice, decrease = remove tile (cache it)
                                 this.state.deletedTiles.set(key, { ...tile });
                                 this.state.tiles.delete(key);
-                            } else {
-                                tile.dice = tile.dice - 1;
-                            }
+                            } else tile.dice -= 1;
                         } else {
                             if (tile.dice >= this.state.maxDice) {
-                                // At max dice, increase = remove tile (cache it)
                                 this.state.deletedTiles.set(key, { ...tile });
                                 this.state.tiles.delete(key);
-                            } else {
-                                tile.dice = tile.dice + 1;
-                            }
+                            } else tile.dice += 1;
                         }
                     }
                     break;
-
                 case 'paint':
-                    // Should not happen in scenario mode, but handle gracefully
                     break;
             }
         }

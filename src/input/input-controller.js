@@ -230,6 +230,11 @@ export class InputController {
             return;
         }
 
+        // When editor is open and using mouse: left click must NOT pan (editor handles it)
+        const isEditorMouse = this.renderer.editorActive && e.pointerType === 'mouse' && e.button === 0;
+        if (isEditorMouse) {
+            // Don't start drag - editor will handle left click for tile editing
+        } else
         // Handle initial pinch state
         if (this.activePointers.size === 2) {
             this.lastPinchDistance = this.calculatePinchDistance();
@@ -239,10 +244,11 @@ export class InputController {
             // Drag Logic:
             // - Allow Middle Click
             // - Allow Left Click (if NOT holding Shift AND NOT a simulated gamepad event)
+            // - Skip Left Click when editor is open + mouse (editor handles it)
             const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
                 (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
                 e.isGamepadSimulated;
-            const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0 && !isSimulated);
+            const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0 && !isSimulated && !isEditorMouse);
 
             if (canDrag) {
                 this.isDragging = true;
@@ -345,11 +351,13 @@ export class InputController {
 
         // Only handle clicks for LEFT mouse button (0)
         // Middle button (1) is for pan only
+        // When editor is open + mouse: editor handles clicks, not the game
+        const isEditorMouseClick = this.renderer.editorActive && e.pointerType === 'mouse' && e.button === 0;
         const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
             (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
             e.isGamepadSimulated;
-        if ((dist < 10 || isSimulated) && e.button === 0) {
-            // It's a click
+        if (!isEditorMouseClick && (dist < 10 || isSimulated) && e.button === 0) {
+            // It's a click (and not editor mode)
             const gamepadIndex = (e.nativeEvent && e.nativeEvent.gamepadIndex !== undefined) ? e.nativeEvent.gamepadIndex :
                 (e.originalEvent && e.originalEvent.gamepadIndex !== undefined) ? e.originalEvent.gamepadIndex :
                     e.gamepadIndex;
