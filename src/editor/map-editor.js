@@ -269,8 +269,8 @@ export class MapEditor {
             ],
             maxDice: 9,
             diceSides: 6,
-            mapBots: 2,
-            mapBotAI: 'easy',
+            bots: 2,
+            botAI: 'easy',
 
             // Editor-only state
             editorType: 'map', // 'map', 'scenario', or 'config'
@@ -332,17 +332,12 @@ export class MapEditor {
             configSection: document.getElementById('editor-config-section'),
             mapScenarioSection: document.getElementById('editor-map-scenario-section'),
             quickActions: document.getElementById('editor-quick-actions'),
-            saveAsConfigBtn: document.getElementById('save-as-config-btn'),
+            saveBtn: document.getElementById('editor-save-btn'),
+            randomizeBtn: document.getElementById('editor-randomize-btn'),
             editorMapSize: document.getElementById('editor-map-size'),
             editorMapSizeVal: document.getElementById('editor-map-size-val'),
             editorMapStyle: document.getElementById('editor-map-style'),
             editorGameMode: document.getElementById('editor-game-mode'),
-            editorBots: document.getElementById('editor-bots'),
-            editorBotAI: document.getElementById('editor-bot-ai'),
-            editorConfigMaxDice: document.getElementById('editor-config-max-dice'),
-            editorConfigMaxDiceVal: document.getElementById('editor-config-max-dice-val'),
-            editorConfigDiceSides: document.getElementById('editor-config-dice-sides'),
-            editorConfigDiceSidesVal: document.getElementById('editor-config-dice-sides-val'),
 
             // Settings
             nameInput: document.getElementById('editor-name'),
@@ -370,31 +365,21 @@ export class MapEditor {
             dicePalette: document.getElementById('dice-palette'),
 
             // New Sections
-            mapSettingsSection: document.getElementById('editor-map-settings-section'),
-            scenarioPlayersSection: document.getElementById('editor-scenario-players-section'),
-            scenarioColorLegend: document.getElementById('editor-scenario-color-legend'),
+            sharedPlayersSection: document.getElementById('editor-shared-players-section'),
+            colorLegend: document.getElementById('editor-color-legend'),
             diceSettingsSection: document.getElementById('editor-dice-settings-section'),
 
             // Map settings
-            editorMapBots: document.getElementById('editor-map-bots'),
-            editorMapBotAI: document.getElementById('editor-map-bot-ai'),
-
-            // Scenario player config
-            editorScenarioHumans: document.getElementById('editor-scenario-humans'),
-            editorScenarioBots: document.getElementById('editor-scenario-bots'),
-            editorScenarioBotAI: document.getElementById('editor-scenario-bot-ai'),
+            editorSharedBots: document.getElementById('editor-shared-bots'),
+            editorSharedBotAI: document.getElementById('editor-shared-bot-ai'),
 
             // Actions
-            saveAsMapBtn: document.getElementById('save-as-map-btn'),
-            saveAsScenarioBtn: document.getElementById('save-as-scenario-btn'),
             clearBtn: document.getElementById('editor-clear-btn'),
             fillBtn: document.getElementById('editor-fill-btn'),
-            randomizeBtn: document.getElementById('editor-randomize-btn'),
 
             // Elements to hide/show
             gamePanel: document.querySelector('.game-panel'),
             endTurnBtn: document.getElementById('end-turn-btn'),
-            aiToggleBtn: document.getElementById('ai-toggle-btn'),
             aiToggleBtn: document.getElementById('ai-toggle-btn'),
             setupModal: document.getElementById('setup-modal'),
 
@@ -480,19 +465,13 @@ export class MapEditor {
             });
         });
 
-        // Map settings
-        this.elements.editorMapBots?.addEventListener('change', () => this.onMapSettingsChange());
-        this.elements.editorMapBotAI?.addEventListener('change', () => this.onMapSettingsChange());
+        // Shared players (Map & Scenario)
+        this.elements.editorSharedBots?.addEventListener('change', () => this.onSharedPlayersChange());
+        this.elements.editorSharedBotAI?.addEventListener('change', () => this.onSharedPlayersChange());
 
-        // Scenario player config
-        this.elements.editorScenarioHumans?.addEventListener('change', () => this.onScenarioPlayersChange());
-        this.elements.editorScenarioBots?.addEventListener('change', () => this.onScenarioPlayersChange());
-        this.elements.editorScenarioBotAI?.addEventListener('change', () => this.onScenarioPlayersChange());
-
-        // Save buttons
-        this.elements.saveAsMapBtn?.addEventListener('click', () => this.saveAsMap());
-        this.elements.saveAsScenarioBtn?.addEventListener('click', () => this.saveAsScenario());
-        this.elements.saveAsConfigBtn?.addEventListener('click', () => this.saveAsConfig());
+        // Save button (calls saveAsMap or saveAsScenario based on type)
+        this.elements.saveBtn?.addEventListener('click', () => this.handleSave());
+        this.elements.randomizeBtn?.addEventListener('click', () => this.handleRandomize());
 
         // Config inputs - use 'input' for immediate feedback
         this.elements.editorMapSize?.addEventListener('input', (e) => {
@@ -503,28 +482,10 @@ export class MapEditor {
         });
         this.elements.editorMapStyle?.addEventListener('change', () => this.onConfigChange());
         this.elements.editorGameMode?.addEventListener('change', () => this.onConfigChange());
-        this.elements.editorBots?.addEventListener('change', () => this.onConfigChange());
-        this.elements.editorBotAI?.addEventListener('change', () => this.onConfigChange());
-        this.elements.editorConfigMaxDice?.addEventListener('input', (e) => {
-            const val = parseInt(e.target.value);
-            this.state.configData = this.state.configData || {};
-            this.state.configData.maxDice = val;
-            if (this.elements.editorConfigMaxDiceVal) this.elements.editorConfigMaxDiceVal.textContent = val;
-            this.onConfigChange();
-        });
-        this.elements.editorConfigDiceSides?.addEventListener('input', (e) => {
-            const val = parseInt(e.target.value);
-            this.state.configData = this.state.configData || {};
-            this.state.configData.diceSides = val;
-            if (this.elements.editorConfigDiceSidesVal) this.elements.editorConfigDiceSidesVal.textContent = val;
-            this.renderer?.setDiceSides(val);
-            this.onConfigChange();
-        });
 
         // Quick actions
         this.elements.clearBtn?.addEventListener('click', () => this.clearGrid());
         this.elements.fillBtn?.addEventListener('click', () => this.fillGrid());
-        this.elements.randomizeBtn?.addEventListener('click', () => this.randomizeDice());
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -881,12 +842,12 @@ export class MapEditor {
         // Update UI to match state
         this.updateUIFromState();
         this.updateCampaignModeUI();
-        if (this.state.editorType === 'scenario') this.syncScenarioConfigToUI();
-        this.syncMapSettingsToUI();
+        this.syncSharedPlayersToUI();
         this.renderPaintPalette();
         this.renderPlayerPalette();
         this.renderDicePalette();
         this.setEditorType(this.state.editorType);
+        this.updateSaveButtonText();
 
         // Render to canvas and fit camera on initial open
         this.renderToCanvas(true);
@@ -971,6 +932,27 @@ export class MapEditor {
     /**
      * Show/hide name/description/author in campaign mode
      */
+    updateSaveButtonText() {
+        const btn = this.elements.saveBtn;
+        if (!btn) return;
+        if (this.state.editorType === 'config') return;
+        const idx = this.editorOptions?.levelIndex;
+        btn.textContent = idx != null ? `💾 Save #${idx + 1}` : '💾 Save';
+    }
+
+    handleSave() {
+        if (this.state.editorType === 'map') return this.saveAsMap();
+        if (this.state.editorType === 'scenario') return this.saveAsScenario();
+    }
+
+    async handleRandomize() {
+        if (this.state.editorType === 'config') {
+            this.syncConfigFromUI();
+            await this.regenerateConfigPreview();
+            this.renderToCanvas();
+        }
+    }
+
     updateCampaignModeUI() {
         const inCampaign = !!this.editorOptions;
         const row = (id) => this.elements[id]?.closest('.control-group');
@@ -1191,37 +1173,31 @@ export class MapEditor {
             this.elements.bottomBar?.classList.add('hidden');
             this.elements.configSection?.classList.remove('hidden');
             this.elements.mapScenarioSection?.classList.add('hidden');
-            this.elements.mapSettingsSection?.classList.add('hidden');
-            this.elements.scenarioPlayersSection?.classList.add('hidden');
+            this.elements.sharedPlayersSection?.classList.add('hidden');
             this.elements.diceSettingsSection?.classList.add('hidden');
-            this.elements.saveAsMapBtn?.classList.add('hidden');
-            this.elements.saveAsScenarioBtn?.classList.add('hidden');
-            this.elements.saveAsConfigBtn?.classList.remove('hidden');
+            this.elements.saveBtn?.classList.add('hidden');
+            this.elements.randomizeBtn?.classList.remove('hidden');
             this.elements.quickActions?.classList.add('hidden');
             if (this.renderer?.grid) {
                 this.renderer.grid.setPaintMode(false);
             }
             if (!this.state.configData) {
-                this.state.configData = { mapSize: '6x6', mapStyle: 'full', gameMode: 'classic', bots: 2, botAI: 'easy', maxDice: 8, diceSides: 6 };
+                this.state.configData = { mapSize: '6x6', mapStyle: 'islands', gameMode: 'classic' };
             }
             this.syncConfigToUI();
-            this.regenerateConfigPreview();
-            this.startConfigPreview();
         } else if (type === 'map') {
             this.elements.configSection?.classList.add('hidden');
             this.elements.mapScenarioSection?.classList.remove('hidden');
             this.elements.quickActions?.classList.remove('hidden');
             this.stopConfigPreview();
-            // Map mode: hide entire bottom bar
             this.elements.bottomBar?.classList.add('hidden');
-
-            this.elements.mapSettingsSection?.classList.remove('hidden');
-            this.elements.scenarioPlayersSection?.classList.add('hidden');
+            this.elements.sharedPlayersSection?.classList.remove('hidden');
             this.elements.diceSettingsSection?.classList.remove('hidden');
-
-            this.elements.saveAsMapBtn?.classList.remove('hidden');
-            this.elements.saveAsScenarioBtn?.classList.add('hidden');
-            this.elements.saveAsConfigBtn?.classList.add('hidden');
+            this.elements.saveBtn?.classList.remove('hidden');
+            this.elements.randomizeBtn?.classList.add('hidden');
+            this.updateSaveButtonText();
+            this.rebuildPlayersFromScenarioConfig();
+            this.renderColorLegend();
 
             // Switch to paint mode internally
             this.state.currentMode = 'paint';
@@ -1240,16 +1216,13 @@ export class MapEditor {
             paintTab?.classList.add('hidden');
             assignTab?.classList.remove('hidden');
             diceTab?.classList.remove('hidden');
-
-            this.elements.mapSettingsSection?.classList.add('hidden');
-            this.elements.scenarioPlayersSection?.classList.remove('hidden');
+            this.elements.sharedPlayersSection?.classList.remove('hidden');
             this.elements.diceSettingsSection?.classList.remove('hidden');
-
-            this.elements.saveAsMapBtn?.classList.add('hidden');
-            this.elements.saveAsScenarioBtn?.classList.remove('hidden');
+            this.elements.saveBtn?.classList.remove('hidden');
+            this.elements.randomizeBtn?.classList.add('hidden');
+            this.updateSaveButtonText();
             this.rebuildPlayersFromScenarioConfig();
-            this.renderScenarioColorLegend();
-            this.elements.saveAsConfigBtn?.classList.add('hidden');
+            this.renderColorLegend();
 
             // Switch to assign mode
             this.setMode('assign');
@@ -1267,31 +1240,27 @@ export class MapEditor {
         this.renderToCanvas();
     }
 
-    syncMapSettingsToUI() {
-        const bots = this.state.mapBots ?? 2;
-        const botAI = this.state.mapBotAI ?? 'easy';
-        if (this.elements.editorMapBots) this.elements.editorMapBots.value = String(bots);
-        if (this.elements.editorMapBotAI) this.elements.editorMapBotAI.value = botAI;
+    syncSharedPlayersToUI() {
+        const bots = this.state.bots ?? 2;
+        const botAI = this.state.botAI ?? 'easy';
+        if (this.elements.editorSharedBots) this.elements.editorSharedBots.value = String(bots);
+        if (this.elements.editorSharedBotAI) this.elements.editorSharedBotAI.value = botAI;
     }
 
-    onMapSettingsChange() {
-        this.state.mapBots = parseInt(this.elements.editorMapBots?.value || '2', 10);
-        this.state.mapBotAI = this.elements.editorMapBotAI?.value || 'easy';
-        this.state.isDirty = true;
-    }
-
-    onScenarioPlayersChange() {
+    onSharedPlayersChange() {
+        this.state.bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
+        this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
         this.rebuildPlayersFromScenarioConfig();
-        this.renderScenarioColorLegend();
-        this.renderPlayerPalette();
+        this.renderColorLegend();
+        if (this.state.editorType === 'scenario') this.renderPlayerPalette();
         this.state.isDirty = true;
         this.renderToCanvas();
     }
 
     rebuildPlayersFromScenarioConfig() {
-        const humans = parseInt(this.elements.editorScenarioHumans?.value || '1', 10);
-        const bots = parseInt(this.elements.editorScenarioBots?.value || '1', 10);
-        const botAI = this.elements.editorScenarioBotAI?.value || 'easy';
+        const bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
+        const humans = 1;
+        const botAI = this.elements.editorSharedBotAI?.value || 'easy';
         const total = Math.max(2, Math.min(8, humans + bots));
 
         const players = [];
@@ -1318,8 +1287,8 @@ export class MapEditor {
         if (this.state.selectedPlayer >= players.length) this.state.selectedPlayer = 0;
     }
 
-    renderScenarioColorLegend() {
-        const el = this.elements.scenarioColorLegend;
+    renderColorLegend() {
+        const el = this.elements.colorLegend;
         if (!el) return;
         el.innerHTML = '';
         this.state.players.forEach((p, i) => {
@@ -1338,12 +1307,8 @@ export class MapEditor {
         const mapSize = `${preset.width}x${preset.height}`;
         this.state.configData = {
             mapSize,
-            mapStyle: this.elements.editorMapStyle?.value || 'full',
-            gameMode: this.elements.editorGameMode?.value || 'classic',
-            bots: parseInt(this.elements.editorBots?.value || '1', 10),
-            botAI: this.elements.editorBotAI?.value || 'easy',
-            maxDice: parseInt(this.elements.editorConfigMaxDice?.value || '8', 10),
-            diceSides: parseInt(this.elements.editorConfigDiceSides?.value || '6', 10)
+            mapStyle: this.elements.editorMapStyle?.value || 'islands',
+            gameMode: this.elements.editorGameMode?.value || 'classic'
         };
     }
 
@@ -1359,18 +1324,8 @@ export class MapEditor {
                 this.elements.editorMapSizeVal.textContent = CONFIG_MAP_SIZE_PRESETS[sliderVal - 1]?.label || mapSize;
             }
         }
-        if (this.elements.editorMapStyle) this.elements.editorMapStyle.value = cfg.mapStyle || 'full';
+        if (this.elements.editorMapStyle) this.elements.editorMapStyle.value = cfg.mapStyle || 'islands';
         if (this.elements.editorGameMode) this.elements.editorGameMode.value = cfg.gameMode || 'classic';
-        if (this.elements.editorBots) this.elements.editorBots.value = String(cfg.bots ?? 1);
-        if (this.elements.editorBotAI) this.elements.editorBotAI.value = cfg.botAI || 'easy';
-        if (this.elements.editorConfigMaxDice) {
-            this.elements.editorConfigMaxDice.value = cfg.maxDice ?? 8;
-            if (this.elements.editorConfigMaxDiceVal) this.elements.editorConfigMaxDiceVal.textContent = cfg.maxDice ?? 8;
-        }
-        if (this.elements.editorConfigDiceSides) {
-            this.elements.editorConfigDiceSides.value = cfg.diceSides ?? 6;
-            if (this.elements.editorConfigDiceSidesVal) this.elements.editorConfigDiceSidesVal.textContent = cfg.diceSides ?? 6;
-        }
     }
 
     async onConfigChange() {
@@ -1385,19 +1340,19 @@ export class MapEditor {
         if (!cfg) return;
         const { MapManager } = await import('../core/map.js');
         const [w, h] = (cfg.mapSize || '6x6').split('x').map(Number);
-        const botCount = Math.max(0, cfg.bots ?? 1);
+        const botCount = 2;
         const players = [
             { id: 0, isBot: false, color: DEFAULT_COLORS[0], aiId: null },
             ...Array.from({ length: botCount }, (_, i) => ({
-                id: i + 1, isBot: true, color: DEFAULT_COLORS[(i + 1) % DEFAULT_COLORS.length], aiId: cfg.botAI || 'easy'
+                id: i + 1, isBot: true, color: DEFAULT_COLORS[(i + 1) % DEFAULT_COLORS.length], aiId: 'easy'
             }))
         ];
         const map = new MapManager();
-        map.generateMap(w, h, players, cfg.maxDice ?? 8, cfg.mapStyle || 'full');
+        map.generateMap(w, h, players, 8, cfg.mapStyle || 'islands');
         this.state.width = map.width;
         this.state.height = map.height;
-        this.state.maxDice = cfg.maxDice ?? 8;
-        this.state.diceSides = cfg.diceSides ?? 6;
+        this.state.maxDice = 8;
+        this.state.diceSides = 6;
         this.state.players = players;
         this.state.tiles.clear();
         for (let y = 0; y < map.height; y++) {
@@ -1411,16 +1366,6 @@ export class MapEditor {
         }
         this.gameAdapter.syncFromState();
         if (this.renderer?.grid) this.renderer.grid.invalidate();
-    }
-
-    startConfigPreview() {
-        this.stopConfigPreview();
-        this.configPreviewInterval = setInterval(() => {
-            if (this.state.editorType === 'config' && this.isOpen) {
-                this.regenerateConfigPreview();
-                this.renderToCanvas();
-            }
-        }, 1500);
     }
 
     stopConfigPreview() {
@@ -1449,12 +1394,10 @@ export class MapEditor {
 
 
     syncScenarioConfigToUI() {
-        const humans = this.state.players.filter(p => !p.isBot).length;
         const bots = this.state.players.filter(p => p.isBot).length;
         const botAI = this.state.players.find(p => p.isBot)?.aiId || 'easy';
-        if (this.elements.editorScenarioHumans) this.elements.editorScenarioHumans.value = String(Math.max(1, humans));
-        if (this.elements.editorScenarioBots) this.elements.editorScenarioBots.value = String(Math.max(1, bots));
-        if (this.elements.editorScenarioBotAI) this.elements.editorScenarioBotAI.value = botAI;
+        if (this.elements.editorSharedBots) this.elements.editorSharedBots.value = String(Math.max(0, bots));
+        if (this.elements.editorSharedBotAI) this.elements.editorSharedBotAI.value = botAI;
     }
 
     /**
@@ -1552,6 +1495,8 @@ export class MapEditor {
      * Save as map (tiles only, no ownership)
      */
     async saveAsMap() {
+        this.state.bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
+        this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
         if (this.state.tiles.size === 0) {
             this.showStatus('Add at least one tile first', 'error');
             return null;
@@ -1564,8 +1509,8 @@ export class MapEditor {
             type: 'map',
             width: bounds.width,
             height: bounds.height,
-            bots: this.state.mapBots ?? 2,
-            botAI: this.state.mapBotAI ?? 'easy',
+            bots: this.state.bots ?? 2,
+            botAI: this.state.botAI ?? 'easy',
             maxDice: this.state.maxDice ?? 9,
             diceSides: this.state.diceSides ?? 6,
             tiles: Array.from(this.state.tiles.entries()).map(([key]) => {
@@ -1617,6 +1562,9 @@ export class MapEditor {
      * Save as scenario (includes players, ownership, dice)
      */
     async saveAsScenario() {
+        this.state.bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
+        this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
+        this.rebuildPlayersFromScenarioConfig();
         if (this.state.tiles.size === 0) {
             this.showStatus('Add at least one tile first', 'error');
             return null;
@@ -1726,12 +1674,12 @@ export class MapEditor {
         const configData = {
             type: 'config',
             mapSize: cfg.mapSize || '6x6',
-            mapStyle: cfg.mapStyle || 'full',
+            mapStyle: cfg.mapStyle || 'islands',
             gameMode: cfg.gameMode || 'classic',
-            bots: Math.max(0, cfg.bots ?? 1),
-            botAI: cfg.botAI || 'easy',
-            maxDice: cfg.maxDice ?? 8,
-            diceSides: cfg.diceSides ?? 6
+            bots: 2,
+            botAI: 'easy',
+            maxDice: 8,
+            diceSides: 6
         };
         if (this.editorOptions?.onSave) {
             try {
@@ -1759,17 +1707,14 @@ export class MapEditor {
             this.state.editorType = 'config';
             this.state.configData = {
                 mapSize: scenario.mapSize || '6x6',
-                mapStyle: scenario.mapStyle || 'full',
-                gameMode: scenario.gameMode || 'classic',
-                bots: scenario.bots ?? 1,
-                botAI: scenario.botAI || 'easy',
-                maxDice: scenario.maxDice ?? 8,
-                diceSides: scenario.diceSides ?? 6
+                mapStyle: scenario.mapStyle || 'islands',
+                gameMode: scenario.gameMode || 'classic'
             };
         } else {
             this.state.editorType = scenario.type === 'scenario' ? 'scenario' : 'map';
-            this.state.mapBots = scenario.bots ?? 2;
-            this.state.mapBotAI = scenario.botAI ?? 'easy';
+            const botCount = (scenario.players || []).filter(p => p.isBot).length;
+            this.state.bots = scenario.bots ?? (scenario.players?.length ? botCount : 2);
+            this.state.botAI = scenario.botAI ?? 'easy';
         }
         if (!this.editorOptions) {
             this.state.name = scenario.isBuiltIn ? scenario.name + ' (Copy)' : (scenario.name || '');
