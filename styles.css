@@ -3832,6 +3832,14 @@ canvas {
     margin-top: 30px;
 }
 
+.dialog-store-links p {
+    margin: 16px 0 8px;
+}
+
+.dialog-store-links p:last-child {
+    margin-bottom: 16px;
+}
+
 /* Game-over (winning) screen: less side padding on mobile */
 @media (max-width: 600px) {
     .dialog-overlay:has(.game-over-content) .dialog-box {

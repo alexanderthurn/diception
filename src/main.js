@@ -185,6 +185,39 @@ async function init() {
             }
         }
 
+        // Web: first-time WELCOME + game speed choice
+        if (!window.steam && !localStorage.getItem('dicy_web_first_shown')) {
+            const choice = await Dialog.show({
+                title: 'WELCOME',
+                message: 'Is this your first time playing? Choose your game speed:',
+                buttons: [
+                    { text: 'Beginner', value: 'beginner', className: 'tron-btn' },
+                    { text: 'Normal', value: 'normal', className: 'tron-btn' },
+                    { text: 'Expert', value: 'expert', className: 'tron-btn' }
+                ]
+            });
+            const speed = choice === 'normal' ? 'normal' : 'beginner';
+            localStorage.setItem('dicy_gameSpeed', speed);
+            localStorage.setItem('dicy_web_first_shown', '1');
+            if (configManager.elements?.gameSpeedInput) {
+                configManager.elements.gameSpeedInput.value = speed;
+            }
+        }
+
+        // Web only: show promotional dialog on 2nd visit, then every 2nd visit
+        if (!window.steam) {
+            const count = parseInt(localStorage.getItem('dicy_web_visit_count') || '0', 10) + 1;
+            localStorage.setItem('dicy_web_visit_count', String(count));
+            if (count % 2 === 0) {
+                await Dialog.show({
+                    title: 'ENJOYING?',
+                    message: 'This is the free web version. If you like the game and want to support Diception, it would be awesome if you buy the full version here (including more campaigns):',
+                    content: '<div class="dialog-store-links"><p><a href="https://store.steampowered.com/app/STEAM_APPID" target="_blank" rel="noopener" class="highlight-link">Steam</a> – Cloud Saves, Achievements</p><p><a href="https://play.google.com/store/apps/details?id=PLACEHOLDER_PACKAGE" target="_blank" rel="noopener" class="highlight-link">Google Play</a> – Android version</p></div>',
+                    buttons: [{ text: 'Later', value: true, className: 'tron-btn' }]
+                });
+            }
+        }
+
         if (localStorage.getItem('dicy_campaignMode')) {
             document.getElementById('setup-modal').classList.add('hidden');
             await scenarioBrowser.showCampaignView();
