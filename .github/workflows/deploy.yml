@@ -1,7 +1,11 @@
-name: Deploy to Production
+name: Deploy
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - '**'    # Triggert auf alle Branches (auch in Unterordnern wie feature/xyz)
+    tags-ignore:
+      - '**'    # Ignoriert absolut alle Tags
 
 jobs:
   deploy:
@@ -29,4 +33,5 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: "./dist/"
-        server-dir: "/prod/"
+        server-dir: "/${{ github.ref_name }}/"
+

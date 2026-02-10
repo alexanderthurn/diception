@@ -1,0 +1,24 @@
+name: Cleanup FTP on Branch Delete
+
+on:
+  delete:
+
+jobs:
+  cleanup:
+    # Check 1: Es muss ein Branch sein (kein Tag)
+    # Check 2: Der Name darf NICHT 'main' oder 'master' sein
+    if: |
+      github.event.ref_type == 'branch' && 
+      github.event.ref != 'main' && 
+      github.event.ref != 'master'
+    
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Folder on FTP
+        uses: airvzxf/ftp-main-action@v3.0.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          user: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          command: |
+            delete -r /${{ github.event.ref }}
