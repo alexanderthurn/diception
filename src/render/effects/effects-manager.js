@@ -163,6 +163,7 @@ export class EffectsManager {
                 (size * (this.tileSize + this.gap)) / 2,
                 (size * (this.tileSize + this.gap)) / 2
             );
+            this.previewMap.scale.set(0.5); // 50% size
             // Position it at the center of the initial screen area in the world
             this.previewMap.x = window.innerWidth * 0.5;
             this.previewMap.y = window.innerHeight * 0.75;
