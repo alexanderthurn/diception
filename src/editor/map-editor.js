@@ -1781,8 +1781,23 @@ export class MapEditor {
 
         this.state.tiles.clear();
         if (scenario.tiles && scenario.tiles.length > 0) {
+            const CANVAS_W = this.state.width;
+            const CANVAS_H = this.state.height;
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             for (const tile of scenario.tiles) {
-                const key = `${tile.x},${tile.y}`;
+                minX = Math.min(minX, tile.x);
+                minY = Math.min(minY, tile.y);
+                maxX = Math.max(maxX, tile.x);
+                maxY = Math.max(maxY, tile.y);
+            }
+            const loadedW = maxX - minX + 1;
+            const loadedH = maxY - minY + 1;
+            const offsetX = Math.floor((CANVAS_W - loadedW) / 2);
+            const offsetY = Math.floor((CANVAS_H - loadedH) / 2);
+            for (const tile of scenario.tiles) {
+                const nx = tile.x - minX + offsetX;
+                const ny = tile.y - minY + offsetY;
+                const key = `${nx},${ny}`;
                 this.state.tiles.set(key, {
                     owner: tile.owner !== undefined ? tile.owner : 0,
                     dice: tile.dice || 1
