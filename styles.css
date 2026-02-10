@@ -2132,14 +2132,18 @@ select {
     50% { box-shadow: 0 0 12px #0f0; }
 }
 
-.level-grid-tile.empty {
-    border-style: dashed;
+.level-grid-tile.add-tile {
+    border-style: solid;
     border-color: rgba(255, 255, 255, 0.3);
 }
 
-.level-grid-tile.empty:hover {
+.level-grid-tile.add-tile:hover {
     border-color: var(--accent-color);
-    background: rgba(0, 255, 255, 0.05);
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.level-grid-tile.add-tile .tile-add {
+    font-size: 1.5em;
 }
 
 .level-grid-tile .tile-index {

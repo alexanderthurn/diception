@@ -137,8 +137,9 @@ export class ScenarioBrowser {
             item.className = 'scenario-list-item' + (this.selectedCampaign?.owner === c.owner ? ' selected' : '');
             item.dataset.owner = c.owner;
             const levelCount = c.levels?.length ?? 0;
+            const displayName = c.isUserCampaign ? 'Your Campaign' : c.owner;
             item.innerHTML = `
-                <span class="list-item-name">${c.owner}</span>
+                <span class="list-item-name">${displayName}</span>
                 <span class="list-item-date">${levelCount} levels</span>
             `;
             item.addEventListener('click', () => {
@@ -154,22 +155,27 @@ export class ScenarioBrowser {
     async renderLevelGrid(campaign) {
         const isEmptyUserCampaign = campaign && (campaign.isEmpty || (campaign.levels?.length === 0 && campaign.isUserCampaign));
         if (isEmptyUserCampaign) {
-            // Empty user campaign - header with + button, empty grid
+            // Empty user campaign - one add tile in grid
             this.isOwner = true;
-            this.levelGridHeader.innerHTML = '<span>Your Campaign</span><span class="hint">Click + to create your first map</span><button id="campaign-add-btn" class="tron-btn small" title="Add new map">+</button>';
+            const ownerLabel = campaign.owner || 'Your Campaign';
+            this.levelGridHeader.innerHTML = `<span>${ownerLabel}</span><span>0 levels</span>`;
             this.levelGrid.style.gridTemplateColumns = '36px';
             this.levelGrid.style.gridTemplateRows = '36px';
             this.levelGrid.innerHTML = '';
-            document.getElementById('campaign-add-btn')?.addEventListener('click', () => this.openEditorForNewLevel(0));
+            const addTile = document.createElement('div');
+            addTile.className = 'level-grid-tile add-tile';
+            addTile.innerHTML = '<span class="tile-add">+</span>';
+            addTile.addEventListener('click', () => this.openEditorForNewLevel(0));
+            this.levelGrid.appendChild(addTile);
             return;
         }
 
         this.isOwner = await this.campaignManager.isOwner(campaign);
         const levels = campaign.levels || [];
-        const slotCount = levels.length || 1;
-        const { cols, rows } = getGridDimensions(slotCount);
+        const ownerLabel = campaign.owner || 'Your Campaign';
+        const totalSlots = this.isOwner ? levels.length + 1 : levels.length;
+        const { cols, rows } = getGridDimensions(totalSlots);
         const gridSize = Math.max(cols, rows, 1);
-        const slots = gridSize * gridSize;
 
         const loadedOwner = localStorage.getItem('dicy_loadedCampaign');
         const loadedIdx = localStorage.getItem('dicy_loadedLevelIndex');
@@ -177,52 +183,49 @@ export class ScenarioBrowser {
             ? parseInt(loadedIdx, 10) : null;
         const solvedLevels = getSolvedLevels(campaign.owner);
 
-        const headerActions = this.isOwner
-            ? `<button id="campaign-add-btn" class="tron-btn small" title="Add new map">+</button>`
-            : '';
-        this.levelGridHeader.innerHTML = `<span>${campaign.owner}</span><span>${levels.length} levels</span>${headerActions}`;
-
-        if (this.isOwner) {
-            document.getElementById('campaign-add-btn')?.addEventListener('click', () => this.openEditorForNewLevel(levels.length));
-        }
+        this.levelGridHeader.innerHTML = `<span>${ownerLabel}</span><span>${levels.length} levels</span>`;
         this.levelGrid.style.gridTemplateColumns = `repeat(${gridSize}, 36px)`;
         this.levelGrid.style.gridTemplateRows = `repeat(${gridSize}, 36px)`;
         this.levelGrid.innerHTML = '';
 
-        for (let i = 0; i < slots; i++) {
+        for (let i = 0; i < levels.length; i++) {
             const level = levels[i];
             const tile = document.createElement('div');
-            tile.className = 'level-grid-tile' + (level ? '' : ' empty');
+            tile.className = 'level-grid-tile';
             if (savedLevelIndex === i) tile.classList.add('selected');
             if (this.justSavedLevelIndex === i) tile.classList.add('just-saved');
+            if (solvedLevels.includes(i)) tile.classList.add('solved');
             tile.dataset.index = i;
 
-            if (level) {
-                if (solvedLevels.includes(i)) tile.classList.add('solved');
-                const idxSpan = document.createElement('span');
-                idxSpan.className = 'tile-index';
-                idxSpan.textContent = i + 1;
-                tile.appendChild(idxSpan);
+            const idxSpan = document.createElement('span');
+            idxSpan.className = 'tile-index';
+            idxSpan.textContent = i + 1;
+            tile.appendChild(idxSpan);
 
-                if (this.isOwner) {
-                    const editBtn = document.createElement('button');
-                    editBtn.className = 'level-tile-edit';
-                    editBtn.title = 'Edit';
-                    editBtn.textContent = '✏️';
-                    editBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.openEditorForLevel(i);
-                    });
-                    tile.appendChild(editBtn);
-                }
-
-                tile.addEventListener('mouseenter', () => this.showHoverPreview(level, tile));
-                tile.addEventListener('mouseleave', () => this.hideHoverPreview());
-                tile.addEventListener('click', () => this.showLevelPreviewDialog(level, i));
-            } else {
-                tile.classList.add('disabled');
+            if (this.isOwner) {
+                const editBtn = document.createElement('button');
+                editBtn.className = 'level-tile-edit';
+                editBtn.title = 'Edit';
+                editBtn.textContent = '✏️';
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.openEditorForLevel(i);
+                });
+                tile.appendChild(editBtn);
             }
+
+            tile.addEventListener('mouseenter', () => this.showHoverPreview(level, tile));
+            tile.addEventListener('mouseleave', () => this.hideHoverPreview());
+            tile.addEventListener('click', () => this.showLevelPreviewDialog(level, i));
             this.levelGrid.appendChild(tile);
+        }
+
+        if (this.isOwner) {
+            const addTile = document.createElement('div');
+            addTile.className = 'level-grid-tile add-tile';
+            addTile.innerHTML = '<span class="tile-add">+</span>';
+            addTile.addEventListener('click', () => this.openEditorForNewLevel(levels.length));
+            this.levelGrid.appendChild(addTile);
         }
     }
 
@@ -320,11 +323,11 @@ export class ScenarioBrowser {
             for (let x = 0; x < map.width; x++) {
                 const t = map.tiles[y * map.width + x];
                 if (t && !t.blocked) {
-                    tiles.push({ x, y, owner: t.owner ?? -1, dice: t.dice || 1 });
+                    tiles.push({ x, y });
                 }
             }
         }
-        return { width: map.width, height: map.height, tiles, players };
+        return { width: map.width, height: map.height, tiles };
     }
 
     renderMinimap(canvas, level) {
@@ -337,9 +340,12 @@ export class ScenarioBrowser {
         }
         w = w || 5;
         h = h || 5;
-        const ts = Math.min(canvas.width / w, canvas.height / h);
-        const ox = (canvas.width - w * ts) / 2;
-        const oy = (canvas.height - h * ts) / 2;
+        const gap = 1;
+        const cellSize = Math.min((canvas.width - (w - 1) * gap) / w, (canvas.height - (h - 1) * gap) / h);
+        const totalW = w * cellSize + (w - 1) * gap;
+        const totalH = h * cellSize + (h - 1) * gap;
+        const ox = (canvas.width - totalW) / 2;
+        const oy = (canvas.height - totalH) / 2;
 
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -351,14 +357,14 @@ export class ScenarioBrowser {
         }
 
         tiles.forEach(t => {
-            const x = ox + t.x * ts;
-            const y = oy + t.y * ts;
+            const x = ox + t.x * (cellSize + gap);
+            const y = oy + t.y * (cellSize + gap);
             let color = '#444';
             if (t.owner !== undefined && t.owner !== -1 && playerColors[t.owner]) {
                 color = '#' + playerColors[t.owner].toString(16).padStart(6, '0');
             }
             ctx.fillStyle = color;
-            ctx.fillRect(x, y, ts, ts);
+            ctx.fillRect(x, y, cellSize, cellSize);
         });
     }
 
