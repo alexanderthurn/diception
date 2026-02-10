@@ -3698,6 +3698,10 @@ canvas {
     .dialog-overlay:has(.game-over-content) .dialog-box {
         max-width: calc(100vw - 20px);
     }
+
+    .dialog-overlay:has(.game-over-content) .dialog-actions .tron-btn {
+        padding: 8px 10px;
+    }
 }
 
 .level-preview-actions {

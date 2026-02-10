@@ -429,7 +429,13 @@ export class GameEventManager {
         const idxStr = localStorage.getItem('dicy_loadedLevelIndex');
         const levelIndex = idxStr != null ? parseInt(idxStr, 10) : -1;
 
-        let title = humanWon ? `${name.toUpperCase()}  WINS!` : `DEFEAT — ${name.toUpperCase()}  WINS`;
+        const humanCount = this.game.players.filter(p => !p.isBot).length;
+        let title;
+        if (humanCount === 1) {
+            title = humanWon ? 'WON' : 'DEFEAT';
+        } else {
+            title = name;
+        }
         let buttons = [];
 
         if (isCampaignMode && this.scenarioBrowser && owner) {
