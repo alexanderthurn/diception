@@ -408,7 +408,9 @@ export class MapEditor {
             cursorPreviewPrimary: document.querySelector('#editor-cursor-preview .preview-box.primary .preview-content'),
             cursorPreviewSecondary: document.querySelector('#editor-cursor-preview .preview-box.secondary .preview-content'),
             hoverPreview: document.getElementById('editor-hover-preview'),
-            hoverPreviewContent: document.querySelector('#editor-hover-preview .editor-hover-preview-content')
+            hoverPreviewContent: document.querySelector('#editor-hover-preview .editor-hover-preview-content'),
+            editorHelpText: document.getElementById('editor-help-text'),
+            editorHelpGamepad: document.getElementById('editor-help-gamepad')
         };
 
         this.bindEvents();
@@ -498,15 +500,12 @@ export class MapEditor {
         this.elements.saveBtn?.addEventListener('click', () => this.handleSave());
         this.elements.randomizeBtn?.addEventListener('click', () => this.handleRandomize());
 
-        // Config inputs (Random dialog) - sync and regenerate on change
+        // Config inputs (Random dialog) - only update label, Generate does the rest
         this.elements.editorMapSize?.addEventListener('input', (e) => {
             const idx = parseInt(e.target.value) - 1;
             const preset = CONFIG_MAP_SIZE_PRESETS[Math.max(0, Math.min(idx, CONFIG_MAP_SIZE_PRESETS.length - 1))];
             if (this.elements.editorMapSizeVal) this.elements.editorMapSizeVal.textContent = preset.label;
-            this.handleRandomize();
         });
-        this.elements.editorMapStyle?.addEventListener('change', () => this.handleRandomize());
-        this.elements.editorGameMode?.addEventListener('change', () => this.handleRandomize());
 
         // Quick actions
         this.elements.clearBtn?.addEventListener('click', () => this.clearGrid());
@@ -1057,6 +1056,10 @@ export class MapEditor {
         this.setupCanvasEvents();
 
         this.isOpen = true;
+        this.boundUpdateEditorHelp = () => this.updateEditorHelpVisibility();
+        this.updateEditorHelpVisibility();
+        window.addEventListener('resize', this.boundUpdateEditorHelp);
+        this.inputManager?.on('gamepadChange', this.boundUpdateEditorHelp);
     }
 
     /**
@@ -1065,6 +1068,10 @@ export class MapEditor {
     close() {
         this.stopConfigPreview();
         this.elements.hoverPreview?.classList.add('hidden');
+        if (this.boundUpdateEditorHelp) {
+            window.removeEventListener('resize', this.boundUpdateEditorHelp);
+            this.inputManager?.off('gamepadChange', this.boundUpdateEditorHelp);
+        }
         if (this.renderer && this.renderer.grid) {
             this.renderer.grid.setPaintMode(false);
             this.renderer.grid.setShowMapBounds(false);
@@ -1158,10 +1165,9 @@ export class MapEditor {
             this.elements.randomDialog?.classList.remove('hidden');
             this.elements.randomBtn?.classList.add('active');
             if (this.state.configData) this.syncConfigToUI();
-            // Initial randomize when opening
             this.syncConfigFromUI();
             this.setEditorType('map');
-            this.regenerateConfigPreview().then(() => this.renderToCanvas());
+            // Don't randomize here - only when user clicks Generate or opens new map
         } else {
             this.elements.randomDialog?.classList.add('hidden');
             this.elements.randomBtn?.classList.remove('active');
@@ -1171,6 +1177,23 @@ export class MapEditor {
     toggleRandomDialog() {
         const isOpen = !this.elements.randomDialog?.classList.contains('hidden');
         this.setRandomDialogOpen(!isOpen);
+    }
+
+    updateEditorHelpVisibility() {
+        if (!this.isOpen) return;
+        const el = this.elements.editorHelpText;
+        const gamepadEl = this.elements.editorHelpGamepad;
+        if (!el) return;
+
+        const hasEnoughHeight = window.innerHeight >= 700;
+        const hasGamepad = this.inputManager?.gamepadStates?.size > 0;
+
+        if (hasEnoughHeight) {
+            el.classList.remove('hidden');
+            if (gamepadEl) gamepadEl.classList.toggle('hidden', !hasGamepad);
+        } else {
+            el.classList.add('hidden');
+        }
     }
 
     updateCampaignModeUI() {
