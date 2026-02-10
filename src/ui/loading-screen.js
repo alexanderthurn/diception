@@ -3,8 +3,9 @@
  * It features a terminal-style log and a progress bar, followed by a start prompt.
  */
 export class LoadingScreen {
-    constructor(inputManager) {
+    constructor(inputManager, opts = {}) {
         this.inputManager = inputManager;
+        this.onDismiss = opts.onDismiss || null;
         this.el = document.getElementById('loading-screen');
         this.content = document.querySelector('.loading-content');
         this.progressBar = document.getElementById('loading-bar-fill');
@@ -133,6 +134,7 @@ export class LoadingScreen {
             this.el.classList.add('fade-out');
             setTimeout(() => {
                 this.el.style.display = 'none';
+                if (this.onDismiss) this.onDismiss();
             }, 800);
         }
 

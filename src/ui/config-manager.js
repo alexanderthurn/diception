@@ -391,6 +391,7 @@ export class ConfigManager {
             localStorage.removeItem('dicy_loadedCampaign');
             localStorage.removeItem('dicy_loadedLevelIndex');
             localStorage.removeItem('dicy_loadedCampaignId');
+            localStorage.removeItem('dicy_customLevelMode');
             localStorage.removeItem('dicy_onlineMapCache');
             this.updateLoadedLevelDisplay(null, null);
             this.updateMapSizeDisplay();

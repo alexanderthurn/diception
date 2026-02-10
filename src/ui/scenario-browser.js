@@ -29,6 +29,7 @@ export class ScenarioBrowser {
         this.setupModal = document.getElementById('setup-modal');
 
         this.onScenarioLoaded = null;
+        this.onStartGame = null;
         this.effectsManager = null;
 
         this.BACKEND_URL = '';
@@ -59,6 +60,10 @@ export class ScenarioBrowser {
         this.effectsManager = effectsManager;
     }
 
+    setOnStartGame(fn) {
+        this.onStartGame = fn;
+    }
+
     setupEventListeners() {
         const scenariosBtn = document.getElementById('scenarios-btn');
         if (scenariosBtn) {
@@ -73,6 +78,7 @@ export class ScenarioBrowser {
 
         if (this.scenarioBrowserCloseBtn) {
             this.scenarioBrowserCloseBtn.addEventListener('click', () => {
+                localStorage.removeItem('dicy_campaignMode');
                 this.scenarioBrowserModal.classList.add('hidden');
                 this.setupModal.classList.remove('hidden');
                 if (this.effectsManager) this.effectsManager.startIntroMode();
@@ -324,11 +330,12 @@ export class ScenarioBrowser {
 
         const buttons = [
             { text: 'Play', value: 'play', className: 'tron-btn primary' },
+            { text: 'Custom Game', value: 'custom', className: 'tron-btn' },
             { text: 'Close', value: 'close', className: 'tron-btn' }
         ];
         if (this.isOwner) {
-            buttons.splice(1, 0, { text: 'Edit', value: 'edit', className: 'tron-btn' });
-            buttons.splice(2, 0, { text: 'Delete', value: 'delete', className: 'tron-btn danger' });
+            buttons.splice(2, 0, { text: 'Edit', value: 'edit', className: 'tron-btn' });
+            buttons.splice(3, 0, { text: 'Delete', value: 'delete', className: 'tron-btn danger' });
         }
 
         Dialog.show({
@@ -336,7 +343,8 @@ export class ScenarioBrowser {
             content,
             buttons
         }).then(result => {
-            if (result === 'play') this.selectAndPlayLevel(index);
+            if (result === 'play') this.selectAndPlayLevel(index, { immediateStart: true });
+            else if (result === 'custom') this.selectAndPlayLevel(index, { customMode: true });
             else if (result === 'edit') this.openEditorForLevel(index);
             else if (result === 'delete') this.deleteLevel(index);
         });
@@ -417,7 +425,7 @@ export class ScenarioBrowser {
         });
     }
 
-    selectAndPlayLevel(index) {
+    selectAndPlayLevel(index, opts = {}) {
         const level = this.campaignManager.getLevel(this.selectedCampaign, index);
         if (!level) return;
 
@@ -436,9 +444,26 @@ export class ScenarioBrowser {
             localStorage.removeItem('dicy_loadedCampaignId');
         }
 
-        this.scenarioBrowserModal.classList.add('hidden');
-        this.setupModal.classList.remove('hidden');
-        if (this.effectsManager) this.effectsManager.startIntroMode();
+        if (opts.immediateStart) {
+            localStorage.setItem('dicy_campaignMode', '1');
+            localStorage.removeItem('dicy_customLevelMode');
+            this.scenarioBrowserModal.classList.add('hidden');
+            this.setupModal.classList.add('hidden');
+            if (this.effectsManager) this.effectsManager.stopIntroMode();
+            if (this.onStartGame) this.onStartGame();
+        } else if (opts.customMode) {
+            localStorage.removeItem('dicy_campaignMode');
+            localStorage.setItem('dicy_customLevelMode', '1');
+            this.scenarioBrowserModal.classList.add('hidden');
+            this.setupModal.classList.remove('hidden');
+            if (this.effectsManager) this.effectsManager.startIntroMode();
+        } else {
+            localStorage.removeItem('dicy_campaignMode');
+            localStorage.removeItem('dicy_customLevelMode');
+            this.scenarioBrowserModal.classList.add('hidden');
+            this.setupModal.classList.remove('hidden');
+            if (this.effectsManager) this.effectsManager.startIntroMode();
+        }
     }
 
     openEditorForLevel(index) {

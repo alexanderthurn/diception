@@ -28,6 +28,7 @@ import { GameStarter } from './core/game-starter.js';
 import { GameEventManager } from './ui/game-events.js';
 import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
+import { initCheatCode } from './cheat.js';
 
 // Pre-compute probability tables at startup
 initializeProbabilityTables();
@@ -88,6 +89,8 @@ async function init() {
     const renderer = new Renderer(container, game, inputManager);
     await renderer.init();
 
+    initCheatCode(game, renderer);
+
     window.gameApp = renderer.app;
 
     // Apply dice texture to UI elements
@@ -107,8 +110,11 @@ async function init() {
 
     const input = new InputController(game, renderer, inputManager);
 
-    // Loading Screen
-    new LoadingScreen(inputManager);
+    // Loading Screen - onDismiss set after scenarioBrowser is ready
+    let onLoadingDismiss = null;
+    new LoadingScreen(inputManager, {
+        onDismiss: () => { if (onLoadingDismiss) onLoadingDismiss(); }
+    });
 
     // Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);
@@ -150,6 +156,7 @@ async function init() {
 
     const sessionManager = new SessionManager(game, renderer, effectsManager, turnHistory, mapEditor);
     const scenarioBrowser = new ScenarioBrowser(configManager, mapEditor);
+    sessionManager.setScenarioBrowser(scenarioBrowser);
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
 
@@ -157,6 +164,17 @@ async function init() {
         game, renderer, effectsManager, turnHistory,
         configManager, scenarioBrowser, scenarioManager
     );
+    scenarioBrowser.setOnStartGame(() => gameStarter.startGame());
+
+    onLoadingDismiss = async () => {
+        if (localStorage.getItem('dicy_campaignMode')) {
+            document.getElementById('setup-modal').classList.add('hidden');
+            await scenarioBrowser.showCampaignView();
+            scenarioBrowser.restoreLastSelectedCampaign();
+            scenarioBrowser.scenarioBrowserModal.classList.remove('hidden');
+            effectsManager.startIntroMode();
+        }
+    };
 
     // Initialize Sound & Audio
     const sfxManager = new SoundManager();
@@ -208,6 +226,7 @@ async function init() {
     );
     gameEventManager.setUIComponents(diceHUD, gameLog, playerDashboard, highscoreManager, sfxManager, effectsManager, gameStatsTracker);
     gameEventManager.setCallbacks(getPlayerName, addLog, startTurnLog, finalizeTurnLog);
+    gameEventManager.setScenarioBrowser(scenarioBrowser);
     gameEventManager.init();
 
     // Tournament Runner

@@ -120,8 +120,9 @@ export class GameStarter {
         // Load pending scenario/level if needed
         this.scenarioBrowser.loadPendingScenarioIfNeeded();
         const pendingLevel = this.scenarioBrowser.getPendingScenario();
+        const isCustomMode = localStorage.getItem('dicy_customLevelMode');
 
-        if (pendingLevel?.type === 'config') {
+        if (pendingLevel?.type === 'config' && !isCustomMode) {
             // Procedural level - build gameConfig from level
             const [w, h] = (pendingLevel.mapSize || '6x6').split('x').map(Number);
             const gameConfig = {
@@ -136,6 +137,20 @@ export class GameStarter {
             };
             this.game.startGame(gameConfig);
             this.initializePlayerAIs(pendingLevel.botAI || 'easy');
+        } else if (pendingLevel?.type === 'config' && isCustomMode) {
+            // Custom mode - use config from UI
+            const gameConfig = {
+                humanCount: config.humanCount,
+                botCount: config.botCount,
+                mapWidth: config.mapWidth,
+                mapHeight: config.mapHeight,
+                maxDice: config.maxDice,
+                diceSides: config.diceSides,
+                mapStyle: config.mapStyle,
+                gameMode: config.gameMode
+            };
+            this.game.startGame(gameConfig);
+            this.initializePlayerAIs(config.botAI);
         } else if (pendingLevel && pendingLevel.type !== 'map') {
             // Scenario type - apply fixed state
             this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);

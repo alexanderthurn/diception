@@ -21,6 +21,12 @@ export class SessionManager {
         this.endTurnBtn = document.getElementById('end-turn-btn');
         this.autoWinBtn = document.getElementById('auto-win-btn');
         this.newGameBtn = document.getElementById('new-game-btn');
+
+        this.scenarioBrowser = null;
+    }
+
+    setScenarioBrowser(scenarioBrowser) {
+        this.scenarioBrowser = scenarioBrowser;
     }
 
     /**
@@ -74,8 +80,26 @@ export class SessionManager {
     quitToMainMenu() {
         this.resetGameSession();
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
+        localStorage.removeItem('dicy_campaignMode');
+        localStorage.removeItem('dicy_customLevelMode');
         this.setupModal.classList.remove('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
+        if (this.effectsManager) this.effectsManager.startIntroMode();
+    }
+
+    /**
+     * Quit to campaign screen (when in campaign mode)
+     */
+    async quitToCampaignScreen() {
+        this.resetGameSession();
+        if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
+        this.setupModal.classList.add('hidden');
+        document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
+        if (this.scenarioBrowser) {
+            await this.scenarioBrowser.showCampaignView();
+            this.scenarioBrowser.restoreLastSelectedCampaign();
+            this.scenarioBrowser.scenarioBrowserModal.classList.remove('hidden');
+        }
         if (this.effectsManager) this.effectsManager.startIntroMode();
     }
 

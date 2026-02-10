@@ -37,6 +37,12 @@ export class GameEventManager {
         this.addLog = null;
         this.startTurnLog = null;
         this.finalizeTurnLog = null;
+
+        this.scenarioBrowser = null;
+    }
+
+    setScenarioBrowser(scenarioBrowser) {
+        this.scenarioBrowser = scenarioBrowser;
     }
 
     /**
@@ -330,8 +336,9 @@ export class GameEventManager {
             this.highscoreManager.recordWin(name, humanPlayed, humanWon);
         }
 
-        // Mark campaign level as solved when human wins
-        if (humanWon) {
+        // Mark campaign level as solved when human wins (not in custom mode)
+        const isCustomMode = localStorage.getItem('dicy_customLevelMode');
+        if (humanWon && !isCustomMode) {
             const owner = localStorage.getItem('dicy_loadedCampaign');
             const idxStr = localStorage.getItem('dicy_loadedLevelIndex');
             if (owner != null && idxStr != null) {
@@ -417,24 +424,68 @@ export class GameEventManager {
             content.appendChild(humanSection);
         }
 
-        const buttons = [
-            { text: 'New Game', value: 'restart', className: 'tron-btn' }
-        ];
+        const isCampaignMode = localStorage.getItem('dicy_campaignMode');
+        const owner = localStorage.getItem('dicy_loadedCampaign');
+        const idxStr = localStorage.getItem('dicy_loadedLevelIndex');
+        const levelIndex = idxStr != null ? parseInt(idxStr, 10) : -1;
 
-        if (this.turnHistory.hasInitialState()) {
-            buttons.push({ text: 'Try Again', value: 'clone', className: 'tron-btn' });
+        let title = humanWon ? `${name.toUpperCase()}  WINS!` : `DEFEAT — ${name.toUpperCase()}  WINS`;
+        let buttons = [];
+
+        if (isCampaignMode && this.scenarioBrowser && owner) {
+            const campaign = this.scenarioBrowser.campaignManager.getCampaign(owner);
+            const totalLevels = campaign?.levels?.length ?? 0;
+            const hasNextLevel = humanWon && levelIndex >= 0 && levelIndex < totalLevels - 1;
+            const campaignFinished = humanWon && totalLevels > 0 && levelIndex === totalLevels - 1;
+
+            if (!campaign) {
+                buttons = [{ text: 'New Game', value: 'restart', className: 'tron-btn' }];
+                if (this.turnHistory.hasInitialState()) buttons.push({ text: 'Try Again', value: 'clone', className: 'tron-btn' });
+            } else if (campaignFinished) {
+                title = '🎉 CAMPAIGN COMPLETE! 🎉';
+                const celebrationEl = document.createElement('p');
+                celebrationEl.className = 'campaign-celebration';
+                celebrationEl.textContent = `You conquered all ${totalLevels} levels of ${campaign?.owner || 'this campaign'}!`;
+                celebrationEl.style.cssText = 'font-size: 1.2em; margin: 1em 0; color: var(--primary-color);';
+                content.insertBefore(celebrationEl, content.firstChild);
+            }
+
+            if (campaign && this.turnHistory.hasInitialState()) {
+                buttons.push({ text: 'Retry', value: 'clone', className: 'tron-btn' });
+            }
+            if (campaign) {
+                if (hasNextLevel) buttons.push({ text: 'Next Level', value: 'next', className: 'tron-btn primary' });
+                buttons.push({ text: 'Back to Campaign', value: 'campaign', className: 'tron-btn' });
+                buttons.push({ text: 'Main Menu', value: 'restart', className: 'tron-btn' });
+            }
+        }
+        if (buttons.length === 0) {
+            buttons.push({ text: 'New Game', value: 'restart', className: 'tron-btn' });
+            if (this.turnHistory.hasInitialState()) {
+                buttons.push({ text: 'Try Again', value: 'clone', className: 'tron-btn' });
+            }
         }
 
         const choice = await Dialog.show({
-            title: `${name.toUpperCase()}  WINS!`,
+            title,
             content: content,
-            buttons: buttons
+            buttons
         });
 
         if (choice === 'restart') {
             this.sessionManager.quitToMainMenu();
         } else if (choice === 'clone') {
             this.sessionManager.restartCurrentGame(this.addLog, this.gameStarter.getAutoplayPlayers());
+        } else if (choice === 'campaign') {
+            localStorage.removeItem('dicy_customLevelMode');
+            await this.sessionManager.quitToCampaignScreen();
+        } else if (choice === 'next') {
+            const campaign = owner ? this.scenarioBrowser.campaignManager.getCampaign(owner) : null;
+            const nextIndex = levelIndex + 1;
+            if (campaign && this.scenarioBrowser.campaignManager.getLevel(campaign, nextIndex)) {
+                this.scenarioBrowser.selectedCampaign = campaign;
+                this.scenarioBrowser.selectAndPlayLevel(nextIndex, { immediateStart: true });
+            }
         }
     }
 
