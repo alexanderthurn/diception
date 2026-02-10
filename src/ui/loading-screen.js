@@ -121,13 +121,13 @@ export class LoadingScreen {
 
         this.isDismissed = true;
 
-        // Block UI interactions for a brief moment to prevent accidental clicks
+        // Block UI interactions briefly to prevent accidental clicks
         const uiOverlay = document.getElementById('ui-overlay');
         if (uiOverlay) {
             uiOverlay.classList.add('interaction-shield');
             setTimeout(() => {
                 uiOverlay.classList.remove('interaction-shield');
-            }, 500);
+            }, 150);
         }
 
         if (this.el) {
@@ -135,7 +135,7 @@ export class LoadingScreen {
             setTimeout(() => {
                 this.el.style.display = 'none';
                 if (this.onDismiss) this.onDismiss();
-            }, 800);
+            }, 150);
         }
 
         // Cleanup

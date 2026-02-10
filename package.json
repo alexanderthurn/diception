@@ -1,7 +1,7 @@
 {
   "name": "dicy",
-  "version": "1.1.0",
-  "description": "A neon-styled, turn-based dice strategy game inspired by Dice Wars / Risk.",
+  "version": "1.1.1",
+  "description": "A fast-paced, neon-styled dice strategy game. Inspired by the tactical depth of DiceWars and Kdice, Diception delivers quick turns and intense territory conquest.",
   "main": "electron-main.cjs",
   "type": "module",
   "scripts": {

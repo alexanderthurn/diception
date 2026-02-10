@@ -1,6 +1,6 @@
 # DICEPTION
 
-A super fast dice conquest game. Conquer territories, roll dice, and dominate the grid. Inspired by Dice Wars / Risk.
+A fast-paced, neon-styled dice strategy game. Inspired by the tactical depth of DiceWars and Kdice, Diception delivers quick turns and intense territory conquest.
 
 **[🎮 LIVE PREVIEW](https://diception.feuerware.com/)**
 

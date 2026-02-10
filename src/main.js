@@ -208,7 +208,7 @@ async function init() {
         if (!window.steam) {
             const count = parseInt(localStorage.getItem('dicy_web_visit_count') || '0', 10) + 1;
             localStorage.setItem('dicy_web_visit_count', String(count));
-            if (count % 2 === 0) {
+            if (count % 5 === 0) {
                 await Dialog.show({
                     title: 'ENJOYING?',
                     message: 'This is the free web version. If you like the game and want to support Diception, it would be awesome if you buy the full version here (including more campaigns):',
