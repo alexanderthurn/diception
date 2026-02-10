@@ -4,6 +4,12 @@ A super fast dice conquest game. Conquer territories, roll dice, and dominate th
 
 **[🎮 LIVE PREVIEW](https://diception.feuerware.com/)**
 
+---
+
+**The code is licensed under GPLv3.** The campaign is also included here so you can learn how the levels are structured. **However:** If you appreciate my work as a solo developer, please consider buying the Steam version. Only there will you get Cloud Saves, Achievements, and directly support further development.
+
+---
+
 ## Overview
 
 Take control of the map by rolling dice to attack neighboring territories. The player who conquers all territories wins!

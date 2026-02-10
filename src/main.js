@@ -167,6 +167,24 @@ async function init() {
     scenarioBrowser.setOnStartGame(() => gameStarter.startGame());
 
     onLoadingDismiss = async () => {
+        // Steam: first-time thank-you + game speed choice
+        if (window.steam && !localStorage.getItem('dicy_steam_welcome_shown')) {
+            const choice = await Dialog.show({
+                title: 'THANK YOU',
+                message: 'Thank you for your purchase! Big help.\n\nIs this your first time playing? Choose your game speed:',
+                buttons: [
+                    { text: 'Yes – Beginner (shows all rolls)', value: 'beginner', className: 'tron-btn' },
+                    { text: 'I know the fundamentals – Normal', value: 'normal', className: 'tron-btn' }
+                ]
+            });
+            const speed = choice === 'normal' ? 'normal' : 'beginner';
+            localStorage.setItem('dicy_gameSpeed', speed);
+            localStorage.setItem('dicy_steam_welcome_shown', '1');
+            if (configManager.elements?.gameSpeedInput) {
+                configManager.elements.gameSpeedInput.value = speed;
+            }
+        }
+
         if (localStorage.getItem('dicy_campaignMode')) {
             document.getElementById('setup-modal').classList.add('hidden');
             await scenarioBrowser.showCampaignView();
