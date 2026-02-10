@@ -324,7 +324,8 @@ export class GamepadCursorManager {
             element: el,
             lastPlayerId: -1,
             lastColor: '',
-            speedMultiplier: parseFloat(localStorage.getItem('dicy_gamepad_speed_' + index)) || 1.0
+            speedMultiplier: parseFloat(localStorage.getItem('dicy_gamepad_speed_' + index)) || 1.0,
+            dragTarget: null
         };
 
         // Set initial position and opacity
@@ -427,8 +428,22 @@ export class GamepadCursorManager {
         });
         target.dispatchEvent(mouseEvent);
 
-        if (type === 'mousedown' && button === 0 && target.focus) {
-            target.focus();
+        if (type === 'mousedown' && button === 0) {
+            if (target.focus) target.focus();
+            const cursor = this.cursors.get(gamepadIndex);
+            if (cursor) cursor.dragTarget = target;
+        }
+
+        if (type === 'mouseup' && button === 0) {
+            const cursor = this.cursors.get(gamepadIndex);
+            if (cursor) cursor.dragTarget = null;
+        }
+
+        if (type === 'mousemove') {
+            const cursor = this.cursors.get(gamepadIndex);
+            if (cursor && cursor.dragTarget && cursor.dragTarget.tagName === 'INPUT' && cursor.dragTarget.type === 'range') {
+                this.updateSliderFromX(cursor.dragTarget, x);
+            }
         }
 
         if (type === 'click') {
@@ -459,34 +474,42 @@ export class GamepadCursorManager {
 
         // 2. Handle <input type="range"> elements (Jump to point)
         else if (target.tagName === 'INPUT' && target.type === 'range') {
-            const rect = target.getBoundingClientRect();
-            const min = parseFloat(target.min || 0);
-            const max = parseFloat(target.max || 100);
-            const step = parseFloat(target.step || 1);
-
-            // Calculate percentage based on crosshair X position
-            // Subtract small padding to center the thumb better
-            const padding = 10;
-            const width = rect.width - (padding * 2);
-            let pct = (x - (rect.left + padding)) / width;
-            pct = Math.max(0, Math.min(1, pct));
-
-            // Calculate raw value
-            let val = min + pct * (max - min);
-
-            // Snap to step
-            val = Math.round(val / step) * step;
-
-            target.value = val;
-
-            // Dispatch events so the UI updates and the app responds
-            target.dispatchEvent(new Event('input', { bubbles: true }));
-            target.dispatchEvent(new Event('change', { bubbles: true }));
+            this.updateSliderFromX(target, x);
         }
 
         // 3. Handle <input type="checkbox"> for completeness
         else if (target.tagName === 'INPUT' && target.type === 'checkbox') {
             target.checked = !target.checked;
+            target.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    /**
+     * Updates an <input type="range"> value based on a screen X coordinate.
+     */
+    updateSliderFromX(target, x) {
+        const rect = target.getBoundingClientRect();
+        const min = parseFloat(target.min || 0);
+        const max = parseFloat(target.max || 100);
+        const step = parseFloat(target.step || 1);
+
+        // Calculate percentage based on crosshair X position
+        // Subtract small padding to center the thumb better
+        const padding = 10;
+        const width = rect.width - (padding * 2);
+        let pct = (x - (rect.left + padding)) / width;
+        pct = Math.max(0, Math.min(1, pct));
+
+        // Calculate raw value
+        let val = min + pct * (max - min);
+
+        // Snap to step
+        val = Math.round(val / step) * step;
+
+        if (target.value !== val.toString()) {
+            target.value = val;
+            // Dispatch events so the UI updates and the app responds
+            target.dispatchEvent(new Event('input', { bubbles: true }));
             target.dispatchEvent(new Event('change', { bubbles: true }));
         }
     }
