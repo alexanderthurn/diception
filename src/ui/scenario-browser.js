@@ -22,6 +22,7 @@ export class ScenarioBrowser {
         this.scenarioBrowserModal = document.getElementById('scenario-browser-modal');
         this.scenarioBrowserCloseBtn = document.getElementById('scenario-browser-close-btn');
         this.campaignList = document.getElementById('campaign-list');
+        this.campaignSelect = document.getElementById('campaign-select');
         this.levelGridContainer = document.getElementById('level-grid-container');
         this.levelGrid = document.getElementById('level-grid');
         this.levelGridHeader = document.getElementById('level-grid-header');
@@ -102,6 +103,7 @@ export class ScenarioBrowser {
         if (item) {
             document.querySelectorAll('#campaign-list .scenario-list-item').forEach(i => i.classList.remove('selected'));
             item.classList.add('selected');
+            if (this.campaignSelect) this.campaignSelect.value = last;
             let campaign = this.campaignManager.getCampaign(last);
             if (!campaign && last === 'Your Campaign') {
                 campaign = { owner: 'Your Campaign', levels: [], isEmpty: true, isUserCampaign: true };
@@ -138,6 +140,29 @@ export class ScenarioBrowser {
         }
 
         this.campaignList.innerHTML = '';
+        if (this.campaignSelect) {
+            this.campaignSelect.innerHTML = '';
+            campaigns.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.owner;
+                const levelCount = c.levels?.length ?? 0;
+                const displayName = c.isUserCampaign ? 'Your Campaign' : c.owner;
+                opt.textContent = `${displayName} (${levelCount} levels)`;
+                this.campaignSelect.appendChild(opt);
+            }
+            );
+            this.campaignSelect.value = this.selectedCampaign?.owner || (campaigns[0]?.owner ?? '');
+            this.campaignSelect.onchange = () => {
+                const c = campaigns.find(x => x.owner === this.campaignSelect.value);
+                if (c) {
+                    localStorage.setItem('dicy_lastCampaign', c.owner);
+                    document.querySelectorAll('#campaign-list .scenario-list-item').forEach(i => i.classList.remove('selected'));
+                    const item = this.campaignList.querySelector(`[data-owner="${CSS.escape(c.owner)}"]`);
+                    if (item) item.classList.add('selected');
+                    this.showLevelGridView(c.isEmpty || (c.levels && c.levels.length === 0 && c.isUserCampaign) ? { ...c, isEmpty: true } : c);
+                }
+            };
+        }
         campaigns.forEach(c => {
             const item = document.createElement('div');
             item.className = 'scenario-list-item' + (this.selectedCampaign?.owner === c.owner ? ' selected' : '');
@@ -152,6 +177,7 @@ export class ScenarioBrowser {
                 localStorage.setItem('dicy_lastCampaign', c.owner);
                 document.querySelectorAll('#campaign-list .scenario-list-item').forEach(i => i.classList.remove('selected'));
                 item.classList.add('selected');
+                if (this.campaignSelect) this.campaignSelect.value = c.owner;
                 this.showLevelGridView(c.isEmpty || (c.levels && c.levels.length === 0 && c.isUserCampaign) ? { ...c, isEmpty: true } : c);
             });
             this.campaignList.appendChild(item);
@@ -269,9 +295,12 @@ export class ScenarioBrowser {
 
     async showHoverPreview(level, tile) {
         this.hideHoverPreview();
+        const index = tile?.dataset?.index != null ? parseInt(tile.dataset.index, 10) : -1;
         const previewLevel = await this.getLevelForPreview(level);
         const el = document.createElement('div');
         el.className = 'level-hover-preview';
+        const isSolved = index >= 0 && this.selectedCampaign?.owner && getSolvedLevels(this.selectedCampaign.owner).includes(index);
+        if (isSolved) el.classList.add('level-hover-preview-solved');
         const size = Math.min(80, Math.floor(window.innerWidth * 0.3), 128);
         const canvas = document.createElement('canvas');
         canvas.width = size;
@@ -298,55 +327,147 @@ export class ScenarioBrowser {
     }
 
     async showLevelPreviewDialog(level, index) {
-        if (this.selectedCampaign?.owner) {
-            localStorage.setItem('dicy_lastCampaign', this.selectedCampaign.owner);
-            localStorage.setItem('dicy_lastLevelIndex', String(index));
-        }
-        const previewLevel = await this.getLevelForPreview(level);
-        const content = document.createElement('div');
-        content.className = 'level-preview-dialog-content';
-        const size = Math.min(160, Math.floor(window.innerWidth * 0.5), 256);
-        const canvas = document.createElement('canvas');
-        canvas.className = 'level-preview-canvas';
-        canvas.width = size;
-        canvas.height = size;
-        canvas.style.setProperty('--preview-size', size + 'px');
-        this.renderMinimap(canvas, previewLevel);
-        content.appendChild(canvas);
-        const p = document.createElement('p');
-        p.className = 'level-preview-type';
-        const typeLabel = level.type === 'config' ? 'Procedural' : (level.type === 'map' ? 'Map' : 'Scenario');
-        p.textContent = `${typeLabel} · Level ${index + 1}`;
-        content.appendChild(p);
-        const infoBlock = document.createElement('div');
-        infoBlock.className = 'level-preview-info';
-        this.getLevelInfoLines(level).forEach(line => {
-            const span = document.createElement('span');
-            span.className = 'level-preview-info-line';
-            span.textContent = line;
-            infoBlock.appendChild(span);
-        });
-        content.appendChild(infoBlock);
+        const campaign = this.selectedCampaign;
+        const levels = campaign?.levels ?? [];
+        const totalLevels = levels.length;
 
-        const buttons = [
+        const buildContent = async (idx) => {
+            const lvl = this.campaignManager.getLevel(campaign, idx);
+            if (!lvl) return null;
+            const previewLevel = await this.getLevelForPreview(lvl);
+            const content = document.createElement('div');
+            content.className = 'level-preview-dialog-content';
+            const isSolved = campaign?.owner && getSolvedLevels(campaign.owner).includes(idx);
+            if (isSolved) content.classList.add('level-preview-solved');
+            const size = Math.min(160, Math.floor(window.innerWidth * 0.5), 256);
+
+            const navRow = document.createElement('div');
+            navRow.className = 'level-preview-nav-row';
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'level-preview-nav level-preview-nav-left tron-btn small';
+            prevBtn.innerHTML = '‹';
+            prevBtn.disabled = idx <= 0;
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'level-preview-nav level-preview-nav-right tron-btn small';
+            nextBtn.innerHTML = '›';
+            nextBtn.disabled = idx >= totalLevels - 1;
+
+            const canvasWrap = document.createElement('div');
+            canvasWrap.className = 'level-preview-canvas-wrap';
+            const canvas = document.createElement('canvas');
+            canvas.className = 'level-preview-canvas';
+            canvas.width = size;
+            canvas.height = size;
+            canvas.style.setProperty('--preview-size', size + 'px');
+            this.renderMinimap(canvas, previewLevel);
+            canvasWrap.appendChild(prevBtn);
+            canvasWrap.appendChild(canvas);
+            canvasWrap.appendChild(nextBtn);
+            navRow.appendChild(canvasWrap);
+            content.appendChild(navRow);
+
+            const p = document.createElement('p');
+            p.className = 'level-preview-type';
+            const typeLabel = lvl.type === 'config' ? 'Procedural' : (lvl.type === 'map' ? 'Map' : 'Scenario');
+            p.textContent = `${typeLabel} · Level ${idx + 1}`;
+            content.appendChild(p);
+            const infoBlock = document.createElement('div');
+            infoBlock.className = 'level-preview-info';
+            this.getLevelInfoLines(lvl).forEach(line => {
+                const span = document.createElement('span');
+                span.className = 'level-preview-info-line';
+                span.textContent = line;
+                infoBlock.appendChild(span);
+            });
+            content.appendChild(infoBlock);
+            return { content, prevBtn, nextBtn };
+        };
+
+        const overlay = document.createElement('div');
+        overlay.className = 'dialog-overlay level-preview-overlay';
+
+        const dialog = document.createElement('div');
+        dialog.className = 'modal dialog-box level-preview-dialog';
+
+        const header = document.createElement('div');
+        header.className = 'dialog-header dialog-header-with-close';
+        const titleEl = document.createElement('h1');
+        titleEl.className = 'tron-title small';
+        titleEl.textContent = `#${index + 1}`;
+        header.appendChild(titleEl);
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'dialog-close-btn';
+        closeBtn.innerHTML = '×';
+        closeBtn.setAttribute('aria-label', 'Close');
+        header.appendChild(closeBtn);
+        dialog.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'dialog-body';
+
+        let currentIndex = index;
+        const updateContent = async (idx) => {
+            currentIndex = idx;
+            titleEl.textContent = `#${idx + 1}`;
+            const built = await buildContent(idx);
+            if (!built) return;
+            body.innerHTML = '';
+            body.appendChild(built.content);
+            built.prevBtn.addEventListener('click', () => { if (idx > 0) updateContent(idx - 1); });
+            built.nextBtn.addEventListener('click', () => { if (idx < totalLevels - 1) updateContent(idx + 1); });
+        };
+
+        const built = await buildContent(index);
+        body.appendChild(built.content);
+        built.prevBtn.addEventListener('click', () => { if (index > 0) updateContent(index - 1); });
+        built.nextBtn.addEventListener('click', () => { if (index < totalLevels - 1) updateContent(index + 1); });
+
+        dialog.appendChild(body);
+
+        const actions = document.createElement('div');
+        actions.className = 'dialog-actions';
+        const actionButtons = [
             { text: 'Play', value: 'play', className: 'tron-btn primary' },
             { text: 'Custom Game', value: 'custom', className: 'tron-btn' },
             { text: 'Close', value: 'close', className: 'tron-btn' }
         ];
         if (this.isOwner) {
-            buttons.splice(2, 0, { text: 'Edit', value: 'edit', className: 'tron-btn' });
-            buttons.splice(3, 0, { text: 'Delete', value: 'delete', className: 'tron-btn danger' });
+            actionButtons.splice(2, 0, { text: 'Edit', value: 'edit', className: 'tron-btn' });
+            actionButtons.splice(3, 0, { text: 'Delete', value: 'delete', className: 'tron-btn danger' });
         }
+        actionButtons.forEach(btnConfig => {
+            const btn = document.createElement('button');
+            btn.className = btnConfig.className || 'tron-btn';
+            btn.textContent = btnConfig.text;
+            btn.dataset.value = btnConfig.value;
+            actions.appendChild(btn);
+        });
+        dialog.appendChild(actions);
 
-        Dialog.show({
-            title: 'Level Preview',
-            content,
-            buttons
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        if (Dialog.activeOverlay) Dialog.close(Dialog.activeOverlay);
+        Dialog.activeOverlay = overlay;
+
+        new Promise((resolve) => {
+            const finish = (value) => {
+                overlay.classList.add('fade-out');
+                setTimeout(() => {
+                    overlay.parentNode?.removeChild(overlay);
+                    Dialog.activeOverlay = null;
+                }, 300);
+                resolve(value);
+            };
+            closeBtn.addEventListener('click', () => finish('close'));
+            actions.querySelectorAll('button').forEach((btn) => {
+                btn.addEventListener('click', () => finish(btn.dataset.value));
+            });
         }).then(result => {
-            if (result === 'play') this.selectAndPlayLevel(index, { immediateStart: true });
-            else if (result === 'custom') this.selectAndPlayLevel(index, { customMode: true });
-            else if (result === 'edit') this.openEditorForLevel(index);
-            else if (result === 'delete') this.deleteLevel(index);
+            const idx = currentIndex;
+            if (result === 'play') this.selectAndPlayLevel(idx, { immediateStart: true });
+            else if (result === 'custom') this.selectAndPlayLevel(idx, { customMode: true });
+            else if (result === 'edit') this.openEditorForLevel(idx);
+            else if (result === 'delete') this.deleteLevel(idx);
         });
     }
 

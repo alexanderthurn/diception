@@ -24,7 +24,8 @@ export class Dialog {
                 title,
                 message = '',
                 content = null,
-                buttons = [{ text: 'OK', value: true, className: 'tron-btn' }]
+                buttons = [{ text: 'OK', value: true, className: 'tron-btn' }],
+                closeButton = false
             } = options;
 
             // Create Overlay/Container
@@ -35,18 +36,29 @@ export class Dialog {
             const dialog = document.createElement('div');
             dialog.className = 'modal dialog-box';
 
-            // Header
-            const header = document.createElement('h1');
-            header.className = 'tron-title small';
-
-            // Wrap letters in spans for per-character animation
+            // Header with optional close button
+            const header = document.createElement('div');
+            header.className = 'dialog-header' + (closeButton ? ' dialog-header-with-close' : '');
+            const titleEl = document.createElement('h1');
+            titleEl.className = 'tron-title small';
             [...title].forEach((char, i) => {
                 const span = document.createElement('span');
                 span.textContent = char;
                 span.style.setProperty('--index', i);
-                header.appendChild(span);
+                titleEl.appendChild(span);
             });
-
+            header.appendChild(titleEl);
+            if (closeButton) {
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'dialog-close-btn';
+                closeBtn.innerHTML = '×';
+                closeBtn.setAttribute('aria-label', 'Close');
+                closeBtn.addEventListener('click', () => {
+                    this.close(overlay);
+                    resolve('close');
+                });
+                header.appendChild(closeBtn);
+            }
             dialog.appendChild(header);
 
             // Body

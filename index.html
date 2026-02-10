@@ -492,17 +492,19 @@
             </div>
         </div>
 
-        <!-- Scenario Browser Modal (Campaign-based) -->
-        <div id="scenario-browser-modal" class="modal hidden wide-modal">
+        <!-- Scenario Browser (full-screen overlay like editor, back button at top-left) -->
+        <div id="scenario-browser-modal" class="scenario-browser-overlay hidden">
             <div class="scenario-browser-top-bar">
                 <button id="scenario-browser-close-btn" class="tron-btn small">← Back</button>
             </div>
+            <div class="scenario-browser-inner modal wide-modal">
             <div class="modal-header compact-header">
                 <h2 class="modal-title">Campaigns</h2>
             </div>
             <div class="scenario-browser-content split-view">
                 <div class="scenario-browser-left">
                     <div class="scenario-list-container">
+                        <select id="campaign-select" class="campaign-select-mobile" aria-label="Select campaign"></select>
                         <div id="campaign-list"></div>
                     </div>
                 </div>
@@ -517,6 +519,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
 
