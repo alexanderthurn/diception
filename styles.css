@@ -750,12 +750,15 @@ input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    background: #000;
+    background: transparent;
     border: 0px solid var(--border-color);
     color: #fff;
     padding: 0px;
     font-family: inherit;
     border-radius: 0;
+    height: 40px;
+    /* Larger hitbox */
+    cursor: pointer;
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
@@ -779,7 +782,8 @@ input[type="range"]::-webkit-slider-thumb {
     background: #00f2ff;
     border-radius: 0;
     cursor: pointer;
-    margin-top: -8px;
+    margin-top: -8.5px;
+    /* Centers 25px thumb on 8px track */
     border: none;
     box-shadow: var(--slider-glow);
 
