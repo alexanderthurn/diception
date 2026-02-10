@@ -17,6 +17,7 @@ import { DiceHUD } from './ui/dice-hud.js';
 import { HighscoreManager } from './ui/highscore-manager.js';
 import { GameStatsTracker } from './ui/game-stats-tracker.js';
 import { Dialog } from './ui/dialog.js';
+import { ProbabilityCalculator } from './ui/probability-calculator.js';
 
 // New modular components
 import { ConfigManager } from './ui/config-manager.js';
