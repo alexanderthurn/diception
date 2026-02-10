@@ -65,6 +65,10 @@ export class ScenarioBrowser {
         this.onStartGame = fn;
     }
 
+    hasHoverCapability() {
+        return window.matchMedia('(hover: hover)').matches;
+    }
+
     setupEventListeners() {
         const scenariosBtn = document.getElementById('scenarios-btn');
         if (scenariosBtn) {
@@ -98,20 +102,41 @@ export class ScenarioBrowser {
 
     restoreLastSelectedCampaign() {
         const last = localStorage.getItem('dicy_lastCampaign');
-        if (!last) return;
-        const item = this.campaignList.querySelector(`[data-owner="${CSS.escape(last)}"]`);
-        if (item) {
-            document.querySelectorAll('#campaign-list .scenario-list-item').forEach(i => i.classList.remove('selected'));
-            item.classList.add('selected');
-            if (this.campaignSelect) this.campaignSelect.value = last;
-            let campaign = this.campaignManager.getCampaign(last);
-            if (!campaign && last === 'Your Campaign') {
-                campaign = { owner: 'Your Campaign', levels: [], isEmpty: true, isUserCampaign: true };
+        let campaign = null;
+        let owner = last;
+
+        if (last) {
+            const item = this.campaignList.querySelector(`[data-owner="${CSS.escape(last)}"]`);
+            if (item) {
+                document.querySelectorAll('#campaign-list .scenario-list-item').forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                if (this.campaignSelect) this.campaignSelect.value = last;
+                campaign = this.campaignManager.getCampaign(last);
+                if (!campaign && last === 'Your Campaign') {
+                    campaign = { owner: 'Your Campaign', levels: [], isEmpty: true, isUserCampaign: true };
+                }
             }
-            if (campaign) {
-                this.selectedCampaign = campaign;
-                this.showLevelGridView(campaign);
+        }
+
+        if (!campaign) {
+            const campaigns = this.campaignManager.listCampaigns();
+            const first = campaigns[0];
+            if (first) {
+                owner = first.owner;
+                const item = this.campaignList.querySelector(`[data-owner="${CSS.escape(owner)}"]`);
+                if (item) {
+                    document.querySelectorAll('#campaign-list .scenario-list-item').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                    if (this.campaignSelect) this.campaignSelect.value = owner;
+                }
+                campaign = first.isEmpty || (first.levels?.length === 0 && first.isUserCampaign)
+                    ? { ...first, isEmpty: true } : first;
             }
+        }
+
+        if (campaign) {
+            this.selectedCampaign = campaign;
+            this.showLevelGridView(campaign);
         }
     }
 
@@ -241,20 +266,10 @@ export class ScenarioBrowser {
             idxSpan.textContent = i + 1;
             tile.appendChild(idxSpan);
 
-            if (this.isOwner) {
-                const editBtn = document.createElement('button');
-                editBtn.className = 'level-tile-edit';
-                editBtn.title = 'Edit';
-                editBtn.textContent = '✏️';
-                editBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.openEditorForLevel(i);
-                });
-                tile.appendChild(editBtn);
+            if (this.hasHoverCapability()) {
+                tile.addEventListener('mouseenter', () => this.showHoverPreview(level, tile));
+                tile.addEventListener('mouseleave', () => this.hideHoverPreview());
             }
-
-            tile.addEventListener('mouseenter', () => this.showHoverPreview(level, tile));
-            tile.addEventListener('mouseleave', () => this.hideHoverPreview());
             tile.addEventListener('click', () => this.showLevelPreviewDialog(level, i));
             this.levelGrid.appendChild(tile);
         }
@@ -425,22 +440,28 @@ export class ScenarioBrowser {
         dialog.appendChild(body);
 
         const actions = document.createElement('div');
-        actions.className = 'dialog-actions';
+        actions.className = 'dialog-actions level-preview-actions';
         const actionButtons = [
             { text: 'Play', value: 'play', className: 'tron-btn primary' },
             { text: 'Custom Game', value: 'custom', className: 'tron-btn' }
         ];
         if (this.isOwner) {
-            actionButtons.push({ text: 'Edit', value: 'edit', className: 'tron-btn' });
-            actionButtons.push({ text: 'Delete', value: 'delete', className: 'tron-btn danger' });
+            actionButtons.push({ text: 'Edit', value: 'edit', className: 'tron-btn', row: 2 });
+            actionButtons.push({ text: 'Delete', value: 'delete', className: 'tron-btn danger', row: 2 });
         }
+        const primaryRow = document.createElement('div');
+        primaryRow.className = 'dialog-actions-row';
+        const secondaryRow = document.createElement('div');
+        secondaryRow.className = 'dialog-actions-row dialog-actions-row-secondary';
         actionButtons.forEach(btnConfig => {
             const btn = document.createElement('button');
             btn.className = btnConfig.className || 'tron-btn';
             btn.textContent = btnConfig.text;
             btn.dataset.value = btnConfig.value;
-            actions.appendChild(btn);
+            (btnConfig.row === 2 ? secondaryRow : primaryRow).appendChild(btn);
         });
+        actions.appendChild(primaryRow);
+        if (secondaryRow.children.length) actions.appendChild(secondaryRow);
         dialog.appendChild(actions);
 
         overlay.appendChild(dialog);

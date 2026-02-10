@@ -2093,6 +2093,7 @@ select {
     position: relative;
     width: 36px;
     height: 36px;
+    touch-action: manipulation;
     min-width: 36px;
     min-height: 36px;
     background: rgba(0, 0, 0, 0.5);
@@ -2229,7 +2230,8 @@ select {
 }
 
 .level-preview-nav.hidden {
-    display: none;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 /* Level preview dialog - compact */
@@ -2490,8 +2492,39 @@ select {
         display: none;
     }
 
+    .scenario-browser-close-btn .scenario-close-desktop {
+        display: none;
+    }
+
+    .scenario-browser-close-btn .scenario-close-mobile {
+        display: inline !important;
+        font-size: 28px;
+        line-height: 1;
+        color: #fff;
+    }
+
+    .scenario-browser-close-btn {
+        min-width: 44px;
+        min-height: 44px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        background: rgba(0, 0, 0, 0.5);
+    }
+
     .scenario-browser-right {
         min-height: 300px;
+    }
+
+    .scenario-browser-inner .modal-title {
+        text-align: center;
+    }
+
+    .level-preview-overlay .dialog-close-btn {
+        position: fixed;
+        top: max(15px, env(safe-area-inset-top));
+        left: 15px;
+        z-index: 2100;
+        min-width: 44px;
+        min-height: 44px;
     }
 
     /* Hide button text on mobile */
@@ -3660,6 +3693,23 @@ canvas {
     margin-top: 30px;
 }
 
+.level-preview-actions {
+    flex-direction: column;
+    align-items: center;
+}
+
+.level-preview-actions .dialog-actions-row {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.level-preview-actions .dialog-actions-row-secondary {
+    margin-top: 8px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 @keyframes dialog-fade-in {
     from {
         opacity: 0;
@@ -3834,11 +3884,21 @@ canvas {
     justify-content: flex-start;
     align-items: center;
     padding: 15px 20px;
-    z-index: 10;
+    padding-top: max(15px, env(safe-area-inset-top));
+    z-index: 1000;
+    pointer-events: auto;
 }
 
 .scenario-browser-top-bar .tron-btn {
     flex: 0 0 auto;
+}
+
+.scenario-browser-close-btn .scenario-close-mobile {
+    display: none;
+}
+
+.scenario-close-desktop {
+    display: inline;
 }
 
 .scenario-browser-inner {
