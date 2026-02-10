@@ -118,7 +118,8 @@ export class HardAI extends BaseAI {
                 }
 
                 // Calculate strategic score within priority
-                const score = (priority * 1000)
+                // Increased multiplier to ensure strict adherence to priority tiers
+                const score = (priority * 10000)
                     - (option.attackerDice * 50)              // preserve strong stacks
                     + (option.opponentTerritories * 20)       // focus on strongest player
                     + (option.targetEnemyNeighbors * 30)      // break connected regions

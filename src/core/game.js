@@ -122,15 +122,21 @@ export class Game {
         // Reduce dice on players with more than minimum
         stats.forEach(s => {
             let excess = s.totalDice - minDice;
-            while (excess > 0) {
-                // Find tiles with more than 1 die
-                const reducibleTiles = s.tiles.filter(t => t.dice > 1);
-                if (reducibleTiles.length === 0) break;
+            // Optimization: Filter once and maintain list
+            const reducibleTiles = s.tiles.filter(t => t.dice > 1);
 
-                // Reduce a random tile
-                const tile = reducibleTiles[Math.floor(Math.random() * reducibleTiles.length)];
+            while (excess > 0 && reducibleTiles.length > 0) {
+                const randomIndex = Math.floor(Math.random() * reducibleTiles.length);
+                const tile = reducibleTiles[randomIndex];
+
                 tile.dice--;
                 excess--;
+
+                // If tile drops to 1 die, it's no longer reducible
+                if (tile.dice <= 1) {
+                    reducibleTiles[randomIndex] = reducibleTiles[reducibleTiles.length - 1];
+                    reducibleTiles.pop();
+                }
             }
         });
     }

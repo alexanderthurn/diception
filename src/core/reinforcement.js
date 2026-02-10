@@ -27,19 +27,24 @@ export class ReinforcementManager {
         const ownedTiles = map.getTilesByOwner(playerId);
 
         // Distribute randomly
-        while (diceToDistribute > 0) {
-            // Filter eligible tiles (dice < maxDice)
-            const eligibleTiles = ownedTiles.filter(t => t.dice < maxDice);
+        // Optimization: Filter once and maintain eligible list
+        const eligibleTiles = ownedTiles.filter(t => t.dice < maxDice);
 
-            if (eligibleTiles.length === 0) {
-                break; // No space left
-            }
+        while (diceToDistribute > 0 && eligibleTiles.length > 0) {
+            const randomIndex = Math.floor(Math.random() * eligibleTiles.length);
+            const randomTile = eligibleTiles[randomIndex];
 
-            const randomTile = eligibleTiles[Math.floor(Math.random() * eligibleTiles.length)];
             randomTile.dice++;
             diceToDistribute--;
             placed++;
             placements.push({ x: randomTile.x, y: randomTile.y });
+
+            // If tile becomes full, remove it from eligible list
+            if (randomTile.dice >= maxDice) {
+                // Efficient removal: swap with last element and pop
+                eligibleTiles[randomIndex] = eligibleTiles[eligibleTiles.length - 1];
+                eligibleTiles.pop();
+            }
         }
 
         // Remaining dice go back to store

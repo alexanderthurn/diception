@@ -68,14 +68,15 @@ export class GameStatsTracker {
             this.totalTerritoryChanges++;
         } else {
             attackerStats.attackLosses++;
+            // Attacker lost all but 1 die
+            attackerStats.diceLost += (result.attackerRolls.length - 1);
         }
 
         // Track defender stats
         if (result.won) {
             defenderStats.territoriesLost++;
-            defenderStats.diceLost += result.defenderRolls.length; // Lost all dice on that tile
-        } else {
-            attackerStats.diceLost += (result.attackerRolls.length - 1); // Lost all but 1 die
+            // Defender lost all dice on the captured tile
+            defenderStats.diceLost += result.defenderRolls.length;
         }
 
         // Track luck (actual roll vs expected)
