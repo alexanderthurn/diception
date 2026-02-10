@@ -290,7 +290,7 @@ export class GridRenderer {
         const color = owner ? owner.color : 0x333333;
 
         // Tron style: Bright fill
-        const fillAlpha = isCurrentPlayer ? 0.6 : 0.3;
+        const fillAlpha = isCurrentPlayer ? 0.5 : 0.4;
 
         tileGfx.rect(0, 0, this.tileSize, this.tileSize);
 
@@ -306,12 +306,12 @@ export class GridRenderer {
             if (isCurrentPlayer) {
                 const borderColor = currentPlayer.isBot ? color : 0xffffff;
                 if (tileRaw.dice > 1) {
-                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 1.0 });
+                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.9 });
                 } else {
-                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.8 });
+                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.7 });
                 }
             } else {
-                tileGfx.stroke({ width: 1, color: color, alpha: 0.6 });
+                tileGfx.stroke({ width: 1, color: color, alpha: 0.7 });
             }
 
             // Draw OUTER borders for largest region tiles
@@ -362,7 +362,7 @@ export class GridRenderer {
 
                 tileGfx.moveTo(edge.x1, edge.y1);
                 tileGfx.lineTo(edge.x2, edge.y2);
-                tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.85 });
+                tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.8 });
             }
         }
     }
