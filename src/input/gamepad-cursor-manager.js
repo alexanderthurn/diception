@@ -54,8 +54,11 @@ export class GamepadCursorManager {
             // Ensure cursor is visible on button press
             cursor.element.style.opacity = '1.0';
 
-            // Visual feedback
-            const buttonLabels = {
+            // Visual feedback - different labels in editor vs game
+            const isEditorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
+            const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
+
+            const gameLabels = {
                 0: 'Select',
                 1: 'Hold to move map',
                 2: 'Deselect',
@@ -70,8 +73,22 @@ export class GamepadCursorManager {
                 14: 'Attack Left',
                 15: 'Attack Right'
             };
-            const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
-
+            const editorLabels = {
+                0: 'Add / Paint',
+                1: 'Hold to pan map',
+                2: 'Remove tile',
+                3: 'Paint mode',
+                4: 'Cursor Speed -',
+                5: 'Cursor Speed +',
+                6: 'Zoom out',
+                7: 'Zoom in',
+                9: 'New Game',
+                12: 'Pan up',
+                13: 'Pan down',
+                14: 'Dice mode',
+                15: 'Assign mode'
+            };
+            const buttonLabels = isEditorOpen ? editorLabels : gameLabels;
             const label = buttonLabels[button];
             if (label) {
                 const gameSpeed = localStorage.getItem('dicy_gameSpeed') || 'beginner';
@@ -84,7 +101,7 @@ export class GamepadCursorManager {
             }
 
 
-            const allowedInMenu = [0, 1, 2, 4, 5, 6, 7, 9];
+            const allowedInMenu = isEditorOpen ? [0, 1, 2, 3, 4, 5, 6, 7, 9, 12, 13, 14, 15] : [0, 1, 2, 4, 5, 6, 7, 9];
             if (isMenuOpen && !allowedInMenu.includes(button)) return;
 
             if (button === 0) {
@@ -92,15 +109,21 @@ export class GamepadCursorManager {
             } else if (button === 2) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
             } else if (button === 3) {
-                // Only allow end turn if it's actually this player's turn (use human index, not raw gamepad index)
-                const currentPlayer = this.game.currentPlayer;
-                const humanIndex = this.inputManager.getHumanIndex(index);
-                if (currentPlayer && !currentPlayer.isBot && currentPlayer.id === humanIndex) {
-                    const endTurnBtn = document.getElementById('end-turn-btn');
-                    if (endTurnBtn && !endTurnBtn.classList.contains('hidden')) {
-                        endTurnBtn.click();
-                    } else {
-                        this.inputManager.emit('endTurn');
+                if (isEditorOpen) {
+                    // In editor: Y = Paint mode
+                    const paintTab = document.querySelector('.editor-tab[data-mode="paint"]');
+                    if (paintTab) paintTab.click();
+                } else {
+                    // In game: End Turn
+                    const currentPlayer = this.game.currentPlayer;
+                    const humanIndex = this.inputManager.getHumanIndex(index);
+                    if (currentPlayer && !currentPlayer.isBot && currentPlayer.id === humanIndex) {
+                        const endTurnBtn = document.getElementById('end-turn-btn');
+                        if (endTurnBtn && !endTurnBtn.classList.contains('hidden')) {
+                            endTurnBtn.click();
+                        } else {
+                            this.inputManager.emit('endTurn');
+                        }
                     }
                 }
             } else if (button === 1) {
