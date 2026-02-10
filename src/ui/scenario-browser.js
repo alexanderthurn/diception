@@ -68,6 +68,7 @@ export class ScenarioBrowser {
                 this.showCampaignView();
                 this.restoreLastSelectedCampaign();
                 this.scenarioBrowserModal.classList.remove('hidden');
+                if (this.effectsManager) this.effectsManager.stopIntroMode();
             });
         }
 

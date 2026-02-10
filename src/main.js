@@ -477,6 +477,7 @@ function setupInputEvents(game, inputManager, sessionManager) {
             }
 
             if (game.players.length > 0) {
+                sessionManager.effectsManager?.stopIntroMode();
                 setupModal.classList.add('hidden');
                 document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
             }
@@ -506,6 +507,7 @@ function setupHowToPlay(effectsManager) {
     howtoBtn.addEventListener('click', () => {
         setupModal.classList.add('hidden');
         howtoModal.classList.remove('hidden');
+        effectsManager.stopIntroMode();
 
         // Initialize probability calculator on first open
         if (!probabilityCalculator) {

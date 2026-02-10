@@ -169,6 +169,10 @@ export class EffectsManager {
             this.container.addChild(this.previewMap);
         }
 
+        if (this.renderer && this.renderer.centerConfigPreview) {
+            this.renderer.centerConfigPreview();
+        }
+
         // Spawn periodic particle streams
         this.introInterval = setInterval(() => {
             if (this.quality === 'off') return;

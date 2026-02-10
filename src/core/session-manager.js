@@ -73,6 +73,7 @@ export class SessionManager {
      */
     quitToMainMenu() {
         this.resetGameSession();
+        if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
         this.setupModal.classList.remove('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
         if (this.effectsManager) this.effectsManager.startIntroMode();

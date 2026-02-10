@@ -186,6 +186,32 @@ export class Renderer {
         this.rootContainer.y += dy;
     }
 
+    /**
+     * Center and scale the view for the 4x4 config preview (setup menu only).
+     * The preview in effects is at (width/2, height*0.75); we center it on screen.
+     */
+    centerConfigPreview() {
+        if (!this.rootContainer || !this.grid) return;
+        const size = 4;
+        const tileSize = this.grid.tileSize;
+        const gap = this.grid.gap;
+        const mapPixelSize = size * (tileSize + gap);
+
+        const padding = 120;
+        const screenWidth = window.innerWidth - padding;
+        const screenHeight = window.innerHeight - padding;
+        const scale = Math.min(screenWidth / mapPixelSize, screenHeight / mapPixelSize, 1.5);
+
+        this.rootContainer.scale.set(Math.max(0.2, scale));
+
+        const centerX = window.innerWidth * 0.5;
+        const centerY = window.innerHeight * 0.75;
+        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 720;
+        const sidebarOffset = isMobile ? 0 : 140;
+        this.rootContainer.x = window.innerWidth / 2 + sidebarOffset - centerX * scale;
+        this.rootContainer.y = window.innerHeight / 2 - centerY * scale;
+    }
+
     zoom(delta, x, y) {
         if (!this.rootContainer) return;
 
