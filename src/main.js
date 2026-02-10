@@ -147,7 +147,7 @@ async function init() {
     configManager.updateGamepadStatus(Array.from(inputManager.connectedGamepadIndices || []));
 
     const sessionManager = new SessionManager(game, renderer, effectsManager, turnHistory, mapEditor);
-    const scenarioBrowser = new ScenarioBrowser(scenarioManager, configManager, mapEditor);
+    const scenarioBrowser = new ScenarioBrowser(configManager, mapEditor);
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
 

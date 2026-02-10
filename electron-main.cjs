@@ -116,6 +116,17 @@ ipcMain.handle('steam-get-user-name', () => {
     return steamClient ? steamClient.localUser.getName() : 'Offline User';
 });
 
+ipcMain.handle('steam-get-id', () => {
+    if (steamClient) {
+        try {
+            return steamClient.localUser.getSteamId().getRawSteamId();
+        } catch (e) {
+            console.error('Failed to get Steam ID', e);
+        }
+    }
+    return null;
+});
+
 ipcMain.handle('steam-quit', () => {
 console.log("Shutting down...");
     app.quit();

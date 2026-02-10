@@ -1119,6 +1119,17 @@ select {
     color: #fff;
 }
 
+.tron-btn.danger {
+    border-color: #f44;
+    color: #f44;
+}
+
+.tron-btn.danger:hover {
+    background: rgba(255, 68, 68, 0.2);
+    border-color: #f66;
+    color: #fff;
+}
+
 /* Button text/icon toggle - show text on desktop, icon on mobile */
 .btn-icon {
     display: none;
@@ -2042,9 +2053,167 @@ select {
     /* Override fixed height from table view */
 }
 
-#scenario-list {
+#scenario-list,
+#campaign-list {
     display: flex;
     flex-direction: column;
+}
+
+/* Level Grid (campaign map selection) */
+#level-grid-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: 100%;
+}
+
+#level-grid-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#level-grid {
+    display: grid;
+    gap: 6px;
+    flex: 1;
+    min-height: 0;
+    align-content: start;
+    grid-auto-rows: minmax(0, 1fr);
+}
+
+.level-grid-tile {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    overflow: hidden;
+}
+
+.level-grid-tile:hover {
+    border-color: var(--accent-color);
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.level-grid-tile.selected {
+    border-color: var(--accent-color);
+    background: rgba(0, 255, 255, 0.25);
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+}
+
+.level-grid-tile.just-saved {
+    border-color: #0f0;
+    animation: level-saved-pulse 0.5s ease;
+}
+
+@keyframes level-saved-pulse {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 12px #0f0; }
+}
+
+.level-grid-tile.empty {
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.level-grid-tile.empty:hover {
+    border-color: var(--accent-color);
+    background: rgba(0, 255, 255, 0.05);
+}
+
+.level-grid-tile .tile-index {
+    font-size: 12px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.9);
+    pointer-events: none;
+}
+
+/* Hover preview (floating) - fixed pixel size, no stretch */
+.level-hover-preview {
+    position: fixed;
+    z-index: 10001;
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid var(--accent-color);
+    border-radius: 4px;
+    padding: 4px;
+    pointer-events: none;
+}
+
+/* Override global canvas 100vw/100vh - preview uses --preview-size set in JS */
+.level-hover-preview canvas {
+    display: block;
+    width: var(--preview-size, 80px) !important;
+    height: var(--preview-size, 80px) !important;
+}
+
+/* Level preview dialog - compact */
+.level-preview-dialog-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+}
+
+/* Override global canvas 100vw/100vh - preview uses --preview-size set in JS */
+.level-preview-canvas {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    width: var(--preview-size, 160px) !important;
+    height: var(--preview-size, 160px) !important;
+}
+
+.level-preview-type {
+    margin: 0;
+    font-size: 0.9em;
+    color: #888;
+}
+
+.level-grid-tile .tile-add {
+    font-size: 2em;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.level-tile-edit {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    font-size: 8px;
+    line-height: 1;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.level-tile-edit:hover {
+    opacity: 1;
+    background: var(--accent-color);
+}
+
+.modal-title {
+    flex: 1;
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.back-btn {
+    margin-right: 10px;
 }
 
 .scenario-list-item {

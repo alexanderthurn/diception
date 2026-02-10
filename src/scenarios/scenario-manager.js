@@ -4,8 +4,7 @@
  */
 
 import { validateScenario, createScenarioFromGame } from './scenario-data.js';
-import builtinScenarios from './builtin-scenarios.json';
-import builtinMaps from './builtin-maps.json';
+/* Built-ins moved to campaigns - see campaign-manager.js */
 
 const STORAGE_KEY = 'diceception_scenarios';
 const MAX_SCENARIOS = 50;
@@ -293,27 +292,9 @@ export class ScenarioManager {
 
     /**
      * Add built-in scenarios if not present
+     * Built-ins are now in campaigns (campaign-manager.js)
      */
     ensureBuiltInScenarios() {
-        console.log('Loading builtin scenarios:', builtinScenarios.length);
-        for (const scenario of builtinScenarios) {
-            delete scenario.id;
-            this.scenarios.set(scenario.name, {
-                ...scenario,
-                createdAt: 0
-            });
-        }
-
-        console.log('Loading builtin maps:', builtinMaps.length);
-        for (const map of builtinMaps) {
-            delete map.id;
-            this.scenarios.set(map.name, {
-                ...map,
-                createdAt: 0,
-                maxDice: map.maxDice || 9,
-                diceSides: map.diceSides || 6,
-                players: map.players || []
-            });
-        }
+        // No-op: built-in maps/scenarios moved to campaigns
     }
 }

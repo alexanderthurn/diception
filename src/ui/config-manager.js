@@ -230,12 +230,19 @@ export class ConfigManager {
      * Update loaded scenario display (or reset to slider mode)
      */
     updateLoadedScenarioDisplay(scenarioName) {
+        this.updateLoadedLevelDisplay(scenarioName ? { owner: scenarioName } : null, scenarioName ? 0 : null);
+    }
+
+    /**
+     * Update loaded level display (campaign owner + level index)
+     */
+    updateLoadedLevelDisplay(campaignOwner, levelIndex) {
         const el = this.elements;
-        if (scenarioName) {
-            el.loadedScenarioName.textContent = scenarioName;
+        if (campaignOwner != null) {
+            const label = levelIndex != null ? `${campaignOwner} #${levelIndex}` : campaignOwner;
+            el.loadedScenarioName.textContent = label;
             el.loadedScenarioName.style.display = 'block';
-            el.loadedScenarioName.title = 'Click to unload scenario';
-            // Hide slider, map size value, and map style controls
+            el.loadedScenarioName.title = 'Click to unload';
             el.mapSizeInput.style.display = 'none';
             el.mapSizeVal.style.display = 'none';
             el.mapStyleGroup.style.display = 'none';
@@ -243,11 +250,37 @@ export class ConfigManager {
         } else {
             el.loadedScenarioName.textContent = '';
             el.loadedScenarioName.style.display = 'none';
-            // Show slider, map size value, and map style controls
             el.mapSizeInput.style.display = 'block';
             el.mapSizeVal.style.display = 'inline';
             el.mapStyleGroup.style.display = 'block';
             el.mapSizeLabel.textContent = 'Map Size';
+        }
+    }
+
+    /**
+     * Update UI config from a loaded level (config, scenario, or map type)
+     */
+    updateConfigFromLevel(level) {
+        if (!level) return;
+        if (level.type === 'config') {
+            const [w, h] = (level.mapSize || '6x6').split('x').map(Number);
+            const presetIndex = this.mapSizePresets.findIndex(p => p.width === w && p.height === h);
+            if (presetIndex !== -1) {
+                this.elements.mapSizeInput.value = presetIndex + 1;
+                this.elements.mapSizeVal.textContent = this.mapSizePresets[presetIndex].label;
+            }
+            this.elements.mapStyleInput.value = level.mapStyle || 'full';
+            this.elements.gameModeInput.value = level.gameMode || 'classic';
+            this.elements.humanCountInput.value = '1';
+            this.elements.botCountInput.value = String(level.bots ?? 1);
+            this.elements.maxDiceInput.value = level.maxDice ?? 8;
+            this.elements.maxDiceVal.textContent = level.maxDice ?? 8;
+            this.elements.diceSidesInput.value = level.diceSides ?? 6;
+            this.elements.diceSidesVal.textContent = level.diceSides ?? 6;
+            this.elements.botAISelect.value = level.botAI || 'easy';
+            this.selectedBotAI = level.botAI || 'easy';
+        } else {
+            this.updateConfigFromScenario(level);
         }
     }
 
@@ -355,8 +388,11 @@ export class ConfigManager {
     setupScenarioNameClickHandler(callback) {
         this.elements.loadedScenarioName.addEventListener('click', () => {
             localStorage.removeItem('dicy_loadedScenario');
+            localStorage.removeItem('dicy_loadedCampaign');
+            localStorage.removeItem('dicy_loadedLevelIndex');
+            localStorage.removeItem('dicy_loadedCampaignId');
             localStorage.removeItem('dicy_onlineMapCache');
-            this.updateLoadedScenarioDisplay(null);
+            this.updateLoadedLevelDisplay(null, null);
             this.updateMapSizeDisplay();
             if (callback) callback();
         });

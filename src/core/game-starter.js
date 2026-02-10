@@ -117,17 +117,32 @@ export class GameStarter {
         this.setupModal.classList.add('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
 
-        // Load pending scenario if needed
+        // Load pending scenario/level if needed
         this.scenarioBrowser.loadPendingScenarioIfNeeded();
-        const pendingScenario = this.scenarioBrowser.getPendingScenario();
+        const pendingLevel = this.scenarioBrowser.getPendingScenario();
 
-        if (pendingScenario && pendingScenario.type !== 'map') {
-            // Apply the loaded scenario or replay (fixed state)
-            this.scenarioManager.applyScenarioToGame(this.game, pendingScenario);
+        if (pendingLevel?.type === 'config') {
+            // Procedural level - build gameConfig from level
+            const [w, h] = (pendingLevel.mapSize || '6x6').split('x').map(Number);
+            const gameConfig = {
+                humanCount: 1,
+                botCount: pendingLevel.bots ?? 1,
+                mapWidth: w,
+                mapHeight: h,
+                maxDice: pendingLevel.maxDice ?? 8,
+                diceSides: pendingLevel.diceSides ?? 6,
+                mapStyle: pendingLevel.mapStyle || 'full',
+                gameMode: pendingLevel.gameMode || 'classic'
+            };
+            this.game.startGame(gameConfig);
+            this.initializePlayerAIs(pendingLevel.botAI || 'easy');
+        } else if (pendingLevel && pendingLevel.type !== 'map') {
+            // Scenario type - apply fixed state
+            this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);
             this.game.emit('gameStart', { players: this.game.players, map: this.game.map });
             this.game.startTurn();
+            this.initializePlayerAIs(config.botAI);
 
-            // Update size display
             const sizePreset = this.configManager.getMapSize(parseInt(this.configManager.elements.mapSizeInput.value));
             this.configManager.elements.mapSizeVal.textContent = sizePreset.label;
         } else {
@@ -143,18 +158,20 @@ export class GameStarter {
                 gameMode: config.gameMode
             };
 
-            // If it's a map type scenario, pass it as a preset
-            if (pendingScenario && pendingScenario.type === 'map') {
-                gameConfig.predefinedMap = pendingScenario;
-                gameConfig.mapWidth = pendingScenario.width;
-                gameConfig.mapHeight = pendingScenario.height;
+            // If it's a map type level, pass as preset
+            if (pendingLevel && pendingLevel.type === 'map') {
+                gameConfig.predefinedMap = pendingLevel;
+                gameConfig.mapWidth = pendingLevel.width;
+                gameConfig.mapHeight = pendingLevel.height;
             }
 
             this.game.startGame(gameConfig);
         }
 
-        // Initialize AI for all players
-        this.initializePlayerAIs(config.botAI);
+        // Initialize AI for map/random (config and scenario done above)
+        if (!pendingLevel || pendingLevel.type === 'map') {
+            this.initializePlayerAIs(config.botAI);
+        }
 
         // Save the initial state for "Play Again" functionality
         this.turnHistory.saveInitialState(this.game);

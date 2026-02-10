@@ -208,6 +208,9 @@ export class MapEditor {
         // Callback for when editor closes
         this.onClose = null;
 
+        // Campaign context (when editing level in campaign)
+        this.editorOptions = null;
+
         // Store original game reference to restore
         this.originalGame = null;
     }
@@ -730,13 +733,24 @@ export class MapEditor {
     }
 
     /**
-     * Open editor with optional existing scenario
+     * Open editor with optional existing scenario/level
+     * @param {Object|null} scenario - Level data (map/scenario) or null for new
+     * @param {Object} options - { campaign, levelIndex, onSave, onClose, isNew }
      */
-    open(scenario = null) {
+    open(scenario = null, options = {}) {
+        this.editorOptions = options?.campaign ? options : null;
+        this.onClose = options.onClose || null;
+
         if (scenario) {
             this.importFromScenario(scenario);
         } else {
             this.state = this.createEmptyState();
+        }
+
+        // In campaign mode, clear name/description (not used)
+        if (this.editorOptions) {
+            this.state.name = '';
+            this.state.description = '';
         }
 
         // Update game adapter reference
@@ -767,6 +781,7 @@ export class MapEditor {
 
         // Update UI to match state
         this.updateUIFromState();
+        this.updateCampaignModeUI();
         this.renderPlayerList();
         this.renderPaintPalette();
         this.renderPlayerPalette();
@@ -850,6 +865,17 @@ export class MapEditor {
         this.statusTimeout = setTimeout(() => {
             status.classList.remove('visible');
         }, 2000);
+    }
+
+    /**
+     * Show/hide name/description/author in campaign mode
+     */
+    updateCampaignModeUI() {
+        const inCampaign = !!this.editorOptions;
+        const row = (id) => this.elements[id]?.closest('.control-group');
+        [row('nameInput'), row('descriptionInput'), row('authorInput')].forEach(el => {
+            if (el) el.style.display = inCampaign ? 'none' : '';
+        });
     }
 
     /**
@@ -1344,26 +1370,8 @@ export class MapEditor {
             return null;
         }
 
-        let name = this.state.name.trim();
-        if (!name) {
-            name = 'Untitled Map';
-            this.state.name = name;
-            if (this.elements.nameInput) this.elements.nameInput.value = name;
-        }
-
-        // Check for collision 
-        const existing = this.scenarioManager.getScenario(name);
-        if (existing && !(await Dialog.confirm(`A map with name "${name}" already exists. Overwrite?`))) {
-            return null;
-        }
-
         const mapData = {
-            name: name,
-            description: this.state.description,
             type: 'map',
-            isBuiltIn: false,
-            author: this.state.author || 'User',
-            createdAt: Date.now(),
             width: this.state.width,
             height: this.state.height,
             tiles: Array.from(this.state.tiles.entries()).map(([key]) => {
@@ -1371,6 +1379,33 @@ export class MapEditor {
                 return { x, y };
             })
         };
+
+        if (this.editorOptions?.onSave) {
+            try {
+                this.editorOptions.onSave(mapData);
+                this.state.isDirty = false;
+                this.showStatus('Saved!', 'success');
+                this.close();
+                return mapData;
+            } catch (e) {
+                this.showStatus('Failed to save', 'error');
+                return null;
+            }
+        }
+
+        let name = this.state.name.trim() || 'Untitled Map';
+        this.state.name = name;
+        if (this.elements.nameInput) this.elements.nameInput.value = name;
+        mapData.name = name;
+        mapData.description = this.state.description;
+        mapData.isBuiltIn = false;
+        mapData.author = this.state.author || 'User';
+        mapData.createdAt = Date.now();
+
+        const existing = this.scenarioManager.getScenario(name);
+        if (existing && !(await Dialog.confirm(`A map with name "${name}" already exists. Overwrite?`))) {
+            return null;
+        }
 
         try {
             this.scenarioManager.saveEditorScenario(mapData);
@@ -1391,13 +1426,6 @@ export class MapEditor {
         if (this.state.tiles.size === 0) {
             this.showStatus('Add at least one tile first', 'error');
             return null;
-        }
-
-        let name = this.state.name.trim();
-        if (!name) {
-            name = 'Untitled Scenario';
-            this.state.name = name;
-            if (this.elements.nameInput) this.elements.nameInput.value = name;
         }
 
         for (const [key, tile] of this.state.tiles) {
@@ -1430,19 +1458,8 @@ export class MapEditor {
             this.renderToCanvas();
         }
 
-        // Check for collision
-        const existing = this.scenarioManager.getScenario(name);
-        if (existing && !(await Dialog.confirm(`A scenario with name "${name}" already exists. Overwrite?`))) {
-            return null;
-        }
-
         const scenarioData = {
-            name: name,
-            description: this.state.description,
             type: 'scenario',
-            isBuiltIn: false,
-            author: this.state.author || 'User',
-            createdAt: Date.now(),
             width: this.state.width,
             height: this.state.height,
             maxDice: this.state.maxDice,
@@ -1459,6 +1476,33 @@ export class MapEditor {
                 return { x, y, owner: tile.owner, dice: tile.dice || 1 };
             })
         };
+
+        if (this.editorOptions?.onSave) {
+            try {
+                this.editorOptions.onSave(scenarioData);
+                this.state.isDirty = false;
+                this.showStatus('Saved!', 'success');
+                this.close();
+                return scenarioData;
+            } catch (e) {
+                this.showStatus('Failed to save', 'error');
+                return null;
+            }
+        }
+
+        let name = this.state.name.trim() || 'Untitled Scenario';
+        this.state.name = name;
+        if (this.elements.nameInput) this.elements.nameInput.value = name;
+        scenarioData.name = name;
+        scenarioData.description = this.state.description;
+        scenarioData.isBuiltIn = false;
+        scenarioData.author = this.state.author || 'User';
+        scenarioData.createdAt = Date.now();
+
+        const existing = this.scenarioManager.getScenario(name);
+        if (existing && !(await Dialog.confirm(`A scenario with name "${name}" already exists. Overwrite?`))) {
+            return null;
+        }
 
         try {
             this.scenarioManager.saveEditorScenario(scenarioData);
@@ -1478,9 +1522,12 @@ export class MapEditor {
     importFromScenario(scenario) {
         this.state = this.createEmptyState(scenario.width || 7, scenario.height || 7);
 
-        this.state.name = scenario.isBuiltIn ? scenario.name + ' (Copy)' : scenario.name;
-        this.state.description = scenario.description || '';
-        this.state.author = scenario.isBuiltIn ? 'User' : (scenario.author || 'User');
+        this.state.editorType = scenario.type === 'scenario' ? 'scenario' : 'map';
+        if (!this.editorOptions) {
+            this.state.name = scenario.isBuiltIn ? scenario.name + ' (Copy)' : (scenario.name || '');
+            this.state.description = scenario.description || '';
+            this.state.author = scenario.isBuiltIn ? 'User' : (scenario.author || 'User');
+        }
         this.state.maxDice = scenario.maxDice || 9;
         this.state.diceSides = scenario.diceSides || 6;
 

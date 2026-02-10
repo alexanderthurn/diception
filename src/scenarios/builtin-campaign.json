@@ -1,718 +1,683 @@
 {
-    "id": "classic",
-    "name": "Classic Campaign",
-    "description": "Master the basics and conquer increasingly difficult challenges",
-    "levels": [
+  "id": "classic",
+  "owner": "prebuilt-campaign",
+  "levels": [
+    {
+      "type": "config",
+      "mapSize": "4x4",
+      "mapStyle": "full",
+      "gameMode": "fair",
+      "bots": 1,
+      "botAI": "easy",
+      "maxDice": 8,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "5x5",
+      "mapStyle": "full",
+      "gameMode": "classic",
+      "bots": 2,
+      "botAI": "easy",
+      "maxDice": 8,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "6x6",
+      "mapStyle": "islands",
+      "gameMode": "classic",
+      "bots": 2,
+      "botAI": "easy",
+      "maxDice": 8,
+      "diceSides": 6
+    },
+    {
+      "type": "scenario",
+      "width": 5,
+      "height": 5,
+      "maxDice": 8,
+      "diceSides": 6,
+      "players": [
         {
-            "name": "First Steps",
-            "description": "Learn the basics against a single easy opponent",
-            "type": "config",
-            "mapSize": "4x4",
-            "mapStyle": "full",
-            "gameMode": "fair",
-            "bots": 1,
-            "botAI": "easy",
-            "maxDice": 8,
-            "diceSides": 6
+          "id": 0,
+          "isBot": false,
+          "color": 11141375,
+          "storedDice": 0
         },
         {
-            "name": "Two's Company",
-            "description": "Face two opponents on a small map",
-            "type": "config",
-            "mapSize": "5x5",
-            "mapStyle": "full",
-            "gameMode": "classic",
-            "bots": 2,
-            "botAI": "easy",
-            "maxDice": 8,
-            "diceSides": 6
-        },
-        {
-            "name": "Island Hopping",
-            "description": "Navigate the islands to victory",
-            "type": "config",
-            "mapSize": "6x6",
-            "mapStyle": "islands",
-            "gameMode": "classic",
-            "bots": 2,
-            "botAI": "easy",
-            "maxDice": 8,
-            "diceSides": 6
-        },
-        {
-            "name": "Classic Duel",
-            "description": "A balanced 1v1 scenario",
-            "type": "scenario",
-            "width": 5,
-            "height": 5,
-            "maxDice": 8,
-            "diceSides": 6,
-            "players": [
-                {
-                    "id": 0,
-                    "isBot": false,
-                    "color": 11141375,
-                    "storedDice": 0
-                },
-                {
-                    "id": 1,
-                    "isBot": true,
-                    "color": 16711765,
-                    "storedDice": 0
-                }
-            ],
-            "tiles": [
-                {
-                    "x": 0,
-                    "y": 2,
-                    "owner": 0,
-                    "dice": 3
-                },
-                {
-                    "x": 1,
-                    "y": 1,
-                    "owner": 0,
-                    "dice": 2
-                },
-                {
-                    "x": 1,
-                    "y": 2,
-                    "owner": 0,
-                    "dice": 4
-                },
-                {
-                    "x": 1,
-                    "y": 3,
-                    "owner": 0,
-                    "dice": 2
-                },
-                {
-                    "x": 2,
-                    "y": 0,
-                    "owner": 0,
-                    "dice": 2
-                },
-                {
-                    "x": 2,
-                    "y": 1,
-                    "owner": 0,
-                    "dice": 3
-                },
-                {
-                    "x": 2,
-                    "y": 2,
-                    "owner": 0,
-                    "dice": 1
-                },
-                {
-                    "x": 2,
-                    "y": 3,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 2,
-                    "y": 4,
-                    "owner": 1,
-                    "dice": 2
-                },
-                {
-                    "x": 3,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 2
-                },
-                {
-                    "x": 3,
-                    "y": 2,
-                    "owner": 1,
-                    "dice": 4
-                },
-                {
-                    "x": 3,
-                    "y": 3,
-                    "owner": 1,
-                    "dice": 2
-                },
-                {
-                    "x": 4,
-                    "y": 2,
-                    "owner": 1,
-                    "dice": 3
-                }
-            ]
-        },
-        {
-            "name": "Cave Spelunking",
-            "description": "Fight through the caves",
-            "type": "config",
-            "mapSize": "6x6",
-            "mapStyle": "caves",
-            "gameMode": "classic",
-            "bots": 3,
-            "botAI": "easy",
-            "maxDice": 8,
-            "diceSides": 6
-        },
-        {
-            "name": "Medium Challenge",
-            "description": "Face smarter opponents",
-            "type": "config",
-            "mapSize": "6x6",
-            "mapStyle": "random",
-            "gameMode": "classic",
-            "bots": 3,
-            "botAI": "medium",
-            "maxDice": 8,
-            "diceSides": 6
-        },
-        {
-            "name": "Four Corners",
-            "description": "Symmetric 4-player battlefield",
-            "type": "scenario",
-            "width": 7,
-            "height": 7,
-            "maxDice": 8,
-            "diceSides": 6,
-            "players": [
-                {
-                    "id": 0,
-                    "isBot": false,
-                    "color": 11141375,
-                    "storedDice": 0
-                },
-                {
-                    "id": 1,
-                    "isBot": true,
-                    "color": 16711765,
-                    "storedDice": 0
-                },
-                {
-                    "id": 2,
-                    "isBot": true,
-                    "color": 5635925,
-                    "storedDice": 0
-                },
-                {
-                    "id": 3,
-                    "isBot": true,
-                    "color": 16750848,
-                    "storedDice": 0
-                }
-            ],
-            "tiles": [
-                {
-                    "x": 0,
-                    "y": 0,
-                    "owner": 0,
-                    "dice": 3
-                },
-                {
-                    "x": 0,
-                    "y": 1,
-                    "owner": 0,
-                    "dice": 2
-                },
-                {
-                    "x": 1,
-                    "y": 0,
-                    "owner": 0,
-                    "dice": 2
-                },
-                {
-                    "x": 1,
-                    "y": 1,
-                    "owner": 0,
-                    "dice": 4
-                },
-                {
-                    "x": 2,
-                    "y": 2,
-                    "owner": 0,
-                    "dice": 1
-                },
-                {
-                    "x": 2,
-                    "y": 3,
-                    "owner": 0,
-                    "dice": 1
-                },
-                {
-                    "x": 3,
-                    "y": 2,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 3,
-                    "y": 3,
-                    "owner": 2,
-                    "dice": 1
-                },
-                {
-                    "x": 3,
-                    "y": 4,
-                    "owner": 2,
-                    "dice": 1
-                },
-                {
-                    "x": 4,
-                    "y": 3,
-                    "owner": 2,
-                    "dice": 1
-                },
-                {
-                    "x": 5,
-                    "y": 0,
-                    "owner": 1,
-                    "dice": 2
-                },
-                {
-                    "x": 5,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 4
-                },
-                {
-                    "x": 6,
-                    "y": 0,
-                    "owner": 1,
-                    "dice": 3
-                },
-                {
-                    "x": 6,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 2
-                },
-                {
-                    "x": 0,
-                    "y": 5,
-                    "owner": 2,
-                    "dice": 2
-                },
-                {
-                    "x": 0,
-                    "y": 6,
-                    "owner": 2,
-                    "dice": 3
-                },
-                {
-                    "x": 1,
-                    "y": 5,
-                    "owner": 2,
-                    "dice": 4
-                },
-                {
-                    "x": 1,
-                    "y": 6,
-                    "owner": 2,
-                    "dice": 2
-                },
-                {
-                    "x": 5,
-                    "y": 5,
-                    "owner": 3,
-                    "dice": 4
-                },
-                {
-                    "x": 5,
-                    "y": 6,
-                    "owner": 3,
-                    "dice": 2
-                },
-                {
-                    "x": 6,
-                    "y": 5,
-                    "owner": 3,
-                    "dice": 2
-                },
-                {
-                    "x": 6,
-                    "y": 6,
-                    "owner": 3,
-                    "dice": 3
-                }
-            ]
-        },
-        {
-            "name": "Maze Runner",
-            "description": "Navigate the maze against medium AI",
-            "type": "config",
-            "mapSize": "7x7",
-            "mapStyle": "maze",
-            "gameMode": "classic",
-            "bots": 3,
-            "botAI": "medium",
-            "maxDice": 8,
-            "diceSides": 6
-        },
-        {
-            "name": "Continental Drift",
-            "description": "Conquer the continents",
-            "type": "config",
-            "mapSize": "8x8",
-            "mapStyle": "continents",
-            "gameMode": "classic",
-            "bots": 4,
-            "botAI": "medium",
-            "maxDice": 9,
-            "diceSides": 6
-        },
-        {
-            "name": "Swiss Cheese",
-            "description": "Battle on a map full of holes",
-            "type": "config",
-            "mapSize": "7x7",
-            "mapStyle": "swiss",
-            "gameMode": "classic",
-            "bots": 3,
-            "botAI": "medium",
-            "maxDice": 9,
-            "diceSides": 6
-        },
-        {
-            "name": "Tunnel Vision",
-            "description": "Navigate the narrow passages",
-            "type": "config",
-            "mapSize": "8x8",
-            "mapStyle": "tunnels",
-            "gameMode": "classic",
-            "bots": 4,
-            "botAI": "medium",
-            "maxDice": 9,
-            "diceSides": 6
-        },
-        {
-            "name": "World Conquest",
-            "description": "Large-scale territorial control",
-            "type": "scenario",
-            "width": 9,
-            "height": 9,
-            "maxDice": 9,
-            "diceSides": 6,
-            "players": [
-                {
-                    "id": 0,
-                    "isBot": false,
-                    "color": 11141375,
-                    "storedDice": 0
-                },
-                {
-                    "id": 1,
-                    "isBot": true,
-                    "color": 16711765,
-                    "storedDice": 0
-                },
-                {
-                    "id": 2,
-                    "isBot": true,
-                    "color": 5635925,
-                    "storedDice": 0
-                },
-                {
-                    "id": 3,
-                    "isBot": true,
-                    "color": 16750848,
-                    "storedDice": 0
-                }
-            ],
-            "tiles": [
-                {
-                    "x": 0,
-                    "y": 0,
-                    "owner": 0,
-                    "dice": 4
-                },
-                {
-                    "x": 0,
-                    "y": 1,
-                    "owner": 0,
-                    "dice": 3
-                },
-                {
-                    "x": 0,
-                    "y": 2,
-                    "owner": 0,
-                    "dice": 2
-                },
-                {
-                    "x": 1,
-                    "y": 0,
-                    "owner": 0,
-                    "dice": 3
-                },
-                {
-                    "x": 1,
-                    "y": 1,
-                    "owner": 0,
-                    "dice": 5
-                },
-                {
-                    "x": 1,
-                    "y": 2,
-                    "owner": 0,
-                    "dice": 2
-                },
-                {
-                    "x": 2,
-                    "y": 0,
-                    "owner": 0,
-                    "dice": 2
-                },
-                {
-                    "x": 2,
-                    "y": 1,
-                    "owner": 0,
-                    "dice": 2
-                },
-                {
-                    "x": 3,
-                    "y": 3,
-                    "owner": 0,
-                    "dice": 1
-                },
-                {
-                    "x": 3,
-                    "y": 4,
-                    "owner": 0,
-                    "dice": 1
-                },
-                {
-                    "x": 4,
-                    "y": 3,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 4,
-                    "y": 4,
-                    "owner": 2,
-                    "dice": 1
-                },
-                {
-                    "x": 4,
-                    "y": 5,
-                    "owner": 2,
-                    "dice": 1
-                },
-                {
-                    "x": 5,
-                    "y": 4,
-                    "owner": 3,
-                    "dice": 1
-                },
-                {
-                    "x": 5,
-                    "y": 5,
-                    "owner": 3,
-                    "dice": 1
-                },
-                {
-                    "x": 6,
-                    "y": 0,
-                    "owner": 1,
-                    "dice": 2
-                },
-                {
-                    "x": 6,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 2
-                },
-                {
-                    "x": 7,
-                    "y": 0,
-                    "owner": 1,
-                    "dice": 3
-                },
-                {
-                    "x": 7,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 5
-                },
-                {
-                    "x": 7,
-                    "y": 2,
-                    "owner": 1,
-                    "dice": 2
-                },
-                {
-                    "x": 8,
-                    "y": 0,
-                    "owner": 1,
-                    "dice": 4
-                },
-                {
-                    "x": 8,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 3
-                },
-                {
-                    "x": 8,
-                    "y": 2,
-                    "owner": 1,
-                    "dice": 2
-                },
-                {
-                    "x": 0,
-                    "y": 6,
-                    "owner": 2,
-                    "dice": 2
-                },
-                {
-                    "x": 0,
-                    "y": 7,
-                    "owner": 2,
-                    "dice": 3
-                },
-                {
-                    "x": 0,
-                    "y": 8,
-                    "owner": 2,
-                    "dice": 4
-                },
-                {
-                    "x": 1,
-                    "y": 6,
-                    "owner": 2,
-                    "dice": 2
-                },
-                {
-                    "x": 1,
-                    "y": 7,
-                    "owner": 2,
-                    "dice": 5
-                },
-                {
-                    "x": 1,
-                    "y": 8,
-                    "owner": 2,
-                    "dice": 3
-                },
-                {
-                    "x": 2,
-                    "y": 7,
-                    "owner": 2,
-                    "dice": 2
-                },
-                {
-                    "x": 2,
-                    "y": 8,
-                    "owner": 2,
-                    "dice": 2
-                },
-                {
-                    "x": 6,
-                    "y": 7,
-                    "owner": 3,
-                    "dice": 2
-                },
-                {
-                    "x": 6,
-                    "y": 8,
-                    "owner": 3,
-                    "dice": 2
-                },
-                {
-                    "x": 7,
-                    "y": 6,
-                    "owner": 3,
-                    "dice": 2
-                },
-                {
-                    "x": 7,
-                    "y": 7,
-                    "owner": 3,
-                    "dice": 5
-                },
-                {
-                    "x": 7,
-                    "y": 8,
-                    "owner": 3,
-                    "dice": 3
-                },
-                {
-                    "x": 8,
-                    "y": 6,
-                    "owner": 3,
-                    "dice": 2
-                },
-                {
-                    "x": 8,
-                    "y": 7,
-                    "owner": 3,
-                    "dice": 3
-                },
-                {
-                    "x": 8,
-                    "y": 8,
-                    "owner": 3,
-                    "dice": 4
-                }
-            ]
-        },
-        {
-            "name": "Madness Begins",
-            "description": "Every territory starts maxed out",
-            "type": "config",
-            "mapSize": "5x5",
-            "mapStyle": "full",
-            "gameMode": "madness",
-            "bots": 3,
-            "botAI": "medium",
-            "maxDice": 8,
-            "diceSides": 6
-        },
-        {
-            "name": "Hard Mode",
-            "description": "Face the hard AI for the first time",
-            "type": "config",
-            "mapSize": "6x6",
-            "mapStyle": "full",
-            "gameMode": "classic",
-            "bots": 3,
-            "botAI": "hard",
-            "maxDice": 8,
-            "diceSides": 6
-        },
-        {
-            "name": "Large Battle",
-            "description": "Conquer a large map against hard AI",
-            "type": "config",
-            "mapSize": "9x9",
-            "mapStyle": "random",
-            "gameMode": "classic",
-            "bots": 5,
-            "botAI": "hard",
-            "maxDice": 9,
-            "diceSides": 6
-        },
-        {
-            "name": "Maximum Chaos",
-            "description": "Large map, max dice, all-out war",
-            "type": "config",
-            "mapSize": "10x10",
-            "mapStyle": "continents",
-            "gameMode": "madness",
-            "bots": 6,
-            "botAI": "hard",
-            "maxDice": 12,
-            "diceSides": 6
-        },
-        {
-            "name": "Epic Finale",
-            "description": "The ultimate challenge: max size, max opponents, hard AI",
-            "type": "config",
-            "mapSize": "12x12",
-            "mapStyle": "random",
-            "gameMode": "classic",
-            "bots": 7,
-            "botAI": "hard",
-            "maxDice": 12,
-            "diceSides": 6
+          "id": 1,
+          "isBot": true,
+          "color": 16711765,
+          "storedDice": 0
         }
-    ]
+      ],
+      "tiles": [
+        {
+          "x": 0,
+          "y": 2,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "owner": 0,
+          "dice": 2
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "owner": 0,
+          "dice": 4
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "owner": 0,
+          "dice": 2
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "owner": 0,
+          "dice": 2
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "owner": 0,
+          "dice": 1
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "owner": 1,
+          "dice": 1
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "owner": 1,
+          "dice": 4
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 4,
+          "y": 2,
+          "owner": 1,
+          "dice": 3
+        }
+      ]
+    },
+    {
+      "type": "config",
+      "mapSize": "6x6",
+      "mapStyle": "caves",
+      "gameMode": "classic",
+      "bots": 3,
+      "botAI": "easy",
+      "maxDice": 8,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "6x6",
+      "mapStyle": "random",
+      "gameMode": "classic",
+      "bots": 3,
+      "botAI": "medium",
+      "maxDice": 8,
+      "diceSides": 6
+    },
+    {
+      "type": "scenario",
+      "width": 7,
+      "height": 7,
+      "maxDice": 8,
+      "diceSides": 6,
+      "players": [
+        {
+          "id": 0,
+          "isBot": false,
+          "color": 11141375,
+          "storedDice": 0
+        },
+        {
+          "id": 1,
+          "isBot": true,
+          "color": 16711765,
+          "storedDice": 0
+        },
+        {
+          "id": 2,
+          "isBot": true,
+          "color": 5635925,
+          "storedDice": 0
+        },
+        {
+          "id": 3,
+          "isBot": true,
+          "color": 16750848,
+          "storedDice": 0
+        }
+      ],
+      "tiles": [
+        {
+          "x": 0,
+          "y": 0,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "owner": 0,
+          "dice": 2
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "owner": 0,
+          "dice": 2
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "owner": 0,
+          "dice": 4
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "owner": 0,
+          "dice": 1
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "owner": 0,
+          "dice": 1
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "owner": 1,
+          "dice": 1
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "owner": 2,
+          "dice": 1
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "owner": 2,
+          "dice": 1
+        },
+        {
+          "x": 4,
+          "y": 3,
+          "owner": 2,
+          "dice": 1
+        },
+        {
+          "x": 5,
+          "y": 0,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 5,
+          "y": 1,
+          "owner": 1,
+          "dice": 4
+        },
+        {
+          "x": 6,
+          "y": 0,
+          "owner": 1,
+          "dice": 3
+        },
+        {
+          "x": 6,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 0,
+          "y": 5,
+          "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 0,
+          "y": 6,
+          "owner": 2,
+          "dice": 3
+        },
+        {
+          "x": 1,
+          "y": 5,
+          "owner": 2,
+          "dice": 4
+        },
+        {
+          "x": 1,
+          "y": 6,
+          "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 5,
+          "y": 5,
+          "owner": 3,
+          "dice": 4
+        },
+        {
+          "x": 5,
+          "y": 6,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 6,
+          "y": 5,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 6,
+          "y": 6,
+          "owner": 3,
+          "dice": 3
+        }
+      ]
+    },
+    {
+      "type": "config",
+      "mapSize": "7x7",
+      "mapStyle": "maze",
+      "gameMode": "classic",
+      "bots": 3,
+      "botAI": "medium",
+      "maxDice": 8,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "8x8",
+      "mapStyle": "continents",
+      "gameMode": "classic",
+      "bots": 4,
+      "botAI": "medium",
+      "maxDice": 9,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "7x7",
+      "mapStyle": "swiss",
+      "gameMode": "classic",
+      "bots": 3,
+      "botAI": "medium",
+      "maxDice": 9,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "8x8",
+      "mapStyle": "tunnels",
+      "gameMode": "classic",
+      "bots": 4,
+      "botAI": "medium",
+      "maxDice": 9,
+      "diceSides": 6
+    },
+    {
+      "type": "scenario",
+      "width": 9,
+      "height": 9,
+      "maxDice": 9,
+      "diceSides": 6,
+      "players": [
+        {
+          "id": 0,
+          "isBot": false,
+          "color": 11141375,
+          "storedDice": 0
+        },
+        {
+          "id": 1,
+          "isBot": true,
+          "color": 16711765,
+          "storedDice": 0
+        },
+        {
+          "id": 2,
+          "isBot": true,
+          "color": 5635925,
+          "storedDice": 0
+        },
+        {
+          "id": 3,
+          "isBot": true,
+          "color": 16750848,
+          "storedDice": 0
+        }
+      ],
+      "tiles": [
+        {
+          "x": 0,
+          "y": 0,
+          "owner": 0,
+          "dice": 4
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "owner": 0,
+          "dice": 2
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "owner": 0,
+          "dice": 5
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "owner": 0,
+          "dice": 2
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "owner": 0,
+          "dice": 2
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "owner": 0,
+          "dice": 2
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "owner": 0,
+          "dice": 1
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "owner": 0,
+          "dice": 1
+        },
+        {
+          "x": 4,
+          "y": 3,
+          "owner": 1,
+          "dice": 1
+        },
+        {
+          "x": 4,
+          "y": 4,
+          "owner": 2,
+          "dice": 1
+        },
+        {
+          "x": 4,
+          "y": 5,
+          "owner": 2,
+          "dice": 1
+        },
+        {
+          "x": 5,
+          "y": 4,
+          "owner": 3,
+          "dice": 1
+        },
+        {
+          "x": 5,
+          "y": 5,
+          "owner": 3,
+          "dice": 1
+        },
+        {
+          "x": 6,
+          "y": 0,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 6,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 7,
+          "y": 0,
+          "owner": 1,
+          "dice": 3
+        },
+        {
+          "x": 7,
+          "y": 1,
+          "owner": 1,
+          "dice": 5
+        },
+        {
+          "x": 7,
+          "y": 2,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 8,
+          "y": 0,
+          "owner": 1,
+          "dice": 4
+        },
+        {
+          "x": 8,
+          "y": 1,
+          "owner": 1,
+          "dice": 3
+        },
+        {
+          "x": 8,
+          "y": 2,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 0,
+          "y": 6,
+          "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 0,
+          "y": 7,
+          "owner": 2,
+          "dice": 3
+        },
+        {
+          "x": 0,
+          "y": 8,
+          "owner": 2,
+          "dice": 4
+        },
+        {
+          "x": 1,
+          "y": 6,
+          "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 1,
+          "y": 7,
+          "owner": 2,
+          "dice": 5
+        },
+        {
+          "x": 1,
+          "y": 8,
+          "owner": 2,
+          "dice": 3
+        },
+        {
+          "x": 2,
+          "y": 7,
+          "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 2,
+          "y": 8,
+          "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 6,
+          "y": 7,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 6,
+          "y": 8,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 7,
+          "y": 6,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 7,
+          "y": 7,
+          "owner": 3,
+          "dice": 5
+        },
+        {
+          "x": 7,
+          "y": 8,
+          "owner": 3,
+          "dice": 3
+        },
+        {
+          "x": 8,
+          "y": 6,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 8,
+          "y": 7,
+          "owner": 3,
+          "dice": 3
+        },
+        {
+          "x": 8,
+          "y": 8,
+          "owner": 3,
+          "dice": 4
+        }
+      ]
+    },
+    {
+      "type": "config",
+      "mapSize": "5x5",
+      "mapStyle": "full",
+      "gameMode": "madness",
+      "bots": 3,
+      "botAI": "medium",
+      "maxDice": 8,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "6x6",
+      "mapStyle": "full",
+      "gameMode": "classic",
+      "bots": 3,
+      "botAI": "hard",
+      "maxDice": 8,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "9x9",
+      "mapStyle": "random",
+      "gameMode": "classic",
+      "bots": 5,
+      "botAI": "hard",
+      "maxDice": 9,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "10x10",
+      "mapStyle": "continents",
+      "gameMode": "madness",
+      "bots": 6,
+      "botAI": "hard",
+      "maxDice": 12,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "12x12",
+      "mapStyle": "random",
+      "gameMode": "classic",
+      "bots": 7,
+      "botAI": "hard",
+      "maxDice": 12,
+      "diceSides": 6
+    }
+  ]
 }
