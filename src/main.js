@@ -304,7 +304,7 @@ async function init() {
     setupInputEvents(game, inputManager, sessionManager);
 
     // How to Play Modal
-    setupHowToPlay(effectsManager);
+    setupHowToPlay(effectsManager, audioController);
 
 
     // Check for auto-resume
@@ -514,19 +514,76 @@ function setupInputEvents(game, inputManager, sessionManager) {
 }
 
 // Helper: Setup How to Play Modal
-function setupHowToPlay(effectsManager) {
+function setupHowToPlay(effectsManager, audioController) {
     const howtoBtn = document.getElementById('howto-btn');
     const howtoModal = document.getElementById('howto-modal');
     const howtoCloseBtn = document.getElementById('howto-close-btn');
     const setupModal = document.getElementById('setup-modal');
+    const keepCampaignsRow = document.getElementById('howto-keep-campaigns-row');
+    const keepCampaignsCheck = document.getElementById('howto-keep-campaigns');
+    const clearStorageBtn = document.getElementById('howto-clear-storage-btn');
+    const musicListEl = document.getElementById('howto-music-list');
 
     // Initialize probability calculator (once)
     let probabilityCalculator = null;
+
+    function refreshHowtoSections() {
+        // Show "Keep campaigns" only if user has a campaign
+        const userCampaign = localStorage.getItem('dicy_userCampaign');
+        const hasUserCampaign = userCampaign && userCampaign !== '[]' && userCampaign !== '{}';
+        keepCampaignsRow.classList.toggle('hidden', !hasUserCampaign);
+        if (hasUserCampaign) keepCampaignsCheck.checked = true;
+
+        // Build music list with links and active toggles
+        if (audioController && musicListEl) {
+            const inactive = new Set(audioController.getInactiveTracks());
+            musicListEl.innerHTML = audioController.availableSongs.map(filename => {
+                const isActive = !inactive.has(filename);
+                const url = new URL(filename, window.location.href).href;
+                const displayName = filename.replace(/\.mp3$/i, '');
+                return `<li class="howto-music-item">
+                    <a href="${url}" target="_blank" rel="noopener" class="howto-music-link">${displayName}</a>
+                    <button type="button" class="howto-music-toggle tron-btn small ${isActive ? 'active' : ''}" data-filename="${filename.replace(/"/g, '&quot;')}" title="${isActive ? 'Active in playlist' : 'Inactive (excluded from loop)'}">${isActive ? '✓' : '○'}</button>
+                </li>`;
+            }).join('');
+        }
+    }
+
+    function bindMusicToggles() {
+        if (!musicListEl) return;
+        musicListEl.querySelectorAll('.howto-music-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filename = btn.getAttribute('data-filename');
+                const inactive = new Set(audioController.getInactiveTracks());
+                const isActive = !inactive.has(filename);
+                audioController.setTrackActive(filename, !isActive);
+                refreshHowtoSections();
+                bindMusicToggles();
+            });
+        });
+    }
+
+    function clearAllStorage() {
+        const keepCampaigns = keepCampaignsCheck.checked && keepCampaignsRow && !keepCampaignsRow.classList.contains('hidden');
+        let savedCampaign = null;
+        if (keepCampaigns) {
+            savedCampaign = localStorage.getItem('dicy_userCampaign');
+        }
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const key = localStorage.key(i);
+            if (key) localStorage.removeItem(key);
+        }
+        if (savedCampaign !== null) {
+            localStorage.setItem('dicy_userCampaign', savedCampaign);
+        }
+    }
 
     howtoBtn.addEventListener('click', () => {
         setupModal.classList.add('hidden');
         howtoModal.classList.remove('hidden');
         effectsManager.stopIntroMode();
+        refreshHowtoSections();
+        bindMusicToggles();
 
         // Initialize probability calculator on first open
         if (!probabilityCalculator) {
@@ -538,6 +595,19 @@ function setupHowToPlay(effectsManager) {
         howtoModal.classList.add('hidden');
         setupModal.classList.remove('hidden');
         effectsManager.startIntroMode();
+    });
+
+    clearStorageBtn?.addEventListener('click', async () => {
+        const keepCampaigns = keepCampaignsCheck?.checked && keepCampaignsRow && !keepCampaignsRow.classList.contains('hidden');
+        const msg = keepCampaigns
+            ? 'Clear all stored data except your campaigns?'
+            : 'Clear all stored data? This cannot be undone.';
+        const ok = await Dialog.confirm(msg, 'CLEAR STORAGE?');
+        if (ok) {
+            clearAllStorage();
+            Dialog.alert('Storage cleared. The page will reload.');
+            window.location.reload();
+        }
     });
 }
 

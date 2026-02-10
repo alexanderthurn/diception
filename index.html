@@ -240,8 +240,8 @@
 
         <div id="howto-modal" class="modal hidden large-modal">
             <div class="modal-header">
-                <h2 class="tron-title small">DICEPTION</h2>
                 <button id="howto-close-btn" class="close-btn">×</button>
+                <h2 class="tron-title small">DICEPTION</h2>
             </div>
             <div class="howto-content">
                 <section>
@@ -443,6 +443,28 @@
                             </tbody>
                         </table>
                     </div>
+                </section>
+
+                <section id="howto-data-section">
+                    <h3>DATA & STORAGE</h3>
+                    <p>This game stores settings, progress, and campaigns in your browser's local storage.</p>
+                    <div id="howto-clear-area" class="howto-clear-area">
+                        <div id="howto-keep-campaigns-row" class="howto-keep-campaigns hidden">
+                            <label class="howto-checkbox-label">
+                                <input type="checkbox" id="howto-keep-campaigns" checked>
+                                Keep my campaigns (<code>dicy_userCampaign</code>)
+                            </label>
+                        </div>
+                        <button id="howto-clear-storage-btn" class="tron-btn small">Clear All Storage</button>
+                    </div>
+                </section>
+
+                <section id="howto-music-section">
+                    <h3>MUSIC</h3>
+                    <p>Direct links to tracks used in the game. Toggle inactive to exclude from the play loop (all active by default).</p>
+                    <ul id="howto-music-list" class="howto-music-list">
+                        <!-- Populated by JavaScript -->
+                    </ul>
                 </section>
 
                 <section>

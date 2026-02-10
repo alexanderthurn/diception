@@ -1,3 +1,5 @@
+const STORAGE_KEY_INACTIVE = 'dicy_musicInactiveTracks';
+
 /**
  * AudioController - Manages music playlist and SFX volume/toggle
  */
@@ -138,8 +140,45 @@ export class AudioController {
         }, { once: true });
     }
 
+    /** @returns {string[]} Filenames marked inactive (excluded from play loop) */
+    getInactiveTracks() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY_INACTIVE);
+            return raw ? JSON.parse(raw) : [];
+        } catch {
+            return [];
+        }
+    }
+
+    /** @param {string} filename - Song filename */
+    /** @param {boolean} active - true = in playlist, false = excluded */
+    setTrackActive(filename, active) {
+        const inactive = this.getInactiveTracks();
+        const set = new Set(inactive);
+        if (active) {
+            set.delete(filename);
+        } else {
+            set.add(filename);
+        }
+        localStorage.setItem(STORAGE_KEY_INACTIVE, JSON.stringify([...set]));
+    }
+
+    /** @returns {string[]} Songs that are in the play loop (all if none explicitly inactive) */
+    getActiveSongs() {
+        const inactive = new Set(this.getInactiveTracks());
+        const active = this.availableSongs.filter(s => !inactive.has(s));
+        return active.length > 0 ? active : this.availableSongs;
+    }
+
     loadNextSong() {
-        this.currentSongIndex = (this.currentSongIndex + 1) % this.availableSongs.length;
+        const activeSongs = this.getActiveSongs();
+        const currentFileName = this.availableSongs[this.currentSongIndex];
+        let idx = activeSongs.indexOf(currentFileName);
+        if (idx < 0) idx = 0;
+        idx = (idx + 1) % activeSongs.length;
+        const nextFileName = activeSongs[idx];
+        this.currentSongIndex = this.availableSongs.indexOf(nextFileName);
+
         this.music.src = './' + encodeURIComponent(this.availableSongs[this.currentSongIndex]);
         localStorage.setItem('dicy_currentSongIndex', this.currentSongIndex.toString());
 

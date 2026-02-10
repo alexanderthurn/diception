@@ -1084,12 +1084,15 @@ export class MapEditor {
             this.renderer.draw();
         }
 
-        // Hide editor UI, show game UI
+        // Hide editor UI, show game UI only if a game is in progress
         if (this.renderer) this.renderer.editorActive = false;
         this.elements.overlay?.classList.add('hidden');
-        this.elements.gamePanel?.classList.remove('hidden');
-        this.elements.endTurnBtn?.classList.remove('hidden');
-        this.elements.aiToggleBtn?.classList.remove('hidden');
+        const hasActiveGame = this.originalGame?.players?.length > 0;
+        if (hasActiveGame) {
+            this.elements.gamePanel?.classList.remove('hidden');
+            this.elements.endTurnBtn?.classList.remove('hidden');
+            this.elements.aiToggleBtn?.classList.remove('hidden');
+        }
 
         this.isOpen = false;
 
