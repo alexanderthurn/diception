@@ -1378,7 +1378,7 @@ select {
 }
 
 .setup-version {
-    position: absolute;
+    position: static;
     bottom: 5px;
     right: 10px;
     color: var(--border-color);
@@ -2424,6 +2424,12 @@ select {
 
     .map-size-row {
         flex-wrap: wrap;
+    }
+
+    @media (max-width: 420px) and (max-height: 680px) {
+        .map-size-row {
+            margin-right: 50px;
+        }
     }
 
     .map-size-row input[type="range"] {
