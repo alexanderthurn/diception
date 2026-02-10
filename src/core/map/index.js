@@ -164,15 +164,21 @@ export class MapManager {
             let currentDiceCount = ownedTiles.length;
             let remainingDice = totalDice - currentDiceCount;
 
-            let safetyCounter = 0;
-            while (remainingDice > 0 && safetyCounter < 1000) {
-                const nonFullTiles = ownedTiles.filter(t => t.dice < this.maxDice);
-                if (nonFullTiles.length === 0) break;
+            // Optimization: Filter once and maintain list
+            const eligibleTiles = ownedTiles.filter(t => t.dice < this.maxDice);
 
-                const randomTile = nonFullTiles[Math.floor(Math.random() * nonFullTiles.length)];
+            while (remainingDice > 0 && eligibleTiles.length > 0) {
+                const randomIndex = Math.floor(Math.random() * eligibleTiles.length);
+                const randomTile = eligibleTiles[randomIndex];
+
                 randomTile.dice++;
                 remainingDice--;
-                safetyCounter++;
+
+                // If tile becomes full, remove it from eligible list
+                if (randomTile.dice >= this.maxDice) {
+                    eligibleTiles[randomIndex] = eligibleTiles[eligibleTiles.length - 1];
+                    eligibleTiles.pop();
+                }
             }
         });
     }
