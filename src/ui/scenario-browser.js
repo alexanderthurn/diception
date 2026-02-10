@@ -62,10 +62,9 @@ export class ScenarioBrowser {
     setupEventListeners() {
         const scenariosBtn = document.getElementById('scenarios-btn');
         if (scenariosBtn) {
-            scenariosBtn.addEventListener('click', () => {
+            scenariosBtn.addEventListener('click', async () => {
                 this.pendingLevel = null;
-                this.renderCampaignList();
-                this.showCampaignView();
+                await this.showCampaignView();
                 this.restoreLastSelectedCampaign();
                 this.scenarioBrowserModal.classList.remove('hidden');
                 if (this.effectsManager) this.effectsManager.stopIntroMode();
@@ -82,12 +81,12 @@ export class ScenarioBrowser {
 
     }
 
-    showCampaignView() {
+    async showCampaignView() {
         this.selectedCampaign = null;
         this.levelGridContainer.classList.add('hidden');
         this.previewContent.classList.remove('hidden');
         this.previewContent.innerHTML = '<div class="empty-message-large">Select a campaign</div>';
-        this.renderCampaignList();
+        await this.renderCampaignList();
     }
 
     restoreLastSelectedCampaign() {
@@ -180,8 +179,15 @@ export class ScenarioBrowser {
 
         const loadedOwner = localStorage.getItem('dicy_loadedCampaign');
         const loadedIdx = localStorage.getItem('dicy_loadedLevelIndex');
-        const savedLevelIndex = (loadedOwner === campaign.owner && loadedIdx != null)
-            ? parseInt(loadedIdx, 10) : null;
+        const lastOwner = localStorage.getItem('dicy_lastCampaign');
+        const lastIdx = localStorage.getItem('dicy_lastLevelIndex');
+        let savedLevelIndex = null;
+        if (loadedOwner === campaign.owner && loadedIdx != null) {
+            savedLevelIndex = parseInt(loadedIdx, 10);
+        } else if (lastOwner === campaign.owner && lastIdx != null) {
+            const idx = parseInt(lastIdx, 10);
+            if (idx >= 0 && idx < (campaign.levels?.length ?? 0)) savedLevelIndex = idx;
+        }
         const solvedLevels = getSolvedLevels(campaign.owner);
 
         this.levelGridHeader.innerHTML = `<span>${ownerLabel}</span><span>${levels.length} levels</span>`;
@@ -286,6 +292,10 @@ export class ScenarioBrowser {
     }
 
     async showLevelPreviewDialog(level, index) {
+        if (this.selectedCampaign?.owner) {
+            localStorage.setItem('dicy_lastCampaign', this.selectedCampaign.owner);
+            localStorage.setItem('dicy_lastLevelIndex', String(index));
+        }
         const previewLevel = await this.getLevelForPreview(level);
         const content = document.createElement('div');
         content.className = 'level-preview-dialog-content';
