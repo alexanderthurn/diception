@@ -1,6 +1,7 @@
 import { Dialog } from './dialog.js';
 import { CampaignManager } from '../scenarios/campaign-manager.js';
 import { getGridDimensions } from '../scenarios/campaign-data.js';
+import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress.js';
 
 /**
  * ScenarioBrowser - Campaign-based map/level selection
@@ -20,7 +21,6 @@ export class ScenarioBrowser {
 
         this.scenarioBrowserModal = document.getElementById('scenario-browser-modal');
         this.scenarioBrowserCloseBtn = document.getElementById('scenario-browser-close-btn');
-        this.scenarioBackBtn = document.getElementById('scenario-back-btn');
         this.campaignList = document.getElementById('campaign-list');
         this.levelGridContainer = document.getElementById('level-grid-container');
         this.levelGrid = document.getElementById('level-grid');
@@ -34,6 +34,7 @@ export class ScenarioBrowser {
         this.BACKEND_URL = '';
         this.hoverPreviewEl = null;
         this.justSavedLevelIndex = null;
+        this._configPreviewCache = new Map();
     }
 
     async determineBackendURL() {
@@ -78,14 +79,10 @@ export class ScenarioBrowser {
             });
         }
 
-        if (this.scenarioBackBtn) {
-            this.scenarioBackBtn.addEventListener('click', () => this.showCampaignView());
-        }
     }
 
     showCampaignView() {
         this.selectedCampaign = null;
-        this.scenarioBackBtn.classList.add('hidden');
         this.levelGridContainer.classList.add('hidden');
         this.previewContent.classList.remove('hidden');
         this.previewContent.innerHTML = '<div class="empty-message-large">Select a campaign</div>';
@@ -113,7 +110,6 @@ export class ScenarioBrowser {
     showLevelGridView(campaign) {
         this.selectedCampaign = campaign;
         if (campaign?.owner) localStorage.setItem('dicy_lastCampaign', campaign.owner);
-        this.scenarioBackBtn.classList.remove('hidden');
         this.levelGridContainer.classList.remove('hidden');
         this.previewContent.classList.add('hidden');
         this.renderLevelGrid(campaign);
@@ -179,6 +175,7 @@ export class ScenarioBrowser {
         const loadedIdx = localStorage.getItem('dicy_loadedLevelIndex');
         const savedLevelIndex = (loadedOwner === campaign.owner && loadedIdx != null)
             ? parseInt(loadedIdx, 10) : null;
+        const solvedLevels = getSolvedLevels(campaign.owner);
 
         const headerActions = this.isOwner
             ? `<button id="campaign-add-btn" class="tron-btn small" title="Add new map">+</button>`
@@ -201,6 +198,7 @@ export class ScenarioBrowser {
             tile.dataset.index = i;
 
             if (level) {
+                if (solvedLevels.includes(i)) tile.classList.add('solved');
                 const idxSpan = document.createElement('span');
                 idxSpan.className = 'tile-index';
                 idxSpan.textContent = i + 1;
@@ -228,8 +226,9 @@ export class ScenarioBrowser {
         }
     }
 
-    showHoverPreview(level, tile) {
+    async showHoverPreview(level, tile) {
         this.hideHoverPreview();
+        const previewLevel = await this.getLevelForPreview(level);
         const el = document.createElement('div');
         el.className = 'level-hover-preview';
         const size = Math.min(80, Math.floor(window.innerWidth * 0.3), 128);
@@ -237,7 +236,7 @@ export class ScenarioBrowser {
         canvas.width = size;
         canvas.height = size;
         canvas.style.setProperty('--preview-size', size + 'px');
-        this.renderMinimap(canvas, level);
+        this.renderMinimap(canvas, previewLevel);
         el.appendChild(canvas);
         document.body.appendChild(el);
         const rect = tile.getBoundingClientRect();
@@ -253,7 +252,8 @@ export class ScenarioBrowser {
         this.hoverPreviewEl = null;
     }
 
-    showLevelPreviewDialog(level, index) {
+    async showLevelPreviewDialog(level, index) {
+        const previewLevel = await this.getLevelForPreview(level);
         const content = document.createElement('div');
         content.className = 'level-preview-dialog-content';
         const size = Math.min(160, Math.floor(window.innerWidth * 0.5), 256);
@@ -262,7 +262,7 @@ export class ScenarioBrowser {
         canvas.width = size;
         canvas.height = size;
         canvas.style.setProperty('--preview-size', size + 'px');
-        this.renderMinimap(canvas, level);
+        this.renderMinimap(canvas, previewLevel);
         content.appendChild(canvas);
         const p = document.createElement('p');
         p.className = 'level-preview-type';
@@ -297,6 +297,36 @@ export class ScenarioBrowser {
         this.renderLevelGrid(this.selectedCampaign);
     }
 
+    async getLevelForPreview(level) {
+        if (level.type !== 'config') return level;
+        const cacheKey = JSON.stringify({ mapSize: level.mapSize, mapStyle: level.mapStyle });
+        if (this._configPreviewCache.has(cacheKey)) {
+            return this._configPreviewCache.get(cacheKey);
+        }
+        const generated = await this.generateConfigPreview(level);
+        this._configPreviewCache.set(cacheKey, generated);
+        return generated;
+    }
+
+    async generateConfigPreview(config) {
+        const { MapManager } = await import('../core/map.js');
+        const [w, h] = (config.mapSize || '6x6').split('x').map(Number);
+        const botCount = config.bots ?? 1;
+        const players = [{ id: 0, isBot: false, color: 0xaa00ff }, ...Array.from({ length: botCount }, (_, i) => ({ id: i + 1, isBot: true, color: [0xff0055, 0x55ff00, 0x5555ff, 0xffaa00][i % 4] }))];
+        const map = new MapManager();
+        map.generateMap(w, h, players, config.maxDice ?? 8, config.mapStyle || 'full');
+        const tiles = [];
+        for (let y = 0; y < map.height; y++) {
+            for (let x = 0; x < map.width; x++) {
+                const t = map.tiles[y * map.width + x];
+                if (t && !t.blocked) {
+                    tiles.push({ x, y, owner: t.owner ?? -1, dice: t.dice || 1 });
+                }
+            }
+        }
+        return { width: map.width, height: map.height, tiles, players };
+    }
+
     renderMinimap(canvas, level) {
         const ctx = canvas.getContext('2d');
         let w = level.width, h = level.height;
@@ -313,15 +343,6 @@ export class ScenarioBrowser {
 
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        if (level.type === 'config') {
-            ctx.fillStyle = '#333';
-            ctx.fillRect(ox, oy, w * ts, h * ts);
-            ctx.fillStyle = '#0fc';
-            ctx.font = '10px sans-serif';
-            ctx.fillText('?', canvas.width / 2 - 3, canvas.height / 2 + 4);
-            return;
-        }
 
         const tiles = level.tiles || [];
         const playerColors = {};

@@ -326,6 +326,16 @@ export class GameEventManager {
             this.highscoreManager.recordWin(name, humanPlayed, humanWon);
         }
 
+        // Mark campaign level as solved when human wins
+        if (humanWon) {
+            const owner = localStorage.getItem('dicy_loadedCampaign');
+            const idxStr = localStorage.getItem('dicy_loadedLevelIndex');
+            if (owner != null && idxStr != null) {
+                const { markLevelSolved } = await import('../scenarios/campaign-progress.js');
+                markLevelSolved(owner, parseInt(idxStr, 10));
+            }
+        }
+
         // Play victory or defeat sound
         if (this.sfx) {
             if (!data.winner.isBot) {
