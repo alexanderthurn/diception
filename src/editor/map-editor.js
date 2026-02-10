@@ -635,6 +635,12 @@ export class MapEditor {
         const content = this.elements.hoverPreviewContent;
         if (!el || !content) return;
 
+        // Hide while dragging to other tiles (brush mode)
+        if (this.isPainting && this.mouseStrokeMovedToOther) {
+            el.classList.add('hidden');
+            return;
+        }
+
         const isScenarioAssignDice = this.state.editorType === 'scenario' &&
             (this.state.currentMode === 'assign' || this.state.currentMode === 'dice');
 
@@ -654,25 +660,15 @@ export class MapEditor {
         el.style.left = `${clientX + offset}px`;
         el.style.top = `${clientY + offset}px`;
 
+        // Always show both resulting color and dice in one combined preview
         content.className = 'editor-hover-preview-content';
-        content.style.background = '';
+        const owner = this.state.players.find(p => p.id === preview.owner);
+        const color = owner ? owner.color : 0x444444;
+        const hex = '#' + color.toString(16).padStart(6, '0');
+        content.style.background = hex;
         content.style.borderColor = '#fff';
-        content.style.color = '#fff';
-
-        if (preview.remove) {
-            content.textContent = '✕';
-            content.style.background = 'rgba(180, 0, 0, 0.9)';
-        } else if (preview.mode === 'assign' && preview.owner != null) {
-            const owner = this.state.players.find(p => p.id === preview.owner);
-            const color = owner ? owner.color : 0x444444;
-            const hex = '#' + color.toString(16).padStart(6, '0');
-            content.textContent = '';
-            content.style.background = hex;
-            content.style.color = getContrastColor(color);
-        } else if (preview.mode === 'dice' && preview.dice != null) {
-            content.textContent = String(preview.dice);
-            content.style.background = 'rgba(0, 0, 0, 0.85)';
-        }
+        content.style.color = getContrastColor(color);
+        content.textContent = String(preview.dice ?? 1);
 
         el.classList.remove('hidden');
     }
@@ -859,7 +855,7 @@ export class MapEditor {
                 const cached = this.state.deletedTiles.get(key);
                 return { x, y, mode: 'assign', owner: 0, dice: cached?.dice || 1 };
             }
-            if (tile.owner >= playerCount - 1) return { x, y, remove: true };
+            if (tile.owner >= playerCount - 1) return { x, y, mode: 'assign', owner: 0, dice: tile.dice };
             return { x, y, mode: 'assign', owner: tile.owner + 1, dice: tile.dice };
         }
         if (this.state.currentMode === 'dice') {
@@ -867,7 +863,7 @@ export class MapEditor {
                 const cached = this.state.deletedTiles.get(key);
                 return { x, y, mode: 'dice', owner: cached?.owner ?? 0, dice: 1 };
             }
-            if (tile.dice >= this.state.maxDice) return { x, y, remove: true };
+            if (tile.dice >= this.state.maxDice) return { x, y, mode: 'dice', owner: tile.owner, dice: 1 };
             return { x, y, mode: 'dice', owner: tile.owner, dice: (tile.dice || 1) + 1 };
         }
         return null;
@@ -1273,7 +1269,7 @@ export class MapEditor {
             } else if (this.state.editorType === 'map') {
                 this.state.tiles.set(key, { owner: 0, dice: 1 });
             } else {
-                // Scenario mode: brush - sample from first tile, apply to all
+                // Scenario mode: brush - sample from first tile, apply to all (mode-specific: only copy relevant value)
                 if (this.state.currentMode === 'assign' || this.state.currentMode === 'dice') {
                     if (this.mouseBrushValue === null) {
                         this.mouseBrushValue = tile
@@ -1281,7 +1277,21 @@ export class MapEditor {
                             : { owner: 0, dice: 1 };
                     }
                     const v = this.mouseBrushValue;
-                    this.state.tiles.set(key, { owner: v.owner, dice: Math.min(v.dice, this.state.maxDice) });
+                    const existing = this.state.tiles.get(key);
+                    const cached = this.state.deletedTiles.get(key);
+                    if (this.state.currentMode === 'dice') {
+                        // Dice mode: only copy dice, preserve target's owner
+                        this.state.tiles.set(key, {
+                            owner: existing?.owner ?? cached?.owner ?? 0,
+                            dice: Math.min(v.dice, this.state.maxDice)
+                        });
+                    } else {
+                        // Assign mode: only copy owner, preserve target's dice
+                        this.state.tiles.set(key, {
+                            owner: v.owner,
+                            dice: existing?.dice ?? cached?.dice ?? 1
+                        });
+                    }
                     this.state.deletedTiles.delete(key);
                 }
             }
@@ -1316,8 +1326,7 @@ export class MapEditor {
                             } else tile.owner -= 1;
                         } else {
                             if (tile.owner >= playerCount - 1) {
-                                this.state.deletedTiles.set(key, { ...tile });
-                                this.state.tiles.delete(key);
+                                tile.owner = 0;
                             } else tile.owner += 1;
                         }
                     }
@@ -1339,8 +1348,7 @@ export class MapEditor {
                             } else tile.dice -= 1;
                         } else {
                             if (tile.dice >= this.state.maxDice) {
-                                this.state.deletedTiles.set(key, { ...tile });
-                                this.state.tiles.delete(key);
+                                tile.dice = 1;
                             } else tile.dice += 1;
                         }
                     }
@@ -1416,6 +1424,7 @@ export class MapEditor {
         }
 
         this.renderToCanvas();
+        this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
     }
 
     syncSharedPlayersToUI() {
@@ -1604,6 +1613,7 @@ export class MapEditor {
         this.elements.diceToolbar?.classList.toggle('hidden', mode !== 'dice');
 
         this.renderToCanvas();
+        this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
     }
 
 
