@@ -2228,6 +2228,10 @@ select {
     cursor: not-allowed;
 }
 
+.level-preview-nav.hidden {
+    display: none;
+}
+
 /* Level preview dialog - compact */
 .level-preview-dialog-content {
     display: flex;
@@ -2459,6 +2463,10 @@ select {
     .scenario-browser-left {
         width: 100%;
         height: auto;
+    }
+
+    .scenario-list-container {
+        border: none;
     }
 
     .campaign-select-mobile {
@@ -3599,6 +3607,11 @@ canvas {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 15px;
+}
+
+.dialog-header-close-left {
+    justify-content: flex-start;
     gap: 15px;
 }
 

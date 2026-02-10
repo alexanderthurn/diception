@@ -344,11 +344,11 @@ export class ScenarioBrowser {
             const navRow = document.createElement('div');
             navRow.className = 'level-preview-nav-row';
             const prevBtn = document.createElement('button');
-            prevBtn.className = 'level-preview-nav level-preview-nav-left tron-btn small';
+            prevBtn.className = 'level-preview-nav level-preview-nav-left tron-btn small' + (idx <= 0 ? ' hidden' : '');
             prevBtn.innerHTML = '‹';
             prevBtn.disabled = idx <= 0;
             const nextBtn = document.createElement('button');
-            nextBtn.className = 'level-preview-nav level-preview-nav-right tron-btn small';
+            nextBtn.className = 'level-preview-nav level-preview-nav-right tron-btn small' + (idx >= totalLevels - 1 ? ' hidden' : '');
             nextBtn.innerHTML = '›';
             nextBtn.disabled = idx >= totalLevels - 1;
 
@@ -390,16 +390,16 @@ export class ScenarioBrowser {
         dialog.className = 'modal dialog-box level-preview-dialog';
 
         const header = document.createElement('div');
-        header.className = 'dialog-header dialog-header-with-close';
-        const titleEl = document.createElement('h1');
-        titleEl.className = 'tron-title small';
-        titleEl.textContent = `#${index + 1}`;
-        header.appendChild(titleEl);
+        header.className = 'dialog-header dialog-header-with-close dialog-header-close-left';
         const closeBtn = document.createElement('button');
         closeBtn.className = 'dialog-close-btn';
         closeBtn.innerHTML = '×';
         closeBtn.setAttribute('aria-label', 'Close');
         header.appendChild(closeBtn);
+        const titleEl = document.createElement('h1');
+        titleEl.className = 'tron-title small';
+        titleEl.textContent = `#${index + 1}`;
+        header.appendChild(titleEl);
         dialog.appendChild(header);
 
         const body = document.createElement('div');
@@ -428,12 +428,11 @@ export class ScenarioBrowser {
         actions.className = 'dialog-actions';
         const actionButtons = [
             { text: 'Play', value: 'play', className: 'tron-btn primary' },
-            { text: 'Custom Game', value: 'custom', className: 'tron-btn' },
-            { text: 'Close', value: 'close', className: 'tron-btn' }
+            { text: 'Custom Game', value: 'custom', className: 'tron-btn' }
         ];
         if (this.isOwner) {
-            actionButtons.splice(2, 0, { text: 'Edit', value: 'edit', className: 'tron-btn' });
-            actionButtons.splice(3, 0, { text: 'Delete', value: 'delete', className: 'tron-btn danger' });
+            actionButtons.push({ text: 'Edit', value: 'edit', className: 'tron-btn' });
+            actionButtons.push({ text: 'Delete', value: 'delete', className: 'tron-btn danger' });
         }
         actionButtons.forEach(btnConfig => {
             const btn = document.createElement('button');
