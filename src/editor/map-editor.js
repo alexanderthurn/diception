@@ -797,7 +797,7 @@ export class MapEditor {
      * @param {Object|null} scenario - Level data (map/scenario) or null for new
      * @param {Object} options - { campaign, levelIndex, onSave, onClose, isNew }
      */
-    open(scenario = null, options = {}) {
+    async open(scenario = null, options = {}) {
         this.editorOptions = options?.campaign ? options : null;
         this.onClose = options.onClose || null;
 
@@ -848,6 +848,12 @@ export class MapEditor {
         this.renderDicePalette();
         this.setEditorType(this.state.editorType);
         this.updateSaveButtonText();
+
+        // New map: do 1 immediate random generation
+        if (this.editorOptions?.isNew && this.state.editorType === 'config') {
+            this.syncConfigFromUI();
+            await this.regenerateConfigPreview();
+        }
 
         // Render to canvas and fit camera on initial open
         this.renderToCanvas(true);
@@ -1339,7 +1345,7 @@ export class MapEditor {
         const cfg = this.state.configData;
         if (!cfg) return;
         const { MapManager } = await import('../core/map.js');
-        const [w, h] = (cfg.mapSize || '6x6').split('x').map(Number);
+        const [genW, genH] = (cfg.mapSize || '6x6').split('x').map(Number);
         const botCount = 2;
         const players = [
             { id: 0, isBot: false, color: DEFAULT_COLORS[0], aiId: null },
@@ -1348,24 +1354,31 @@ export class MapEditor {
             }))
         ];
         const map = new MapManager();
-        map.generateMap(w, h, players, 8, cfg.mapStyle || 'islands');
-        this.state.width = map.width;
-        this.state.height = map.height;
+        map.generateMap(genW, genH, players, 8, cfg.mapStyle || 'islands');
+
+        // Canvas stays 20x20; place generated map centered
+        const CANVAS_SIZE = 20;
+        this.state.width = CANVAS_SIZE;
+        this.state.height = CANVAS_SIZE;
         this.state.maxDice = 8;
         this.state.diceSides = 6;
         this.state.players = players;
         this.state.tiles.clear();
+
+        const offsetX = Math.floor((CANVAS_SIZE - genW) / 2);
+        const offsetY = Math.floor((CANVAS_SIZE - genH) / 2);
         for (let y = 0; y < map.height; y++) {
             for (let x = 0; x < map.width; x++) {
                 const t = map.tiles[y * map.width + x];
                 if (t && !t.blocked) {
-                    const key = `${x},${y}`;
+                    const key = `${x + offsetX},${y + offsetY}`;
                     this.state.tiles.set(key, { owner: t.owner, dice: t.dice || 1 });
                 }
             }
         }
         this.gameAdapter.syncFromState();
         if (this.renderer?.grid) this.renderer.grid.invalidate();
+        this.updateUIFromState();
     }
 
     stopConfigPreview() {
@@ -1709,6 +1722,13 @@ export class MapEditor {
                 mapSize: scenario.mapSize || '6x6',
                 mapStyle: scenario.mapStyle || 'islands',
                 gameMode: scenario.gameMode || 'classic'
+            };
+        } else if (this.editorOptions?.isNew && scenario.type === 'map' && (!scenario.tiles || scenario.tiles.length === 0)) {
+            this.state.editorType = 'config';
+            this.state.configData = {
+                mapSize: '6x6',
+                mapStyle: 'islands',
+                gameMode: 'classic'
             };
         } else {
             this.state.editorType = scenario.type === 'scenario' ? 'scenario' : 'map';
