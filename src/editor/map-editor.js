@@ -821,6 +821,7 @@ export class MapEditor {
             this.originalGame = this.renderer.game;
             this.renderer.game = this.gameAdapter;
             this.renderer.grid.game = this.gameAdapter;
+            this.renderer.grid.setShowMapBounds(true);
             this.renderer.setDiceSides(this.state.diceSides);
         }
 
@@ -869,9 +870,9 @@ export class MapEditor {
      */
     close() {
         this.stopConfigPreview();
-        // Disable paint mode in renderer
         if (this.renderer && this.renderer.grid) {
             this.renderer.grid.setPaintMode(false);
+            this.renderer.grid.setShowMapBounds(false);
         }
 
         // Restore original game

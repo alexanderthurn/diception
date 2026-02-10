@@ -52,6 +52,8 @@ export class GridRenderer {
 
         // Editor paint mode (neutral rendering)
         this.paintMode = false;
+        // Show map bounds (editor) - outline of full grid
+        this.showMapBounds = false;
 
         // === PERFORMANCE: Tile caching ===
         // Pool of tile containers indexed by tile index
@@ -143,6 +145,11 @@ export class GridRenderer {
         this.paintMode = enabled;
     }
 
+    setShowMapBounds(enabled) {
+        this.showMapBounds = enabled;
+        this.needsFullRedraw = true;
+    }
+
     setGameSpeed(speed) {
         this.gameSpeed = speed;
     }
@@ -205,11 +212,12 @@ export class GridRenderer {
         this.overlayContainer.x = 0;
         this.overlayContainer.y = 0;
 
-        // Paint mode border (only on full redraw)
-        if (this.paintMode && needsFullRedraw) {
+        // Map bounds border (editor) - clear outline of full grid
+        if (this.showMapBounds && needsFullRedraw) {
             const borderGfx = new Graphics();
-            borderGfx.rect(-2, -2, mapPixelWidth + 4 - this.gap, mapPixelHeight + 4 - this.gap);
-            borderGfx.stroke({ width: 2, color: 0xFFFFFF, alpha: 0.3 });
+            const pad = 4;
+            borderGfx.rect(-pad, -pad, mapPixelWidth + pad * 2 - this.gap, mapPixelHeight + pad * 2 - this.gap);
+            borderGfx.stroke({ width: 4, color: 0x00ffff, alpha: 0.85 });
             this.container.addChild(borderGfx);
         }
 
