@@ -1456,6 +1456,16 @@ select {
     text-shadow: var(--title-glow);
 }
 
+.loading-icons .loading-input-group {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.loading-icons span + span {
+    margin-left: 30px;
+}
+
 .loading-content {
     display: flex;
     flex-direction: column;
