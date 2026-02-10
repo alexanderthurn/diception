@@ -314,6 +314,10 @@ export class GameEventManager {
         // Clear auto-save IMMEDIATELY on game over
         this.turnHistory.clearAutoSave();
 
+        // Hide End Turn and game UI immediately (before winning dialog)
+        this.endTurnBtn.classList.add('hidden');
+        this.autoWinBtn.classList.add('hidden');
+
         const name = this.getPlayerName(data.winner);
         if (this.addLog) this.addLog(`🏆 ${name} wins the game!`, 'death');
 

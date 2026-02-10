@@ -3697,11 +3697,14 @@ canvas {
 }
 
 .scenario-browser-top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
     display: flex;
     justify-content: flex-start;
     align-items: center;
     padding: 15px 20px;
-    margin-bottom: 0;
+    z-index: 10001;
 }
 
 .scenario-browser-top-bar .tron-btn {
