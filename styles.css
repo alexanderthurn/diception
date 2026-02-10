@@ -2939,6 +2939,105 @@ select {
     font-size: 11px;
 }
 
+/* Random dialog - top-left, like player-dashboard */
+.editor-random-dialog {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    width: 260px;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid var(--border-color);
+    border-radius: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+}
+
+.editor-random-dialog.hidden {
+    display: none !important;
+}
+
+.editor-random-dialog-body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.editor-random-title {
+    margin: 0 0 6px 0;
+    font-size: 14px;
+    color: var(--border-color);
+}
+
+.editor-random-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid rgba(100, 100, 120, 0.4);
+    color: #aaa;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.editor-random-close:hover {
+    background: rgba(255, 100, 100, 0.2);
+    color: #fff;
+    border-color: #888;
+}
+
+.editor-random-generate {
+    margin-top: 6px;
+}
+
+.editor-random-dialog .control-group {
+    margin-bottom: 0;
+}
+
+.editor-random-dialog label {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.editor-random-dialog select {
+    width: 100%;
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(100, 100, 120, 0.4);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 12px;
+}
+
+.editor-random-dialog .range-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editor-random-dialog .range-row input[type="range"] {
+    flex: 1;
+}
+
+#editor-random-btn.active {
+    background: var(--border-color);
+    color: #000;
+    font-weight: bold;
+    border-color: var(--border-color);
+}
+
 .editor-config-section {
     display: flex;
     flex-direction: column;

@@ -467,32 +467,11 @@
                 <button id="editor-back-btn" class="tron-btn small">← Back</button>
             </div>
 
-            <!-- Bottom toolbar -->
-            <div class="editor-bottom-bar">
-                <!-- Mode tabs -->
-                <div class="editor-mode-tabs">
-                    <button class="editor-tab active" data-mode="paint">🖌️ Paint</button>
-                    <button class="editor-tab" data-mode="assign">👤 (A)ssign</button>
-                    <button class="editor-tab" data-mode="dice"><span class="dice-icon-sprite mini"
-                            style="background-color: #888;"></span> (D)ice</button>
-                </div>
-            </div>
-
-            <!-- Right settings panel -->
-            <div class="editor-settings">
-
-                <div class="control-group editor-type-toggle">
-                    <div class="toggle-buttons toggle-buttons-stacked">
-                        <button id="editor-type-map" class="toggle-btn active"><span class="toggle-icon">🗺️</span><span class="toggle-text">Map</span></button>
-                        <button id="editor-type-scenario" class="toggle-btn"><span class="toggle-icon">⭐</span><span class="toggle-text">Scenario</span></button>
-                        <button id="editor-type-config" class="toggle-btn"><span class="toggle-icon">🎲</span><span class="toggle-text">Random</span></button>
-                    </div>
-                </div>
-
-                <hr class="editor-divider">
-
-                <!-- Config-specific (procedural) - shown only when type=config (no map editing) -->
-                <div id="editor-config-section" class="editor-config-section hidden">
+            <!-- Random dialog (top-left, like player-dashboard) -->
+            <div id="editor-random-dialog" class="editor-random-dialog hidden">
+                <button id="editor-random-close-btn" class="editor-random-close" type="button" title="Close">✕</button>
+                <div class="editor-random-dialog-body">
+                    <h4 class="editor-random-title">Random Generate</h4>
                     <div class="control-group">
                         <label>Map Size</label>
                         <div class="range-row">
@@ -503,11 +482,11 @@
                     <div class="control-group">
                         <label>Map Style</label>
                         <select id="editor-map-style">
-                            <option value="random">Random</option>
+                            <option value="random" selected>Random</option>
                             <option value="full">Full Grid</option>
                             <option value="continents">Continents</option>
                             <option value="caves">Caves</option>
-                            <option value="islands" selected>Islands</option>
+                            <option value="islands">Islands</option>
                             <option value="maze">Maze</option>
                             <option value="tunnels">Tunnels</option>
                             <option value="swiss">Swiss Cheese</option>
@@ -522,9 +501,33 @@
                             <option value="2of2">2 of 2</option>
                         </select>
                     </div>
+                    <button id="editor-randomize-btn" class="tron-btn primary editor-random-generate">🎲 Generate</button>
+                </div>
+            </div>
+
+            <!-- Bottom toolbar -->
+            <div class="editor-bottom-bar">
+                <!-- Mode tabs -->
+                <div class="editor-mode-tabs">
+                    <button class="editor-tab active" data-mode="paint">🖌️ Paint</button>
+                    <button class="editor-tab" data-mode="assign">👤 (A)ssign</button>
+                    <button class="editor-tab" data-mode="dice"><span class="dice-icon-sprite mini"
+                            style="background-color: #888;"></span> (D)ice</button>
+                </div>
+            </div>
+
+            <!-- Right settings panel -->
+            <div class="editor-settings">
+                <div class="control-group editor-type-toggle">
+                    <div class="toggle-buttons toggle-buttons-stacked">
+                        <button id="editor-type-map" class="toggle-btn active"><span class="toggle-icon">🗺️</span><span class="toggle-text">Map</span></button>
+                        <button id="editor-type-scenario" class="toggle-btn"><span class="toggle-icon">⭐</span><span class="toggle-text">Scenario</span></button>
+                    </div>
                 </div>
 
-                <!-- Map/Scenario-specific - hidden when type=config -->
+                <hr class="editor-divider">
+
+                <!-- Map/Scenario-specific -->
                 <div id="editor-map-scenario-section">
                 <div class="control-group">
                     <label>Name</label>
@@ -616,12 +619,12 @@
 
                 <div class="editor-actions">
                     <button id="editor-save-btn" class="tron-btn primary">💾 Save</button>
-                    <button id="editor-randomize-btn" class="tron-btn hidden">🎲 Randomize</button>
                 </div>
 
                 <div class="editor-quick-actions" id="editor-quick-actions">
                     <button id="editor-clear-btn" class="tron-btn small">Clear</button>
                     <button id="editor-fill-btn" class="tron-btn small">Fill</button>
+                    <button id="editor-random-btn" class="tron-btn small">🎲 Random</button>
                 </div>
             </div>
 
