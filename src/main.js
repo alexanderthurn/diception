@@ -482,9 +482,13 @@ function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboar
         game.endTurn();
     });
 
-    // New Game Button
-    newGameBtn.addEventListener('click', () => {
-        sessionManager.quitToMainMenu();
+    // New Game Button (Back to Campaign when started from campaign)
+    newGameBtn.addEventListener('click', async () => {
+        if (localStorage.getItem('dicy_campaignMode')) {
+            await sessionManager.quitToCampaignScreen();
+        } else {
+            sessionManager.quitToMainMenu();
+        }
     });
 
     // Auto-Win Button

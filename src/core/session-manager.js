@@ -23,10 +23,28 @@ export class SessionManager {
         this.newGameBtn = document.getElementById('new-game-btn');
 
         this.scenarioBrowser = null;
+
+        game.on('gameStart', () => this.updateNewGameBtnLabel());
     }
 
     setScenarioBrowser(scenarioBrowser) {
         this.scenarioBrowser = scenarioBrowser;
+    }
+
+    /**
+     * Update new-game button label based on campaign mode (desktop: text + title)
+     */
+    updateNewGameBtnLabel() {
+        if (!this.newGameBtn) return;
+        const isCampaignMode = localStorage.getItem('dicy_campaignMode');
+        const btnText = this.newGameBtn.querySelector('.btn-text');
+        if (isCampaignMode) {
+            this.newGameBtn.title = 'Back to Campaign';
+            if (btnText) btnText.textContent = 'BACK TO CAMPAIGN';
+        } else {
+            this.newGameBtn.title = 'New Game';
+            if (btnText) btnText.textContent = 'NEW GAME';
+        }
     }
 
     /**
@@ -121,6 +139,7 @@ export class SessionManager {
 
             // Restore UI visibility
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
+            this.updateNewGameBtnLabel();
             const dashToggle = document.getElementById('dash-toggle');
             if (dashToggle) dashToggle.textContent = '[-]';
 
@@ -177,6 +196,7 @@ export class SessionManager {
 
             this.setupModal.classList.add('hidden');
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
+            this.updateNewGameBtnLabel();
 
             // Restore state
             this.turnHistory.applyGameState(this.game, snapshot.gameState);
