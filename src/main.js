@@ -624,15 +624,14 @@ function setupHowToPlay(effectsManager, audioController) {
         keepCampaignsRow.classList.toggle('hidden', !hasUserCampaign);
         if (hasUserCampaign) keepCampaignsCheck.checked = true;
 
-        // Build music list with links and active toggles
+        // Build music list with buttons and active toggles
         if (audioController && musicListEl) {
             const inactive = new Set(audioController.getInactiveTracks());
             musicListEl.innerHTML = audioController.availableSongs.map(filename => {
                 const isActive = !inactive.has(filename);
-                const url = new URL(filename, window.location.href).href;
                 const displayName = filename.replace(/\.mp3$/i, '');
                 return `<li class="howto-music-item">
-                    <a href="${url}" target="_blank" rel="noopener" class="howto-music-link">${displayName}</a>
+                    <span class="howto-music-name" data-filename="${filename.replace(/"/g, '&quot;')}">${displayName}</span>
                     <button type="button" class="howto-music-toggle tron-btn small ${isActive ? 'active' : ''}" data-filename="${filename.replace(/"/g, '&quot;')}" title="${isActive ? 'Active in playlist' : 'Inactive (excluded from loop)'}">${isActive ? '✓' : '○'}</button>
                 </li>`;
             }).join('');
@@ -641,12 +640,33 @@ function setupHowToPlay(effectsManager, audioController) {
 
     function bindMusicToggles() {
         if (!musicListEl) return;
+
+        // Name click -> Play song
+        musicListEl.querySelectorAll('.howto-music-name').forEach(el => {
+            el.addEventListener('click', () => {
+                const filename = el.getAttribute('data-filename');
+                audioController.playSong(filename);
+                refreshHowtoSections();
+                bindMusicToggles();
+            });
+        });
+
+        // Toggle click -> Update playlist + Play if enabling
         musicListEl.querySelectorAll('.howto-music-toggle').forEach(btn => {
             btn.addEventListener('click', () => {
                 const filename = btn.getAttribute('data-filename');
                 const inactive = new Set(audioController.getInactiveTracks());
                 const isActive = !inactive.has(filename);
-                audioController.setTrackActive(filename, !isActive);
+                const newState = !isActive;
+
+                audioController.setTrackActive(filename, newState);
+
+                if (newState) {
+                    audioController.playSong(filename);
+                } else if (audioController.availableSongs[audioController.currentSongIndex] === filename && audioController.musicPlaying) {
+                    audioController.handleMusicToggle();
+                }
+
                 refreshHowtoSections();
                 bindMusicToggles();
             });

@@ -187,6 +187,31 @@ export class AudioController {
         }
     }
 
+    /**
+     * Plays a specific song by filename.
+     * Also marks it as active if it was inactive.
+     */
+    playSong(filename) {
+        const idx = this.availableSongs.indexOf(filename);
+        if (idx === -1) return;
+
+        // Ensure it's active so it stays in the rotation
+        this.setTrackActive(filename, true);
+
+        this.currentSongIndex = idx;
+        this.music.src = './' + encodeURIComponent(filename);
+        localStorage.setItem('dicy_currentSongIndex', this.currentSongIndex.toString());
+
+        this.musicPlaying = true;
+        localStorage.setItem('dicy_musicEnabled', 'true');
+        if (this.musicToggle) {
+            this.musicToggle.textContent = '🔊';
+            this.musicToggle.classList.add('active');
+        }
+
+        this.music.play().catch(e => console.warn('Audio play failed:', e));
+    }
+
     getMobileAction(isEnabled, volumeSlider) {
         if (window.innerWidth > 768 && window.innerHeight > 720) return null;
 

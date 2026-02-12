@@ -1462,7 +1462,7 @@ select {
     align-items: center;
 }
 
-.loading-icons span + span {
+.loading-icons span+span {
     margin-left: 30px;
 }
 
@@ -1823,15 +1823,16 @@ select {
     margin-bottom: 8px;
 }
 
-.howto-music-link {
+.howto-music-name {
     flex: 1;
     color: var(--accent-color);
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition: all 0.2s;
+    cursor: pointer;
 }
 
-.howto-music-link:hover {
+.howto-music-name:hover {
     color: #fff;
     border-bottom-color: #fff;
 }
@@ -2263,8 +2264,15 @@ select {
 }
 
 @keyframes level-saved-pulse {
-    0%, 100% { box-shadow: none; }
-    50% { box-shadow: 0 0 12px #0f0; }
+
+    0%,
+    100% {
+        box-shadow: none;
+    }
+
+    50% {
+        box-shadow: 0 0 12px #0f0;
+    }
 }
 
 .level-grid-tile.add-tile {
