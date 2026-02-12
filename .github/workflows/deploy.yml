@@ -28,6 +28,7 @@ jobs:
 
     - name: FTP Deploy to DEV
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      continue-on-error: true
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
