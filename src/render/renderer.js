@@ -39,6 +39,7 @@ export class Renderer {
         this.app.canvas.style.width = '100%';
         this.app.canvas.style.height = '100%';
         this.app.canvas.style.display = 'block';
+        this.app.canvas.style.objectFit = 'contain';
 
         // Ensure smooth rendering but don't overwork the CPU/GPU
         this.app.ticker.maxFPS = Math.min(window.screen.refreshRate || 60, 120);
@@ -105,13 +106,13 @@ export class Renderer {
         let screenWidth, screenHeight, padding;
         if (this.editorActive) {
             // Editor: right panel ~290px, top bar ~70px, bottom bar ~80px
-            screenWidth = window.innerWidth - 310;
-            screenHeight = window.innerHeight - 160;
+            screenWidth = this.app.screen.width - 310;
+            screenHeight = this.app.screen.height - 160;
             padding = 0;
         } else {
             padding = 120;
-            screenWidth = window.innerWidth - padding;
-            screenHeight = window.innerHeight - padding;
+            screenWidth = this.app.screen.width - padding;
+            screenHeight = this.app.screen.height - padding;
         }
 
         // Calculate scale to fit
@@ -119,24 +120,24 @@ export class Renderer {
         const scaleY = screenHeight / mapPixelHeight;
         const scale = Math.min(scaleX, scaleY, 1.5) * fitRatio; // Apply fitRatio
 
-        // Apply scale
-        this.rootContainer.scale.set(Math.max(0.2, scale)); // Allow slightly smaller scale
+        const safeScale = Math.max(0.2, scale);
+        this.rootContainer.scale.set(safeScale, safeScale);
 
         const scaledWidth = mapPixelWidth * this.rootContainer.scale.x;
         const scaledHeight = mapPixelHeight * this.rootContainer.scale.y;
 
         if (this.editorActive) {
             // Position in lower-left: ~25% inset from left, bottom-aligned above bottom bar
-            const leftInset = window.innerWidth * 0.25;
+            const leftInset = this.app.screen.width * 0.25;
             const bottomInset = 100; // Space for bottom bar and padding
             this.rootContainer.x = leftInset;
-            this.rootContainer.y = window.innerHeight - scaledHeight - bottomInset;
+            this.rootContainer.y = this.app.screen.height - scaledHeight - bottomInset;
         } else {
             // Center the map with offset for left sidebar on desktop
-            const isMobile = window.innerWidth <= 768 || window.innerHeight <= 720;
+            const isMobile = this.app.screen.width <= 768 || this.app.screen.height <= 720;
             const sidebarOffset = isMobile ? 0 : 140;
-            this.rootContainer.x = (window.innerWidth - scaledWidth) / 2 + sidebarOffset;
-            this.rootContainer.y = (window.innerHeight - scaledHeight) / 2;
+            this.rootContainer.x = (this.app.screen.width - scaledWidth) / 2 + sidebarOffset;
+            this.rootContainer.y = (this.app.screen.height - scaledHeight) / 2;
         }
     }
 
@@ -211,18 +212,19 @@ export class Renderer {
         const mapPixelSize = size * (tileSize + gap);
 
         const padding = 120;
-        const screenWidth = window.innerWidth - padding;
-        const screenHeight = window.innerHeight - padding;
+        const screenWidth = this.app.screen.width - padding;
+        const screenHeight = this.app.screen.height - padding;
         const scale = Math.min(screenWidth / mapPixelSize, screenHeight / mapPixelSize, 1.5);
 
-        this.rootContainer.scale.set(Math.max(0.2, scale));
+        const safeScale = Math.max(0.2, scale);
+        this.rootContainer.scale.set(safeScale, safeScale);
 
-        const centerX = window.innerWidth * 0.5;
-        const centerY = window.innerHeight * 0.75;
-        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 720;
+        const centerX = this.app.screen.width * 0.5;
+        const centerY = this.app.screen.height * 0.75;
+        const isMobile = this.app.screen.width <= 768 || this.app.screen.height <= 720;
         const sidebarOffset = isMobile ? 0 : 140;
-        this.rootContainer.x = window.innerWidth / 2 + sidebarOffset - centerX * scale;
-        this.rootContainer.y = window.innerHeight / 2 - centerY * scale;
+        this.rootContainer.x = this.app.screen.width / 2 + sidebarOffset - centerX * scale;
+        this.rootContainer.y = this.app.screen.height / 2 - centerY * scale;
     }
 
     zoom(delta, x, y) {
@@ -240,7 +242,7 @@ export class Renderer {
             y: (y - this.rootContainer.y) / this.rootContainer.scale.y
         };
 
-        this.rootContainer.scale.set(newScale);
+        this.rootContainer.scale.set(newScale, newScale);
 
         this.rootContainer.x = x - worldPos.x * newScale;
         this.rootContainer.y = y - worldPos.y * newScale;

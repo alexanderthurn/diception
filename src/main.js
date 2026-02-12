@@ -143,9 +143,18 @@ async function init() {
     // FPS Counter
     setupFPSCounter(renderer);
 
-    // Handle window resize
+    // Handle window resize with a small delay for mobile bars to settle
+    let resizeTimeout;
     window.addEventListener('resize', () => {
-        renderer.autoFitCamera();
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            const w = document.documentElement.clientWidth;
+            const h = document.documentElement.clientHeight;
+            if (renderer.app && renderer.app.renderer) {
+                renderer.app.renderer.resize(w, h);
+            }
+            renderer.autoFitCamera();
+        }, 50);
     });
 
     // Wire tile selection to effects

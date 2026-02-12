@@ -305,7 +305,7 @@ export class ParticleSystem {
         graphics.visible = true;
         graphics.x = data.x;
         graphics.y = data.y;
-        graphics.scale.set(data.scale);
+        graphics.scale.set(data.scale, data.scale);
         graphics.tint = data.color;
         graphics.alpha = 1;
 
@@ -353,7 +353,8 @@ export class ParticleSystem {
             }
 
             if (p.shrink) {
-                p.graphics.scale.set(p.scale * lifeRatio);
+                const s = p.scale * lifeRatio;
+                p.graphics.scale.set(s, s);
             }
 
             // Remove dead particles

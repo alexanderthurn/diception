@@ -188,7 +188,7 @@ export class TileRenderer {
 
             // Scale to desired size
             const scale = size / TileRenderer.tileSize;
-            bgSprite.scale.set(scale);
+            bgSprite.scale.set(scale, scale);
 
             container.addChild(bgSprite);
         }
@@ -209,7 +209,7 @@ export class TileRenderer {
 
             // Scale to desired size
             const scale = size / TileRenderer.tileSize;
-            diceSprite.scale.set(scale);
+            diceSprite.scale.set(scale, scale);
 
             container.addChild(diceSprite);
         }
@@ -370,7 +370,7 @@ export class TileRenderer {
         // Scale sprite to match desired fontSize
         // The master texture is 256px, fontSize is typically 8-12
         const scale = (fontSize * 1.2) / 256;
-        sprite.scale.set(scale);
+        sprite.scale.set(scale, scale);
 
         sprite.anchor.set(0.5);
         sprite.x = x;

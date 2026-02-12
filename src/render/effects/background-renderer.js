@@ -15,8 +15,14 @@ export class BackgroundRenderer {
         // Insert at the beginning of stage (behind game)
         stage.addChildAt(this.container, 0);
 
-        this.width = options.width || window.innerWidth;
-        this.height = options.height || window.innerHeight;
+        this.width = options.width || (window.visualViewport ? window.visualViewport.width : document.documentElement.clientWidth);
+        this.height = options.height || (window.visualViewport ? window.visualViewport.height : document.documentElement.clientHeight);
+
+        // Try to get actual renderer dimensions if available (most accurate for game-space)
+        if (stage.renderer) {
+            this.width = stage.renderer.screen.width;
+            this.height = stage.renderer.screen.height;
+        }
 
         // Effect settings
         this.quality = 'high';
@@ -286,8 +292,14 @@ export class BackgroundRenderer {
     }
 
     onResize() {
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
+        if (this.container.stage?.renderer) {
+            this.width = this.container.stage.renderer.screen.width;
+            this.height = this.container.stage.renderer.screen.height;
+        } else {
+            const viewport = window.visualViewport;
+            this.width = viewport ? viewport.width : document.documentElement.clientWidth;
+            this.height = viewport ? viewport.height : document.documentElement.clientHeight;
+        }
         this.createGrid();
     }
 

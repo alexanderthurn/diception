@@ -163,10 +163,12 @@ export class EffectsManager {
                 (size * (this.tileSize + this.gap)) / 2,
                 (size * (this.tileSize + this.gap)) / 2
             );
-            this.previewMap.scale.set(0.5); // 50% size
+            this.previewMap.scale.set(0.5, 0.5); // 50% size
             // Position it at the center of the initial screen area in the world
-            this.previewMap.x = window.innerWidth * 0.5;
-            this.previewMap.y = window.innerHeight * 0.75;
+            if (this.renderer && this.renderer.app) {
+                this.previewMap.x = this.renderer.app.screen.width * 0.5;
+                this.previewMap.y = this.renderer.app.screen.height * 0.75;
+            }
             this.container.addChild(this.previewMap);
         }
 
@@ -182,28 +184,32 @@ export class EffectsManager {
             const side = Math.floor(Math.random() * 4);
             let x, y, dirX, dirY;
 
+            const viewport = window.visualViewport;
+            const screenWidth = this.renderer?.app?.screen?.width || (viewport ? viewport.width : document.documentElement.clientWidth);
+            const screenHeight = this.renderer?.app?.screen?.height || (viewport ? viewport.height : document.documentElement.clientHeight);
+
             switch (side) {
                 case 0: // Top
-                    x = Math.random() * window.innerWidth;
+                    x = Math.random() * screenWidth;
                     y = -20;
                     dirX = (Math.random() - 0.5) * 0.5;
                     dirY = 1;
                     break;
                 case 1: // Right
-                    x = window.innerWidth + 20;
-                    y = Math.random() * window.innerHeight;
+                    x = screenWidth + 20;
+                    y = Math.random() * screenHeight;
                     dirX = -1;
                     dirY = (Math.random() - 0.5) * 0.5;
                     break;
                 case 2: // Bottom
-                    x = Math.random() * window.innerWidth;
-                    y = window.innerHeight + 20;
+                    x = Math.random() * screenWidth;
+                    y = screenHeight + 20;
                     dirX = (Math.random() - 0.5) * 0.5;
                     dirY = -1;
                     break;
                 case 3: // Left
                     x = -20;
-                    y = Math.random() * window.innerHeight;
+                    y = Math.random() * screenHeight;
                     dirX = 1;
                     dirY = (Math.random() - 0.5) * 0.5;
                     break;
@@ -368,10 +374,14 @@ export class EffectsManager {
         const burstCount = this.quality === 'high' ? 8 : 4;
 
         // Multiple firework bursts
+        const viewport = window.visualViewport;
+        const screenWidth = this.renderer?.app?.screen?.width || (viewport ? viewport.width : document.documentElement.clientWidth);
+        const screenHeight = this.renderer?.app?.screen?.height || (viewport ? viewport.height : document.documentElement.clientHeight);
+
         for (let i = 0; i < burstCount; i++) {
             setTimeout(() => {
-                const x = 100 + Math.random() * (window.innerWidth - 200);
-                const y = 100 + Math.random() * (window.innerHeight - 300);
+                const x = 100 + Math.random() * (screenWidth - 200);
+                const y = 100 + Math.random() * (screenHeight - 300);
 
                 this.screenParticles.emit(x, y, winnerFirework);
             }, i * 300);
@@ -381,7 +391,7 @@ export class EffectsManager {
         if (this.quality === 'high') {
             for (let i = 0; i < 30; i++) {
                 setTimeout(() => {
-                    const x = Math.random() * window.innerWidth;
+                    const x = Math.random() * screenWidth;
                     this.screenParticles.emit(x, -10, 'confetti', { directionX: 0, directionY: 1 });
                 }, i * 100);
             }
