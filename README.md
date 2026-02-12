@@ -80,6 +80,9 @@ Steam integration is currently being migrated to Tauri plugins. Local developmen
 
 Created as a Dice Wars inspired strategy game.
 
+**Branding:**
+- The Steam logo and branding are property of Valve Corporation and are used in accordance with the [Steam Branding Guidelines](https://partner.steamgames.com/doc/marketing/branding).
+
 
 TODO:
 

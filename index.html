@@ -54,6 +54,10 @@
             <span title="Touch / Mobile">📱</span>
         </div>
         <div id="loading-version" class="loading-version"></div>
+        <div class="loading-platforms">
+            <img src="steam-logo.png" alt="Steam" class="platform-icon">
+            <img src="android-logo.png" alt="Android" class="platform-icon">
+        </div>
         <div class="loading-footer">feuerware.com</div>
     </div>
 
@@ -78,9 +82,11 @@
         <button id="auto-win-btn" class="tron-btn game-ui hidden" title="Toggle Autoplay">🤖</button>
 
         <div id="music-controls" class="panel">
-            <button id="retry-game-btn" class="tron-btn small game-ui hidden" title="Retry Game"><span class="btn-text">RETRY</span><span class="btn-icon">🔄</span></button>
+            <button id="retry-game-btn" class="tron-btn small game-ui hidden" title="Retry Game"><span
+                    class="btn-text">RETRY</span><span class="btn-icon">🔄</span></button>
             <span class="separator retry-separator hidden"></span>
-            <button id="new-game-btn" class="tron-btn small game-ui hidden" title="New Game"><span class="btn-text">NEW GAME</span><span class="btn-icon">⚙️</span></button>
+            <button id="new-game-btn" class="tron-btn small game-ui hidden" title="New Game"><span class="btn-text">NEW
+                    GAME</span><span class="btn-icon">⚙️</span></button>
             <span class="separator"></span>
             <div class="audio-group">
                 <button id="music-toggle" class="tron-btn small" title="Music">🔇</button>
@@ -462,7 +468,8 @@
 
                 <section id="howto-music-section">
                     <h3>MUSIC</h3>
-                    <p>Direct links to tracks used in the game. Toggle inactive to exclude from the play loop (all active by default).</p>
+                    <p>Direct links to tracks used in the game. Toggle inactive to exclude from the play loop (all
+                        active by default).</p>
                     <ul id="howto-music-list" class="howto-music-list">
                         <!-- Populated by JavaScript -->
                     </ul>
@@ -473,8 +480,11 @@
                     <div class="setting-explain">
                         <p>This game was made by <strong>Alexander Thurn</strong>.</p>
                         <p>It is <strong>open source</strong> under the <strong>GNU GPL v3</strong>.
-                            You may use, modify, and share it freely. The full license is in the <code>LICENSE</code> file.</p>
-                        <p><strong>Distribution plan:</strong> The <strong>web version</strong> stays free forever. A paid <strong>Steam version</strong> is planned to support development while keeping the core game open source and accessible to everyone.</p>
+                            You may use, modify, and share it freely. The full license is in the <code>LICENSE</code>
+                            file.</p>
+                        <p><strong>Distribution plan:</strong> The <strong>web version</strong> stays free forever. A
+                            paid <strong>Steam version</strong> is planned to support development while keeping the core
+                            game open source and accessible to everyone.</p>
                         <p>GitHub: <a href="https://github.com/alexanderthurn/diception" target="_blank"
                                 class="about-link highlight-link">alexanderthurn/diception</a></p>
                         <p>Visit <a href="https://feuerware.com" target="_blank"
@@ -519,34 +529,36 @@
         <!-- Scenario Browser (full-screen overlay like editor, back button at top-left) -->
         <div id="scenario-browser-modal" class="scenario-browser-overlay hidden">
             <div class="scenario-browser-top-bar">
-                <button id="scenario-browser-close-btn" class="scenario-browser-close-btn tron-btn small" aria-label="Close">
+                <button id="scenario-browser-close-btn" class="scenario-browser-close-btn tron-btn small"
+                    aria-label="Close">
                     <span class="scenario-close-desktop">← Back</span>
                     <span class="scenario-close-mobile">×</span>
                 </button>
             </div>
             <div class="scenario-browser-inner modal wide-modal">
-            <div class="modal-header compact-header">
-                <h2 class="modal-title">Campaigns</h2>
-            </div>
-            <div class="scenario-browser-content split-view">
-                <div class="scenario-browser-left">
-                    <div class="scenario-list-container">
-                        <select id="campaign-select" class="campaign-select-mobile" aria-label="Select campaign"></select>
-                        <div id="campaign-list"></div>
-                    </div>
+                <div class="modal-header compact-header">
+                    <h2 class="modal-title">Campaigns</h2>
                 </div>
-                <div class="scenario-browser-right">
-                    <div id="level-grid-container" class="hidden">
-                        <div id="level-grid-header"></div>
-                        <div id="level-grid"></div>
+                <div class="scenario-browser-content split-view">
+                    <div class="scenario-browser-left">
+                        <div class="scenario-list-container">
+                            <select id="campaign-select" class="campaign-select-mobile"
+                                aria-label="Select campaign"></select>
+                            <div id="campaign-list"></div>
+                        </div>
                     </div>
-                    <div id="scenario-preview-content">
-                        <div class="empty-message-large">
-                            Select a campaign
+                    <div class="scenario-browser-right">
+                        <div id="level-grid-container" class="hidden">
+                            <div id="level-grid-header"></div>
+                            <div id="level-grid"></div>
+                        </div>
+                        <div id="scenario-preview-content">
+                            <div class="empty-message-large">
+                                Select a campaign
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
         </div>
 
@@ -590,7 +602,8 @@
                             <option value="2of2">2 of 2</option>
                         </select>
                     </div>
-                    <button id="editor-randomize-btn" class="tron-btn primary editor-random-generate">🎲 Generate</button>
+                    <button id="editor-randomize-btn" class="tron-btn primary editor-random-generate">🎲
+                        Generate</button>
                 </div>
             </div>
 
@@ -600,8 +613,10 @@
                 <div class="editor-mode-tabs">
                     <button class="editor-tab active" data-mode="paint">🖌️ Paint</button>
                     <button class="editor-tab" data-mode="dice"><span class="dice-icon-sprite mini"
-                            style="background-color: #888;"></span> Dice <span id="editor-dice-hint" class="input-hint keyboard">F</span></button>
-                    <button class="editor-tab" data-mode="assign">👤 Assign <span id="editor-assign-hint" class="input-hint keyboard">R</span></button>
+                            style="background-color: #888;"></span> Dice <span id="editor-dice-hint"
+                            class="input-hint keyboard">F</span></button>
+                    <button class="editor-tab" data-mode="assign">👤 Assign <span id="editor-assign-hint"
+                            class="input-hint keyboard">R</span></button>
                 </div>
             </div>
 
@@ -609,90 +624,92 @@
             <div class="editor-settings">
                 <div class="control-group editor-type-toggle">
                     <div class="toggle-buttons toggle-buttons-stacked">
-                        <button id="editor-type-map" class="toggle-btn active"><span class="toggle-icon">🗺️</span><span class="toggle-text">Map</span></button>
-                        <button id="editor-type-scenario" class="toggle-btn"><span class="toggle-icon">⭐</span><span class="toggle-text">Scenario</span></button>
+                        <button id="editor-type-map" class="toggle-btn active"><span class="toggle-icon">🗺️</span><span
+                                class="toggle-text">Map</span></button>
+                        <button id="editor-type-scenario" class="toggle-btn"><span class="toggle-icon">⭐</span><span
+                                class="toggle-text">Scenario</span></button>
                     </div>
                 </div>
 
                 <!-- Map/Scenario-specific -->
                 <div id="editor-map-scenario-section">
-                <div class="control-group">
-                    <label>Name</label>
-                    <input type="text" id="editor-name" placeholder="My Map" maxlength="40">
-                </div>
-
-                <div class="control-group">
-                    <label>Description</label>
-                    <input type="text" id="editor-description" placeholder="Optional description" maxlength="100">
-                </div>
-
-                <div class="control-group">
-                    <label>Author</label>
-                    <input type="text" id="editor-author" placeholder="Author name" maxlength="40">
-                </div>
-
-                <div class="control-row">
-                    <div class="control-group half">
-                        <label>Width</label>
-                        <div class="range-row">
-                            <input type="range" id="editor-width" min="3" max="20" value="7">
-                            <span id="editor-width-val">7</span>
-                        </div>
+                    <div class="control-group">
+                        <label>Name</label>
+                        <input type="text" id="editor-name" placeholder="My Map" maxlength="40">
                     </div>
-                    <div class="control-group half">
-                        <label>Height</label>
-                        <div class="range-row">
-                            <input type="range" id="editor-height" min="3" max="20" value="7">
-                            <span id="editor-height-val">7</span>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Map & Scenario: shared Bots, Bot AI + color legend -->
-                <div id="editor-shared-players-section">
+                    <div class="control-group">
+                        <label>Description</label>
+                        <input type="text" id="editor-description" placeholder="Optional description" maxlength="100">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Author</label>
+                        <input type="text" id="editor-author" placeholder="Author name" maxlength="40">
+                    </div>
+
                     <div class="control-row">
                         <div class="control-group half">
-                            <label>Bots</label>
-                            <select id="editor-shared-bots">
-                                <option value="0">0</option>
-                                <option value="1" selected>1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                            </select>
+                            <label>Width</label>
+                            <div class="range-row">
+                                <input type="range" id="editor-width" min="3" max="20" value="7">
+                                <span id="editor-width-val">7</span>
+                            </div>
                         </div>
                         <div class="control-group half">
-                            <label>Bot AI</label>
-                            <select id="editor-shared-bot-ai">
-                                <option value="easy" selected>Easy</option>
-                                <option value="medium">Medium</option>
-                                <option value="hard">Hard</option>
-                            </select>
+                            <label>Height</label>
+                            <div class="range-row">
+                                <input type="range" id="editor-height" min="3" max="20" value="7">
+                                <span id="editor-height-val">7</span>
+                            </div>
                         </div>
                     </div>
-                    <div id="editor-color-legend" class="editor-color-legend"></div>
-                </div>
 
-                <div class="control-row" id="editor-dice-settings-section">
-                    <div class="control-group half">
-                        <label>Max Dice</label>
-                        <div class="range-row">
-                            <input type="range" id="editor-max-dice" min="2" max="12" value="9">
-                            <span id="editor-max-dice-val">9</span>
+                    <!-- Map & Scenario: shared Bots, Bot AI + color legend -->
+                    <div id="editor-shared-players-section">
+                        <div class="control-row">
+                            <div class="control-group half">
+                                <label>Bots</label>
+                                <select id="editor-shared-bots">
+                                    <option value="0">0</option>
+                                    <option value="1" selected>1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                </select>
+                            </div>
+                            <div class="control-group half">
+                                <label>Bot AI</label>
+                                <select id="editor-shared-bot-ai">
+                                    <option value="easy" selected>Easy</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="editor-color-legend" class="editor-color-legend"></div>
+                    </div>
+
+                    <div class="control-row" id="editor-dice-settings-section">
+                        <div class="control-group half">
+                            <label>Max Dice</label>
+                            <div class="range-row">
+                                <input type="range" id="editor-max-dice" min="2" max="12" value="9">
+                                <span id="editor-max-dice-val">9</span>
+                            </div>
+                        </div>
+                        <div class="control-group half">
+                            <label>Dice Sides</label>
+                            <div class="range-row">
+                                <input type="range" id="editor-dice-sides" min="1" max="12" value="6">
+                                <span id="editor-dice-sides-val">6</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="control-group half">
-                        <label>Dice Sides</label>
-                        <div class="range-row">
-                            <input type="range" id="editor-dice-sides" min="1" max="12" value="6">
-                            <span id="editor-dice-sides-val">6</span>
-                        </div>
-                    </div>
-                </div>
                 </div>
 
                 <div class="editor-actions">

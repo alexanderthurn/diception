@@ -1416,7 +1416,7 @@ select {
 
 .loading-prompt {
     position: absolute;
-    top: 50%;
+    top: 42%;
     left: 0;
     width: 100%;
     text-align: center;
@@ -1440,7 +1440,7 @@ select {
 
 .loading-icons {
     position: absolute;
-    top: calc(50% + 60px);
+    top: calc(50% + 20px);
     left: 0;
     width: 100%;
     display: flex;
@@ -1560,7 +1560,7 @@ select {
     .loading-icons {
         font-size: 4rem;
         gap: 50px;
-        top: calc(50% + 120px);
+        top: calc(50% + 80px);
     }
 }
 
@@ -1576,6 +1576,29 @@ select {
     letter-spacing: 2px;
     opacity: 0.4;
     text-transform: uppercase;
+}
+
+.loading-platforms {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    opacity: 0.4;
+    transition: opacity 0.5s ease;
+}
+
+#loading-screen.completed .loading-platforms {
+    opacity: 0.8;
+}
+
+.platform-icon {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.4));
 }
 
 @keyframes pulse-opacity {
