@@ -23,3 +23,10 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.10.0", features = [] }
 tauri-plugin-log = "2"
+
+[profile.release]
+panic = "abort"   # Verringert die Größe, indem im Fehlerfall sofort abgebrochen wird
+codegen-units = 1 # Erlaubt dem Compiler bessere Optimierungen (dauert länger beim Bauen)
+lto = true        # "Link Time Optimization" – macht die Datei kleiner und schneller
+strip = true      # ENTFERNT alle unnötigen Debug-Symbole (macht die Datei massiv kleiner)
+opt-level = "z"   # Optimiert auf Dateigröße ("s" oder "z" sind gut für kleine Binaries)

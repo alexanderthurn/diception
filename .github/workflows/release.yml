@@ -15,9 +15,9 @@ jobs:
       matrix:
         include:
           - platform: "macos-latest"
-            args: "--bundles app"
+            args: "--bundles app,dmg" # Baut beides, damit die Action zufrieden ist
           - platform: "windows-latest"
-            args: "" # Erzeugt nur die EXE
+            args: "--bundles nsis" # Baut den Installer
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -42,34 +42,32 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "DICEPTION ${{ github.ref_name }}"
-          includeRelease: false # Wir zippen manuell
+          includeRelease: true # Zurück zum Standard: Erstellt Release und lädt Installer hoch
           args: ${{ matrix.args }}
 
-      # --- MANUELLER ZIP-PROZESS ---
+      # --- ZUSÄTZLICHE STEAM-ZIPS (Optional, aber super für dich) ---
 
-      # MAC: Zippt den .app Ordner
-      - name: Zip Mac App
+      - name: Zip Mac App for Steam
         if: matrix.platform == 'macos-latest'
         run: |
           cd src-tauri/target/release/bundle/macos/
           zip -r ../../../../DICEPTION_macos.zip *.app
           
-      # WINDOWS: Zippt die EXE und DLLs (flexibler Name)
-      - name: Zip Windows EXE
+      - name: Zip Windows Files for Steam
         if: matrix.platform == 'windows-latest'
         shell: pwsh
         run: |
           cd src-tauri/target/release/
-          # Wir nutzen *.exe, um sicherzugehen, dass wir die Datei finden
+          # Wir nehmen die .exe und alle DLLs für Steam
           Compress-Archive -Path "*.exe", "*.dll" -DestinationPath "../../../../DICEPTION_windows.zip"
 
-      # Upload zum Release
-      - name: Upload Zips to Release
+      - name: Upload Steam Zips
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            *.zip
+            DICEPTION_macos.zip
+            DICEPTION_windows.zip
           tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
