@@ -241,8 +241,8 @@ export class GamepadCursorManager {
             if (Math.abs(sy) < this.deadZone) sy = 0;
 
             if (sx !== 0 || sy !== 0) {
-                const scrollX = -sx * 15; // Scroll speed (inverted)
-                const scrollY = -sy * 15;
+                const scrollX = sx * 15; // Scroll speed
+                const scrollY = sy * 15;
                 const target = document.elementFromPoint(cursor.x, cursor.y);
                 if (target) {
                     const scrollable = this.findScrollableParent(target);
