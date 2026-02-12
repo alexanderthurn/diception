@@ -60,8 +60,8 @@ async function init() {
     };
     wrapLetters('.tron-title');
 
-    // App Integration (Steam / Tauri / Android)
-    if (window.steam || isTauriContext() || isAndroid()) {
+    // App Integration (Tauri)
+    if (isTauriContext()) {
         const quitBtn = document.getElementById('quit-game-btn');
         if (quitBtn) {
             quitBtn.classList.remove('hidden');
@@ -564,7 +564,7 @@ function setupInputEvents(game, inputManager, sessionManager) {
         }
 
         if (isSetupOpen) {
-            if (isDesktopContext() && game.players.length === 0) {
+            if (isTauriContext() && game.players.length === 0) {
                 Dialog.confirm('Are you sure you want to exit to desktop?', 'QUIT GAME?').then(async choice => {
                     if (choice) {
                         if (window.steam) {
