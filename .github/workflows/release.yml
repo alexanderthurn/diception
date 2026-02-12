@@ -42,7 +42,8 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "DICEPTION ${{ github.ref_name }}"
-          includeRelease: true
+          # WICHTIG: Verhindert das Hochladen der Standard-Installer (DMG, Setup.exe)
+          includeRelease: false 
           args: ${{ matrix.args }}
 
       # --- STEAM ZIP LOGIK ---
@@ -58,7 +59,6 @@ jobs:
         shell: pwsh
         run: |
           cd src-tauri/target/release/
-          # Hart kodiert: Nur die diception.exe und DLLs, kein Setup-Installer
           Compress-Archive -Path "diception.exe", "*.dll" -DestinationPath "${{ github.workspace }}/DICEPTION_windows.zip" -Force
 
       - name: Upload Steam Zips
@@ -73,7 +73,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # FTP-DEPLOY NUR NACH PROD (WENN TAG AUF MAIN)
+  # FTP-DEPLOY (Nur bei Tag auf Main)
   deploy-web:
     needs: publish
     runs-on: ubuntu-latest
