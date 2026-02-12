@@ -44,7 +44,7 @@ function getOrCreateWebId() {
  * @returns {Promise<{ownerId: string, ownerIdType: string, owner: string}>}
  */
 export async function getUserIdentity() {
-    // Steam (Electron)
+    // Steam (Electron/Tauri)
     if (window.steam?.getSteamId) {
         try {
             const steamId = await window.steam.getSteamId();

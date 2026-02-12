@@ -2,16 +2,12 @@
   "name": "dicy",
   "version": "1.1.1",
   "description": "A fast-paced, neon-styled dice strategy game. Inspired by the tactical depth of DiceWars and Kdice, Diception delivers quick turns and intense territory conquest.",
-  "main": "electron-main.cjs",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "electron:dev": "electron .",
-    "steam:build": "npm run build && electron-builder",
-    "steam:build:win": "npm run build && electron-builder --win",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
@@ -22,36 +18,10 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@tauri-apps/api": "^2.10.1",
-    "pixi.js": "^8.0.0",
-    "steamworks.js": "^0.4.0"
+    "pixi.js": "^8.0.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.10.0",
-    "electron": "^33.2.1",
-    "electron-builder": "^24.13.3",
-    "electron-icon-builder": "^2.0.1",
     "vite": "^5.0.0"
-  },
-  "build": {
-    "appId": "com.feuerware.diception",
-    "productName": "DICEPTION",
-    "directories": {
-      "output": "dist-steam",
-      "buildResources": "public"
-    },
-    "files": [
-      "dist/**/*",
-      "electron-main.cjs",
-      "electron-preload.js",
-      "package.json",
-      "public/**/*"
-    ],
-    "mac": {
-      "category": "public.app-category.games"
-    },
-    "win": {
-      "target": "portable",
-      "artifactName": "${productName}.${ext}"
-    }
   }
 }

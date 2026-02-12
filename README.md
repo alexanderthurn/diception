@@ -52,35 +52,25 @@ Click the **"?"** / **How to Play** button in the main setup menu to view:
     npm run build
     ```
 
-## Steam & Desktop Version
+## Desktop Version
 
-The game is bundled with **Electron** and **steamworks.js** for native desktop support and Steam integration.
+The game is bundled with **Tauri** for native desktop support.
 
 ### Development
-To run the game in the Electron container during development:
-1. Ensure Steam is running on your machine.
-2. Run the development command:
+To run the game in the Tauri container during development:
+1. Run the development command:
    ```bash
-   npm run electron:dev
+   npm run tauri:dev
    ```
 
-### Building the Steam Version
-To create a bundled desktop application for your current OS (output to `dist-steam/`):
+### Building the Desktop Version
+To create a bundled desktop application for your current OS:
 ```bash
-npm run steam:build
-```
-
-To cross-compile for **Windows** from your Mac:
-```bash
-npm run steam:build:win
+npm run tauri:build
 ```
 
 ### Steam Integration Details
-- **AppID**: Currently defaults to `480` (SpaceWar test app).
-- **Configuration**: To use your own AppID, update:
-  - `steam_appid.txt` in the root directory.
-  - The AppID in `electron-main.cjs` (line 12).
-- **Features**: The desktop version supports native features like Steam user identification and achievements (via `window.steam` in the frontend).
+Steam integration is currently being migrated to Tauri plugins. Local development and builds primarily use Tauri v2 features for window management and native performance.
 
 ## Documentation
 
