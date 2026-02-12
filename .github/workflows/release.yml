@@ -15,23 +15,20 @@ jobs:
       matrix:
         include:
           - platform: "macos-latest"
-            args: "--bundles app,dmg" # Baut beides, damit die Action zufrieden ist
+            args: "--bundles app,dmg"
           - platform: "windows-latest"
-            args: "--bundles nsis" # Baut den Installer
+            args: "--bundles nsis"
 
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
-
       - name: setup node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
-
       - name: install frontend dependencies
         run: npm install
 
@@ -42,10 +39,8 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "DICEPTION ${{ github.ref_name }}"
-          includeRelease: true # Zurück zum Standard: Erstellt Release und lädt Installer hoch
+          includeRelease: true
           args: ${{ matrix.args }}
-
-      # --- ZUSÄTZLICHE STEAM-ZIPS (Optional, aber super für dich) ---
 
       - name: Zip Mac App for Steam
         if: matrix.platform == 'macos-latest'
@@ -58,7 +53,6 @@ jobs:
         shell: pwsh
         run: |
           cd src-tauri/target/release/
-          # Wir nehmen die .exe und alle DLLs für Steam
           Compress-Archive -Path "*.exe", "*.dll" -DestinationPath "../../../../DICEPTION_windows.zip"
 
       - name: Upload Steam Zips
@@ -71,3 +65,48 @@ jobs:
           tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # NEUER JOB: FTP-DEPLOY NUR NACH PROD
+  deploy-web:
+    needs: publish # Wartet, bis Windows und Mac fertig gebaut haben
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Wichtig für den Branch-Check
+
+      # SICHERHEITS-CHECK: Ist dieses Tag auf dem Main-Branch?
+      - name: Check if tag is on main
+        run: |
+          git fetch origin main
+          if ! git branch -r --contains ${{ github.sha }} | grep -q "origin/main"; then
+            echo "Tag is NOT on main branch. Skipping FTP deploy to prod."
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install & Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to FTP (Prod)
+        run: |
+          sudo apt-get update && sudo apt-get install -y lftp
+          lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_SERVER }}" <<EOF
+          set ftp:ssl-allow no
+          set ftp:passive-mode true
+          mkdir -p "/prod"
+          mirror -R "./dist/" "/prod" \
+            --delete \
+            --parallel=10 \
+            --exclude-glob .htaccess \
+            --exclude-glob .htpasswd \
+            --verbose
+          quit
+          EOF
