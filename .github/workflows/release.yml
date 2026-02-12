@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -16,7 +17,7 @@ jobs:
           - platform: "macos-latest"
             args: "--bundles app"
           - platform: "windows-latest"
-            args: "--bundles nsis"
+            args: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -26,7 +27,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm' # Beschleunigt künftige Builds
+          cache: 'npm'
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -41,6 +42,35 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "DICEPTION ${{ github.ref_name }}"
-          # Hier erzwingen wir, dass er auch die Binary ohne Installer einpackt
-          includeRelease: true
+          includeRelease: false
           args: ${{ matrix.args }}
+
+      # --- ZIP LOGIK FÜR STEAM ---
+
+      # MAC: .app Ordner zippen
+      - name: Zip Mac App
+        if: matrix.platform == 'macos-latest'
+        run: |
+          cd src-tauri/target/release/bundle/macos/
+          zip -r ../../../../DICEPTION_macos.zip DICEPTION.app
+          
+      # WINDOWS: .exe und alle benötigten DLLs zippen
+      - name: Zip Windows EXE
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          cd src-tauri/target/release/
+          # Wir zippen die EXE und alle DLLs (wichtig für Webview2/Tauri)
+          Compress-Archive -Path "DICEPTION.exe", "*.dll" -DestinationPath "../../../../DICEPTION_windows.zip"
+
+      # Upload der Zips zum GitHub Release
+      - name: Upload Zips to Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            DICEPTION_macos.zip
+            DICEPTION_windows.zip
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
