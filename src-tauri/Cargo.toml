@@ -1,5 +1,5 @@
 [package]
-name = "app"
+name = "diception"
 version = "0.1.0"
 description = "A fast-paced, neon-styled dice strategy game. Inspired by the tactical depth of DiceWars and Kdice, Diception delivers quick turns and intense territory conquest."
 authors = ["Alexander Thurn"]
