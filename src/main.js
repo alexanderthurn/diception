@@ -198,17 +198,17 @@ async function init() {
     scenarioBrowser.setOnStartGame(() => gameStarter.startGame());
 
     const showStartupDialogs = async () => {
-        // Steam: first-time thank-you + game speed choice
-        if (window.steam && !localStorage.getItem('dicy_steam_welcome_shown')) {
+        if (!localStorage.getItem('dicy_steam_welcome_shown')) {
             const choice = await Dialog.show({
-                title: 'THANK YOU',
-                message: 'Thank you for your purchase! Big help.\n\nIs this your first time playing? Choose your game speed:',
+                title: 'Welcome',
+                message: 'Is this your first time playing? Choose your game speed:',
                 buttons: [
-                    { text: 'Yes – Beginner (shows all rolls)', value: 'beginner', className: 'tron-btn' },
-                    { text: 'I know the fundamentals – Normal', value: 'normal', className: 'tron-btn' }
+                    { text: 'Beginner (shows all rolls)', value: 'beginner', className: 'tron-btn' },
+                    { text: 'Normal', value: 'normal', className: 'tron-btn' },
+                    { text: 'Expert (no time to waste)', value: 'expert', className: 'tron-btn' }
                 ]
             });
-            const speed = choice === 'normal' ? 'normal' : 'beginner';
+            const speed = choice;
             localStorage.setItem('dicy_gameSpeed', speed);
             localStorage.setItem('dicy_steam_welcome_shown', '1');
             if (configManager.elements?.gameSpeedInput) {
@@ -216,24 +216,6 @@ async function init() {
             }
         }
 
-        // Web: first-time WELCOME + game speed choice
-        if (!window.steam && !localStorage.getItem('dicy_web_first_shown')) {
-            const choice = await Dialog.show({
-                title: 'WELCOME',
-                message: 'Is this your first time playing? Choose your game speed:',
-                buttons: [
-                    { text: 'Beginner', value: 'beginner', className: 'tron-btn' },
-                    { text: 'Normal', value: 'normal', className: 'tron-btn' },
-                    { text: 'Expert', value: 'expert', className: 'tron-btn' }
-                ]
-            });
-            const speed = choice === 'normal' ? 'normal' : 'beginner';
-            localStorage.setItem('dicy_gameSpeed', speed);
-            localStorage.setItem('dicy_web_first_shown', '1');
-            if (configManager.elements?.gameSpeedInput) {
-                configManager.elements.gameSpeedInput.value = speed;
-            }
-        }
 
         // Web only: show promotional dialog on 2nd visit, then every 2nd visit
         if (!window.steam) {
@@ -242,7 +224,7 @@ async function init() {
             if (count % 5 === 0) {
                 await Dialog.show({
                     title: 'ENJOYING?',
-                    message: 'This is the free web version. If you like the game and want to support Diception, it would be awesome if you buy the full version here (including more campaigns):',
+                    message: 'This is the free web version. If you like the game you can buy a full version here (including more campaigns):',
                     content: '<div class="dialog-store-links"><p><a href="https://store.steampowered.com/app/STEAM_APPID" target="_blank" rel="noopener" class="highlight-link">Steam</a> – Cloud Saves, Achievements</p><p><a href="https://play.google.com/store/apps/details?id=PLACEHOLDER_PACKAGE" target="_blank" rel="noopener" class="highlight-link">Google Play</a> – Android version</p></div>',
                     buttons: [{ text: 'Later', value: true, className: 'tron-btn' }]
                 });

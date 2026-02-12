@@ -3835,8 +3835,16 @@ canvas {
 
 .dialog-body {
     margin: 20px 0;
+    padding: 0 20px;
+    /* Base horizontal padding */
     text-align: center;
     background-color: #000;
+}
+
+.dialog-body p {
+    margin: 0 auto 20px auto;
+    max-width: 100%;
+    line-height: 1.4;
 }
 
 .dialog-actions {
@@ -3856,12 +3864,34 @@ canvas {
 
 /* Game-over (winning) screen: less side padding on mobile */
 @media (max-width: 600px) {
+    .dialog-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 0 15px;
+        /* Add side padding for buttons */
+    }
+
+    .dialog-actions .tron-btn {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 14px 20px;
+        /* Better touch target */
+        font-size: 16px;
+    }
+
     .dialog-overlay:has(.game-over-content) .dialog-box {
         max-width: calc(100vw - 20px);
     }
 
-    .dialog-overlay:has(.game-over-content) .dialog-actions .tron-btn {
-        padding: 8px 10px;
+    .dialog-body {
+        padding: 0 15px;
+        /* Slightly tighter for very small screens */
+    }
+
+    .dialog-body p {
+        font-size: 15px;
+        /* Better readability on mobile */
     }
 }
 
