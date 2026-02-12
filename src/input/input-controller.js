@@ -28,6 +28,8 @@ export class InputController {
         this.renderer.app.stage.on('pointerup', this.onPointerUp.bind(this));
         this.renderer.app.stage.on('pointerupoutside', this.onPointerUp.bind(this));
 
+        this.waitTillNoTouch = false;
+
         // Zoom listener (Wheel)
         this.renderer.app.canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
@@ -216,6 +218,8 @@ export class InputController {
     }
 
     onPointerDown(e) {
+        if (this.waitTillNoTouch) return;
+
         // Track the pointer
         this.activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
 
@@ -333,6 +337,10 @@ export class InputController {
 
     onPointerUp(e) {
         this.activePointers.delete(e.pointerId);
+
+        if (this.activePointers.size === 0) {
+            this.waitTillNoTouch = false;
+        }
 
         if (this.activePointers.size < 2) {
             this.lastPinchDistance = null;

@@ -29,6 +29,10 @@ export class LoadingScreen {
         this.init();
     }
 
+    setInputController(inputController) {
+        this.inputController = inputController;
+    }
+
     init() {
         if (!this.el) return;
 
@@ -121,14 +125,32 @@ export class LoadingScreen {
 
         this.isDismissed = true;
 
-        // Block UI interactions briefly to prevent accidental clicks
-        const uiOverlay = document.getElementById('ui-overlay');
-        if (uiOverlay) {
-            uiOverlay.classList.add('interaction-shield');
+        if (this.inputController) {
+            this.inputController.waitTillNoTouch = true;
+
+            const resetWait = (e) => {
+                // For touch, wait until all fingers are removed
+                if (e.type === 'touchend' && e.touches && e.touches.length > 0) {
+                    return;
+                }
+                this.inputController.waitTillNoTouch = false;
+                window.removeEventListener('touchend', resetWait);
+                window.removeEventListener('mouseup', resetWait);
+            };
+            window.addEventListener('touchend', resetWait);
+            window.addEventListener('mouseup', resetWait);
+
+            // Safety fallback: reset after 1 second anyway
             setTimeout(() => {
-                uiOverlay.classList.remove('interaction-shield');
-            }, 150);
+                if (this.inputController) this.inputController.waitTillNoTouch = false;
+            }, 1000);
         }
+
+        // Block UI interactions briefly to prevent accidental clicks
+        document.body.classList.add('interaction-shield');
+        setTimeout(() => {
+            document.body.classList.remove('interaction-shield');
+        }, 300);
 
         if (this.el) {
             this.el.classList.add('fade-out');

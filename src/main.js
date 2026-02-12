@@ -133,9 +133,10 @@ async function init() {
 
     // Loading Screen - onDismiss set after scenarioBrowser is ready
     let onLoadingDismiss = null;
-    new LoadingScreen(inputManager, {
+    const loadingScreen = new LoadingScreen(inputManager, {
         onDismiss: () => { if (onLoadingDismiss) onLoadingDismiss(); }
     });
+    loadingScreen.setInputController(input);
 
     // Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);
