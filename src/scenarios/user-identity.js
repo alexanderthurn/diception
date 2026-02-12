@@ -101,6 +101,22 @@ export function isAndroid() {
 }
 
 /**
+ * Check if we're on iOS (iPhone, iPad, iPod)
+ * Includes detection for iPad Pro which reports as Macintosh
+ */
+export function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+/**
+ * Check if we're on a mobile device (Android or iOS)
+ */
+export function isMobile() {
+    return isAndroid() || isIOS();
+}
+
+/**
  * Check if we're in Tauri context
  */
 export function isTauriContext() {

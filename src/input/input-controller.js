@@ -1,3 +1,5 @@
+import { isMobile } from '../scenarios/user-identity.js';
+
 /**
  * InputController - Handles game input and tile interactions
  * Now uses InputManager for unified keyboard/gamepad support
@@ -236,27 +238,27 @@ export class InputController {
         if (isEditorMouse) {
             // Don't start drag - editor will handle left click for tile editing
         } else
-        // Handle initial pinch state
-        if (this.activePointers.size === 2) {
-            this.lastPinchDistance = this.calculatePinchDistance();
-            this.isDragging = false; // Stop dragging when pinch starts
-            this.panPointerId = null;
-        } else if (this.activePointers.size === 1) {
-            // Drag Logic:
-            // - Allow Middle Click
-            // - Allow Left Click (if NOT holding Shift AND NOT a simulated gamepad event)
-            // - Skip Left Click when editor is open + mouse (editor handles it)
-            const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
-                (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
-                e.isGamepadSimulated;
-            const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0 && !isSimulated && !isEditorMouse);
+            // Handle initial pinch state
+            if (this.activePointers.size === 2 && !isMobile()) {
+                this.lastPinchDistance = this.calculatePinchDistance();
+                this.isDragging = false; // Stop dragging when pinch starts
+                this.panPointerId = null;
+            } else if (this.activePointers.size === 1) {
+                // Drag Logic:
+                // - Allow Middle Click
+                // - Allow Left Click (if NOT holding Shift AND NOT a simulated gamepad event)
+                // - Skip Left Click when editor is open + mouse (editor handles it)
+                const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
+                    (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
+                    e.isGamepadSimulated;
+                const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0 && !isSimulated && !isEditorMouse);
 
-            if (canDrag) {
-                this.isDragging = true;
-                this.lastPos = { x: e.global.x, y: e.global.y };
-                this.panPointerId = e.pointerId;
+                if (canDrag) {
+                    this.isDragging = true;
+                    this.lastPos = { x: e.global.x, y: e.global.y };
+                    this.panPointerId = e.pointerId;
+                }
             }
-        }
 
         const globalPos = e.global;
         const localPos = this.renderer.grid.container.toLocal(globalPos);
@@ -274,7 +276,7 @@ export class InputController {
             this.activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
         }
 
-        if (this.activePointers.size === 2) {
+        if (this.activePointers.size === 2 && !isMobile()) {
             // Handle Pinch-to-Zoom
             const currentDistance = this.calculatePinchDistance();
             if (this.lastPinchDistance !== null && currentDistance > 0) {
