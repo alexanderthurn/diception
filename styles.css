@@ -1587,11 +1587,12 @@ select {
     justify-content: center;
     gap: 30px;
     opacity: 0.4;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.5s ease, bottom 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #loading-screen.completed .loading-platforms {
     opacity: 0.8;
+    bottom: 80px;
 }
 
 .platform-icon {

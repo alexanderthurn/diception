@@ -98,6 +98,11 @@ export class LoadingScreen {
     onComplete() {
         this.isComplete = true;
 
+        // Mark entire screen as completed
+        if (this.el) {
+            this.el.classList.add('completed');
+        }
+
         // Shrink loading content
         if (this.content) {
             this.content.classList.add('completed');
