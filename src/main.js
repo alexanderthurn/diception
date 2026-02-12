@@ -491,6 +491,7 @@ function setupFPSCounter(renderer) {
 function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboard, toggleAutoplay, inputManager) {
     const endTurnBtn = document.getElementById('end-turn-btn');
     const newGameBtn = document.getElementById('new-game-btn');
+    const retryGameBtn = document.getElementById('retry-game-btn');
     const autoWinBtn = document.getElementById('auto-win-btn');
     const setupModal = document.getElementById('setup-modal');
 
@@ -520,6 +521,18 @@ function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboar
             sessionManager.quitToMainMenu();
         }
     });
+
+    // Retry Current Game Button
+    if (retryGameBtn) {
+        retryGameBtn.addEventListener('click', () => {
+            sessionManager.restartCurrentGame((msg, type) => {
+                const gameLog = sessionManager.gameLog;
+                if (gameLog && gameLog.addEntry) {
+                    gameLog.addEntry(msg, type);
+                }
+            }, gameStarter.getAutoplayPlayers());
+        });
+    }
 
     // Auto-Win Button
     autoWinBtn.addEventListener('click', () => {

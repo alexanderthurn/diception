@@ -21,10 +21,15 @@ export class SessionManager {
         this.endTurnBtn = document.getElementById('end-turn-btn');
         this.autoWinBtn = document.getElementById('auto-win-btn');
         this.newGameBtn = document.getElementById('new-game-btn');
+        this.retryGameBtn = document.getElementById('retry-game-btn');
+        this.retrySeparator = document.querySelector('.retry-separator');
 
         this.scenarioBrowser = null;
 
-        game.on('gameStart', () => this.updateNewGameBtnLabel());
+        game.on('gameStart', () => {
+            this.updateNewGameBtnLabel();
+            this.updateRetryBtnVisibility();
+        });
     }
 
     setScenarioBrowser(scenarioBrowser) {
@@ -45,6 +50,16 @@ export class SessionManager {
             this.newGameBtn.title = 'New Game';
             if (btnText) btnText.textContent = 'NEW GAME';
         }
+    }
+
+    /**
+     * Update retry button visibility based on whether we have an initial state to retry
+     */
+    updateRetryBtnVisibility() {
+        if (!this.retryGameBtn) return;
+        const hasInitialState = this.turnHistory.hasInitialState();
+        this.retryGameBtn.classList.toggle('hidden', !hasInitialState);
+        if (this.retrySeparator) this.retrySeparator.classList.toggle('hidden', !hasInitialState);
     }
 
     /**
@@ -70,6 +85,8 @@ export class SessionManager {
         if (this.autoWinBtn) this.autoWinBtn.classList.add('hidden');
         if (this.playerDashboard) this.playerDashboard.hide();
         if (this.newGameBtn) this.newGameBtn.classList.add('hidden');
+        if (this.retryGameBtn) this.retryGameBtn.classList.add('hidden');
+        if (this.retrySeparator) this.retrySeparator.classList.add('hidden');
     }
 
     /**
@@ -140,6 +157,7 @@ export class SessionManager {
             // Restore UI visibility
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
             this.updateNewGameBtnLabel();
+            this.updateRetryBtnVisibility();
             const dashToggle = document.getElementById('dash-toggle');
             if (dashToggle) dashToggle.textContent = '[-]';
 
@@ -197,6 +215,7 @@ export class SessionManager {
             this.setupModal.classList.add('hidden');
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
             this.updateNewGameBtnLabel();
+            this.updateRetryBtnVisibility();
 
             // Restore state
             this.turnHistory.applyGameState(this.game, snapshot.gameState);
