@@ -120,8 +120,9 @@ export class LoadingScreen {
     }
 
     dismiss() {
-        // Only allow dismissal if complete
+        // Only allow dismissal if complete and no dialog is open
         if (this.isDismissed || !this.isComplete) return;
+        if (document.querySelector('.dialog-overlay')) return;
 
         this.isDismissed = true;
 

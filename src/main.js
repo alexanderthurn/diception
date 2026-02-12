@@ -197,7 +197,7 @@ async function init() {
     );
     scenarioBrowser.setOnStartGame(() => gameStarter.startGame());
 
-    onLoadingDismiss = async () => {
+    const showStartupDialogs = async () => {
         // Steam: first-time thank-you + game speed choice
         if (window.steam && !localStorage.getItem('dicy_steam_welcome_shown')) {
             const choice = await Dialog.show({
@@ -248,7 +248,12 @@ async function init() {
                 });
             }
         }
+    };
 
+    // Show dialogs in parallel with loading
+    showStartupDialogs();
+
+    onLoadingDismiss = async () => {
         if (localStorage.getItem('dicy_campaignMode')) {
             document.getElementById('setup-modal').classList.add('hidden');
             await scenarioBrowser.showCampaignView();
