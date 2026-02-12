@@ -62,7 +62,7 @@ export async function getUserIdentity() {
         }
     }
 
-    // Web fallback
+    // Web or Android fallback
     const webId = getOrCreateWebId();
     const ownerId = await sha256Hex(webId);
     let owner = localStorage.getItem('dicy_displayName');
@@ -70,6 +70,15 @@ export async function getUserIdentity() {
         owner = randomShortId();
         localStorage.setItem('dicy_displayName', owner);
     }
+
+    if (isAndroid()) {
+        return {
+            ownerId,
+            ownerIdType: 'android',
+            owner
+        };
+    }
+
     return {
         ownerId,
         ownerIdType: 'web',
@@ -82,6 +91,27 @@ export async function getUserIdentity() {
  */
 export function isSteamContext() {
     return !!(window.steam?.getSteamId);
+}
+
+/**
+ * Check if we're on Android
+ */
+export function isAndroid() {
+    return /Android/i.test(navigator.userAgent);
+}
+
+/**
+ * Check if we're in Tauri context
+ */
+export function isTauriContext() {
+    return !!(window.__TAURI_INTERNALS__);
+}
+
+/**
+ * Check if we're in any desktop or app context (Steam/Electron, Tauri, or Android)
+ */
+export function isDesktopContext() {
+    return isSteamContext() || isTauriContext() || isAndroid();
 }
 
 /**

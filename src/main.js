@@ -29,6 +29,7 @@ import { GameEventManager } from './ui/game-events.js';
 import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode } from './cheat.js';
+import { isTauriContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
 
 // Pre-compute probability tables at startup
 initializeProbabilityTables();
@@ -59,23 +60,43 @@ async function init() {
     };
     wrapLetters('.tron-title');
 
-    // Steam Integration
-    if (window.steam) {
+    // App Integration (Steam / Tauri / Android)
+    if (window.steam || isTauriContext() || isAndroid()) {
         const quitBtn = document.getElementById('quit-game-btn');
         if (quitBtn) {
             quitBtn.classList.remove('hidden');
             quitBtn.addEventListener('click', async () => {
-                if (await Dialog.confirm('Are you sure you want to exit to desktop?', 'QUIT GAME?')) {
-                    window.steam.quit();
+                if (await Dialog.confirm('Are you sure you want to exit the game?', 'EXIT GAME?')) {
+                    if (window.steam) {
+                        window.steam.quit();
+                    } else if (isTauriContext()) {
+                        try {
+                            const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                            await getCurrentWindow().close();
+                        } catch (e) {
+                            console.error('Tauri exit failed:', e);
+                            window.close();
+                        }
+                    } else if (isAndroid()) {
+                        window.close();
+                    } else {
+                        window.close();
+                    }
                 }
             });
         }
+    }
 
+    // Steam-specific identity display
+    if (window.steam) {
         window.steam.getUserName().then(name => {
             console.log('Steam User:', name);
             const credits = document.querySelector('.credits');
             if (credits) {
-                credits.innerHTML += `<br><span style="color: #66c0f4">Logged in as ${name} (Steam)</span>`;
+                // Remove existing if any to avoid duplicates on hot reload or similar
+                const existing = credits.querySelector('.steam-login-info');
+                if (existing) existing.remove();
+                credits.innerHTML += `<br><span class="steam-login-info" style="color: #66c0f4">Logged in as ${name} (Steam)</span>`;
             }
         });
     }
@@ -543,9 +564,23 @@ function setupInputEvents(game, inputManager, sessionManager) {
         }
 
         if (isSetupOpen) {
-            if (window.steam && game.players.length === 0) {
-                Dialog.confirm('Are you sure you want to exit to desktop?', 'QUIT GAME?').then(choice => {
-                    if (choice) window.steam.quit();
+            if (isDesktopContext() && game.players.length === 0) {
+                Dialog.confirm('Are you sure you want to exit to desktop?', 'QUIT GAME?').then(async choice => {
+                    if (choice) {
+                        if (window.steam) {
+                            window.steam.quit();
+                        } else if (isTauriContext()) {
+                            try {
+                                const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                                await getCurrentWindow().close();
+                            } catch (e) {
+                                console.error('Tauri exit failed:', e);
+                                window.close();
+                            }
+                        } else if (isAndroid()) {
+                            window.close();
+                        }
+                    }
                 });
                 return;
             }

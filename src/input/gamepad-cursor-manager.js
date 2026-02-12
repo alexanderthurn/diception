@@ -1,4 +1,5 @@
 import { GAME } from '../core/constants.js';
+import { isDesktopContext } from '../scenarios/user-identity.js';
 
 /**
  * GamepadCursorManager - Handles artificial cursors for gamepad players.
@@ -10,8 +11,8 @@ export class GamepadCursorManager {
         this.game = game;
         this.inputManager = inputManager;
         this.cursors = new Map(); // gamepadIndex -> { x, y, element, player }
-        const isSteam = window.steam?.isSteamVersion;
-        this.cursorSpeed = isSteam ? 12 : 20;
+        const isDesktop = isDesktopContext();
+        this.cursorSpeed = isDesktop ? 12 : 20;
         this.deadZone = 0.15;
 
         // Container for all virtual cursors

@@ -1,3 +1,5 @@
+import { isDesktopContext } from '../scenarios/user-identity.js';
+
 /**
  * InputManager - Unified input handling for keyboard and gamepad
  * Emits semantic game events that InputController consumes
@@ -12,10 +14,10 @@ export class InputManager {
         this.gamepadToHumanMap = new Map(); // raw gamepad index -> human player index (0, 1, 2, ...)
         this.deadZone = 0.4;
 
-        // Steam version often has higher polling rates or different timing, adjust accordingly
-        const isSteam = window.steam?.isSteamVersion;
-        this.repeatDelay = isSteam ? 300 : 250;  // ms before repeat starts
-        this.repeatRate = isSteam ? 160 : 120;   // ms between repeats
+        // Desktop version (Steam/Tauri) often has higher polling rates or different timing, adjust accordingly
+        const isDesktop = isDesktopContext();
+        this.repeatDelay = isDesktop ? 300 : 250;  // ms before repeat starts
+        this.repeatRate = isDesktop ? 160 : 120;   // ms between repeats
 
         // Key repeat state
         this.heldDirections = new Map(); // key -> { direction, lastFire, started }
