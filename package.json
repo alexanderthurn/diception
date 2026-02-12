@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
+    "tauri:build": "tauri build && mkdir -p dist-steam && cp -r src-tauri/target/release/bundle/dmg/*.dmg dist-steam/ 2>/dev/null || true && cp -r src-tauri/target/release/bundle/macos/*.app dist-steam/ 2>/dev/null || true && cp -r src-tauri/target/release/bundle/nsis/*.exe dist-steam/ 2>/dev/null || true && cp -r src-tauri/target/release/bundle/msi/*.msi dist-steam/ 2>/dev/null || true",
     "generate-icons": "npm run tauri icon ./public/icon.png"
   },
   "keywords": [],
