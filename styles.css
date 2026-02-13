@@ -321,17 +321,19 @@ select {
     transform: translateX(-50%);
     z-index: 100;
     padding: 6px 16px;
-    background: rgba(0, 0, 0, 0.9);
-    border: 1px solid var(--accent-color);
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.0);
     border: 1px solid var(--accent-color);
     border-radius: 0;
-    font-family: inherit;
     font-family: inherit;
     font-size: 14px;
     text-align: center;
     white-space: nowrap;
     box-shadow: var(--panel-glow);
+    /* Make it transparent to clicks so it doesn't block territories */
+    pointer-events: none;
+    /* Optional: backdrop-filter for better readability */
+    backdrop-filter: blur(4px);
+    transition: opacity 0.3s ease;
 }
 
 #dice-result-content {

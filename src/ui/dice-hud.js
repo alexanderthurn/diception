@@ -7,6 +7,13 @@ export class DiceHUD {
         this.diceResultContent = document.getElementById('dice-result-content');
         this.hideTimeout = null;
         this.diceDataURL = null;
+
+        // Allow clicking to dismiss
+        if (this.diceResultHud) {
+            this.diceResultHud.style.pointerEvents = 'auto';
+            this.diceResultHud.style.cursor = 'pointer';
+            this.diceResultHud.addEventListener('click', () => this.hide());
+        }
     }
 
     setDiceDataURL(url) {
