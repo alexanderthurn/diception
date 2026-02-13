@@ -1473,6 +1473,152 @@ select {
     visibility: visible;
 }
 
+.loading-dice {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    opacity: 0;
+    transition: opacity 2.5s ease;
+    z-index: 10000;
+    pointer-events: none;
+}
+
+#loading-screen.completed .loading-dice {
+    opacity: 0.6;
+}
+
+.loading-dice .dice-icon-sprite {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    background-color: #0ff;
+    filter: drop-shadow(0 0 12px #0ff);
+}
+
+/* Border Drifting Dice - Rectangular Paths */
+.loading-dice span.drifting {
+    width: 20px;
+    height: 20px;
+    opacity: 0.3;
+    animation-timing-function: linear !important;
+}
+
+/* Outer Orbit */
+.d1,
+.d2,
+.d3,
+.d4 {
+    animation: dice-orbit-outer 24s infinite;
+}
+
+.d1 {
+    animation-delay: 0s;
+}
+
+.d2 {
+    animation-delay: -6s;
+}
+
+.d3 {
+    animation-delay: -12s;
+}
+
+.d4 {
+    animation-delay: -18s;
+}
+
+/* Inner Orbit (Slightly offset and faster) */
+.d5,
+.d6,
+.d7,
+.d8 {
+    animation: dice-orbit-inner 20s infinite;
+}
+
+.d5 {
+    animation-delay: -2s;
+}
+
+.d6 {
+    animation-delay: -7s;
+}
+
+.d7 {
+    animation-delay: -12s;
+}
+
+.d8 {
+    animation-delay: -17s;
+}
+
+
+@keyframes dice-orbit-outer {
+    0% {
+        top: 2%;
+        left: 2%;
+        transform: rotate(0deg);
+    }
+
+    25% {
+        top: 2%;
+        left: 98%;
+        transform: rotate(90deg);
+    }
+
+    50% {
+        top: 98%;
+        left: 98%;
+        transform: rotate(180deg);
+    }
+
+    75% {
+        top: 98%;
+        left: 2%;
+        transform: rotate(270deg);
+    }
+
+    100% {
+        top: 2%;
+        left: 2%;
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes dice-orbit-inner {
+    0% {
+        top: 6%;
+        left: 6%;
+        transform: rotate(0deg);
+    }
+
+    25% {
+        top: 6%;
+        left: 94%;
+        transform: rotate(-90deg);
+    }
+
+    50% {
+        top: 94%;
+        left: 94%;
+        transform: rotate(-180deg);
+    }
+
+    75% {
+        top: 94%;
+        left: 6%;
+        transform: rotate(-270deg);
+    }
+
+    100% {
+        top: 6%;
+        left: 6%;
+        transform: rotate(-360deg);
+    }
+}
+
+
 .loading-icons {
     position: absolute;
     top: calc(30% + 20px);
