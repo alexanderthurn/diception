@@ -36,10 +36,9 @@ export class Renderer {
             hello: false // Minor performance boost by skipping splash
         });
 
-        this.app.canvas.style.width = '100%';
-        this.app.canvas.style.height = '100%';
         this.app.canvas.style.display = 'block';
-        this.app.canvas.style.objectFit = 'contain';
+        // Remove object-fit or fixed percentages that might fight with Pixi's resizeTo/autoDensity
+        // display: block is enough to ensure it behaves correctly in the container.
 
         // Ensure smooth rendering but don't overwork the CPU/GPU
         this.app.ticker.maxFPS = Math.min(window.screen.refreshRate || 60, 120);

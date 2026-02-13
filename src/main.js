@@ -148,14 +148,23 @@ async function init() {
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
+        // On iOS, the dimensions update can be slightly delayed after the resize event
+        const delay = (navigator.userAgent.match(/iPhone|iPad|iPod/i)) ? 100 : 50;
         resizeTimeout = setTimeout(() => {
-            const w = document.documentElement.clientWidth;
-            const h = document.documentElement.clientHeight;
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+
+            // Update container size explicitly if needed (though CSS should handle it)
+            if (container) {
+                container.style.width = `${w}px`;
+                container.style.height = `${h}px`;
+            }
+
             if (renderer.app && renderer.app.renderer) {
                 renderer.app.renderer.resize(w, h);
             }
             renderer.autoFitCamera();
-        }, 50);
+        }, delay);
     });
 
     // Wire tile selection to effects
