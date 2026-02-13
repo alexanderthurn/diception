@@ -584,6 +584,7 @@ select {
     font-weight: bold;
     transition: all 0.2s;
     pointer-events: auto;
+    touch-action: manipulation;
     box-shadow: var(--button-glow);
     text-shadow: var(--text-glow);
 }

@@ -73,10 +73,10 @@ export class ScenarioBrowser {
         const scenariosBtn = document.getElementById('scenarios-btn');
         if (scenariosBtn) {
             scenariosBtn.addEventListener('click', async () => {
+                this.scenarioBrowserModal.classList.remove('hidden');
                 this.pendingLevel = null;
                 await this.showCampaignView();
                 this.restoreLastSelectedCampaign();
-                this.scenarioBrowserModal.classList.remove('hidden');
                 if (this.effectsManager) this.effectsManager.stopIntroMode();
             });
         }
