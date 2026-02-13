@@ -99,6 +99,85 @@
                     "dice": 1
                 }
             ]
+        },
+        {
+            "type": "scenario",
+            "width": 3,
+            "height": 3,
+            "maxDice": 8,
+            "diceSides": 6,
+            "players": [
+                {
+                    "id": 0,
+                    "isBot": false,
+                    "color": 11141375,
+                    "storedDice": 0,
+                    "ai": "easy"
+                },
+                {
+                    "id": 1,
+                    "isBot": true,
+                    "color": 16711765,
+                    "storedDice": 0,
+                    "ai": "easy"
+                }
+            ],
+            "tiles": [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "owner": 0,
+                    "dice": 6
+                },
+                {
+                    "x": 1,
+                    "y": 0,
+                    "owner": 1,
+                    "dice": 1
+                },
+                {
+                    "x": 2,
+                    "y": 0,
+                    "owner": 1,
+                    "dice": 1
+                },
+                {
+                    "x": 0,
+                    "y": 1,
+                    "owner": 1,
+                    "dice": 1
+                },
+                {
+                    "x": 1,
+                    "y": 1,
+                    "owner": 1,
+                    "dice": 1
+                },
+                {
+                    "x": 2,
+                    "y": 1,
+                    "owner": 0,
+                    "dice": 1
+                },
+                {
+                    "x": 0,
+                    "y": 2,
+                    "owner": 1,
+                    "dice": 1
+                },
+                {
+                    "x": 1,
+                    "y": 2,
+                    "owner": 0,
+                    "dice": 1
+                },
+                {
+                    "x": 2,
+                    "y": 2,
+                    "owner": 0,
+                    "dice": 1
+                }
+            ]
         }
     ]
 }

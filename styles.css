@@ -4189,6 +4189,7 @@ canvas {
     align-items: center;
     z-index: 10000;
     backdrop-filter: blur(3px);
+    overflow: scroll;
 }
 
 .dialog-overlay.fade-out {
