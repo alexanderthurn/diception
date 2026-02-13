@@ -197,6 +197,7 @@ async function init() {
     const sessionManager = new SessionManager(game, renderer, effectsManager, turnHistory, mapEditor);
     const scenarioBrowser = new ScenarioBrowser(configManager, mapEditor);
     sessionManager.setScenarioBrowser(scenarioBrowser);
+    sessionManager.setConfigManager(configManager);
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
 

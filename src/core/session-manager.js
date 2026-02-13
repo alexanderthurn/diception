@@ -25,6 +25,7 @@ export class SessionManager {
         this.retrySeparator = document.querySelector('.retry-separator');
 
         this.scenarioBrowser = null;
+        this.configManager = null;
 
         game.on('gameStart', () => {
             this.updateNewGameBtnLabel();
@@ -34,6 +35,10 @@ export class SessionManager {
 
     setScenarioBrowser(scenarioBrowser) {
         this.scenarioBrowser = scenarioBrowser;
+    }
+
+    setConfigManager(configManager) {
+        this.configManager = configManager;
     }
 
     /**
@@ -117,6 +122,12 @@ export class SessionManager {
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
         localStorage.removeItem('dicy_campaignMode');
         localStorage.removeItem('dicy_customLevelMode');
+
+        // Update ConfigManager UI to clear loaded level display
+        if (this.configManager) {
+            this.configManager.updateLoadedLevelDisplay(null, null);
+        }
+
         this.setupModal.classList.remove('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
         if (this.effectsManager) this.effectsManager.startIntroMode();

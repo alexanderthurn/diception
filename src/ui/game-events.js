@@ -437,12 +437,13 @@ export class GameEventManager {
             title = name;
         }
         let buttons = [];
+        let campaignFinished = false;
 
         if (isCampaignMode && this.scenarioBrowser && owner) {
             const campaign = this.scenarioBrowser.campaignManager.getCampaign(owner);
             const totalLevels = campaign?.levels?.length ?? 0;
             const hasNextLevel = humanWon && levelIndex >= 0 && levelIndex < totalLevels - 1;
-            const campaignFinished = humanWon && totalLevels > 0 && levelIndex === totalLevels - 1;
+            campaignFinished = humanWon && totalLevels > 0 && levelIndex === totalLevels - 1;
 
             if (!campaign) {
                 buttons = [{ text: 'Main Menu', value: 'restart', className: 'tron-btn' }];
@@ -485,6 +486,13 @@ export class GameEventManager {
         });
 
         if (choice === 'restart') {
+            // If campaign is finished, clear the loaded campaign data
+            if (campaignFinished) {
+                localStorage.removeItem('dicy_loadedCampaign');
+                localStorage.removeItem('dicy_loadedLevelIndex');
+                localStorage.removeItem('dicy_loadedCampaignId');
+                localStorage.removeItem('dicy_customLevelMode');
+            }
             this.sessionManager.quitToMainMenu();
         } else if (choice === 'clone') {
             this.sessionManager.restartCurrentGame(this.addLog, this.gameStarter.getAutoplayPlayers());
