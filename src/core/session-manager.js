@@ -47,8 +47,8 @@ export class SessionManager {
             this.newGameBtn.title = 'Back to Campaign';
             if (btnText) btnText.textContent = 'BACK TO CAMPAIGN';
         } else {
-            this.newGameBtn.title = 'New Game';
-            if (btnText) btnText.textContent = 'NEW GAME';
+            this.newGameBtn.title = 'Main Menu';
+            if (btnText) btnText.textContent = 'MAIN MENU';
         }
     }
 
