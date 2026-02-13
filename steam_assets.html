@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DICEPTION — Steam Assets</title>
+    <style>
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 400;
+            src: url('public/fonts/Rajdhani-Regular.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 600;
+            src: url('public/fonts/Rajdhani-SemiBold.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 700;
+            src: url('public/fonts/Rajdhani-Bold.ttf') format('truetype');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a1a;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #00FFFF;
+            font-size: 28px;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+        }
+
+        h2.section-title {
+            color: #AA00FF;
+            font-size: 20px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+        }
+
+        .page-subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .asset-section {
+            margin-bottom: 30px;
+        }
+
+        .asset-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .asset-name {
+            color: #00FFFF;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .asset-size {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .asset-note {
+            color: #888;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .download-btn {
+            font-family: 'Rajdhani', sans-serif;
+            background: #000;
+            border: 1px solid #00FFFF;
+            color: #00FFFF;
+            padding: 4px 14px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .download-btn:hover {
+            background: rgba(0, 255, 255, 0.15);
+            color: #fff;
+            border-color: #fff;
+        }
+
+        .download-all-btn {
+            font-family: 'Rajdhani', sans-serif;
+            background: rgba(0, 255, 255, 0.15);
+            border: 2px solid #00FFFF;
+            color: #00FFFF;
+            padding: 12px 30px;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .download-all-btn:hover {
+            background: rgba(0, 255, 255, 0.3);
+            color: #fff;
+            border-color: #fff;
+        }
+
+        .canvas-wrapper {
+            display: inline-block;
+            border: 1px solid #333;
+        }
+
+        /* Checkerboard for transparent canvases */
+        .canvas-wrapper.transparent {
+            background-image:
+                linear-gradient(45deg, #222 25%, transparent 25%),
+                linear-gradient(-45deg, #222 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #222 75%),
+                linear-gradient(-45deg, transparent 75%, #222 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+        }
+
+        /* Scale previews down — max 500px wide */
+        canvas {
+            max-width: 500px;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>STEAM ASSETS</h1>
+    <p class="page-subtitle">DICEPTION — All images at exact Steam-required resolutions. Previews are scaled down;
+        downloads are full resolution.</p>
+    <button class="download-all-btn" onclick="downloadAll()">⬇ Download All</button>
+
+    <div id="assets-container"></div>
+
+    <script>
+        // ── Asset definitions ──
+        const STORE_ASSETS = [
+            { id: 'header_capsule', name: 'Header Capsule', w: 920, h: 430, type: 'title' },
+            { id: 'small_capsule', name: 'Small Capsule', w: 462, h: 174, type: 'title' },
+            { id: 'main_capsule', name: 'Main Capsule', w: 1232, h: 706, type: 'title' },
+            { id: 'vertical_capsule', name: 'Vertical Capsule', w: 748, h: 896, type: 'title' },
+            { id: 'page_background', name: 'Page Background', w: 1438, h: 810, type: 'bg_only' },
+        ];
+
+        const LIBRARY_ASSETS = [
+            { id: 'library_capsule', name: 'Library Capsule', w: 600, h: 900, type: 'title' },
+            { id: 'library_header', name: 'Library Header', w: 920, h: 430, type: 'title', note: 'Same as Header Capsule' },
+            { id: 'library_hero', name: 'Library Hero', w: 3840, h: 1240, type: 'bg_only' },
+            { id: 'library_logo', name: 'Library Logo', w: 1280, h: 720, type: 'logo_transparent' },
+        ];
+
+        // ── Colors ──
+        const TITLE_COLOR = '#00FFFF';
+        const HUMAN1_COLOR = '#AA00FF';
+        const SUBTITLE_COLOR = '#00FFFF';
+        const TITLE_TEXT = 'DICEPTION';
+        const DICE_END = 4;
+        const SUBTITLE_TEXT = 'by Alexander Thurn';
+
+        // ── Render on font load ──
+        document.fonts.ready.then(() => {
+            const container = document.getElementById('assets-container');
+
+            function addSection(title, assets) {
+                const h2 = document.createElement('h2');
+                h2.className = 'section-title';
+                h2.textContent = title;
+                container.appendChild(h2);
+
+                assets.forEach(asset => {
+                    const section = document.createElement('div');
+                    section.className = 'asset-section';
+
+                    const header = document.createElement('div');
+                    header.className = 'asset-header';
+                    header.innerHTML = `
+                        <span class="asset-name">${asset.name}</span>
+                        <span class="asset-size">${asset.w}×${asset.h}</span>
+                        ${asset.note ? `<span class="asset-note">${asset.note}</span>` : ''}
+                        <button class="download-btn" onclick="downloadCanvas('${asset.id}', '${asset.id}_${asset.w}x${asset.h}.png')">⬇ PNG</button>
+                    `;
+                    section.appendChild(header);
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'canvas-wrapper' + (asset.type === 'logo_transparent' ? ' transparent' : '');
+                    const canvas = document.createElement('canvas');
+                    canvas.id = asset.id;
+                    canvas.width = asset.w;
+                    canvas.height = asset.h;
+                    wrapper.appendChild(canvas);
+                    section.appendChild(wrapper);
+
+                    container.appendChild(section);
+                    renderAsset(canvas, asset);
+                });
+            }
+
+            addSection('Store Assets', STORE_ASSETS);
+            addSection('Library Assets', LIBRARY_ASSETS);
+        });
+
+        // ── Rendering ──
+        function renderAsset(canvas, asset) {
+            const ctx = canvas.getContext('2d');
+            const w = asset.w;
+            const h = asset.h;
+
+            if (asset.type === 'logo_transparent') {
+                // Transparent background — just draw title + subtitle
+                ctx.clearRect(0, 0, w, h);
+                drawTitleBlock(ctx, w, h, asset);
+                return;
+            }
+
+            // Gradient background (all non-transparent images)
+            ctx.fillStyle = '#080820';
+            ctx.fillRect(0, 0, w, h);
+            const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) / 2);
+            grad.addColorStop(0, 'rgba(170, 0, 255, 0.13)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
+            // Background-only: no text
+            if (asset.type === 'bg_only') return;
+
+            // Draw title + subtitle
+            drawTitleBlock(ctx, w, h, asset);
+        }
+
+        function drawTitleBlock(ctx, w, h, asset) {
+            // Compute title font size: fill ~75% of width
+            const targetTitleWidth = w * 0.75;
+            let titleFontSize = h * 0.35;
+            ctx.font = `700 ${titleFontSize}px Rajdhani`;
+            let measured = ctx.measureText(TITLE_TEXT).width;
+
+            titleFontSize = titleFontSize * (targetTitleWidth / measured);
+            titleFontSize = Math.min(titleFontSize, h * 0.55);
+
+            // Small capsule: fill more width
+            if (asset.id === 'small_capsule') {
+                const targetSmall = w * 0.85;
+                ctx.font = `700 ${titleFontSize}px Rajdhani`;
+                measured = ctx.measureText(TITLE_TEXT).width;
+                titleFontSize = titleFontSize * (targetSmall / measured);
+                titleFontSize = Math.min(titleFontSize, h * 0.6);
+            }
+
+            const subtitleFontSize = Math.max(titleFontSize * 0.25, 12);
+            const letterSpacing = Math.round(titleFontSize * 0.08);
+
+            const gap = titleFontSize * 0.05;
+            const totalBlockHeight = titleFontSize + gap + subtitleFontSize;
+            const titleY = (h - totalBlockHeight) / 2 + titleFontSize * 0.85;
+            const subtitleY = titleY + gap + subtitleFontSize;
+
+            // Title — per-char coloring
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic';
+            const charColors = TITLE_TEXT.split('').map((_, i) => i < DICE_END ? HUMAN1_COLOR : TITLE_COLOR);
+            drawTextWithSpacing(ctx, TITLE_TEXT, w / 2, titleY, titleFontSize, 700, letterSpacing, charColors);
+
+            // Subtitle
+            const subLetterSpacing = Math.round(subtitleFontSize * 0.15);
+            ctx.fillStyle = SUBTITLE_COLOR;
+            ctx.globalAlpha = 0.5;
+            drawTextWithSpacing(ctx, SUBTITLE_TEXT.toUpperCase(), w / 2, subtitleY, subtitleFontSize, 400, subLetterSpacing);
+            ctx.globalAlpha = 1.0;
+        }
+
+        function drawTextWithSpacing(ctx, text, centerX, y, fontSize, weight, spacing, charColors) {
+            ctx.font = `${weight} ${fontSize}px Rajdhani`;
+
+            let totalWidth = 0;
+            for (let i = 0; i < text.length; i++) {
+                totalWidth += ctx.measureText(text[i]).width;
+                if (i < text.length - 1) totalWidth += spacing;
+            }
+
+            let x = centerX - totalWidth / 2;
+            for (let i = 0; i < text.length; i++) {
+                if (charColors) ctx.fillStyle = charColors[i];
+                const charWidth = ctx.measureText(text[i]).width;
+                ctx.fillText(text[i], x + charWidth / 2, y);
+                x += charWidth + spacing;
+            }
+        }
+
+        // ── Downloads ──
+        function downloadCanvas(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAll() {
+            const all = [...STORE_ASSETS, ...LIBRARY_ASSETS];
+            all.forEach((asset, i) => {
+                setTimeout(() => {
+                    downloadCanvas(asset.id, `${asset.id}_${asset.w}x${asset.h}.png`);
+                }, i * 300);
+            });
+        }
+    </script>
+</body>
+
+</html>
