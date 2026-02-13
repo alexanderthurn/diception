@@ -1416,7 +1416,7 @@ select {
 
 .loading-prompt {
     position: absolute;
-    top: 42%;
+    top: 50%;
     left: 0;
     width: 100%;
     text-align: center;
@@ -1440,7 +1440,7 @@ select {
 
 .loading-icons {
     position: absolute;
-    top: calc(50% + 20px);
+    top: calc(30% + 20px);
     left: 0;
     width: 100%;
     display: flex;
@@ -1560,7 +1560,7 @@ select {
     .loading-icons {
         font-size: 4rem;
         gap: 50px;
-        top: calc(50% + 80px);
+        top: calc(50% + 40px);
     }
 }
 
