@@ -67,6 +67,14 @@ export class ScenarioBrowser {
         this.onStartGame = fn;
     }
 
+    async open() {
+        this.scenarioBrowserModal.classList.remove('hidden');
+        this.pendingLevel = null;
+        await this.showCampaignView();
+        this.restoreLastSelectedCampaign();
+        if (this.effectsManager) this.effectsManager.stopIntroMode();
+    }
+
     hasHoverCapability() {
         return window.matchMedia('(hover: hover)').matches;
     }
@@ -74,13 +82,7 @@ export class ScenarioBrowser {
     setupEventListeners() {
         const scenariosBtn = document.getElementById('scenarios-btn');
         if (scenariosBtn) {
-            scenariosBtn.addEventListener('click', async () => {
-                this.scenarioBrowserModal.classList.remove('hidden');
-                this.pendingLevel = null;
-                await this.showCampaignView();
-                this.restoreLastSelectedCampaign();
-                if (this.effectsManager) this.effectsManager.stopIntroMode();
-            });
+            scenariosBtn.addEventListener('click', () => this.open());
         }
 
         if (this.scenarioBrowserCloseBtn) {

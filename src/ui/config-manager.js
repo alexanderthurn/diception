@@ -41,7 +41,9 @@ export class ConfigManager {
             gameModeInput: document.getElementById('game-mode'),
             botAISelect: document.getElementById('bot-ai-select'),
             tournamentGamesInput: document.getElementById('tournament-games'),
-            tournamentConfig: document.getElementById('tournament-config')
+            tournamentConfig: document.getElementById('tournament-config'),
+            scenariosBtn: document.getElementById('scenarios-btn'),
+            deselectScenarioBtn: document.getElementById('deselect-scenario-btn')
         };
 
         // Current selected bot AI
@@ -242,11 +244,14 @@ export class ConfigManager {
             const label = levelIndex != null ? `${campaignOwner} #${levelIndex}` : campaignOwner;
             el.loadedScenarioName.textContent = label;
             el.loadedScenarioName.style.display = 'block';
-            el.loadedScenarioName.title = 'Click to unload';
+            el.loadedScenarioName.title = 'Click to open campaign browser';
             el.mapSizeInput.style.display = 'none';
             el.mapSizeVal.style.display = 'none';
             el.mapStyleGroup.style.display = 'none';
             el.mapSizeLabel.textContent = 'Map';
+
+            if (el.scenariosBtn) el.scenariosBtn.classList.add('hidden');
+            if (el.deselectScenarioBtn) el.deselectScenarioBtn.classList.remove('hidden');
         } else {
             el.loadedScenarioName.textContent = '';
             el.loadedScenarioName.style.display = 'none';
@@ -254,6 +259,9 @@ export class ConfigManager {
             el.mapSizeVal.style.display = 'inline';
             el.mapStyleGroup.style.display = 'block';
             el.mapSizeLabel.textContent = 'Map Size';
+
+            if (el.scenariosBtn) el.scenariosBtn.classList.remove('hidden');
+            if (el.deselectScenarioBtn) el.deselectScenarioBtn.classList.add('hidden');
         }
     }
 
@@ -382,22 +390,6 @@ export class ConfigManager {
         localStorage.setItem('effectsQuality', config.effectsQuality);
     }
 
-    /**
-     * Set up click handler for scenario name to unload
-     */
-    setupScenarioNameClickHandler(callback) {
-        this.elements.loadedScenarioName.addEventListener('click', () => {
-            localStorage.removeItem('dicy_loadedScenario');
-            localStorage.removeItem('dicy_loadedCampaign');
-            localStorage.removeItem('dicy_loadedLevelIndex');
-            localStorage.removeItem('dicy_loadedCampaignId');
-            localStorage.removeItem('dicy_customLevelMode');
-            localStorage.removeItem('dicy_onlineMapCache');
-            this.updateLoadedLevelDisplay(null, null);
-            this.updateMapSizeDisplay();
-            if (callback) callback();
-        });
-    }
 
     /**
      * Update body class based on effects quality

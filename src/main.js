@@ -241,7 +241,7 @@ async function init() {
             if (count % 5 === 0) {
                 await Dialog.show({
                     title: 'ENJOYING?',
-                    message: 'This is the free web version. If you like the game you can buy a full version here (including more campaigns):',
+                    message: 'If you want to support this game, you can buy an extended version (including more campaigns):',
                     content: '<div class="dialog-store-links"><p><a href="https://store.steampowered.com/app/STEAM_APPID" target="_blank" rel="noopener" class="highlight-link">Steam</a> – Cloud Saves, Achievements</p><p><a href="https://play.google.com/store/apps/details?id=PLACEHOLDER_PACKAGE" target="_blank" rel="noopener" class="highlight-link">Google Play</a> – Android version</p></div>',
                     buttons: [{ text: 'Later', value: true, className: 'tron-btn' }]
                 });
@@ -319,10 +319,20 @@ async function init() {
     // Tournament Runner
     const tournamentRunner = new TournamentRunner(configManager);
 
-    // Setup scenario name click to unload
-    configManager.setupScenarioNameClickHandler(() => {
-        scenarioBrowser.clearPendingScenario();
-    });
+    // Setup scenario name click to open campaign browser
+    if (configManager.elements.loadedScenarioName) {
+        configManager.elements.loadedScenarioName.addEventListener('click', () => {
+            scenarioBrowser.open();
+        });
+    }
+
+    // Setup deselect button to unload scenario
+    if (configManager.elements.deselectScenarioBtn) {
+        configManager.elements.deselectScenarioBtn.addEventListener('click', () => {
+            scenarioBrowser.clearPendingScenario();
+            configManager.updateLoadedLevelDisplay(null, null);
+        });
+    }
 
     // Autoplay toggle function
     const toggleAutoplay = (playerId, forceState) => {

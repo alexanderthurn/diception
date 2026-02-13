@@ -649,12 +649,12 @@ select {
     margin-bottom: 10px;
     letter-spacing: 4px;
     display: inline-block;
-    font-size: 4rem;
+    font-size: 2rem;
 }
 
 .tron-title span {
     display: inline-block;
-    min-width: 5px;
+    min-width: 15px;
     color: #00ffff;
     animation: tron-color-cycle 96s infinite;
     animation-delay: calc(var(--index) * -0.5s);
@@ -1312,6 +1312,10 @@ select {
 
     .tron-title {
         font-size: 24px;
+    }
+
+    .tron-title span {
+        min-width: 5px;
     }
 
     .control-row {
