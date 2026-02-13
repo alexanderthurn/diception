@@ -448,10 +448,10 @@ export class GameEventManager {
                 buttons = [{ text: 'New Game', value: 'restart', className: 'tron-btn' }];
                 if (this.turnHistory.hasInitialState()) buttons.push({ text: 'Try Again', value: 'clone', className: 'tron-btn' });
             } else if (campaignFinished) {
-                title = '🎉 CAMPAIGN COMPLETE! 🎉';
+                title = 'CAMPAIGN COMPLETE!';
                 const celebrationEl = document.createElement('p');
                 celebrationEl.className = 'campaign-celebration';
-                celebrationEl.textContent = `You conquered all ${totalLevels} levels of ${campaign?.owner || 'this campaign'}!`;
+                celebrationEl.textContent = `You finished all ${totalLevels} levels of ${campaign?.owner || 'this campaign'}!`;
                 celebrationEl.style.cssText = 'font-size: 1.2em; margin: 1em 0; color: var(--primary-color);';
                 content.insertBefore(celebrationEl, content.firstChild);
             }
