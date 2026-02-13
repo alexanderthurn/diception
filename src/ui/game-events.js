@@ -1,6 +1,7 @@
 import { Dialog } from './dialog.js';
 import { createAI } from '../core/ai/index.js';
 import { shouldShowInputHints, getInputHint, ACTION_END_TURN } from './input-hints.js';
+import { markLevelSolved } from '../scenarios/campaign-progress.js';
 
 /**
  * GameEventManager - Handles all game event subscriptions and turn flow
@@ -342,7 +343,6 @@ export class GameEventManager {
             const owner = localStorage.getItem('dicy_loadedCampaign');
             const idxStr = localStorage.getItem('dicy_loadedLevelIndex');
             if (owner != null && idxStr != null) {
-                const { markLevelSolved } = await import('../scenarios/campaign-progress.js');
                 markLevelSolved(owner, parseInt(idxStr, 10));
             }
         }

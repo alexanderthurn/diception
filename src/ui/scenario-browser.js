@@ -2,6 +2,8 @@ import { Dialog } from './dialog.js';
 import { CampaignManager } from '../scenarios/campaign-manager.js';
 import { getGridDimensions } from '../scenarios/campaign-data.js';
 import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress.js';
+import { getCachedIdentity } from '../scenarios/user-identity.js';
+import { MapManager } from '../core/map.js';
 
 /**
  * ScenarioBrowser - Campaign-based map/level selection
@@ -152,7 +154,7 @@ export class ScenarioBrowser {
         const campaigns = this.campaignManager.listCampaigns();
 
         // Ensure user has a campaign slot (empty if none)
-        await import('../scenarios/user-identity.js').then(m => m.getCachedIdentity());
+        getCachedIdentity();
         const hasUserCampaign = campaigns.some(c => c.isUserCampaign);
         if (!hasUserCampaign) {
             campaigns.push({
@@ -515,7 +517,6 @@ export class ScenarioBrowser {
     }
 
     async generateConfigPreview(config) {
-        const { MapManager } = await import('../core/map.js');
         const [w, h] = (config.mapSize || '6x6').split('x').map(Number);
         const botCount = config.bots ?? 1;
         const players = [{ id: 0, isBot: false, color: 0xaa00ff }, ...Array.from({ length: botCount }, (_, i) => ({ id: i + 1, isBot: true, color: [0xff0055, 0x55ff00, 0x5555ff, 0xffaa00][i % 4] }))];

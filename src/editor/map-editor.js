@@ -9,6 +9,7 @@
 import { Dialog } from '../ui/dialog.js';
 import { GAME } from '../core/constants.js';
 import { getInputHint, ACTION_ASSIGN, ACTION_DICE } from '../ui/input-hints.js';
+import { MapManager } from '../core/map.js';
 
 
 // Default player colors
@@ -1551,7 +1552,6 @@ export class MapEditor {
         const maxDice = this.state.maxDice;
         const diceSides = this.state.diceSides;
 
-        const { MapManager } = await import('../core/map.js');
         const [genW, genH] = (cfg.mapSize || '6x6').split('x').map(Number);
         const map = new MapManager();
         map.generateMap(genW, genH, players, maxDice, cfg.mapStyle || 'random');
