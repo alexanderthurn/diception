@@ -163,7 +163,7 @@ export class LoadingScreen {
             setTimeout(() => {
                 this.el.style.display = 'none';
                 if (this.onDismiss) this.onDismiss();
-            }, 150);
+            }, 800);
         }
 
         // Cleanup

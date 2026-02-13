@@ -1374,13 +1374,21 @@ select {
     align-items: center;
     justify-content: flex-start;
     padding-top: 15vh;
-    transition: opacity 0.8s ease-out, background 1s ease;
+    transition:
+        opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+        background 1s ease,
+        filter 0.8s ease;
     box-sizing: border-box;
+    transform: scale(1);
+    filter: blur(0);
 }
 
 #loading-screen.fade-out {
     opacity: 0;
     pointer-events: none;
+    transform: scale(1.1);
+    filter: blur(10px);
 }
 
 #loading-screen.completed {
