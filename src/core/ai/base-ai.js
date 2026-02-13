@@ -56,9 +56,10 @@ export class BaseAI {
      * Get delay between attacks based on game speed
      */
     getAttackDelay(gameSpeed) {
+        if (gameSpeed === 'ultrafast') return 0; // Ultra-fast mode when all humans on autoplay
         if (gameSpeed === 'beginner') return 1200;
         if (gameSpeed === 'normal') return 200;
-        return 0; // fast
+        return 0; // expert/fast
     }
 
     /**

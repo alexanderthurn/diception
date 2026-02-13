@@ -143,9 +143,19 @@ export class GameEventManager {
         if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
         if (this.endTurnReinforcement) this.endTurnReinforcement.textContent = '';
 
+        // Check if all human players have autoplay enabled
+        const humanPlayers = this.game.players.filter(p => !p.isBot);
+        const allHumansOnAutoplay = humanPlayers.length > 0 && humanPlayers.every(p => autoplayPlayers.has(p.id));
+
         // Calculate delay based on game speed
+        // If all humans are on autoplay, use ultra-fast mode with no delays
         let delay = 500;
-        if (gameSpeed === 'expert') {
+        let effectiveSpeed = gameSpeed;
+
+        if (allHumansOnAutoplay) {
+            delay = 0; // No delay between turns
+            effectiveSpeed = 'ultrafast'; // Special mode for AI to skip all delays
+        } else if (gameSpeed === 'expert') {
             delay = 10;
         } else if (gameSpeed === 'normal') {
             delay = player.isBot ? 300 : 500;
@@ -162,7 +172,7 @@ export class GameEventManager {
 
             const playerAI = playerAIs.get(player.id);
             if (playerAI) {
-                await playerAI.takeTurn(gameSpeed);
+                await playerAI.takeTurn(effectiveSpeed);
             }
             this.game.endTurn();
         }, delay);
