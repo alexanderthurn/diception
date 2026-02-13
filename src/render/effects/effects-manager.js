@@ -288,9 +288,10 @@ export class EffectsManager {
             this.winStreak = 0;
         }
 
-        // Handle Dynamic Screen Shake
+        // Handle Dynamic Screen Shake (only for human players)
+        const isHumanPlayer = this.game.currentPlayer && !this.game.currentPlayer.isBot;
         const isHighOrMedium = this.quality === 'high' || this.quality === 'medium';
-        if (isHighOrMedium && this.renderer) {
+        if (isHighOrMedium && this.renderer && isHumanPlayer) {
             let shakeIntensity = 0;
             if (result.won) {
                 // Streak scaling: start only with second attack (winStreak > 1)
