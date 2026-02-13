@@ -1374,13 +1374,35 @@ select {
     align-items: center;
     justify-content: flex-start;
     padding-top: 15vh;
-    transition: opacity 0.8s ease-out;
+    transition: opacity 0.8s ease-out, background 1s ease;
     box-sizing: border-box;
 }
 
 #loading-screen.fade-out {
     opacity: 0;
     pointer-events: none;
+}
+
+#loading-screen.completed {
+    background: radial-gradient(circle, #080820 0%, #000 100%);
+    animation: breathing-bg 4s infinite ease-in-out;
+}
+
+@keyframes breathing-bg {
+
+    0%,
+    100% {
+        box-shadow: inset 0 0 60px rgba(0, 255, 255, 0.05);
+    }
+
+    50% {
+        box-shadow: inset 0 0 120px rgba(0, 255, 255, 0.15);
+    }
+}
+
+#loading-screen.completed .loading-prompt {
+    opacity: 1;
+    visibility: visible;
 }
 
 .loading-status {
@@ -1433,7 +1455,7 @@ select {
     transform: translateY(-50%);
 }
 
-.loading-prompt.visible {
+#loading-screen.completed .loading-prompt {
     opacity: 1;
     visibility: visible;
 }
@@ -1593,6 +1615,108 @@ select {
 #loading-screen.completed .loading-platforms {
     opacity: 0.8;
     bottom: 80px;
+}
+
+.loading-border-lights {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 10001;
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+#loading-screen.completed .loading-border-lights {
+    opacity: 1;
+}
+
+.light {
+    position: absolute;
+    background: #0ff;
+    pointer-events: none;
+}
+
+.light-top {
+    top: 0;
+    height: 4px;
+    width: 200px;
+    background: linear-gradient(to right, transparent, #0ff);
+    box-shadow: 0 0 15px #0ff;
+    animation: border-top 3s linear infinite;
+}
+
+.light-right {
+    right: 0;
+    width: 4px;
+    height: 200px;
+    background: linear-gradient(to bottom, transparent, #0ff);
+    box-shadow: 0 0 15px #0ff;
+    animation: border-right 3s linear infinite;
+    animation-delay: 0.75s;
+}
+
+.light-bottom {
+    bottom: 0;
+    height: 4px;
+    width: 200px;
+    background: linear-gradient(to left, transparent, #0ff);
+    box-shadow: 0 0 15px #0ff;
+    animation: border-bottom 3s linear infinite;
+    animation-delay: 1.5s;
+}
+
+.light-left {
+    left: 0;
+    width: 4px;
+    height: 200px;
+    background: linear-gradient(to top, transparent, #0ff);
+    box-shadow: 0 0 15px #0ff;
+    animation: border-left 3s linear infinite;
+    animation-delay: 2.25s;
+}
+
+@keyframes border-top {
+    0% {
+        left: -200px;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+@keyframes border-right {
+    0% {
+        top: -200px;
+    }
+
+    100% {
+        top: 100%;
+    }
+}
+
+@keyframes border-bottom {
+    0% {
+        right: -200px;
+    }
+
+    100% {
+        right: 100%;
+    }
+}
+
+@keyframes border-left {
+    0% {
+        bottom: -200px;
+    }
+
+    100% {
+        bottom: 100%;
+    }
 }
 
 .platform-icon {

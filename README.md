@@ -82,6 +82,7 @@ Created as a Dice Wars inspired strategy game.
 
 **Branding:**
 - The Steam logo and branding are property of Valve Corporation and are used in accordance with the [Steam Branding Guidelines](https://partner.steamgames.com/doc/marketing/branding).
+- The "Get it on Google Play" . [Google Play Badge Guidelines](https://partnermarketinghub.withgoogle.com/brands/google-play/visual-identity/badge-guidelines/?folder=86642)
 
 
 TODO:
@@ -94,31 +95,3 @@ TODO:
 
 * No reload when changing visual effects
 * if it is a bots turn, do not show the border of the active player as white, keep the color of the player. only if a human is active, make it like now (white)
-
-
-* HARD AI:
-
-Revised Hard AI Strategy
-Priority System (same as medium):
-Priority 1: Dice advantage ≥ 2
-Priority 2: Dice advantage == 1
-Priority 3: Same dice only if no attacks made yet
-Smart Scoring Within Each Priority:
-Target STRONGER players (+points) ✅
-Count territories per opponent
-Prefer attacking players with MORE territories
-They're the real threat and need to be weakened
-Attack from WEAKER positions (+points) ✅
-Prefer attacking from tiles with FEWER dice
-Preserve your strongest stacks for critical battles
-Use expendable weak stacks first
-Break connected enemy regions (+points) ✅
-Count how many same-owner neighbors the target has
-Prefer targets with MORE friendly neighbors (part of big regions)
-Breaking these reduces their bonus dice next turn
-Disrupts their economy
-Value consolidation (+points) ✅
-Prefer attacks that would connect your own territories
-Building contiguous regions strengthens your position
-Target high-value territories (+points) ✅
-Prefer targets with more dice (more valuable when captured)
