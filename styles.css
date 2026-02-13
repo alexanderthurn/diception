@@ -1859,7 +1859,8 @@ select {
     position: static;
     display: flex;
     justify-content: center;
-    gap: 30px;
+    gap: 50px;
+    margin-top: 50px;
     opacity: 0.4;
     transition: opacity 0.5s ease, transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
