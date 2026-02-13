@@ -4189,7 +4189,9 @@ canvas {
     align-items: center;
     z-index: 10000;
     backdrop-filter: blur(3px);
-    overflow: scroll;
+    overflow-y: auto;
+    padding: 20px 0;
+    box-sizing: border-box;
 }
 
 .dialog-overlay.fade-out {
@@ -4241,6 +4243,7 @@ canvas {
     transform: none;
     min-width: 320px;
     max-width: 500px;
+    margin: auto;
 }
 
 .dialog-body {
