@@ -1,6 +1,6 @@
 {
   "id": "scenarios",
-  "owner": "prebuilt-scenarios",
+  "owner": "scenarios",
   "levels": [
     {
       "type": "scenario",

@@ -1,6 +1,6 @@
 {
   "id": "classic",
-  "owner": "prebuilt-campaign",
+  "owner": "steam-campaign",
   "levels": [
     {
       "type": "config",

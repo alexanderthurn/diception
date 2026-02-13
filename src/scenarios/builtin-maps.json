@@ -1,6 +1,6 @@
 {
   "id": "maps",
-  "owner": "prebuilt-maps",
+  "owner": "maps",
   "levels": [
     {
       "type": "map",
