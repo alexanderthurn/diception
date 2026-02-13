@@ -16,6 +16,14 @@ export default defineConfig({
     // Sorgt dafür, dass der Build-Ordner leer ist, bevor Vite neu baut
     emptyOutDir: true,
     // Verhindert Unschärfe bei manchen Assets durch Inlining-Limit
-    assetsInlineLimit: 0, 
+    assetsInlineLimit: 0,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          pixi: ['pixi.js'],
+        },
+      },
+    },
   }
 })
