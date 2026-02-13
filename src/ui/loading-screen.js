@@ -124,27 +124,25 @@ export class LoadingScreen {
         }
     }
 
-    dismiss() {
+    dismiss(event) {
         // Only allow dismissal if complete and no dialog is open
         if (!this.isComplete) return;
         if (document.querySelector('.dialog-overlay')) return;
 
-        // Stage 1: Initial tap - start the atmospheric fade
-        if (!this.el.classList.contains('fade-out')) {
-            this.isDismissed = true; // Stop ongoing log sequences
+        const isTouchEvent = event && (event.type === 'touchstart' || (event.type === 'mousedown' && event.pointerType === 'touch'));
+        const isGamePadEvent = !event || event.type === 'confirm'; // Gamepad or programmatic
+
+        // Only enforce the two-stage dismissal for touch events to prevent accidental clicks behind the loading screen
+        if (isTouchEvent && !this.el.classList.contains('fade-out')) {
+            this.isDismissed = true;
             this.el.classList.add('fade-out');
 
-            // Visual guidance for secondary tap
             if (this.prompt) {
-                const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-                this.prompt.textContent = isTouch ? 'TOUCH AGAIN' : 'PRESS AGAIN';
+                this.prompt.textContent = 'TOUCH AGAIN';
                 this.prompt.classList.add('pulse-fast');
             }
 
-            // Set cooldown to prevent accidental double-activation
             this.fadeStartTime = Date.now();
-
-            // Block UI interactions
             document.body.classList.add('interaction-shield');
 
             if (this.inputController) {
@@ -153,9 +151,8 @@ export class LoadingScreen {
             return;
         }
 
-        // Stage 2: Secondary tap - final entry
-        // Cooldown (350ms) ensures it was a separate interaction
-        if (Date.now() - this.fadeStartTime < 350) return;
+        // For non-touch events or the second touch, complete the dismissal
+        if (isTouchEvent && (Date.now() - this.fadeStartTime < 350)) return;
 
         if (this.el.style.display !== 'none') {
             this.el.style.display = 'none';
