@@ -223,6 +223,14 @@ async function init() {
             if (configManager.elements?.gameSpeedInput) {
                 configManager.elements.gameSpeedInput.value = speed;
             }
+
+            if (speed === 'beginner') {
+                const tutorialCampaign = scenarioBrowser.campaignManager.getCampaign('tutorial');
+                if (tutorialCampaign) {
+                    scenarioBrowser.selectedCampaign = tutorialCampaign;
+                    scenarioBrowser.selectAndPlayLevel(0, { immediateStart: true });
+                }
+            }
         }
 
 
@@ -246,6 +254,7 @@ async function init() {
 
     onLoadingDismiss = async () => {
         if (localStorage.getItem('dicy_campaignMode')) {
+            if (game.players.length > 0) return;
             document.getElementById('setup-modal').classList.add('hidden');
             await scenarioBrowser.showCampaignView();
             scenarioBrowser.restoreLastSelectedCampaign();
