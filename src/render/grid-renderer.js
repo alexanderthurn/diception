@@ -21,6 +21,10 @@ export class GridRenderer {
         this.animationContainer = new Container();
         this.stage.addChild(this.animationContainer);
 
+        // Container for probability badges and input hints (always on top)
+        this.hintsContainer = new Container();
+        this.stage.addChild(this.hintsContainer);
+
         this.tileSize = RENDER.DEFAULT_TILE_SIZE;
         this.gap = RENDER.DEFAULT_GAP;
 
@@ -211,6 +215,11 @@ export class GridRenderer {
         this.container.y = 0;
         this.overlayContainer.x = 0;
         this.overlayContainer.y = 0;
+        this.hintsContainer.x = 0;
+        this.hintsContainer.y = 0;
+
+        // Ensure hints are always on top of EVERYTHING (including shimmer)
+        this.stage.addChild(this.hintsContainer);
 
         // Map bounds border (editor) - clear outline of full grid
         if (this.showMapBounds && needsFullRedraw) {
@@ -784,7 +793,7 @@ export class GridRenderer {
             container.addChild(hintContainer);
             container.hintContainer = hintContainer;
 
-            this.overlayContainer.addChild(container);
+            this.hintsContainer.addChild(container);
             this.probabilityBadges[index] = container;
         }
 

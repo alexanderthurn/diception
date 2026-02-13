@@ -316,11 +316,16 @@ select {
 /* Dice Result HUD - Below playfield */
 #dice-result-hud {
     position: fixed;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 40px;
+    right: 300px;
+    left: auto;
+    transform: none;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
     z-index: 100;
-    padding: 6px 16px;
+    padding: 0 16px;
     background: rgba(0, 0, 0, 0.0);
     border: 1px solid var(--accent-color);
     border-radius: 0;
@@ -334,6 +339,17 @@ select {
     /* Optional: backdrop-filter for better readability */
     backdrop-filter: blur(4px);
     transition: opacity 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    #dice-result-hud {
+        bottom: 100px;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        height: auto;
+        padding: 6px 16px;
+    }
 }
 
 #dice-result-content {
