@@ -126,52 +126,54 @@ export class LoadingScreen {
 
     dismiss() {
         // Only allow dismissal if complete and no dialog is open
-        if (this.isDismissed || !this.isComplete) return;
+        if (!this.isComplete) return;
         if (document.querySelector('.dialog-overlay')) return;
 
-        this.isDismissed = true;
-
-        if (this.inputController) {
-            this.inputController.waitTillNoTouch = true;
-
-            const resetWait = (e) => {
-                // For touch, wait until all fingers are removed
-                if (e.type === 'touchend' && e.touches && e.touches.length > 0) {
-                    return;
-                }
-                this.inputController.waitTillNoTouch = false;
-                window.removeEventListener('touchend', resetWait);
-                window.removeEventListener('mouseup', resetWait);
-            };
-            window.addEventListener('touchend', resetWait);
-            window.addEventListener('mouseup', resetWait);
-
-            // Safety fallback: reset after 1 second anyway
-            setTimeout(() => {
-                if (this.inputController) this.inputController.waitTillNoTouch = false;
-            }, 1000);
-        }
-
-        // Block UI interactions briefly to prevent accidental clicks
-        document.body.classList.add('interaction-shield');
-        setTimeout(() => {
-            document.body.classList.remove('interaction-shield');
-        }, 300);
-
-        if (this.el) {
+        // Stage 1: Initial tap - start the atmospheric fade
+        if (!this.el.classList.contains('fade-out')) {
+            this.isDismissed = true; // Stop ongoing log sequences
             this.el.classList.add('fade-out');
-            setTimeout(() => {
-                this.el.style.display = 'none';
-                if (this.onDismiss) this.onDismiss();
-            }, 800);
+
+            // Visual guidance for secondary tap
+            if (this.prompt) {
+                const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+                this.prompt.textContent = isTouch ? 'TOUCH AGAIN' : 'PRESS AGAIN';
+                this.prompt.classList.add('pulse-fast');
+            }
+
+            // Set cooldown to prevent accidental double-activation
+            this.fadeStartTime = Date.now();
+
+            // Block UI interactions
+            document.body.classList.add('interaction-shield');
+
+            if (this.inputController) {
+                this.inputController.waitTillNoTouch = true;
+            }
+            return;
         }
 
-        // Cleanup
-        window.removeEventListener('mousedown', this.dismissHandler);
-        window.removeEventListener('touchstart', this.dismissHandler);
-        window.removeEventListener('keydown', this.dismissHandler);
-        if (this.inputManager) {
-            this.inputManager.off('confirm', this.dismissHandler);
+        // Stage 2: Secondary tap - final entry
+        // Cooldown (350ms) ensures it was a separate interaction
+        if (Date.now() - this.fadeStartTime < 350) return;
+
+        if (this.el.style.display !== 'none') {
+            this.el.style.display = 'none';
+            document.body.classList.remove('interaction-shield');
+
+            if (this.onDismiss) this.onDismiss();
+
+            if (this.inputController) {
+                this.inputController.waitTillNoTouch = false;
+            }
+
+            // Cleanup
+            window.removeEventListener('mousedown', this.dismissHandler);
+            window.removeEventListener('touchstart', this.dismissHandler);
+            window.removeEventListener('keydown', this.dismissHandler);
+            if (this.inputManager) {
+                this.inputManager.off('confirm', this.dismissHandler);
+            }
         }
     }
 }
