@@ -422,6 +422,9 @@ export class GameEventManager {
         // Ensure headless fast-forward mode is deactivated
         this.game.muted = false;
 
+        // Deactivate autoplay so the next game starts normally
+        this.gameStarter.getAutoplayPlayers().clear();
+
         // Clear auto-save IMMEDIATELY on game over
         this.turnHistory.clearAutoSave();
 
