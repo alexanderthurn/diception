@@ -53,6 +53,7 @@ export class GridRenderer {
 
         // Cache for current player's largest region edges
         this.currentPlayerRegionEdges = [];
+        this.currentPlayerSecondaryRegionEdges = []; // For smaller regions
 
         // Editor paint mode (neutral rendering)
         this.paintMode = false;
@@ -121,7 +122,7 @@ export class GridRenderer {
     /**
      * Check if a tile needs redrawing based on its current state
      */
-    isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isInLargestRegion) {
+    isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isInRegion) {
         const lastState = this.lastTileStates.get(tileIdx);
         if (!lastState) return true;
 
@@ -129,19 +130,19 @@ export class GridRenderer {
             lastState.dice !== tileRaw.dice ||
             lastState.blocked !== tileRaw.blocked ||
             lastState.isCurrentPlayer !== isCurrentPlayer ||
-            lastState.isInLargestRegion !== isInLargestRegion;
+            lastState.isInRegion !== isInRegion;
     }
 
     /**
      * Store the current state of a tile for future dirty checking
      */
-    saveTileState(tileIdx, tileRaw, isCurrentPlayer, isInLargestRegion) {
+    saveTileState(tileIdx, tileRaw, isCurrentPlayer, isInRegion) {
         this.lastTileStates.set(tileIdx, {
             owner: tileRaw.owner,
             dice: tileRaw.dice,
             blocked: tileRaw.blocked,
             isCurrentPlayer,
-            isInLargestRegion
+            isInRegion
         });
     }
 
@@ -230,33 +231,54 @@ export class GridRenderer {
             this.container.addChild(borderGfx);
         }
 
-        // Get largest connected regions for ALL alive players (cached)
+        // Get ALL connected regions for ALL alive players (cached)
+        // Structure: { largest: Set<idx>, others: Array<Set<idx>> }
         if (!this.regionsValid) {
             this.largestRegionsCache.clear();
             for (const player of this.game.players) {
                 if (player.alive) {
-                    this.largestRegionsCache.set(player.id, this.getLargestConnectedRegionTiles(player.id));
+                    this.largestRegionsCache.set(player.id, this.getPlayerRegions(player.id));
                 }
             }
             this.regionsValid = true;
         }
-        const largestRegions = this.largestRegionsCache;
+        const playerRegions = this.largestRegionsCache;
 
         // Clear and recollect edges for current player's shimmer effect
         this.currentPlayerRegionEdges = [];
+        this.currentPlayerSecondaryRegionEdges = [];
 
         for (let y = 0; y < map.height; y++) {
             for (let x = 0; x < map.width; x++) {
                 const tileIdx = map.getTileIndex(x, y);
                 const tileRaw = map.getTileRaw(x, y);
                 const isCurrentPlayer = tileRaw.owner === currentPlayerId;
-                const ownerLargestRegion = largestRegions.get(tileRaw.owner);
-                const isInLargestRegion = ownerLargestRegion?.has(tileIdx) || false;
+
+                const regionsData = playerRegions.get(tileRaw.owner);
+                const largestRegion = regionsData?.largest;
+                const otherRegions = regionsData?.others || [];
+
+                const isInLargestRegion = largestRegion?.has(tileIdx) || false;
+                // Check if in secondary (non-largest) region
+                let isInSecondaryRegion = false;
+                if (!isInLargestRegion && isCurrentPlayer) {
+                    for (const region of otherRegions) {
+                        if (region.has(tileIdx)) {
+                            isInSecondaryRegion = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Treat both largest and secondary regions as "active" for border drawing purposes?
+                // The user requested "comets at every territory... but on the others... smaller and slower"
+                // This implies all regions get the "region border" treatment
+                const isRegionTile = isInLargestRegion || isInSecondaryRegion;
 
                 // Check if this tile needs redrawing
                 const isDirty = needsFullRedraw ||
                     playerChanged ||
-                    this.isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isInLargestRegion);
+                    this.isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isRegionTile);
 
                 if (isDirty) {
                     // Remove old cached tile if it exists
@@ -267,17 +289,21 @@ export class GridRenderer {
                     }
 
                     // Create new tile
-                    const tileContainer = this.createTileContainer(x, y, tileRaw, currentPlayer, isCurrentPlayer, isInLargestRegion, largestRegions, map);
+                    const tileContainer = this.createTileContainer(x, y, tileRaw, currentPlayer, isCurrentPlayer, isRegionTile, playerRegions, map);
                     this.container.addChild(tileContainer);
                     this.tileCache.set(tileIdx, tileContainer);
 
                     // Save state for future dirty checking
-                    this.saveTileState(tileIdx, tileRaw, isCurrentPlayer, isInLargestRegion);
+                    this.saveTileState(tileIdx, tileRaw, isCurrentPlayer, isRegionTile);
                 }
 
                 // Always collect shimmer edges for current human player
-                if (!tileRaw.blocked && isCurrentPlayer && isInLargestRegion && !this.paintMode && !currentPlayer.isBot) {
-                    this.collectShimmerEdges(x, y, tileRaw, map);
+                if (!tileRaw.blocked && isCurrentPlayer && !this.paintMode && !currentPlayer.isBot) {
+                    if (isInLargestRegion) {
+                        this.collectShimmerEdges(x, y, tileRaw, map, this.currentPlayerRegionEdges);
+                    } else if (isInSecondaryRegion) {
+                        this.collectShimmerEdges(x, y, tileRaw, map, this.currentPlayerSecondaryRegionEdges);
+                    }
                 }
             }
         }
@@ -288,7 +314,7 @@ export class GridRenderer {
     /**
      * Create a tile container with all graphics
      */
-    createTileContainer(x, y, tileRaw, currentPlayer, isCurrentPlayer, isInLargestRegion, largestRegions, map) {
+    createTileContainer(x, y, tileRaw, currentPlayer, isCurrentPlayer, isInRegion, playerRegions, map) {
         const tileContainer = new Container();
         tileContainer.x = x * (this.tileSize + this.gap);
         tileContainer.y = y * (this.tileSize + this.gap);
@@ -326,8 +352,8 @@ export class GridRenderer {
             // This prevents "gray borders between tiles of the same color"
             this.drawSmartBorders(tileGfx, x, y, tileRaw, map);
 
-            // Draw OUTER borders for largest region tiles
-            if (isInLargestRegion && isCurrentPlayer && !currentPlayer.isBot) {
+            // Draw OUTER borders for any region tiles (largest or secondary)
+            if (isInRegion && isCurrentPlayer && !currentPlayer.isBot) {
                 this.drawRegionBorders(tileGfx, x, y, tileRaw, currentPlayer, isCurrentPlayer, color, map);
             }
         }
@@ -419,7 +445,7 @@ export class GridRenderer {
     /**
      * Collect shimmer effect edges for a tile
      */
-    collectShimmerEdges(x, y, tileRaw, map) {
+    collectShimmerEdges(x, y, tileRaw, map, targetArray) {
         const edgeDefs = [
             { dx: 0, dy: -1, x1: 0, y1: 0, x2: this.tileSize, y2: 0 },
             { dx: 0, dy: 1, x1: 0, y1: this.tileSize, x2: this.tileSize, y2: this.tileSize },
@@ -446,7 +472,7 @@ export class GridRenderer {
                 if (edge.dy === 1) [ex1, ex2] = [ex2, ex1];
                 else if (edge.dx === -1) [ey1, ey2] = [ey2, ey1];
 
-                this.currentPlayerRegionEdges.push({
+                targetArray.push({
                     x1: ex1, y1: ey1,
                     x2: ex2, y2: ey2
                 });
@@ -454,7 +480,7 @@ export class GridRenderer {
         }
     }
 
-    getLargestConnectedRegionTiles(playerId) {
+    getPlayerRegions(playerId) {
         const map = this.game.map;
         const visited = new Set();
         const regions = [];
@@ -488,9 +514,14 @@ export class GridRenderer {
             }
         }
 
-        // Return the largest region
-        if (regions.length === 0) return new Set();
-        return regions.reduce((a, b) => a.size > b.size ? a : b);
+        if (regions.length === 0) return { largest: new Set(), others: [] };
+
+        // Sort by size descending
+        regions.sort((a, b) => b.size - a.size);
+        const largest = regions[0];
+        const others = regions.slice(1);
+
+        return { largest, others };
     }
 
     /**
@@ -538,40 +569,50 @@ export class GridRenderer {
         // Update time consistently
         this.shimmerTime += deltaTime;
 
-        // Calculate animation progress (0 to 1, loops)
-        const cycleProgress = (this.shimmerTime / CYCLE_DURATION) % 1;
+        // Helper to draw comets for a set of edges
+        const drawComets = (edges, durationScale, sizeScale, alphaScale) => {
+            const duration = CYCLE_DURATION * durationScale;
+            // Calculate animation progress (0 to 1, loops)
+            const cycleProgress = (this.shimmerTime / duration) % 1;
 
-        // Draw one comet on EACH edge, all in sync
-        for (const edge of this.currentPlayerRegionEdges) {
-            const dx = edge.x2 - edge.x1;
-            const dy = edge.y2 - edge.y1;
-            const edgeLength = Math.sqrt(dx * dx + dy * dy);
-
-            if (edgeLength === 0) continue;
-
-            // Comet position along this edge (0 to 1)
-            const headT = cycleProgress;
-
-            // Draw trail segments (including head at seg 0)
             const segmentOffset = RENDER.SHIMMER_SEGMENT_OFFSET || 0.08;
 
-            for (let seg = 0; seg <= TRAIL_SEGMENTS; seg++) {
-                const segT = headT - (seg * segmentOffset);
-                if (segT < 0) continue;
+            for (const edge of edges) {
+                const dx = edge.x2 - edge.x1;
+                const dy = edge.y2 - edge.y1;
+                const edgeLength = Math.sqrt(dx * dx + dy * dy);
 
-                const x = edge.x1 + dx * segT;
-                const y = edge.y1 + dy * segT;
+                if (edgeLength === 0) continue;
 
-                const fadeProgress = seg / TRAIL_SEGMENTS;
-                const alpha = seg === 0 ? 1.0 : (1 - fadeProgress) * 0.5; // Solid head
-                const size = 3.141592;
+                // Comet position along this edge (0 to 1)
+                const headT = cycleProgress;
 
-                if (alpha > 0.05) {
-                    this.shimmerGraphics.rect(x - size, y - size, size * 2, size * 2);
-                    this.shimmerGraphics.fill({ color: 0xffffff, alpha: alpha });
+                for (let seg = 0; seg <= TRAIL_SEGMENTS; seg++) {
+                    const segT = headT - (seg * segmentOffset);
+                    if (segT < 0) continue;
+
+                    const x = edge.x1 + dx * segT;
+                    const y = edge.y1 + dy * segT;
+
+                    const fadeProgress = seg / TRAIL_SEGMENTS;
+                    let alpha = seg === 0 ? 1.0 : (1 - fadeProgress) * 0.5; // Solid head
+                    alpha *= alphaScale;
+
+                    const size = 3.141592 * sizeScale;
+
+                    if (alpha > 0.05) {
+                        this.shimmerGraphics.rect(x - size, y - size, size * 2, size * 2);
+                        this.shimmerGraphics.fill({ color: 0xffffff, alpha: alpha });
+                    }
                 }
             }
-        }
+        };
+
+        // 1. Primary (Largest) Region - Standard size/speed
+        drawComets(this.currentPlayerRegionEdges, 1.0, 1.0, 1.0);
+
+        // 2. Secondary Regions - Smaller, slower
+        drawComets(this.currentPlayerSecondaryRegionEdges, 1.8, 0.6, 0.7);
     }
 
     drawOverlay() {
