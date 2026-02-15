@@ -1353,7 +1353,9 @@ export class MapEditor {
                             } else tile.owner -= 1;
                         } else {
                             if (tile.owner >= playerCount - 1) {
-                                tile.owner = 0;
+                                // Touch: remove tile after cycling through all players
+                                this.state.deletedTiles.set(key, { ...tile });
+                                this.state.tiles.delete(key);
                             } else tile.owner += 1;
                         }
                     }
@@ -1375,7 +1377,9 @@ export class MapEditor {
                             } else tile.dice -= 1;
                         } else {
                             if (tile.dice >= this.state.maxDice) {
-                                tile.dice = 1;
+                                // Touch: remove tile after cycling through all dice values
+                                this.state.deletedTiles.set(key, { ...tile });
+                                this.state.tiles.delete(key);
                             } else tile.dice += 1;
                         }
                     }
