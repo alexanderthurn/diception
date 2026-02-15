@@ -367,9 +367,15 @@ export class GridRenderer {
             const shouldDraw = !neighbor || neighbor.blocked || neighbor.owner !== tileRaw.owner;
 
             if (shouldDraw) {
+                // Determine width:
+                // Adjacent to another tile (e.g. enemy)? Use 1px (will combine with neighbor's 1px = 2px total)
+                // Adjacent to NOTHING (void/blocked)? Use 2px to match visual thickness
+                const isMapEdgeOrBlocked = !neighbor || neighbor.blocked;
+                const width = isMapEdgeOrBlocked ? 2 : 1;
+
                 tileGfx.moveTo(edge.x1, edge.y1);
                 tileGfx.lineTo(edge.x2, edge.y2);
-                tileGfx.stroke({ width: 1, color: 0xffffff, alpha: 1.0, join: 'miter', cap: 'square' });
+                tileGfx.stroke({ width: width, color: 0xffffff, alpha: 1.0, join: 'miter', cap: 'square' });
             }
         }
     }
