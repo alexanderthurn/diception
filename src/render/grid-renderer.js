@@ -226,7 +226,7 @@ export class GridRenderer {
             const borderGfx = new Graphics();
             const pad = 4;
             borderGfx.rect(-pad, -pad, mapPixelWidth + pad * 2 - this.gap, mapPixelHeight + pad * 2 - this.gap);
-            borderGfx.stroke({ width: 4, color: 0x00ffff, alpha: 0.85 });
+            borderGfx.stroke({ width: 4, color: 0x00ffff, alpha: 0.85, join: 'miter', cap: 'square' });
             this.container.addChild(borderGfx);
         }
 
@@ -314,7 +314,7 @@ export class GridRenderer {
         if (this.paintMode) {
             // Paint mode: Neutral gray, no numbers, simple border
             tileGfx.fill({ color: 0x444444, alpha: 0.8 });
-            tileGfx.stroke({ width: 1, color: 0x666666, alpha: 0.8 });
+            tileGfx.stroke({ width: 1, color: 0x666666, alpha: 0.8, join: 'miter', cap: 'square' });
         } else {
             // Normal game mode
             tileGfx.fill({ color: color, alpha: fillAlpha });
@@ -323,12 +323,12 @@ export class GridRenderer {
             if (isCurrentPlayer) {
                 const borderColor = currentPlayer.isBot ? color : 0xffffff;
                 if (tileRaw.dice > 1) {
-                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.9 });
+                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.9, join: 'miter', cap: 'square' });
                 } else {
-                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.7 });
+                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.7, join: 'miter', cap: 'square' });
                 }
             } else {
-                tileGfx.stroke({ width: 1, color: color, alpha: 0.7 });
+                tileGfx.stroke({ width: 1, color: color, alpha: 0.7, join: 'miter', cap: 'square' });
             }
 
             // Draw OUTER borders for largest region tiles
@@ -379,7 +379,7 @@ export class GridRenderer {
 
                 tileGfx.moveTo(edge.x1, edge.y1);
                 tileGfx.lineTo(edge.x2, edge.y2);
-                tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.8 });
+                tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.8, join: 'miter', cap: 'square' });
             }
         }
     }
@@ -561,7 +561,7 @@ export class GridRenderer {
             if (this.hoverTile) {
                 this.hoverGfx.clear();
                 this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
-                this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8 });
+                this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, join: 'miter', cap: 'square' });
                 this.hoverGfx.x = this.hoverTile.x * (this.tileSize + this.gap);
                 this.hoverGfx.y = this.hoverTile.y * (this.tileSize + this.gap);
                 this.hoverGfx.visible = true;
@@ -582,7 +582,7 @@ export class GridRenderer {
 
             // Draw pulsing diamond/crosshair cursor
             this.cursorGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
-            this.cursorGfx.stroke({ width: 3, color: 0x00ffff, alpha: pulseAlpha }); // Cyan cursor
+            this.cursorGfx.stroke({ width: 3, color: 0x00ffff, alpha: pulseAlpha, join: 'miter', cap: 'square' }); // Cyan cursor
 
             // Corner brackets for extra visibility
             const bracketSize = 10;
@@ -602,7 +602,7 @@ export class GridRenderer {
             this.cursorGfx.moveTo(bracketSize, this.tileSize);
             this.cursorGfx.lineTo(0, this.tileSize);
             this.cursorGfx.lineTo(0, this.tileSize - bracketSize);
-            this.cursorGfx.stroke({ width: 2, color: 0x00ffff, alpha: 1.0 });
+            this.cursorGfx.stroke({ width: 2, color: 0x00ffff, alpha: 1.0, join: 'miter', cap: 'square' });
 
             this.cursorGfx.x = this.cursorTile.x * (this.tileSize + this.gap);
             this.cursorGfx.y = this.cursorTile.y * (this.tileSize + this.gap);
@@ -619,7 +619,7 @@ export class GridRenderer {
         if (this.selectedTile) {
             this.selectionGfx.clear();
             this.selectionGfx.rect(0, 0, this.tileSize, this.tileSize);
-            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 1.0 });
+            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 1.0, join: 'miter', cap: 'square' });
             this.selectionGfx.fill({ color: 0xffffff, alpha: 0.4 });
 
             this.selectionGfx.x = this.selectedTile.x * (this.tileSize + this.gap);
@@ -657,7 +657,7 @@ export class GridRenderer {
                         // Draw pulsing border
                         const pulseAlpha = 0.4 + Math.sin(this.cursorPulse * 1.5) * 0.2;
                         hGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
-                        hGfx.stroke({ width: 2, color: 0x00ffff, alpha: pulseAlpha });
+                        hGfx.stroke({ width: 2, color: 0x00ffff, alpha: pulseAlpha, join: 'miter', cap: 'square' });
 
                         hGfx.x = neighborPixelX;
                         hGfx.y = neighborPixelY;
@@ -720,9 +720,9 @@ export class GridRenderer {
                     const isEnemy = tileContent && tileContent.owner !== this.game.currentPlayer.id;
 
                     if (isEnemy) {
-                        hGfx.stroke({ width: 4, color: 0xff0000, alpha: 0.8 }); // Red
+                        hGfx.stroke({ width: 4, color: 0xff0000, alpha: 0.8, join: 'miter', cap: 'square' }); // Red
                     } else {
-                        hGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8 }); // Neutral
+                        hGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, join: 'miter', cap: 'square' }); // Neutral
                     }
 
                     hGfx.x = targetTile.x * (this.tileSize + this.gap);
@@ -741,7 +741,7 @@ export class GridRenderer {
                 if (tileRaw) {
                     this.hoverGfx.clear();
                     this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
-                    this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8 });
+                    this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, join: 'miter', cap: 'square' });
                     this.hoverGfx.x = this.hoverTile.x * (this.tileSize + this.gap);
                     this.hoverGfx.y = this.hoverTile.y * (this.tileSize + this.gap);
                     this.hoverGfx.visible = true;
@@ -950,13 +950,13 @@ export class GridRenderer {
                 // Glow effect
                 const glow = new Graphics();
                 glow.rect(-this.tileSize / 2 - 6, -this.tileSize / 2 - 6, this.tileSize + 12, this.tileSize + 12);
-                glow.stroke({ color: 0xffffff, width: 8, alpha: 0.5 });
+                glow.stroke({ color: 0xffffff, width: 8, alpha: 0.5, join: 'miter', cap: 'square' });
                 group.addChild(glow);
 
                 const high = new Graphics();
                 high.rect(-this.tileSize / 2, -this.tileSize / 2, this.tileSize, this.tileSize);
                 high.fill({ color: color, alpha: 0.8 });
-                high.stroke({ color: 0xffffff, width: 4, alpha: 1.0 });
+                high.stroke({ color: 0xffffff, width: 4, alpha: 1.0, join: 'miter', cap: 'square' });
                 group.addChild(high);
 
                 return group;

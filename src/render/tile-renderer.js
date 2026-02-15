@@ -80,13 +80,13 @@ export class TileRenderer {
         g.fill({ color: 0xffffff, alpha: 1 });
 
         if (withBorder) {
-            g.stroke({ width: 2 * scale, color: 0xffffff, alpha: 1 });
+            g.stroke({ width: 2 * scale, color: 0xffffff, alpha: 1, join: 'miter', cap: 'square' });
         }
 
         const texture = app.renderer.generateTexture({
             target: g,
             resolution: 4, // 4x resolution for crisp rendering when zoomed
-            antialias: true
+            antialias: false
         });
         g.destroy();
         return texture;
@@ -116,7 +116,7 @@ export class TileRenderer {
         const texture = app.renderer.generateTexture({
             target: container,
             resolution: 4, // 4x resolution for crisp rendering when zoomed
-            antialias: true
+            antialias: false
         });
 
         container.destroy({ children: true });
@@ -239,7 +239,7 @@ export class TileRenderer {
         bg.fill({ color: color, alpha: fillAlpha });
 
         if (showBorder) {
-            bg.stroke({ width: 2 * scale, color: color, alpha: 0.8 });
+            bg.stroke({ width: 2 * scale, color: color, alpha: 0.8, join: 'miter', cap: 'square' });
         }
 
         container.addChild(bg);
