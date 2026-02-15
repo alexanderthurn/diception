@@ -324,7 +324,7 @@ export class GridRenderer {
         // Handle blocked tiles
         if (tileRaw.blocked) {
             tileGfx.rect(0, 0, this.tileSize, this.tileSize);
-            tileGfx.fill({ color: 0x080818, alpha: 0.5 });
+            tileGfx.fill({ color: 0x080818, alpha: 0.0 });
             tileContainer.addChild(tileGfx);
             return tileContainer;
         }
