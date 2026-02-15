@@ -321,6 +321,10 @@ export class GridRenderer {
 
             // Border logic - REMOVED per user request
             // We rely on fill color difference and region borders
+            // UPDATE: User requested subtle 1px inner border
+            // Use manual inset to guarantee no overlap (0.5 offset for 1px center stroke = 0..1 to size-1..size)
+            tileGfx.rect(0.5, 0.5, this.tileSize - 1, this.tileSize - 1);
+            tileGfx.stroke({ width: 1, color: color, alpha: 0.8, alignment: 0.5, join: 'miter', cap: 'square' });
 
             // Draw OUTER borders for largest region tiles
             if (isInLargestRegion && isCurrentPlayer && !currentPlayer.isBot) {

@@ -79,7 +79,11 @@ export class TileRenderer {
         g.rect(0, 0, size, size);
         g.fill({ color: 0xffffff, alpha: 1 });
 
-
+        if (withBorder) {
+            // Manual inset for perfect 1px inner border
+            g.rect(0.5 * scale, 0.5 * scale, size - 1 * scale, size - 1 * scale);
+            g.stroke({ width: 1 * scale, color: 0xffffff, alpha: 1, alignment: 0.5, join: 'miter', cap: 'square' });
+        }
 
         const texture = app.renderer.generateTexture({
             target: g,
@@ -236,8 +240,11 @@ export class TileRenderer {
         bg.rect(0, 0, size, size);
         bg.fill({ color: color, alpha: fillAlpha });
 
-
-
+        if (showBorder) {
+            // Manual inset for perfect 1px inner border
+            bg.rect(0.5 * scale, 0.5 * scale, size - 1 * scale, size - 1 * scale);
+            bg.stroke({ width: 1 * scale, color: color, alpha: 0.8, alignment: 0.5, join: 'miter', cap: 'square' });
+        }
         container.addChild(bg);
 
         // Add dice
