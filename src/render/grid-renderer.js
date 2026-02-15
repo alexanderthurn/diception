@@ -611,8 +611,8 @@ export class GridRenderer {
         // 1. Primary (Largest) Region - Standard size/speed
         drawComets(this.currentPlayerRegionEdges, 1.0, 1.0, 1.0);
 
-        // 2. Secondary Regions - Smaller, slower
-        drawComets(this.currentPlayerSecondaryRegionEdges, 1.8, 0.6, 0.7);
+        // 2. Secondary Regions - Smaller, slower (50% of previous speed = 2x duration)
+        drawComets(this.currentPlayerSecondaryRegionEdges, 3.6, 0.6, 1);
     }
 
     drawOverlay() {
