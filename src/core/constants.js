@@ -5,6 +5,7 @@
 
 // === GAME DEFAULTS ===
 export const GAME = {
+    MAX_TURNS: 999,
     DEFAULT_MAX_DICE: 9,
     DEFAULT_DICE_SIDES: 6,
     MAX_DICE_SIDES: 16,          // Maximum dice sides for probability tables (1-16)

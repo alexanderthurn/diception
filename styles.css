@@ -1000,6 +1000,10 @@ select {
     color: #ff0055;
 }
 
+.timeline-entry.survivor {
+    color: #ffcc00;
+}
+
 .timeline-entry.winner {
     color: #55ff00;
     font-weight: bold;

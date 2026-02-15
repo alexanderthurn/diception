@@ -12,7 +12,7 @@ A fast-paced, neon-styled dice strategy game. Inspired by the tactical depth of 
 
 ## Overview
 
-Take control of the map by rolling dice to attack neighboring territories. The player who conquers all territories wins!
+Take control of the map by rolling dice to attack neighboring territories. The player who conquers all territories wins! If no one conquers all territories within 999 turns, the player with the most total dice wins.
 
 **Features:**
 -   **Neon Aesthetic**: Sleek visuals with dynamic effects.

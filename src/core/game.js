@@ -14,11 +14,15 @@ export class Game {
         this.turn = 1;
         this.gameOver = false;
         this.winner = null;
+        this.turnLimitReached = false; // Set when game ends due to turn limit
         this.maxDice = 9;
         this.diceSides = 6; // Default to standard 6-sided dice
 
         // Event listeners
         this.listeners = {};
+
+        // When muted, emit() is a no-op (used for headless fast-forward)
+        this.muted = false;
     }
 
     on(event, callback) {
@@ -27,6 +31,7 @@ export class Game {
     }
 
     emit(event, data) {
+        if (this.muted) return;
         if (this.listeners[event]) {
             this.listeners[event].forEach(cb => cb(data));
         }
@@ -38,6 +43,7 @@ export class Game {
         this.turn = 1;
         this.gameOver = false;
         this.winner = null;
+        this.turnLimitReached = false;
         // Reset map to empty
         this.map.generateMap(0, 0, [], this.maxDice, 'empty');
         this.emit('gameReset');
@@ -48,6 +54,7 @@ export class Game {
         this.players = [];
         this.gameOver = false;
         this.winner = null;
+        this.turnLimitReached = false;
         this.turn = 1;
         this.maxDice = config.maxDice || 9;
         this.diceSides = config.diceSides || 6;
@@ -219,6 +226,13 @@ export class Game {
         } while (!this.players[this.currentPlayerIndex].alive);
 
         this.turn++;
+
+        // Check turn limit
+        if (this.turn > GAME.MAX_TURNS) {
+            this.determineTurnLimitWinner();
+            return;
+        }
+
         this.startTurn();
     }
 
@@ -256,6 +270,34 @@ export class Game {
     }
 
 
+
+    /**
+     * End the game due to turn limit. Winner is the player with the most total dice.
+     */
+    determineTurnLimitWinner() {
+        this.turnLimitReached = true;
+        this.gameOver = true;
+
+        // Calculate total dice for each alive player (territory dice + stored/reserve dice)
+        let bestPlayer = null;
+        let bestDice = -1;
+
+        for (const player of this.players) {
+            if (!player.alive) continue;
+
+            const ownedTiles = this.map.getTilesByOwner(player.id);
+            const territoryDice = ownedTiles.reduce((sum, t) => sum + t.dice, 0);
+            const totalDice = territoryDice + (player.storedDice || 0);
+
+            if (totalDice > bestDice) {
+                bestDice = totalDice;
+                bestPlayer = player;
+            }
+        }
+
+        this.winner = bestPlayer;
+        this.emit('gameOver', { winner: this.winner, turnLimitReached: true });
+    }
 
     getPlayerStats() {
         return this.players.map(p => {

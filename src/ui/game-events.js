@@ -1,5 +1,6 @@
 import { Dialog } from './dialog.js';
 import { createAI } from '../core/ai/index.js';
+import { GAME } from '../core/constants.js';
 import { shouldShowInputHints, getInputHint, ACTION_END_TURN } from './input-hints.js';
 import { markLevelSolved } from '../scenarios/campaign-progress.js';
 
@@ -147,15 +148,17 @@ export class GameEventManager {
         const humanPlayers = this.game.players.filter(p => !p.isBot);
         const allHumansOnAutoplay = humanPlayers.length > 0 && humanPlayers.every(p => autoplayPlayers.has(p.id));
 
+        // If all humans on autoplay, run headless fast-forward (skip all rendering)
+        if (allHumansOnAutoplay) {
+            this.runHeadlessFastForward(player, playerAIs, autoplayPlayers);
+            return;
+        }
+
         // Calculate delay based on game speed
-        // If all humans are on autoplay, use ultra-fast mode with no delays
         let delay = 500;
         let effectiveSpeed = gameSpeed;
 
-        if (allHumansOnAutoplay) {
-            delay = 0; // No delay between turns
-            effectiveSpeed = 'ultrafast'; // Special mode for AI to skip all delays
-        } else if (gameSpeed === 'expert') {
+        if (gameSpeed === 'expert') {
             delay = 10;
         } else if (gameSpeed === 'normal') {
             delay = player.isBot ? 300 : 500;
@@ -176,6 +179,94 @@ export class GameEventManager {
             }
             this.game.endTurn();
         }, delay);
+    }
+
+    /**
+     * Run game to completion headlessly (no rendering, effects, or sounds).
+     * Used when all human players have autoplay enabled.
+     */
+    async runHeadlessFastForward(startingPlayer, playerAIs, autoplayPlayers) {
+        // Show "fast-forwarding" indicator on the auto-win button
+        this.autoWinBtn.textContent = '⏩';
+        this.autoWinBtn.classList.add('active');
+
+        // Ensure all players have AIs
+        for (const p of this.game.players) {
+            if (!playerAIs.has(p.id)) {
+                playerAIs.set(p.id, createAI(p.isBot ? (p.aiId || 'easy') : 'autoplay', this.game, p.id));
+            }
+        }
+
+        // Mute game events to skip rendering/effects/sounds
+        this.game.muted = true;
+
+        try {
+            // Run the current player's turn first (they haven't attacked yet)
+            const startAI = playerAIs.get(startingPlayer.id);
+            if (startAI && startingPlayer.alive) {
+                try {
+                    await startAI.takeTurn('fast');
+                } catch (e) {
+                    console.warn('Fast-forward AI error (starting player):', e);
+                }
+            }
+            if (!this.game.gameOver) {
+                this.game.endTurn();
+            }
+
+            // Run remaining turns headlessly
+            let turns = 0;
+            const maxTurns = GAME.MAX_TURNS;
+
+            while (!this.game.gameOver && turns < maxTurns) {
+                const currentPlayer = this.game.currentPlayer;
+
+                // Skip dead players (shouldn't happen, but safety check)
+                if (!currentPlayer || !currentPlayer.alive) {
+                    this.game.endTurn();
+                    turns++;
+                    continue;
+                }
+
+                const ai = playerAIs.get(currentPlayer.id);
+                if (ai) {
+                    try {
+                        await ai.takeTurn('fast');
+                    } catch (e) {
+                        console.warn('Fast-forward AI error:', e);
+                    }
+                }
+                this.game.endTurn();
+                turns++;
+
+                // Yield to UI every 50 turns to prevent browser freeze
+                if (turns % 50 === 0) {
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+        } finally {
+            // Always unmute, even if an error occurred
+            this.game.muted = false;
+
+            // Restore auto-win button text
+            this.autoWinBtn.textContent = '🤖';
+        }
+
+        // Force renderer to show final board state
+        if (this.renderer) {
+            this.renderer.forceUpdate();
+        }
+
+        // Update dashboard with final state
+        if (this.playerDashboard) this.playerDashboard.update();
+
+        // Trigger game over if game ended (either by conquest or turn limit)
+        if (this.game.gameOver && this.game.winner) {
+            this.handleGameOver({ winner: this.game.winner, turnLimitReached: this.game.turnLimitReached });
+        } else {
+            // Game didn't finish (maxTurns hit) — resume normal event-driven flow
+            this.game.emit('turnStart', { player: this.game.currentPlayer });
+        }
     }
 
     handleHumanTurn(player, autoplayPlayers, gameSpeed) {
@@ -328,6 +419,9 @@ export class GameEventManager {
     }
 
     async handleGameOver(data) {
+        // Ensure headless fast-forward mode is deactivated
+        this.game.muted = false;
+
         // Clear auto-save IMMEDIATELY on game over
         this.turnHistory.clearAutoSave();
 
@@ -336,7 +430,14 @@ export class GameEventManager {
         this.autoWinBtn.classList.add('hidden');
 
         const name = this.getPlayerName(data.winner);
-        if (this.addLog) this.addLog(`🏆 ${name} wins the game!`, 'death');
+        const turnLimitReached = data.turnLimitReached || false;
+        if (this.addLog) {
+            if (turnLimitReached) {
+                this.addLog(`⏱️ Turn limit reached! ${name} wins by dice count!`, 'death');
+            } else {
+                this.addLog(`🏆 ${name} wins the game!`, 'death');
+            }
+        }
 
         // Determine if human played and won
         const humanPlayed = this.game.players.some(p => !p.isBot);
@@ -385,7 +486,7 @@ export class GameEventManager {
             });
 
             let statsHtml = `
-                <p class="dice-obituary">A total of <strong>${totalDiceLost}</strong> dice lost their lives in this battle in <strong>${gameStats.gameDuration}</strong> rounds.</p>
+                <p class="dice-obituary">A total of <strong>${totalDiceLost}</strong> dice lost their lives in this battle in <strong>${gameStats.gameDuration}</strong> rounds.${turnLimitReached ? ' <em>Turn limit reached!</em>' : ''}</p>
             `;
 
             // Elimination timeline (redesigned to horizontal sentence)
@@ -394,12 +495,39 @@ export class GameEventManager {
             statsHtml += '<div class="timeline-sentence">';
 
             // Show eliminated players with red symbol
+            // During headless fast-forward, playerEliminated events were muted,
+            // so we need to check game state directly for eliminated players
+            const trackedIds = new Set(gameStats.eliminationOrder.map(e => e.playerId));
+            const deadPlayers = this.game.players.filter(p => !p.alive);
+
+            // Show tracked eliminations first (in order)
             gameStats.eliminationOrder.forEach(e => {
                 statsHtml += `<span class="timeline-entry eliminated"><span class="symbol">✗</span> ${e.name}</span> `;
             });
 
-            // Show winner with green check
-            statsHtml += `<span class="timeline-entry winner"><span class="symbol">✓</span> ${name}</span>`;
+            // Show any untracked eliminations (from headless mode)
+            deadPlayers.forEach(p => {
+                if (!trackedIds.has(p.id)) {
+                    const pName = this.getPlayerName(p);
+                    statsHtml += `<span class="timeline-entry eliminated"><span class="symbol">✗</span> ${pName}</span> `;
+                }
+            });
+
+            if (turnLimitReached) {
+                // Show all surviving players — winner gets ✓ (green), others get ≈ (yellow)
+                const survivors = this.game.players.filter(p => p.alive);
+                survivors.forEach(p => {
+                    const pName = this.getPlayerName(p);
+                    if (p.id === data.winner.id) {
+                        statsHtml += `<span class="timeline-entry winner"><span class="symbol">✓</span> ${pName}</span> `;
+                    } else {
+                        statsHtml += `<span class="timeline-entry survivor"><span class="symbol">≈</span> ${pName}</span> `;
+                    }
+                });
+            } else {
+                // Show winner with green check
+                statsHtml += `<span class="timeline-entry winner"><span class="symbol">✓</span> ${name}</span>`;
+            }
 
             statsHtml += '</div>';
             statsHtml += '</div>';
