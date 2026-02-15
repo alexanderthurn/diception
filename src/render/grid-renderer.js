@@ -322,9 +322,9 @@ export class GridRenderer {
             // Border logic - REMOVED per user request
             // We rely on fill color difference and region borders
             // UPDATE: User requested subtle 1px inner border
-            // Use manual inset to guarantee no overlap (0.5 offset for 1px center stroke = 0..1 to size-1..size)
-            tileGfx.rect(0.5, 0.5, this.tileSize - 1, this.tileSize - 1);
-            tileGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.4, alignment: 0.5, join: 'miter', cap: 'square' });
+            // Smart borders: Only draw borders separating different colors
+            // This prevents "gray borders between tiles of the same color"
+            this.drawSmartBorders(tileGfx, x, y, tileRaw, map);
 
             // Draw OUTER borders for largest region tiles
             if (isInLargestRegion && isCurrentPlayer && !currentPlayer.isBot) {
@@ -341,6 +341,37 @@ export class GridRenderer {
         }
 
         return tileContainer;
+    }
+
+    /**
+     * Draw smart borders only on edges that face a different owner
+     */
+    drawSmartBorders(tileGfx, x, y, tileRaw, map) {
+        const edgeDefs = [
+            { dx: 0, dy: -1, x1: 0.5, y1: 0.5, x2: this.tileSize - 0.5, y2: 0.5 }, // Top (inset 0.5)
+            { dx: 0, dy: 1, x1: 0.5, y1: this.tileSize - 0.5, x2: this.tileSize - 0.5, y2: this.tileSize - 0.5 }, // Bottom (inset 0.5)
+            { dx: -1, dy: 0, x1: 0.5, y1: 0.5, x2: 0.5, y2: this.tileSize - 0.5 }, // Left (inset 0.5)
+            { dx: 1, dy: 0, x1: this.tileSize - 0.5, y1: 0.5, x2: this.tileSize - 0.5, y2: this.tileSize - 0.5 } // Right (inset 0.5)
+        ];
+
+        for (const edge of edgeDefs) {
+            const nx = x + edge.dx;
+            const ny = y + edge.dy;
+            const neighbor = map.getTileRaw(nx, ny);
+
+            // Draw border if:
+            // 1. No neighbor (edge of map)
+            // 2. Neighbor is blocked
+            // 3. Neighbor blocked status doesn't behave like a tile? (Assuming blocked is just a type)
+            // 4. Neighbor has DIFFERENT owner
+            const shouldDraw = !neighbor || neighbor.blocked || neighbor.owner !== tileRaw.owner;
+
+            if (shouldDraw) {
+                tileGfx.moveTo(edge.x1, edge.y1);
+                tileGfx.lineTo(edge.x2, edge.y2);
+                tileGfx.stroke({ width: 1, color: 0xffffff, alpha: 1.0, join: 'miter', cap: 'square' });
+            }
+        }
     }
 
     /**
@@ -885,6 +916,7 @@ export class GridRenderer {
         // Skip animations in expert mode
         if (this.gameSpeed === 'expert') {
             if (onComplete) onComplete();
+            this.invalidate(); // Full redraw to update borders
             return;
         }
 
@@ -929,6 +961,7 @@ export class GridRenderer {
             onComplete: () => {
                 defenderFlash.destroy();
                 if (onComplete) onComplete();
+                this.invalidate(); // Full redraw to update borders
             }
         });
 
