@@ -82,7 +82,7 @@ export class TileRenderer {
         if (withBorder) {
             // Manual inset for perfect 1px inner border
             g.rect(0.5 * scale, 0.5 * scale, size - 1 * scale, size - 1 * scale);
-            g.stroke({ width: 1 * scale, color: 0xffffff, alpha: 1, alignment: 0.5, join: 'miter', cap: 'square' });
+            g.stroke({ width: 1 * scale, color: 0xffffff, alpha: 0.4, alignment: 0.5, join: 'miter', cap: 'square' });
         }
 
         const texture = app.renderer.generateTexture({
@@ -243,7 +243,7 @@ export class TileRenderer {
         if (showBorder) {
             // Manual inset for perfect 1px inner border
             bg.rect(0.5 * scale, 0.5 * scale, size - 1 * scale, size - 1 * scale);
-            bg.stroke({ width: 1 * scale, color: color, alpha: 0.8, alignment: 0.5, join: 'miter', cap: 'square' });
+            bg.stroke({ width: 1 * scale, color: 0xffffff, alpha: 0.4, alignment: 0.5, join: 'miter', cap: 'square' });
         }
         container.addChild(bg);
 

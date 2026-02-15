@@ -324,7 +324,7 @@ export class GridRenderer {
             // UPDATE: User requested subtle 1px inner border
             // Use manual inset to guarantee no overlap (0.5 offset for 1px center stroke = 0..1 to size-1..size)
             tileGfx.rect(0.5, 0.5, this.tileSize - 1, this.tileSize - 1);
-            tileGfx.stroke({ width: 1, color: color, alpha: 0.8, alignment: 0.5, join: 'miter', cap: 'square' });
+            tileGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.4, alignment: 0.5, join: 'miter', cap: 'square' });
 
             // Draw OUTER borders for largest region tiles
             if (isInLargestRegion && isCurrentPlayer && !currentPlayer.isBot) {
@@ -735,8 +735,10 @@ export class GridRenderer {
                 const tileRaw = this.game.map.getTileRaw(this.hoverTile.x, this.hoverTile.y);
                 if (tileRaw) {
                     this.hoverGfx.clear();
-                    this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
-                    this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, join: 'miter', cap: 'square' });
+                    // Refined hover: 1px solid white inset border (matches tile style) + white highlight
+                    this.hoverGfx.rect(0.5, 0.5, this.tileSize - 1, this.tileSize - 1);
+                    this.hoverGfx.fill({ color: 0xffffff, alpha: 0.3 });
+                    this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 1.0, alignment: 0.5, join: 'miter', cap: 'square' });
                     this.hoverGfx.x = this.hoverTile.x * (this.tileSize + this.gap);
                     this.hoverGfx.y = this.hoverTile.y * (this.tileSize + this.gap);
                     this.hoverGfx.visible = true;
