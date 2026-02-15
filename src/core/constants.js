@@ -78,7 +78,7 @@ export const MAP_GENERATION = {
 // === RENDERING ===
 export const RENDER = {
     DEFAULT_TILE_SIZE: 60,
-    DEFAULT_GAP: 4,
+    DEFAULT_GAP: 0,
 
     // Shimmer animation
     SHIMMER_CYCLE_DURATION: 2.5, // seconds (slower, more elegant)

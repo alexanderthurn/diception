@@ -79,9 +79,7 @@ export class TileRenderer {
         g.rect(0, 0, size, size);
         g.fill({ color: 0xffffff, alpha: 1 });
 
-        if (withBorder) {
-            g.stroke({ width: 2 * scale, color: 0xffffff, alpha: 1, join: 'miter', cap: 'square' });
-        }
+
 
         const texture = app.renderer.generateTexture({
             target: g,
@@ -238,9 +236,7 @@ export class TileRenderer {
         bg.rect(0, 0, size, size);
         bg.fill({ color: color, alpha: fillAlpha });
 
-        if (showBorder) {
-            bg.stroke({ width: 2 * scale, color: color, alpha: 0.8, join: 'miter', cap: 'square' });
-        }
+
 
         container.addChild(bg);
 

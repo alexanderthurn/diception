@@ -319,20 +319,11 @@ export class GridRenderer {
             // Normal game mode
             tileGfx.fill({ color: color, alpha: fillAlpha });
 
-            // Border logic
-            if (isCurrentPlayer) {
-                const borderColor = currentPlayer.isBot ? color : 0xffffff;
-                if (tileRaw.dice > 1) {
-                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.9, join: 'miter', cap: 'square' });
-                } else {
-                    tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.7, join: 'miter', cap: 'square' });
-                }
-            } else {
-                tileGfx.stroke({ width: 1, color: color, alpha: 0.7, join: 'miter', cap: 'square' });
-            }
+            // Border logic - REMOVED per user request
+            // We rely on fill color difference and region borders
 
             // Draw OUTER borders for largest region tiles
-            if (isInLargestRegion) {
+            if (isInLargestRegion && isCurrentPlayer && !currentPlayer.isBot) {
                 this.drawRegionBorders(tileGfx, x, y, tileRaw, currentPlayer, isCurrentPlayer, color, map);
             }
         }
