@@ -444,7 +444,7 @@ export class InputController {
             if (attacker) {
                 const result = this.game.attack(attacker.x, attacker.y, x, y);
                 if (result && !result.error && result.won) {
-                    this.select(x, y);
+                    this.deselect();
                 } else if (result && !result.error) {
                     // Attack happened but lost or stopped
                     this.deselect();
