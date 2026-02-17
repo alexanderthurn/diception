@@ -1,3 +1,4 @@
+import { Assets } from 'pixi.js';
 import { Game } from './core/game.js';
 import { Renderer } from './render/renderer.js';
 import { InputController } from './input/input-controller.js';
@@ -36,6 +37,14 @@ initializeProbabilityTables();
 
 
 async function init() {
+    // Load spritesheet
+    try {
+        await Assets.load('gfx/diception.json');
+        console.log('Spritesheet loaded');
+    } catch (e) {
+        console.error('Failed to load spritesheet:', e);
+    }
+
     // Show package version
     const version = import.meta.env.VITE_APP_VERSION || '1.0.0';
     const setVersionText = (id) => {
