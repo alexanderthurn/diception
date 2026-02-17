@@ -299,7 +299,11 @@ export class AudioController {
                     this.isFirstRunEver = false;
                     this._playCurrent();
                 } else {
-                    this.loadNextSong();
+                    if (sound.exists('music') && this._musicInstance) {
+                        sound.resume('music');
+                    } else {
+                        this._playCurrent();
+                    }
                 }
                 this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-on"></span>';
                 this.musicToggle.classList.add('active');
@@ -328,12 +332,11 @@ export class AudioController {
                 this.isFirstRunEver = false;
                 this._playCurrent();
             } else {
-                // Resume if paused, otherwise load next
-                if (sound.exists('music') && this._musicSound?.isPlaying === false) {
-                    // Try resuming
+                // Resume if paused, otherwise play
+                if (sound.exists('music') && this._musicInstance) {
                     sound.resume('music');
                 } else {
-                    this.loadNextSong();
+                    this._playCurrent();
                 }
             }
             this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-on"></span>';
