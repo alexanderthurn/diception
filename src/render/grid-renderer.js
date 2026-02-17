@@ -975,7 +975,7 @@ export class GridRenderer {
             const badgeY = (hoverPy + attackPy + this.tileSize) / 2;
 
             // Experts see the badge (to identify attacker) but with NO text
-            this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, '', 0x444444, 'direct');
+            this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, '', 0xffffff, 'direct');
         } else if (canAttackFrom) {
             // Selectable & Actionable: Large white static border
             this.hoverGfx.fill({ color: 0xffffff, alpha: 0.15 });
@@ -1059,13 +1059,18 @@ export class GridRenderer {
         container.y = y;
         container.visible = true;
 
-        // Update Background
-        const badgeWidth = 28;
-        const badgeHeight = 16;
+        // Update Background (Smaller if empty/shortcut)
+        const isSmall = text === '';
+        const badgeWidth = isSmall ? 10 : 28;
+        const badgeHeight = isSmall ? 10 : 16;
+
         container.badgeBg.clear();
-        container.badgeBg.roundRect(-badgeWidth / 2, -badgeHeight / 2, badgeWidth, badgeHeight, 3);
-        container.badgeBg.fill({ color: color, alpha: 0.9 });
-        container.badgeBg.stroke({ width: 1, color: 0x000000, alpha: 0.3 });
+        container.badgeBg.rect(-badgeWidth / 2, -badgeHeight / 2, badgeWidth, badgeHeight);
+        container.badgeBg.fill({ color: color, alpha: 0.95 });
+
+        if (!isSmall) {
+            container.badgeBg.stroke({ width: 1, color: 0x000000, alpha: 0.4 });
+        }
 
         // Update Text
         container.probText.text = text;
