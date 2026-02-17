@@ -249,7 +249,7 @@ export class GameEventManager {
             this.game.muted = false;
 
             // Restore auto-win button text
-            this.autoWinBtn.textContent = '🤖';
+            this.autoWinBtn.innerHTML = '<span class="sprite-icon icon-autoplay"></span>';
         }
 
         // Force renderer to show final board state

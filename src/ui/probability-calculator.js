@@ -55,7 +55,7 @@ export class ProbabilityCalculator {
         // Add corner cell
         const cornerTh = document.createElement('th');
         cornerTh.className = 'sticky-col';
-        cornerTh.textContent = '⚔️ \\ 🛡️';
+        cornerTh.innerHTML = '<span class="sprite-icon icon-attack"></span> \\ <span class="sprite-icon icon-defend"></span>';
         this.tableHead.appendChild(cornerTh);
 
         // Add column headers for each defender dice count

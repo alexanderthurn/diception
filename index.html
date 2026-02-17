@@ -33,6 +33,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="manifest" href="site.webmanifest">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="gfx/sprites.css">
 </head>
 
 <body>
@@ -50,7 +51,7 @@
 
         <div id="loading-icons" class="loading-icons hidden" title="Mouse + Keyboard, Gamepad, or Touch">
             <span class="loading-input-group" title="Mouse + Keyboard">🖱️+⌨️</span>
-            <span title="Gamepad">🎮</span>
+            <span title="Gamepad" class="sprite-icon icon-gamepad"></span>
         </div>
         <div id="loading-version" class="loading-version"></div>
         <div class="loading-dice">
@@ -95,27 +96,34 @@
             <span id="end-turn-text">End Turn</span>
             <span id="end-turn-hint" class="input-hint hidden"></span>
         </button>
-        <button id="auto-win-btn" class="tron-btn game-ui hidden" title="Toggle Autoplay">🤖</button>
+        <button id="auto-win-btn" class="tron-btn game-ui hidden" title="Toggle Autoplay"><span
+                class="sprite-icon icon-autoplay"></span></button>
 
         <div id="music-controls" class="panel">
             <button id="retry-game-btn" class="tron-btn small game-ui hidden" title="Retry Game"><span
-                    class="btn-text">Restart Game</span><span class="btn-icon">🔄</span></button>
+                    class="btn-text">Restart Game</span><span class="btn-icon"><span
+                        class="sprite-icon icon-retry"></span></span></button>
             <span class="separator retry-separator hidden"></span>
             <button id="new-game-btn" class="tron-btn small game-ui hidden" title="Main Menu"><span
-                    class="btn-text">Main Menu</span><span class="btn-icon">⚙️</span></button>
+                    class="btn-text">Main Menu</span><span class="btn-icon"><span
+                        class="sprite-icon icon-settings"></span></span></button>
             <span class="separator"></span>
             <div class="audio-group">
-                <button id="music-toggle" class="tron-btn small" title="Music">🔇</button>
+                <button id="music-toggle" class="tron-btn small" title="Music"><span
+                        class="sprite-icon icon-music-on"></span></button>
                 <input type="range" id="music-volume" min="0" max="100" value="50" title="Music Volume">
             </div>
             <span class="separator"></span>
             <div class="audio-group">
-                <button id="sfx-toggle" class="tron-btn small active" title="Sound Effects">🔔</button>
+                <button id="sfx-toggle" class="tron-btn small active" title="Sound Effects"><span
+                        class="sprite-icon icon-sfx-on"></span></button>
                 <input type="range" id="sfx-volume" min="0" max="100" value="50" title="SFX Volume">
             </div>
             <span class="separator zoom-control"></span>
-            <button id="zoom-out-btn" class="tron-btn small zoom-control" title="Zoom Out">➖</button>
-            <button id="zoom-in-btn" class="tron-btn small zoom-control" title="Zoom In">➕</button>
+            <button id="zoom-out-btn" class="tron-btn small zoom-control" title="Zoom Out"><span
+                    class="sprite-icon icon-zoom-out"></span></button>
+            <button id="zoom-in-btn" class="tron-btn small zoom-control" title="Zoom In"><span
+                    class="sprite-icon icon-zoom-in"></span></button>
         </div>
 
 
@@ -130,8 +138,10 @@
                         style="display: none;"></button>
                     <input type="range" id="map-size" min="1" max="10" value="2">
                     <span id="map-size-val">4x4</span>
-                    <button id="scenarios-btn" class="tron-btn small" title="Campaigns">📋</button>
-                    <button id="deselect-scenario-btn" class="tron-btn small hidden" title="Deselect Map">✕</button>
+                    <button id="scenarios-btn" class="tron-btn small" title="Campaigns"><span
+                            class="sprite-icon icon-campaigns"></span></button>
+                    <button id="deselect-scenario-btn" class="tron-btn small hidden" title="Deselect Map"><span
+                            class="sprite-icon icon-close"></span></button>
                 </div>
             </div>
 
@@ -250,7 +260,7 @@
 
             <div class="control-row" style="margin-top: 20px; gap: 10px;">
                 <button id="howto-btn" class="tron-btn small" style="flex: 0 0 auto; width: auto; padding: 0 15px;"
-                    title="How to Play">?</button>
+                    title="How to Play"><span class="sprite-icon icon-help"></span></button>
                 <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; align-items: flex-end;">
                     <button id="start-game-btn" class="tron-btn large" style="width: 100%;">START</button>
                     <button id="quit-game-btn" class="tron-btn small hidden" style="width: 100%; padding: 10px;"
@@ -449,7 +459,8 @@
                         <table id="probability-table" class="probability-table">
                             <thead>
                                 <tr>
-                                    <th class="sticky-col">⚔️ \ 🛡️</th>
+                                    <th class="sticky-col"><span class="sprite-icon icon-attack"></span> \ <span
+                                            class="sprite-icon icon-defend"></span></th>
                                     <th>1</th>
                                     <th>2</th>
                                     <th>3</th>
@@ -589,7 +600,8 @@
 
             <!-- Random dialog (top-left, like player-dashboard) -->
             <div id="editor-random-dialog" class="editor-random-dialog hidden">
-                <button id="editor-random-close-btn" class="editor-random-close" type="button" title="Close">✕</button>
+                <button id="editor-random-close-btn" class="editor-random-close" type="button" title="Close"><span
+                        class="sprite-icon icon-close"></span></button>
                 <div class="editor-random-dialog-body">
                     <h4 class="editor-random-title">Random Generate</h4>
                     <div class="control-group">
@@ -621,7 +633,8 @@
                             <option value="2of2">2 of 2</option>
                         </select>
                     </div>
-                    <button id="editor-randomize-btn" class="tron-btn primary editor-random-generate">🎲
+                    <button id="editor-randomize-btn" class="tron-btn primary editor-random-generate"><span
+                            class="sprite-icon icon-dice"></span>
                         Generate</button>
                 </div>
             </div>
@@ -630,12 +643,13 @@
             <div class="editor-bottom-bar">
                 <!-- Mode tabs -->
                 <div class="editor-mode-tabs">
-                    <button class="editor-tab active" data-mode="paint">🖌️ Paint</button>
+                    <button class="editor-tab active" data-mode="paint"><span class="sprite-icon icon-paint"></span>
+                        Paint</button>
                     <button class="editor-tab" data-mode="dice"><span class="dice-icon-sprite mini"
                             style="background-color: #888;"></span> Dice <span id="editor-dice-hint"
                             class="input-hint keyboard">F</span></button>
-                    <button class="editor-tab" data-mode="assign">👤 Assign <span id="editor-assign-hint"
-                            class="input-hint keyboard">R</span></button>
+                    <button class="editor-tab" data-mode="assign"><span class="sprite-icon icon-assign"></span> Assign
+                        <span id="editor-assign-hint" class="input-hint keyboard">R</span></button>
                 </div>
             </div>
 
@@ -643,9 +657,11 @@
             <div class="editor-settings">
                 <div class="control-group editor-type-toggle">
                     <div class="toggle-buttons toggle-buttons-stacked">
-                        <button id="editor-type-map" class="toggle-btn active"><span class="toggle-icon">🗺️</span><span
+                        <button id="editor-type-map" class="toggle-btn active"><span class="toggle-icon"><span
+                                    class="sprite-icon icon-map"></span></span><span
                                 class="toggle-text">Map</span></button>
-                        <button id="editor-type-scenario" class="toggle-btn"><span class="toggle-icon">⭐</span><span
+                        <button id="editor-type-scenario" class="toggle-btn"><span class="toggle-icon"><span
+                                    class="sprite-icon icon-scenario"></span></span><span
                                 class="toggle-text">Scenario</span></button>
                     </div>
                 </div>
@@ -732,13 +748,15 @@
                 </div>
 
                 <div class="editor-actions">
-                    <button id="editor-save-btn" class="tron-btn primary">💾 Save</button>
+                    <button id="editor-save-btn" class="tron-btn primary"><span class="sprite-icon icon-save"></span>
+                        Save</button>
                 </div>
 
                 <div class="editor-quick-actions" id="editor-quick-actions">
                     <button id="editor-clear-btn" class="tron-btn small">Clear</button>
                     <button id="editor-fill-btn" class="tron-btn small">Fill</button>
-                    <button id="editor-random-btn" class="tron-btn small">🎲 Random</button>
+                    <button id="editor-random-btn" class="tron-btn small"><span class="sprite-icon icon-dice"></span>
+                        Random</button>
                 </div>
                 <div id="editor-help-text" class="editor-help-text hidden">
                     WASD/Arrows: pan · R: Assign · F: Dice · Y: Paint

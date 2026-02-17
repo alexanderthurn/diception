@@ -66,7 +66,7 @@ export class GameLog {
             <span class="turn-player" style="color: ${colorHex}">${playerName}</span>
             <span class="turn-summary"></span>
             <span class="turn-actions">
-                <button class="turn-action-btn" data-action="save" title="Save as scenario">💾</button>
+                <button class="turn-action-btn" data-action="save" title="Save as scenario"><span class="sprite-icon icon-save"></span></button>
             </span>
             <span class="turn-toggle">▼</span>
         `;

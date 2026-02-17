@@ -2446,7 +2446,6 @@ select {
 }
 
 .map-size-row span {
-    min-width: 45px;
     text-align: center;
     color: var(--accent-color);
     font-weight: bold;
@@ -4607,4 +4606,46 @@ canvas {
     font-weight: bold;
     background: #FFD700;
     border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+/* UI Sprite Size Overrides */
+#howto-btn .sprite-icon.icon-help {
+    width: auto;
+    height: 1em;
+    transform: translateY(-0.1em);
+}
+
+/* Fix: map/close buttons square and matching slider height */
+#scenarios-btn,
+#deselect-scenario-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0 !important;
+    display: inline-flex;
+    /* No !important so .hidden works */
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: middle;
+    box-sizing: border-box;
+}
+
+#scenarios-btn .sprite-icon,
+#deselect-scenario-btn .sprite-icon {
+    width: 18px !important;
+    /* 50% of button size */
+    height: 18px !important;
+    transform: none;
+    margin: 0;
+}
+
+/* Ensure loaded-scenario-name matches/aligns */
+#loaded-scenario-name {
+    height: 36px;
+    line-height: normal;
+    /* dependent on flex centering */
+    padding: 0 15px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
 }

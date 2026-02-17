@@ -88,9 +88,9 @@ export class AudioController {
         // Initialize UI state
         this.musicVolume.value = savedMusicVolume * 100;
         this.sfxVolume.value = savedSfxVolume * 100;
-        this.sfxToggle.textContent = savedSfxEnabled ? '🔔' : '🔕';
+        this.sfxToggle.innerHTML = `<span class="sprite-icon icon-sfx-${savedSfxEnabled ? 'on' : 'off'}"></span>`;
         this.sfxToggle.classList.toggle('active', savedSfxEnabled);
-        this.musicToggle.textContent = savedMusicEnabled ? '🔊' : '🔇';
+        this.musicToggle.innerHTML = `<span class="sprite-icon icon-music-${savedMusicEnabled ? 'on' : 'off'}"></span>`;
         this.musicToggle.classList.toggle('active', savedMusicEnabled);
 
         // Bind events
@@ -178,7 +178,7 @@ export class AudioController {
             this.sfx.init();
             if (this.shouldAutoplayMusic && !this.musicPlaying) {
                 this._playCurrent();
-                this.musicToggle.textContent = '🔊';
+                this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-on"></span>';
                 this.musicToggle.classList.add('active');
                 this.musicPlaying = true;
             }
@@ -251,7 +251,7 @@ export class AudioController {
         this.musicPlaying = true;
         localStorage.setItem('dicy_musicEnabled', 'true');
         if (this.musicToggle) {
-            this.musicToggle.textContent = '🔊';
+            this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-on"></span>';
             this.musicToggle.classList.add('active');
         }
 
@@ -301,7 +301,7 @@ export class AudioController {
                 } else {
                     this.loadNextSong();
                 }
-                this.musicToggle.textContent = '🔊';
+                this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-on"></span>';
                 this.musicToggle.classList.add('active');
                 localStorage.setItem('dicy_musicEnabled', 'true');
             }
@@ -320,7 +320,7 @@ export class AudioController {
             if (sound.exists('music')) {
                 sound.pause('music');
             }
-            this.musicToggle.textContent = '🔇';
+            this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-off"></span>';
             this.musicPlaying = false;
         } else {
             this.musicPlaying = true;
@@ -336,7 +336,7 @@ export class AudioController {
                     this.loadNextSong();
                 }
             }
-            this.musicToggle.textContent = '🔊';
+            this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-on"></span>';
         }
         localStorage.setItem('dicy_musicEnabled', this.musicPlaying.toString());
         this.musicToggle.classList.toggle('active', this.musicPlaying);
@@ -350,7 +350,7 @@ export class AudioController {
             this.showSliderWithTimeout(this.sfxVolume, 'sfxTimeout');
             if (!this.sfx.enabled) {
                 this.sfx.setEnabled(true);
-                this.sfxToggle.textContent = '🔔';
+                this.sfxToggle.innerHTML = '<span class="sprite-icon icon-sfx-on"></span>';
                 this.sfxToggle.classList.add('active');
                 localStorage.setItem('dicy_sfxEnabled', 'true');
             }
@@ -365,7 +365,7 @@ export class AudioController {
 
         const enabled = !this.sfx.enabled;
         this.sfx.setEnabled(enabled);
-        this.sfxToggle.textContent = enabled ? '🔔' : '🔕';
+        this.sfxToggle.innerHTML = `<span class="sprite-icon icon-sfx-${enabled ? 'on' : 'off'}"></span>`;
         this.sfxToggle.classList.toggle('active', enabled);
         localStorage.setItem('dicy_sfxEnabled', enabled.toString());
     }

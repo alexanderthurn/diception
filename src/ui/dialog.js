@@ -51,7 +51,7 @@ export class Dialog {
             if (closeButton) {
                 const closeBtn = document.createElement('button');
                 closeBtn.className = 'dialog-close-btn';
-                closeBtn.innerHTML = '×';
+                closeBtn.innerHTML = '<span class="sprite-icon icon-close"></span>';
                 closeBtn.setAttribute('aria-label', 'Close');
                 closeBtn.addEventListener('click', () => {
                     this.close(overlay);
