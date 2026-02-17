@@ -387,52 +387,64 @@ export class InputController {
         if (this.game.gameOver) return;
         if (this.game.currentPlayer.isBot) return;
 
-        // 1. If nothing selected, try to select
-        if (!this.selectedTile) {
-            if (!tile) return;
-            const owner = this.game.players.find(p => p.id === tile.owner);
-            const isEnemy = owner && owner.id !== this.game.currentPlayer.id;
+        const owner = tile ? this.game.players.find(p => p.id === tile.owner) : null;
+        const isEnemy = owner && owner.id !== this.game.currentPlayer.id;
 
-            // Direct attack shortcut: If clicking enemy tile with exactly ONE adjacent attacker
-            // ONLY available in expert mode for now
-            if (isEnemy && this.renderer.gameSpeed === 'expert') {
+        // 1. Direct attack shortcut (Expert Mode Only)
+        // This overrides normal selection behavior if we can attack the clicked enemy tile
+        if (isEnemy && this.renderer.gameSpeed === 'expert' && tile && !tile.blocked) {
+            let attacker = null;
+
+            // Priority: If current selection is one of the possible attackers, use it
+            if (this.selectedTile) {
+                const isAdjacent = Math.abs(this.selectedTile.x - x) + Math.abs(this.selectedTile.y - y) === 1;
+                const fromTile = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
+                if (isAdjacent && fromTile && fromTile.owner === this.game.currentPlayer.id && fromTile.dice > 1) {
+                    attacker = { x: this.selectedTile.x, y: this.selectedTile.y };
+                }
+            }
+
+            // If no valid attacker from selection, check for unique neighbor
+            if (!attacker) {
                 const attackers = [];
                 const neighbors = [
                     { x: x, y: y - 1 }, { x: x, y: y + 1 },
                     { x: x - 1, y: y }, { x: x + 1, y: y }
                 ];
-
                 for (const n of neighbors) {
                     const nTile = this.game.map.getTile(n.x, n.y);
                     if (nTile && nTile.owner === this.game.currentPlayer.id && nTile.dice > 1) {
                         attackers.push(n);
                     }
                 }
-
                 if (attackers.length === 1) {
-                    const attacker = attackers[0];
-                    const result = this.game.attack(attacker.x, attacker.y, x, y);
-                    if (result && !result.error && result.won) {
-                        this.select(x, y);
-                    }
-                    return;
+                    attacker = attackers[0];
                 }
             }
 
-            // Standard selection: Allow any human player to select any of their tiles
-            if (owner && !owner.isBot) {
+            if (attacker) {
+                const result = this.game.attack(attacker.x, attacker.y, x, y);
+                if (result && !result.error && result.won) {
+                    this.select(x, y);
+                } else if (result && !result.error) {
+                    // Attack happened but lost or stopped
+                    this.deselect();
+                }
+                return;
+            }
+        }
+
+        // 2. Standard Interaction Logic
+        if (!this.selectedTile) {
+            // Nothing selected: Standard selection
+            if (owner && !owner.isBot && owner.id === this.game.currentPlayer.id) {
                 this.select(x, y);
             }
             return;
         }
 
-        // 2. If something selected, handle action
-        if (!tile) {
-            this.deselect();
-            return;
-        }
-
-        if (this.selectedTile.x === x && this.selectedTile.y === y) {
+        // Something is selected: Handle target
+        if (!tile || (this.selectedTile.x === x && this.selectedTile.y === y)) {
             this.deselect();
             return;
         }
@@ -443,32 +455,27 @@ export class InputController {
             return;
         }
 
-        // A. Clicked another tile owned by a human (not necessarily the current one) -> Change selection
-        const targetOwner = this.game.players.find(p => p.id === tile.owner);
-        if (targetOwner && !targetOwner.isBot && tile.owner === fromTile.owner) {
+        // A. Clicked another tile owned by current player -> Change selection
+        if (tile.owner === this.game.currentPlayer.id) {
             this.select(x, y);
             return;
         }
 
-        // B. Try Attack (if it's the current player's turn and tile is a neighbor)
-        if (fromTile.owner === this.game.currentPlayer.id) {
-            const isAdjacent = Math.abs(this.selectedTile.x - x) + Math.abs(this.selectedTile.y - y) === 1;
-
-            if (isAdjacent && tile.owner !== fromTile.owner && fromTile.dice > 1) {
-                const result = this.game.attack(this.selectedTile.x, this.selectedTile.y, x, y);
-
-                if (result && !result.error) {
-                    if (result.won) {
-                        this.select(x, y);
-                    } else {
-                        this.deselect();
-                    }
+        // B. Standard Attack (in case expert shortcut didn't trigger or for Beginner/Normal)
+        const isAdjacent = Math.abs(this.selectedTile.x - x) + Math.abs(this.selectedTile.y - y) === 1;
+        if (isAdjacent && tile.owner !== fromTile.owner && fromTile.dice > 1 && fromTile.owner === this.game.currentPlayer.id) {
+            const result = this.game.attack(this.selectedTile.x, this.selectedTile.y, x, y);
+            if (result && !result.error) {
+                if (result.won) {
+                    this.select(x, y);
+                } else {
+                    this.deselect();
                 }
-                return;
             }
+            return;
         }
 
-        // C. Default: deselect if clicking elsewhere
+        // C. Default: deselect
         this.deselect();
     }
 
