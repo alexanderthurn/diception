@@ -399,9 +399,23 @@ export class GridRenderer {
                 const isMapEdgeOrBlocked = !neighbor || neighbor.blocked;
                 const width = isMapEdgeOrBlocked ? 2 : 1;
 
+                // Border style: Tile owner's color for visible borders
+                const owner = this.game.players.find(p => p.id === tileRaw.owner);
+                let color = owner ? owner.color : 0xffffff;
+                let alpha = 1.0;
+                if (!isMapEdgeOrBlocked) {
+                    const humanPlayer = this.game.players.find(p => !p.isBot);
+                    const humanId = humanPlayer ? humanPlayer.id : null;
+                    const isHumanActive = this.game.currentPlayer && this.game.currentPlayer.id === humanId;
+                    const isPlayerInvolved = isHumanActive && (tileRaw.owner === humanId || (neighbor && neighbor.owner === humanId));
+                    if (!isPlayerInvolved) {
+                        alpha = 0;
+                    }
+                }
+
                 tileGfx.moveTo(edge.x1, edge.y1);
                 tileGfx.lineTo(edge.x2, edge.y2);
-                tileGfx.stroke({ width: width, color: 0xffffff, alpha: 1.0, join: 'miter', cap: 'square' });
+                tileGfx.stroke({ width: width, color: color, alpha: alpha, join: 'miter', cap: 'square' });
             }
         }
     }
