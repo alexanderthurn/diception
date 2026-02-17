@@ -247,17 +247,23 @@ async function init() {
         }
 
 
-        // Web only: show promotional dialog on 2nd visit, then every 2nd visit
-        if (!window.steam) {
+        // Web only: show promotional dialog on 2nd visit, then every 5th visit
+        if (!window.steam && !localStorage.getItem('dicy_enjoying_dialog_disabled')) {
             const count = parseInt(localStorage.getItem('dicy_web_visit_count') || '0', 10) + 1;
             localStorage.setItem('dicy_web_visit_count', String(count));
             if (count % 5 === 0) {
-                await Dialog.show({
+                const choice = await Dialog.show({
                     title: 'ENJOYING?',
                     message: 'If you want to support this game, you can buy an extended version (including more campaigns):',
                     content: '<div class="dialog-store-links"><p><a href="https://store.steampowered.com/app/STEAM_APPID" target="_blank" rel="noopener" class="highlight-link">Steam</a> – Cloud Saves, Achievements</p><p><a href="https://play.google.com/store/apps/details?id=PLACEHOLDER_PACKAGE" target="_blank" rel="noopener" class="highlight-link">Google Play</a> – Android version</p></div>',
-                    buttons: [{ text: 'Later', value: true, className: 'tron-btn' }]
+                    buttons: [
+                        { text: 'Later', value: true, className: 'tron-btn' },
+                        { text: "Don't show again", value: 'dont_show', className: 'tron-btn' }
+                    ]
                 });
+                if (choice === 'dont_show') {
+                    localStorage.setItem('dicy_enjoying_dialog_disabled', '1');
+                }
             }
         }
     };
