@@ -808,14 +808,18 @@ export class GridRenderer {
             const selectedTileData = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
             const attackerDice = selectedTileData ? selectedTileData.dice : 0;
 
-            // Draw attackable neighbor indicators (Beginner: highlight + probability, Normal: probability only)
-            if (this.gameSpeed !== 'expert' && attackerDice > 1) {
+            // Draw attackable neighbor indicators - always visible while selected (all modes)
+            // Beginner: red highlight + percentage. Normal: percentage. Expert: white badge only.
+            if (attackerDice > 1) {
                 const neighbors = [
                     { x: this.selectedTile.x, y: this.selectedTile.y - 1, edge: 'top' },
                     { x: this.selectedTile.x, y: this.selectedTile.y + 1, edge: 'bottom' },
                     { x: this.selectedTile.x - 1, y: this.selectedTile.y, edge: 'left' },
                     { x: this.selectedTile.x + 1, y: this.selectedTile.y, edge: 'right' }
                 ];
+
+                const selectedPixelX = this.selectedTile.x * (this.tileSize + this.gap);
+                const selectedPixelY = this.selectedTile.y * (this.tileSize + this.gap);
 
                 for (const neighbor of neighbors) {
                     const neighborTile = this.game.map.getTile(neighbor.x, neighbor.y);
@@ -840,25 +844,12 @@ export class GridRenderer {
                         hGfx.visible = true;
                     }
 
-                    // Calculate win probability
-                    const defenderDice = neighborTile.dice;
-                    const probability = getWinProbability(attackerDice, defenderDice, this.diceSides);
-                    // Cap at 99% only if rounded to 100 but not actually 100%
-                    let probabilityPercent = Math.round(probability * 100);
-                    if (probabilityPercent === 100 && probability < 1.0) {
-                        probabilityPercent = 99;
-                    }
-                    const probColor = getProbabilityHexColor(probability);
-
-                    // Calculate badge position (at edge between attacker and defender)
+                    // Badge position at edge between attacker and defender
                     let badgeX, badgeY;
-                    const selectedPixelX = this.selectedTile.x * (this.tileSize + this.gap);
-                    const selectedPixelY = this.selectedTile.y * (this.tileSize + this.gap);
-
                     switch (neighbor.edge) {
                         case 'top':
                             badgeX = selectedPixelX + this.tileSize / 2;
-                            badgeY = selectedPixelY + 8 - this.gap / 2; // Move it a bit more down into the tile to avoid overlap
+                            badgeY = selectedPixelY + 8 - this.gap / 2;
                             break;
                         case 'bottom':
                             badgeX = selectedPixelX + this.tileSize / 2;
@@ -874,8 +865,17 @@ export class GridRenderer {
                             break;
                     }
 
-                    // Update probability badge
-                    this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, `${probabilityPercent}%`, probColor, neighbor.edge);
+                    // Expert: white badge. Normal/Beginner: percentage badge
+                    if (this.gameSpeed === 'expert') {
+                        this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, '', 0xffffff, neighbor.edge);
+                    } else {
+                        const defenderDice = neighborTile.dice;
+                        const probability = getWinProbability(attackerDice, defenderDice, this.diceSides);
+                        let probabilityPercent = Math.round(probability * 100);
+                        if (probabilityPercent === 100 && probability < 1.0) probabilityPercent = 99;
+                        const probColor = getProbabilityHexColor(probability);
+                        this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, `${probabilityPercent}%`, probColor, neighbor.edge);
+                    }
                 }
             }
 
@@ -989,7 +989,7 @@ export class GridRenderer {
             // Experts see the badge (to identify attacker) but with NO text
             this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, '', 0xffffff, 'direct');
         } else if (canAttackFrom) {
-            // Selectable & Actionable: Large white static border
+            // Selectable & Actionable: Large white static border (badges only when selected, not on hover)
             this.hoverGfx.fill({ color: 0xffffff, alpha: 0.15 });
             // Individual CW segments for stroke
             this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
