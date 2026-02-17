@@ -192,7 +192,7 @@
         const SUBTITLE_COLOR = '#00FFFF';
         const TITLE_TEXT = 'DICEPTION';
         const DICE_END = 4;
-        const SUBTITLE_TEXT = 'by Alexander Thurn';
+        const SUBTITLE_TEXT = '';
 
         // ── Render on font load ──
         document.fonts.ready.then(() => {
@@ -289,7 +289,7 @@
 
             const gap = titleFontSize * 0.05;
             const totalBlockHeight = titleFontSize + gap + subtitleFontSize;
-            const titleY = (h - totalBlockHeight) / 2 + titleFontSize * 0.85;
+            const titleY = (h - totalBlockHeight) / 2 + titleFontSize * 0.98;
             const subtitleY = titleY + gap + subtitleFontSize;
 
             // Title — per-char coloring

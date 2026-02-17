@@ -4649,3 +4649,33 @@ canvas {
     display: inline-flex;
     align-items: center;
 }
+
+/* Fix Zoom Buttons to be square (36px) and handle icon aspect ratios */
+#zoom-in-btn,
+#zoom-out-btn {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: normal;
+    vertical-align: middle;
+    box-sizing: border-box;
+    /* Ensure no flex stretching inherits */
+    flex: 0 0 auto;
+}
+
+/* Minus is wide, so constrain width */
+#zoom-out-btn .sprite-icon {
+    width: 60% !important;
+    height: auto !important;
+    margin: 0;
+}
+
+/* Plus is square, constrain height (or width, same effect) */
+#zoom-in-btn .sprite-icon {
+    height: 60% !important;
+    width: auto !important;
+    margin: 0;
+}

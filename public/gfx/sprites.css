@@ -2,8 +2,8 @@
 
 .sprite-icon {
     display: inline-block;
-    width: 1.2em; /* Base width */
-    /* height: auto;  Derived from aspect-ratio */
+    height: 1.2em; /* Base height */
+    width: auto;   /* Width derived from aspect-ratio */
     background-image: url('diception.png');
     background-repeat: no-repeat;
     vertical-align: middle; /* Align with text */
@@ -14,107 +14,112 @@
 
 /* Specific icons */
 .icon-assign {
-    background-size: 274.8603% 1105.6180%;
-    background-position: 0.3195% 63.5196%;
+    background-size: 565.9218% 588.2022%;
+    background-position: 46.7626% 30.7250%;
     aspect-ratio: 179 / 178;
 }
 .icon-attack {
-    background-size: 287.7193% 1150.8772%;
-    background-position: 0.3115% 83.2499%;
+    background-size: 592.3977% 612.2807%;
+    background-position: 21.8527% 93.7215%;
     aspect-ratio: 171 / 171;
 }
 .icon-autoplay {
-    background-size: 307.5000% 1164.4970%;
-    background-position: 52.4096% 88.7715%;
+    background-size: 633.1250% 619.5266%;
+    background-position: 42.9074% 51.2528%;
     aspect-ratio: 160 / 169;
 }
 .icon-campaigns {
-    background-size: 271.8232% 1087.2928%;
-    background-position: 83.2797% 11.4717%;
+    background-size: 559.6685% 578.4530%;
+    background-position: 0.1202% 53.4642%;
     aspect-ratio: 181 / 181;
 }
 .icon-close {
-    background-size: 361.7647% 1457.7778%;
-    background-position: 0.2809% 98.6361%;
+    background-size: 744.8529% 775.5556%;
+    background-position: 85.6328% 19.9561%;
     aspect-ratio: 136 / 135;
 }
 .icon-defend {
-    background-size: 403.2787% 1087.2928%;
-    background-position: 49.7297% 42.1936%;
+    background-size: 830.3279% 578.4530%;
+    background-position: 99.8878% 0.1155%;
     aspect-ratio: 122 / 181;
 }
 .icon-dice {
-    background-size: 277.9661% 1118.1818%;
-    background-position: 57.4603% 79.1853%;
+    background-size: 572.3164% 594.8864%;
+    background-position: 22.0096% 73.8232%;
     aspect-ratio: 177 / 176;
 }
 .icon-gamepad {
-    background-size: 271.8232% 1253.5032%;
-    background-position: 0.3215% 34.5113%;
+    background-size: 559.6685% 666.8790%;
+    background-position: 31.1298% 12.1348%;
     aspect-ratio: 181 / 157;
 }
 .icon-help {
-    background-size: 512.5000% 1479.6992%;
-    background-position: 34.8485% 98.5286%;
+    background-size: 1055.2083% 787.2180%;
+    background-position: 96.9466% 20.1313%;
     aspect-ratio: 96 / 133;
 }
+.icon-input-mk {
+    background-size: 382.2642% 997.1429%;
+    background-position: 34.6257% 0.1062%;
+    aspect-ratio: 265 / 105;
+}
 .icon-map {
-    background-size: 271.8232% 1087.2928%;
-    background-position: 0.3215% 14.4936%;
+    background-size: 559.6685% 578.4530%;
+    background-position: 0.1202% 74.5958%;
     aspect-ratio: 181 / 181;
 }
 .icon-music-off {
-    background-size: 276.4045% 1105.6180%;
-    background-position: 57.9618% 69.2179%;
+    background-size: 569.1011% 588.2022%;
+    background-position: 68.3832% 21.1738%;
     aspect-ratio: 178 / 178;
 }
 .icon-music-on {
-    background-size: 276.4045% 1111.8644%;
-    background-position: 0.3185% 73.5343%;
+    background-size: 569.1011% 591.5254%;
+    background-position: 68.3832% 41.8391%;
     aspect-ratio: 178 / 177;
 }
 .icon-paint {
-    background-size: 271.8232% 1087.2928%;
-    background-position: 59.1640% 21.7124%;
+    background-size: 559.6685% 578.4530%;
+    background-position: 0.1202% 95.7275%;
     aspect-ratio: 181 / 181;
 }
 .icon-retry {
-    background-size: 271.8232% 1087.2928%;
-    background-position: 0.3215% 24.7342%;
+    background-size: 559.6685% 578.4530%;
+    background-position: 24.8798% 30.8314%;
     aspect-ratio: 181 / 181;
 }
 .icon-save {
-    background-size: 271.8232% 1087.2928%;
-    background-position: 59.1640% 31.9530%;
+    background-size: 559.6685% 578.4530%;
+    background-position: 63.2212% 0.1155%;
     aspect-ratio: 181 / 181;
 }
 .icon-scenario {
-    background-size: 273.3333% 1150.8772%;
-    background-position: 0.3205% 53.6450%;
+    background-size: 562.7778% 612.2807%;
+    background-position: 90.1561% 56.9635%;
     aspect-ratio: 180 / 171;
 }
 .icon-settings {
-    background-size: 274.8603% 1099.4413%;
-    background-position: 58.4665% 59.1392%;
+    background-size: 565.9218% 584.9162%;
+    background-position: 85.0120% 0.1152%;
     aspect-ratio: 179 / 179;
 }
 .icon-sfx-off {
-    background-size: 273.3333% 1105.6180%;
-    background-position: 0.3205% 43.7989%;
+    background-size: 562.7778% 588.2022%;
+    background-position: 90.1561% 36.7089%;
     aspect-ratio: 180 / 178;
 }
 .icon-sfx-on {
-    background-size: 273.3333% 1105.6180%;
-    background-position: 58.6538% 49.0503%;
+    background-size: 562.7778% 588.2022%;
+    background-position: 22.0888% 53.2796%;
     aspect-ratio: 180 / 178;
 }
 .icon-zoom-in {
-    background-size: 359.1241% 1436.4964%;
-    background-position: 0.2817% 91.1524%;
-    aspect-ratio: 137 / 137;
+    background-size: 1066.3158% 1125.8065%;
+    background-position: 39.5425% 78.0922%;
+    aspect-ratio: 95 / 93;
 }
 .icon-zoom-out {
-    background-size: 359.1241% 5622.8571%;
-    background-position: 124.5070% 10.6053%;
-    aspect-ratio: 137 / 35;
+    background-size: 1066.3158% 3877.7778%;
+    background-position: 0.1089% 99.2157%;
+    aspect-ratio: 95 / 27;
 }

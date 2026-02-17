@@ -26,7 +26,7 @@
             </struct>
         </array>
         <key>allowRotation</key>
-        <true/>
+        <false/>
         <key>shapeDebug</key>
         <false/>
         <key>dpi</key>
@@ -236,6 +236,21 @@
                 <rect>64,64,128,128</rect>
                 <key>scale9Paddings</key>
                 <rect>64,64,128,128</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">gfx/icon_input_mk.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>67,64,133,128</rect>
+                <key>scale9Paddings</key>
+                <rect>67,64,133,128</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
