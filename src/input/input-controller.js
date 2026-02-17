@@ -389,8 +389,36 @@ export class InputController {
 
         // 1. If nothing selected, try to select
         if (!this.selectedTile) {
-            const owner = this.game.players.find(p => p.id === tile?.owner);
-            // Allow any human player to select any of their tiles (regardless of dice count or turn)
+            if (!tile) return;
+            const owner = this.game.players.find(p => p.id === tile.owner);
+            const isEnemy = owner && owner.id !== this.game.currentPlayer.id;
+
+            // Direct attack shortcut: If clicking enemy tile with exactly ONE adjacent attacker
+            if (isEnemy) {
+                const attackers = [];
+                const neighbors = [
+                    { x: x, y: y - 1 }, { x: x, y: y + 1 },
+                    { x: x - 1, y: y }, { x: x + 1, y: y }
+                ];
+
+                for (const n of neighbors) {
+                    const nTile = this.game.map.getTile(n.x, n.y);
+                    if (nTile && nTile.owner === this.game.currentPlayer.id && nTile.dice > 1) {
+                        attackers.push(n);
+                    }
+                }
+
+                if (attackers.length === 1) {
+                    const attacker = attackers[0];
+                    const result = this.game.attack(attacker.x, attacker.y, x, y);
+                    if (result && !result.error && result.won) {
+                        this.select(x, y);
+                    }
+                    return;
+                }
+            }
+
+            // Standard selection: Allow any human player to select any of their tiles
             if (owner && !owner.isBot) {
                 this.select(x, y);
             }

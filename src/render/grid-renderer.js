@@ -687,6 +687,9 @@ export class GridRenderer {
     }
 
     drawOverlay() {
+        // Global animation pulse used for all highlighters
+        this.cursorPulse = (this.cursorPulse + 0.1) % (Math.PI * 2);
+
         // Hide all human-centric overlay elements during bot turns (but allow in paint mode for editor)
         if (!this.paintMode && this.game.currentPlayer?.isBot) {
             this.selectionGfx.visible = false;
@@ -724,8 +727,6 @@ export class GridRenderer {
 
         // Draw keyboard/gamepad cursor (distinct from hover)
         if (this.cursorTile) {
-            // Animate pulse
-            this.cursorPulse = (this.cursorPulse + 0.1) % (Math.PI * 2);
             const pulseAlpha = 0.5 + Math.sin(this.cursorPulse) * 0.3;
 
             this.cursorGfx.clear();
@@ -776,15 +777,16 @@ export class GridRenderer {
         if (this.selectedTile) {
             this.selectionGfx.clear();
             this.selectionGfx.rect(0, 0, this.tileSize, this.tileSize);
+            const pulse = 0.5 + Math.sin(this.cursorPulse * 1.5) * 0.3;
             this.selectionGfx.stroke({
                 width: 4,
                 color: 0xffffff,
-                alpha: 1.0,
+                alpha: 0.7 + pulse * 0.3,
                 join: 'miter',
                 cap: 'square',
                 alignment: 0 // Inner
             });
-            this.selectionGfx.fill({ color: 0xffffff, alpha: 0.4 });
+            this.selectionGfx.fill({ color: 0xffffff, alpha: 0.2 + pulse * 0.2 });
 
             this.selectionGfx.x = this.selectedTile.x * (this.tileSize + this.gap);
             this.selectionGfx.y = this.selectedTile.y * (this.tileSize + this.gap);
@@ -897,17 +899,50 @@ export class GridRenderer {
             this.hoverGfx.visible = false;
         } else if (this.hoverTile) {
             this.selectionGfx.visible = false;
-            // Just hovering without selection - show clear white highlight
+            // Just hovering without selection - show smart highlight
             if (this.game.currentPlayer?.isBot) {
                 this.hoverGfx.visible = false;
             } else {
                 const tileRaw = this.game.map.getTileRaw(this.hoverTile.x, this.hoverTile.y);
-                if (tileRaw) {
+                if (tileRaw && !tileRaw.blocked) {
+                    const isOwned = tileRaw.owner === this.game.currentPlayer.id;
+                    const canAttackFrom = isOwned && tileRaw.dice > 1;
+
+                    // Check for direct attack shortcut (uniquely attackable)
+                    let isUniquelyAttackable = false;
+                    if (!isOwned) {
+                        const neighbors = this.game.map.getAdjacentTiles(this.hoverTile.x, this.hoverTile.y);
+                        let attackersCount = 0;
+                        for (const n of neighbors) {
+                            if (n.owner === this.game.currentPlayer.id && n.dice > 1) {
+                                attackersCount++;
+                            }
+                        }
+                        isUniquelyAttackable = attackersCount === 1;
+                    }
+
                     this.hoverGfx.clear();
-                    // Refined hover: 1px solid white inset border (matches tile style) + white highlight
-                    this.hoverGfx.rect(0.5, 0.5, this.tileSize - 1, this.tileSize - 1);
-                    this.hoverGfx.fill({ color: 0xffffff, alpha: 0.3 });
-                    this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 1.0, alignment: 0.5, join: 'miter', cap: 'square' });
+                    this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
+
+                    if (isUniquelyAttackable) {
+                        // Attack shortcut available: Red pulsing highlight
+                        const pulse = 0.5 + Math.sin(this.cursorPulse * 1.5) * 0.3;
+                        this.hoverGfx.fill({ color: 0xff0000, alpha: 0.1 + pulse * 0.1 });
+                        this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.6 + pulse * 0.4, alignment: 0 });
+                    } else if (canAttackFrom) {
+                        // Selectable & Actionable: Large white pulsing border
+                        const pulse = 0.5 + Math.sin(this.cursorPulse * 1.5) * 0.3;
+                        this.hoverGfx.fill({ color: 0xffffff, alpha: 0.1 + pulse * 0.1 });
+                        this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.6 + pulse * 0.4, alignment: 0 });
+                    } else if (isOwned) {
+                        // Selectable but no action: Subtle static white
+                        this.hoverGfx.fill({ color: 0xffffff, alpha: 0.1 });
+                        this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0 });
+                    } else {
+                        // Not interactable: Very subtle dimmed highlight
+                        this.hoverGfx.fill({ color: 0x000000, alpha: 0.15 });
+                    }
+
                     this.hoverGfx.x = this.hoverTile.x * (this.tileSize + this.gap);
                     this.hoverGfx.y = this.hoverTile.y * (this.tileSize + this.gap);
                     this.hoverGfx.visible = true;
