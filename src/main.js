@@ -9,6 +9,7 @@ import { EffectsManager } from './render/effects/effects-manager.js';
 import { ScenarioManager } from './scenarios/scenario-manager.js';
 import { TurnHistory } from './scenarios/turn-history.js';
 import { MapEditor } from './editor/map-editor.js';
+import { createScenarioFromGame } from './scenarios/scenario-data.js';
 import { TileRenderer } from './render/tile-renderer.js';
 import { GamepadCursorManager } from './input/gamepad-cursor-manager.js';
 import { AudioController } from './ui/audio-controller.js';
@@ -293,7 +294,7 @@ async function init() {
     const gameLog = new GameLog(game, turnHistory, scenarioManager);
     gameLog.setPlayerNameGetter(getPlayerName);
     gameLog.setDiceDataURL(TileRenderer.diceDataURL);
-    gameLog.setSaveScenarioCallback((index, defaultName) => openSaveScenarioDialog(index, defaultName));
+    gameLog.setSaveScenarioCallback((index) => openSaveScenarioDialog(index));
 
     // Wrapper functions
     const addLog = (message, type = '') => gameLog.addEntry(message, type);
@@ -434,45 +435,25 @@ async function init() {
         );
     }, 100);
 
-    // Save Scenario Dialog
-    const openSaveScenarioDialog = async (snapshotIndex, defaultName = '') => {
-        const content = document.createElement('div');
-        content.className = 'save-scenario-content';
-        content.innerHTML = `
-            <div class="control-group">
-                <label>Scenario Name</label>
-                <input type="text" id="dialog-scenario-name-input" placeholder="My Epic Battle" maxlength="40" style="width: 100%; box-sizing: border-box;">
-            </div>
-            <p style="text-align: left; font-size: 13px; color: #aaa; margin-top: 15px;">
-                This will save the current game state including map layout, player positions, and dice counts.
-            </p>
-        `;
+    // Save Scenario
+    const openSaveScenarioDialog = async (snapshotIndex) => {
+        let scenario = null;
+        if (snapshotIndex !== undefined && snapshotIndex !== null && !isNaN(parseInt(snapshotIndex))) {
+            scenario = turnHistory.createScenarioFromSnapshot(game, parseInt(snapshotIndex), '');
+        } else {
+            scenario = createScenarioFromGame(game, '');
+        }
 
-        const nameInput = content.querySelector('#dialog-scenario-name-input');
-        if (defaultName) nameInput.value = defaultName;
+        if (scenario) {
+            // Ensure ID is removed
+            delete scenario.id;
 
-        const result = await Dialog.show({
-            title: 'SAVE SCENARIO',
-            content: content,
-            buttons: [
-                { text: '💾 Save', value: 'save', className: 'tron-btn' },
-                { text: 'Cancel', value: 'cancel', className: 'tron-btn small' }
-            ]
-        });
+            // Save to user campaign
+            await scenarioBrowser.campaignManager.ensureUserCampaign();
+            const levelIndex = scenarioBrowser.campaignManager.userCampaign.levels.length + 1;
+            scenarioBrowser.campaignManager.setUserLevel(-1, scenario);
 
-        if (result === 'save') {
-            const name = nameInput.value.trim() || 'Unnamed Scenario';
-
-            if (snapshotIndex !== undefined && snapshotIndex !== null && !isNaN(parseInt(snapshotIndex))) {
-                const scenario = turnHistory.createScenarioFromSnapshot(game, parseInt(snapshotIndex), name);
-                if (scenario) {
-                    scenarioManager.saveEditorScenario(scenario);
-                    Dialog.alert(`Saved: ${name}`);
-                }
-            } else {
-                scenarioManager.saveScenario(game, name);
-                Dialog.alert(`Saved: ${name}`);
-            }
+            Dialog.alert(`Saved as #${levelIndex}`);
         }
     };
 }
