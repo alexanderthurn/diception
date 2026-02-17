@@ -2949,6 +2949,10 @@ select {
     z-index: 2;
 }
 
+.level-preview-dialog .dialog-body {
+    background: none;
+}
+
 /* Override global canvas 100vw/100vh - preview uses --preview-size set in JS */
 .level-preview-canvas {
     border: 1px solid rgba(255, 255, 255, 0.3);

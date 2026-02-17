@@ -1112,6 +1112,7 @@ export class MapEditor {
             this.elements.settingsPanel?.classList.remove('editor-settings-open');
         }
         if (this.renderer) this.renderer.editorActive = true;
+        this.elements.settingsToggle?.classList.remove('hidden');
 
         this.updateEditorInputHints();
 
@@ -1181,6 +1182,7 @@ export class MapEditor {
         // Hide editor UI, show game UI only if a game is in progress
         if (this.renderer) this.renderer.editorActive = false;
         this.elements.overlay?.classList.add('hidden');
+        this.elements.settingsToggle?.classList.add('hidden');
         this.elements.settingsPanel?.classList.remove('editor-settings-open');
         const hasActiveGame = this.originalGame?.players?.length > 0;
         if (hasActiveGame) {
