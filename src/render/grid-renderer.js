@@ -773,26 +773,20 @@ export class GridRenderer {
             this.selectionGfx.clear();
             // 1. Draw and fill the background rectangle
             this.selectionGfx.rect(0, 0, this.tileSize, this.tileSize);
-            this.selectionGfx.fill({ color: 0xffffff, alpha: 0.2 });
+            this.selectionGfx.fill({ color: 0xffffff, alpha: 0.4 });
 
             // 2. Draw directional line segments for the border (alignment: 0)
-            // Top: L -> R
             this.selectionGfx.moveTo(0, 0); this.selectionGfx.lineTo(this.tileSize, 0);
-            // Right: T -> B
-            this.selectionGfx.moveTo(this.tileSize, 0); this.selectionGfx.lineTo(this.tileSize, this.tileSize);
-            // Bottom: R -> L
-            this.selectionGfx.moveTo(this.tileSize, this.tileSize); this.selectionGfx.lineTo(0, this.tileSize);
-            // Left: B -> T
-            this.selectionGfx.moveTo(0, this.tileSize); this.selectionGfx.lineTo(0, 0);
+            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
 
-            this.selectionGfx.stroke({
-                width: 4,
-                color: 0xffffff,
-                alpha: 0.9,
-                join: 'miter',
-                cap: 'butt',
-                alignment: 0 // Inner
-            });
+            this.selectionGfx.moveTo(this.tileSize, 0); this.selectionGfx.lineTo(this.tileSize, this.tileSize);
+            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
+
+            this.selectionGfx.moveTo(this.tileSize, this.tileSize); this.selectionGfx.lineTo(0, this.tileSize);
+            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
+
+            this.selectionGfx.moveTo(0, this.tileSize); this.selectionGfx.lineTo(0, 0);
+            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
 
             this.selectionGfx.x = this.selectedTile.x * (this.tileSize + this.gap);
             this.selectionGfx.y = this.selectedTile.y * (this.tileSize + this.gap);
@@ -884,110 +878,138 @@ export class GridRenderer {
                 if (isAdjacent) {
                     const hGfx = this.getNeighborHighlighter(neighborIdx++);
                     hGfx.clear();
-                    // Individual CW segments
-                    hGfx.moveTo(0, 0); hGfx.lineTo(this.tileSize, 0);
-                    hGfx.moveTo(this.tileSize, 0); hGfx.lineTo(this.tileSize, this.tileSize);
-                    hGfx.moveTo(this.tileSize, this.tileSize); hGfx.lineTo(0, this.tileSize);
-                    hGfx.moveTo(0, this.tileSize); hGfx.lineTo(0, 0);
-
                     const tileContent = this.game.map.getTile(targetTile.x, targetTile.y);
                     const isEnemy = tileContent && tileContent.owner !== this.game.currentPlayer.id;
+                    const color = isEnemy ? 0xff0000 : 0xffffff;
 
-                    if (isEnemy) {
-                        hGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, join: 'miter', cap: 'butt', alignment: 0 }); // Red Inner
-                    } else {
-                        hGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, join: 'miter', cap: 'butt', alignment: 0 }); // Neutral Inner
-                    }
+                    // Individual CW segments with individual strokes
+                    hGfx.moveTo(0, 0); hGfx.lineTo(this.tileSize, 0);
+                    hGfx.stroke({ width: 3, color, alpha: 0.8, alignment: 0, cap: 'butt' });
+                    hGfx.moveTo(this.tileSize, 0); hGfx.lineTo(this.tileSize, this.tileSize);
+                    hGfx.stroke({ width: 3, color, alpha: 0.8, alignment: 0, cap: 'butt' });
+                    hGfx.moveTo(this.tileSize, this.tileSize); hGfx.lineTo(0, this.tileSize);
+                    hGfx.stroke({ width: 3, color, alpha: 0.8, alignment: 0, cap: 'butt' });
+                    hGfx.moveTo(0, this.tileSize); hGfx.lineTo(0, 0);
+                    hGfx.stroke({ width: 3, color, alpha: 0.8, alignment: 0, cap: 'butt' });
 
                     hGfx.x = targetTile.x * (this.tileSize + this.gap);
                     hGfx.y = targetTile.y * (this.tileSize + this.gap);
                     hGfx.visible = true;
+                    this.hoverGfx.visible = false;
+                } else {
+                    // Non-adjacent hover: show normal smart highlight
+                    const { nextBadgeIdx } = this._renderSmartHover(targetTile.x, targetTile.y, badgeIdx);
+                    badgeIdx = nextBadgeIdx;
                 }
+            } else {
+                this.hoverGfx.visible = false;
             }
-            this.hoverGfx.visible = false;
         } else if (this.hoverTile) {
             this.selectionGfx.visible = false;
             // Just hovering without selection - show smart highlight
             if (this.game.currentPlayer?.isBot) {
                 this.hoverGfx.visible = false;
             } else {
-                const tileRaw = this.game.map.getTileRaw(this.hoverTile.x, this.hoverTile.y);
-                if (tileRaw && !tileRaw.blocked) {
-                    const isOwned = tileRaw.owner === this.game.currentPlayer.id;
-                    const canAttackFrom = isOwned && tileRaw.dice > 1;
-
-                    // Check for direct attack shortcut (uniquely attackable)
-                    let isUniquelyAttackable = false;
-                    let uniqueAttacker = null;
-                    if (!isOwned) {
-                        const neighbors = this.game.map.getAdjacentTiles(this.hoverTile.x, this.hoverTile.y);
-                        let attackersCount = 0;
-                        for (const n of neighbors) {
-                            if (n.owner === this.game.currentPlayer.id && n.dice > 1) {
-                                attackersCount++;
-                                uniqueAttacker = n;
-                            }
-                        }
-                        // ONLY available in expert mode for now
-                        isUniquelyAttackable = attackersCount === 1 && this.gameSpeed === 'expert';
-                    }
-
-                    this.hoverGfx.clear();
-                    // Pattern for fill
-                    this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
-
-                    if (isUniquelyAttackable) {
-                        this.hoverGfx.fill({ color: 0xff0000, alpha: 0.2 });
-                        // Individual CW segments for stroke
-                        this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
-                        this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
-                        this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
-                        this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
-                        this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, join: 'miter', cap: 'butt', alignment: 0 });
-
-                        // Position between hovered tile and attacker
-                        const hoverPx = this.hoverTile.x * (this.tileSize + this.gap);
-                        const hoverPy = this.hoverTile.y * (this.tileSize + this.gap);
-                        const attackPx = uniqueAttacker.x * (this.tileSize + this.gap);
-                        const attackPy = uniqueAttacker.y * (this.tileSize + this.gap);
-
-                        const badgeX = (hoverPx + attackPx + this.tileSize) / 2;
-                        const badgeY = (hoverPy + attackPy + this.tileSize) / 2;
-
-                        // Experts see the badge (to identify attacker) but with NO text
-                        this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, '', 0x444444, 'direct');
-                    } else if (canAttackFrom) {
-                        this.hoverGfx.fill({ color: 0xffffff, alpha: 0.15 });
-                        // Individual CW segments for stroke
-                        this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
-                        this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
-                        this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
-                        this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
-                        this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, join: 'miter', cap: 'butt', alignment: 0 });
-                    } else if (isOwned) {
-                        this.hoverGfx.fill({ color: 0xffffff, alpha: 0.1 });
-                        // Individual CW segments for stroke
-                        this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
-                        this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
-                        this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
-                        this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
-                        this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, join: 'miter', cap: 'butt', alignment: 0 });
-                    } else {
-                        // Not interactable: Very subtle dimmed highlight
-                        this.hoverGfx.fill({ color: 0x000000, alpha: 0.15 });
-                    }
-
-                    this.hoverGfx.x = this.hoverTile.x * (this.tileSize + this.gap);
-                    this.hoverGfx.y = this.hoverTile.y * (this.tileSize + this.gap);
-                    this.hoverGfx.visible = true;
-                } else {
-                    this.hoverGfx.visible = false;
-                }
+                this._renderSmartHover(this.hoverTile.x, this.hoverTile.y, badgeIdx);
             }
         } else {
             this.selectionGfx.visible = false;
             this.hoverGfx.visible = false;
         }
+    }
+
+    /**
+     * Internal helper to draw the "smart" hover highlight for a tile.
+     * Differentiates between own attackable tiles, static own tiles, and non-interactable tiles.
+     */
+    _renderSmartHover(x, y, badgeIdx) {
+        const tileRaw = this.game.map.getTileRaw(x, y);
+        if (!tileRaw || tileRaw.blocked) {
+            this.hoverGfx.visible = false;
+            return { nextBadgeIdx: badgeIdx };
+        }
+
+        const isOwned = tileRaw.owner === this.game.currentPlayer.id;
+        const canAttackFrom = isOwned && tileRaw.dice > 1;
+
+        // Check for direct attack shortcut (uniquely attackable)
+        let isUniquelyAttackable = false;
+        let uniqueAttacker = null;
+        if (!isOwned) {
+            const neighbors = this.game.map.getAdjacentTiles(x, y);
+            let attackersCount = 0;
+            for (const n of neighbors) {
+                if (n.owner === this.game.currentPlayer.id && n.dice > 1) {
+                    attackersCount++;
+                    uniqueAttacker = n;
+                }
+            }
+            // ONLY available in expert mode for now
+            isUniquelyAttackable = attackersCount === 1 && this.gameSpeed === 'expert';
+        }
+
+        this.hoverGfx.clear();
+        // Pattern for fill
+        this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
+
+        if (isUniquelyAttackable) {
+            // Attack shortcut available: Red static highlight on target (hover)
+            this.hoverGfx.fill({ color: 0xff0000, alpha: 0.2 });
+            // Individual CW segments for stroke
+            this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
+            this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
+            this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
+            this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
+            this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
+            this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
+            this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
+            this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
+
+            // Position between hovered tile and attacker
+            const hoverPx = x * (this.tileSize + this.gap);
+            const hoverPy = y * (this.tileSize + this.gap);
+            const attackPx = uniqueAttacker.x * (this.tileSize + this.gap);
+            const attackPy = uniqueAttacker.y * (this.tileSize + this.gap);
+
+            const badgeX = (hoverPx + attackPx + this.tileSize) / 2;
+            const badgeY = (hoverPy + attackPy + this.tileSize) / 2;
+
+            // Experts see the badge (to identify attacker) but with NO text
+            this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, '', 0x444444, 'direct');
+        } else if (canAttackFrom) {
+            // Selectable & Actionable: Large white static border
+            this.hoverGfx.fill({ color: 0xffffff, alpha: 0.15 });
+            // Individual CW segments for stroke
+            this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
+            this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
+            this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
+            this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
+            this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
+            this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
+            this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
+            this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
+        } else if (isOwned) {
+            // Selectable but no action: Subtle static white
+            this.hoverGfx.fill({ color: 0xffffff, alpha: 0.1 });
+            // Individual CW segments for stroke
+            this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
+            this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
+            this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
+            this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
+            this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
+            this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
+            this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
+            this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
+        } else {
+            // Not interactable: Very subtle dimmed highlight
+            this.hoverGfx.fill({ color: 0x000000, alpha: 0.15 });
+        }
+
+        this.hoverGfx.x = x * (this.tileSize + this.gap);
+        this.hoverGfx.y = y * (this.tileSize + this.gap);
+        this.hoverGfx.visible = true;
+
+        return { nextBadgeIdx: badgeIdx };
     }
 
     hidePools() {
