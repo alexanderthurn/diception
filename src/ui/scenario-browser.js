@@ -39,6 +39,8 @@ export class ScenarioBrowser {
         this.hoverPreviewEl = null;
         this.justSavedLevelIndex = null;
         this._configPreviewCache = new Map();
+        this._gridResizeObserver = null;
+        this._gridResizeDebounce = null;
     }
 
     async determineBackendURL() {
@@ -91,6 +93,7 @@ export class ScenarioBrowser {
 
         if (this.scenarioBrowserCloseBtn) {
             this.scenarioBrowserCloseBtn.addEventListener('click', () => {
+                this._disconnectGridResizeObserver();
                 localStorage.removeItem('dicy_campaignMode');
                 this.scenarioBrowserModal.classList.add('hidden');
                 this.setupModal.classList.remove('hidden');
@@ -104,8 +107,36 @@ export class ScenarioBrowser {
 
     }
 
+    _disconnectGridResizeObserver() {
+        if (this._gridResizeObserver && this.levelGridContainer?.parentElement) {
+            this._gridResizeObserver.disconnect();
+            this._gridResizeObserver = null;
+        }
+        if (this._gridResizeDebounce) {
+            clearTimeout(this._gridResizeDebounce);
+            this._gridResizeDebounce = null;
+        }
+    }
+
+    _connectGridResizeObserver() {
+        this._disconnectGridResizeObserver();
+        const parent = this.levelGridContainer?.parentElement;
+        if (!parent) return;
+        this._gridResizeObserver = new ResizeObserver(() => {
+            if (this._gridResizeDebounce) clearTimeout(this._gridResizeDebounce);
+            this._gridResizeDebounce = setTimeout(() => {
+                this._gridResizeDebounce = null;
+                if (this.selectedCampaign && !this.levelGridContainer.classList.contains('hidden')) {
+                    this.renderLevelGrid(this.selectedCampaign);
+                }
+            }, 100);
+        });
+        this._gridResizeObserver.observe(parent);
+    }
+
     async showCampaignView() {
         this.selectedCampaign = null;
+        this._disconnectGridResizeObserver();
         this.levelGridContainer.classList.add('hidden');
         this.previewContent.classList.remove('hidden');
         this.previewContent.innerHTML = '<div class="empty-message-large">Select a campaign</div>';
@@ -157,6 +188,7 @@ export class ScenarioBrowser {
         if (campaign?.owner) localStorage.setItem('dicy_lastCampaign', campaign.owner);
         this.levelGridContainer.classList.remove('hidden');
         this.previewContent.classList.add('hidden');
+        this._connectGridResizeObserver();
         this.renderLevelGrid(campaign);
     }
 
@@ -239,8 +271,10 @@ export class ScenarioBrowser {
 
         const ownerLabel = isUserCampaign ? 'Your Campaign' : (campaign.owner || 'Unnamed Campaign');
         const totalSlots = this.isOwner ? levels.length + 1 : levels.length;
-        const { cols, rows } = getGridDimensions(totalSlots);
-        const gridSize = Math.max(cols, rows, 1);
+        const containerWidth = this.levelGridContainer.offsetWidth
+            || this.levelGridContainer.parentElement?.offsetWidth
+            || 400;
+        const { cols, rows } = getGridDimensions(totalSlots, containerWidth);
 
         const loadedOwner = localStorage.getItem('dicy_loadedCampaign');
         const loadedIdx = localStorage.getItem('dicy_loadedLevelIndex');
@@ -280,8 +314,8 @@ export class ScenarioBrowser {
         }
 
         this.levelGridHeader.innerHTML = `<span>${ownerLabel}</span><span>${levels.length} levels</span>`;
-        this.levelGrid.style.gridTemplateColumns = `repeat(${gridSize}, 36px)`;
-        this.levelGrid.style.gridTemplateRows = `repeat(${gridSize}, 36px)`;
+        this.levelGrid.style.gridTemplateColumns = `repeat(${cols}, 44px)`;
+        this.levelGrid.style.gridTemplateRows = `repeat(${rows}, 44px)`;
         this.levelGrid.innerHTML = '';
 
         for (let i = 0; i < levels.length; i++) {

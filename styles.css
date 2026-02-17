@@ -2666,6 +2666,7 @@ select {
     gap: 25px;
     height: 100%;
     padding-top: 10px;
+    overflow-x: hidden;
 }
 
 #level-grid-header {

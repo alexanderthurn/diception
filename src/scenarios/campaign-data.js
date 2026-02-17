@@ -130,12 +130,28 @@ export function sanitizeLevel(level) {
 }
 
 /**
- * Compute grid dimensions for level count (1×1 to 12×12)
+ * Compute grid dimensions for level count.
+ * Fills horizontally first (max cols), breaks to new row only when no space remains.
+ * Uses a safety buffer so tiles never cause horizontal overflow/scrollbar.
  * @param {number} levelCount
+ * @param {number|null} [containerWidth] - Available width in px; if provided, cols are derived from it
  * @returns {{cols: number, rows: number}}
  */
-export function getGridDimensions(levelCount) {
+export function getGridDimensions(levelCount, containerWidth = null) {
     if (levelCount <= 0) return { cols: 1, rows: 1 };
-    const size = Math.min(12, Math.ceil(Math.sqrt(Math.max(levelCount, 1))));
-    return { cols: size, rows: size };
+    const CELL_SIZE = 44;  /* Match .level-grid-tile width/height in CSS */
+    const GAP = 15;        /* Use larger gap (mobile value) so we break earlier and avoid overflow */
+    const slotWidth = CELL_SIZE + GAP;
+    const BUFFER = 24;  /* Reserve for padding, scrollbars, rounding */
+
+    let cols;
+    if (containerWidth != null && containerWidth > 0) {
+        const effectiveWidth = Math.max(0, containerWidth - BUFFER);
+        cols = Math.max(1, Math.min(12, Math.floor((effectiveWidth + GAP) / slotWidth)));
+    } else {
+        cols = Math.min(12, levelCount);
+    }
+    cols = Math.min(cols, levelCount);
+    const rows = Math.ceil(levelCount / cols);
+    return { cols, rows };
 }
