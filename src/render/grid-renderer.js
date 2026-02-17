@@ -846,7 +846,7 @@ export class GridRenderer {
                     switch (neighbor.edge) {
                         case 'top':
                             badgeX = selectedPixelX + this.tileSize / 2;
-                            badgeY = selectedPixelY - this.gap / 2;
+                            badgeY = selectedPixelY + 8 - this.gap / 2; // Move it a bit more down into the tile to avoid overlap
                             break;
                         case 'bottom':
                             badgeX = selectedPixelX + this.tileSize / 2;
