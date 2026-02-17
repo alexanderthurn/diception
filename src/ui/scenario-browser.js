@@ -219,26 +219,17 @@ export class ScenarioBrowser {
     }
 
     async renderLevelGrid(campaign) {
-        const isEmptyUserCampaign = campaign && (campaign.isEmpty || (campaign.levels?.length === 0 && campaign.isUserCampaign));
-        if (isEmptyUserCampaign) {
-            // Empty user campaign - one add tile in grid
-            this.isOwner = true;
-            const ownerLabel = campaign.owner || 'Your Campaign';
-            this.levelGridHeader.innerHTML = `<span>${ownerLabel}</span><span>0 levels</span>`;
-            this.levelGrid.style.gridTemplateColumns = '36px';
-            this.levelGrid.style.gridTemplateRows = '36px';
-            this.levelGrid.innerHTML = '';
-            const addTile = document.createElement('div');
-            addTile.className = 'level-grid-tile add-tile';
-            addTile.innerHTML = '<span class="tile-add">+</span>';
-            addTile.addEventListener('click', () => this.openEditorForNewLevel(0));
-            this.levelGrid.appendChild(addTile);
-            return;
-        }
+        if (!campaign) return;
 
-        this.isOwner = await this.campaignManager.isOwner(campaign);
+        const identity = await getCachedIdentity();
+        const isUserCampaign = campaign.isUserCampaign ||
+            campaign.owner === 'Your Campaign' ||
+            (campaign.ownerId && campaign.ownerId === identity.ownerId);
+
+        this.isOwner = isUserCampaign;
         const levels = campaign.levels || [];
-        const ownerLabel = campaign.owner || 'Your Campaign';
+
+        const ownerLabel = isUserCampaign ? 'Your Campaign' : (campaign.owner || 'Unnamed Campaign');
         const totalSlots = this.isOwner ? levels.length + 1 : levels.length;
         const { cols, rows } = getGridDimensions(totalSlots);
         const gridSize = Math.max(cols, rows, 1);
@@ -420,6 +411,7 @@ export class ScenarioBrowser {
         closeBtn.innerHTML = '×';
         closeBtn.setAttribute('aria-label', 'Close');
         header.appendChild(closeBtn);
+
         const titleEl = document.createElement('h1');
         titleEl.className = 'tron-title small';
         titleEl.textContent = `#${index + 1}`;
@@ -439,47 +431,97 @@ export class ScenarioBrowser {
             body.appendChild(built.content);
             built.prevBtn.addEventListener('click', () => { if (idx > 0) updateContent(idx - 1); });
             built.nextBtn.addEventListener('click', () => { if (idx < totalLevels - 1) updateContent(idx + 1); });
+
+            // Re-render actions to update move button states
+            updateActions(idx);
         };
-
-        const built = await buildContent(index);
-        body.appendChild(built.content);
-        built.prevBtn.addEventListener('click', () => { if (index > 0) updateContent(index - 1); });
-        built.nextBtn.addEventListener('click', () => { if (index < totalLevels - 1) updateContent(index + 1); });
-
-        dialog.appendChild(body);
 
         const actions = document.createElement('div');
         actions.className = 'dialog-actions level-preview-actions';
-        const actionButtons = [
-            { text: 'Play', value: 'play', className: 'tron-btn primary' },
-            { text: 'Custom Game', value: 'custom', className: 'tron-btn' }
-        ];
-        if (this.isOwner) {
-            actionButtons.push({ text: 'Edit', value: 'edit', className: 'tron-btn', row: 2 });
-            actionButtons.push({ text: 'Delete', value: 'delete', className: 'tron-btn danger', row: 2 });
-        }
-        const primaryRow = document.createElement('div');
-        primaryRow.className = 'dialog-actions-row';
-        const secondaryRow = document.createElement('div');
-        secondaryRow.className = 'dialog-actions-row dialog-actions-row-secondary';
-        actionButtons.forEach(btnConfig => {
-            const btn = document.createElement('button');
-            btn.className = btnConfig.className || 'tron-btn';
-            btn.textContent = btnConfig.text;
-            btn.dataset.value = btnConfig.value;
-            (btnConfig.row === 2 ? secondaryRow : primaryRow).appendChild(btn);
-        });
-        actions.appendChild(primaryRow);
-        if (secondaryRow.children.length) actions.appendChild(secondaryRow);
-        dialog.appendChild(actions);
 
+        const updateActions = (idx) => {
+            actions.innerHTML = '';
+            const primaryRow = document.createElement('div');
+            primaryRow.className = 'dialog-actions-row';
+            const secondaryRow = document.createElement('div');
+            secondaryRow.className = 'dialog-actions-row dialog-actions-row-secondary';
+
+            const playBtn = document.createElement('button');
+            playBtn.className = 'tron-btn primary';
+            playBtn.textContent = 'Play';
+            playBtn.onclick = () => finish('play');
+            primaryRow.appendChild(playBtn);
+
+            const customBtn = document.createElement('button');
+            customBtn.className = 'tron-btn';
+            customBtn.textContent = 'Custom Game';
+            customBtn.onclick = () => finish('custom');
+            primaryRow.appendChild(customBtn);
+
+            if (this.isOwner) {
+                const editBtn = document.createElement('button');
+                editBtn.className = 'tron-btn small';
+                editBtn.textContent = 'Edit';
+                editBtn.onclick = () => finish('edit');
+                secondaryRow.appendChild(editBtn);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'tron-btn small danger';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = () => finish('delete');
+                secondaryRow.appendChild(deleteBtn);
+
+                const moveLeftBtn = document.createElement('button');
+                moveLeftBtn.className = 'tron-btn small move-btn';
+                moveLeftBtn.textContent = '← Move';
+                moveLeftBtn.disabled = idx <= 0;
+                moveLeftBtn.onclick = async () => {
+                    this.campaignManager.moveUserLevel(idx, idx - 1);
+                    if (this.selectedCampaign.isUserCampaign) {
+                        this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
+                    }
+                    this.renderLevelGrid(this.selectedCampaign);
+                    await updateContent(idx - 1);
+                };
+                secondaryRow.appendChild(moveLeftBtn);
+
+                const moveRightBtn = document.createElement('button');
+                moveRightBtn.className = 'tron-btn small move-btn';
+                moveRightBtn.textContent = 'Move →';
+                moveRightBtn.disabled = idx >= totalLevels - 1;
+                moveRightBtn.onclick = async () => {
+                    this.campaignManager.moveUserLevel(idx, idx + 1);
+                    if (this.selectedCampaign.isUserCampaign) {
+                        this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
+                    }
+                    this.renderLevelGrid(this.selectedCampaign);
+                    await updateContent(idx + 1);
+                };
+                secondaryRow.appendChild(moveRightBtn);
+            }
+
+            actions.appendChild(primaryRow);
+            if (secondaryRow.children.length) actions.appendChild(secondaryRow);
+        };
+
+        let finish;
+        const built = await buildContent(index);
+        body.appendChild(built.content);
+        built.prevBtn.addEventListener('click', () => { if (currentIndex > 0) updateContent(currentIndex - 1); });
+        built.nextBtn.addEventListener('click', () => { if (currentIndex < totalLevels - 1) updateContent(currentIndex + 1); });
+
+        updateActions(index);
+
+        dialog.appendChild(body);
+        dialog.appendChild(actions);
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
+
         if (Dialog.activeOverlay) Dialog.close(Dialog.activeOverlay);
         Dialog.activeOverlay = overlay;
 
         new Promise((resolve) => {
-            const finish = (value) => {
+            finish = (value) => {
                 overlay.classList.add('fade-out');
                 setTimeout(() => {
                     overlay.parentNode?.removeChild(overlay);
@@ -488,9 +530,6 @@ export class ScenarioBrowser {
                 resolve(value);
             };
             closeBtn.addEventListener('click', () => finish('close'));
-            actions.querySelectorAll('button').forEach((btn) => {
-                btn.addEventListener('click', () => finish(btn.dataset.value));
-            });
         }).then(result => {
             const idx = currentIndex;
             if (result === 'play') this.selectAndPlayLevel(idx, { immediateStart: true });
@@ -504,6 +543,9 @@ export class ScenarioBrowser {
         if (!this.isOwner || !this.selectedCampaign) return;
         if (!(await Dialog.confirm('Delete this level?'))) return;
         this.campaignManager.removeUserLevel(index);
+        if (this.selectedCampaign.isUserCampaign) {
+            this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
+        }
         this.renderLevelGrid(this.selectedCampaign);
     }
 
@@ -625,6 +667,9 @@ export class ScenarioBrowser {
             levelIndex: index,
             onSave: (data) => {
                 this.campaignManager.setUserLevel(index, data);
+                if (this.selectedCampaign.isUserCampaign) {
+                    this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
+                }
                 this.justSavedLevelIndex = index;
                 this.scenarioBrowserModal.classList.remove('hidden');
                 this.renderLevelGrid(this.selectedCampaign);
@@ -660,7 +705,7 @@ export class ScenarioBrowser {
             isNew: true,
             onSave: (data) => {
                 this.campaignManager.setUserLevel(actualIndex, data);
-                this.selectedCampaign = this.campaignManager.userCampaign;
+                this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
                 this.justSavedLevelIndex = actualIndex;
                 this.scenarioBrowserModal.classList.remove('hidden');
                 this.renderLevelGrid(this.selectedCampaign);

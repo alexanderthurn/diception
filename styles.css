@@ -4240,6 +4240,7 @@ canvas {
     justify-content: space-between;
     align-items: center;
     gap: 15px;
+    position: relative;
 }
 
 .dialog-header-close-left {
@@ -4356,7 +4357,16 @@ canvas {
     margin-top: 8px;
     padding-top: 15px;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
+
+.level-preview-actions .move-btn {
+    min-width: 44px;
+}
+
 
 @keyframes dialog-fade-in {
     from {

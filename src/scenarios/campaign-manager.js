@@ -84,6 +84,7 @@ export class CampaignManager {
      */
     async isOwner(campaign) {
         if (campaign.isBuiltIn) return false;
+        if (campaign.isUserCampaign) return true;
         const identity = await getCachedIdentity();
         return campaign.ownerId === identity.ownerId;
     }
@@ -151,6 +152,23 @@ export class CampaignManager {
         if (!this.userCampaign) return false;
         if (index < 0 || index >= this.userCampaign.levels.length) return false;
         this.userCampaign.levels.splice(index, 1);
+        this.saveUserCampaign();
+        return true;
+    }
+
+    /**
+     * Move level in user campaign
+     * @param {number} fromIndex
+     * @param {number} toIndex
+     */
+    moveUserLevel(fromIndex, toIndex) {
+        if (!this.userCampaign) return false;
+        if (fromIndex < 0 || fromIndex >= this.userCampaign.levels.length) return false;
+        if (toIndex < 0 || toIndex >= this.userCampaign.levels.length) return false;
+        if (fromIndex === toIndex) return true;
+
+        const [level] = this.userCampaign.levels.splice(fromIndex, 1);
+        this.userCampaign.levels.splice(toIndex, 0, level);
         this.saveUserCampaign();
         return true;
     }
