@@ -374,49 +374,77 @@ export class GridRenderer {
      */
     drawSmartBorders(tileGfx, x, y, tileRaw, map) {
         const edgeDefs = [
-            { dx: 0, dy: -1, x1: 0.5, y1: 0.5, x2: this.tileSize - 0.5, y2: 0.5 }, // Top (inset 0.5)
-            { dx: 0, dy: 1, x1: 0.5, y1: this.tileSize - 0.5, x2: this.tileSize - 0.5, y2: this.tileSize - 0.5 }, // Bottom (inset 0.5)
-            { dx: -1, dy: 0, x1: 0.5, y1: 0.5, x2: 0.5, y2: this.tileSize - 0.5 }, // Left (inset 0.5)
-            { dx: 1, dy: 0, x1: this.tileSize - 0.5, y1: 0.5, x2: this.tileSize - 0.5, y2: this.tileSize - 0.5 } // Right (inset 0.5)
+            { dx: 0, dy: -1, x1: 0, y1: 0, x2: this.tileSize, y2: 0 }, // Top
+            { dx: 0, dy: 1, x1: 0, y1: this.tileSize, x2: this.tileSize, y2: this.tileSize }, // Bottom
+            { dx: -1, dy: 0, x1: 0, y1: 0, x2: 0, y2: this.tileSize }, // Left
+            { dx: 1, dy: 0, x1: this.tileSize, y1: 0, x2: this.tileSize, y2: this.tileSize } // Right
         ];
+
+        // Gather all styles to group strokes by color/alpha for fewer draw calls and better corners
+        const drawPasses = new Map();
+
+        const humanPlayer = this.game.players.find(p => !p.isBot);
+        const humanId = humanPlayer ? humanPlayer.id : null;
+        const isHumanActive = this.game.currentPlayer && this.game.currentPlayer.id === humanId;
 
         for (const edge of edgeDefs) {
             const nx = x + edge.dx;
             const ny = y + edge.dy;
             const neighbor = map.getTileRaw(nx, ny);
 
-            // Draw border if:
-            // 1. No neighbor (edge of map)
-            // 2. Neighbor is blocked
-            // 3. Neighbor blocked status doesn't behave like a tile? (Assuming blocked is just a type)
-            // 4. Neighbor has DIFFERENT owner
-            const shouldDraw = !neighbor || neighbor.blocked || neighbor.owner !== tileRaw.owner;
+            let shouldDraw = !neighbor || neighbor.blocked || neighbor.owner !== tileRaw.owner;
+
+            // Do not draw smart border if the neighbor is the active human player
+            // (The human player's region borders will handle this boundary)
+            if (shouldDraw && isHumanActive && neighbor && neighbor.owner === humanId) {
+                shouldDraw = false;
+            }
 
             if (shouldDraw) {
-                // Determine width:
-                // Adjacent to another tile (e.g. enemy)? Use 1px (will combine with neighbor's 1px = 2px total)
-                // Adjacent to NOTHING (void/blocked)? Use 2px to match visual thickness
                 const isMapEdgeOrBlocked = !neighbor || neighbor.blocked;
-                const width = isMapEdgeOrBlocked ? 2 : 1;
+                const width = 1; // Simplified per user request
 
-                // Border style: Tile owner's color for visible borders
                 const owner = this.game.players.find(p => p.id === tileRaw.owner);
                 let color = owner ? owner.color : 0xffffff;
                 let alpha = 1.0;
+
                 if (!isMapEdgeOrBlocked) {
-                    const humanPlayer = this.game.players.find(p => !p.isBot);
-                    const humanId = humanPlayer ? humanPlayer.id : null;
-                    const isHumanActive = this.game.currentPlayer && this.game.currentPlayer.id === humanId;
                     const isPlayerInvolved = isHumanActive && (tileRaw.owner === humanId || (neighbor && neighbor.owner === humanId));
                     if (!isPlayerInvolved) {
                         alpha = 0;
                     }
                 }
 
-                tileGfx.moveTo(edge.x1, edge.y1);
-                tileGfx.lineTo(edge.x2, edge.y2);
-                tileGfx.stroke({ width: width, color: color, alpha: alpha, join: 'miter', cap: 'square' });
+                if (alpha === 0) continue;
+
+                const key = `${color}-${alpha}-${width}`;
+                if (!drawPasses.has(key)) drawPasses.set(key, { color, alpha, width, edges: [] });
+                drawPasses.get(key).edges.push(edge);
             }
+        }
+
+        for (const pass of drawPasses.values()) {
+            for (const edge of pass.edges) {
+                // Directional drawing to assist 'inner' (alignment: 0) detection
+                // CW: Top (L->R), Right (T->B), Bottom (R->L), Left (B->T)
+                let x1 = edge.x1, y1 = edge.y1, x2 = edge.x2, y2 = edge.y2;
+                if (edge.dy === 1) { // Bottom: should be R->L
+                    x1 = edge.x2; x2 = edge.x1;
+                } else if (edge.dx === -1) { // Left: should be B->T
+                    y1 = edge.y2; y2 = edge.y1;
+                }
+
+                tileGfx.moveTo(x1, y1);
+                tileGfx.lineTo(x2, y2);
+            }
+            tileGfx.stroke({
+                width: pass.width,
+                color: pass.color,
+                alpha: pass.alpha,
+                join: 'miter',
+                cap: 'butt',
+                alignment: 0 // Inner
+            });
         }
     }
 
@@ -447,11 +475,28 @@ export class GridRenderer {
                     const g = (color >> 8) & 0xFF;
                     const b = color & 0xFF;
                     borderColor = ((r * 0.6) << 16) | ((g * 0.6) << 8) | (b * 0.6);
+                    borderColor = 0xffffff;
                 }
 
-                tileGfx.moveTo(edge.x1, edge.y1);
-                tileGfx.lineTo(edge.x2, edge.y2);
-                tileGfx.stroke({ width: 2, color: borderColor, alpha: 1, join: 'miter', cap: 'square' });
+                // Directional drawing to assist 'inner' (alignment: 0) detection
+                // CW: Top (L->R), Right (T->B), Bottom (R->L), Left (B->T)
+                let x1 = edge.x1, y1 = edge.y1, x2 = edge.x2, y2 = edge.y2;
+                if (edge.dy === 1) { // Bottom
+                    x1 = edge.x2; x2 = edge.x1;
+                } else if (edge.dx === -1) { // Left
+                    y1 = edge.y2; y2 = edge.y1;
+                }
+
+                tileGfx.moveTo(x1, y1);
+                tileGfx.lineTo(x2, y2);
+                tileGfx.stroke({
+                    width: 1,
+                    color: borderColor,
+                    alpha: 1,
+                    join: 'miter',
+                    cap: 'butt',
+                    alignment: 0 // Inner
+                });
             }
         }
     }
@@ -660,7 +705,14 @@ export class GridRenderer {
             if (this.hoverTile) {
                 this.hoverGfx.clear();
                 this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
-                this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, join: 'miter', cap: 'square' });
+                this.hoverGfx.stroke({
+                    width: 3,
+                    color: 0xffffff,
+                    alpha: 0.8,
+                    join: 'miter',
+                    cap: 'square',
+                    alignment: 0 // Force inner
+                });
                 this.hoverGfx.x = this.hoverTile.x * (this.tileSize + this.gap);
                 this.hoverGfx.y = this.hoverTile.y * (this.tileSize + this.gap);
                 this.hoverGfx.visible = true;
@@ -685,7 +737,6 @@ export class GridRenderer {
 
             // Corner brackets for extra visibility
             const bracketSize = 10;
-            // Top-left
             this.cursorGfx.moveTo(0, bracketSize);
             this.cursorGfx.lineTo(0, 0);
             this.cursorGfx.lineTo(bracketSize, 0);
@@ -701,7 +752,14 @@ export class GridRenderer {
             this.cursorGfx.moveTo(bracketSize, this.tileSize);
             this.cursorGfx.lineTo(0, this.tileSize);
             this.cursorGfx.lineTo(0, this.tileSize - bracketSize);
-            this.cursorGfx.stroke({ width: 2, color: 0x00ffff, alpha: 1.0, join: 'miter', cap: 'square' });
+            this.cursorGfx.stroke({
+                width: 2,
+                color: 0x00ffff,
+                alpha: 1.0,
+                join: 'miter',
+                cap: 'square',
+                alignment: 0 // Inner
+            });
 
             this.cursorGfx.x = this.cursorTile.x * (this.tileSize + this.gap);
             this.cursorGfx.y = this.cursorTile.y * (this.tileSize + this.gap);
@@ -718,7 +776,14 @@ export class GridRenderer {
         if (this.selectedTile) {
             this.selectionGfx.clear();
             this.selectionGfx.rect(0, 0, this.tileSize, this.tileSize);
-            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 1.0, join: 'miter', cap: 'square' });
+            this.selectionGfx.stroke({
+                width: 4,
+                color: 0xffffff,
+                alpha: 1.0,
+                join: 'miter',
+                cap: 'square',
+                alignment: 0 // Inner
+            });
             this.selectionGfx.fill({ color: 0xffffff, alpha: 0.4 });
 
             this.selectionGfx.x = this.selectedTile.x * (this.tileSize + this.gap);
