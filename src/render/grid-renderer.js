@@ -402,7 +402,7 @@ export class GridRenderer {
 
             if (shouldDraw) {
                 const isMapEdgeOrBlocked = !neighbor || neighbor.blocked;
-                const width = 1; // Simplified per user request
+                const width = 2; // Increased to 2 per user request
 
                 const owner = this.game.players.find(p => p.id === tileRaw.owner);
                 let color = owner ? owner.color : 0xffffff;
@@ -490,7 +490,7 @@ export class GridRenderer {
                 tileGfx.moveTo(x1, y1);
                 tileGfx.lineTo(x2, y2);
                 tileGfx.stroke({
-                    width: 1,
+                    width: 2,
                     color: borderColor,
                     alpha: 1,
                     join: 'miter',
