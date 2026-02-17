@@ -272,6 +272,7 @@ export class MapEditor {
             ],
             maxDice: 9,
             diceSides: 6,
+            gameMode: 'classic',
             bots: 2,
             botAI: 'easy',
 
@@ -393,6 +394,7 @@ export class MapEditor {
             // Map settings
             editorSharedBots: document.getElementById('editor-shared-bots'),
             editorSharedBotAI: document.getElementById('editor-shared-bot-ai'),
+            editorMapGameMode: document.getElementById('editor-map-game-mode'),
 
             // Actions
             clearBtn: document.getElementById('editor-clear-btn'),
@@ -480,6 +482,11 @@ export class MapEditor {
             this.state.diceSides = val;
             if (this.elements.diceSidesVal) this.elements.diceSidesVal.textContent = val;
 
+            // When dice sides change, clamp tile dice counts to [1, maxDice] and ensure render uses new sides
+            for (const tile of this.state.tiles.values()) {
+                tile.dice = Math.max(1, Math.min(this.state.maxDice, tile.dice || 1));
+            }
+
             this.renderer?.setDiceSides(this.state.diceSides);
             this.state.isDirty = true;
             this.renderToCanvas();
@@ -496,6 +503,12 @@ export class MapEditor {
         // Shared players (Map & Scenario)
         this.elements.editorSharedBots?.addEventListener('change', () => this.onSharedPlayersChange());
         this.elements.editorSharedBotAI?.addEventListener('change', () => this.onSharedPlayersChange());
+
+        // Start mode (Map & Scenario)
+        this.elements.editorMapGameMode?.addEventListener('change', () => {
+            this.state.gameMode = this.elements.editorMapGameMode?.value || 'classic';
+            this.state.isDirty = true;
+        });
 
         // Save button (calls saveAsMap or saveAsScenario based on type)
         this.elements.saveBtn?.addEventListener('click', () => this.handleSave());
@@ -1225,6 +1238,7 @@ export class MapEditor {
         if (this.elements.heightVal) this.elements.heightVal.textContent = this.state.height;
         if (this.elements.maxDiceSelect) this.elements.maxDiceSelect.value = this.state.maxDice;
         if (this.elements.diceSidesSelect) this.elements.diceSidesSelect.value = this.state.diceSides;
+        if (this.elements.editorMapGameMode) this.elements.editorMapGameMode.value = this.state.gameMode || 'classic';
     }
 
     /**
@@ -1767,6 +1781,7 @@ export class MapEditor {
             botAI: this.state.botAI ?? 'easy',
             maxDice: this.state.maxDice ?? 9,
             diceSides: this.state.diceSides ?? 6,
+            gameMode: this.state.gameMode ?? 'classic',
             tiles: Array.from(this.state.tiles.entries()).map(([key]) => {
                 const [x, y] = key.split(',').map(Number);
                 return { x: x - bounds.minX, y: y - bounds.minY };
@@ -1863,6 +1878,7 @@ export class MapEditor {
             height: bounds.height,
             maxDice: this.state.maxDice,
             diceSides: this.state.diceSides,
+            gameMode: this.state.gameMode ?? 'classic',
             players: this.state.players.map(p => ({
                 id: p.id,
                 isBot: p.isBot,
@@ -1982,6 +1998,7 @@ export class MapEditor {
         }
         this.state.maxDice = scenario.maxDice || 9;
         this.state.diceSides = scenario.diceSides || 6;
+        this.state.gameMode = scenario.gameMode || (scenario.configData?.gameMode) || 'classic';
 
         if (scenario.players && scenario.players.length > 0) {
             this.state.players = scenario.players.map(p => ({

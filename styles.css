@@ -4710,6 +4710,11 @@ body:has(#scenario-browser-modal:not(.hidden)) .zoom-control {
     display: none !important;
 }
 
+/* Show zoom controls when map editor is open (they are hidden in main menu and campaigns) */
+body:has(.editor-overlay:not(.hidden)) .zoom-control {
+    display: revert !important;
+}
+
 .scenario-browser-top-bar {
     position: absolute;
     top: 0;
