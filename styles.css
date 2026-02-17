@@ -2510,7 +2510,8 @@ select {
     justify-content: flex-start;
     /* Align start to accommodate tabs */
     gap: 15px;
-    padding: 10px 15px;
+    /*  padding: 10px 15px; */
+    padding: 0;
     align-items: center;
 }
 
@@ -2571,7 +2572,7 @@ select {
 /* Tighter on mobile */
 @media (max-width: 600px) {
     .modal-header.compact-header {
-        padding: 8px 10px;
+        padding: 0;
         gap: 8px;
     }
 
@@ -2611,8 +2612,7 @@ select {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    background: rgba(0, 5, 10, 0.4);
-    border-right: 1px solid rgba(0, 255, 255, 0.1);
+
     /* No negative margins for safer mobile layout */
     padding: 20px;
 }
@@ -3095,8 +3095,6 @@ select {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0;
     padding: 20px;
     overflow-y: auto;
@@ -3188,6 +3186,8 @@ select {
         left: 0 !important;
         transform: none !important;
         background: radial-gradient(circle at center, #0a0a2a 0%, #050510 100%) !important;
+
+
     }
 
     .scenario-browser-content.split-view {
@@ -3198,11 +3198,9 @@ select {
     }
 
     .scenario-browser-left {
-        width: 100% !important;
-        border-right: none !important;
-        padding: 0 !important;
-        flex-shrink: 0 !important;
-        background: transparent !important;
+        width: 100%;
+        padding: 0;
+        flex-shrink: 0;
     }
 
     .scenario-list-container {
@@ -3215,7 +3213,7 @@ select {
         display: block !important;
         width: 100% !important;
         padding: 12px !important;
-        margin-bottom: 20px !important;
+        margin-bottom: 0px !important;
         background: rgba(0, 255, 255, 0.1) !important;
         border: 1px solid var(--accent-color) !important;
         color: #fff !important;
@@ -3249,28 +3247,23 @@ select {
     }
 
     .scenario-browser-close-btn {
-        min-width: 50px !important;
-        min-height: 50px !important;
+        min-width: 40px !important;
+        min-height: 40px !important;
         padding: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        border: 1px solid rgba(0, 255, 255, 0.3) !important;
+        border: 1px solid rgba(0, 255, 255, 1) !important;
         background: rgba(0, 0, 0, 0.5) !important;
     }
 
-    .scenario-browser-right {
-        padding: 20px 0 !important;
-        border-top: 1px solid rgba(0, 255, 255, 0.2) !important;
-        background: transparent !important;
-        border-left: none !important;
-    }
+
 
     .scenario-browser-inner .modal-title {
         text-align: center !important;
         font-size: 2em !important;
         letter-spacing: 4px !important;
-        margin-bottom: 20px !important;
+        margin: 0px !important;
     }
 
     #level-grid {
@@ -3280,6 +3273,11 @@ select {
 
     /* Hide header info on mobile to save space */
     #level-grid-header {
+        display: none !important;
+    }
+
+    /* Hide zoom controls in main menu on mobile */
+    body:has(#setup-modal:not(.hidden)) .zoom-control {
         display: none !important;
     }
 }
@@ -4760,6 +4758,10 @@ body:has(#scenario-browser-modal:not(.hidden)) .zoom-control {
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.05);
     display: flex;
     flex-direction: column;
+
+    background: none;
+    border: none;
+    box-shadow: none;
 }
 
 /* Scroll handling for smaller heights */
@@ -4791,16 +4793,14 @@ body:has(#scenario-browser-modal:not(.hidden)) .zoom-control {
         overflow-y: auto;
     }
 
-    .scenario-browser-left {
-        width: 100%;
-        border-right: none;
-        padding: 0;
-        flex-shrink: 0;
-    }
+
 
     .scenario-browser-right {
-        padding-top: 20px;
-        border-top: 1px solid rgba(0, 255, 255, 0.1);
+        padding: 0px;
+        border: 0;
+        background: transparent;
+        border-left: none;
+
     }
 }
 

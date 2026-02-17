@@ -279,9 +279,9 @@ export class ScenarioBrowser {
             const typeIcon = document.createElement('span');
             const type = level.type || 'map';
             if (type === 'config') {
-                typeIcon.className = 'sprite-icon icon-dice tile-type-sprite';
+                typeIcon.className = 'sprite-icon icon-defend tile-type-sprite';
             } else if (type === 'scenario') {
-                typeIcon.className = 'sprite-icon icon-scenario tile-type-sprite';
+                typeIcon.className = 'sprite-icon icon-campaigns tile-type-sprite';
             } else {
                 typeIcon.className = 'sprite-icon icon-map tile-type-sprite';
             }
