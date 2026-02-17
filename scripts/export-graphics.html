@@ -148,6 +148,7 @@
             { name: 'icon_attack', emoji: '⚔️', label: 'Attack' },
             { name: 'icon_defend', emoji: '🛡️', label: 'Defend' },
             { name: 'icon_help', emoji: '?', label: 'Help / How to Play' },
+            { name: 'icon_input_mk', emoji: '🖱️+⌨️', label: 'Mouse + Keyboard', scale: 0.4 },
         ];
 
         // ============================
@@ -288,7 +289,7 @@
         /**
          * Render a UI icon (emoji or text character) at full SPRITE_SIZE resolution
          */
-        function createIconTexture(emoji) {
+        function createIconTexture(emoji, scale = 0.7) {
             const size = SPRITE_SIZE;
             const container = new PIXI.Container();
 
@@ -301,7 +302,7 @@
             const text = new PIXI.Text({
                 text: emoji,
                 style: {
-                    fontSize: size * 0.7,
+                    fontSize: size * scale,
                     fill: 0xffffff,
                     fontFamily: 'Arial, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji"',
                     fontWeight: 'bold',
@@ -390,7 +391,7 @@
             // UI Icons
             log('Creating UI icons...', 'info');
             for (const icon of UI_ICONS) {
-                const tex = createIconTexture(icon.emoji);
+                const tex = createIconTexture(icon.emoji, icon.scale);
                 const blob = await textureToBlob(tex);
                 generatedTextures.set(icon.name, { blob, name: icon.name, label: icon.label });
                 tex.destroy();
