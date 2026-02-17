@@ -245,15 +245,16 @@ export class ScenarioBrowser {
         const loadedOwner = localStorage.getItem('dicy_loadedCampaign');
         const loadedIdx = localStorage.getItem('dicy_loadedLevelIndex');
         const lastOwner = localStorage.getItem('dicy_lastCampaign');
-        const lastIdx = localStorage.getItem('dicy_lastLevelIndex');
-        let savedLevelIndex = null;
-        if (loadedOwner === campaign.owner && loadedIdx != null) {
-            savedLevelIndex = parseInt(loadedIdx, 10);
-        } else if (lastOwner === campaign.owner && lastIdx != null) {
-            const idx = parseInt(lastIdx, 10);
-            if (idx >= 0 && idx < (campaign.levels?.length ?? 0)) savedLevelIndex = idx;
-        }
         const solvedLevels = getSolvedLevels(campaign.owner);
+
+        // Find first level not yet solved to highlight it
+        let firstUnsolvedIndex = -1;
+        for (let i = 0; i < levels.length; i++) {
+            if (!solvedLevels.includes(i)) {
+                firstUnsolvedIndex = i;
+                break;
+            }
+        }
 
         this.levelGridHeader.innerHTML = `<span>${ownerLabel}</span><span>${levels.length} levels</span>`;
         this.levelGrid.style.gridTemplateColumns = `repeat(${gridSize}, 36px)`;
@@ -264,7 +265,7 @@ export class ScenarioBrowser {
             const level = levels[i];
             const tile = document.createElement('div');
             tile.className = 'level-grid-tile';
-            if (savedLevelIndex === i) tile.classList.add('selected');
+            if (firstUnsolvedIndex === i) tile.classList.add('selected');
             if (this.justSavedLevelIndex === i) tile.classList.add('just-saved');
             if (solvedLevels.includes(i)) tile.classList.add('solved');
             tile.dataset.index = i;
