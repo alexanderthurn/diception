@@ -123,6 +123,11 @@ export class SessionManager {
         localStorage.removeItem('dicy_campaignMode');
         localStorage.removeItem('dicy_customLevelMode');
 
+        // Clear any pending scenario/level in memory
+        if (this.scenarioBrowser) {
+            this.scenarioBrowser.clearPendingScenario();
+        }
+
         // Update ConfigManager UI to clear loaded level display
         if (this.configManager) {
             this.configManager.updateLoadedLevelDisplay(null, null);

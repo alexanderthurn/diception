@@ -194,7 +194,6 @@ async function init() {
 
     const configManager = new ConfigManager();
     configManager.loadSavedSettings();
-    configManager.setupInputListeners(effectsManager, renderer);
 
     // Update gamepad status in menu
     inputManager.on('gamepadChange', (indices) => {
@@ -210,6 +209,9 @@ async function init() {
     sessionManager.setConfigManager(configManager);
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
+    configManager.setupInputListeners(effectsManager, renderer, () => {
+        scenarioBrowser.clearPendingScenario();
+    });
 
     const gameStarter = new GameStarter(
         game, renderer, effectsManager, turnHistory,

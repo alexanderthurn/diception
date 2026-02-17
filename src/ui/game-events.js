@@ -628,10 +628,8 @@ export class GameEventManager {
 
         if (choice === 'restart') {
             // If campaign is finished, clear the loaded campaign data
-            if (campaignFinished) {
-                localStorage.removeItem('dicy_loadedCampaign');
-                localStorage.removeItem('dicy_loadedLevelIndex');
-                localStorage.removeItem('dicy_loadedCampaignId');
+            if (campaignFinished && this.scenarioBrowser) {
+                this.scenarioBrowser.clearPendingScenario();
                 localStorage.removeItem('dicy_customLevelMode');
             }
             this.sessionManager.quitToMainMenu();

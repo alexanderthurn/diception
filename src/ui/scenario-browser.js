@@ -256,6 +256,29 @@ export class ScenarioBrowser {
             }
         }
 
+        // Synchronize pending selection with UI for the main menu START button
+        if (firstUnsolvedIndex === -1) {
+            this.clearPendingScenario();
+        } else {
+            const level = levels[firstUnsolvedIndex];
+            this.pendingLevel = level;
+            this.pendingCampaign = campaign;
+            this.selectedLevelIndex = firstUnsolvedIndex;
+
+            if (this.configManager) {
+                this.configManager.updateConfigFromLevel(level);
+                this.configManager.updateLoadedLevelDisplay(campaign.owner, firstUnsolvedIndex + 1);
+            }
+
+            localStorage.setItem('dicy_loadedCampaign', campaign.owner);
+            localStorage.setItem('dicy_loadedLevelIndex', String(firstUnsolvedIndex));
+            if (campaign.ownerId) {
+                localStorage.setItem('dicy_loadedCampaignId', campaign.ownerId);
+            } else {
+                localStorage.removeItem('dicy_loadedCampaignId');
+            }
+        }
+
         this.levelGridHeader.innerHTML = `<span>${ownerLabel}</span><span>${levels.length} levels</span>`;
         this.levelGrid.style.gridTemplateColumns = `repeat(${gridSize}, 36px)`;
         this.levelGrid.style.gridTemplateRows = `repeat(${gridSize}, 36px)`;
@@ -817,6 +840,9 @@ export class ScenarioBrowser {
         this.pendingLevel = null;
         this.pendingCampaign = null;
         this.selectedLevelIndex = null;
+        if (this.configManager) {
+            this.configManager.updateLoadedLevelDisplay(null);
+        }
         localStorage.removeItem('dicy_loadedCampaign');
         localStorage.removeItem('dicy_loadedLevelIndex');
         localStorage.removeItem('dicy_loadedCampaignId');

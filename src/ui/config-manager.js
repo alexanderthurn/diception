@@ -136,23 +136,30 @@ export class ConfigManager {
     /**
      * Set up all input change listeners for saving settings
      */
-    setupInputListeners(effectsManager, renderer) {
+    setupInputListeners(effectsManager, renderer, onConfigChange = null) {
         const el = this.elements;
+
+        const handleChange = () => {
+            if (onConfigChange) onConfigChange();
+        };
 
         el.mapSizeInput.addEventListener('input', () => {
             this.updateMapSizeDisplay();
             const sizePreset = this.getMapSize(parseInt(el.mapSizeInput.value));
             localStorage.setItem('dicy_mapSize', `${sizePreset.width}x${sizePreset.height}`);
+            handleChange();
         });
 
         el.maxDiceInput.addEventListener('input', () => {
             el.maxDiceVal.textContent = el.maxDiceInput.value;
             localStorage.setItem('dicy_maxDice', el.maxDiceInput.value);
+            handleChange();
         });
 
         el.diceSidesInput.addEventListener('input', () => {
             el.diceSidesVal.textContent = el.diceSidesInput.value;
             localStorage.setItem('dicy_diceSides', el.diceSidesInput.value);
+            handleChange();
         });
 
         el.humanCountInput.addEventListener('change', () => {
@@ -160,22 +167,27 @@ export class ConfigManager {
             // Show tournament config when humans = 0
             const humans = parseInt(el.humanCountInput.value);
             el.tournamentConfig.style.display = humans === 0 ? 'block' : 'none';
+            handleChange();
         });
 
         el.botCountInput.addEventListener('change', () => {
             localStorage.setItem('dicy_botCount', el.botCountInput.value);
+            handleChange();
         });
 
         el.gameSpeedInput.addEventListener('change', () => {
             localStorage.setItem('dicy_gameSpeed', el.gameSpeedInput.value);
+            // Speed change doesn't necessarily clear scenario
         });
 
         el.mapStyleInput.addEventListener('change', () => {
             localStorage.setItem('dicy_mapStyle', el.mapStyleInput.value);
+            handleChange();
         });
 
         el.gameModeInput.addEventListener('change', () => {
             localStorage.setItem('dicy_gameMode', el.gameModeInput.value);
+            handleChange();
         });
 
         el.tournamentGamesInput.addEventListener('input', () => {
