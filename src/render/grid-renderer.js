@@ -451,7 +451,7 @@ export class GridRenderer {
 
                 tileGfx.moveTo(edge.x1, edge.y1);
                 tileGfx.lineTo(edge.x2, edge.y2);
-                tileGfx.stroke({ width: 2, color: borderColor, alpha: 0.8, join: 'miter', cap: 'square' });
+                tileGfx.stroke({ width: 2, color: borderColor, alpha: 1, join: 'miter', cap: 'square' });
             }
         }
     }
@@ -530,8 +530,20 @@ export class GridRenderer {
 
         if (regions.length === 0) return { largest: new Set(), others: [] };
 
-        // Sort by size descending
-        regions.sort((a, b) => b.size - a.size);
+        // Sort by size descending, then by total dice count as a tie-breaker
+        regions.sort((a, b) => {
+            if (b.size !== a.size) return b.size - a.size;
+
+            const getDiceCount = (tileSet) => {
+                let total = 0;
+                for (const idx of tileSet) {
+                    total += map.tiles[idx].dice;
+                }
+                return total;
+            };
+
+            return getDiceCount(b) - getDiceCount(a);
+        });
         const largest = regions[0];
         const others = regions.slice(1);
 
@@ -626,7 +638,7 @@ export class GridRenderer {
         drawComets(this.currentPlayerRegionEdges, 1.0, 1.0, 1.0);
 
         // 2. Secondary Regions - Smaller, slower (50% of previous speed = 2x duration)
-        drawComets(this.currentPlayerSecondaryRegionEdges, 3.6, 0.6, 1);
+        // drawComets(this.currentPlayerSecondaryRegionEdges, 3.6, 0.6, 1);
     }
 
     drawOverlay() {
