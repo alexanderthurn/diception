@@ -333,8 +333,11 @@ export class InputController {
             this.lastPos = { x: e.global.x, y: e.global.y };
         } else if (this.activePointers.size <= 1) {
             // Hover Logic - pointer movement always updates hover (mouse/virtual cursor)
+            const isSimulated = e.isGamepadSimulated || (e.nativeEvent && e.nativeEvent.isGamepadSimulated) || (e.originalEvent && e.originalEvent.isGamepadSimulated);
+
             // Switch to pointer mode when user moves pointer so hover and target highlights work
-            if (this.cursorVisible) {
+            // but NOT when the move is simulated by the gamepad itself
+            if (this.cursorVisible && !isSimulated) {
                 this.cursorVisible = false;
                 this.cursorX = null;
                 this.cursorY = null;
