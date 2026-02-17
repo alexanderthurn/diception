@@ -353,9 +353,20 @@ export class ScenarioBrowser {
         el.style.left = Math.min(rect.left, window.innerWidth - size - 16) + 'px';
         el.style.top = (rect.top - size - 12) + 'px';
         this.hoverPreviewEl = el;
+
+        if (level.type === 'config') {
+            this.hoverPreviewInterval = setInterval(async () => {
+                const updatedLevel = await this.generateConfigPreview(level);
+                this.renderMinimap(canvas, updatedLevel);
+            }, 1000);
+        }
     }
 
     hideHoverPreview() {
+        if (this.hoverPreviewInterval) {
+            clearInterval(this.hoverPreviewInterval);
+            this.hoverPreviewInterval = null;
+        }
         if (this.hoverPreviewEl?.parentNode) {
             this.hoverPreviewEl.parentNode.removeChild(this.hoverPreviewEl);
         }
@@ -442,6 +453,17 @@ export class ScenarioBrowser {
         const body = document.createElement('div');
         body.className = 'dialog-body';
 
+        // Start dynamic update if procedural
+        const startDynamicUpdate = (lvl, canvas) => {
+            if (this.dialogPreviewInterval) clearInterval(this.dialogPreviewInterval);
+            if (lvl.type === 'config') {
+                this.dialogPreviewInterval = setInterval(async () => {
+                    const updatedLevel = await this.generateConfigPreview(lvl);
+                    this.renderMinimap(canvas, updatedLevel);
+                }, 1000);
+            }
+        };
+
         let currentIndex = index;
         const updateContent = async (idx) => {
             currentIndex = idx;
@@ -450,11 +472,16 @@ export class ScenarioBrowser {
             if (!built) return;
             body.innerHTML = '';
             body.appendChild(built.content);
-            built.prevBtn.addEventListener('click', () => { if (idx > 0) updateContent(idx - 1); });
-            built.nextBtn.addEventListener('click', () => { if (idx < totalLevels - 1) updateContent(idx + 1); });
+            built.prevBtn.addEventListener('click', () => { if (currentIndex > 0) updateContent(currentIndex - 1); });
+            built.nextBtn.addEventListener('click', () => { if (currentIndex < totalLevels - 1) updateContent(currentIndex + 1); });
 
             // Re-render actions to update move button states
             updateActions(idx);
+
+            // Handle dynamic procedural update
+            const canvas = built.content.querySelector('.level-preview-canvas');
+            const lvl = this.campaignManager.getLevel(campaign, idx);
+            startDynamicUpdate(lvl, canvas);
         };
 
         const actions = document.createElement('div');
@@ -526,12 +553,8 @@ export class ScenarioBrowser {
         };
 
         let finish;
-        const built = await buildContent(index);
-        body.appendChild(built.content);
-        built.prevBtn.addEventListener('click', () => { if (currentIndex > 0) updateContent(currentIndex - 1); });
-        built.nextBtn.addEventListener('click', () => { if (currentIndex < totalLevels - 1) updateContent(currentIndex + 1); });
-
-        updateActions(index);
+        // Initial setup
+        await updateContent(index);
 
         dialog.appendChild(body);
         dialog.appendChild(actions);
@@ -543,6 +566,10 @@ export class ScenarioBrowser {
 
         new Promise((resolve) => {
             finish = (value) => {
+                if (this.dialogPreviewInterval) {
+                    clearInterval(this.dialogPreviewInterval);
+                    this.dialogPreviewInterval = null;
+                }
                 overlay.classList.add('fade-out');
                 setTimeout(() => {
                     overlay.parentNode?.removeChild(overlay);
