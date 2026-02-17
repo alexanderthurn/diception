@@ -4650,9 +4650,11 @@ canvas {
     align-items: center;
 }
 
-/* Fix Zoom Buttons to be square (36px) and handle icon aspect ratios */
+/* Fix Zoom and Audio Buttons to be square (36px) and handle icon aspect ratios */
 #zoom-in-btn,
-#zoom-out-btn {
+#zoom-out-btn,
+#music-toggle,
+#sfx-toggle {
     width: 36px !important;
     height: 36px !important;
     padding: 0 !important;

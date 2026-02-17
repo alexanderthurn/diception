@@ -134,8 +134,8 @@
             { name: 'icon_music_off', emoji: '🔇', label: 'Music Off' },
             { name: 'icon_sfx_on', emoji: '🔔', label: 'SFX On' },
             { name: 'icon_sfx_off', emoji: '🔕', label: 'SFX Off' },
-            { name: 'icon_zoom_in', emoji: '+', label: 'Zoom In' },
-            { name: 'icon_zoom_out', emoji: '−', label: 'Zoom Out' },
+            { name: 'icon_zoom_in', emoji: '+', label: 'Zoom In', color: '#00FFFF' },
+            { name: 'icon_zoom_out', emoji: '−', label: 'Zoom Out', color: '#00FFFF' },
             { name: 'icon_campaigns', emoji: '📋', label: 'Campaigns' },
             { name: 'icon_close', emoji: '✕', label: 'Close / Deselect' },
             { name: 'icon_map', emoji: '🗺️', label: 'Map' },
@@ -289,7 +289,7 @@
         /**
          * Render a UI icon (emoji or text character) at full SPRITE_SIZE resolution
          */
-        function createIconTexture(emoji, scale = 0.7) {
+        function createIconTexture(emoji, scale = 0.7, color = 0xffffff) {
             const size = SPRITE_SIZE;
             const container = new PIXI.Container();
 
@@ -303,7 +303,7 @@
                 text: emoji,
                 style: {
                     fontSize: size * scale,
-                    fill: 0xffffff,
+                    fill: color,
                     fontFamily: 'Arial, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji"',
                     fontWeight: 'bold',
                     align: 'center'
@@ -314,6 +314,67 @@
             text.x = size / 2;
             text.y = size / 2;
             container.addChild(text);
+
+            const texture = app.renderer.generateTexture({
+                target: container,
+                resolution: 1,
+                antialias: true
+            });
+
+            container.destroy({ children: true });
+            return texture;
+        }
+
+        /**
+         * specialized texture for Mouse + Keyboard (icon_input_mk)
+         * to handle spacing and sizing of the '+' sign
+         */
+        function createMouseKeyboardTexture() {
+            const size = SPRITE_SIZE;
+            const container = new PIXI.Container();
+
+            // Invisible bounds
+            const bounds = new PIXI.Graphics();
+            bounds.rect(0, 0, size, size);
+            bounds.fill({ color: 0x000000, alpha: 0 });
+            container.addChild(bounds);
+
+            const style = {
+                fill: 0xffffff,
+                fontFamily: 'Arial, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji"',
+                fontWeight: 'bold',
+                align: 'center'
+            };
+
+            // Mouse (Left)
+            const mouse = new PIXI.Text({
+                text: '🖱️',
+                style: { ...style, fontSize: size * 0.35 }
+            });
+            mouse.anchor.set(0.5);
+            mouse.x = size * 0.25;
+            mouse.y = size * 0.5;
+            container.addChild(mouse);
+
+            // Plus (Center, Small)
+            const plus = new PIXI.Text({
+                text: '+',
+                style: { ...style, fontSize: size * 0.15 }
+            });
+            plus.anchor.set(0.5);
+            plus.x = size * 0.47;
+            plus.y = size * 0.5;
+            container.addChild(plus);
+
+            // Keyboard (Right)
+            const kb = new PIXI.Text({
+                text: '⌨️',
+                style: { ...style, fontSize: size * 0.35 }
+            });
+            kb.anchor.set(0.5);
+            kb.x = size * 0.75;
+            kb.y = size * 0.5;
+            container.addChild(kb);
 
             const texture = app.renderer.generateTexture({
                 target: container,
@@ -391,7 +452,12 @@
             // UI Icons
             log('Creating UI icons...', 'info');
             for (const icon of UI_ICONS) {
-                const tex = createIconTexture(icon.emoji, icon.scale);
+                let tex;
+                if (icon.name === 'icon_input_mk') {
+                    tex = createMouseKeyboardTexture();
+                } else {
+                    tex = createIconTexture(icon.emoji, icon.scale, icon.color);
+                }
                 const blob = await textureToBlob(tex);
                 generatedTextures.set(icon.name, { blob, name: icon.name, label: icon.label });
                 tex.destroy();
