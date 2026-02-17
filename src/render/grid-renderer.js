@@ -732,7 +732,10 @@ export class GridRenderer {
         }
 
         // Draw keyboard/gamepad cursor (distinct from hover)
-        if (this.cursorTile) {
+        // Skip when cursor is on the same tile as selection - avoid duplicate "second selection"
+        const cursorSameAsSelection = this.selectedTile && this.cursorTile &&
+            this.cursorTile.x === this.selectedTile.x && this.cursorTile.y === this.selectedTile.y;
+        if (this.cursorTile && !cursorSameAsSelection) {
             this.cursorGfx.clear();
             const inset = 3; // Draw cursor slightly inside tile
 

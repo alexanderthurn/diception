@@ -4306,10 +4306,10 @@ select {
     }
 }
 
-/* Gamepad Cursors */
+/* Gamepad Cursors - above dialogs (game over, modals, etc.) */
 .gamepad-cursor {
     pointer-events: none;
-    z-index: 10000;
+    z-index: 100050;
     /* Default color if not set */
     color: #ffffff;
 }

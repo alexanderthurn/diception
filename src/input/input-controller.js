@@ -156,7 +156,13 @@ export class InputController {
         if (this.game.gameOver) return;
         if (this.game.currentPlayer.isBot) return;
 
-        // If cursor not visible, initialize it
+        // Virtual cursor mode: cursorX/cursorY are null - GamepadCursorManager handles
+        // selection via simulated click. Do NOT init grid cursor (would show teal at wrong tile).
+        if (!this.cursorVisible && this.cursorX === null) {
+            return;
+        }
+
+        // If cursor not visible, initialize it (D-pad/keyboard mode)
         if (!this.cursorVisible || this.cursorX === null) {
             this.cursorVisible = true;
             this.initCursorAtNearestTile();
@@ -223,8 +229,10 @@ export class InputController {
         // Track the pointer
         this.activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
 
-        // Mouse interaction hides keyboard cursor
+        // Mouse/pointer interaction hides keyboard cursor - clear fully so onConfirm doesn't initCursorAtNearestTile
         this.cursorVisible = false;
+        this.cursorX = null;
+        this.cursorY = null;
         this.renderer.setCursor(null, null);
 
         // Check input types
@@ -317,8 +325,14 @@ export class InputController {
             this.renderer.pan(dx, dy);
             this.lastPos = { x: e.global.x, y: e.global.y };
         } else if (this.activePointers.size <= 1) {
-            // Hover Logic - only if cursor not in keyboard mode and NOT dragging
-            if (this.cursorVisible) return;
+            // Hover Logic - pointer movement always updates hover (mouse/virtual cursor)
+            // Switch to pointer mode when user moves pointer so hover and target highlights work
+            if (this.cursorVisible) {
+                this.cursorVisible = false;
+                this.cursorX = null;
+                this.cursorY = null;
+                this.renderer.setCursor(null, null);
+            }
 
             const globalPos = e.global;
             const localPos = this.renderer.grid.container.toLocal(globalPos);
@@ -534,6 +548,11 @@ export class InputController {
     deselect() {
         this.selectedTile = null;
         this.renderer.setSelection(null, null);
+        // Clear cursor state to avoid orphaned teal cursor (unified selection for mouse/touch/gamepad)
+        this.cursorVisible = false;
+        this.cursorX = null;
+        this.cursorY = null;
+        this.renderer.setCursor(null, null);
     }
 
     onTurnStart() {

@@ -24,7 +24,7 @@ export class GamepadCursorManager {
         this.container.style.width = '100vw';
         this.container.style.height = '100vh';
         this.container.style.pointerEvents = 'none';
-        this.container.style.zIndex = '9999';
+        this.container.style.zIndex = '100050';
         document.body.appendChild(this.container);
 
         // Track animation frame and disposed state for cleanup
@@ -585,7 +585,7 @@ export class GamepadCursorManager {
         feedback.style.fontSize = '12px';
         feedback.style.fontWeight = 'bold';
         feedback.style.pointerEvents = 'none';
-        feedback.style.zIndex = '10000';
+        feedback.style.zIndex = '100051';
         feedback.style.transition = 'all 2s cubic-bezier(0.2, 0.8, 0.2, 1)';
         feedback.style.whiteSpace = 'nowrap';
         feedback.style.fontFamily = 'system-ui, -apple-system, sans-serif';
