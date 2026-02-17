@@ -73,6 +73,10 @@ export class ScenarioBrowser {
         await this.showCampaignView();
         this.restoreLastSelectedCampaign();
         if (this.effectsManager) this.effectsManager.stopIntroMode();
+
+        // Hide zoom buttons in campaign view
+        const zoomBtns = document.querySelectorAll('.zoom-control');
+        zoomBtns.forEach(btn => btn.classList.add('hidden'));
     }
 
     hasHoverCapability() {
@@ -91,6 +95,10 @@ export class ScenarioBrowser {
                 this.scenarioBrowserModal.classList.add('hidden');
                 this.setupModal.classList.remove('hidden');
                 if (this.effectsManager) this.effectsManager.startIntroMode();
+
+                // Show zoom buttons again
+                const zoomBtns = document.querySelectorAll('.zoom-control');
+                zoomBtns.forEach(btn => btn.classList.remove('hidden'));
             });
         }
 
@@ -266,6 +274,18 @@ export class ScenarioBrowser {
             idxSpan.textContent = i + 1;
             tile.appendChild(idxSpan);
 
+            // Add type icon
+            const typeIcon = document.createElement('span');
+            const type = level.type || 'map';
+            if (type === 'config') {
+                typeIcon.className = 'sprite-icon icon-dice tile-type-sprite';
+            } else if (type === 'scenario') {
+                typeIcon.className = 'sprite-icon icon-scenario tile-type-sprite';
+            } else {
+                typeIcon.className = 'sprite-icon icon-map tile-type-sprite';
+            }
+            tile.appendChild(typeIcon);
+
             if (this.hasHoverCapability()) {
                 tile.addEventListener('mouseenter', () => this.showHoverPreview(level, tile));
                 tile.addEventListener('mouseleave', () => this.hideHoverPreview());
@@ -277,7 +297,7 @@ export class ScenarioBrowser {
         if (this.isOwner) {
             const addTile = document.createElement('div');
             addTile.className = 'level-grid-tile add-tile';
-            addTile.innerHTML = '<span class="tile-add">+</span>';
+            addTile.innerHTML = ''; // No icon at all
             addTile.addEventListener('click', () => this.openEditorForNewLevel(levels.length));
             this.levelGrid.appendChild(addTile);
         }
@@ -595,8 +615,23 @@ export class ScenarioBrowser {
         const ox = (canvas.width - totalW) / 2;
         const oy = (canvas.height - totalH) / 2;
 
-        ctx.fillStyle = '#111';
+        const grd = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 1.5);
+        grd.addColorStop(0, '#0a1a2a');
+        grd.addColorStop(1, '#050510');
+        ctx.fillStyle = grd;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Subtle grid lines
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)';
+        ctx.lineWidth = 0.5;
+        for (let ix = 0; ix <= w; ix++) {
+            const x = ox + ix * (cellSize + gap) - gap / 2;
+            ctx.beginPath(); ctx.moveTo(x, oy); ctx.lineTo(x, oy + totalH); ctx.stroke();
+        }
+        for (let iy = 0; iy <= h; iy++) {
+            const y = oy + iy * (cellSize + gap) - gap / 2;
+            ctx.beginPath(); ctx.moveTo(ox, y); ctx.lineTo(ox + totalW, y); ctx.stroke();
+        }
 
         const tiles = level.tiles || [];
         const playerColors = {};
@@ -607,12 +642,17 @@ export class ScenarioBrowser {
         tiles.forEach(t => {
             const x = ox + t.x * (cellSize + gap);
             const y = oy + t.y * (cellSize + gap);
-            let color = '#444';
+            let colorStr = '#223344';
             if (t.owner !== undefined && t.owner !== -1 && playerColors[t.owner]) {
-                color = '#' + playerColors[t.owner].toString(16).padStart(6, '0');
+                colorStr = '#' + playerColors[t.owner].toString(16).padStart(6, '0');
             }
-            ctx.fillStyle = color;
+
+            ctx.fillStyle = colorStr;
             ctx.fillRect(x, y, cellSize, cellSize);
+
+            // Subtle highlight
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.fillRect(x, y, cellSize, cellSize / 2);
         });
     }
 
