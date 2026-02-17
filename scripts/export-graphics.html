@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Diception Graphics Exporter</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #111;
+            color: #0f0;
+            padding: 2em;
+        }
+
+        h1 {
+            color: #00ffff;
+        }
+
+        button {
+            font-size: 1.2em;
+            padding: 0.5em 1em;
+            cursor: pointer;
+            margin: 0.3em;
+            background: #222;
+            color: #0f0;
+            border: 1px solid #0f0;
+        }
+
+        button:hover {
+            background: #333;
+        }
+
+        .done {
+            color: #0f0;
+        }
+
+        .error {
+            color: #f00;
+        }
+
+        .info {
+            color: #00ffff;
+        }
+
+        #log {
+            white-space: pre-wrap;
+            margin-top: 1em;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            padding: 0.5em;
+        }
+
+        #preview {
+            margin-top: 1em;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .preview-item {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 8px;
+        }
+
+        .preview-item img {
+            width: 128px;
+            height: 128px;
+            image-rendering: auto;
+            background: #000;
+        }
+
+        .preview-item .label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .preview-item .size {
+            font-size: 10px;
+            color: #555;
+        }
+
+        #status {
+            margin-top: 1em;
+            color: #ffff00;
+        }
+
+        #canvas-container {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Diception Graphics Exporter</h1>
+    <p>Exports individual die face sprites at 256×256px for use in a spritesheet.</p>
+    <p class="info">The game will position/arrange these dice on tiles at runtime — only individual die faces are
+        exported.</p>
+
+    <button id="export-all">Export All as ZIP</button>
+    <button id="preview-all">Preview All</button>
+
+    <div id="status"></div>
+    <div id="log"></div>
+    <div id="preview"></div>
+    <div id="canvas-container"></div>
+
+    <!-- PixiJS 8 from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/8.6.6/pixi.min.js"></script>
+    <!-- JSZip for ZIP export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script>
+        // ============================
+        // CONFIGURATION
+        // ============================
+        const SPRITE_SIZE = 256; // Export size for each sprite
+        // Game supports dice sides 1-16 (see constants.js MAX_DICE_SIDES)
+        const DICE_SIDES_OPTIONS = Array.from({ length: 16 }, (_, i) => i + 1);
+
+        // All UI icons used in the game (from index.html + JS files)
+        const UI_ICONS = [
+            { name: 'icon_autoplay', emoji: '🤖', label: 'Autoplay' },
+            { name: 'icon_retry', emoji: '🔄', label: 'Retry / Restart' },
+            { name: 'icon_settings', emoji: '⚙️', label: 'Settings / Main Menu' },
+            { name: 'icon_music_on', emoji: '🔊', label: 'Music On' },
+            { name: 'icon_music_off', emoji: '🔇', label: 'Music Off' },
+            { name: 'icon_sfx_on', emoji: '🔔', label: 'SFX On' },
+            { name: 'icon_sfx_off', emoji: '🔕', label: 'SFX Off' },
+            { name: 'icon_zoom_in', emoji: '➕', label: 'Zoom In' },
+            { name: 'icon_zoom_out', emoji: '➖', label: 'Zoom Out' },
+            { name: 'icon_campaigns', emoji: '📋', label: 'Campaigns' },
+            { name: 'icon_close', emoji: '✕', label: 'Close / Deselect' },
+            { name: 'icon_map', emoji: '🗺️', label: 'Map' },
+            { name: 'icon_scenario', emoji: '⭐', label: 'Scenario' },
+            { name: 'icon_dice', emoji: '🎲', label: 'Dice / Generate' },
+            { name: 'icon_save', emoji: '💾', label: 'Save' },
+            { name: 'icon_paint', emoji: '🖌️', label: 'Paint' },
+            { name: 'icon_assign', emoji: '👤', label: 'Assign Player' },
+            { name: 'icon_gamepad', emoji: '🎮', label: 'Gamepad' },
+            { name: 'icon_attack', emoji: '⚔️', label: 'Attack' },
+            { name: 'icon_defend', emoji: '🛡️', label: 'Defend' },
+            { name: 'icon_help', emoji: '?', label: 'Help / How to Play' },
+        ];
+
+        // ============================
+        // LOGGING
+        // ============================
+        const log = (msg, cls = '') => {
+            const el = document.getElementById('log');
+            const span = document.createElement('div');
+            span.textContent = msg;
+            if (cls) span.className = cls;
+            el.appendChild(span);
+            el.scrollTop = el.scrollHeight;
+        };
+
+        const setStatus = (msg) => {
+            document.getElementById('status').textContent = msg;
+        };
+
+        // ============================
+        // PIXI SETUP
+        // ============================
+        let app = null;
+        const generatedTextures = new Map(); // key -> { blob, name }
+
+        async function initPixi() {
+            app = new PIXI.Application();
+            await app.init({
+                width: SPRITE_SIZE,
+                height: SPRITE_SIZE,
+                backgroundAlpha: 0,
+                antialias: true,
+                canvas: document.createElement('canvas')
+            });
+            document.getElementById('canvas-container').appendChild(app.canvas);
+        }
+
+        // ============================
+        // DIE RENDERING
+        // ============================
+
+        /**
+         * Render the D6 emoji die face (🎲) at full SPRITE_SIZE resolution
+         */
+        function createD6DieFace() {
+            const size = SPRITE_SIZE;
+            const text = new PIXI.Text({
+                text: '🎲',
+                style: {
+                    fontSize: size * 0.8,
+                    fill: 0xffffff,
+                    fontFamily: 'Arial, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji"',
+                    fontWeight: 'bold',
+                    align: 'center'
+                }
+            });
+
+            const container = new PIXI.Container();
+
+            // Invisible bounds to ensure texture is exactly size x size
+            const bounds = new PIXI.Graphics();
+            bounds.rect(0, 0, size, size);
+            bounds.fill({ color: 0x000000, alpha: 0 });
+            container.addChild(bounds);
+
+            container.addChild(text);
+            text.anchor.set(0.5);
+            text.x = size / 2;
+            text.y = size / 2;
+
+            const texture = app.renderer.generateTexture({
+                target: container,
+                resolution: 1,
+                antialias: true
+            });
+
+            container.destroy({ children: true });
+            return texture;
+        }
+
+        /**
+         * Render a non-D6 die face (shows the side number) at full SPRITE_SIZE resolution
+         */
+        function createNumberDieFace(sides) {
+            const size = SPRITE_SIZE;
+            const container = new PIXI.Container();
+
+            // Invisible bounds to ensure texture is exactly size x size
+            const bounds = new PIXI.Graphics();
+            bounds.rect(0, 0, size, size);
+            bounds.fill({ color: 0x000000, alpha: 0 });
+            container.addChild(bounds);
+
+            const labelText = new PIXI.Text({
+                text: sides.toString(),
+                style: {
+                    fontFamily: 'Arial',
+                    fontSize: size * 0.6,
+                    fontWeight: 'bold',
+                    fill: 0xffffff,
+                    align: 'center',
+                    stroke: { color: 0x000000, width: size * 0.03 }
+                }
+            });
+
+            labelText.anchor.set(0.5);
+            labelText.x = size / 2;
+            labelText.y = size / 2;
+            container.addChild(labelText);
+
+            const texture = app.renderer.generateTexture({
+                target: container,
+                resolution: 1,
+                antialias: true
+            });
+
+            container.destroy({ children: true });
+            return texture;
+        }
+
+        /**
+         * Render the tile background (white square, tinted at runtime)
+         */
+        function createBgTexture() {
+            const size = SPRITE_SIZE;
+            const g = new PIXI.Graphics();
+            g.rect(0, 0, size, size);
+            g.fill({ color: 0xffffff, alpha: 1 });
+
+            const texture = app.renderer.generateTexture({
+                target: g,
+                resolution: 1,
+                antialias: false
+            });
+            g.destroy();
+            return texture;
+        }
+
+        /**
+         * Render a UI icon (emoji or text character) at full SPRITE_SIZE resolution
+         */
+        function createIconTexture(emoji) {
+            const size = SPRITE_SIZE;
+            const container = new PIXI.Container();
+
+            // Invisible bounds to ensure texture is exactly size x size
+            const bounds = new PIXI.Graphics();
+            bounds.rect(0, 0, size, size);
+            bounds.fill({ color: 0x000000, alpha: 0 });
+            container.addChild(bounds);
+
+            const text = new PIXI.Text({
+                text: emoji,
+                style: {
+                    fontSize: size * 0.7,
+                    fill: 0xffffff,
+                    fontFamily: 'Arial, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji"',
+                    fontWeight: 'bold',
+                    align: 'center'
+                }
+            });
+
+            text.anchor.set(0.5);
+            text.x = size / 2;
+            text.y = size / 2;
+            container.addChild(text);
+
+            const texture = app.renderer.generateTexture({
+                target: container,
+                resolution: 1,
+                antialias: true
+            });
+
+            container.destroy({ children: true });
+            return texture;
+        }
+
+        // ============================
+        // EXTRACT TEXTURE TO BLOB
+        // ============================
+        async function textureToBlob(texture) {
+            const sprite = new PIXI.Sprite(texture);
+            const base64 = await app.renderer.extract.base64({
+                target: sprite,
+                resolution: 1,
+                format: 'png'
+            });
+            sprite.destroy();
+            const response = await fetch(base64);
+            return await response.blob();
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================
+        // GENERATE ALL
+        // ============================
+        async function generateAll() {
+            generatedTextures.clear();
+
+            if (!app) {
+                log('Initializing PixiJS...', 'info');
+                await initPixi();
+            }
+
+            // Tile background
+            log('Creating tile background (white square)...', 'info');
+            const bgTex = createBgTexture();
+            const bgBlob = await textureToBlob(bgTex);
+            generatedTextures.set('bg', { blob: bgBlob, name: 'bg' });
+            bgTex.destroy();
+
+            // D6 emoji die face
+            log('Creating D6 die face (🎲 emoji)...', 'info');
+            const d6Tex = createD6DieFace();
+            const d6Blob = await textureToBlob(d6Tex);
+            generatedTextures.set('die_d6', { blob: d6Blob, name: 'die_d6' });
+            d6Tex.destroy();
+
+            // Other dice faces (number labels)
+            for (const sides of DICE_SIDES_OPTIONS) {
+                if (sides === 6) continue; // Already handled with emoji
+                log(`Creating D${sides} die face...`, 'info');
+                const tex = createNumberDieFace(sides);
+                const blob = await textureToBlob(tex);
+                generatedTextures.set(`die_d${sides}`, { blob, name: `die_d${sides}` });
+                tex.destroy();
+            }
+
+            log(`✓ Generated ${generatedTextures.size} sprites (all ${SPRITE_SIZE}×${SPRITE_SIZE}px)`, 'done');
+
+            // UI Icons
+            log('Creating UI icons...', 'info');
+            for (const icon of UI_ICONS) {
+                const tex = createIconTexture(icon.emoji);
+                const blob = await textureToBlob(tex);
+                generatedTextures.set(icon.name, { blob, name: icon.name, label: icon.label });
+                tex.destroy();
+            }
+
+            log(`✓ Total: ${generatedTextures.size} sprites exported`, 'done');
+        }
+
+        // ============================
+        // PREVIEW
+        // ============================
+        async function showPreview() {
+            const previewEl = document.getElementById('preview');
+            previewEl.innerHTML = '';
+
+            setStatus('Generating sprites...');
+            await generateAll();
+            setStatus('Rendering previews...');
+
+            for (const [key, { blob, name }] of generatedTextures) {
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(blob);
+                item.appendChild(img);
+
+                const label = document.createElement('div');
+                label.className = 'label';
+                const entry = generatedTextures.get(key);
+                label.textContent = entry.label ? `${name} (${entry.label})` : `${name}.png`;
+                item.appendChild(label);
+
+                const size = document.createElement('div');
+                size.className = 'size';
+                size.textContent = `${SPRITE_SIZE}×${SPRITE_SIZE}px — ${(blob.size / 1024).toFixed(1)} KB`;
+                item.appendChild(size);
+
+                previewEl.appendChild(item);
+            }
+
+            setStatus(`Preview complete: ${generatedTextures.size} sprites`);
+        }
+
+        // ============================
+        // EXPORT AS ZIP
+        // ============================
+        async function exportAll() {
+            setStatus('Generating sprites...');
+            await generateAll();
+
+            setStatus('Building ZIP...');
+            const zip = new JSZip();
+
+            for (const [key, { blob, name }] of generatedTextures) {
+                zip.file(`${name}.png`, blob);
+                log(`  ✓ ${name}.png (${(blob.size / 1024).toFixed(1)} KB)`, 'done');
+            }
+
+            setStatus('Compressing ZIP...');
+            log('\nCompressing...', 'info');
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            downloadBlob(zipBlob, 'diception-sprites.zip');
+
+            setStatus(`Done! ${generatedTextures.size} sprites in diception-sprites.zip (${(zipBlob.size / 1024).toFixed(0)} KB)`);
+            log(`\nExported diception-sprites.zip (${(zipBlob.size / 1024).toFixed(0)} KB)`, 'done');
+        }
+
+        // ============================
+        // EVENT LISTENERS
+        // ============================
+        document.getElementById('export-all').addEventListener('click', exportAll);
+        document.getElementById('preview-all').addEventListener('click', showPreview);
+    </script>
+</body>
+
+</html>
