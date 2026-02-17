@@ -221,6 +221,12 @@ export class MapEditor {
         // Interaction state
         this.isPainting = false;
         this.lastPaintedTile = null;
+        // Trackpad mode (no middle button): tap = draw, drag = pan
+        this.mouseTrackpadPendingTap = false;
+        this.mouseTrackpadIsPanning = false;
+        this.mouseTrackpadStartTile = null;
+        this.mouseTrackpadStartX = 0;
+        this.mouseTrackpadStartY = 0;
 
         // Config preview rotation
         this.configPreviewInterval = null;
@@ -814,7 +820,7 @@ export class MapEditor {
 
         // Add listeners (window mouseup catches release outside canvas)
         this.handleCanvasMouseUpGlobal = () => {
-            if (this.isPainting) this.onCanvasMouseUp();
+            if (this.isPainting || this.mouseTrackpadPendingTap) this.onCanvasMouseUp();
         };
         canvas.addEventListener('mousedown', this.handleCanvasMouseDown);
         canvas.addEventListener('mousemove', this.handleCanvasMouseMove);
@@ -862,6 +868,18 @@ export class MapEditor {
         if (e.button === 1) return;
 
         const tile = this.screenToTile(e.clientX, e.clientY);
+        const isTrackpadMode = this.renderer?.likelyTrackpad && e.button === 0;
+
+        if (isTrackpadMode) {
+            // Trackpad: tap = draw, drag = pan (InputController handles pan)
+            this.mouseTrackpadPendingTap = !!tile;
+            this.mouseTrackpadIsPanning = false;
+            this.mouseTrackpadStartTile = tile ? { x: tile.x, y: tile.y } : null;
+            this.mouseTrackpadStartX = e.clientX;
+            this.mouseTrackpadStartY = e.clientY;
+            return;
+        }
+
         if (tile) {
             this.isPainting = true;
             this.mouseStrokeStartTile = { x: tile.x, y: tile.y };
@@ -912,6 +930,16 @@ export class MapEditor {
 
         const tile = this.screenToTile(e.clientX, e.clientY);
 
+        // Trackpad mode: detect drag → pan (InputController handles it)
+        if (this.mouseTrackpadPendingTap) {
+            const dx = e.clientX - this.mouseTrackpadStartX;
+            const dy = e.clientY - this.mouseTrackpadStartY;
+            if (Math.sqrt(dx * dx + dy * dy) > 8) {
+                this.mouseTrackpadIsPanning = true;
+                this.mouseTrackpadPendingTap = false;
+            }
+        }
+
         // Update hovered tile state for keyboard input
         this.state.hoveredTile = tile;
 
@@ -956,6 +984,14 @@ export class MapEditor {
     }
 
     onCanvasMouseUp() {
+        // Trackpad tap (no drag): treat as draw
+        if (this.mouseTrackpadPendingTap && !this.mouseTrackpadIsPanning && this.mouseTrackpadStartTile) {
+            this.handleTileInteraction(this.mouseTrackpadStartTile.x, this.mouseTrackpadStartTile.y, 0, false, true);
+        }
+        this.mouseTrackpadPendingTap = false;
+        this.mouseTrackpadIsPanning = false;
+        this.mouseTrackpadStartTile = null;
+
         if (this.isPainting && this.mouseStrokeStartTile && !this.mouseStrokeMovedToOther &&
             this.currentInteractionButton === 0 && this.state.editorType === 'scenario' &&
             (this.state.currentMode === 'assign' || this.state.currentMode === 'dice')) {

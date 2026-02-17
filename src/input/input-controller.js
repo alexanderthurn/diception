@@ -30,9 +30,15 @@ export class InputController {
 
         this.waitTillNoTouch = false;
 
-        // Zoom listener (Wheel)
+        // Zoom listener (Wheel) - also detect trackpad vs mouse for editor pan behavior
         this.renderer.app.canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
+            // Trackpad: small pixel deltas. Mouse: larger discrete steps. Pinch: ctrlKey/metaKey.
+            const looksLikeMouseStep = e.deltaMode === 0 && Math.abs(e.deltaY) > 4 && Math.abs(e.deltaX) === 0;
+            const isPinch = e.ctrlKey || e.metaKey;
+            if (!isPinch) {
+                this.renderer.likelyTrackpad = !looksLikeMouseStep;
+            }
             this.renderer.zoom(e.deltaY, e.clientX, e.clientY);
         }, { passive: false });
 
@@ -245,8 +251,9 @@ export class InputController {
             return;
         }
 
-        // When editor is open and using mouse: left click must NOT pan (editor handles it)
-        const isEditorMouse = this.renderer.editorActive && e.pointerType === 'mouse' && e.button === 0;
+        // When editor is open and using mouse: left click must NOT pan (editor handles it).
+        // Exception: trackpad (no middle button) - use left-drag for pan, tap for draw.
+        const isEditorMouse = this.renderer.editorActive && e.pointerType === 'mouse' && e.button === 0 && !this.renderer.likelyTrackpad;
         if (isEditorMouse) {
             // Don't start drag - editor will handle left click for tile editing
         } else

@@ -18,6 +18,8 @@ export class Renderer {
         this.originalX = 0;
         this.originalY = 0;
         this.editorActive = false;
+        /** True when trackpad-style scroll detected (no middle button → use left-drag for pan). Default true on Mac. */
+        this.likelyTrackpad = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
     }
 
 
