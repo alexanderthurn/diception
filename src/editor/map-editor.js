@@ -1105,7 +1105,12 @@ export class MapEditor {
         this.elements.aiToggleBtn?.classList.add('hidden');
         this.elements.setupModal?.classList.add('hidden');
         this.elements.overlay?.classList.remove('hidden');
-        this.elements.settingsPanel?.classList.remove('editor-settings-open');
+        const isDesktop = !window.matchMedia('(max-width: 900px)').matches;
+        if (isDesktop) {
+            this.elements.settingsPanel?.classList.add('editor-settings-open');
+        } else {
+            this.elements.settingsPanel?.classList.remove('editor-settings-open');
+        }
         if (this.renderer) this.renderer.editorActive = true;
 
         this.updateEditorInputHints();

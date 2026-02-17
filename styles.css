@@ -2691,6 +2691,7 @@ select {
     min-height: 0;
     align-content: start;
     grid-auto-rows: minmax(44px, auto);
+    padding: 2px;
 }
 
 .level-grid-tile {
@@ -4134,21 +4135,37 @@ select {
     border: 1px solid rgba(0, 200, 255, 0.5);
 }
 
-/* Editor settings toggle - hidden on desktop (panel always visible), shown on mobile */
+/* Editor settings toggle - visible on desktop and mobile */
 .editor-settings-toggle {
-    display: none;
+    display: flex;
+    width: 36px !important;
+    padding: 0 !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Desktop: settings panel toggleable (default: visible) */
+.editor-settings:not(.editor-settings-open) {
+    transform: translateX(calc(100% + 20px));
+    pointer-events: none;
+}
+
+.editor-settings.editor-settings-open {
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+.editor-settings {
+    transition: transform 0.3s ease;
+}
+
+/* When settings hidden on desktop, bottom bar extends to the right */
+.editor-overlay:not(:has(.editor-settings.editor-settings-open)) .editor-bottom-bar {
+    right: 20px;
 }
 
 /* Mobile: full-screen toggleable settings */
 @media (max-width: 900px) {
-    .editor-settings-toggle {
-        display: flex;
-        width: 36px !important;
-        padding: 0 !important;
-        align-items: center;
-        justify-content: center;
-    }
-
     .editor-settings-toggle .sprite-icon {
         width: 60% !important;
         height: auto !important;
