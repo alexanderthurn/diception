@@ -605,6 +605,46 @@ export class GridRenderer {
     }
 
     /**
+     * Pick best attacker when multiple can attack same enemy (Expert mode quick-attack tiebreaker).
+     * 1) Most dice. 2) Selected tile if applicable. 3) Most connected friendly tiles.
+     */
+    pickBestAttackerForExpert(attackers, selectedTile) {
+        if (!attackers.length) return null;
+        if (attackers.length === 1) return attackers[0];
+
+        const playerId = this.game.currentPlayer.id;
+        const map = this.game.map;
+        const { largest, others } = this.getPlayerRegions(playerId);
+        const allRegions = [largest, ...others];
+
+        const getConnectedCount = (x, y) => {
+            const idx = map.getTileIndex(x, y);
+            for (const region of allRegions) {
+                if (region.has(idx)) return region.size;
+            }
+            return 0;
+        };
+
+        const withMeta = attackers.map(a => {
+            const tile = map.getTile(a.x, a.y);
+            return {
+                ...a,
+                dice: tile?.dice ?? 0,
+                isSelected: selectedTile && a.x === selectedTile.x && a.y === selectedTile.y,
+                connectedCount: getConnectedCount(a.x, a.y)
+            };
+        });
+
+        withMeta.sort((a, b) => {
+            if (b.dice !== a.dice) return b.dice - a.dice;
+            if (a.isSelected !== b.isSelected) return a.isSelected ? -1 : 1;
+            return b.connectedCount - a.connectedCount;
+        });
+
+        return withMeta[0] ? { x: withMeta[0].x, y: withMeta[0].y } : null;
+    }
+
+    /**
      * Updates the animated shimmer effect on the current player's largest region border.
      * Call this every frame for smooth animation.
      * Optimized to reuse Graphics object instead of recreating every frame.
@@ -820,6 +860,7 @@ export class GridRenderer {
 
                 const selectedPixelX = this.selectedTile.x * (this.tileSize + this.gap);
                 const selectedPixelY = this.selectedTile.y * (this.tileSize + this.gap);
+                const hasHint = this.gameSpeed === 'beginner' && shouldShowInputHints(this.inputManager);
 
                 for (const neighbor of neighbors) {
                     const neighborTile = this.game.map.getTile(neighbor.x, neighbor.y);
@@ -849,7 +890,7 @@ export class GridRenderer {
                     switch (neighbor.edge) {
                         case 'top':
                             badgeX = selectedPixelX + this.tileSize / 2;
-                            badgeY = selectedPixelY + 8 - this.gap / 2;
+                            badgeY = selectedPixelY + (hasHint ? 8 : 2) - this.gap / 2;
                             break;
                         case 'bottom':
                             badgeX = selectedPixelX + this.tileSize / 2;
@@ -944,20 +985,15 @@ export class GridRenderer {
         const isOwned = tileRaw.owner === this.game.currentPlayer.id;
         const canAttackFrom = isOwned && tileRaw.dice > 1;
 
-        // Check for direct attack shortcut (uniquely attackable)
+        // Check for direct attack shortcut (expert: any attackable enemy, pick best attacker)
         let isUniquelyAttackable = false;
         let uniqueAttacker = null;
-        if (!isOwned) {
+        if (!isOwned && this.gameSpeed === 'expert') {
             const neighbors = this.game.map.getAdjacentTiles(x, y);
-            let attackersCount = 0;
-            for (const n of neighbors) {
-                if (n.owner === this.game.currentPlayer.id && n.dice > 1) {
-                    attackersCount++;
-                    uniqueAttacker = n;
-                }
-            }
-            // ONLY available in expert mode for now
-            isUniquelyAttackable = attackersCount === 1 && this.gameSpeed === 'expert';
+            const attackers = neighbors.filter(n => n.owner === this.game.currentPlayer.id && n.dice > 1)
+                .map(n => ({ x: n.x, y: n.y }));
+            uniqueAttacker = this.pickBestAttackerForExpert(attackers, this.selectedTile);
+            isUniquelyAttackable = !!uniqueAttacker;
         }
 
         this.hoverGfx.clear();

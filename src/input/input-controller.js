@@ -418,7 +418,7 @@ export class InputController {
                 }
             }
 
-            // If no valid attacker from selection, check for unique neighbor
+            // If no valid attacker from selection, pick best from all possible attackers
             if (!attacker) {
                 const attackers = [];
                 const neighbors = [
@@ -428,12 +428,10 @@ export class InputController {
                 for (const n of neighbors) {
                     const nTile = this.game.map.getTile(n.x, n.y);
                     if (nTile && nTile.owner === this.game.currentPlayer.id && nTile.dice > 1) {
-                        attackers.push(n);
+                        attackers.push({ x: n.x, y: n.y });
                     }
                 }
-                if (attackers.length === 1) {
-                    attacker = attackers[0];
-                }
+                attacker = this.renderer.grid.pickBestAttackerForExpert(attackers, this.selectedTile);
             }
 
             if (attacker) {
