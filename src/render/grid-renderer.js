@@ -2,7 +2,7 @@ import { Graphics, Container, Text, TextStyle, Sprite } from 'pixi.js';
 import { TileRenderer } from './tile-renderer.js';
 import { RENDER } from '../core/constants.js';
 import { getWinProbability, getProbabilityHexColor } from '../core/probability.js';
-import { shouldShowInputHints, getInputHint, ACTION_MOVE_UP, ACTION_MOVE_DOWN, ACTION_MOVE_LEFT, ACTION_MOVE_RIGHT } from '../ui/input-hints.js';
+import { shouldShowInputHints, getInputHint, ACTION_MOVE_UP, ACTION_MOVE_DOWN, ACTION_MOVE_LEFT, ACTION_MOVE_RIGHT, ACTION_ATTACK } from '../ui/input-hints.js';
 
 export class GridRenderer {
     constructor(stage, game, animator, inputManager = null) {
@@ -687,9 +687,6 @@ export class GridRenderer {
     }
 
     drawOverlay() {
-        // Global animation pulse used for all highlighters
-        this.cursorPulse = (this.cursorPulse + 0.1) % (Math.PI * 2);
-
         // Hide all human-centric overlay elements during bot turns (but allow in paint mode for editor)
         if (!this.paintMode && this.game.currentPlayer?.isBot) {
             this.selectionGfx.visible = false;
@@ -727,14 +724,12 @@ export class GridRenderer {
 
         // Draw keyboard/gamepad cursor (distinct from hover)
         if (this.cursorTile) {
-            const pulseAlpha = 0.5 + Math.sin(this.cursorPulse) * 0.3;
-
             this.cursorGfx.clear();
             const inset = 3; // Draw cursor slightly inside tile
 
-            // Draw pulsing diamond/crosshair cursor
+            // Draw diamond/crosshair cursor
             this.cursorGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
-            this.cursorGfx.stroke({ width: 3, color: 0x00ffff, alpha: pulseAlpha, join: 'miter', cap: 'square' }); // Cyan cursor
+            this.cursorGfx.stroke({ width: 3, color: 0x00ffff, alpha: 0.8, join: 'miter', cap: 'square' }); // Cyan cursor
 
             // Corner brackets for extra visibility
             const bracketSize = 10;
@@ -776,17 +771,28 @@ export class GridRenderer {
         // Draw Selection
         if (this.selectedTile) {
             this.selectionGfx.clear();
+            // 1. Draw and fill the background rectangle
             this.selectionGfx.rect(0, 0, this.tileSize, this.tileSize);
-            const pulse = 0.5 + Math.sin(this.cursorPulse * 1.5) * 0.3;
+            this.selectionGfx.fill({ color: 0xffffff, alpha: 0.2 });
+
+            // 2. Draw directional line segments for the border (alignment: 0)
+            // Top: L -> R
+            this.selectionGfx.moveTo(0, 0); this.selectionGfx.lineTo(this.tileSize, 0);
+            // Right: T -> B
+            this.selectionGfx.moveTo(this.tileSize, 0); this.selectionGfx.lineTo(this.tileSize, this.tileSize);
+            // Bottom: R -> L
+            this.selectionGfx.moveTo(this.tileSize, this.tileSize); this.selectionGfx.lineTo(0, this.tileSize);
+            // Left: B -> T
+            this.selectionGfx.moveTo(0, this.tileSize); this.selectionGfx.lineTo(0, 0);
+
             this.selectionGfx.stroke({
                 width: 4,
                 color: 0xffffff,
-                alpha: 0.7 + pulse * 0.3,
+                alpha: 0.9,
                 join: 'miter',
-                cap: 'square',
+                cap: 'butt',
                 alignment: 0 // Inner
             });
-            this.selectionGfx.fill({ color: 0xffffff, alpha: 0.2 + pulse * 0.2 });
 
             this.selectionGfx.x = this.selectedTile.x * (this.tileSize + this.gap);
             this.selectionGfx.y = this.selectedTile.y * (this.tileSize + this.gap);
@@ -814,16 +820,14 @@ export class GridRenderer {
                     const neighborPixelX = neighbor.x * (this.tileSize + this.gap);
                     const neighborPixelY = neighbor.y * (this.tileSize + this.gap);
 
-                    // Beginner mode: show pulsing dashed highlight on attackable neighbors
+                    // Beginner mode: show simple static red highlight on attackable neighbors
                     if (this.gameSpeed === 'beginner') {
                         const hGfx = this.getNeighborHighlighter(neighborIdx++);
                         const inset = 4;
 
                         hGfx.clear();
-                        // Draw pulsing border
-                        const pulseAlpha = 0.4 + Math.sin(this.cursorPulse * 1.5) * 0.2;
                         hGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
-                        hGfx.stroke({ width: 2, color: 0x00ffff, alpha: pulseAlpha, join: 'miter', cap: 'square' });
+                        hGfx.stroke({ width: 2, color: 0xff0000, alpha: 0.8, join: 'miter', cap: 'square' });
 
                         hGfx.x = neighborPixelX;
                         hGfx.y = neighborPixelY;
@@ -880,15 +884,19 @@ export class GridRenderer {
                 if (isAdjacent) {
                     const hGfx = this.getNeighborHighlighter(neighborIdx++);
                     hGfx.clear();
-                    hGfx.rect(0, 0, this.tileSize, this.tileSize);
+                    // Individual CW segments
+                    hGfx.moveTo(0, 0); hGfx.lineTo(this.tileSize, 0);
+                    hGfx.moveTo(this.tileSize, 0); hGfx.lineTo(this.tileSize, this.tileSize);
+                    hGfx.moveTo(this.tileSize, this.tileSize); hGfx.lineTo(0, this.tileSize);
+                    hGfx.moveTo(0, this.tileSize); hGfx.lineTo(0, 0);
 
                     const tileContent = this.game.map.getTile(targetTile.x, targetTile.y);
                     const isEnemy = tileContent && tileContent.owner !== this.game.currentPlayer.id;
 
                     if (isEnemy) {
-                        hGfx.stroke({ width: 4, color: 0xff0000, alpha: 0.8, join: 'miter', cap: 'square' }); // Red
+                        hGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, join: 'miter', cap: 'butt', alignment: 0 }); // Red Inner
                     } else {
-                        hGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, join: 'miter', cap: 'square' }); // Neutral
+                        hGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, join: 'miter', cap: 'butt', alignment: 0 }); // Neutral Inner
                     }
 
                     hGfx.x = targetTile.x * (this.tileSize + this.gap);
@@ -910,34 +918,60 @@ export class GridRenderer {
 
                     // Check for direct attack shortcut (uniquely attackable)
                     let isUniquelyAttackable = false;
+                    let uniqueAttacker = null;
                     if (!isOwned) {
                         const neighbors = this.game.map.getAdjacentTiles(this.hoverTile.x, this.hoverTile.y);
                         let attackersCount = 0;
                         for (const n of neighbors) {
                             if (n.owner === this.game.currentPlayer.id && n.dice > 1) {
                                 attackersCount++;
+                                uniqueAttacker = n;
                             }
                         }
-                        isUniquelyAttackable = attackersCount === 1;
+                        // ONLY available in expert mode for now
+                        isUniquelyAttackable = attackersCount === 1 && this.gameSpeed === 'expert';
                     }
 
                     this.hoverGfx.clear();
+                    // Pattern for fill
                     this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
 
                     if (isUniquelyAttackable) {
-                        // Attack shortcut available: Red pulsing highlight
-                        const pulse = 0.5 + Math.sin(this.cursorPulse * 1.5) * 0.3;
-                        this.hoverGfx.fill({ color: 0xff0000, alpha: 0.1 + pulse * 0.1 });
-                        this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.6 + pulse * 0.4, alignment: 0 });
+                        this.hoverGfx.fill({ color: 0xff0000, alpha: 0.2 });
+                        // Individual CW segments for stroke
+                        this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
+                        this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
+                        this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
+                        this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
+                        this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, join: 'miter', cap: 'butt', alignment: 0 });
+
+                        // Position between hovered tile and attacker
+                        const hoverPx = this.hoverTile.x * (this.tileSize + this.gap);
+                        const hoverPy = this.hoverTile.y * (this.tileSize + this.gap);
+                        const attackPx = uniqueAttacker.x * (this.tileSize + this.gap);
+                        const attackPy = uniqueAttacker.y * (this.tileSize + this.gap);
+
+                        const badgeX = (hoverPx + attackPx + this.tileSize) / 2;
+                        const badgeY = (hoverPy + attackPy + this.tileSize) / 2;
+
+                        // Experts see the badge (to identify attacker) but with NO text
+                        this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, '', 0x444444, 'direct');
                     } else if (canAttackFrom) {
-                        // Selectable & Actionable: Large white pulsing border
-                        const pulse = 0.5 + Math.sin(this.cursorPulse * 1.5) * 0.3;
-                        this.hoverGfx.fill({ color: 0xffffff, alpha: 0.1 + pulse * 0.1 });
-                        this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.6 + pulse * 0.4, alignment: 0 });
+                        this.hoverGfx.fill({ color: 0xffffff, alpha: 0.15 });
+                        // Individual CW segments for stroke
+                        this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
+                        this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
+                        this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
+                        this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
+                        this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, join: 'miter', cap: 'butt', alignment: 0 });
                     } else if (isOwned) {
-                        // Selectable but no action: Subtle static white
                         this.hoverGfx.fill({ color: 0xffffff, alpha: 0.1 });
-                        this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0 });
+                        // Individual CW segments for stroke
+                        this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
+                        this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
+                        this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
+                        this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
+                        this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, join: 'miter', cap: 'butt', alignment: 0 });
                     } else {
                         // Not interactable: Very subtle dimmed highlight
                         this.hoverGfx.fill({ color: 0x000000, alpha: 0.15 });

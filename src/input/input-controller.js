@@ -394,7 +394,8 @@ export class InputController {
             const isEnemy = owner && owner.id !== this.game.currentPlayer.id;
 
             // Direct attack shortcut: If clicking enemy tile with exactly ONE adjacent attacker
-            if (isEnemy) {
+            // ONLY available in expert mode for now
+            if (isEnemy && this.renderer.gameSpeed === 'expert') {
                 const attackers = [];
                 const neighbors = [
                     { x: x, y: y - 1 }, { x: x, y: y + 1 },
