@@ -168,10 +168,14 @@ export class InputController {
             return;
         }
 
-        // If cursor not visible, initialize it (D-pad/keyboard mode)
-        if (!this.cursorVisible || this.cursorX === null) {
+        // If cursor not visible, show it. Only initialize if it was never set.
+        if (!this.cursorVisible) {
             this.cursorVisible = true;
-            this.initCursorAtNearestTile();
+            if (this.cursorX === null || this.cursorY === null) {
+                this.initCursorAtNearestTile();
+            } else {
+                this.renderer.setCursor(this.cursorX, this.cursorY);
+            }
             return;
         }
 
@@ -235,10 +239,8 @@ export class InputController {
         // Track the pointer
         this.activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
 
-        // Mouse/pointer interaction hides keyboard cursor - clear fully so onConfirm doesn't initCursorAtNearestTile
+        // Mouse/pointer interaction hides keyboard cursor - keep coordinates to prevent jumping
         this.cursorVisible = false;
-        this.cursorX = null;
-        this.cursorY = null;
         this.renderer.setCursor(null, null);
 
         // Check input types
@@ -339,8 +341,6 @@ export class InputController {
             // but NOT when the move is simulated by the gamepad itself
             if (this.cursorVisible && !isSimulated) {
                 this.cursorVisible = false;
-                this.cursorX = null;
-                this.cursorY = null;
                 this.renderer.setCursor(null, null);
             }
 
@@ -562,10 +562,8 @@ export class InputController {
     deselect() {
         this.selectedTile = null;
         this.renderer.setSelection(null, null);
-        // Clear cursor state to avoid orphaned teal cursor (unified selection for mouse/touch/gamepad)
+        // Hide cursor visually but keep coordinates to prevent jumping back to center
         this.cursorVisible = false;
-        this.cursorX = null;
-        this.cursorY = null;
         this.renderer.setCursor(null, null);
     }
 
