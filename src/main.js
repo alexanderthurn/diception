@@ -668,7 +668,7 @@ function setupHowToPlay(effectsManager, audioController) {
             const inactive = new Set(audioController.getInactiveTracks());
             musicListEl.innerHTML = audioController.availableSongs.map(filename => {
                 const isActive = !inactive.has(filename);
-                const displayName = filename.replace(/\.mp3$/i, '');
+                const displayName = filename.replace(/\.(mp3|ogg)$/i, '');
                 return `<li class="howto-music-item">
                     <span class="howto-music-name" data-filename="${filename.replace(/"/g, '&quot;')}">${displayName}</span>
                     <button type="button" class="howto-music-toggle tron-btn small ${isActive ? 'active' : ''}" data-filename="${filename.replace(/"/g, '&quot;')}" title="${isActive ? 'Active in playlist' : 'Inactive (excluded from loop)'}">${isActive ? '✓' : '○'}</button>

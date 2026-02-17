@@ -12,14 +12,14 @@ export class AudioController {
 
         // Available songs
         this.availableSongs = [
-            'Neon Dice Offensive.mp3',
-            'Neon Etude.mp3',
-            'Neon Second Dice Offensive.mp3',
-            'Neon Second Etude.mp3',
-            'Neon Third Dice Offensive.mp3',
-            'Neon Third Etude.mp3',
-            'Grid of Echoes.mp3',
-            'Neon Fourth Etude.mp3'
+            'Neon Dice Offensive.ogg',
+            'Neon Etude.ogg',
+            'Neon Second Dice Offensive.ogg',
+            'Neon Second Etude.ogg',
+            'Neon Third Dice Offensive.ogg',
+            'Neon Third Etude.ogg',
+            'Grid of Echoes.ogg',
+            'Neon Fourth Etude.ogg'
         ];
 
         // State
@@ -108,7 +108,7 @@ export class AudioController {
         }
         this._musicInstance = null;
 
-        const songPath = './' + encodeURIComponent(this.availableSongs[index]);
+        const songPath = './music/' + encodeURIComponent(this.availableSongs[index]);
         console.log('Loading music:', songPath);
 
         this._musicSound = sound.add('music', {
