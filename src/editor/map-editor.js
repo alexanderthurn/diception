@@ -285,6 +285,7 @@ export class MapEditor {
             diceBrushValue: 2,
             deletedTiles: new Map(), // Cache for deleted tile data (preserves dice/owner)
             hoveredTile: null, // Currently hovered tile {x, y} for keyboard input
+            lastPointerType: 'mouse', // 'mouse' | 'touch' - only show hover preview for mouse
             isDirty: false
         };
     }
@@ -345,6 +346,8 @@ export class MapEditor {
         this.elements = {
             overlay: document.getElementById('editor-overlay'),
             backBtn: document.getElementById('editor-back-btn'),
+            settingsToggle: document.getElementById('editor-settings-toggle'),
+            settingsPanel: document.querySelector('.editor-settings'),
 
             // Editor type toggle
             editorTypeMapBtn: document.getElementById('editor-type-map'),
@@ -423,8 +426,21 @@ export class MapEditor {
      * Bind all event handlers
      */
     bindEvents() {
-        // Close/back button
-        this.elements.backBtn?.addEventListener('click', () => this.close());
+        // Close/back button: on mobile with settings open, close settings first; otherwise close editor
+        this.elements.backBtn?.addEventListener('click', () => {
+            const isMobile = window.matchMedia('(max-width: 900px)').matches;
+            const settingsOpen = this.elements.settingsPanel?.classList.contains('editor-settings-open');
+            if (isMobile && settingsOpen) {
+                this.elements.settingsPanel?.classList.remove('editor-settings-open');
+            } else {
+                this.close();
+            }
+        });
+
+        // Settings toggle (mobile: full-screen panel; same button opens and closes)
+        this.elements.settingsToggle?.addEventListener('click', () => {
+            this.elements.settingsPanel?.classList.toggle('editor-settings-open');
+        });
 
         // Editor type toggle
         this.elements.editorTypeMapBtn?.addEventListener('click', () => this.setEditorType('map'));
@@ -642,11 +658,18 @@ export class MapEditor {
 
     /**
      * Update hover preview: HTML overlay showing what left-click would do (assign/dice mode)
+     * Only shown on mouse hover - not on touch (worthless for touch users)
      */
     updateHoverPreview(clientX, clientY) {
         const el = this.elements.hoverPreview;
         const content = this.elements.hoverPreviewContent;
         if (!el || !content) return;
+
+        // Only show on mouse - touch users cannot "click" the same way
+        if (this.state.lastPointerType !== 'mouse') {
+            el.classList.add('hidden');
+            return;
+        }
 
         // Hide while dragging to other tiles (brush mode)
         if (this.isPainting && this.mouseStrokeMovedToOther) {
@@ -885,6 +908,8 @@ export class MapEditor {
     onCanvasMouseMove(e) {
         if (!this.isOpen) return;
 
+        this.state.lastPointerType = 'mouse';
+
         const tile = this.screenToTile(e.clientX, e.clientY);
 
         // Update hovered tile state for keyboard input
@@ -949,47 +974,60 @@ export class MapEditor {
     onCanvasTouchStart(e) {
         if (!this.isOpen) return;
 
+        this.state.lastPointerType = 'touch';
         this.setRandomDialogOpen(false);
 
         const touch = e.touches[0];
+        this.touchStartX = touch.clientX;
+        this.touchStartY = touch.clientY;
+        this.touchIsPanning = false;
         this.lastMouseX = touch.clientX;
         this.lastMouseY = touch.clientY;
         const tile = this.screenToTile(touch.clientX, touch.clientY);
         this.state.hoveredTile = tile;
+        this.touchStartTile = tile ? { x: tile.x, y: tile.y } : null;
         if (tile) {
             e.preventDefault();
-            this.isPainting = true;
-            // Treat touch as left click (button 0), pass shift key if held
-            this.currentInteractionButton = 0;
-            this.currentInteractionShift = e.shiftKey;
-            this.handleTileInteraction(tile.x, tile.y, 0, e.shiftKey);
-            this.lastPaintedTile = `${tile.x},${tile.y}`;
+            // Don't do tile interaction yet - wait for touchend to distinguish tap from drag
+            this.touchPendingTap = true;
         }
     }
 
     onCanvasTouchMove(e) {
-        if (!this.isOpen || !this.isPainting) return;
+        if (!this.isOpen) return;
 
         const touch = e.touches[0];
         this.lastMouseX = touch.clientX;
         this.lastMouseY = touch.clientY;
-        const tile = this.screenToTile(touch.clientX, touch.clientY);
-        this.state.hoveredTile = tile;
-        if (tile) {
-            e.preventDefault();
-            const key = `${tile.x},${tile.y}`;
-            if (this.lastPaintedTile !== key) {
-                this.handleTileInteraction(tile.x, tile.y, 0, this.currentInteractionShift);
-                this.lastPaintedTile = key;
+
+        // Detect drag: if moved beyond threshold, treat as pan-only (no tile actions)
+        if (this.touchPendingTap) {
+            const dx = touch.clientX - this.touchStartX;
+            const dy = touch.clientY - this.touchStartY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 8) {
+                this.touchIsPanning = true;
+                this.touchPendingTap = false;
             }
         }
+
+        // When panning, do nothing - let InputController handle map translation
+        if (this.touchIsPanning) return;
     }
 
-    onCanvasTouchEnd() {
+    onCanvasTouchEnd(e) {
         this.isPainting = false;
         this.lastPaintedTile = null;
         this.currentInteractionShift = false;
-        this.mouseBrushValue = null; // Desktop scenario mode: { owner, dice } sampled from first tile
+        this.mouseBrushValue = null;
+
+        // Tap (no drag): do single tile interaction
+        if (this.touchPendingTap && !this.touchIsPanning && this.touchStartTile) {
+            this.handleTileInteraction(this.touchStartTile.x, this.touchStartTile.y, 0, false, false);
+        }
+        this.touchPendingTap = false;
+        this.touchIsPanning = false;
+        this.touchStartTile = null;
     }
 
     /**
@@ -1031,6 +1069,7 @@ export class MapEditor {
         this.elements.aiToggleBtn?.classList.add('hidden');
         this.elements.setupModal?.classList.add('hidden');
         this.elements.overlay?.classList.remove('hidden');
+        this.elements.settingsPanel?.classList.remove('editor-settings-open');
         if (this.renderer) this.renderer.editorActive = true;
 
         this.updateEditorInputHints();
@@ -1101,6 +1140,7 @@ export class MapEditor {
         // Hide editor UI, show game UI only if a game is in progress
         if (this.renderer) this.renderer.editorActive = false;
         this.elements.overlay?.classList.add('hidden');
+        this.elements.settingsPanel?.classList.remove('editor-settings-open');
         const hasActiveGame = this.originalGame?.players?.length > 0;
         if (hasActiveGame) {
             this.elements.gamePanel?.classList.remove('hidden');

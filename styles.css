@@ -3548,7 +3548,7 @@ select {
     pointer-events: auto;
 }
 
-/* Top bar */
+/* Top bar (z-index above settings panel when it goes full-screen on mobile) */
 .editor-top-bar {
     position: absolute;
     top: 0;
@@ -3558,7 +3558,7 @@ select {
     justify-content: space-between;
     align-items: center;
     padding: 15px 20px;
-    z-index: 10;
+    z-index: 200;
 }
 
 .editor-top-bar .tron-title {
@@ -4071,6 +4071,7 @@ select {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    margin-top: 20px;
     margin-bottom: 12px;
 }
 
@@ -4132,43 +4133,82 @@ select {
     border: 1px solid rgba(0, 200, 255, 0.5);
 }
 
-/* Mobile responsive */
+/* Editor settings toggle - hidden on desktop (panel always visible), shown on mobile */
+.editor-settings-toggle {
+    display: none;
+}
+
+/* Mobile: full-screen toggleable settings */
 @media (max-width: 900px) {
+    .editor-settings-toggle {
+        display: flex;
+        width: 36px !important;
+        padding: 0 !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .editor-settings-toggle .sprite-icon {
+        width: 60% !important;
+        height: auto !important;
+    }
+
     .editor-bottom-bar {
         right: 0;
         padding-bottom: 10px;
     }
 
+    /* Settings panel hidden by default on mobile */
     .editor-settings {
         position: fixed;
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        inset: 0;
         width: 100%;
-        max-height: 40vh;
-        border-radius: 12px 12px 0 0;
-        transform: translateY(calc(100% - 50px));
+        max-width: 100%;
+        max-height: none;
+        border-radius: 0;
+        z-index: 150;
+        transform: translateX(100%);
         transition: transform 0.3s ease;
+        pointer-events: none;
+        box-sizing: border-box;
+        overflow-x: hidden;
+        min-width: 0;
     }
 
-    .editor-settings:hover,
-    .editor-settings:focus-within {
-        transform: translateY(0);
+    /* Full-screen when open (z-index below top bar so toggle stays clickable) */
+    .editor-settings.editor-settings-open {
+        transform: translateX(0);
+        pointer-events: auto;
     }
 
     .editor-settings::before {
-        content: '⬆ Settings';
+        content: 'Settings';
         display: block;
         text-align: center;
-        padding: 8px;
+        padding: 12px;
         color: #888;
-        font-size: 12px;
+        font-size: 14px;
         border-bottom: 1px solid rgba(100, 100, 120, 0.3);
-        margin: -15px -15px 10px -15px;
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 12px 12px 0 0;
+        margin: -15px -15px 15px -15px;
+        background: rgba(0, 0, 0, 0.5);
+        box-sizing: border-box;
     }
+
+    /* Hide random generator dialog on mobile */
+    .editor-random-dialog {
+        display: none !important;
+    }
+
+    /* Hide Random button on mobile (opens the hidden dialog) */
+    #editor-random-btn {
+        display: none !important;
+    }
+
+    /* When settings panel is open on mobile, hide all top-right icons (music, sfx, zoom, settings) */
+    body:has(.editor-settings.editor-settings-open) #music-controls {
+        display: none !important;
+    }
+
 }
 
 @media (max-width: 500px) {
@@ -4925,5 +4965,21 @@ body:has(.editor-overlay:not(.hidden)) .zoom-control {
 #zoom-in-btn .sprite-icon {
     height: 60% !important;
     width: auto !important;
+    margin: 0;
+}
+
+/* Editor settings toggle - same size as zoom buttons (36px), display controlled by .editor-settings-toggle */
+#editor-settings-toggle {
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+#editor-settings-toggle .sprite-icon {
+    width: 60% !important;
+    height: 60% !important;
     margin: 0;
 }
