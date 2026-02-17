@@ -138,6 +138,8 @@ export class Renderer {
             this.rootContainer.x = (this.app.screen.width - scaledWidth) / 2 + sidebarOffset;
             this.rootContainer.y = (this.app.screen.height - scaledHeight) / 2;
         }
+
+        this.draw();
     }
 
     centerGrid() {
@@ -197,6 +199,7 @@ export class Renderer {
         if (!this.rootContainer) return;
         this.rootContainer.x += dx;
         this.rootContainer.y += dy;
+        this.draw();
     }
 
     /**
@@ -245,6 +248,8 @@ export class Renderer {
 
         this.rootContainer.x = x - worldPos.x * newScale;
         this.rootContainer.y = y - worldPos.y * newScale;
+
+        this.draw();
     }
 
     /**

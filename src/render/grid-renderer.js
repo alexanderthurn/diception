@@ -119,30 +119,35 @@ export class GridRenderer {
         this.largestRegionsCache.clear();
     }
 
-    /**
-     * Check if a tile needs redrawing based on its current state
-     */
     isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isInRegion) {
         const lastState = this.lastTileStates.get(tileIdx);
         if (!lastState) return true;
+
+        const actualTileSize = this.tileSize * this.stage.scale.x;
+        const hideSmallBorders = actualTileSize < RENDER.MIN_TILE_SIZE_FOR_BORDERS;
 
         return lastState.owner !== tileRaw.owner ||
             lastState.dice !== tileRaw.dice ||
             lastState.blocked !== tileRaw.blocked ||
             lastState.isCurrentPlayer !== isCurrentPlayer ||
-            lastState.isInRegion !== isInRegion;
+            lastState.isInRegion !== isInRegion ||
+            lastState.hideSmallBorders !== hideSmallBorders;
     }
 
     /**
      * Store the current state of a tile for future dirty checking
      */
     saveTileState(tileIdx, tileRaw, isCurrentPlayer, isInRegion) {
+        const actualTileSize = this.tileSize * this.stage.scale.x;
+        const hideSmallBorders = actualTileSize < RENDER.MIN_TILE_SIZE_FOR_BORDERS;
+
         this.lastTileStates.set(tileIdx, {
             owner: tileRaw.owner,
             dice: tileRaw.dice,
             blocked: tileRaw.blocked,
             isCurrentPlayer,
-            isInRegion
+            isInRegion,
+            hideSmallBorders
         });
     }
 
@@ -345,16 +350,20 @@ export class GridRenderer {
             // Normal game mode
             tileGfx.fill({ color: color, alpha: fillAlpha });
 
-            // Border logic - REMOVED per user request
-            // We rely on fill color difference and region borders
-            // UPDATE: User requested subtle 1px inner border
+            const actualTileSize = this.tileSize * this.stage.scale.x;
+            const hideSmallBorders = actualTileSize < RENDER.MIN_TILE_SIZE_FOR_BORDERS;
+
             // Smart borders: Only draw borders separating different colors
-            // This prevents "gray borders between tiles of the same color"
-            this.drawSmartBorders(tileGfx, x, y, tileRaw, map);
+            // Skip them if they are too small to avoid artifacts
+            if (!hideSmallBorders) {
+                this.drawSmartBorders(tileGfx, x, y, tileRaw, map);
+            }
 
             // Draw OUTER borders for any region tiles (largest or secondary)
+            // For human players, these stay visible and get thicker when small
             if (isInRegion && isCurrentPlayer && !currentPlayer.isBot) {
-                this.drawRegionBorders(tileGfx, x, y, tileRaw, currentPlayer, isCurrentPlayer, color, map);
+                const borderThickness = hideSmallBorders ? 3 : 2;
+                this.drawRegionBorders(tileGfx, x, y, tileRaw, currentPlayer, isCurrentPlayer, color, map, borderThickness);
             }
         }
 
@@ -451,7 +460,7 @@ export class GridRenderer {
     /**
      * Draw outer borders for tiles in the largest connected region
      */
-    drawRegionBorders(tileGfx, x, y, tileRaw, currentPlayer, isCurrentPlayer, color, map) {
+    drawRegionBorders(tileGfx, x, y, tileRaw, currentPlayer, isCurrentPlayer, color, map, strokeWidth = 2) {
         const edgeDefs = [
             { dx: 0, dy: -1, x1: 0, y1: 0, x2: this.tileSize, y2: 0 },
             { dx: 0, dy: 1, x1: 0, y1: this.tileSize, x2: this.tileSize, y2: this.tileSize },
@@ -490,7 +499,7 @@ export class GridRenderer {
                 tileGfx.moveTo(x1, y1);
                 tileGfx.lineTo(x2, y2);
                 tileGfx.stroke({
-                    width: 2,
+                    width: strokeWidth,
                     color: borderColor,
                     alpha: 1,
                     join: 'miter',

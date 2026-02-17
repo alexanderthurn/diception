@@ -91,6 +91,9 @@ export const RENDER = {
 
     // Reinforcement animation
     REINFORCE_FLASH_DURATION: 12, // frames
+
+    // Artifact prevention
+    MIN_TILE_SIZE_FOR_BORDERS: 32, // px
 };
 
 // === INPUT ===
