@@ -150,10 +150,10 @@ export class InputController {
             this.cursorX = newX;
             this.cursorY = newY;
             this.renderer.setCursor(this.cursorX, this.cursorY);
+        }
 
-            if (gamepadIndex !== -1) {
-                this.syncGamepadCursor(gamepadIndex);
-            }
+        if (gamepadIndex !== -1) {
+            this.syncGamepadCursor(gamepadIndex);
         }
     }
 
@@ -187,7 +187,7 @@ export class InputController {
         }
 
         // If something selected, handle like a click on cursor position
-        this.handleTileClick(tile, this.cursorX, this.cursorY, index);
+        this.handleTileClick(tile, this.cursorX, this.cursorY);
     }
 
     onCancel() {
@@ -417,11 +417,13 @@ export class InputController {
             let attacker = null;
 
             // Priority: If current selection is one of the possible attackers, use it
+            let selectedWasAttacker = false;
             if (this.selectedTile) {
                 const isAdjacent = Math.abs(this.selectedTile.x - x) + Math.abs(this.selectedTile.y - y) === 1;
                 const fromTile = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
                 if (isAdjacent && fromTile && fromTile.owner === this.game.currentPlayer.id && fromTile.dice > 1) {
                     attacker = { x: this.selectedTile.x, y: this.selectedTile.y };
+                    selectedWasAttacker = true;
                 }
             }
 
@@ -444,7 +446,11 @@ export class InputController {
             if (attacker) {
                 const result = this.game.attack(attacker.x, attacker.y, x, y);
                 if (result && !result.error && result.won) {
-                    this.deselect();
+                    if (selectedWasAttacker) {
+                        this.select(x, y);
+                    } else {
+                        this.deselect();
+                    }
                 } else if (result && !result.error) {
                     // Attack happened but lost or stopped
                     this.deselect();
