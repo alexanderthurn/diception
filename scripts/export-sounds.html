@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Diception SFX Exporter</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #111;
+            color: #0f0;
+            padding: 2em;
+        }
+
+        button {
+            font-size: 1.2em;
+            padding: 0.5em 1em;
+            cursor: pointer;
+            margin: 0.3em;
+        }
+
+        .done {
+            color: #0f0;
+        }
+
+        .error {
+            color: #f00;
+        }
+
+        #log {
+            white-space: pre-wrap;
+            margin-top: 1em;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Diception SFX Exporter</h1>
+    <p>Click the button to generate and download all SFX as WAV files.</p>
+    <button id="export-all">Export All Sounds as WAV</button>
+    <div id="log"></div>
+
+    <script>
+        const log = (msg, cls = '') => {
+            const el = document.getElementById('log');
+            const span = document.createElement('div');
+            span.textContent = msg;
+            if (cls) span.className = cls;
+            el.appendChild(span);
+        };
+
+        // Same note definitions as sound-manager.js
+        function getAttackWinNotes(pitchMultiplier) {
+            const basePitch = 440;
+            return [
+                { freq: basePitch * pitchMultiplier, type: 'square', duration: 0.1, delay: 0 },
+                { freq: basePitch * pitchMultiplier * 1.25, type: 'square', duration: 0.1, delay: 0.07 },
+                { freq: basePitch * pitchMultiplier * 1.5, type: 'square', duration: 0.15, delay: 0.14 }
+            ];
+        }
+
+        const soundDefinitions = {
+            'turn-start': [
+                { freq: 440, type: 'square', duration: 0.1, delay: 0 },
+                { freq: 550, type: 'square', duration: 0.15, delay: 0.08 }
+            ],
+            'attack': [
+                { freq: 220, type: 'sawtooth', duration: 0.1, delay: 0 }
+            ],
+            'attack-win': getAttackWinNotes(1),
+            'attack-lose': [
+                { freq: 300, type: 'sawtooth', duration: 0.15, delay: 0 },
+                { freq: 200, type: 'sawtooth', duration: 0.2, delay: 0.12 }
+            ],
+            'reinforce': [
+                { freq: 330, type: 'triangle', duration: 0.08, delay: 0 },
+                { freq: 392, type: 'triangle', duration: 0.08, delay: 0.06 },
+                { freq: 523, type: 'triangle', duration: 0.12, delay: 0.12 }
+            ],
+            'player-eliminated': [
+                { freq: 200, type: 'sawtooth', duration: 0.2, delay: 0 },
+                { freq: 150, type: 'sawtooth', duration: 0.25, delay: 0.15 },
+                { freq: 100, type: 'sawtooth', duration: 0.3, delay: 0.30 }
+            ],
+            'victory': [
+                { freq: 523.25, type: 'square', duration: 0.12, delay: 0 },
+                { freq: 659.25, type: 'square', duration: 0.12, delay: 0.15 },
+                { freq: 783.99, type: 'square', duration: 0.12, delay: 0.30 },
+                { freq: 1046.5, type: 'square', duration: 0.15, delay: 0.45 },
+                { freq: 783.99, type: 'square', duration: 0.12, delay: 0.60 },
+                { freq: 1046.5, type: 'square', duration: 0.5, delay: 0.75 },
+                // Harmony overlay
+                { freq: 523.25, type: 'triangle', duration: 0.5, delay: 0.75 },
+                { freq: 659.25, type: 'triangle', duration: 0.5, delay: 0.75 }
+            ],
+            'defeat': [
+                { freq: 400, type: 'sawtooth', duration: 0.2, delay: 0 },
+                { freq: 300, type: 'sawtooth', duration: 0.25, delay: 0.2 },
+                { freq: 200, type: 'sawtooth', duration: 0.3, delay: 0.4 },
+                { freq: 100, type: 'sawtooth', duration: 0.4, delay: 0.6 }
+            ]
+        };
+
+        async function renderSound(notes, sampleRate) {
+            let maxEnd = 0;
+            for (const note of notes) {
+                const end = (note.delay || 0) + (note.duration || 0.15) + 0.05;
+                if (end > maxEnd) maxEnd = end;
+            }
+
+            const bufferLength = Math.ceil(maxEnd * sampleRate);
+            const offlineCtx = new OfflineAudioContext(1, bufferLength, sampleRate);
+
+            for (const note of notes) {
+                const oscillator = offlineCtx.createOscillator();
+                const gainNode = offlineCtx.createGain();
+
+                oscillator.type = note.type || 'square';
+                oscillator.frequency.value = note.freq;
+                oscillator.connect(gainNode);
+                gainNode.connect(offlineCtx.destination);
+
+                const startTime = note.delay || 0;
+                const duration = note.duration || 0.15;
+                const attack = 0.01;
+
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.2, startTime + attack);
+                gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+
+                oscillator.start(startTime);
+                oscillator.stop(startTime + duration + 0.05);
+            }
+
+            return await offlineCtx.startRendering();
+        }
+
+        function audioBufferToWav(buffer) {
+            const numChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = 1; // PCM
+            const bitDepth = 16;
+
+            const data = buffer.getChannelData(0);
+            const dataLength = data.length * (bitDepth / 8);
+            const headerLength = 44;
+            const totalLength = headerLength + dataLength;
+
+            const arrayBuffer = new ArrayBuffer(totalLength);
+            const view = new DataView(arrayBuffer);
+
+            // RIFF header
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, totalLength - 8, true);
+            writeString(view, 8, 'WAVE');
+
+            // fmt chunk
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true); // chunk size
+            view.setUint16(20, format, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true);
+            view.setUint16(32, numChannels * (bitDepth / 8), true);
+            view.setUint16(34, bitDepth, true);
+
+            // data chunk
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataLength, true);
+
+            // Write PCM samples
+            let offset = 44;
+            for (let i = 0; i < data.length; i++) {
+                const sample = Math.max(-1, Math.min(1, data[i]));
+                view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                offset += 2;
+            }
+
+            return new Blob([arrayBuffer], { type: 'audio/wav' });
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        document.getElementById('export-all').addEventListener('click', async () => {
+            const sampleRate = 44100;
+
+            for (const [name, notes] of Object.entries(soundDefinitions)) {
+                try {
+                    log(`Rendering ${name}...`);
+                    const buffer = await renderSound(notes, sampleRate);
+                    const wav = audioBufferToWav(buffer);
+                    downloadBlob(wav, `${name}.wav`);
+                    log(`  ✓ ${name}.wav exported (${(wav.size / 1024).toFixed(1)} KB)`, 'done');
+                } catch (e) {
+                    log(`  ✗ Failed: ${name} - ${e.message}`, 'error');
+                }
+
+                // Small delay between downloads so browser doesn't block them
+                await new Promise(r => setTimeout(r, 300));
+            }
+
+            log('\nAll done! Convert to MP3 with: for f in *.wav; do ffmpeg -i "$f" -b:a 128k "${f%.wav}.mp3"; done');
+        });
+    </script>
+</body>
+
+</html>

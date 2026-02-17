@@ -1,7 +1,10 @@
+import { sound, Sound } from '@pixi/sound';
+
 const STORAGE_KEY_INACTIVE = 'dicy_musicInactiveTracks';
 
 /**
  * AudioController - Manages music playlist and SFX volume/toggle
+ * Uses @pixi/sound for music playback
  */
 export class AudioController {
     constructor(sfxManager) {
@@ -24,7 +27,12 @@ export class AudioController {
         this.isFirstRunEver = false;
         this.musicPlaying = false;
         this.shouldAutoplayMusic = false;
-        this.music = null;
+        this.musicVolume_value = 0.5;
+
+        // The @pixi/sound Sound instance for the current song
+        this._musicSound = null;
+        // The currently playing instance (IMediaInstance)
+        this._musicInstance = null;
 
         // Timeouts for mobile slider auto-hide
         this.musicTimeout = null;
@@ -55,27 +63,21 @@ export class AudioController {
 
         localStorage.setItem('dicy_currentSongIndex', this.currentSongIndex.toString());
 
-        // Create audio element - use relative path for subpath deployment
-        const songPath = './' + encodeURIComponent(this.availableSongs[this.currentSongIndex]);
-        console.log('Loading audio:', songPath);
-        this.music = new Audio(songPath);
-
-        this.music.addEventListener('error', (e) => {
-            console.error('Audio load error for:', this.music.src, e);
-        });
-
         // Load volume/enabled settings
         const savedMusicEnabled = localStorage.getItem('dicy_musicEnabled') !== 'false';
         const savedMusicVolume = parseFloat(localStorage.getItem('dicy_musicVolume') ?? '0.5');
         const savedSfxEnabled = localStorage.getItem('dicy_sfxEnabled') !== 'false';
         const savedSfxVolume = parseFloat(localStorage.getItem('dicy_sfxVolume') ?? '0.5');
 
-        this.music.volume = savedMusicVolume;
+        this.musicVolume_value = savedMusicVolume;
         this.shouldAutoplayMusic = savedMusicEnabled;
 
         // Apply SFX settings
         this.sfx.setEnabled(savedSfxEnabled);
         this.sfx.setVolume(savedSfxVolume);
+
+        // Pre-load the current song
+        this._loadSong(this.currentSongIndex);
 
         // Get UI elements
         this.musicToggle = document.getElementById('music-toggle');
@@ -95,17 +97,61 @@ export class AudioController {
         this.bindEvents();
     }
 
-    bindEvents() {
-        // Song ended - play next
-        this.music.addEventListener('ended', () => this.loadNextSong());
+    /**
+     * Load a song by index using @pixi/sound.
+     */
+    _loadSong(index) {
+        // Stop and remove previous music sound
+        if (sound.exists('music')) {
+            sound.stop('music');
+            sound.remove('music');
+        }
+        this._musicInstance = null;
 
+        const songPath = './' + encodeURIComponent(this.availableSongs[index]);
+        console.log('Loading music:', songPath);
+
+        this._musicSound = sound.add('music', {
+            url: songPath,
+            preload: true,
+            volume: this.musicVolume_value,
+        });
+    }
+
+    /**
+     * Play the currently loaded song.
+     */
+    _playCurrent() {
+        if (!sound.exists('music')) return;
+
+        // Stop any existing playback
+        sound.stop('music');
+
+        sound.volume('music', this.musicVolume_value);
+        const instance = sound.play('music', {
+            loop: false,
+            complete: () => this.loadNextSong(),
+        });
+
+        // instance might be a Promise if still loading
+        if (instance && typeof instance.then === 'function') {
+            instance.then(inst => { this._musicInstance = inst; });
+        } else {
+            this._musicInstance = instance;
+        }
+    }
+
+    bindEvents() {
         // Music toggle
         this.musicToggle.addEventListener('click', () => this.handleMusicToggle());
 
         // Music volume
         this.musicVolume.addEventListener('input', (e) => {
-            this.music.volume = e.target.value / 100;
-            localStorage.setItem('dicy_musicVolume', (e.target.value / 100).toString());
+            this.musicVolume_value = e.target.value / 100;
+            if (sound.exists('music')) {
+                sound.volume('music', this.musicVolume_value);
+            }
+            localStorage.setItem('dicy_musicVolume', this.musicVolume_value.toString());
             this.resetSliderTimeout(this.musicVolume, 'musicTimeout');
         });
 
@@ -131,7 +177,7 @@ export class AudioController {
         document.body.addEventListener('click', () => {
             this.sfx.init();
             if (this.shouldAutoplayMusic && !this.musicPlaying) {
-                this.music.play();
+                this._playCurrent();
                 this.musicToggle.textContent = '🔊';
                 this.musicToggle.classList.add('active');
                 this.musicPlaying = true;
@@ -179,11 +225,11 @@ export class AudioController {
         const nextFileName = activeSongs[idx];
         this.currentSongIndex = this.availableSongs.indexOf(nextFileName);
 
-        this.music.src = './' + encodeURIComponent(this.availableSongs[this.currentSongIndex]);
+        this._loadSong(this.currentSongIndex);
         localStorage.setItem('dicy_currentSongIndex', this.currentSongIndex.toString());
 
         if (this.musicPlaying) {
-            this.music.play();
+            this._playCurrent();
         }
     }
 
@@ -199,7 +245,7 @@ export class AudioController {
         this.setTrackActive(filename, true);
 
         this.currentSongIndex = idx;
-        this.music.src = './' + encodeURIComponent(filename);
+        this._loadSong(idx);
         localStorage.setItem('dicy_currentSongIndex', this.currentSongIndex.toString());
 
         this.musicPlaying = true;
@@ -209,7 +255,7 @@ export class AudioController {
             this.musicToggle.classList.add('active');
         }
 
-        this.music.play().catch(e => console.warn('Audio play failed:', e));
+        this._playCurrent();
     }
 
     getMobileAction(isEnabled, volumeSlider) {
@@ -251,7 +297,7 @@ export class AudioController {
                 this.musicPlaying = true;
                 if (this.isFirstRunEver) {
                     this.isFirstRunEver = false;
-                    this.music.play();
+                    this._playCurrent();
                 } else {
                     this.loadNextSong();
                 }
@@ -270,16 +316,25 @@ export class AudioController {
 
         // Desktop or mute action
         if (this.musicPlaying) {
-            this.music.pause();
+            // Pause/stop music
+            if (sound.exists('music')) {
+                sound.pause('music');
+            }
             this.musicToggle.textContent = '🔇';
             this.musicPlaying = false;
         } else {
             this.musicPlaying = true;
             if (this.isFirstRunEver) {
                 this.isFirstRunEver = false;
-                this.music.play();
+                this._playCurrent();
             } else {
-                this.loadNextSong();
+                // Resume if paused, otherwise load next
+                if (sound.exists('music') && this._musicSound?.isPlaying === false) {
+                    // Try resuming
+                    sound.resume('music');
+                } else {
+                    this.loadNextSong();
+                }
             }
             this.musicToggle.textContent = '🔊';
         }
