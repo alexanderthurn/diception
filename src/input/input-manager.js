@@ -1,8 +1,13 @@
 import { isDesktopContext } from '../scenarios/user-identity.js';
+import { loadBindings } from './key-bindings.js';
 
 /**
- * InputManager - Unified input handling for keyboard and gamepad
- * Emits semantic game events that InputController consumes
+ * InputManager - Unified input handling for keyboard and gamepad.
+ * Emits semantic game events that InputController consumes.
+ *
+ * Uses configurable key bindings loaded from key-bindings.js.
+ * Designed to be swappable: a SteamInput adapter would implement the same
+ * emit() interface and bypass this binding system entirely.
  */
 export class InputManager {
     constructor() {
@@ -14,29 +19,111 @@ export class InputManager {
         this.gamepadToHumanMap = new Map(); // raw gamepad index -> human player index (0, 1, 2, ...)
         this.deadZone = 0.4;
 
-        // Desktop version (Steam/Tauri) often has higher polling rates or different timing, adjust accordingly
+        // Desktop version (Steam/Tauri) often has higher polling rates or different timing
         const isDesktop = isDesktopContext();
         this.repeatDelay = isDesktop ? 300 : 250;  // ms before repeat starts
-        this.repeatRate = isDesktop ? 160 : 120;   // ms between repeats
+        this.repeatRate  = isDesktop ? 160 : 120;  // ms between repeats
 
         // Key repeat state
-        this.heldDirections = new Map(); // key -> { direction, lastFire, started }
+        this.heldDirections = new Map(); // code -> { direction, lastFire, started }
         this.heldKeys = new Set();
 
-        // Pan state for continuous panning
+        // Pan state for continuous panning (emitted every frame in update() while non-zero)
         this.panState = { x: 0, y: 0 }; // -1, 0, or 1 for each axis
+
+        // Input suspension (e.g. during key-binding wizard)
+        this.suspended = false;
 
         // Track animation frame and bound handlers for cleanup
         this.animationFrameId = null;
         this.boundKeyDown = (e) => this.onKeyDown(e);
-        this.boundKeyUp = (e) => this.onKeyUp(e);
+        this.boundKeyUp   = (e) => this.onKeyUp(e);
         this.disposed = false;
+
+        // Load bindings and build lookup maps
+        this.bindings = loadBindings();
+        this._buildMaps();
 
         // Bind keyboard events
         this.setupKeyboard();
 
         // Start gamepad polling
         this.pollGamepads();
+    }
+
+    /** Build fast lookup maps from current bindings. */
+    _buildMaps() {
+        const kb = this.bindings.keyboard;
+        const gp = this.bindings.gamepad;
+
+        // Keyboard: code -> action
+        this._keyActionMap = {};
+        for (const [action, codes] of Object.entries(kb)) {
+            for (const code of codes) {
+                this._keyActionMap[code] = action;
+            }
+        }
+
+        // Gamepad: button index -> action
+        this._gpButtonActionMap = {};
+        for (const [action, buttons] of Object.entries(gp)) {
+            for (const btn of buttons) {
+                this._gpButtonActionMap[btn] = action;
+            }
+        }
+
+        // Direction actions -> vector
+        this._directionVectors = {
+            move_up:    { x:  0, y: -1 },
+            move_down:  { x:  0, y:  1 },
+            move_left:  { x: -1, y:  0 },
+            move_right: { x:  1, y:  0 },
+        };
+
+        // Pan actions -> vector
+        this._panVectors = {
+            pan_up:    { x:  0, y: -1 },
+            pan_down:  { x:  0, y:  1 },
+            pan_left:  { x: -1, y:  0 },
+            pan_right: { x:  1, y:  0 },
+        };
+
+        // Zoom actions -> direction (-1 = in, +1 = out)
+        this._zoomDirections = {
+            zoom_in:  -1,
+            zoom_out:  1,
+        };
+
+        // Set of all key codes that should have default browser behaviour suppressed
+        this._gameKeyCodes = new Set(Object.keys(this._keyActionMap));
+    }
+
+    /**
+     * Reload bindings from localStorage and rebuild lookup maps.
+     * Call after saving new bindings so they take effect immediately.
+     */
+    reloadBindings() {
+        this.bindings = loadBindings();
+        this._buildMaps();
+        // Clear held state so stale keys don't fire with old bindings
+        this.heldDirections.clear();
+        this.heldKeys.clear();
+        this.panState = { x: 0, y: 0 };
+        this.emit('bindingsReloaded');
+    }
+
+    /**
+     * Suspend or resume input event emission.
+     * While suspended, keyboard and gamepad events are ignored.
+     * Used by the key-binding wizard to prevent input leaking into the game.
+     */
+    setSuspended(value) {
+        this.suspended = value;
+        if (value) {
+            this.heldDirections.clear();
+            this.heldKeys.clear();
+            this.panState = { x: 0, y: 0 };
+        }
     }
 
     on(event, callback) {
@@ -73,76 +160,61 @@ export class InputManager {
         // Ignore if typing in an input field
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-        const key = e.key.toLowerCase();
+        const code = e.code.toLowerCase();
 
-        // Prevent default for game keys
-        const gameKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright',
-            'e', 'q', ' ', 'escape', 'enter', 'i', 'j', 'k', 'l', 'shift'];
-        if (gameKeys.includes(key)) {
+        // Prevent default for mapped game keys
+        if (this._gameKeyCodes.has(code)) {
             e.preventDefault();
         }
 
+        if (this.suspended) return;
+
         // Track held keys for repeat
-        if (this.heldKeys.has(key)) return; // Already held
-        this.heldKeys.add(key);
+        if (this.heldKeys.has(code)) return; // Already held
+        this.heldKeys.add(code);
 
-        // Direction keys (movement)
-        const directionMap = {
-            'w': { x: 0, y: -1 },
-            'arrowup': { x: 0, y: -1 },
-            's': { x: 0, y: 1 },
-            'arrowdown': { x: 0, y: 1 },
-            'a': { x: -1, y: 0 },
-            'arrowleft': { x: -1, y: 0 },
-            'd': { x: 1, y: 0 },
-            'arrowright': { x: 1, y: 0 }
-        };
+        const action = this._keyActionMap[code];
+        if (!action) return;
 
-        // Pan keys (camera)
-        const panMap = {
-            'i': { x: 0, y: -1 },
-            'k': { x: 0, y: 1 },
-            'j': { x: -1, y: 0 },
-            'l': { x: 1, y: 0 }
-        };
-
-        if (directionMap[key]) {
-            const dir = directionMap[key];
-            this.emit('move', { ...dir, index: -1 });
-            // Start repeat timer
-            this.heldDirections.set(key, {
-                direction: dir,
+        const dirVec = this._directionVectors[action];
+        if (dirVec) {
+            this.emit('move', { ...dirVec, index: -1 });
+            this.heldDirections.set(code, {
+                direction: dirVec,
                 started: Date.now(),
-                lastFire: Date.now()
+                lastFire: Date.now(),
             });
-        } else if (panMap[key]) {
-            this.updatePanState(panMap[key].x, panMap[key].y, true);
-        } else if (key === 'e' || e.code === 'ShiftRight') {
-            this.emit('confirm');
-        } else if (key === 'q') {
-            this.emit('cancel');
-        } else if (key === ' ' || key === 'enter') {
-            this.emit('endTurn');
-        } else if (key === 'escape') {
-            this.emit('menu');
+            return;
         }
+
+        const panVec = this._panVectors[action];
+        if (panVec) {
+            this.updatePanState(panVec.x, panVec.y, true);
+            return;
+        }
+
+        if (action === 'confirm')  this.emit('confirm', { source: 'keyboard' });
+        if (action === 'cancel')   this.emit('cancel',  { source: 'keyboard' });
+        if (action === 'end_turn') this.emit('endTurn');
+        if (action === 'menu')     this.emit('menu');
+
+        const zoomDir = this._zoomDirections[action];
+        if (zoomDir !== undefined) this.emit('zoom', { direction: zoomDir });
     }
 
     onKeyUp(e) {
-        const key = e.key.toLowerCase();
-        this.heldKeys.delete(key);
-        this.heldDirections.delete(key);
+        const code = e.code.toLowerCase();
+        this.heldKeys.delete(code);
+        this.heldDirections.delete(code);
 
-        // Pan keys
-        const panMap = {
-            'i': { x: 0, y: -1 },
-            'k': { x: 0, y: 1 },
-            'j': { x: -1, y: 0 },
-            'l': { x: 1, y: 0 }
-        };
+        if (this.suspended) return;
 
-        if (panMap[key]) {
-            this.updatePanState(panMap[key].x, panMap[key].y, false);
+        const action = this._keyActionMap[code];
+        if (!action) return;
+
+        const panVec = this._panVectors[action];
+        if (panVec) {
+            this.updatePanState(panVec.x, panVec.y, false);
         }
     }
 
@@ -153,30 +225,42 @@ export class InputManager {
         if (dy !== 0) {
             this.panState.y = pressed ? dy : 0;
         }
-        this.emit('pan', { ...this.panState });
+        // Pan is emitted continuously in update() while panState is non-zero.
+        // Emit once immediately on key-up so the renderer knows to stop.
+        if (!pressed) {
+            this.emit('pan', { ...this.panState });
+        }
     }
 
     // Call this from requestAnimationFrame loop
     update() {
-        const now = Date.now();
+        if (!this.suspended) {
+            const now = Date.now();
 
-        // Handle keyboard repeat
-        for (const [key, state] of this.heldDirections) {
-            const elapsed = now - state.started;
-            const sinceLast = now - state.lastFire;
+            // Handle keyboard repeat
+            for (const [, state] of this.heldDirections) {
+                const elapsed   = now - state.started;
+                const sinceLast = now - state.lastFire;
 
-            if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
-                this.emit('move', { ...state.direction, index: -1 });
-                state.lastFire = now;
+                if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
+                    this.emit('move', { ...state.direction, index: -1 });
+                    state.lastFire = now;
+                }
+            }
+
+            // Continuous pan while pan keys are held
+            if (this.panState.x !== 0 || this.panState.y !== 0) {
+                this.emit('pan', { ...this.panState });
             }
         }
 
-        // Poll gamepads
+        // Always poll gamepads so GamepadCursorManager receives button events
+        // even during suspension (allows clicking Skip/Cancel via the cursor).
+        // processGamepadButtons guards semantic events with !this.suspended internally.
         this.processGamepads();
     }
 
     pollGamepads() {
-        // Set up animation frame loop for gamepad polling
         const poll = () => {
             if (this.disposed) return;
             this.update();
@@ -187,22 +271,18 @@ export class InputManager {
 
     /**
      * Clean up all event listeners and stop polling loops.
-     * Call this when the InputManager is no longer needed.
      */
     dispose() {
         this.disposed = true;
 
-        // Stop animation frame loop
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
 
-        // Remove keyboard event listeners
         document.removeEventListener('keydown', this.boundKeyDown);
         document.removeEventListener('keyup', this.boundKeyUp);
 
-        // Clear all state
         this.listeners = {};
         this.gamepadStates.clear();
         this.gamepadToHumanMap.clear();
@@ -210,6 +290,7 @@ export class InputManager {
         this.heldKeys.clear();
         this.panState = { x: 0, y: 0 };
     }
+
     processGamepads() {
         const gamepads = navigator.getGamepads();
         const currentIndices = new Set();
@@ -224,16 +305,10 @@ export class InputManager {
                 moveRepeat: { active: false, dir: null, started: 0, lastFire: 0 }
             };
 
-            // Process buttons
             this.processGamepadButtons(gp, prevState);
-
-            // Process D-pad and left stick for movement
             this.processGamepadMovement(gp, prevState);
-
-            // Process right stick for panning
             this.processGamepadPan(gp);
 
-            // Store state
             this.gamepadStates.set(gp.index, {
                 buttons: gp.buttons.map(b => b.pressed),
                 axes: [...gp.axes],
@@ -266,26 +341,22 @@ export class InputManager {
     }
 
     processGamepadButtons(gp, prevState) {
-        // Standard gamepad mapping:
-        // 0 = A (South) = Confirm
-        // 1 = B (East) = Middle Click
-        // 2 = X (West) = Cancel
-        // 3 = Y (North) = End Turn
-        // 9 = Start = Menu
-
         for (let i = 0; i < gp.buttons.length; i++) {
-            const pressed = gp.buttons[i].pressed;
+            const pressed    = gp.buttons[i].pressed;
             const wasPressed = prevState.buttons[i];
 
             if (pressed && !wasPressed) {
                 this.emit('gamepadButtonDown', { index: gp.index, button: i });
 
-                // Map buttons to semantic events
-                if (i === 0) this.emit('confirm');
-                if (i === 2) this.emit('cancel');
-                if (i === 3) this.emit('endTurn', { index: gp.index });
-                if (i === 9) {
-                    this.emit('menu');
+                if (!this.suspended) {
+                    const action = this._gpButtonActionMap[i];
+                    if (action === 'confirm')  this.emit('confirm', { source: 'gamepad', index: gp.index });
+                    if (action === 'cancel')   this.emit('cancel',  { source: 'gamepad', index: gp.index });
+                    if (action === 'end_turn') this.emit('endTurn', { index: gp.index });
+                    if (action === 'menu')     this.emit('menu');
+                    // move_up/down/left/right handled by processGamepadMovement
+                    const zoomDir = this._zoomDirections[action];
+                    if (zoomDir !== undefined) this.emit('zoom', { direction: zoomDir });
                 }
             } else if (!pressed && wasPressed) {
                 this.emit('gamepadButtonUp', { index: gp.index, button: i });
@@ -294,29 +365,32 @@ export class InputManager {
     }
 
     processGamepadMovement(gp, prevState) {
-        // D-pad mapping: 12=Up, 13=Down, 14=Left, 15=Right
-        const dpButtons = {
-            12: { x: 0, y: -1 },
-            13: { x: 0, y: 1 },
-            14: { x: -1, y: 0 },
-            15: { x: 1, y: 0 }
-        };
+        if (this.suspended) return;
 
-        const now = Date.now();
+        // Build D-pad direction map from current gamepad bindings
+        const kb = this.bindings.gamepad;
+        const dpMap = {};
+        for (const [action, buttons] of Object.entries(kb)) {
+            const vec = this._directionVectors[action];
+            if (!vec) continue;
+            for (const btn of buttons) {
+                dpMap[btn] = vec;
+            }
+        }
+
+        const now    = Date.now();
         const repeat = prevState.moveRepeat;
-
         let activeDir = null;
 
-        for (const [btnIdx, dir] of Object.entries(dpButtons)) {
+        for (const [btnIdx, dir] of Object.entries(dpMap)) {
             const i = parseInt(btnIdx);
-            const pressed = gp.buttons[i]?.pressed;
+            const pressed    = gp.buttons[i]?.pressed;
             const wasPressed = prevState.buttons[i];
 
             if (pressed && !wasPressed) {
                 this.emit('move', { ...dir, index: gp.index });
-                // Start repeat timer
-                repeat.active = true;
-                repeat.dir = dir;
+                repeat.active  = true;
+                repeat.dir     = dir;
                 repeat.started = now;
                 repeat.lastFire = now;
                 activeDir = dir;
@@ -327,7 +401,7 @@ export class InputManager {
 
         // Handle repeat
         if (activeDir && repeat.active) {
-            const elapsed = now - repeat.started;
+            const elapsed   = now - repeat.started;
             const sinceLast = now - repeat.lastFire;
 
             if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
@@ -336,25 +410,23 @@ export class InputManager {
             }
         } else {
             repeat.active = false;
-            repeat.dir = null;
+            repeat.dir    = null;
         }
     }
 
     processGamepadPan(gp) {
-        // Right stick: axes 2 (X), 3 (Y) - or axes 0,1 on some controllers
-        // Try axes 2,3 first (most common for right stick)
+        if (this.suspended) return;
+
+        // Right stick: axes 2 (X), 3 (Y)
         let rx = gp.axes[2] ?? 0;
         let ry = gp.axes[3] ?? 0;
 
-        // Apply dead zone
         if (Math.abs(rx) < this.deadZone) rx = 0;
         if (Math.abs(ry) < this.deadZone) ry = 0;
 
-        // Invert right stick (push right = pan right, push up = pan up)
         rx = -rx;
         ry = -ry;
 
-        // Emit continuous pan (will be handled per-frame by consumer)
         if (rx !== 0 || ry !== 0) {
             this.emit('panAnalog', { x: rx, y: ry });
         }

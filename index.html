@@ -301,53 +301,35 @@
 
                 <section>
                     <h3>INTERFACE CONTROLS</h3>
-                    <table class="control-table">
-                        <tr>
-                            <th>Action</th>
-                            <th>Keyboard</th>
-                            <th>Gamepad</th>
-                        </tr>
-                        <tr>
-                            <td>Navigate Cursor</td>
-                            <td>-</td>
-                            <td>Left Stick</td>
-                        </tr>
-                        <tr>
-                            <td>Select / Attack</td>
-                            <td>Right Shift / E</td>
-                            <td>A Button</td>
-                        </tr>
-                        <tr>
-                            <td>Attack Neighbor</td>
-                            <td>WASD / Arrows</td>
-                            <td>D-Pad</td>
-                        </tr>
-                        <tr>
-                            <td>Cancel / Deselect</td>
-                            <td>Q</td>
-                            <td>X Button</td>
-                        </tr>
-                        <tr>
-                            <td>End Turn</td>
-                            <td>Enter / Space</td>
-                            <td>Y Button</td>
-                        </tr>
-                        <tr>
-                            <td>Camera Pan</td>
-                            <td>I J K L</td>
-                            <td>Right Stick / B (Hold)</td>
-                        </tr>
-                        <tr>
-                            <td>Zoom</td>
-                            <td>Wheel</td>
-                            <td>L2 / R2</td>
-                        </tr>
-                        <tr>
-                            <td>Cursor Speed</td>
-                            <td>-</td>
-                            <td>L1 / R1</td>
-                        </tr>
+                    <table class="control-table" id="controls-table">
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>Keyboard</th>
+                                <th>Gamepad</th>
+                            </tr>
+                        </thead>
+                        <tbody id="controls-table-body">
+                            <!-- Dynamically populated by JS -->
+                            <tr><td>Navigate Cursor</td><td>-</td><td>Left Stick</td></tr>
+                            <tr><td>Select / Attack</td><td>R.Shift / E</td><td>A</td></tr>
+                            <tr><td>Attack Up</td><td>W / ↑</td><td>D↑</td></tr>
+                            <tr><td>Attack Down</td><td>S / ↓</td><td>D↓</td></tr>
+                            <tr><td>Attack Left</td><td>A / ←</td><td>D←</td></tr>
+                            <tr><td>Attack Right</td><td>D / →</td><td>D→</td></tr>
+                            <tr><td>Cancel / Deselect</td><td>Q</td><td>X</td></tr>
+                            <tr><td>End Turn</td><td>Space / Enter</td><td>Y</td></tr>
+                            <tr><td>Camera Up</td><td>I</td><td>Right Stick</td></tr>
+                            <tr><td>Camera Down</td><td>K</td><td>Right Stick</td></tr>
+                            <tr><td>Camera Left</td><td>J</td><td>Right Stick</td></tr>
+                            <tr><td>Camera Right</td><td>L</td><td>Right Stick</td></tr>
+                            <tr><td>Zoom</td><td>Wheel</td><td>L2 / R2</td></tr>
+                            <tr><td>Cursor Speed</td><td>-</td><td>L1 / R1</td></tr>
+                        </tbody>
                     </table>
+                    <div id="controls-configure-area" class="controls-configure-area">
+                        <!-- Configure buttons inserted by JS -->
+                    </div>
                 </section>
 
                 <section>

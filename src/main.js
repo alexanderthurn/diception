@@ -32,6 +32,13 @@ import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode } from './cheat.js';
 import { isTauriContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
+import { KeyBindingDialog } from './input/key-binding-dialog.js';
+import {
+    GAME_ACTIONS,
+    loadBindings,
+    getKeysDisplayName,
+    getGamepadButtonsName,
+} from './input/key-bindings.js';
 
 // Pre-compute probability tables at startup
 initializeProbabilityTables();
@@ -335,6 +342,9 @@ async function init() {
     gameEventManager.setScenarioBrowser(scenarioBrowser);
     gameEventManager.init();
 
+    // Refresh UI hints whenever bindings are reloaded after configuration
+    inputManager.on('bindingsReloaded', () => gameEventManager.refreshHints());
+
     // Tournament Runner
     const tournamentRunner = new TournamentRunner(configManager);
 
@@ -420,7 +430,7 @@ async function init() {
     setupInputEvents(game, inputManager, sessionManager);
 
     // How to Play Modal
-    setupHowToPlay(effectsManager, audioController);
+    setupHowToPlay(effectsManager, audioController, inputManager);
 
 
     // Check for auto-resume
@@ -641,7 +651,7 @@ function setupInputEvents(game, inputManager, sessionManager) {
 }
 
 // Helper: Setup How to Play Modal
-function setupHowToPlay(effectsManager, audioController) {
+function setupHowToPlay(effectsManager, audioController, inputManager) {
     const howtoBtn = document.getElementById('howto-btn');
     const howtoModal = document.getElementById('howto-modal');
     const howtoCloseBtn = document.getElementById('howto-close-btn');
@@ -725,12 +735,93 @@ function setupHowToPlay(effectsManager, audioController) {
         }
     }
 
+    // Controls table: fixed rows that are not configurable
+    const FIXED_CONTROLS = [
+        { label: 'Navigate Cursor', keyboard: '-',     gamepad: 'Left Stick' },
+        { label: 'Zoom',            keyboard: 'Wheel', gamepad: 'L2 / R2'   },
+        { label: 'Cursor Speed',    keyboard: '-',     gamepad: 'L1 / R1'   },
+    ];
+
+    // Gamepad column for keyboardOnly actions (uses analog stick, not a button)
+    const GAMEPAD_FIXED_LABELS = {
+        pan_up:    'Right Stick',
+        pan_down:  'Right Stick',
+        pan_left:  'Right Stick',
+        pan_right: 'Right Stick',
+    };
+
+    function refreshControlsSection() {
+        const tbody = document.getElementById('controls-table-body');
+        const configArea = document.getElementById('controls-configure-area');
+        if (!tbody || !configArea) return;
+
+        const bindings = loadBindings();
+
+        // Build tbody rows
+        let html = '';
+
+        // Fixed rows first
+        for (const row of FIXED_CONTROLS) {
+            html += `<tr><td>${row.label}</td><td>${row.keyboard}</td><td>${row.gamepad}</td></tr>`;
+        }
+
+        // Configurable actions
+        for (const action of GAME_ACTIONS) {
+            const kbCodes   = bindings.keyboard[action.id] || [];
+            const kbDisplay = getKeysDisplayName(kbCodes);
+            let gpDisplay;
+            if (action.keyboardOnly) {
+                gpDisplay = GAMEPAD_FIXED_LABELS[action.id] || 'Right Stick';
+            } else {
+                const gpBtns = bindings.gamepad[action.id] || [];
+                gpDisplay = getGamepadButtonsName(gpBtns);
+            }
+            html += `<tr><td>${action.label}</td><td>${kbDisplay}</td><td>${gpDisplay}</td></tr>`;
+        }
+
+        tbody.innerHTML = html;
+
+        // Build configure buttons
+        let configHtml = '<div class="controls-configure-row">';
+        configHtml += '<button class="tron-btn small" id="configure-keyboard-btn">CONFIGURE KEYBOARD</button>';
+
+        const connectedGamepads = Array.from(inputManager.connectedGamepadIndices || []).sort();
+        connectedGamepads.forEach((rawIdx) => {
+            const humanIdx = inputManager.getHumanIndex(rawIdx);
+            configHtml += `<button class="tron-btn small" data-gamepad-index="${rawIdx}">CONFIGURE GAMEPAD ${humanIdx + 1}</button>`;
+        });
+
+        configHtml += '</div>';
+        configArea.innerHTML = configHtml;
+
+        // Keyboard configure button
+        document.getElementById('configure-keyboard-btn')?.addEventListener('click', async () => {
+            const saved = await KeyBindingDialog.configureKeyboard(inputManager);
+            if (saved) refreshControlsSection();
+        });
+
+        // Gamepad configure buttons
+        configArea.querySelectorAll('[data-gamepad-index]').forEach(btn => {
+            const rawIdx = parseInt(btn.getAttribute('data-gamepad-index'));
+            btn.addEventListener('click', async () => {
+                const saved = await KeyBindingDialog.configureGamepad(rawIdx, inputManager);
+                if (saved) refreshControlsSection();
+            });
+        });
+    }
+
+    // Refresh configure buttons when gamepads connect/disconnect
+    if (inputManager) {
+        inputManager.on('gamepadChange', () => refreshControlsSection());
+    }
+
     howtoBtn.addEventListener('click', () => {
         setupModal.classList.add('hidden');
         howtoModal.classList.remove('hidden');
         effectsManager.stopIntroMode();
         refreshHowtoSections();
         bindMusicToggles();
+        refreshControlsSection();
 
         // Initialize probability calculator on first open
         if (!probabilityCalculator) {

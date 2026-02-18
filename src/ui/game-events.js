@@ -310,6 +310,11 @@ export class GameEventManager {
     /** 
      * Update End Turn button hint based on game speed and input type
      */
+    /** Refresh all input hints from current bindings. Call after rebinding. */
+    refreshHints() {
+        this.updateEndTurnHint(this.gameStarter.getGameSpeed());
+    }
+
     updateEndTurnHint(gameSpeed) {
         if (!this.endTurnHint || !this.endTurnText) return;
 

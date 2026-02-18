@@ -46,6 +46,26 @@ export class GamepadCursorManager {
         this.setupEventListeners();
     }
 
+    /** Read current gamepad bindings from InputManager, falling back to defaults. */
+    _gb() {
+        const gb = this.inputManager.bindings?.gamepad ?? {};
+        return {
+            confirm:        gb.confirm?.[0]          ?? 0,
+            cancel:         gb.cancel?.[0]           ?? 2,
+            endTurn:        gb.end_turn?.[0]         ?? 3,
+            menu:           gb.menu?.[0]             ?? 9,
+            moveUp:         gb.move_up?.[0]          ?? 12,
+            moveDown:       gb.move_down?.[0]        ?? 13,
+            moveLeft:       gb.move_left?.[0]        ?? 14,
+            moveRight:      gb.move_right?.[0]       ?? 15,
+            drag:           gb.gamepad_drag?.[0]     ?? 1,
+            cursorSpeedDown:gb.cursor_speed_down?.[0]?? 4,
+            cursorSpeedUp:  gb.cursor_speed_up?.[0]  ?? 5,
+            zoomOut:        gb.zoom_out?.[0]         ?? 6,
+            zoomIn:         gb.zoom_in?.[0]          ?? 7,
+        };
+    }
+
     setupEventListeners() {
         // Define and store bound handlers for cleanup
         this.boundEventHandlers.gamepadButtonDown = ({ index, button }) => {
@@ -55,45 +75,47 @@ export class GamepadCursorManager {
             // Ensure cursor is visible on button press
             cursor.element.style.opacity = '1.0';
 
-            // Visual feedback - different labels in editor vs game
+            // Read current bindings so labels and actions follow remapping
+            const b = this._gb();
             const isEditorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
 
             const gameLabels = {
-                0: 'Select',
-                1: 'Hold to move map',
-                2: 'Deselect',
-                3: 'End Turn',
-                4: 'Cursor Speed -',
-                5: 'Cursor Speed +',
-                6: 'Zoom out',
-                7: 'Zoom in',
-                9: 'Main Menu',
-                12: 'Attack Up',
-                13: 'Attack Down',
-                14: 'Attack Left',
-                15: 'Attack Right'
+                [b.confirm]:         'Select',
+                [b.cancel]:          'Deselect',
+                [b.endTurn]:         'End Turn',
+                [b.menu]:            'Main Menu',
+                [b.moveUp]:          'Attack Up',
+                [b.moveDown]:        'Attack Down',
+                [b.moveLeft]:        'Attack Left',
+                [b.moveRight]:       'Attack Right',
+                [b.drag]:            'Hold to move map',
+                [b.cursorSpeedDown]: 'Cursor Speed -',
+                [b.cursorSpeedUp]:   'Cursor Speed +',
+                [b.zoomOut]:         'Zoom out',
+                [b.zoomIn]:          'Zoom in',
             };
             const editorLabels = {
-                0: 'Add / Paint',
-                1: 'Hold to pan map',
-                2: 'Remove tile',
-                3: 'Paint mode',
-                4: 'Cursor Speed -',
-                5: 'Cursor Speed +',
-                6: 'Zoom out',
-                7: 'Zoom in',
-                9: 'Main Menu',
-                12: 'Pan up',
-                13: 'Pan down',
-                14: 'Dice mode',
-                15: 'Assign mode'
+                [b.confirm]:         'Add / Paint',
+                [b.cancel]:          'Remove tile',
+                [b.endTurn]:         'Paint mode',
+                [b.menu]:            'Main Menu',
+                [b.moveUp]:          'Pan up',
+                [b.moveDown]:        'Pan down',
+                [b.moveLeft]:        'Dice mode',
+                [b.moveRight]:       'Assign mode',
+                [b.drag]:            'Hold to pan map',
+                [b.cursorSpeedDown]: 'Cursor Speed -',
+                [b.cursorSpeedUp]:   'Cursor Speed +',
+                [b.zoomOut]:         'Zoom out',
+                [b.zoomIn]:          'Zoom in',
             };
+
             const buttonLabels = isEditorOpen ? editorLabels : gameLabels;
             const label = buttonLabels[button];
             if (label) {
                 const gameSpeed = localStorage.getItem('dicy_gameSpeed') || 'beginner';
-                const showAlways = [4, 5, 6, 7].includes(button) || isMenuOpen;
+                const showAlways = [b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn].includes(button) || isMenuOpen;
                 const isBeginner = gameSpeed === 'beginner';
 
                 if (showAlways || isBeginner) {
@@ -101,17 +123,21 @@ export class GamepadCursorManager {
                 }
             }
 
+            // In menu mode, only allow cursor/zoom/confirm/cancel buttons
+            if (isMenuOpen) {
+                const allowedInMenu = isEditorOpen
+                    ? [b.confirm, b.cancel, b.endTurn, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight]
+                    : [b.confirm, b.cancel, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu];
+                if (!allowedInMenu.includes(button)) return;
+            }
 
-            const allowedInMenu = isEditorOpen ? [0, 1, 2, 3, 4, 5, 6, 7, 9, 12, 13, 14, 15] : [0, 1, 2, 4, 5, 6, 7, 9];
-            if (isMenuOpen && !allowedInMenu.includes(button)) return;
-
-            if (button === 0) {
+            if (button === b.confirm) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
-            } else if (button === 2) {
+            } else if (button === b.cancel) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
-            } else if (button === 3) {
+            } else if (button === b.endTurn) {
                 if (isEditorOpen) {
-                    // In editor: Y = Paint mode
+                    // In editor: end_turn button = Paint mode
                     const paintTab = document.querySelector('.editor-tab[data-mode="paint"]');
                     if (paintTab) paintTab.click();
                 } else {
@@ -127,41 +153,35 @@ export class GamepadCursorManager {
                         }
                     }
                 }
-            } else if (button === 1) {
+            } else if (button === b.drag) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
-            } else if (button === 4) {
-                // Persistent Speed: L1 -> slower (0.5x)
+            } else if (button === b.cursorSpeedDown) {
+                // Persistent Speed: slower (0.5x)
                 cursor.speedMultiplier *= 0.5;
                 localStorage.setItem('dicy_gamepad_speed_' + index, cursor.speedMultiplier);
-            } else if (button === 5) {
-                // Persistent Speed: R1 -> faster (2x)
+            } else if (button === b.cursorSpeedUp) {
+                // Persistent Speed: faster (2x)
                 cursor.speedMultiplier *= 2.0;
                 localStorage.setItem('dicy_gamepad_speed_' + index, cursor.speedMultiplier);
-            } else if (button === 6) {
-                this.inputManager.emit('panAnalog', { x: 0, y: 0, zoom: 1 });
-                const zoomOutBtn = document.getElementById('zoom-out-btn');
-                if (zoomOutBtn) zoomOutBtn.click();
-            } else if (button === 7) {
-                this.inputManager.emit('panAnalog', { x: 0, y: 0, zoom: -1 });
-                const zoomInBtn = document.getElementById('zoom-in-btn');
-                if (zoomInBtn) zoomInBtn.click();
             }
+            // zoom_in / zoom_out are handled by InputManager → input-controller via 'zoom' event
         };
 
         this.boundEventHandlers.gamepadButtonUp = ({ index, button }) => {
             const cursor = this.cursors.get(index);
             if (!cursor) return;
 
+            const b = this._gb();
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
-            if (isMenuOpen && button !== 0 && button !== 1 && button !== 2) return;
+            if (isMenuOpen && button !== b.confirm && button !== b.drag && button !== b.cancel) return;
 
-            if (button === 0) {
+            if (button === b.confirm) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
                 this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
-            } else if (button === 2) {
+            } else if (button === b.cancel) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
                 this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
-            } else if (button === 1) {
+            } else if (button === b.drag) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 1, index);
             }
         };

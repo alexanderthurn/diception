@@ -4558,6 +4558,118 @@ canvas {
     }
 }
 
+/* ── Key-Binding Dialog (List View) ─────────────────────────── */
+.keybinding-overlay {
+    z-index: 20000; /* Above the howto modal */
+}
+
+.keybinding-box {
+    min-width: 360px;
+    max-width: 500px;
+    width: min(90vw, 500px);
+    text-align: left;
+}
+
+.keybinding-body {
+    padding: 0;
+    margin: 0;
+}
+
+.keybinding-list {
+    max-height: min(60vh, 420px);
+    overflow-y: auto;
+    padding: 6px 0;
+}
+
+/* Each action row */
+.keybinding-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.1s, border-color 0.15s;
+    gap: 12px;
+}
+
+.keybinding-row:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* Active (currently being assigned) */
+.keybinding-row-active {
+    background: rgba(0, 229, 255, 0.07);
+    border-left-color: #00e5ff;
+}
+
+.keybinding-row-active .keybinding-row-label {
+    color: #00e5ff;
+}
+
+/* Done (assigned in this session) */
+.keybinding-row-done {
+    opacity: 0.75;
+}
+
+/* Pending (not yet reached) */
+.keybinding-row-pending .keybinding-row-label {
+    opacity: 0.5;
+}
+
+.keybinding-row-label {
+    font-size: 0.82em;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #fff;
+    flex: 1;
+    min-width: 0;
+}
+
+.keybinding-row-key {
+    flex-shrink: 0;
+    margin-left: 0; /* override .input-hint margin when used as row-key */
+}
+
+.keybinding-row-key-empty {
+    font-size: 0.8em;
+    color: rgba(255, 255, 255, 0.25);
+}
+
+/* Waiting for input: pulsing "..." */
+.keybinding-row-key-waiting {
+    color: rgba(0, 229, 255, 0.7);
+    font-size: 0.85em;
+    letter-spacing: 0.15em;
+    animation: kb-pulse 0.9s ease-in-out infinite;
+}
+
+/* Newly captured key: pop-in animation */
+.keybinding-key-new {
+    animation: kb-pop 0.25s ease-out;
+}
+
+@keyframes kb-pulse {
+    0%, 100% { opacity: 0.35; }
+    50%       { opacity: 1;    }
+}
+
+@keyframes kb-pop {
+    0%   { transform: scale(0.7); opacity: 0.4; }
+    100% { transform: scale(1);   opacity: 1;   }
+}
+
+/* ── Controls configure area (below the controls table) ──── */
+.controls-configure-area {
+    margin-top: 14px;
+}
+
+.controls-configure-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .level-preview-actions {
     flex-direction: column;
     align-items: center;

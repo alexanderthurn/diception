@@ -2,6 +2,7 @@
  * Input Hints Utility
  * Detects active input method and provides button hints for UI
  */
+import { loadBindings, getKeyDisplayName, getGamepadButtonName } from '../input/key-bindings.js';
 
 // Action constants
 export const ACTION_MOVE_UP = 'move_up';
@@ -13,10 +14,28 @@ export const ACTION_ASSIGN = 'assign';
 export const ACTION_DICE = 'dice';
 export const ACTION_ATTACK = 'attack';
 
+// Map hint action constants to binding system action IDs
+const HINT_TO_BINDING_ID = {
+    [ACTION_MOVE_UP]:    'move_up',
+    [ACTION_MOVE_DOWN]:  'move_down',
+    [ACTION_MOVE_LEFT]:  'move_left',
+    [ACTION_MOVE_RIGHT]: 'move_right',
+    [ACTION_END_TURN]:   'end_turn',
+    [ACTION_ATTACK]:     'confirm',
+    // ACTION_ASSIGN and ACTION_DICE are not in the binding system
+};
+
+/** Map gamepad button index to CSS style class. */
+function getGamepadButtonStyle(buttonIndex) {
+    const faceStyles = { 0: 'gamepad-a', 1: 'gamepad-b', 2: 'gamepad-x', 3: 'gamepad-y' };
+    if (buttonIndex >= 12 && buttonIndex <= 15) return 'gamepad-dpad';
+    return faceStyles[buttonIndex] ?? 'gamepad-btn';
+}
+
 /**
  * Detect active input type based on connected devices
  * Priority: Gamepad > Keyboard > Touch-only (null)
- * @param {InputManager} inputManager 
+ * @param {InputManager} inputManager
  * @returns {'keyboard'|'gamepad'|null} Input type or null if touch-only
  */
 export function getActiveInputType(inputManager) {
@@ -40,7 +59,7 @@ export function getActiveInputType(inputManager) {
 
 /**
  * Check if input hints should be shown
- * @param {InputManager} inputManager 
+ * @param {InputManager} inputManager
  * @returns {boolean} True if hints should be shown
  */
 export function shouldShowInputHints(inputManager) {
@@ -50,39 +69,40 @@ export function shouldShowInputHints(inputManager) {
 /**
  * Get input hint for a specific action
  * @param {string} action - Action constant
- * @param {InputManager} inputManager 
+ * @param {InputManager} inputManager
  * @returns {{label: string, type: string, style: string}|null} Hint object or null
  */
 export function getInputHint(action, inputManager) {
     const inputType = getActiveInputType(inputManager);
+    if (!inputType) return null;
 
-    if (!inputType) {
-        return null;
+    const bindingId = HINT_TO_BINDING_ID[action];
+    if (bindingId) {
+        const bindings = loadBindings();
+        if (inputType === 'keyboard') {
+            const codes = bindings.keyboard[bindingId];
+            const label = codes && codes.length > 0 ? getKeyDisplayName(codes[0]) : '-';
+            return { label, type: 'keyboard', style: 'keyboard' };
+        } else {
+            const buttons = bindings.gamepad[bindingId];
+            if (buttons && buttons.length > 0) {
+                const btnIndex = buttons[0];
+                return { label: getGamepadButtonName(btnIndex), type: 'gamepad', style: getGamepadButtonStyle(btnIndex) };
+            }
+            return null;
+        }
     }
 
-    const hints = {
+    // Hardcoded for non-configurable actions (not in the binding system)
+    const staticHints = {
         keyboard: {
-            [ACTION_MOVE_UP]: { label: 'W', type: 'keyboard', style: 'keyboard' },
-            [ACTION_MOVE_DOWN]: { label: 'S', type: 'keyboard', style: 'keyboard' },
-            [ACTION_MOVE_LEFT]: { label: 'A', type: 'keyboard', style: 'keyboard' },
-            [ACTION_MOVE_RIGHT]: { label: 'D', type: 'keyboard', style: 'keyboard' },
-            [ACTION_END_TURN]: { label: 'Space', type: 'keyboard', style: 'keyboard' },
             [ACTION_ASSIGN]: { label: 'R', type: 'keyboard', style: 'keyboard' },
-            [ACTION_DICE]: { label: 'F', type: 'keyboard', style: 'keyboard' },
-            [ACTION_ATTACK]: { label: 'E', type: 'keyboard', style: 'keyboard' }
+            [ACTION_DICE]:   { label: 'F', type: 'keyboard', style: 'keyboard' },
         },
         gamepad: {
-            // D-pad buttons for Xbox layout
-            [ACTION_MOVE_UP]: { label: '▲', type: 'gamepad', style: 'gamepad-dpad' },
-            [ACTION_MOVE_DOWN]: { label: '▼', type: 'gamepad', style: 'gamepad-dpad' },
-            [ACTION_MOVE_LEFT]: { label: '◄', type: 'gamepad', style: 'gamepad-dpad' },
-            [ACTION_MOVE_RIGHT]: { label: '►', type: 'gamepad', style: 'gamepad-dpad' },
-            [ACTION_END_TURN]: { label: 'Y', type: 'gamepad', style: 'gamepad-y' },
             [ACTION_ASSIGN]: { label: '◄', type: 'gamepad', style: 'gamepad-dpad' },
-            [ACTION_DICE]: { label: '►', type: 'gamepad', style: 'gamepad-dpad' },
-            [ACTION_ATTACK]: { label: 'A', type: 'gamepad', style: 'gamepad-a' }
+            [ACTION_DICE]:   { label: '►', type: 'gamepad', style: 'gamepad-dpad' },
         }
     };
-
-    return hints[inputType]?.[action] || null;
+    return staticHints[inputType]?.[action] ?? null;
 }

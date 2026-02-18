@@ -62,11 +62,12 @@ export class InputController {
         if (!this.inputManager) return;
 
         this.inputManager.on('move', (dir) => this.onMove(dir));
-        this.inputManager.on('confirm', () => this.onConfirm());
-        this.inputManager.on('cancel', () => this.onCancel());
+        this.inputManager.on('confirm', (data) => this.onConfirm(data));
+        this.inputManager.on('cancel', (data) => this.onCancel(data));
         this.inputManager.on('endTurn', (data) => this.onEndTurn(data));
         this.inputManager.on('pan', (dir) => this.onPan(dir));
         this.inputManager.on('panAnalog', (dir) => this.onPanAnalog(dir));
+        this.inputManager.on('zoom', (data) => this.onZoom(data));
     }
 
     onMove(data) {
@@ -157,14 +158,16 @@ export class InputController {
         }
     }
 
-    onConfirm() {
+    onConfirm(data) {
         if (!this.game.players || this.game.players.length === 0) return;
         if (this.game.gameOver) return;
         if (this.game.currentPlayer.isBot) return;
 
         // Virtual cursor mode: cursorX/cursorY are null - GamepadCursorManager handles
         // selection via simulated click. Do NOT init grid cursor (would show teal at wrong tile).
-        if (!this.cursorVisible && this.cursorX === null) {
+        // Keyboard confirm (E) is allowed through so it can initialize the cursor.
+        const source = data?.source ?? 'keyboard';
+        if (!this.cursorVisible && this.cursorX === null && source === 'gamepad') {
             return;
         }
 
@@ -194,7 +197,7 @@ export class InputController {
         this.handleTileClick(tile, this.cursorX, this.cursorY);
     }
 
-    onCancel() {
+    onCancel(data) {
         if (this.selectedTile) {
             this.deselect();
         } else if (this.cursorVisible) {
@@ -217,9 +220,14 @@ export class InputController {
     }
 
     onPan(dir) {
-        // Keyboard panning (IJKL) - dir is { x: -1/0/1, y: -1/0/1 }
-        const panSpeed = 10;
+        // Keyboard panning (IJKL) - emitted every frame while keys are held
+        const panSpeed = 4;
         this.renderer.pan(dir.x * panSpeed, dir.y * panSpeed);
+    }
+
+    onZoom(data) {
+        // Keyboard zoom: direction -1 = in, +1 = out (same convention as mouse wheel)
+        this.renderer.zoom(data.direction, window.innerWidth / 2, window.innerHeight / 2);
     }
 
     onPanAnalog(dir) {

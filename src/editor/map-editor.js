@@ -10,6 +10,7 @@ import { Dialog } from '../ui/dialog.js';
 import { GAME } from '../core/constants.js';
 import { getInputHint, ACTION_ASSIGN, ACTION_DICE } from '../ui/input-hints.js';
 import { MapManager } from '../core/map.js';
+import { loadBindings } from '../input/key-bindings.js';
 
 
 // Default player colors
@@ -547,50 +548,56 @@ export class MapEditor {
         this.elements.clearBtn?.addEventListener('click', () => this.clearGrid());
         this.elements.fillBtn?.addEventListener('click', () => this.fillGrid());
 
-        // Keyboard shortcuts (capture phase so we can handle WASD/arrows before InputManager)
+        // Keyboard shortcuts (capture phase so we can handle move keys before InputManager)
         document.addEventListener('keydown', (e) => {
             if (!this.isOpen) return;
 
             // Ignore if typing in input fields
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-            const key = e.key.toLowerCase();
+            const code = e.code.toLowerCase();
 
-            // WASD and arrow keys: pan the map (inverted - W/Up pans down, etc.)
-            const panMap = {
-                'w': { x: 0, y: 1 }, 'arrowup': { x: 0, y: 1 },
-                's': { x: 0, y: -1 }, 'arrowdown': { x: 0, y: -1 },
-                'a': { x: 1, y: 0 }, 'arrowleft': { x: 1, y: 0 },
-                'd': { x: -1, y: 0 }, 'arrowright': { x: -1, y: 0 }
+            // Build pan map from current bindings: move_up/down/left/right keys pan the editor map.
+            // Direction is inverted vs game (W pans view down so map appears to scroll up).
+            const kb = loadBindings().keyboard;
+            const editorPanMap = {};
+            const addPan = (action, pan) => {
+                for (const c of (kb[action] || [])) editorPanMap[c] = pan;
             };
-            if (panMap[key] && this.renderer) {
+            addPan('move_up',    { x:  0, y:  1 });
+            addPan('move_down',  { x:  0, y: -1 });
+            addPan('move_left',  { x:  1, y:  0 });
+            addPan('move_right', { x: -1, y:  0 });
+
+            if (editorPanMap[code] && this.renderer) {
                 const panSpeed = 15;
-                this.renderer.pan(panMap[key].x * panSpeed, panMap[key].y * panSpeed);
+                this.renderer.pan(editorPanMap[code].x * panSpeed, editorPanMap[code].y * panSpeed);
                 e.preventDefault();
                 e.stopImmediatePropagation();
                 return;
             }
 
-            if (e.key === 'Escape') {
+            if (code === 'escape') {
                 this.close();
-            } else if (key === 'y') {
+            } else if (code === 'keyy') {
                 this.setMode('paint');
-            } else if (key === 'r') {
+            } else if (code === 'keyr') {
                 this.setMode('assign');
-            } else if (key === 'f') {
+            } else if (code === 'keyf') {
                 this.setMode('dice');
             } else {
-                // Handle number/letter keys for direct value input
+                // Handle number/letter keys for direct value input (editor-specific tool shortcuts)
                 const keyMap = {
-                    '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
-                    'q': 10, 'e': 11, 't': 12, 'z': 13, 'u': 14, 'g': 15, 'b': 16
+                    'digit0': 0, 'digit1': 1, 'digit2': 2, 'digit3': 3, 'digit4': 4,
+                    'digit5': 5, 'digit6': 6, 'digit7': 7, 'digit8': 8, 'digit9': 9,
+                    'keyq': 10, 'keye': 11, 'keyt': 12, 'keyz': 13, 'keyu': 14, 'keyg': 15, 'keyb': 16
                 };
-                const value = keyMap[key];
+                const value = keyMap[code];
                 if (value !== undefined) {
                     this.handleNumberKey(value);
                 }
             }
-        }, true); // capture: true so we run before InputManager for WASD/arrows
+        }, true); // capture: true so we run before InputManager for move keys
 
         // Gamepad: move event for pan and D-pad Left/Right for Assign/Dice
         this.boundMoveHandler = (data) => {
