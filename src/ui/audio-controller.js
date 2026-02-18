@@ -33,6 +33,8 @@ export class AudioController {
         this._musicSound = null;
         // The currently playing instance (IMediaInstance)
         this._musicInstance = null;
+        // Set synchronously on pause so resume guard doesn't rely on async _musicInstance
+        this._musicPaused = false;
 
         // Timeouts for mobile slider auto-hide
         this.musicTimeout = null;
@@ -107,6 +109,7 @@ export class AudioController {
             sound.remove('music');
         }
         this._musicInstance = null;
+        this._musicPaused = false;
 
         const songPath = './music/' + encodeURIComponent(this.availableSongs[index]);
         console.log('Loading music:', songPath);
@@ -123,6 +126,7 @@ export class AudioController {
      */
     _playCurrent() {
         if (!sound.exists('music')) return;
+        this._musicPaused = false;
 
         // Stop any existing playback
         sound.stop('music');
@@ -264,8 +268,8 @@ export class AudioController {
         const isVisible = volumeSlider.classList.contains('visible');
 
         if (!isEnabled) return 'unmute-show';
-        if (isEnabled && isVisible) return 'hide';
-        return 'mute';
+        if (isEnabled && isVisible) return 'pause-hide';
+        return 'show';
     }
 
     showSliderWithTimeout(slider, timeoutKey) {
@@ -299,8 +303,9 @@ export class AudioController {
                     this.isFirstRunEver = false;
                     this._playCurrent();
                 } else {
-                    if (sound.exists('music') && this._musicInstance) {
+                    if (this._musicPaused && sound.exists('music')) {
                         sound.resume('music');
+                        this._musicPaused = false;
                     } else {
                         this._playCurrent();
                     }
@@ -312,17 +317,34 @@ export class AudioController {
             return;
         }
 
-        if (action === 'hide') {
+        // Music ON, slider hidden → just show slider, keep playing
+        if (action === 'show') {
             clearTimeout(this.musicTimeout);
-            this.musicVolume.classList.remove('visible');
+            this.showSliderWithTimeout(this.musicVolume, 'musicTimeout');
             return;
         }
 
-        // Desktop or mute action
-        if (this.musicPlaying) {
-            // Pause/stop music
+        // Music ON, slider visible → pause + hide slider
+        if (action === 'pause-hide') {
+            clearTimeout(this.musicTimeout);
+            this.musicVolume.classList.remove('visible');
             if (sound.exists('music')) {
                 sound.pause('music');
+                this._musicPaused = true;
+            }
+            this.musicPlaying = false;
+            this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-off"></span>';
+            this.musicToggle.classList.remove('active');
+            localStorage.setItem('dicy_musicEnabled', 'false');
+            return;
+        }
+
+        // Desktop toggle
+        if (this.musicPlaying) {
+            // Pause music
+            if (sound.exists('music')) {
+                sound.pause('music');
+                this._musicPaused = true;
             }
             this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-off"></span>';
             this.musicPlaying = false;
@@ -332,9 +354,10 @@ export class AudioController {
                 this.isFirstRunEver = false;
                 this._playCurrent();
             } else {
-                // Resume if paused, otherwise play
-                if (sound.exists('music') && this._musicInstance) {
+                // Resume if paused, otherwise play from start
+                if (this._musicPaused && sound.exists('music')) {
                     sound.resume('music');
+                    this._musicPaused = false;
                 } else {
                     this._playCurrent();
                 }
@@ -360,12 +383,25 @@ export class AudioController {
             return;
         }
 
-        if (action === 'hide') {
+        // SFX ON, slider hidden → just show slider, keep enabled
+        if (action === 'show') {
             clearTimeout(this.sfxTimeout);
-            this.sfxVolume.classList.remove('visible');
+            this.showSliderWithTimeout(this.sfxVolume, 'sfxTimeout');
             return;
         }
 
+        // SFX ON, slider visible → disable + hide slider
+        if (action === 'pause-hide') {
+            clearTimeout(this.sfxTimeout);
+            this.sfxVolume.classList.remove('visible');
+            this.sfx.setEnabled(false);
+            this.sfxToggle.innerHTML = '<span class="sprite-icon icon-sfx-off"></span>';
+            this.sfxToggle.classList.remove('active');
+            localStorage.setItem('dicy_sfxEnabled', 'false');
+            return;
+        }
+
+        // Desktop toggle
         const enabled = !this.sfx.enabled;
         this.sfx.setEnabled(enabled);
         this.sfxToggle.innerHTML = `<span class="sprite-icon icon-sfx-${enabled ? 'on' : 'off'}"></span>`;
