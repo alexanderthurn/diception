@@ -7,3 +7,6 @@ node_modules/
 **/.htaccess
 
 .npm-cache/
+src-tauri/resources/steam_api64.dll
+src-tauri/resources/libsteam_api.so
+src-tauri/resources/libsteam_api.dylib
