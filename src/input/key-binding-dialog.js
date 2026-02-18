@@ -175,9 +175,9 @@ export class KeyBindingDialog {
             cancelBtn.textContent = 'CANCEL';
 
             footer.appendChild(skipBtn);
-            footer.appendChild(saveBtn);
             footer.appendChild(resetBtn);
             footer.appendChild(cancelBtn);
+            footer.appendChild(saveBtn);
             box.appendChild(footer);
 
             overlay.appendChild(box);

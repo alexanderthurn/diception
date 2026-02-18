@@ -17,13 +17,13 @@ const STORAGE_KEY = 'dicy_key_bindings';
  * gamepadOnly:  true  → shown only in gamepad config  (no keyboard binding).
  */
 export const GAME_ACTIONS = [
+    { id: 'confirm',           label: 'Select/Attack' },
+    { id: 'cancel',            label: 'Deselect' },
+    { id: 'end_turn',          label: 'End Turn' },
     { id: 'move_up',           label: 'Attack Up' },
     { id: 'move_down',         label: 'Attack Down' },
     { id: 'move_left',         label: 'Attack Left' },
     { id: 'move_right',        label: 'Attack Right' },
-    { id: 'confirm',           label: 'Select' },
-    { id: 'cancel',            label: 'Deselect' },
-    { id: 'end_turn',          label: 'End Turn' },
     { id: 'zoom_in',           label: 'Zoom In' },
     { id: 'zoom_out',          label: 'Zoom Out' },
     { id: 'pan_up',            label: 'Camera Up',       keyboardOnly: true },
