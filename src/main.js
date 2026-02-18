@@ -45,6 +45,20 @@ import {
 initializeProbabilityTables();
 
 
+// Detect whether this device needs on-screen zoom buttons.
+// Touch devices and devices without a precise pointer (mouse) get them.
+// If the user actually scrolls with a mouse wheel, the class is removed.
+(function detectZoomNeed() {
+    const hasTouch = navigator.maxTouchPoints > 0;
+    const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
+    if (hasTouch || !hasFinePointer) {
+        document.body.classList.add('needs-zoom-controls');
+    }
+    window.addEventListener('wheel', () => {
+        document.body.classList.remove('needs-zoom-controls');
+    }, { once: true, passive: true });
+})();
+
 async function init() {
     // Load spritesheet
     try {

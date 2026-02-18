@@ -1173,7 +1173,7 @@ select {
 }
 
 @media (max-width: 768px),
-(max-height: 720px) {
+(max-height: 600px) {
     #music-controls {
         top: 10px;
         right: 10px;
@@ -3282,11 +3282,8 @@ select {
         display: none !important;
     }
 
-    /* Hide zoom controls in main menu on mobile */
-    body:has(#setup-modal:not(.hidden)) .zoom-control {
-        display: none !important;
-    }
 }
+
 
 /* End of Campaign Browser Mobile Adjustments */
 
@@ -4877,16 +4874,25 @@ canvas {
     opacity: 0.3;
 }
 
-/* Hide zoom controls when campaign browser is open */
+/* Zoom controls: hidden for mouse/wheel users, shown for touch or no-mousewheel (class set by JS) */
+body:not(.needs-zoom-controls) .zoom-control {
+    display: none;
+}
+
+/* Always hidden in menus (even for touch users — nothing to zoom there) */
+body:has(#setup-modal:not(.hidden)) .zoom-control,
 #scenario-browser-modal:not(.hidden)~.bottom-controls .zoom-control,
 #scenario-browser-modal:not(.hidden)~* .zoom-control,
 body:has(#scenario-browser-modal:not(.hidden)) .zoom-control {
     display: none !important;
 }
 
-/* Show zoom controls when map editor is open (they are hidden in main menu and campaigns) */
+/* Always shown in map editor regardless of input type */
 body:has(.editor-overlay:not(.hidden)) .zoom-control {
-    display: revert !important;
+    display: inline-flex !important;
+}
+body:has(.editor-overlay:not(.hidden)) .separator.zoom-control {
+    display: block !important;
 }
 
 .scenario-browser-top-bar {

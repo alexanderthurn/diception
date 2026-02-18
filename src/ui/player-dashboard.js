@@ -20,7 +20,7 @@ export class PlayerDashboard {
 
     init() {
         // Collapse by default on mobile
-        if (window.innerWidth <= 768 || window.innerHeight <= 720) {
+        if (window.innerWidth <= 768 || window.innerHeight <= 600) {
             this.playerDashboard.classList.add('collapsed');
             this.dashToggle.textContent = '[+]';
         }

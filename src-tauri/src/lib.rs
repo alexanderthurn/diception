@@ -69,7 +69,7 @@ const STEAM_INIT_SCRIPT: &str = r#"
 pub fn run() {
     // Try to init Steam on the main thread BEFORE Tauri starts.
     // steamworks::Client must be created on the main thread.
-    let steam_data = match steamworks::Client::init_app(480u32) {
+    let steam_data = match steamworks::Client::init() {
         Ok(client) => {
             let user_name = client.friends().name();
             let steam_id = client.user().steam_id().raw();

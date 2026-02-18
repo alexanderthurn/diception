@@ -171,7 +171,7 @@ export class AudioController {
 
         // Close sliders on outside click (mobile)
         document.addEventListener('click', (e) => {
-            if (window.innerWidth > 768 && window.innerHeight > 720) return;
+            if (window.innerWidth > 768 && window.innerHeight > 600) return;
             if (!e.target.closest('#music-controls')) {
                 document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
             }
@@ -263,7 +263,7 @@ export class AudioController {
     }
 
     getMobileAction(isEnabled, volumeSlider) {
-        if (window.innerWidth > 768 && window.innerHeight > 720) return null;
+        if (window.innerWidth > 768 && window.innerHeight > 600) return null;
 
         const isVisible = volumeSlider.classList.contains('visible');
 
@@ -282,7 +282,7 @@ export class AudioController {
     }
 
     resetSliderTimeout(slider, timeoutKey) {
-        if (window.innerWidth <= 768 || window.innerHeight <= 720) {
+        if (window.innerWidth <= 768 || window.innerHeight <= 600) {
             slider.classList.add('visible');
             clearTimeout(this[timeoutKey]);
             this[timeoutKey] = setTimeout(() => {
