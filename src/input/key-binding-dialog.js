@@ -1,5 +1,6 @@
 import {
     GAME_ACTIONS,
+    DEFAULT_BINDINGS,
     loadBindings,
     saveBindings,
     getKeyDisplayName,
@@ -165,12 +166,17 @@ export class KeyBindingDialog {
             saveBtn.className = 'tron-btn small';
             saveBtn.textContent = 'SAVE';
 
+            const resetBtn = document.createElement('button');
+            resetBtn.className = 'tron-btn small';
+            resetBtn.textContent = 'RESET';
+
             const cancelBtn = document.createElement('button');
             cancelBtn.className = 'tron-btn small';
             cancelBtn.textContent = 'CANCEL';
 
             footer.appendChild(skipBtn);
             footer.appendChild(saveBtn);
+            footer.appendChild(resetBtn);
             footer.appendChild(cancelBtn);
             box.appendChild(footer);
 
@@ -344,6 +350,27 @@ export class KeyBindingDialog {
                     keyEl.className = 'keybinding-row-key keybinding-row-key-empty';
                 }
                 stepIndex++;
+                updateStep();
+            });
+
+            resetBtn.addEventListener('click', () => {
+                if (captureCleanup) captureCleanup();
+                captureCleanup = null;
+                // Reset pending to defaults for this device only
+                const defaults = DEFAULT_BINDINGS[device];
+                Object.keys(defaults).forEach(id => { pending[id] = [...defaults[id]]; });
+                // Refresh all row displays
+                rowData.forEach(({ keyEl }, i) => {
+                    const bd = getBindingDisplay(actions[i]);
+                    if (bd) {
+                        keyEl.textContent = bd.label;
+                        keyEl.className = 'keybinding-row-key input-hint ' + bd.style;
+                    } else {
+                        keyEl.textContent = '—';
+                        keyEl.className = 'keybinding-row-key keybinding-row-key-empty';
+                    }
+                });
+                stepIndex = 0;
                 updateStep();
             });
 

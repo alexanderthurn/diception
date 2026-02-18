@@ -23,6 +23,7 @@ import { ProbabilityCalculator } from './ui/probability-calculator.js';
 
 // New modular components
 import { ConfigManager } from './ui/config-manager.js';
+import { GAME } from './core/constants.js';
 import { SessionManager } from './core/session-manager.js';
 import { TournamentRunner } from './core/tournament-runner.js';
 import { ScenarioBrowser } from './ui/scenario-browser.js';
@@ -788,7 +789,9 @@ function setupHowToPlay(effectsManager, audioController, inputManager) {
         const connectedGamepads = Array.from(inputManager.connectedGamepadIndices || []).sort();
         connectedGamepads.forEach((rawIdx) => {
             const humanIdx = inputManager.getHumanIndex(rawIdx);
-            configHtml += `<button class="tron-btn small" data-gamepad-index="${rawIdx}">CONFIGURE GAMEPAD ${humanIdx + 1}</button>`;
+            const color = GAME.HUMAN_COLORS[humanIdx % GAME.HUMAN_COLORS.length];
+            const colorHex = '#' + color.toString(16).padStart(6, '0');
+            configHtml += `<button class="tron-btn small" data-gamepad-index="${rawIdx}" style="border-color:${colorHex};color:${colorHex}">CONFIGURE GAMEPAD ${humanIdx + 1}</button>`;
         });
 
         configHtml += '</div>';
