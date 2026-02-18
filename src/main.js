@@ -245,7 +245,7 @@ async function init() {
         if (!localStorage.getItem('dicy_steam_welcome_shown')) {
             const choice = await Dialog.show({
                 title: 'Welcome',
-                message: 'Is this your first time playing? Choose your game speed:',
+                message: 'Choose your game speed:',
                 buttons: [
                     { text: 'Beginner (shows all rolls)', value: 'beginner', className: 'tron-btn' },
                     { text: 'Normal', value: 'normal', className: 'tron-btn' },
@@ -752,16 +752,16 @@ function setupHowToPlay(effectsManager, audioController, inputManager) {
 
     // Controls table: fixed rows that are not configurable
     const FIXED_CONTROLS = [
-        { label: 'Navigate Cursor', keyboard: '-',     gamepad: 'Left Stick' },
-        { label: 'Zoom',            keyboard: 'Wheel', gamepad: 'L2 / R2'   },
-        { label: 'Cursor Speed',    keyboard: '-',     gamepad: 'L1 / R1'   },
+        { label: 'Navigate Cursor', keyboard: '-', gamepad: 'Left Stick' },
+        { label: 'Zoom', keyboard: 'Wheel', gamepad: 'L2 / R2' },
+        { label: 'Cursor Speed', keyboard: '-', gamepad: 'L1 / R1' },
     ];
 
     // Gamepad column for keyboardOnly actions (uses analog stick, not a button)
     const GAMEPAD_FIXED_LABELS = {
-        pan_up:    'Right Stick',
-        pan_down:  'Right Stick',
-        pan_left:  'Right Stick',
+        pan_up: 'Right Stick',
+        pan_down: 'Right Stick',
+        pan_left: 'Right Stick',
         pan_right: 'Right Stick',
     };
 
@@ -782,7 +782,7 @@ function setupHowToPlay(effectsManager, audioController, inputManager) {
 
         // Configurable actions
         for (const action of GAME_ACTIONS) {
-            const kbCodes   = bindings.keyboard[action.id] || [];
+            const kbCodes = bindings.keyboard[action.id] || [];
             const kbDisplay = getKeysDisplayName(kbCodes);
             let gpDisplay;
             if (action.keyboardOnly) {
