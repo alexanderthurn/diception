@@ -120,10 +120,11 @@ export class GamepadCursorManager {
             const label = buttonLabels[button];
             if (label) {
                 const gameSpeed = localStorage.getItem('dicy_gameSpeed') || 'beginner';
-                const showAlways = [b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn].includes(button) || isMenuOpen;
                 const isBeginner = gameSpeed === 'beginner';
+                const isMainMenu = !!document.querySelector('#setup-modal:not(.hidden)');
 
-                if (showAlways || isBeginner) {
+                // Beginner: show hints everywhere. Normal/Expert: only in the main menu.
+                if (isBeginner || isMainMenu) {
                     this.showFeedback(index, label, button);
                 }
             }
