@@ -94,6 +94,19 @@ fn steam_input_init(state: tauri::State<AppState>) -> Result<bool, String> {
     if !input.init(false) {
         return Err("SteamAPI_ISteamInput_Init returned false".to_string());
     }
+
+    // Explicitly point Steam at the action manifest so it is found regardless
+    // of working directory.  The VDF is copied next to the executable by the
+    // build scripts (Contents/MacOS/ on macOS, same dir as .exe on Windows).
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(dir) = exe_path.parent() {
+            let vdf = dir.join("game_actions_X.vdf");
+            let vdf_str = vdf.to_string_lossy();
+            eprintln!("[Steam Input] action manifest path: {}", vdf_str);
+            input.set_input_action_manifest_file_path(&vdf_str);
+        }
+    }
+
     // RunFrame once so handles are valid before the first poll
     input.run_frame();
 

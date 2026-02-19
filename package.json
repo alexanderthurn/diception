@@ -10,8 +10,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build:mac": "tauri build --bundles app && rm -rf dist-steam && mkdir -p dist-steam && cp -r src-tauri/target/release/bundle/macos/*.app dist-steam/ 2>/dev/null || true",
-    "tauri:build:win": "tauri build --bundles nsis && rm -rf dist-steam && mkdir dist-steam && cp src-tauri/target/release/diception.exe dist-steam/ && cp src-tauri/target/release/resources/steam_api64.dll dist-steam/",
+    "tauri:build:mac": "tauri build --bundles app && rm -rf dist-steam && mkdir -p dist-steam && cp -r src-tauri/target/release/bundle/macos/*.app dist-steam/ 2>/dev/null || true && cp steam/game_actions_X.vdf dist-steam/DICEPTION.app/Contents/MacOS/game_actions_X.vdf",
+    "tauri:build:win": "tauri build --bundles nsis && rm -rf dist-steam && mkdir dist-steam && cp src-tauri/target/release/diception.exe dist-steam/ && cp src-tauri/target/release/resources/steam_api64.dll dist-steam/ && cp steam/game_actions_X.vdf dist-steam/game_actions_X.vdf",
     "generate-icons": "npm run tauri icon ./public/icon.png"
   },
   "keywords": [],
