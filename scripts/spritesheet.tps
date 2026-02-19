@@ -173,7 +173,115 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
-            <key type="filename">gfx/bg.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_0.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_1.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_2.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_3.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_4.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_5.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_6.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_7.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_8.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_9.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_a.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_alt.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_arrow_down.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_arrow_left.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_arrow_right.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_arrow_up.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_b.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_backspace_icon.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_c.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_ctrl.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_d.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_e.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_end.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_escape.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f1.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f10.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f11.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f12.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f2.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f3.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f4.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f5.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f6.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f7.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f8.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_f9.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_g.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_h.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_home.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_i.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_j.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_k.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_l.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_m.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_n.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_o.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_p.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_page_down.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_page_up.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_q.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_r.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_return.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_s.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_shift_icon.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_space_icon.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_t.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_tab.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_u.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_v.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_w.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_x.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_y.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/keyboard_z.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/mouse_left.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/mouse_right.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/mouse_scroll.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/mouse_scroll_down.png</key>
+            <key type="filename">gfx/controls/Keyboard &amp; Mouse/Default/mouse_scroll_up.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation4_button_options.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation4_button_share.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation5_button_create.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation5_button_options.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_button_color_circle.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_button_color_cross.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_button_color_square.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_button_color_triangle.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_button_l3.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_button_r3.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_dpad_down.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_dpad_left.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_dpad_right.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_dpad_up.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_stick_l.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_stick_r.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_trigger_l1.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_trigger_l2.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_trigger_r1.png</key>
+            <key type="filename">gfx/controls/PlayStation Series/Default/playstation_trigger_r2.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_button_back_icon.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_button_color_a.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_button_color_b.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_button_color_x.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_button_color_y.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_button_menu.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_button_start_icon.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_button_view.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_dpad_down.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_dpad_left.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_dpad_right.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_dpad_up.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_lb.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_ls.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_lt.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_rb.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_rs.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_rt.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_stick_l.png</key>
+            <key type="filename">gfx/controls/Xbox Series/Default/xbox_stick_r.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0,0</point_f>
@@ -182,49 +290,51 @@
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
-                <rect>15,15,30,30</rect>
+                <rect>16,16,32,32</rect>
                 <key>scale9Paddings</key>
-                <rect>15,15,30,30</rect>
+                <rect>16,16,32,32</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
-            <key type="filename">gfx/die_d1.png</key>
-            <key type="filename">gfx/die_d10.png</key>
-            <key type="filename">gfx/die_d11.png</key>
-            <key type="filename">gfx/die_d12.png</key>
-            <key type="filename">gfx/die_d13.png</key>
-            <key type="filename">gfx/die_d14.png</key>
-            <key type="filename">gfx/die_d15.png</key>
-            <key type="filename">gfx/die_d16.png</key>
-            <key type="filename">gfx/die_d2.png</key>
-            <key type="filename">gfx/die_d3.png</key>
-            <key type="filename">gfx/die_d4.png</key>
-            <key type="filename">gfx/die_d5.png</key>
-            <key type="filename">gfx/die_d6.png</key>
-            <key type="filename">gfx/die_d7.png</key>
-            <key type="filename">gfx/die_d8.png</key>
-            <key type="filename">gfx/die_d9.png</key>
-            <key type="filename">gfx/icon_assign.png</key>
-            <key type="filename">gfx/icon_attack.png</key>
-            <key type="filename">gfx/icon_autoplay.png</key>
-            <key type="filename">gfx/icon_campaigns.png</key>
-            <key type="filename">gfx/icon_close.png</key>
-            <key type="filename">gfx/icon_defend.png</key>
-            <key type="filename">gfx/icon_dice.png</key>
-            <key type="filename">gfx/icon_gamepad.png</key>
-            <key type="filename">gfx/icon_help.png</key>
-            <key type="filename">gfx/icon_map.png</key>
-            <key type="filename">gfx/icon_music_off.png</key>
-            <key type="filename">gfx/icon_music_on.png</key>
-            <key type="filename">gfx/icon_paint.png</key>
-            <key type="filename">gfx/icon_retry.png</key>
-            <key type="filename">gfx/icon_save.png</key>
-            <key type="filename">gfx/icon_scenario.png</key>
-            <key type="filename">gfx/icon_settings.png</key>
-            <key type="filename">gfx/icon_sfx_off.png</key>
-            <key type="filename">gfx/icon_sfx_on.png</key>
-            <key type="filename">gfx/icon_zoom_in.png</key>
-            <key type="filename">gfx/icon_zoom_out.png</key>
+            <key type="filename">gfx/game/bg.png</key>
+            <key type="filename">gfx/game/die_d1.png</key>
+            <key type="filename">gfx/game/die_d10.png</key>
+            <key type="filename">gfx/game/die_d11.png</key>
+            <key type="filename">gfx/game/die_d12.png</key>
+            <key type="filename">gfx/game/die_d13.png</key>
+            <key type="filename">gfx/game/die_d14.png</key>
+            <key type="filename">gfx/game/die_d15.png</key>
+            <key type="filename">gfx/game/die_d16.png</key>
+            <key type="filename">gfx/game/die_d2.png</key>
+            <key type="filename">gfx/game/die_d3.png</key>
+            <key type="filename">gfx/game/die_d4.png</key>
+            <key type="filename">gfx/game/die_d5.png</key>
+            <key type="filename">gfx/game/die_d6.png</key>
+            <key type="filename">gfx/game/die_d7.png</key>
+            <key type="filename">gfx/game/die_d8.png</key>
+            <key type="filename">gfx/game/die_d9.png</key>
+            <key type="filename">gfx/game/icon_assign.png</key>
+            <key type="filename">gfx/game/icon_attack.png</key>
+            <key type="filename">gfx/game/icon_autoplay.png</key>
+            <key type="filename">gfx/game/icon_campaigns.png</key>
+            <key type="filename">gfx/game/icon_close.png</key>
+            <key type="filename">gfx/game/icon_defend.png</key>
+            <key type="filename">gfx/game/icon_dice.png</key>
+            <key type="filename">gfx/game/icon_gamepad.png</key>
+            <key type="filename">gfx/game/icon_help.png</key>
+            <key type="filename">gfx/game/icon_input_mk.png</key>
+            <key type="filename">gfx/game/icon_map.png</key>
+            <key type="filename">gfx/game/icon_music_off.png</key>
+            <key type="filename">gfx/game/icon_music_on.png</key>
+            <key type="filename">gfx/game/icon_paint.png</key>
+            <key type="filename">gfx/game/icon_retry.png</key>
+            <key type="filename">gfx/game/icon_save.png</key>
+            <key type="filename">gfx/game/icon_scenario.png</key>
+            <key type="filename">gfx/game/icon_settings.png</key>
+            <key type="filename">gfx/game/icon_sfx_off.png</key>
+            <key type="filename">gfx/game/icon_sfx_on.png</key>
+            <key type="filename">gfx/game/icon_zoom_in.png</key>
+            <key type="filename">gfx/game/icon_zoom_out.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0,0</point_f>
@@ -236,21 +346,6 @@
                 <rect>64,64,128,128</rect>
                 <key>scale9Paddings</key>
                 <rect>64,64,128,128</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">gfx/icon_input_mk.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0,0</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>67,64,133,128</rect>
-                <key>scale9Paddings</key>
-                <rect>67,64,133,128</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>

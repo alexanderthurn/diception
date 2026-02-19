@@ -1,6 +1,878 @@
 {"frames": {
 
-"bg.png":
+"controls/Keyboard & Mouse/Default/keyboard_0.png":
+{
+	"frame": {"x":308,"y":582,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_1.png":
+{
+	"frame": {"x":184,"y":825,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_2.png":
+{
+	"frame": {"x":236,"y":825,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_3.png":
+{
+	"frame": {"x":288,"y":825,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_4.png":
+{
+	"frame": {"x":182,"y":877,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_5.png":
+{
+	"frame": {"x":182,"y":929,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_6.png":
+{
+	"frame": {"x":234,"y":877,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_7.png":
+{
+	"frame": {"x":182,"y":981,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_8.png":
+{
+	"frame": {"x":234,"y":929,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_9.png":
+{
+	"frame": {"x":286,"y":877,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_a.png":
+{
+	"frame": {"x":182,"y":1033,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_alt.png":
+{
+	"frame": {"x":598,"y":1175,"w":50,"h":38},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":13,"w":50,"h":38},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_arrow_down.png":
+{
+	"frame": {"x":234,"y":981,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_arrow_left.png":
+{
+	"frame": {"x":286,"y":929,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_arrow_right.png":
+{
+	"frame": {"x":182,"y":1085,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_arrow_up.png":
+{
+	"frame": {"x":234,"y":1033,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_b.png":
+{
+	"frame": {"x":286,"y":981,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_backspace_icon.png":
+{
+	"frame": {"x":182,"y":1189,"w":50,"h":34},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_c.png":
+{
+	"frame": {"x":182,"y":1137,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_ctrl.png":
+{
+	"frame": {"x":650,"y":1175,"w":50,"h":38},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":13,"w":50,"h":38},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_d.png":
+{
+	"frame": {"x":234,"y":1085,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_e.png":
+{
+	"frame": {"x":286,"y":1033,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_end.png":
+{
+	"frame": {"x":234,"y":1137,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_escape.png":
+{
+	"frame": {"x":286,"y":1085,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f.png":
+{
+	"frame": {"x":286,"y":1137,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f1.png":
+{
+	"frame": {"x":338,"y":892,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f2.png":
+{
+	"frame": {"x":390,"y":892,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f3.png":
+{
+	"frame": {"x":338,"y":944,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f4.png":
+{
+	"frame": {"x":442,"y":892,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f5.png":
+{
+	"frame": {"x":338,"y":996,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f6.png":
+{
+	"frame": {"x":390,"y":944,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f7.png":
+{
+	"frame": {"x":338,"y":1048,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f8.png":
+{
+	"frame": {"x":390,"y":996,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f9.png":
+{
+	"frame": {"x":442,"y":944,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f10.png":
+{
+	"frame": {"x":338,"y":1100,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f11.png":
+{
+	"frame": {"x":390,"y":1048,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_f12.png":
+{
+	"frame": {"x":442,"y":996,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_g.png":
+{
+	"frame": {"x":338,"y":1152,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_h.png":
+{
+	"frame": {"x":390,"y":1100,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_home.png":
+{
+	"frame": {"x":442,"y":1048,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_i.png":
+{
+	"frame": {"x":390,"y":1152,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_j.png":
+{
+	"frame": {"x":442,"y":1100,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_k.png":
+{
+	"frame": {"x":442,"y":1152,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_l.png":
+{
+	"frame": {"x":494,"y":899,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_m.png":
+{
+	"frame": {"x":494,"y":951,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_n.png":
+{
+	"frame": {"x":546,"y":899,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_o.png":
+{
+	"frame": {"x":494,"y":1003,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_p.png":
+{
+	"frame": {"x":546,"y":951,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_page_down.png":
+{
+	"frame": {"x":494,"y":1055,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_page_up.png":
+{
+	"frame": {"x":546,"y":1003,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_q.png":
+{
+	"frame": {"x":494,"y":1107,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_r.png":
+{
+	"frame": {"x":546,"y":1055,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_return.png":
+{
+	"frame": {"x":546,"y":1107,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_s.png":
+{
+	"frame": {"x":494,"y":1159,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_shift_icon.png":
+{
+	"frame": {"x":234,"y":1189,"w":50,"h":34},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_space_icon.png":
+{
+	"frame": {"x":546,"y":1159,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_t.png":
+{
+	"frame": {"x":598,"y":915,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_tab.png":
+{
+	"frame": {"x":702,"y":1175,"w":50,"h":38},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":13,"w":50,"h":38},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_u.png":
+{
+	"frame": {"x":598,"y":967,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_v.png":
+{
+	"frame": {"x":650,"y":915,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_w.png":
+{
+	"frame": {"x":598,"y":1019,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_x.png":
+{
+	"frame": {"x":650,"y":967,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_y.png":
+{
+	"frame": {"x":702,"y":915,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/keyboard_z.png":
+{
+	"frame": {"x":598,"y":1071,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/mouse_left.png":
+{
+	"frame": {"x":984,"y":594,"w":36,"h":46},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":14,"y":9,"w":36,"h":46},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/mouse_right.png":
+{
+	"frame": {"x":962,"y":1001,"w":36,"h":46},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":14,"y":9,"w":36,"h":46},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/mouse_scroll.png":
+{
+	"frame": {"x":962,"y":1049,"w":36,"h":46},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":14,"y":9,"w":36,"h":46},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/mouse_scroll_down.png":
+{
+	"frame": {"x":962,"y":1097,"w":36,"h":46},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":14,"y":9,"w":36,"h":46},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Keyboard & Mouse/Default/mouse_scroll_up.png":
+{
+	"frame": {"x":984,"y":539,"w":36,"h":53},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":14,"y":2,"w":36,"h":53},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation4_button_options.png":
+{
+	"frame": {"x":910,"y":1155,"w":46,"h":46},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":9,"y":9,"w":46,"h":46},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation4_button_share.png":
+{
+	"frame": {"x":958,"y":1155,"w":36,"h":46},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":14,"y":9,"w":36,"h":46},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation5_button_create.png":
+{
+	"frame": {"x":990,"y":1,"w":26,"h":47},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":17,"y":10,"w":26,"h":47},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation5_button_options.png":
+{
+	"frame": {"x":990,"y":50,"w":22,"h":48},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":21,"y":9,"w":22,"h":48},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_button_color_circle.png":
+{
+	"frame": {"x":650,"y":1019,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_button_color_cross.png":
+{
+	"frame": {"x":702,"y":967,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_button_color_square.png":
+{
+	"frame": {"x":598,"y":1123,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_button_color_triangle.png":
+{
+	"frame": {"x":650,"y":1071,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_button_l3.png":
+{
+	"frame": {"x":702,"y":1019,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_button_r3.png":
+{
+	"frame": {"x":650,"y":1123,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_dpad_down.png":
+{
+	"frame": {"x":702,"y":1071,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_dpad_left.png":
+{
+	"frame": {"x":702,"y":1123,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_dpad_right.png":
+{
+	"frame": {"x":754,"y":915,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_dpad_up.png":
+{
+	"frame": {"x":754,"y":967,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_stick_l.png":
+{
+	"frame": {"x":754,"y":1019,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_stick_r.png":
+{
+	"frame": {"x":754,"y":1071,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_trigger_l1.png":
+{
+	"frame": {"x":806,"y":913,"w":42,"h":46},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":11,"y":9,"w":42,"h":46},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_trigger_l2.png":
+{
+	"frame": {"x":754,"y":1123,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_trigger_r1.png":
+{
+	"frame": {"x":806,"y":961,"w":42,"h":46},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":11,"y":9,"w":42,"h":46},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/PlayStation Series/Default/playstation_trigger_r2.png":
+{
+	"frame": {"x":850,"y":915,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_button_back_icon.png":
+{
+	"frame": {"x":286,"y":1189,"w":50,"h":34},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_button_color_a.png":
+{
+	"frame": {"x":806,"y":1009,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_button_color_b.png":
+{
+	"frame": {"x":806,"y":1061,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_button_color_x.png":
+{
+	"frame": {"x":806,"y":1113,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_button_color_y.png":
+{
+	"frame": {"x":806,"y":1165,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_button_menu.png":
+{
+	"frame": {"x":858,"y":1003,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_button_start_icon.png":
+{
+	"frame": {"x":850,"y":967,"w":50,"h":34},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_button_view.png":
+{
+	"frame": {"x":858,"y":1055,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_dpad_down.png":
+{
+	"frame": {"x":858,"y":1107,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_dpad_left.png":
+{
+	"frame": {"x":858,"y":1159,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_dpad_right.png":
+{
+	"frame": {"x":902,"y":915,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_dpad_up.png":
+{
+	"frame": {"x":954,"y":913,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_lb.png":
+{
+	"frame": {"x":902,"y":967,"w":50,"h":34},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_ls.png":
+{
+	"frame": {"x":910,"y":1003,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_lt.png":
+{
+	"frame": {"x":754,"y":1175,"w":50,"h":46},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":9,"w":50,"h":46},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_rb.png":
+{
+	"frame": {"x":954,"y":965,"w":50,"h":34},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_rs.png":
+{
+	"frame": {"x":910,"y":1055,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_rt.png":
+{
+	"frame": {"x":910,"y":1107,"w":50,"h":46},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":9,"w":50,"h":46},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_stick_l.png":
+{
+	"frame": {"x":754,"y":1019,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"controls/Xbox Series/Default/xbox_stick_r.png":
+{
+	"frame": {"x":754,"y":1071,"w":50,"h":50},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
+	"sourceSize": {"w":64,"h":64}
+},
+"game/bg.png":
 {
 	"frame": {"x":1,"y":1,"w":256,"h":256},
 	"rotated": false,
@@ -8,320 +880,324 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d1.png":
+"game/die_d1.png":
 {
-	"frame": {"x":184,"y":259,"w":60,"h":122},
+	"frame": {"x":308,"y":458,"w":60,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":91,"y":65,"w":60,"h":122},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d2.png":
+"game/die_d2.png":
 {
-	"frame": {"x":174,"y":1917,"w":86,"h":122},
+	"frame": {"x":389,"y":404,"w":86,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":82,"y":65,"w":86,"h":122},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d3.png":
+"game/die_d3.png":
 {
-	"frame": {"x":360,"y":1433,"w":86,"h":124},
+	"frame": {"x":389,"y":278,"w":86,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":84,"y":65,"w":86,"h":124},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d4.png":
+"game/die_d4.png":
 {
-	"frame": {"x":362,"y":1185,"w":91,"h":122},
+	"frame": {"x":530,"y":775,"w":91,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":82,"y":65,"w":91,"h":122},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d5.png":
+"game/die_d5.png":
 {
-	"frame": {"x":362,"y":1309,"w":87,"h":122},
+	"frame": {"x":761,"y":789,"w":87,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":85,"y":67,"w":87,"h":122},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d6.png":
+"game/die_d6.png":
 {
-	"frame": {"x":259,"y":95,"w":204,"h":202},
+	"frame": {"x":1,"y":259,"w":204,"h":202},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":25,"y":23,"w":204,"h":202},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d7.png":
+"game/die_d7.png":
 {
-	"frame": {"x":262,"y":1917,"w":84,"h":120},
+	"frame": {"x":936,"y":791,"w":84,"h":120},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":85,"y":67,"w":84,"h":120},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d8.png":
+"game/die_d8.png":
 {
-	"frame": {"x":88,"y":1917,"w":84,"h":124},
+	"frame": {"x":850,"y":789,"w":84,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":85,"y":65,"w":84,"h":124},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d9.png":
+"game/die_d9.png":
 {
-	"frame": {"x":1,"y":1917,"w":85,"h":124},
+	"frame": {"x":936,"y":665,"w":85,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":84,"y":65,"w":85,"h":124},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d10.png":
+"game/die_d10.png":
 {
-	"frame": {"x":344,"y":1559,"w":164,"h":124},
+	"frame": {"x":364,"y":766,"w":164,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":164,"h":124},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d11.png":
+"game/die_d11.png":
 {
-	"frame": {"x":367,"y":482,"w":138,"h":122},
+	"frame": {"x":795,"y":665,"w":138,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":52,"y":65,"w":138,"h":122},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d12.png":
+"game/die_d12.png":
 {
-	"frame": {"x":169,"y":1793,"w":164,"h":122},
+	"frame": {"x":629,"y":654,"w":164,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":164,"h":122},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d13.png":
+"game/die_d13.png":
 {
-	"frame": {"x":343,"y":1685,"w":165,"h":124},
+	"frame": {"x":364,"y":640,"w":165,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":165,"h":124},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d14.png":
+"game/die_d14.png":
 {
-	"frame": {"x":174,"y":1543,"w":168,"h":122},
+	"frame": {"x":477,"y":516,"w":168,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":168,"h":122},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d15.png":
+"game/die_d15.png":
 {
-	"frame": {"x":174,"y":1667,"w":167,"h":124},
+	"frame": {"x":647,"y":528,"w":167,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":167,"h":124},
 	"sourceSize": {"w":256,"h":256}
 },
-"die_d16.png":
+"game/die_d16.png":
 {
-	"frame": {"x":1,"y":1693,"w":166,"h":124},
+	"frame": {"x":816,"y":539,"w":166,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":166,"h":124},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_assign.png":
+"game/icon_assign.png":
 {
-	"frame": {"x":1,"y":1161,"w":179,"h":178},
+	"frame": {"x":1,"y":1010,"w":179,"h":178},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":37,"y":33,"w":179,"h":178},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_attack.png":
+"game/icon_attack.png":
 {
-	"frame": {"x":1,"y":1520,"w":171,"h":171},
+	"frame": {"x":664,"y":184,"w":171,"h":171},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":41,"y":38,"w":171,"h":171},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_autoplay.png":
+"game/icon_autoplay.png":
 {
-	"frame": {"x":348,"y":1811,"w":160,"h":169},
+	"frame": {"x":659,"y":357,"w":160,"h":169},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":47,"y":34,"w":160,"h":169},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_campaigns.png":
+"game/icon_campaigns.png":
 {
-	"frame": {"x":1,"y":259,"w":181,"h":181},
+	"frame": {"x":259,"y":1,"w":181,"h":181},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":32,"w":181,"h":181},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_close.png":
+"game/icon_close.png":
 {
-	"frame": {"x":367,"y":606,"w":136,"h":135},
+	"frame": {"x":623,"y":778,"w":136,"h":135},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":60,"y":60,"w":136,"h":135},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_defend.png":
+"game/icon_defend.png":
 {
-	"frame": {"x":367,"y":743,"w":122,"h":181},
+	"frame": {"x":184,"y":463,"w":122,"h":181},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":66,"y":32,"w":122,"h":181},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_dice.png":
+"game/icon_dice.png":
 {
-	"frame": {"x":181,"y":1365,"w":177,"h":176},
+	"frame": {"x":837,"y":181,"w":177,"h":176},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":38,"y":36,"w":177,"h":176},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_gamepad.png":
+"game/icon_gamepad.png":
 {
-	"frame": {"x":184,"y":665,"w":181,"h":157},
+	"frame": {"x":481,"y":184,"w":181,"h":157},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":56,"w":181,"h":157},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_help.png":
+"game/icon_help.png":
 {
-	"frame": {"x":365,"y":926,"w":96,"h":133},
+	"frame": {"x":531,"y":640,"w":96,"h":133},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":80,"y":58,"w":96,"h":133},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_input_mk.png":
+"game/icon_input_mk.png":
 {
-	"frame": {"x":259,"y":1,"w":220,"h":92},
+	"frame": {"x":259,"y":184,"w":220,"h":92},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":17,"y":79,"w":220,"h":92},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_map.png":
+"game/icon_map.png":
 {
-	"frame": {"x":246,"y":299,"w":181,"h":181},
+	"frame": {"x":1,"y":463,"w":181,"h":181},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":32,"w":181,"h":181},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_music_off.png":
+"game/icon_music_off.png":
 {
-	"frame": {"x":182,"y":1185,"w":178,"h":178},
+	"frame": {"x":821,"y":359,"w":178,"h":178},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":35,"w":178,"h":178},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_music_on.png":
+"game/icon_music_on.png":
 {
-	"frame": {"x":1,"y":1341,"w":178,"h":177},
+	"frame": {"x":184,"y":646,"w":178,"h":177},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":36,"w":178,"h":177},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_paint.png":
+"game/icon_paint.png":
 {
-	"frame": {"x":1,"y":442,"w":181,"h":181},
+	"frame": {"x":442,"y":1,"w":181,"h":181},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":32,"w":181,"h":181},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_retry.png":
+"game/icon_retry.png":
 {
-	"frame": {"x":184,"y":482,"w":181,"h":181},
+	"frame": {"x":1,"y":646,"w":181,"h":181},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":32,"w":181,"h":181},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_save.png":
+"game/icon_save.png":
 {
-	"frame": {"x":1,"y":625,"w":181,"h":181},
+	"frame": {"x":625,"y":1,"w":181,"h":181},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":32,"w":181,"h":181},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_scenario.png":
+"game/icon_scenario.png":
 {
-	"frame": {"x":1,"y":988,"w":180,"h":171},
+	"frame": {"x":477,"y":343,"w":180,"h":171},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":36,"w":180,"h":171},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_settings.png":
+"game/icon_settings.png":
 {
-	"frame": {"x":183,"y":1004,"w":179,"h":179},
+	"frame": {"x":1,"y":829,"w":179,"h":179},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":37,"y":33,"w":179,"h":179},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_sfx_off.png":
+"game/icon_sfx_off.png":
 {
-	"frame": {"x":1,"y":808,"w":180,"h":178},
+	"frame": {"x":808,"y":1,"w":180,"h":178},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":37,"y":33,"w":180,"h":178},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_sfx_on.png":
+"game/icon_sfx_on.png":
 {
-	"frame": {"x":183,"y":824,"w":180,"h":178},
+	"frame": {"x":207,"y":278,"w":180,"h":178},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":37,"y":33,"w":180,"h":178},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_zoom_in.png":
+"game/icon_zoom_in.png":
 {
-	"frame": {"x":364,"y":1061,"w":95,"h":93},
+	"frame": {"x":370,"y":528,"w":95,"h":93},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":80,"y":80,"w":95,"h":93},
 	"sourceSize": {"w":256,"h":256}
 },
-"icon_zoom_out.png":
+"game/icon_zoom_out.png":
 {
-	"frame": {"x":364,"y":1156,"w":95,"h":27},
+	"frame": {"x":1,"y":1190,"w":95,"h":27},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":80,"y":113,"w":95,"h":27},
 	"sourceSize": {"w":256,"h":256}
 }},
 "animations": {
-	"die_d": ["die_d1.png","die_d2.png","die_d3.png","die_d4.png","die_d5.png","die_d6.png","die_d7.png","die_d8.png","die_d9.png","die_d10.png","die_d11.png","die_d12.png","die_d13.png","die_d14.png","die_d15.png","die_d16.png"]
+	"controls/Keyboard & Mouse/Default/keyboard": ["controls/Keyboard & Mouse/Default/keyboard_0.png","controls/Keyboard & Mouse/Default/keyboard_1.png","controls/Keyboard & Mouse/Default/keyboard_2.png","controls/Keyboard & Mouse/Default/keyboard_3.png","controls/Keyboard & Mouse/Default/keyboard_4.png","controls/Keyboard & Mouse/Default/keyboard_5.png","controls/Keyboard & Mouse/Default/keyboard_6.png","controls/Keyboard & Mouse/Default/keyboard_7.png","controls/Keyboard & Mouse/Default/keyboard_8.png","controls/Keyboard & Mouse/Default/keyboard_9.png"],
+	"controls/Keyboard & Mouse/Default/keyboard_f": ["controls/Keyboard & Mouse/Default/keyboard_f1.png","controls/Keyboard & Mouse/Default/keyboard_f2.png","controls/Keyboard & Mouse/Default/keyboard_f3.png","controls/Keyboard & Mouse/Default/keyboard_f4.png","controls/Keyboard & Mouse/Default/keyboard_f5.png","controls/Keyboard & Mouse/Default/keyboard_f6.png","controls/Keyboard & Mouse/Default/keyboard_f7.png","controls/Keyboard & Mouse/Default/keyboard_f8.png","controls/Keyboard & Mouse/Default/keyboard_f9.png","controls/Keyboard & Mouse/Default/keyboard_f10.png","controls/Keyboard & Mouse/Default/keyboard_f11.png","controls/Keyboard & Mouse/Default/keyboard_f12.png"],
+	"controls/PlayStation Series/Default/playstation_trigger_l": ["controls/PlayStation Series/Default/playstation_trigger_l1.png","controls/PlayStation Series/Default/playstation_trigger_l2.png"],
+	"controls/PlayStation Series/Default/playstation_trigger_r": ["controls/PlayStation Series/Default/playstation_trigger_r1.png","controls/PlayStation Series/Default/playstation_trigger_r2.png"],
+	"game/die_d": ["game/die_d1.png","game/die_d2.png","game/die_d3.png","game/die_d4.png","game/die_d5.png","game/die_d6.png","game/die_d7.png","game/die_d8.png","game/die_d9.png","game/die_d10.png","game/die_d11.png","game/die_d12.png","game/die_d13.png","game/die_d14.png","game/die_d15.png","game/die_d16.png"]
 },
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.1",
 	"image": "diception.png",
 	"format": "RGBA8888",
-	"size": {"w":509,"h":2042},
+	"size": {"w":1022,"h":1224},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:e5c80cdc962cbf04566fb20e9a16fbc0:4cd3fc98b6124e26588bcb8684ebc005:c8957ea805ce385ea1446de7aef809f3$"
+	"smartupdate": "$TexturePacker:SmartUpdate:90b34c79a5274ba4578633d66bd7431a:d6a468c74ea3dc4fbf67637b9ff7ff3c:c8957ea805ce385ea1446de7aef809f3$"
 }
 }

@@ -84,14 +84,5 @@ Created as a Dice Wars inspired strategy game.
 - The Steam logo and branding are property of Valve Corporation and are used in accordance with the [Steam Branding Guidelines](https://partner.steamgames.com/doc/marketing/branding).
 - The "Get it on Google Play" . [Google Play Badge Guidelines](https://partnermarketinghub.withgoogle.com/brands/google-play/visual-identity/badge-guidelines/?folder=86642)
 
-
-TODO:
-
-* Scenarios / Maps / Replays (like play this exact setup again froum round 1,2,3,4)
-* Highscores, how many wins does the human have? 
-* Reset config and highscore button
-* Saving stuff with php (like ai + maps + highscores)
-* BattleLog for Bots should be seen immediately when a bot is playing, this is important for beginners to see what is going on.
-
-* No reload when changing visual effects
-* if it is a bots turn, do not show the border of the active player as white, keep the color of the player. only if a human is active, make it like now (white)
+**Gamepad/Keyboard Icons**
+- Thank you [Kenney.nl](https://kenney.nl/assets/input-prompts)
