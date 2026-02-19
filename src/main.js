@@ -119,6 +119,15 @@ async function init() {
         }
     }
 
+    // Steam Input — initialise in the background; non-blocking, optional
+    if (window.steam?.inputInit) {
+        import('./input/steam-input-adapter.js').then(({ steamInput }) => {
+            steamInput.init().then(ok => {
+                if (ok) console.log('[SteamInput] Ready');
+            });
+        });
+    }
+
     // Steam-specific identity display
     if (window.steam) {
         window.steam.getUserName().then(name => {

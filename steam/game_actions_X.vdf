@@ -1,0 +1,64 @@
+"In Game Actions"
+{
+	"actions"
+	{
+		"GameControls"
+		{
+			"title"		"#Set_GameControls"
+			"StickPadGyro"
+			{
+				"cursor_move"
+				{
+					"title"			"#Action_CursorMove"
+					"input_mode"	"joystick_move"
+				}
+				"map_pan"
+				{
+					"title"			"#Action_MapPan"
+					"input_mode"	"joystick_move"
+				}
+			}
+			"AnalogTrigger"
+			{
+				"zoom_in"	"#Action_ZoomIn"
+				"zoom_out"	"#Action_ZoomOut"
+			}
+			"Button"
+			{
+				"confirm"			"#Action_Confirm"
+				"cancel"			"#Action_Cancel"
+				"end_turn"			"#Action_EndTurn"
+				"menu"				"#Action_Menu"
+				"move_up"			"#Action_MoveUp"
+				"move_down"			"#Action_MoveDown"
+				"move_left"			"#Action_MoveLeft"
+				"move_right"		"#Action_MoveRight"
+				"gamepad_drag"		"#Action_GamepadDrag"
+				"cursor_speed_down"	"#Action_CursorSpeedDown"
+				"cursor_speed_up"	"#Action_CursorSpeedUp"
+			}
+		}
+	}
+	"localization"
+	{
+		"english"
+		{
+			"Set_GameControls"		"Game Controls"
+			"Action_CursorMove"		"Move Cursor"
+			"Action_MapPan"			"Pan Map"
+			"Action_ZoomIn"			"Zoom In"
+			"Action_ZoomOut"		"Zoom Out"
+			"Action_Confirm"		"Select / Attack"
+			"Action_Cancel"			"Deselect"
+			"Action_EndTurn"		"End Turn"
+			"Action_Menu"			"Main Menu"
+			"Action_MoveUp"			"Attack Up"
+			"Action_MoveDown"		"Attack Down"
+			"Action_MoveLeft"		"Attack Left"
+			"Action_MoveRight"		"Attack Right"
+			"Action_GamepadDrag"	"Hold to Pan Map"
+			"Action_CursorSpeedDown"	"Cursor Speed -"
+			"Action_CursorSpeedUp"		"Cursor Speed +"
+		}
+	}
+}
