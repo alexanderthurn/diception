@@ -132,6 +132,11 @@ export class GamepadCursorManager {
                 }
             }
 
+            // D-pad press → snap mode (no center dot), regardless of context
+            if ([b.moveUp, b.moveDown, b.moveLeft, b.moveRight].includes(button)) {
+                this._setCursorMode(cursor, 'dpad');
+            }
+
             // In menu mode, only allow cursor/zoom/confirm/cancel buttons
             if (isMenuOpen) {
                 const allowedInMenu = isEditorOpen
