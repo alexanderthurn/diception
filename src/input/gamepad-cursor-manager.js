@@ -8,6 +8,9 @@ import { detectControllerType, buttonIconHTML } from './controller-icons.js';
  * and HTML UI elements by simulating mouse events.
  */
 export class GamepadCursorManager {
+    // Survives instance destruction so cursors keep their position across game restarts.
+    static savedPositions = new Map(); // gamepadIndex → { x, y }
+
     constructor(game, inputManager) {
         this.game = game;
         this.inputManager = inputManager;
@@ -211,6 +214,7 @@ export class GamepadCursorManager {
 
             cursor.x = x;
             cursor.y = y;
+            GamepadCursorManager.savedPositions.set(index, { x, y });
             cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
             cursor.element.style.opacity = '0.35';
             this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, index);
@@ -262,6 +266,8 @@ export class GamepadCursorManager {
                 // Clamp to screen bounds
                 cursor.x = Math.max(0, Math.min(window.innerWidth, cursor.x));
                 cursor.y = Math.max(0, Math.min(window.innerHeight, cursor.y));
+
+                GamepadCursorManager.savedPositions.set(i, { x: cursor.x, y: cursor.y });
 
                 // Update DOM element
                 cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
@@ -370,24 +376,21 @@ export class GamepadCursorManager {
             </svg>
         `;
 
-        // Initial position: Corners depending on human index (so Human 0 = top-left, etc.)
-        const humanIndex = this.inputManager.getHumanIndex(index);
-        const padding = 0;
-        let initialX = window.innerWidth / 2;
-        let initialY = window.innerHeight / 2;
-
-        if (humanIndex % 4 === 0) { // Top-left
-            initialX = padding;
-            initialY = padding;
-        } else if (humanIndex % 4 === 1) { // Top-right
-            initialX = window.innerWidth - padding;
-            initialY = padding;
-        } else if (humanIndex % 4 === 2) { // Bottom-left
-            initialX = padding;
-            initialY = window.innerHeight - padding;
-        } else if (humanIndex % 4 === 3) { // Bottom-right
-            initialX = window.innerWidth - padding;
-            initialY = window.innerHeight - padding;
+        // Restore last known position, or place at player corner on first appearance.
+        const saved = GamepadCursorManager.savedPositions.get(index);
+        let initialX, initialY;
+        if (saved) {
+            initialX = saved.x;
+            initialY = saved.y;
+        } else {
+            const humanIndex = this.inputManager.getHumanIndex(index);
+            const padding = 0;
+            initialX = window.innerWidth / 2;
+            initialY = window.innerHeight / 2;
+            if (humanIndex % 4 === 0) { initialX = padding;                      initialY = padding; }
+            else if (humanIndex % 4 === 1) { initialX = window.innerWidth - padding; initialY = padding; }
+            else if (humanIndex % 4 === 2) { initialX = padding;                      initialY = window.innerHeight - padding; }
+            else if (humanIndex % 4 === 3) { initialX = window.innerWidth - padding; initialY = window.innerHeight - padding; }
         }
 
         const cursor = {
