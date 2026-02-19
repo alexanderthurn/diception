@@ -107,7 +107,8 @@
             <span class="separator retry-separator hidden"></span>
             <button id="new-game-btn" class="tron-btn small game-ui hidden" title="Main Menu"><span
                     class="btn-text">Main Menu</span><span class="btn-icon"><span
-                        class="sprite-icon icon-settings"></span></span><span id="new-game-hint" class="input-hint hidden"></span></button>
+                        class="sprite-icon icon-settings"></span></span><span id="new-game-hint"
+                    class="input-hint hidden"></span></button>
             <span class="separator"></span>
             <div class="audio-group">
                 <button id="music-toggle" class="tron-btn small" title="Music"><span
@@ -311,20 +312,76 @@
                         </thead>
                         <tbody id="controls-table-body">
                             <!-- Dynamically populated by JS -->
-                            <tr><td>Navigate Cursor</td><td>-</td><td>Left Stick</td></tr>
-                            <tr><td>Select / Attack</td><td>R.Shift / E</td><td>A</td></tr>
-                            <tr><td>Attack Up</td><td>W / ↑</td><td>D↑</td></tr>
-                            <tr><td>Attack Down</td><td>S / ↓</td><td>D↓</td></tr>
-                            <tr><td>Attack Left</td><td>A / ←</td><td>D←</td></tr>
-                            <tr><td>Attack Right</td><td>D / →</td><td>D→</td></tr>
-                            <tr><td>Cancel / Deselect</td><td>Q</td><td>X</td></tr>
-                            <tr><td>End Turn</td><td>Space / Enter</td><td>Y</td></tr>
-                            <tr><td>Camera Up</td><td>I</td><td>Right Stick</td></tr>
-                            <tr><td>Camera Down</td><td>K</td><td>Right Stick</td></tr>
-                            <tr><td>Camera Left</td><td>J</td><td>Right Stick</td></tr>
-                            <tr><td>Camera Right</td><td>L</td><td>Right Stick</td></tr>
-                            <tr><td>Zoom</td><td>Wheel</td><td>L2 / R2</td></tr>
-                            <tr><td>Cursor Speed</td><td>-</td><td>L1 / R1</td></tr>
+                            <tr>
+                                <td>Navigate Cursor</td>
+                                <td>-</td>
+                                <td>Left Stick</td>
+                            </tr>
+                            <tr>
+                                <td>Select / Attack</td>
+                                <td>R.Shift / E</td>
+                                <td>A</td>
+                            </tr>
+                            <tr>
+                                <td>Attack Up</td>
+                                <td>W / ↑</td>
+                                <td>D↑</td>
+                            </tr>
+                            <tr>
+                                <td>Attack Down</td>
+                                <td>S / ↓</td>
+                                <td>D↓</td>
+                            </tr>
+                            <tr>
+                                <td>Attack Left</td>
+                                <td>A / ←</td>
+                                <td>D←</td>
+                            </tr>
+                            <tr>
+                                <td>Attack Right</td>
+                                <td>D / →</td>
+                                <td>D→</td>
+                            </tr>
+                            <tr>
+                                <td>Cancel / Deselect</td>
+                                <td>Q</td>
+                                <td>X</td>
+                            </tr>
+                            <tr>
+                                <td>End Turn</td>
+                                <td>Space / Enter</td>
+                                <td>Y</td>
+                            </tr>
+                            <tr>
+                                <td>Camera Up</td>
+                                <td>I</td>
+                                <td>Right Stick</td>
+                            </tr>
+                            <tr>
+                                <td>Camera Down</td>
+                                <td>K</td>
+                                <td>Right Stick</td>
+                            </tr>
+                            <tr>
+                                <td>Camera Left</td>
+                                <td>J</td>
+                                <td>Right Stick</td>
+                            </tr>
+                            <tr>
+                                <td>Camera Right</td>
+                                <td>L</td>
+                                <td>Right Stick</td>
+                            </tr>
+                            <tr>
+                                <td>Zoom</td>
+                                <td>Wheel</td>
+                                <td>L2 / R2</td>
+                            </tr>
+                            <tr>
+                                <td>Cursor Speed</td>
+                                <td>-</td>
+                                <td>L1 / R1</td>
+                            </tr>
                         </tbody>
                     </table>
                     <div id="controls-configure-area" class="controls-configure-area">
@@ -494,19 +551,52 @@
                     <h3>ABOUT</h3>
                     <div class="setting-explain">
                         <p>This game was made by <strong>Alexander Thurn</strong>.</p>
-                        <p>It is <strong>open source</strong> under the <strong>GNU GPL v3</strong>.
-                            You may use, modify, and share it freely. The full license is in the <code>LICENSE</code>
-                            file.</p>
-                        <p><strong>Distribution plan:</strong> The <strong>web version</strong> stays free forever. A
-                            paid <strong>Steam version</strong> is planned to support development while keeping the core
-                            game open source and accessible to everyone.</p>
+                        <p>Its core is <strong>open source</strong> under the <strong>GNU GPL v3</strong>.
+                        </p>
+                        <p>The <strong>web version</strong> is free. It is a subset of the full game,
+                            but contains all of the core engine and a tutorial. The
+                            <strong>paid version</strong> contains more features, like handcrafted campaigns and in case
+                            of steam cloud saving and achievements.
+                        </p>
                         <p>GitHub: <a href="https://github.com/alexanderthurn/diception" target="_blank"
                                 class="about-link highlight-link">alexanderthurn/diception</a></p>
                         <p>Visit <a href="https://feuerware.com" target="_blank"
                                 class="about-link  highlight-link">feuerware.com</a>
                             for more games.</p>
-                        <p><strong>Gamepad &amp; Keyboard Icons</strong> by <a href="https://kenney.nl/assets/input-prompts" target="_blank"
+                        <p><strong>Gamepad &amp; Keyboard Icons</strong> by <a
+                                href="https://kenney.nl/assets/input-prompts" target="_blank"
                                 class="about-link highlight-link">Kenney.nl</a> (CC0)</p>
+                        <p>Music was made with a paid Suno Pro Account <a href="https://suno.com/invite/@werteherren"
+                                target="_blank" class="about-link  highlight-link">suno.com</a>
+                            for more games.</p>
+
+
+                        <h2>Legal Notice (Imprint)</h2>
+
+                        <p>
+                            <strong>Service Provider:</strong><br>
+                            Alexander Thurn<br>
+                            Gerhardstr. 14<br>
+                            53229 Bonn<br>
+                            Germany
+                        </p>
+
+                        <p>
+                            <strong>Contact Information:</strong><br>
+                            Email: <a class="about-link highlight-link"
+                                href="mailto:alex@feuerware.com">alex@feuerware.com</a><br>
+                            Phone: +49 (0) 176 23570002
+                        </p>
+
+                        <hr>
+
+                        <p>
+                            <em>Information according to § 5 DDG:</em><br>
+                            Responsible for content according to § 18 Abs. 2 MStV: Alexander Thurn (address as stated
+                            above).
+                        </p>
+
+
                     </div>
                 </section>
             </div>
