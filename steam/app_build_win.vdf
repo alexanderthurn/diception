@@ -1,0 +1,11 @@
+"AppBuild"
+{
+	"AppID" "4429000"
+	"Desc" "DICEPTION Windows-only Build"
+	"ContentRoot" ".."
+	"BuildOutput" "steam/output"
+	"Depots"
+	{
+		"4429001" "depot_build_win.vdf"
+	}
+}

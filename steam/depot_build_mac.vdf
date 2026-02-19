@@ -1,0 +1,11 @@
+"DepotBuild"
+{
+	"DepotID" "4429002"
+	"ContentRoot" "../dist-steam"
+	"FileMapping"
+	{
+		"LocalPath" "DICEPTION.app/*"
+		"DepotPath" "."
+		"recursive" "1"
+	}
+}

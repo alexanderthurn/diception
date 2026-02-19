@@ -1,0 +1,17 @@
+"DepotBuild"
+{
+	"DepotID" "4429001"
+	"ContentRoot" "../dist-steam"
+	"FileMapping"
+	{
+		"LocalPath" "diception.exe"
+		"DepotPath" "."
+		"recursive" "0"
+	}
+	"FileMapping"
+	{
+		"LocalPath" "steam_api64.dll"
+		"DepotPath" "."
+		"recursive" "0"
+	}
+}

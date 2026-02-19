@@ -1,0 +1,11 @@
+"AppBuild"
+{
+	"AppID" "4429000"
+	"Desc" "DICEPTION Mac-only Build"
+	"ContentRoot" ".."
+	"BuildOutput" "steam/output"
+	"Depots"
+	{
+		"4429002" "depot_build_mac.vdf"
+	}
+}
