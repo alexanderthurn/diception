@@ -357,15 +357,15 @@ export class GamepadCursorManager {
         el.style.marginTop = '-32px';
         el.style.transition = 'none';
 
-        // Crosshair design
+        // Corner-bracket crosshair — open centre keeps tile text readable,
+        // square geometry fits the rectangular game aesthetic.
         el.innerHTML = `
-            <svg width="64" height="64" viewBox="0 0 64 64" style="filter: drop-shadow(0 0 4px rgba(0,0,0,0.5))">
-                <line x1="32" y1="0" x2="32" y2="20" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
-                <line x1="32" y1="44" x2="32" y2="64" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
-                <line x1="0" y1="32" x2="20" y2="32" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
-                <line x1="44" y1="32" x2="64" y2="32" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
-                <circle cx="32" cy="32" r="6" fill="none" stroke="currentColor" stroke-width="3" />
-                <circle cx="32" cy="32" r="2" fill="currentColor" />
+            <svg width="64" height="64" viewBox="0 0 64 64" style="filter: drop-shadow(0 0 5px rgba(0,0,0,0.9))">
+                <path d="M 8 24 L 8 8 L 24 8"  fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
+                <path d="M 40 8 L 56 8 L 56 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
+                <path d="M 8 40 L 8 56 L 24 56"  fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
+                <path d="M 40 56 L 56 56 L 56 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
+                <rect x="31" y="31" width="2" height="2" fill="currentColor"/>
             </svg>
         `;
 
