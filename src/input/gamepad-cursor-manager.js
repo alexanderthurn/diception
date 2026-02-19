@@ -31,6 +31,7 @@ export class GamepadCursorManager {
         // Track animation frame and disposed state for cleanup
         this.animationFrameId = null;
         this.disposed = false;
+        this._modalObserver = null;
 
         // Bound event handlers for cleanup
         this.boundEventHandlers = {
@@ -45,6 +46,9 @@ export class GamepadCursorManager {
 
         // Listen for button events from input manager
         this.setupEventListeners();
+
+        // Auto-focus first element when a modal becomes visible
+        this._setupModalAutoFocus();
     }
 
     /** Read current gamepad bindings from InputManager, falling back to defaults. */
@@ -128,8 +132,21 @@ export class GamepadCursorManager {
             if (isMenuOpen) {
                 const allowedInMenu = isEditorOpen
                     ? [b.confirm, b.cancel, b.endTurn, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight]
-                    : [b.confirm, b.cancel, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu];
+                    : [b.confirm, b.cancel, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight];
                 if (!allowedInMenu.includes(button)) return;
+
+                if (!isEditorOpen) {
+                    // D-pad → focus navigation between dialog elements
+                    if ([b.moveUp, b.moveDown, b.moveLeft, b.moveRight].includes(button)) {
+                        this.navigateModal(button, cursor);
+                        return;
+                    }
+                    // B (drag) → close the current modal
+                    if (button === b.drag) {
+                        this.closeCurrentModal();
+                        return;
+                    }
+                }
             }
 
             if (button === b.confirm) {
@@ -174,7 +191,7 @@ export class GamepadCursorManager {
 
             const b = this._gb();
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
-            if (isMenuOpen && button !== b.confirm && button !== b.drag && button !== b.cancel) return;
+            if (isMenuOpen && button !== b.confirm && button !== b.cancel) return;
 
             if (button === b.confirm) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
@@ -286,6 +303,11 @@ export class GamepadCursorManager {
      */
     dispose() {
         this.disposed = true;
+
+        if (this._modalObserver) {
+            this._modalObserver.disconnect();
+            this._modalObserver = null;
+        }
 
         // Stop animation frame loop
         if (this.animationFrameId) {
@@ -632,5 +654,124 @@ export class GamepadCursorManager {
         setTimeout(() => {
             feedback.remove();
         }, 2000);
+    }
+
+    // -------------------------------------------------------------------------
+    // Modal / dialog navigation helpers
+    // -------------------------------------------------------------------------
+
+    static get FOCUSABLE() {
+        return 'button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])';
+    }
+
+    /** Return the topmost open modal/dialog container. */
+    getOpenModal() {
+        return (
+            document.querySelector('.dialog-overlay') ||
+            document.querySelector('.modal:not(.hidden)') ||
+            document.querySelector('.editor-overlay:not(.hidden)')
+        );
+    }
+
+    /** Close the current modal by clicking its close button or dispatching Escape. */
+    closeCurrentModal() {
+        const modal = this.getOpenModal();
+        if (!modal) return;
+        const closeBtn = modal.querySelector('.close-btn, [aria-label="Close"], button[title="Close"]');
+        if (closeBtn) { closeBtn.click(); return; }
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true, cancelable: true }));
+    }
+
+    /** Move a cursor's crosshair to the centre of a DOM element. */
+    moveCursorToElement(cursor, el) {
+        const rect = el.getBoundingClientRect();
+        cursor.x = Math.max(0, Math.min(window.innerWidth,  rect.left + rect.width  / 2));
+        cursor.y = Math.max(0, Math.min(window.innerHeight, rect.top  + rect.height / 2));
+        cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+        cursor.element.style.opacity = '1.0';
+        this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0);
+    }
+
+    /**
+     * Move focus within the current modal using D-pad directions.
+     * Left/Right navigate same-level siblings; Up/Down navigate all focusable elements.
+     */
+    navigateModal(button, cursor) {
+        const b = this._gb();
+        const modal = this.getOpenModal();
+        if (!modal) return;
+
+        const isHorizontal = button === b.moveLeft || button === b.moveRight;
+        const forward = button === b.moveRight || button === b.moveDown;
+        const current = document.activeElement;
+
+        let candidates;
+        if (isHorizontal && current && modal.contains(current)) {
+            // Same-level siblings first
+            const siblings = [...current.parentElement.querySelectorAll(GamepadCursorManager.FOCUSABLE)]
+                .filter(el => el.offsetParent !== null);
+            candidates = siblings.length > 1 ? siblings : null;
+        }
+        if (!candidates) {
+            candidates = [...modal.querySelectorAll(GamepadCursorManager.FOCUSABLE)]
+                .filter(el => el.offsetParent !== null);
+        }
+        if (!candidates.length) return;
+
+        const currentIdx = candidates.indexOf(current);
+        const nextIdx = currentIdx === -1
+            ? (forward ? 0 : candidates.length - 1)
+            : (currentIdx + (forward ? 1 : -1) + candidates.length) % candidates.length;
+
+        const target = candidates[nextIdx];
+        target.focus({ preventScroll: false });
+        this.moveCursorToElement(cursor, target);
+    }
+
+    /**
+     * Watch for modals becoming visible and auto-focus their first element
+     * so D-pad navigation works immediately without needing an initial Tab press.
+     */
+    _setupModalAutoFocus() {
+        const autoFocus = (container) => {
+            if (this.cursors.size === 0) return; // only when gamepad is connected
+            const first = container.querySelector(GamepadCursorManager.FOCUSABLE);
+            if (!first) return;
+            setTimeout(() => {
+                first.focus({ preventScroll: true });
+                for (const [, cursor] of this.cursors) {
+                    this.moveCursorToElement(cursor, first);
+                }
+            }, 80); // after open animation starts
+        };
+
+        this._modalObserver = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                // dialog-overlay or standalone modal added to DOM
+                if (mutation.type === 'childList') {
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType !== 1) continue;
+                        if (node.classList?.contains('dialog-overlay') ||
+                            node.classList?.contains('modal')) {
+                            autoFocus(node);
+                        }
+                    }
+                }
+                // .modal lost its 'hidden' class → became visible
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const el = mutation.target;
+                    if (el.classList?.contains('modal') && !el.classList.contains('hidden')) {
+                        autoFocus(el);
+                    }
+                }
+            }
+        });
+
+        this._modalObserver.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class'],
+        });
     }
 }
