@@ -14,4 +14,10 @@
 		"DepotPath" "."
 		"recursive" "0"
 	}
+	"FileMapping"
+	{
+		"LocalPath" "game_actions_X.vdf"
+		"DepotPath" "."
+		"recursive" "0"
+	}
 }
