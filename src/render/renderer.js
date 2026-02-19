@@ -154,11 +154,11 @@ export class Renderer {
         this.grid.draw();
     }
 
-    forceUpdate() {
+    forceUpdate(fitCamera = true) {
         // Force complete redraw - used when loading scenarios
         this.grid.invalidate(); // Clear tile cache for full redraw
         this.draw();
-        this.autoFitCamera();
+        if (fitCamera) this.autoFitCamera();
     }
 
     setSelection(x, y) {

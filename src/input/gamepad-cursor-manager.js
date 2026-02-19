@@ -254,27 +254,33 @@ export class GamepadCursorManager {
             if (Math.abs(dy) < this.deadZone) dy = 0;
 
             if (dx !== 0 || dy !== 0) {
-                // Use persistent speed multiplier
-                let speedMultiplier = cursor.speedMultiplier || 1.0;
-
-                // Apply speed and update position
                 const scale = (val) => Math.sign(val) * Math.pow(Math.abs(val), 1.5);
+                const b = this._gb();
+                const dragHeld = gp.buttons[b.drag]?.pressed ?? false;
 
-                cursor.x += scale(dx) * this.cursorSpeed * speedMultiplier;
-                cursor.y += scale(dy) * this.cursorSpeed * speedMultiplier;
+                if (dragHeld) {
+                    // Hold drag button + left stick = pan map (same as right stick)
+                    this.inputManager.emit('panAnalog', { x: -dx, y: -dy });
+                } else {
+                    // Normal: move cursor with left stick
+                    let speedMultiplier = cursor.speedMultiplier || 1.0;
 
-                // Clamp to screen bounds
-                cursor.x = Math.max(0, Math.min(window.innerWidth, cursor.x));
-                cursor.y = Math.max(0, Math.min(window.innerHeight, cursor.y));
+                    cursor.x += scale(dx) * this.cursorSpeed * speedMultiplier;
+                    cursor.y += scale(dy) * this.cursorSpeed * speedMultiplier;
 
-                GamepadCursorManager.savedPositions.set(i, { x: cursor.x, y: cursor.y });
+                    // Clamp to screen bounds
+                    cursor.x = Math.max(0, Math.min(window.innerWidth, cursor.x));
+                    cursor.y = Math.max(0, Math.min(window.innerHeight, cursor.y));
 
-                // Update DOM element
-                cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
-                cursor.element.style.opacity = '1.0'; // Restore full opacity for analog stick movement
+                    GamepadCursorManager.savedPositions.set(i, { x: cursor.x, y: cursor.y });
 
-                // Trigger mousemove on current position
-                this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, i);
+                    // Update DOM element
+                    cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+                    cursor.element.style.opacity = '1.0';
+
+                    // Trigger mousemove on current position
+                    this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, i);
+                }
             }
 
             // Scroll Logic using Right Stick
@@ -741,12 +747,9 @@ export class GamepadCursorManager {
             if (this.cursors.size === 0) return; // only when gamepad is connected
             const first = container.querySelector(GamepadCursorManager.FOCUSABLE);
             if (!first) return;
-            setTimeout(() => {
-                first.focus({ preventScroll: true });
-                for (const [, cursor] of this.cursors) {
-                    this.moveCursorToElement(cursor, first);
-                }
-            }, 80); // after open animation starts
+            // Focus the element so D-pad navigation works immediately,
+            // but don't move the cursor — the user knows where it is.
+            setTimeout(() => first.focus({ preventScroll: true }), 80);
         };
 
         this._modalObserver = new MutationObserver((mutations) => {

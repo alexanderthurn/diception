@@ -181,7 +181,7 @@ export class SessionManager {
             this.renderer.draw();
             if (this.playerDashboard) this.playerDashboard.update();
             this.game.emit('turnStart', { player: this.game.currentPlayer });
-            this.renderer.forceUpdate();
+            this.renderer.forceUpdate(false);
 
             // Clear any lingering auto-save from the finished game
             this.turnHistory.clearAutoSave();
