@@ -1092,9 +1092,8 @@ export class GridRenderer {
             container.addChild(probText);
             container.probText = probText;
 
-            // Input hint container
+            // Input hint container (position set each update)
             const hintContainer = new Container();
-            hintContainer.y = -14;
             container.addChild(hintContainer);
             container.hintContainer = hintContainer;
 
@@ -1107,74 +1106,79 @@ export class GridRenderer {
         container.y = y;
         container.visible = true;
 
-        // Update Background (Smaller if empty/shortcut)
         const isSmall = text === '';
-        const badgeWidth = isSmall ? 10 : 28;
+
+        // Determine hint first so badge width can be adjusted
+        let hint = null;
+        if (!isSmall && this.gameSpeed === 'beginner' && shouldShowInputHints(this.inputManager)) {
+            let hintAction = null;
+            switch (edge) {
+                case 'top':    hintAction = ACTION_MOVE_UP;    break;
+                case 'bottom': hintAction = ACTION_MOVE_DOWN;  break;
+                case 'left':   hintAction = ACTION_MOVE_LEFT;  break;
+                case 'right':  hintAction = ACTION_MOVE_RIGHT; break;
+            }
+            if (hintAction) {
+                hint = getInputHint(hintAction, this.inputManager, this.game?.currentPlayer?.id);
+            }
+        }
+
+        // Badge dimensions — wider when a sprite icon is inlined on the left
+        const inlineSprite = hint?.textureName != null;
+        const badgeWidth  = isSmall ? 10 : (inlineSprite ? 44 : 28);
         const badgeHeight = isSmall ? 10 : 16;
 
         container.badgeBg.clear();
         container.badgeBg.rect(-badgeWidth / 2, -badgeHeight / 2, badgeWidth, badgeHeight);
         container.badgeBg.fill({ color: color, alpha: 0.95 });
-
         if (!isSmall) {
             container.badgeBg.stroke({ width: 1, color: 0x000000, alpha: 0.4 });
         }
 
-        // Update Text
+        // Probability text — shifted right when sharing space with an inline icon
         container.probText.text = text;
+        container.probText.x = inlineSprite ? 10 : 0;
 
-        // Update Hint
+        // Hint rendering
         container.hintContainer.removeChildren();
-        if (this.gameSpeed === 'beginner' && shouldShowInputHints(this.inputManager)) {
-            let hintAction = null;
-            switch (edge) {
-                case 'top': hintAction = ACTION_MOVE_UP; break;
-                case 'bottom': hintAction = ACTION_MOVE_DOWN; break;
-                case 'left': hintAction = ACTION_MOVE_LEFT; break;
-                case 'right': hintAction = ACTION_MOVE_RIGHT; break;
-            }
-
-            if (hintAction) {
-                const currentPlayerId = this.game?.currentPlayer?.id;
-                const hint = getInputHint(hintAction, this.inputManager, currentPlayerId);
-                if (hint) {
-                    if (hint.textureName) {
-                        // Gamepad sprite from atlas — render as Pixi sprite
-                        try {
-                            const tex = Texture.from(hint.textureName);
-                            const sprite = new Sprite(tex);
-                            sprite.anchor.set(0.5);
-                            sprite.width = 14;
-                            sprite.height = 14;
-                            container.hintContainer.addChild(sprite);
-                        } catch (e) { /* atlas not ready yet, skip */ }
-                    } else {
-                        // Text-based hint (keyboard or unmapped button)
-                        const hintBg = new Graphics();
-                        const hintWidth = hint.label.length * 7 + 6;
-                        const hintHeight = 14;
-
-                        if (hint.style === 'keyboard') {
-                            hintBg.roundRect(-hintWidth / 2, -hintHeight / 2, hintWidth, hintHeight, 3);
-                            hintBg.fill({ color: 0x000000, alpha: 0.8 });
-                            hintBg.stroke({ width: 1, color: 0x00ffff, alpha: 0.6 });
-                        } else {
-                            hintBg.circle(0, 0, 8);
-                            hintBg.fill({ color: 0x666666, alpha: 0.9 });
-                            hintBg.stroke({ width: 1, color: 0x000000, alpha: 0.5 });
-                        }
-                        container.hintContainer.addChild(hintBg);
-
-                        const hintText = new Text({
-                            text: hint.label,
-                            style: this.hintTextStyle
-                        });
-                        hintText.anchor.set(0.5, 0.5);
-                        hintText.style.fontSize = hint.type === 'gamepad' ? 10 : 11;
-                        container.hintContainer.addChild(hintText);
-                    }
+        if (hint) {
+            if (inlineSprite) {
+                // Sprite inside the badge, left side
+                container.hintContainer.x = -11;
+                container.hintContainer.y = 0;
+                try {
+                    const tex = Texture.from(hint.textureName);
+                    const sprite = new Sprite(tex);
+                    sprite.anchor.set(0.5);
+                    sprite.width = 14;
+                    sprite.height = 14;
+                    container.hintContainer.addChild(sprite);
+                } catch (e) { /* atlas not ready yet */ }
+            } else {
+                // Text hint above the badge (keyboard / fallback)
+                container.hintContainer.x = 0;
+                container.hintContainer.y = -14;
+                const hintWidth = hint.label.length * 7 + 6;
+                const hintHeight = 14;
+                const hintBg = new Graphics();
+                if (hint.style === 'keyboard') {
+                    hintBg.roundRect(-hintWidth / 2, -hintHeight / 2, hintWidth, hintHeight, 3);
+                    hintBg.fill({ color: 0x000000, alpha: 0.8 });
+                    hintBg.stroke({ width: 1, color: 0x00ffff, alpha: 0.6 });
+                } else {
+                    hintBg.circle(0, 0, 8);
+                    hintBg.fill({ color: 0x666666, alpha: 0.9 });
+                    hintBg.stroke({ width: 1, color: 0x000000, alpha: 0.5 });
                 }
+                container.hintContainer.addChild(hintBg);
+                const hintText = new Text({ text: hint.label, style: this.hintTextStyle });
+                hintText.anchor.set(0.5, 0.5);
+                hintText.style.fontSize = hint.type === 'gamepad' ? 10 : 11;
+                container.hintContainer.addChild(hintText);
             }
+        } else {
+            container.hintContainer.x = 0;
+            container.hintContainer.y = -14;
         }
     }
 
