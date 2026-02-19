@@ -4390,6 +4390,10 @@ select {
     pointer-events: none;
 }
 
+/* Center dot: hidden in D-pad (snap) mode, visible in analog (free) mode */
+.gamepad-cursor .center-dot { display: none; }
+.gamepad-cursor.analog-mode .center-dot { display: block; }
+
 #fps-counter {
     position: fixed;
     top: 5px;

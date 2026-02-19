@@ -262,7 +262,8 @@ export class GamepadCursorManager {
                     // Hold drag button + left stick = pan map (same as right stick)
                     this.inputManager.emit('panAnalog', { x: -dx, y: -dy });
                 } else {
-                    // Normal: move cursor with left stick
+                    // Normal: move cursor with left stick — switch to analog visual mode
+                    this._setCursorMode(cursor, 'analog');
                     let speedMultiplier = cursor.speedMultiplier || 1.0;
 
                     cursor.x += scale(dx) * this.cursorSpeed * speedMultiplier;
@@ -378,7 +379,7 @@ export class GamepadCursorManager {
                 <path d="M 40 8 L 56 8 L 56 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
                 <path d="M 8 40 L 8 56 L 24 56"  fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
                 <path d="M 40 56 L 56 56 L 56 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
-                <rect x="31" y="31" width="2" height="2" fill="currentColor"/>
+                <rect class="center-dot" x="29" y="29" width="6" height="6" fill="currentColor"/>
             </svg>
         `;
 
@@ -407,7 +408,8 @@ export class GamepadCursorManager {
             lastPlayerId: -1,
             lastColor: '',
             speedMultiplier: parseFloat(localStorage.getItem('dicy_gamepad_speed_' + index)) || 1.0,
-            dragTarget: null
+            dragTarget: null,
+            mode: 'dpad',
         };
 
         // Set initial position and opacity
@@ -692,6 +694,13 @@ export class GamepadCursorManager {
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true, cancelable: true }));
     }
 
+    /** Switch a cursor between 'analog' (free-move, dot visible) and 'dpad' (snap, dot hidden). */
+    _setCursorMode(cursor, mode) {
+        if (cursor.mode === mode) return;
+        cursor.mode = mode;
+        cursor.element.classList.toggle('analog-mode', mode === 'analog');
+    }
+
     /** Move a cursor's crosshair to the centre of a DOM element. */
     moveCursorToElement(cursor, el) {
         const rect = el.getBoundingClientRect();
@@ -699,6 +708,7 @@ export class GamepadCursorManager {
         cursor.y = Math.max(0, Math.min(window.innerHeight, rect.top  + rect.height / 2));
         cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
         cursor.element.style.opacity = '1.0';
+        this._setCursorMode(cursor, 'dpad');
         this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0);
     }
 
