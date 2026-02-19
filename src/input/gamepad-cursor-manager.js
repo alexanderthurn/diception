@@ -1,5 +1,6 @@
 import { GAME } from '../core/constants.js';
 import { isDesktopContext } from '../scenarios/user-identity.js';
+import { detectControllerType, buttonIconHTML } from './controller-icons.js';
 
 /**
  * GamepadCursorManager - Handles artificial cursors for gamepad players.
@@ -119,7 +120,7 @@ export class GamepadCursorManager {
                 const isBeginner = gameSpeed === 'beginner';
 
                 if (showAlways || isBeginner) {
-                    this.showFeedback(index, label);
+                    this.showFeedback(index, label, button);
                 }
             }
 
@@ -219,7 +220,7 @@ export class GamepadCursorManager {
 
             let cursor = this.cursors.get(i);
             if (!cursor) {
-                cursor = this.createCursor(i);
+                cursor = this.createCursor(i, gp);
             }
 
             // Move cursor based on left stick
@@ -320,7 +321,11 @@ export class GamepadCursorManager {
         this.container = null;
     }
 
-    createCursor(index) {
+    createCursor(index, gamepad) {
+        if (gamepad) {
+            const type = detectControllerType(gamepad);
+            console.log(`[GamepadCursor] Controller ${index}: "${gamepad.id}" → ${type}`);
+        }
         const el = document.createElement('div');
         el.className = 'gamepad-cursor';
         el.style.position = 'absolute';
@@ -366,6 +371,7 @@ export class GamepadCursorManager {
             x: initialX,
             y: initialY,
             element: el,
+            controllerType: gamepad ? detectControllerType(gamepad) : 'xbox',
             lastPlayerId: -1,
             lastColor: '',
             speedMultiplier: parseFloat(localStorage.getItem('dicy_gamepad_speed_' + index)) || 1.0,
@@ -587,13 +593,16 @@ export class GamepadCursorManager {
     /**
      * Shows a temporary floating feedback label near the cursor.
      */
-    showFeedback(index, text) {
+    showFeedback(index, text, button) {
         const cursor = this.cursors.get(index);
         if (!cursor) return;
 
         const feedback = document.createElement('div');
         feedback.className = 'gamepad-feedback';
-        feedback.textContent = text;
+        const iconHTML = (button !== undefined)
+            ? (buttonIconHTML(cursor.controllerType ?? 'xbox', button) ?? '')
+            : '';
+        feedback.innerHTML = iconHTML + `<span>${text}</span>`;
         feedback.style.position = 'fixed';
         feedback.style.left = `${cursor.x}px`;
         feedback.style.top = `${cursor.y - 40}px`;

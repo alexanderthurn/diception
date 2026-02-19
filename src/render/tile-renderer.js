@@ -37,14 +37,14 @@ export class TileRenderer {
             // Note: 'bg.png' is white square for tinting
             // 'die_d6.png' is the emoji for standard dice
             // 'die_dX.png' are the number sprites for other dice
-            const bgTexture = Texture.from('bg.png');
+            const bgTexture = Texture.from('game/bg.png');
 
             // Cache backgrounds
             TileRenderer.textureCache.set('bg', bgTexture);
             TileRenderer.textureCache.set('bg_border', bgTexture); // Reusing bg for now (borders handled by GridRenderer)
 
             // Set Master Dice Texture (D6 emoji) for UI usage
-            TileRenderer.masterDiceTexture = Texture.from('die_d6.png');
+            TileRenderer.masterDiceTexture = Texture.from('game/die_d6.png');
 
             // Extract DataURL for DOM HUD masking
             try {
@@ -272,12 +272,12 @@ export class TileRenderer {
         }
 
         // Determine which sprite texture to use
-        let textureName = 'die_d6.png'; // Default emoji
+        let textureName = 'game/die_d6.png'; // Default emoji
         if (diceSides !== 6) {
             // Handle various die sides (1-16)
             // Ensure we have a valid texture name, clamp to 16 just in case
             const sideIndex = Math.min(Math.max(1, diceSides), 16);
-            textureName = `die_d${sideIndex}.png`;
+            textureName = `game/die_d${sideIndex}.png`;
         }
 
         // Texture lookup might fail if Assets not ready (in fallback mode), 

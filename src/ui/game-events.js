@@ -1,7 +1,7 @@
 import { Dialog } from './dialog.js';
 import { createAI } from '../core/ai/index.js';
 import { GAME } from '../core/constants.js';
-import { shouldShowInputHints, getInputHint, ACTION_END_TURN } from './input-hints.js';
+import { shouldShowInputHints, getInputHint, ACTION_END_TURN, ACTION_MENU } from './input-hints.js';
 import { markLevelSolved } from '../scenarios/campaign-progress.js';
 
 /**
@@ -32,6 +32,7 @@ export class GameEventManager {
         this.endTurnText = document.getElementById('end-turn-text');
         this.endTurnReinforcement = document.getElementById('end-turn-reinforcement');
         this.endTurnHint = document.getElementById('end-turn-hint');
+        this.newGameHint = document.getElementById('new-game-hint');
         this.autoWinBtn = document.getElementById('auto-win-btn');
 
         // Callbacks
@@ -80,6 +81,11 @@ export class GameEventManager {
         this.game.on('reinforcements', (data) => this.handleReinforcements(data));
         this.game.on('gameOver', (data) => this.handleGameOver(data));
         this.game.on('gameStart', () => this.handleGameStart());
+
+        // Refresh hints whenever a gamepad connects/disconnects so the correct
+        // controller icon is shown immediately (before the first button press).
+        this.renderer.inputManager.on('gamepadChange', () => this.refreshHints());
+        window.addEventListener('gamepadconnected', () => this.refreshHints());
     }
 
     handleTurnStart(data) {
@@ -303,8 +309,9 @@ export class GameEventManager {
             this.autoWinBtn.classList.add('hidden');
         }
 
-        // Update input hint on End Turn button
+        // Update input hints on End Turn and Main Menu buttons
         this.updateEndTurnHint(gameSpeed);
+        this.updateMenuHint(gameSpeed);
     }
 
     /** 
@@ -312,25 +319,40 @@ export class GameEventManager {
      */
     /** Refresh all input hints from current bindings. Call after rebinding. */
     refreshHints() {
-        this.updateEndTurnHint(this.gameStarter.getGameSpeed());
+        const gameSpeed = this.gameStarter.getGameSpeed();
+        this.updateEndTurnHint(gameSpeed);
+        this.updateMenuHint(gameSpeed);
+    }
+
+    _applyHint(el, hint) {
+        if (!el) return;
+        if (hint.html) {
+            el.innerHTML = hint.html;
+        } else {
+            el.textContent = hint.label;
+        }
+        el.className = 'input-hint ' + hint.style;
+        el.classList.remove('hidden');
     }
 
     updateEndTurnHint(gameSpeed) {
         if (!this.endTurnHint || !this.endTurnText) return;
-
-        // Only show hint in beginner mode
         if (gameSpeed === 'beginner' && shouldShowInputHints(this.renderer.inputManager)) {
-            const hint = getInputHint(ACTION_END_TURN, this.renderer.inputManager);
-            if (hint) {
-                this.endTurnHint.textContent = hint.label;
-                this.endTurnHint.className = 'input-hint ' + hint.style;
-                this.endTurnHint.classList.remove('hidden');
-                return;
-            }
+            const playerId = this.game?.currentPlayer?.id;
+            const hint = getInputHint(ACTION_END_TURN, this.renderer.inputManager, playerId);
+            if (hint) { this._applyHint(this.endTurnHint, hint); return; }
         }
-
-        // Hide hint if not in beginner mode or no input device
         this.endTurnHint.classList.add('hidden');
+    }
+
+    updateMenuHint(gameSpeed) {
+        if (!this.newGameHint) return;
+        if (gameSpeed === 'beginner' && shouldShowInputHints(this.renderer.inputManager)) {
+            const playerId = this.game?.currentPlayer?.id;
+            const hint = getInputHint(ACTION_MENU, this.renderer.inputManager, playerId);
+            if (hint) { this._applyHint(this.newGameHint, hint); return; }
+        }
+        this.newGameHint.classList.add('hidden');
     }
 
     handleAttackResult(result) {

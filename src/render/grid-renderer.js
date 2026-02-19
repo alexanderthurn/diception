@@ -1,4 +1,4 @@
-import { Graphics, Container, Text, TextStyle, Sprite } from 'pixi.js';
+import { Graphics, Container, Text, TextStyle, Sprite, Texture } from 'pixi.js';
 import { TileRenderer } from './tile-renderer.js';
 import { RENDER } from '../core/constants.js';
 import { getWinProbability, getProbabilityHexColor } from '../core/probability.js';
@@ -1135,30 +1135,44 @@ export class GridRenderer {
             }
 
             if (hintAction) {
-                const hint = getInputHint(hintAction, this.inputManager);
+                const currentPlayerId = this.game?.currentPlayer?.id;
+                const hint = getInputHint(hintAction, this.inputManager, currentPlayerId);
                 if (hint) {
-                    const hintBg = new Graphics();
-                    const hintWidth = hint.type === 'gamepad' ? 16 : (hint.label.length * 7 + 6);
-                    const hintHeight = 14;
+                    if (hint.textureName) {
+                        // Gamepad sprite from atlas — render as Pixi sprite
+                        try {
+                            const tex = Texture.from(hint.textureName);
+                            const sprite = new Sprite(tex);
+                            sprite.anchor.set(0.5);
+                            sprite.width = 14;
+                            sprite.height = 14;
+                            container.hintContainer.addChild(sprite);
+                        } catch (e) { /* atlas not ready yet, skip */ }
+                    } else {
+                        // Text-based hint (keyboard or unmapped button)
+                        const hintBg = new Graphics();
+                        const hintWidth = hint.label.length * 7 + 6;
+                        const hintHeight = 14;
 
-                    if (hint.style === 'gamepad-dpad') {
-                        hintBg.circle(0, 0, 8);
-                        hintBg.fill({ color: 0x666666, alpha: 0.9 });
-                        hintBg.stroke({ width: 1, color: 0x000000, alpha: 0.5 });
-                    } else if (hint.style === 'keyboard') {
-                        hintBg.roundRect(-hintWidth / 2, -hintHeight / 2, hintWidth, hintHeight, 3);
-                        hintBg.fill({ color: 0x000000, alpha: 0.8 });
-                        hintBg.stroke({ width: 1, color: 0x00ffff, alpha: 0.6 });
+                        if (hint.style === 'keyboard') {
+                            hintBg.roundRect(-hintWidth / 2, -hintHeight / 2, hintWidth, hintHeight, 3);
+                            hintBg.fill({ color: 0x000000, alpha: 0.8 });
+                            hintBg.stroke({ width: 1, color: 0x00ffff, alpha: 0.6 });
+                        } else {
+                            hintBg.circle(0, 0, 8);
+                            hintBg.fill({ color: 0x666666, alpha: 0.9 });
+                            hintBg.stroke({ width: 1, color: 0x000000, alpha: 0.5 });
+                        }
+                        container.hintContainer.addChild(hintBg);
+
+                        const hintText = new Text({
+                            text: hint.label,
+                            style: this.hintTextStyle
+                        });
+                        hintText.anchor.set(0.5, 0.5);
+                        hintText.style.fontSize = hint.type === 'gamepad' ? 10 : 11;
+                        container.hintContainer.addChild(hintText);
                     }
-                    container.hintContainer.addChild(hintBg);
-
-                    const hintText = new Text({
-                        text: hint.label,
-                        style: this.hintTextStyle
-                    });
-                    hintText.anchor.set(0.5, 0.5);
-                    hintText.style.fontSize = hint.type === 'gamepad' ? 10 : 11;
-                    container.hintContainer.addChild(hintText);
                 }
             }
         }
