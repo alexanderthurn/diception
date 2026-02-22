@@ -51,7 +51,7 @@ initializeProbabilityTables();
 // The CSS rule `html { zoom: var(--ui-scale) }` scales the entire viewport
 // uniformly, so centering and fixed positioning all stay correct.
 function updateUIScale() {
-    const refWidth = 1920;
+    const refWidth = 1280;
     const scale = Math.max(1, screen.width / refWidth);
     const rounded = Math.round(scale * 100) / 100;
     document.documentElement.style.setProperty('--ui-scale', rounded);
