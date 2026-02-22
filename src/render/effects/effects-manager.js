@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container } from 'pixi.js';
 import { ParticleSystem, EffectPresets } from './particle-system.js';
 import { BackgroundRenderer } from './background-renderer.js';
 
@@ -50,8 +50,6 @@ export class EffectsManager {
         this.lastWinTime = 0;
         this.streakDecayTimer = null;
 
-        // Preview map for intro mode
-        this.previewMap = null;
     }
 
     bindEvents() {
@@ -144,36 +142,10 @@ export class EffectsManager {
         this.introModeActive = true;
         this.background.setIntroMode(true);
 
-        // Create a minimalistic map preview for visual feedback during zoom/pan in menu
-        if (!this.previewMap) {
-            this.previewMap = new Container();
-            const size = 4;
-            const tilePixelSize = this.tileSize;
-            for (let x = 0; x < size; x++) {
-                for (let y = 0; y < size; y++) {
-                    const g = new Graphics();
-                    g.rect(x * (tilePixelSize + this.gap), y * (tilePixelSize + this.gap), tilePixelSize, tilePixelSize);
-                    g.fill({ color: 0x333344, alpha: 0.3 });
-                    g.stroke({ width: 2, color: 0x00ffff, alpha: 0.15 });
-                    this.previewMap.addChild(g);
-                }
-            }
-            // Center the preview map
-            this.previewMap.pivot.set(
-                (size * (this.tileSize + this.gap)) / 2,
-                (size * (this.tileSize + this.gap)) / 2
-            );
-            this.previewMap.scale.set(0.5, 0.5); // 50% size
-            // Position it at the center of the initial screen area in the world
-            if (this.renderer && this.renderer.app) {
-                this.previewMap.x = this.renderer.app.screen.width * 0.5;
-                this.previewMap.y = this.renderer.app.screen.height * 0.75;
-            }
-            this.container.addChild(this.previewMap);
-        }
-
-        if (this.renderer && this.renderer.centerConfigPreview) {
-            this.renderer.centerConfigPreview();
+        // Redirect pan/zoom input to move the floating dice instead of the game grid
+        if (this.renderer) {
+            this.renderer.setPanOverride((dx, dy) => this.background.panDice(dx, dy));
+            this.renderer.setZoomOverride((delta, x, y) => this.background.zoomDice(delta, x, y));
         }
 
         // Spawn periodic particle streams
@@ -226,14 +198,15 @@ export class EffectsManager {
         this.introModeActive = false;
         this.background.setIntroMode(false);
 
+        // Restore normal pan/zoom behaviour
+        if (this.renderer) {
+            this.renderer.setPanOverride(null);
+            this.renderer.setZoomOverride(null);
+        }
+
         if (this.introInterval) {
             clearInterval(this.introInterval);
             this.introInterval = null;
-        }
-
-        if (this.previewMap) {
-            this.previewMap.destroy({ children: true });
-            this.previewMap = null;
         }
 
         // Clear any remaining screen particles

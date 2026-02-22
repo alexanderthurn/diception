@@ -28,11 +28,9 @@ export class BackgroundRenderer {
         this.quality = 'high';
         this.enabled = true;
 
-        // Grid/scanline/gradient container
+        // Gradient container (unused at both quality levels currently, kept for pulse)
         this.gridContainer = new Container();
         this.container.addChild(this.gridContainer);
-        this.scanLineObjects = [];
-        this.gradientPhase = 0;
 
         // Ambient particles
         this.particleContainer = new Container();
@@ -44,7 +42,7 @@ export class BackgroundRenderer {
         this.pulseTarget = 0;
         this.pulseColor = 0x00ffff;
 
-        // Dynamic intensity based on game action
+        // Dynamic intensity based on game action (elimination flare)
         this.winIntensity = 0;
         this.intensityColor = 0x00ffff;
         this.flareProgress = 0;
@@ -62,7 +60,6 @@ export class BackgroundRenderer {
         this.container.addChild(this.diceContainer);
 
         // Create effects
-        this.createGrid();
         this.createAmbientParticles();
 
         // Animation state
@@ -75,6 +72,11 @@ export class BackgroundRenderer {
         window.addEventListener('resize', this.handleResize);
     }
 
+    // Resolution scale factor — 1.0 at 1080p, 2.0 at 4K, etc.
+    _scale() {
+        return Math.max(this.width, this.height) / 1080;
+    }
+
     setQuality(quality) {
         this.quality = quality;
         this.enabled = quality !== 'off';
@@ -83,87 +85,26 @@ export class BackgroundRenderer {
         if (quality === 'off') {
             this.clearAmbientParticles();
         } else {
-            this.createGrid();
             this.createAmbientParticles();
         }
     }
 
-    createGrid() {
-        this.gridContainer.removeChildren();
-        this.scanLineObjects = [];
-        this.gradientPhase = 0;
-
-        if (!this.enabled) return;
-
-        if (this.quality === 'high') {
-            this._createScanlines();
-        } else if (this.quality === 'medium') {
-            this._createGradientOverlay();
-        }
-        // 'off': nothing
-    }
-
-    _createScanlines() {
-        // Horizontal glowing bands that drift slowly downward — Tron CRT feel
-        const count = 5;
-        const bandColors = [0x00ffff, 0x0088ff, 0x00ffff, 0xAA00FF, 0x00ffff];
-
-        for (let i = 0; i < count; i++) {
-            const gfx = new Graphics();
-            const h = 80 + Math.random() * 140;
-            gfx.rect(0, 0, this.width, h);
-            gfx.fill({ color: bandColors[i % bandColors.length], alpha: 0.025 + Math.random() * 0.02 });
-            gfx.blendMode = 'add';
-
-            const sl = {
-                graphics: gfx,
-                y: Math.random() * this.height,
-                speed: 0.12 + Math.random() * 0.18,
-                height: h
-            };
-            gfx.y = sl.y;
-
-            this.gridContainer.addChild(gfx);
-            this.scanLineObjects.push(sl);
-        }
-    }
-
-    _createGradientOverlay() {
-        // Radial purple-to-black gradient matching the loading screen feel
-        const cx = this.width / 2;
-        const cy = this.height / 2;
-        const maxR = Math.sqrt(cx * cx + cy * cy);
-        const steps = 14;
-
-        const gradGfx = new Graphics();
-        // Draw concentric circles from largest (edge, no tint) to smallest (center, most tint)
-        for (let i = steps; i >= 1; i--) {
-            const r = (i / steps) * maxR;
-            const t = 1 - i / steps; // 0 at edges → 1 at center
-            const alpha = t * 0.13;
-            if (alpha > 0.003) {
-                gradGfx.circle(cx, cy, r);
-                gradGfx.fill({ color: 0xaa00ff, alpha });
-            }
-        }
-        gradGfx.blendMode = 'add';
-        this.gridContainer.addChild(gradGfx);
-    }
+    // ── Particles ─────────────────────────────────────────────────────────────
 
     createAmbientParticles() {
         this.clearAmbientParticles();
 
         if (!this.enabled) return;
 
-        // Particle count based on quality
         let count = 20; // Medium
-        if (this.quality === 'high') count = 40;
+        if (this.quality === 'high') count = 120;
 
         const colors = [0x00ffff, 0xAA00FF, 0x00ff88, 0x0088ff];
+        const s = this._scale();
 
         for (let i = 0; i < count; i++) {
             const g = new Graphics();
-            const size = 1 + Math.random() * 2;
+            const size = (1 + Math.random() * 2) * s;
 
             g.circle(0, 0, size);
             g.fill({ color: 0xffffff });
@@ -173,8 +114,8 @@ export class BackgroundRenderer {
                 graphics: g,
                 x: Math.random() * this.width,
                 y: Math.random() * this.height,
-                vx: (Math.random() - 0.5) * 0.3,
-                vy: (Math.random() - 0.5) * 0.3,
+                vx: (Math.random() - 0.5) * 0.3 * s,
+                vy: (Math.random() - 0.5) * 0.3 * s,
                 baseAlpha: 0.2 + Math.random() * 0.4,
                 alphaPhase: Math.random() * Math.PI * 2,
                 alphaSpeed: 0.01 + Math.random() * 0.02,
@@ -199,9 +140,8 @@ export class BackgroundRenderer {
         this.particleContainer.removeChildren();
     }
 
-    /**
-     * Trigger a screen pulse effect (e.g., on major events)
-     */
+    // ── Public effect triggers ────────────────────────────────────────────────
+
     pulse(color = 0x00ffff, intensity = 0.3) {
         if (!this.enabled) return;
         this.pulseColor = color;
@@ -221,12 +161,14 @@ export class BackgroundRenderer {
         this.flareActive = true;
     }
 
+    // ── Main update loop ──────────────────────────────────────────────────────
+
     update() {
         if (!this.enabled) return;
 
         this.time++;
 
-        // Update ambient particles
+        // Ambient particles
         for (const p of this.ambientParticles) {
             p.x += p.vx;
             p.y += p.vy;
@@ -244,35 +186,16 @@ export class BackgroundRenderer {
             p.graphics.alpha = p.baseAlpha * alphaMod;
         }
 
-        // Update pulse effect
+        // Pulse decay
         if (this.pulseTarget > 0) {
             this.pulseAlpha += (this.pulseTarget - this.pulseAlpha) * 0.1;
-            if (this.pulseAlpha >= this.pulseTarget * 0.9) {
-                this.pulseTarget = 0;
-            }
+            if (this.pulseAlpha >= this.pulseTarget * 0.9) this.pulseTarget = 0;
         } else {
             this.pulseAlpha *= 0.92;
-            if (this.pulseAlpha < 0.01) {
-                this.pulseAlpha = 0;
-            }
+            if (this.pulseAlpha < 0.01) this.pulseAlpha = 0;
         }
 
-        // Animate scanlines (high quality) and gradient/pulse (medium)
-        if (this.quality === 'high') {
-            for (const sl of this.scanLineObjects) {
-                sl.y += sl.speed;
-                if (sl.y > this.height) sl.y = -sl.height;
-                sl.graphics.y = sl.y;
-            }
-            const baseAlpha = this.introMode ? 1.5 : 1;
-            this.gridContainer.alpha = baseAlpha + this.pulseAlpha * 2 + (this.winIntensity * 0.5);
-        } else if (this.quality === 'medium') {
-            this.gradientPhase += 0.008;
-            const breathe = 0.8 + Math.sin(this.gradientPhase) * 0.2;
-            this.gridContainer.alpha = breathe + this.pulseAlpha * 2;
-        }
-
-        // Intensify ambient particles based on winIntensity
+        // Win intensity (brightens particles)
         if (this.winIntensity > 0) {
             this.winIntensity *= 0.99;
             if (this.winIntensity < 0.01) this.winIntensity = 0;
@@ -282,10 +205,9 @@ export class BackgroundRenderer {
             }
         }
 
-        // Update growing flare effect
+        // Elimination flare (growing square, event-driven — unchanged)
         if (this.flareActive) {
             this.flareProgress += 0.012;
-
             this.flareGfx.clear();
             const maxDim = Math.max(this.width, this.height);
             const flareSize = this.flareProgress * maxDim * 2.5;
@@ -298,8 +220,7 @@ export class BackgroundRenderer {
                 this.flareGfx.rect(
                     this.width / 2 - flareSize / 2,
                     this.height / 2 - flareSize / 2,
-                    flareSize,
-                    flareSize
+                    flareSize, flareSize
                 );
                 this.flareGfx.fill({ color: this.intensityColor, alpha: flareAlpha });
                 this.flareGfx.blendMode = 'add';
@@ -308,11 +229,13 @@ export class BackgroundRenderer {
             this.flareGfx.clear();
         }
 
-        // Update floating dice (intro mode)
+        // Floating dice (intro only)
         if (this.introMode) {
             this.updateFloatingDice();
         }
     }
+
+    // ── Resize / destroy ─────────────────────────────────────────────────────
 
     onResize() {
         if (this.container.stage?.renderer) {
@@ -323,7 +246,6 @@ export class BackgroundRenderer {
             this.width = viewport ? viewport.width : document.documentElement.clientWidth;
             this.height = viewport ? viewport.height : document.documentElement.clientHeight;
         }
-        this.createGrid();
     }
 
     destroy() {
@@ -334,14 +256,12 @@ export class BackgroundRenderer {
         this.container.destroy({ children: true });
     }
 
-    /**
-     * Enable/disable intro mode (intensified effects for setup screen)
-     */
+    // ── Intro mode ────────────────────────────────────────────────────────────
+
     setIntroMode(enabled) {
         this.introMode = enabled;
 
         if (enabled) {
-            this.gridContainer.alpha = 1.5;
             for (const p of this.ambientParticles) {
                 p.vx *= 2;
                 p.vy *= 2;
@@ -349,7 +269,6 @@ export class BackgroundRenderer {
             }
             this.createFloatingDice();
         } else {
-            this.gridContainer.alpha = 1;
             for (const p of this.ambientParticles) {
                 p.vx /= 2;
                 p.vy /= 2;
@@ -359,17 +278,24 @@ export class BackgroundRenderer {
         }
     }
 
+    // ── Floating dice ─────────────────────────────────────────────────────────
+
     createFloatingDice() {
         this.clearFloatingDice();
 
         if (!this.enabled) return;
 
-        const count = this.quality === 'high' ? 8 : 4;
+        const count = this.quality === 'high' ? 32 : 8;
         const colors = [0x00ffff, 0xAA00FF, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
         const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20];
+        const s = this._scale();
+        const minDim = Math.min(this.width, this.height);
+
+        const cx = this.width / 2;
+        const cy = this.height / 2;
 
         for (let i = 0; i < count; i++) {
-            const size = 40 + Math.random() * 30;
+            const size = (0.04 + Math.random() * 0.02) * minDim;
             const diceCount = 1 + Math.floor(Math.random() * 6);
             const diceSides = diceSidesOptions[Math.floor(Math.random() * diceSidesOptions.length)];
             const color = colors[i % colors.length];
@@ -379,22 +305,26 @@ export class BackgroundRenderer {
                 diceCount,
                 diceSides,
                 color,
-                fillAlpha: 0.3,
+                fillAlpha: 0.7,
                 showBorder: true
             });
 
             tileContainer.pivot.set(size / 2, size / 2);
-            tileContainer.alpha = 0.6;
+
+            // Start tightly clustered at center, radiate outward
+            const spawnRadius = minDim * 0.02;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = (0.3 + Math.random() * 0.3) * s;
 
             const dice = {
                 graphics: tileContainer,
-                x: Math.random() * this.width,
-                y: Math.random() * this.height,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5,
+                x: cx + (Math.random() - 0.5) * spawnRadius,
+                y: cy + (Math.random() - 0.5) * spawnRadius,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
                 rotation: (Math.random() - 0.5) * 0.3,
-                rotationSpeed: (Math.random() - 0.5) * 0.005,
-                baseAlpha: 0.4 + Math.random() * 0.3,
+                rotationSpeed: (Math.random() - 0.5) * 0.004,
+                baseAlpha: 0.65 + Math.random() * 0.25,
                 alphaPhase: Math.random() * Math.PI * 2
             };
 
@@ -408,26 +338,60 @@ export class BackgroundRenderer {
         }
     }
 
+    panDice(dx, dy) {
+        this.diceContainer.x += dx;
+        this.diceContainer.y += dy;
+    }
+
+    zoomDice(delta, x, y) {
+        const scaleFactor = 1.1;
+        const currentScale = this.diceContainer.scale.x;
+        const newScale = delta > 0 ? currentScale / scaleFactor : currentScale * scaleFactor;
+
+        if (newScale < 0.3 || newScale > 4.0) return;
+
+        // Zoom towards mouse point
+        const worldX = (x - this.diceContainer.x) / currentScale;
+        const worldY = (y - this.diceContainer.y) / currentScale;
+
+        this.diceContainer.scale.set(newScale, newScale);
+        this.diceContainer.x = x - worldX * newScale;
+        this.diceContainer.y = y - worldY * newScale;
+    }
+
     clearFloatingDice() {
         for (const d of this.floatingDice) {
             d.graphics.destroy();
         }
         this.floatingDice = [];
         this.diceContainer.removeChildren();
+        this.diceContainer.position.set(0, 0);
+        this.diceContainer.scale.set(1, 1);
     }
 
     updateFloatingDice() {
+        // Convert screen-space bounds to local (die) coordinates so wrapping
+        // always happens at the real screen edge regardless of pan/zoom.
+        const sc = this.diceContainer.scale.x;
+        const ox = this.diceContainer.x;
+        const oy = this.diceContainer.y;
+        const marginPx = 200 * this._scale(); // margin in screen pixels
+        const localMinX = (-marginPx - ox) / sc;
+        const localMaxX = (this.width  + marginPx - ox) / sc;
+        const localMinY = (-marginPx - oy) / sc;
+        const localMaxY = (this.height + marginPx - oy) / sc;
+
         for (const d of this.floatingDice) {
             d.x += d.vx;
             d.y += d.vy;
             d.rotation += d.rotationSpeed;
 
-            if (d.x < -50) d.x = this.width + 50;
-            if (d.x > this.width + 50) d.x = -50;
-            if (d.y < -50) d.y = this.height + 50;
-            if (d.y > this.height + 50) d.y = -50;
+            if (d.x < localMinX) d.x = localMaxX;
+            if (d.x > localMaxX) d.x = localMinX;
+            if (d.y < localMinY) d.y = localMaxY;
+            if (d.y > localMaxY) d.y = localMinY;
 
-            d.alphaPhase += 0.02;
+            d.alphaPhase += 0.015;
             const alphaMod = Math.sin(d.alphaPhase) * 0.2 + 0.8;
 
             d.graphics.x = d.x;
