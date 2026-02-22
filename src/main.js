@@ -52,8 +52,17 @@ initializeProbabilityTables();
 // uniformly, so centering and fixed positioning all stay correct.
 function updateUIScale() {
     const refWidth = 1280;
-    const scale = Math.max(1, screen.width / refWidth);
+    const refHeight = 800;
+
+    // Calculate scales based on both dimensions
+    const scaleW = window.innerWidth / refWidth;
+    const scaleH = window.innerHeight / refHeight;
+
+    // Use the smaller scale so it doesn't overflow vertically on ultra-wide screens,
+    // or horizontally on ultra-tall screens. Keep a minimum scale of 1.
+    const scale = Math.max(1, Math.min(scaleW, scaleH));
     const rounded = Math.round(scale * 100) / 100;
+
     document.documentElement.style.setProperty('--ui-scale', rounded);
 }
 updateUIScale();
