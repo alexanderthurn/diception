@@ -44,6 +44,20 @@ import {
 // Pre-compute probability tables at startup
 initializeProbabilityTables();
 
+// High-DPI UI scaling: on 4K/high-res displays without OS DPI scaling,
+// HTML elements (buttons, dialogs, text) render at tiny physical sizes.
+// We detect this via screen.width (reflects OS-level DPI scaling, not
+// affected by CSS zoom or browser zoom) and set --ui-scale on :root.
+// The CSS rule `html { zoom: var(--ui-scale) }` scales the entire viewport
+// uniformly, so centering and fixed positioning all stay correct.
+function updateUIScale() {
+    const refWidth = 1920;
+    const scale = Math.max(1, screen.width / refWidth);
+    const rounded = Math.round(scale * 100) / 100;
+    document.documentElement.style.setProperty('--ui-scale', rounded);
+}
+updateUIScale();
+window.addEventListener('resize', updateUIScale);
 
 // Detect whether this device needs on-screen zoom buttons.
 // Touch devices and devices without a precise pointer (mouse) get them.

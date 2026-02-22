@@ -25,8 +25,8 @@ export class GamepadCursorManager {
         this.container.style.position = 'fixed';
         this.container.style.top = '0';
         this.container.style.left = '0';
-        this.container.style.width = '100vw';
-        this.container.style.height = '100vh';
+        this.container.style.width = '100%';
+        this.container.style.height = '100%';
         this.container.style.pointerEvents = 'none';
         this.container.style.zIndex = '100050';
         document.body.appendChild(this.container);
@@ -58,19 +58,19 @@ export class GamepadCursorManager {
     _gb() {
         const gb = this.inputManager.bindings?.gamepad ?? {};
         return {
-            confirm:        gb.confirm?.[0]          ?? 0,
-            cancel:         gb.cancel?.[0]           ?? 2,
-            endTurn:        gb.end_turn?.[0]         ?? 3,
-            menu:           gb.menu?.[0]             ?? 9,
-            moveUp:         gb.move_up?.[0]          ?? 12,
-            moveDown:       gb.move_down?.[0]        ?? 13,
-            moveLeft:       gb.move_left?.[0]        ?? 14,
-            moveRight:      gb.move_right?.[0]       ?? 15,
-            drag:           gb.gamepad_drag?.[0]     ?? 1,
-            cursorSpeedDown:gb.cursor_speed_down?.[0]?? 4,
-            cursorSpeedUp:  gb.cursor_speed_up?.[0]  ?? 5,
-            zoomOut:        gb.zoom_out?.[0]         ?? 6,
-            zoomIn:         gb.zoom_in?.[0]          ?? 7,
+            confirm: gb.confirm?.[0] ?? 0,
+            cancel: gb.cancel?.[0] ?? 2,
+            endTurn: gb.end_turn?.[0] ?? 3,
+            menu: gb.menu?.[0] ?? 9,
+            moveUp: gb.move_up?.[0] ?? 12,
+            moveDown: gb.move_down?.[0] ?? 13,
+            moveLeft: gb.move_left?.[0] ?? 14,
+            moveRight: gb.move_right?.[0] ?? 15,
+            drag: gb.gamepad_drag?.[0] ?? 1,
+            cursorSpeedDown: gb.cursor_speed_down?.[0] ?? 4,
+            cursorSpeedUp: gb.cursor_speed_up?.[0] ?? 5,
+            zoomOut: gb.zoom_out?.[0] ?? 6,
+            zoomIn: gb.zoom_in?.[0] ?? 7,
         };
     }
 
@@ -89,34 +89,34 @@ export class GamepadCursorManager {
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
 
             const gameLabels = {
-                [b.confirm]:         'Select',
-                [b.cancel]:          'Deselect',
-                [b.endTurn]:         'End Turn',
-                [b.menu]:            'Main Menu',
-                [b.moveUp]:          'Attack Up',
-                [b.moveDown]:        'Attack Down',
-                [b.moveLeft]:        'Attack Left',
-                [b.moveRight]:       'Attack Right',
-                [b.drag]:            'Hold to move map',
+                [b.confirm]: 'Select',
+                [b.cancel]: 'Deselect',
+                [b.endTurn]: 'End Turn',
+                [b.menu]: 'Main Menu',
+                [b.moveUp]: 'Attack Up',
+                [b.moveDown]: 'Attack Down',
+                [b.moveLeft]: 'Attack Left',
+                [b.moveRight]: 'Attack Right',
+                [b.drag]: 'Hold to move map',
                 [b.cursorSpeedDown]: 'Cursor Speed -',
-                [b.cursorSpeedUp]:   'Cursor Speed +',
-                [b.zoomOut]:         'Zoom out',
-                [b.zoomIn]:          'Zoom in',
+                [b.cursorSpeedUp]: 'Cursor Speed +',
+                [b.zoomOut]: 'Zoom out',
+                [b.zoomIn]: 'Zoom in',
             };
             const editorLabels = {
-                [b.confirm]:         'Add / Paint',
-                [b.cancel]:          'Remove tile',
-                [b.endTurn]:         'Paint mode',
-                [b.menu]:            'Main Menu',
-                [b.moveUp]:          'Pan up',
-                [b.moveDown]:        'Pan down',
-                [b.moveLeft]:        'Dice mode',
-                [b.moveRight]:       'Assign mode',
-                [b.drag]:            'Hold to pan map',
+                [b.confirm]: 'Add / Paint',
+                [b.cancel]: 'Remove tile',
+                [b.endTurn]: 'Paint mode',
+                [b.menu]: 'Main Menu',
+                [b.moveUp]: 'Pan up',
+                [b.moveDown]: 'Pan down',
+                [b.moveLeft]: 'Dice mode',
+                [b.moveRight]: 'Assign mode',
+                [b.drag]: 'Hold to pan map',
                 [b.cursorSpeedDown]: 'Cursor Speed -',
-                [b.cursorSpeedUp]:   'Cursor Speed +',
-                [b.zoomOut]:         'Zoom out',
-                [b.zoomIn]:          'Zoom in',
+                [b.cursorSpeedUp]: 'Cursor Speed +',
+                [b.zoomOut]: 'Zoom out',
+                [b.zoomIn]: 'Zoom in',
             };
 
             const buttonLabels = isEditorOpen ? editorLabels : gameLabels;
@@ -399,9 +399,9 @@ export class GamepadCursorManager {
             const padding = 0;
             initialX = window.innerWidth / 2;
             initialY = window.innerHeight / 2;
-            if (humanIndex % 4 === 0) { initialX = padding;                      initialY = padding; }
+            if (humanIndex % 4 === 0) { initialX = padding; initialY = padding; }
             else if (humanIndex % 4 === 1) { initialX = window.innerWidth - padding; initialY = padding; }
-            else if (humanIndex % 4 === 2) { initialX = padding;                      initialY = window.innerHeight - padding; }
+            else if (humanIndex % 4 === 2) { initialX = padding; initialY = window.innerHeight - padding; }
             else if (humanIndex % 4 === 3) { initialX = window.innerWidth - padding; initialY = window.innerHeight - padding; }
         }
 
@@ -709,8 +709,8 @@ export class GamepadCursorManager {
     /** Move a cursor's crosshair to the centre of a DOM element. */
     moveCursorToElement(cursor, el) {
         const rect = el.getBoundingClientRect();
-        cursor.x = Math.max(0, Math.min(window.innerWidth,  rect.left + rect.width  / 2));
-        cursor.y = Math.max(0, Math.min(window.innerHeight, rect.top  + rect.height / 2));
+        cursor.x = Math.max(0, Math.min(window.innerWidth, rect.left + rect.width / 2));
+        cursor.y = Math.max(0, Math.min(window.innerHeight, rect.top + rect.height / 2));
         cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
         cursor.element.style.opacity = '1.0';
         this._setCursorMode(cursor, 'dpad');
