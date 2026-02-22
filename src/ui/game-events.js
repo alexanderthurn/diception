@@ -642,7 +642,7 @@ export class GameEventManager {
         }
         if (buttons.length === 0) {
             buttons.push({ text: 'Main Menu', value: 'restart', className: 'tron-btn' });
-            if (this.turnHistory.hasInitialState() && !humanWon) {
+            if (this.turnHistory.hasInitialState()) {
                 buttons.push({ text: 'Try Again', value: 'clone', className: 'tron-btn' });
             }
         }
