@@ -10,11 +10,24 @@ export class GameLog {
         this.logEntries = document.getElementById('log-entries');
         this.currentTurnLog = null;
         this.turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };
+        this.latestSnapshotIndex = undefined;
+        this.latestSnapshot = null;
 
         // Callbacks
         this.getPlayerName = null; // Set by main
         this.diceDataURL = null; // Set by main
         this.onSaveScenario = null; // Set by main
+
+        // Hook up global save button
+        const saveBtn = document.getElementById('log-save-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                if (this.onSaveScenario && this.latestSnapshotIndex !== undefined) {
+                    const name = this.latestSnapshot ? `Turn ${this.latestSnapshot.turn}` : 'Current State';
+                    this.onSaveScenario(this.latestSnapshotIndex, name);
+                }
+            });
+        }
     }
 
     setPlayerNameGetter(fn) {
@@ -32,77 +45,52 @@ export class GameLog {
     clear() {
         this.logEntries.innerHTML = '';
         this.currentTurnLog = null;
+        this.latestSnapshotIndex = undefined;
+        this.latestSnapshot = null;
         this.turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };
     }
 
     startTurnLog(player, autoplayPlayers) {
         const playerName = this.getPlayerName(player);
         const colorHex = '#' + player.color.toString(16).padStart(6, '0');
-        const isHuman = !player.isBot && !autoplayPlayers.has(player.id);
 
         // Capture game state snapshot for this turn
         const snapshot = this.turnHistory.captureSnapshot(this.game);
         const snapshotIndex = this.turnHistory.length - 1;
+        this.latestSnapshotIndex = snapshotIndex;
+        this.latestSnapshot = snapshot;
 
         // Reset stats
         this.turnStats = { attacks: 0, wins: 0, losses: 0, conquered: 0 };
 
-        // Collapse all previous turn groups
-        this.logEntries.querySelectorAll('.turn-group').forEach(group => {
-            group.classList.remove('expanded');
-            const toggle = group.querySelector('.turn-toggle');
-            if (toggle) toggle.textContent = '▶';
-        });
-
         // Create wrapper
         const wrapper = document.createElement('div');
-        wrapper.className = 'turn-group expanded';
-        wrapper.dataset.snapshotIndex = snapshotIndex;
+        wrapper.className = 'turn-group';
 
-        // Create header with action buttons
+        // Create header: player name + summary only
         const header = document.createElement('div');
         header.className = 'turn-header';
         header.innerHTML = `
             <span class="turn-player" style="color: ${colorHex}">${playerName}</span>
             <span class="turn-summary"></span>
-            <span class="turn-actions">
-                <button class="turn-action-btn" data-action="save" title="Save as scenario"><span class="sprite-icon icon-save"></span></button>
-            </span>
-            <span class="turn-toggle">▼</span>
         `;
 
-        // Create details container
+        // Create details container (always visible)
         const details = document.createElement('div');
         details.className = 'turn-details';
 
         wrapper.appendChild(header);
         wrapper.appendChild(details);
 
-        // Handle action button clicks
-        header.querySelector('[data-action="save"]').addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (this.onSaveScenario) {
-                this.onSaveScenario(wrapper.dataset.snapshotIndex, `Turn ${snapshot.turn} - ${playerName}`);
-            }
-        });
-
-        // Toggle expand/collapse
-        header.addEventListener('click', (e) => {
-            if (e.target.closest('.turn-action-btn')) return;
-            wrapper.classList.toggle('expanded');
-            header.querySelector('.turn-toggle').textContent =
-                wrapper.classList.contains('expanded') ? '▼' : '▶';
-        });
-
         this.logEntries.insertBefore(wrapper, this.logEntries.firstChild);
 
-        // Keep only last 3 rounds
+        // Keep only last N rounds
         const maxEntries = Math.max(12, this.game.players.length * 3);
         while (this.logEntries.children.length > maxEntries) {
             this.logEntries.removeChild(this.logEntries.lastChild);
         }
 
-        this.currentTurnLog = { wrapper, details, header, player, isHuman, snapshotIndex };
+        this.currentTurnLog = { wrapper, details, header, player, snapshotIndex };
     }
 
     finalizeTurnLog(reinforcements, saved = 0) {
@@ -129,12 +117,6 @@ export class GameLog {
         }
 
         summary.innerHTML = summaryHtml;
-
-        // For bots/autoplay, collapse the log after their turn
-        if (!this.currentTurnLog.isHuman) {
-            this.currentTurnLog.wrapper.classList.remove('expanded');
-            this.currentTurnLog.header.querySelector('.turn-toggle').textContent = '▶';
-        }
     }
 
     addEntry(message, type = '') {

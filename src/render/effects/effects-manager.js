@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container } from 'pixi.js';
 import { ParticleSystem, EffectPresets } from './particle-system.js';
 import { BackgroundRenderer } from './background-renderer.js';
 
@@ -44,14 +44,19 @@ export class EffectsManager {
         // Intro mode state
         this.introModeActive = false;
         this.introInterval = null;
+        this._holdSpawnInterval = null;
+        this._pointerHeld = false;
+        this._spawnX = 0;
+        this._spawnY = 0;
+        this._boundPointerDown = null;
+        this._boundPointerMove = null;
+        this._boundPointerUp = null;
 
         // Streak tracking for dynamic effects
         this.winStreak = 0;
         this.lastWinTime = 0;
         this.streakDecayTimer = null;
 
-        // Preview map for intro mode
-        this.previewMap = null;
     }
 
     bindEvents() {
@@ -144,37 +149,55 @@ export class EffectsManager {
         this.introModeActive = true;
         this.background.setIntroMode(true);
 
-        // Create a minimalistic map preview for visual feedback during zoom/pan in menu
-        if (!this.previewMap) {
-            this.previewMap = new Container();
-            const size = 4;
-            const tilePixelSize = this.tileSize;
-            for (let x = 0; x < size; x++) {
-                for (let y = 0; y < size; y++) {
-                    const g = new Graphics();
-                    g.rect(x * (tilePixelSize + this.gap), y * (tilePixelSize + this.gap), tilePixelSize, tilePixelSize);
-                    g.fill({ color: 0x333344, alpha: 0.3 });
-                    g.stroke({ width: 2, color: 0x00ffff, alpha: 0.15 });
-                    this.previewMap.addChild(g);
-                }
-            }
-            // Center the preview map
-            this.previewMap.pivot.set(
-                (size * (this.tileSize + this.gap)) / 2,
-                (size * (this.tileSize + this.gap)) / 2
-            );
-            this.previewMap.scale.set(0.5, 0.5); // 50% size
-            // Position it at the center of the initial screen area in the world
-            if (this.renderer && this.renderer.app) {
-                this.previewMap.x = this.renderer.app.screen.width * 0.5;
-                this.previewMap.y = this.renderer.app.screen.height * 0.75;
-            }
-            this.container.addChild(this.previewMap);
+        // Redirect pan/zoom input to move the floating dice instead of the game grid
+        if (this.renderer) {
+            this.renderer.setPanOverride((dx, dy) => this.background.panDice(dx, dy));
+            this.renderer.setZoomOverride((delta, x, y) => this.background.zoomDice(delta, x, y));
         }
 
-        if (this.renderer && this.renderer.centerConfigPreview) {
-            this.renderer.centerConfigPreview();
+        // Hold-to-spawn dice at pointer position
+        this._pointerHeld = false;
+        this._spawnX = this.background.width / 2;
+        this._spawnY = this.background.height / 2;
+
+        const canvas = this.renderer?.app?.canvas;
+        if (canvas) {
+            this._boundPointerDown = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                this._spawnX = e.clientX - rect.left;
+                this._spawnY = e.clientY - rect.top;
+                this._pointerHeld = true;
+            };
+            this._boundPointerMove = (e) => {
+                if (!this._pointerHeld) return;
+                const rect = canvas.getBoundingClientRect();
+                this._spawnX = e.clientX - rect.left;
+                this._spawnY = e.clientY - rect.top;
+            };
+            this._boundPointerUp = () => { this._pointerHeld = false; };
+
+            canvas.addEventListener('pointerdown', this._boundPointerDown);
+            window.addEventListener('pointermove', this._boundPointerMove);
+            window.addEventListener('pointerup', this._boundPointerUp);
+            window.addEventListener('pointercancel', this._boundPointerUp);
         }
+
+        this._holdSpawnInterval = setInterval(() => {
+            if (this.quality === 'off') return;
+            if (this._pointerHeld) {
+                this.background.spawnDiceAt(this._spawnX, this._spawnY);
+            }
+            // Gamepad: any face button held spawns at last known pointer position
+            if (typeof navigator.getGamepads === 'function') {
+                for (const gp of navigator.getGamepads()) {
+                    if (!gp) continue;
+                    if ([0, 1, 2, 3].some(i => gp.buttons[i]?.pressed)) {
+                        this.background.spawnDiceAt(this._spawnX, this._spawnY);
+                        break;
+                    }
+                }
+            }
+        }, 150);
 
         // Spawn periodic particle streams
         this.introInterval = setInterval(() => {
@@ -226,14 +249,31 @@ export class EffectsManager {
         this.introModeActive = false;
         this.background.setIntroMode(false);
 
+        // Restore normal pan/zoom behaviour
+        if (this.renderer) {
+            this.renderer.setPanOverride(null);
+            this.renderer.setZoomOverride(null);
+        }
+
+        // Clean up hold-to-spawn
+        const canvas = this.renderer?.app?.canvas;
+        if (canvas && this._boundPointerDown) {
+            canvas.removeEventListener('pointerdown', this._boundPointerDown);
+            window.removeEventListener('pointermove', this._boundPointerMove);
+            window.removeEventListener('pointerup', this._boundPointerUp);
+            window.removeEventListener('pointercancel', this._boundPointerUp);
+        }
+        this._boundPointerDown = this._boundPointerMove = this._boundPointerUp = null;
+        this._pointerHeld = false;
+
+        if (this._holdSpawnInterval) {
+            clearInterval(this._holdSpawnInterval);
+            this._holdSpawnInterval = null;
+        }
+
         if (this.introInterval) {
             clearInterval(this.introInterval);
             this.introInterval = null;
-        }
-
-        if (this.previewMap) {
-            this.previewMap.destroy({ children: true });
-            this.previewMap = null;
         }
 
         // Clear any remaining screen particles

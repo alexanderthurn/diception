@@ -18,6 +18,8 @@ export class Renderer {
         this.originalX = 0;
         this.originalY = 0;
         this.editorActive = false;
+        this.panOverride = null;
+        this.zoomOverride = null;
         /** True when trackpad-style scroll detected (no middle button → use left-drag for pan). Default true on Mac. */
         this.likelyTrackpad = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
     }
@@ -203,9 +205,17 @@ export class Renderer {
 
     pan(dx, dy) {
         if (!this.rootContainer) return;
+        if (this.panOverride) {
+            this.panOverride(dx, dy);
+            return;
+        }
         this.rootContainer.x += dx;
         this.rootContainer.y += dy;
         this.draw();
+    }
+
+    setPanOverride(fn) {
+        this.panOverride = fn || null;
     }
 
     /**
@@ -235,8 +245,17 @@ export class Renderer {
         this.rootContainer.y = this.app.screen.height / 2 - centerY * scale;
     }
 
+    setZoomOverride(fn) {
+        this.zoomOverride = fn || null;
+    }
+
     zoom(delta, x, y) {
         if (!this.rootContainer) return;
+
+        if (this.zoomOverride) {
+            this.zoomOverride(delta, x, y);
+            return;
+        }
 
         const scaleFactor = 1.1;
         const newScale = delta > 0 ? this.rootContainer.scale.x / scaleFactor : this.rootContainer.scale.x * scaleFactor;
