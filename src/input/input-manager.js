@@ -22,7 +22,7 @@ export class InputManager {
         // Desktop version (Steam/Tauri) often has higher polling rates or different timing
         const isDesktop = isDesktopContext();
         this.repeatDelay = isDesktop ? 300 : 250;  // ms before repeat starts
-        this.repeatRate  = isDesktop ? 160 : 120;  // ms between repeats
+        this.repeatRate = isDesktop ? 160 : 120;  // ms between repeats
 
         // Key repeat state
         this.heldDirections = new Map(); // code -> { direction, lastFire, started }
@@ -37,7 +37,7 @@ export class InputManager {
         // Track animation frame and bound handlers for cleanup
         this.animationFrameId = null;
         this.boundKeyDown = (e) => this.onKeyDown(e);
-        this.boundKeyUp   = (e) => this.onKeyUp(e);
+        this.boundKeyUp = (e) => this.onKeyUp(e);
         this.disposed = false;
 
         // Load bindings and build lookup maps
@@ -74,24 +74,24 @@ export class InputManager {
 
         // Direction actions -> vector
         this._directionVectors = {
-            move_up:    { x:  0, y: -1 },
-            move_down:  { x:  0, y:  1 },
-            move_left:  { x: -1, y:  0 },
-            move_right: { x:  1, y:  0 },
+            move_up: { x: 0, y: -1 },
+            move_down: { x: 0, y: 1 },
+            move_left: { x: -1, y: 0 },
+            move_right: { x: 1, y: 0 },
         };
 
         // Pan actions -> vector
         this._panVectors = {
-            pan_up:    { x:  0, y: -1 },
-            pan_down:  { x:  0, y:  1 },
-            pan_left:  { x: -1, y:  0 },
-            pan_right: { x:  1, y:  0 },
+            pan_up: { x: 0, y: -1 },
+            pan_down: { x: 0, y: 1 },
+            pan_left: { x: -1, y: 0 },
+            pan_right: { x: 1, y: 0 },
         };
 
         // Zoom actions -> direction (-1 = in, +1 = out)
         this._zoomDirections = {
-            zoom_in:  -1,
-            zoom_out:  1,
+            zoom_in: -1,
+            zoom_out: 1,
         };
 
         // Set of all key codes that should have default browser behaviour suppressed
@@ -193,10 +193,10 @@ export class InputManager {
             return;
         }
 
-        if (action === 'confirm')  this.emit('confirm', { source: 'keyboard' });
-        if (action === 'cancel')   this.emit('cancel',  { source: 'keyboard' });
+        if (action === 'confirm') this.emit('confirm', { source: 'keyboard' });
+        if (action === 'cancel') this.emit('cancel', { source: 'keyboard' });
         if (action === 'end_turn') this.emit('endTurn');
-        if (action === 'menu')     this.emit('menu');
+        if (action === 'menu') this.emit('menu');
 
         const zoomDir = this._zoomDirections[action];
         if (zoomDir !== undefined) this.emit('zoom', { direction: zoomDir });
@@ -239,7 +239,7 @@ export class InputManager {
 
             // Handle keyboard repeat
             for (const [, state] of this.heldDirections) {
-                const elapsed   = now - state.started;
+                const elapsed = now - state.started;
                 const sinceLast = now - state.lastFire;
 
                 if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
@@ -342,7 +342,7 @@ export class InputManager {
 
     processGamepadButtons(gp, prevState) {
         for (let i = 0; i < gp.buttons.length; i++) {
-            const pressed    = gp.buttons[i].pressed;
+            const pressed = gp.buttons[i].pressed;
             const wasPressed = prevState.buttons[i];
 
             if (pressed && !wasPressed) {
@@ -350,10 +350,10 @@ export class InputManager {
 
                 if (!this.suspended) {
                     const action = this._gpButtonActionMap[i];
-                    if (action === 'confirm')  this.emit('confirm', { source: 'gamepad', index: gp.index });
-                    if (action === 'cancel')   this.emit('cancel',  { source: 'gamepad', index: gp.index });
+                    if (action === 'confirm') this.emit('confirm', { source: 'gamepad', index: gp.index });
+                    if (action === 'cancel') this.emit('cancel', { source: 'gamepad', index: gp.index });
                     if (action === 'end_turn') this.emit('endTurn', { index: gp.index });
-                    if (action === 'menu')     this.emit('menu');
+                    if (action === 'menu') this.emit('menu');
                     // move_up/down/left/right handled by processGamepadMovement
                     const zoomDir = this._zoomDirections[action];
                     if (zoomDir !== undefined) this.emit('zoom', { direction: zoomDir });
@@ -378,19 +378,19 @@ export class InputManager {
             }
         }
 
-        const now    = Date.now();
+        const now = Date.now();
         const repeat = prevState.moveRepeat;
         let activeDir = null;
 
         for (const [btnIdx, dir] of Object.entries(dpMap)) {
             const i = parseInt(btnIdx);
-            const pressed    = gp.buttons[i]?.pressed;
+            const pressed = gp.buttons[i]?.pressed;
             const wasPressed = prevState.buttons[i];
 
             if (pressed && !wasPressed) {
                 this.emit('move', { ...dir, index: gp.index });
-                repeat.active  = true;
-                repeat.dir     = dir;
+                repeat.active = true;
+                repeat.dir = dir;
                 repeat.started = now;
                 repeat.lastFire = now;
                 activeDir = dir;
@@ -401,7 +401,7 @@ export class InputManager {
 
         // Handle repeat
         if (activeDir && repeat.active) {
-            const elapsed   = now - repeat.started;
+            const elapsed = now - repeat.started;
             const sinceLast = now - repeat.lastFire;
 
             if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
@@ -410,7 +410,7 @@ export class InputManager {
             }
         } else {
             repeat.active = false;
-            repeat.dir    = null;
+            repeat.dir = null;
         }
     }
 
@@ -421,8 +421,11 @@ export class InputManager {
         let rx = gp.axes[2] ?? 0;
         let ry = gp.axes[3] ?? 0;
 
-        if (Math.abs(rx) < this.deadZone) rx = 0;
-        if (Math.abs(ry) < this.deadZone) ry = 0;
+        const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.index);
+        const currentDeadZone = savedDeadzone ? parseFloat(savedDeadzone) : 0.40;
+
+        if (Math.abs(rx) < currentDeadZone) rx = 0;
+        if (Math.abs(ry) < currentDeadZone) ry = 0;
 
         rx = -rx;
         ry = -ry;

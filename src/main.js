@@ -823,15 +823,32 @@ function setupHowToPlay(effectsManager, audioController, inputManager) {
         tbody.innerHTML = html;
 
         // Build configure buttons
-        let configHtml = '<div class="controls-configure-row">';
-        configHtml += '<button class="tron-btn small" id="configure-keyboard-btn">CONFIGURE KEYBOARD</button>';
+        let configHtml = '<div class="controls-configure-row" style="flex-wrap: wrap; gap: 15px;">';
+        configHtml += '<div><button class="tron-btn small" id="configure-keyboard-btn" style="margin-bottom:10px;">CONFIGURE KEYBOARD</button></div>';
 
         const connectedGamepads = Array.from(inputManager.connectedGamepadIndices || []).sort();
         connectedGamepads.forEach((rawIdx) => {
             const humanIdx = inputManager.getHumanIndex(rawIdx);
             const color = GAME.HUMAN_COLORS[humanIdx % GAME.HUMAN_COLORS.length];
             const colorHex = '#' + color.toString(16).padStart(6, '0');
-            configHtml += `<button class="tron-btn small" data-gamepad-index="${rawIdx}" style="border-color:${colorHex};color:${colorHex}">CONFIGURE GAMEPAD ${humanIdx + 1}</button>`;
+
+            // Read saved deadzone or default to 0.15
+            const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + rawIdx);
+            const currentDeadzone = savedDeadzone ? parseFloat(savedDeadzone) : 0.15;
+            const displayPct = Math.round(currentDeadzone * 100);
+
+            configHtml += `
+            <div class="gamepad-config-group" style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-left: 4px solid ${colorHex}; display: flex; flex-direction: column; gap: 10px; width: 300px; max-width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color:${colorHex}; font-weight:bold; letter-spacing: 1px;">GP ${humanIdx + 1}</span>
+                    <button class="tron-btn small gamepad-configure-btn" data-gamepad-index="${rawIdx}" style="border-color:${colorHex};color:${colorHex}; margin:0;">BINDINGS</button>
+                </div>
+                <div class="control-group range-row" style="margin: 0; display:flex; align-items:center; gap: 10px;">
+                    <label style="margin:0; min-width: 70px;">Deadzone</label>
+                    <input type="range" class="gamepad-deadzone-slider" data-gamepad-index="${rawIdx}" min="0.0" max="0.5" step="0.01" value="${currentDeadzone}" style="flex:1;">
+                    <span class="deadzone-value" id="deadzone-val-${rawIdx}" style="min-width:35px; text-align:right;">${displayPct}%</span>
+                </div>
+            </div>`;
         });
 
         configHtml += '</div>';
@@ -844,11 +861,24 @@ function setupHowToPlay(effectsManager, audioController, inputManager) {
         });
 
         // Gamepad configure buttons
-        configArea.querySelectorAll('[data-gamepad-index]').forEach(btn => {
+        configArea.querySelectorAll('.gamepad-configure-btn').forEach(btn => {
             const rawIdx = parseInt(btn.getAttribute('data-gamepad-index'));
             btn.addEventListener('click', async () => {
                 const saved = await KeyBindingDialog.configureGamepad(rawIdx, inputManager);
                 if (saved) refreshControlsSection();
+            });
+        });
+
+        // Gamepad deadzone sliders
+        configArea.querySelectorAll('.gamepad-deadzone-slider').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const rawIdx = e.target.getAttribute('data-gamepad-index');
+                const val = parseFloat(e.target.value);
+                const displaySpan = document.getElementById('deadzone-val-' + rawIdx);
+                if (displaySpan) {
+                    displaySpan.textContent = Math.round(val * 100) + '%';
+                }
+                localStorage.setItem('dicy_gamepad_deadzone_' + rawIdx, val.toString());
             });
         });
     }

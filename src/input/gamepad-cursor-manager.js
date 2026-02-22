@@ -17,7 +17,6 @@ export class GamepadCursorManager {
         this.cursors = new Map(); // gamepadIndex -> { x, y, element, player }
         const isDesktop = isDesktopContext();
         this.cursorSpeed = isDesktop ? 12 : 20;
-        this.deadZone = 0.15;
 
         // Container for all virtual cursors
         this.container = document.createElement('div');
@@ -265,9 +264,13 @@ export class GamepadCursorManager {
             let dx = gp.axes[0] || 0;
             let dy = gp.axes[1] || 0;
 
+            // Load dynamically saved deadzone per gamepad, default to 0.15
+            const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.index);
+            const currentDeadZone = savedDeadzone ? parseFloat(savedDeadzone) : 0.15;
+
             // Apply deadzone
-            if (Math.abs(dx) < this.deadZone) dx = 0;
-            if (Math.abs(dy) < this.deadZone) dy = 0;
+            if (Math.abs(dx) < currentDeadZone) dx = 0;
+            if (Math.abs(dy) < currentDeadZone) dy = 0;
 
             if (dx !== 0 || dy !== 0) {
                 const scale = (val) => Math.sign(val) * Math.pow(Math.abs(val), 1.5);
@@ -305,8 +308,8 @@ export class GamepadCursorManager {
             let sx = gp.axes[2] || 0;
             let sy = gp.axes[3] || 0;
 
-            if (Math.abs(sx) < this.deadZone) sx = 0;
-            if (Math.abs(sy) < this.deadZone) sy = 0;
+            if (Math.abs(sx) < currentDeadZone) sx = 0;
+            if (Math.abs(sy) < currentDeadZone) sy = 0;
 
             if (sx !== 0 || sy !== 0) {
                 const scrollX = sx * 15; // Scroll speed
