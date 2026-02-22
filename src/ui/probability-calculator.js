@@ -93,9 +93,12 @@ export class ProbabilityCalculator {
             for (let defender = 1; defender <= this.maxDice; defender++) {
                 const cell = document.createElement('td');
                 const probability = probTable[attacker - 1][defender - 1];
-                const percent = Math.round(probability * 100);
+                const percentValue = probability * 100;
+                const percentStr = percentValue < 1
+                    ? percentValue.toFixed(2).replace(/^0/, '')
+                    : Math.round(percentValue).toString();
 
-                cell.textContent = `${percent}%`;
+                cell.textContent = `${percentStr}%`;
                 cell.className = getProbabilityColor(probability);
 
                 row.appendChild(cell);
