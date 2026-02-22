@@ -56,6 +56,8 @@ export class BackgroundRenderer {
         // Intro mode state
         this.introMode = false;
         this.floatingDice = [];
+        this.baseCount = 0;  // initial dice count (protected from recycling)
+        this.maxExtra = 0;   // max additional spawnable dice
         this.diceContainer = new Container();
         this.container.addChild(this.diceContainer);
 
@@ -286,6 +288,9 @@ export class BackgroundRenderer {
         if (!this.enabled) return;
 
         const count = this.quality === 'high' ? 32 : 8;
+        this.baseCount = count;
+        this.maxExtra = this.quality === 'high' ? 60 : 20;
+
         const colors = [0x00ffff, 0xAA00FF, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
         const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20];
         const s = this._scale();
@@ -359,6 +364,60 @@ export class BackgroundRenderer {
         this.diceContainer.y = y - worldY * newScale;
     }
 
+    spawnDiceAt(screenX, screenY) {
+        if (!this.enabled || !this.introMode) return;
+
+        // Convert screen coords to diceContainer local space
+        const sc = this.diceContainer.scale.x;
+        const localX = (screenX - this.diceContainer.x) / sc;
+        const localY = (screenY - this.diceContainer.y) / sc;
+
+        const s = this._scale();
+        const minDim = Math.min(this.width, this.height);
+        const size = (0.04 + Math.random() * 0.02) * minDim;
+
+        const colors = [0x00ffff, 0xAA00FF, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
+        const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20];
+        const diceCount = 1 + Math.floor(Math.random() * 6);
+        const diceSides = diceSidesOptions[Math.floor(Math.random() * diceSidesOptions.length)];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+
+        const tileContainer = TileRenderer.createTile({
+            size, diceCount, diceSides, color,
+            fillAlpha: 0.7, showBorder: true
+        });
+        tileContainer.pivot.set(size / 2, size / 2);
+
+        const angle = Math.random() * Math.PI * 2;
+        const speed = (0.3 + Math.random() * 0.3) * s;
+
+        const dice = {
+            graphics: tileContainer,
+            x: localX,
+            y: localY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            rotation: (Math.random() - 0.5) * 0.3,
+            rotationSpeed: (Math.random() - 0.5) * 0.004,
+            baseAlpha: 0.65 + Math.random() * 0.25,
+            alphaPhase: Math.random() * Math.PI * 2
+        };
+
+        tileContainer.x = dice.x;
+        tileContainer.y = dice.y;
+        tileContainer.rotation = dice.rotation;
+        tileContainer.alpha = dice.baseAlpha;
+
+        // At cap: recycle the oldest extra die (index baseCount) instead of allocating
+        if (this.floatingDice.length >= this.baseCount + this.maxExtra) {
+            const oldest = this.floatingDice.splice(this.baseCount, 1)[0];
+            oldest.graphics.destroy();
+        }
+
+        this.floatingDice.push(dice);
+        this.diceContainer.addChild(tileContainer);
+    }
+
     clearFloatingDice() {
         for (const d of this.floatingDice) {
             d.graphics.destroy();
@@ -370,26 +429,27 @@ export class BackgroundRenderer {
     }
 
     updateFloatingDice() {
-        // Convert screen-space bounds to local (die) coordinates so wrapping
-        // always happens at the real screen edge regardless of pan/zoom.
         const sc = this.diceContainer.scale.x;
         const ox = this.diceContainer.x;
         const oy = this.diceContainer.y;
-        const marginPx = 200 * this._scale(); // margin in screen pixels
-        const localMinX = (-marginPx - ox) / sc;
-        const localMaxX = (this.width  + marginPx - ox) / sc;
-        const localMinY = (-marginPx - oy) / sc;
-        const localMaxY = (this.height + marginPx - oy) / sc;
+        const cullMargin = 2000; // screen pixels — far enough to never be visible
 
-        for (const d of this.floatingDice) {
+        for (let i = this.floatingDice.length - 1; i >= 0; i--) {
+            const d = this.floatingDice[i];
             d.x += d.vx;
             d.y += d.vy;
             d.rotation += d.rotationSpeed;
 
-            if (d.x < localMinX) d.x = localMaxX;
-            if (d.x > localMaxX) d.x = localMinX;
-            if (d.y < localMinY) d.y = localMaxY;
-            if (d.y > localMaxY) d.y = localMinY;
+            // Cull dice that have drifted far off-screen (no wrap-back)
+            const screenX = ox + d.x * sc;
+            const screenY = oy + d.y * sc;
+            if (screenX < -cullMargin || screenX > this.width  + cullMargin ||
+                screenY < -cullMargin || screenY > this.height + cullMargin) {
+                d.graphics.destroy();
+                this.floatingDice.splice(i, 1);
+                if (i < this.baseCount) this.baseCount = Math.max(0, this.baseCount - 1);
+                continue;
+            }
 
             d.alphaPhase += 0.015;
             const alphaMod = Math.sin(d.alphaPhase) * 0.2 + 0.8;

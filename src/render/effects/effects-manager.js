@@ -44,6 +44,13 @@ export class EffectsManager {
         // Intro mode state
         this.introModeActive = false;
         this.introInterval = null;
+        this._holdSpawnInterval = null;
+        this._pointerHeld = false;
+        this._spawnX = 0;
+        this._spawnY = 0;
+        this._boundPointerDown = null;
+        this._boundPointerMove = null;
+        this._boundPointerUp = null;
 
         // Streak tracking for dynamic effects
         this.winStreak = 0;
@@ -148,6 +155,50 @@ export class EffectsManager {
             this.renderer.setZoomOverride((delta, x, y) => this.background.zoomDice(delta, x, y));
         }
 
+        // Hold-to-spawn dice at pointer position
+        this._pointerHeld = false;
+        this._spawnX = this.background.width / 2;
+        this._spawnY = this.background.height / 2;
+
+        const canvas = this.renderer?.app?.canvas;
+        if (canvas) {
+            this._boundPointerDown = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                this._spawnX = e.clientX - rect.left;
+                this._spawnY = e.clientY - rect.top;
+                this._pointerHeld = true;
+            };
+            this._boundPointerMove = (e) => {
+                if (!this._pointerHeld) return;
+                const rect = canvas.getBoundingClientRect();
+                this._spawnX = e.clientX - rect.left;
+                this._spawnY = e.clientY - rect.top;
+            };
+            this._boundPointerUp = () => { this._pointerHeld = false; };
+
+            canvas.addEventListener('pointerdown', this._boundPointerDown);
+            window.addEventListener('pointermove', this._boundPointerMove);
+            window.addEventListener('pointerup', this._boundPointerUp);
+            window.addEventListener('pointercancel', this._boundPointerUp);
+        }
+
+        this._holdSpawnInterval = setInterval(() => {
+            if (this.quality === 'off') return;
+            if (this._pointerHeld) {
+                this.background.spawnDiceAt(this._spawnX, this._spawnY);
+            }
+            // Gamepad: any face button held spawns at last known pointer position
+            if (typeof navigator.getGamepads === 'function') {
+                for (const gp of navigator.getGamepads()) {
+                    if (!gp) continue;
+                    if ([0, 1, 2, 3].some(i => gp.buttons[i]?.pressed)) {
+                        this.background.spawnDiceAt(this._spawnX, this._spawnY);
+                        break;
+                    }
+                }
+            }
+        }, 150);
+
         // Spawn periodic particle streams
         this.introInterval = setInterval(() => {
             if (this.quality === 'off') return;
@@ -202,6 +253,22 @@ export class EffectsManager {
         if (this.renderer) {
             this.renderer.setPanOverride(null);
             this.renderer.setZoomOverride(null);
+        }
+
+        // Clean up hold-to-spawn
+        const canvas = this.renderer?.app?.canvas;
+        if (canvas && this._boundPointerDown) {
+            canvas.removeEventListener('pointerdown', this._boundPointerDown);
+            window.removeEventListener('pointermove', this._boundPointerMove);
+            window.removeEventListener('pointerup', this._boundPointerUp);
+            window.removeEventListener('pointercancel', this._boundPointerUp);
+        }
+        this._boundPointerDown = this._boundPointerMove = this._boundPointerUp = null;
+        this._pointerHeld = false;
+
+        if (this._holdSpawnInterval) {
+            clearInterval(this._holdSpawnInterval);
+            this._holdSpawnInterval = null;
         }
 
         if (this.introInterval) {
