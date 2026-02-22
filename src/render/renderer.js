@@ -24,13 +24,16 @@ export class Renderer {
 
 
     async init() {
+        // Check user graphics preferences
+        const savedAA = localStorage.getItem('dicy_gfx_antialias') !== 'off';
+
         // Cap resolution to 1.5 to avoid extreme overhead on Retina/4K displays while keeping it crisp
         const realRes = Math.min(window.devicePixelRatio || 1, 1.5);
         this.app = new Application();
         await this.app.init({
             background: '#050510',
             resizeTo: this.container,
-            antialias: true,
+            antialias: savedAA,
             resolution: realRes,
             autoDensity: true,
             roundPixels: true,
@@ -43,6 +46,7 @@ export class Renderer {
         // display: block is enough to ensure it behaves correctly in the container.
 
         // Ensure smooth rendering but don't overwork the CPU/GPU
+        // (This gets instantly overridden by the framerate setting in main.js, but acts as a safe default)
         this.app.ticker.maxFPS = Math.min(window.screen.refreshRate || 60, 120);
 
         this.container.appendChild(this.app.canvas);

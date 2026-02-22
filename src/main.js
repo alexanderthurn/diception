@@ -374,6 +374,114 @@ async function init() {
     gameStarter.setCallbacks(getPlayerName, addLog, gameLog);
     gameStarter.init();
 
+    // --- DISPLAY & GRAPHICS SETUP ---
+    const desktopDisplayGroup = document.getElementById('desktop-display-controls');
+    const gfxDisplayMode = document.getElementById('gfx-display-mode');
+    const gfxResolution = document.getElementById('gfx-resolution');
+    const gfxAntialias = document.getElementById('gfx-antialias');
+    const gfxFramerate = document.getElementById('gfx-framerate');
+
+    // 1. Initialize Values from Storage
+    const savedAA = localStorage.getItem('dicy_gfx_antialias') || 'on';
+    if (gfxAntialias) gfxAntialias.value = savedAA;
+
+    const savedFPS = localStorage.getItem('dicy_gfx_framerate') || 'vsync';
+    if (gfxFramerate) gfxFramerate.value = savedFPS;
+
+    // Wait until renderer exists to apply framerate
+    const applyFramerate = (val) => {
+        if (!renderer || !renderer.app) return;
+        if (val === 'vsync') {
+            renderer.app.ticker.maxFPS = Math.min(window.screen.refreshRate || 60, 120);
+        } else {
+            renderer.app.ticker.maxFPS = parseInt(val, 10);
+        }
+    };
+
+    if (gfxAntialias) {
+        gfxAntialias.addEventListener('change', async (e) => {
+            localStorage.setItem('dicy_gfx_antialias', e.target.value);
+            const ok = await Dialog.confirm('Changing Anti-Aliasing requires a restart. Reload now?', 'RESTART REQUIRED');
+            if (ok) window.location.reload();
+        });
+    }
+
+    if (gfxFramerate) {
+        gfxFramerate.addEventListener('change', (e) => {
+            const val = e.target.value;
+            localStorage.setItem('dicy_gfx_framerate', val);
+            applyFramerate(val);
+        });
+
+        // Apply immediately
+        applyFramerate(savedFPS);
+    }
+
+    // 2. Tauri / Desktop Only Settings
+    if (isDesktopContext()) {
+        if (desktopDisplayGroup) desktopDisplayGroup.classList.remove('hidden');
+
+        const savedMode = localStorage.getItem('dicy_gfx_display_mode') || 'fullscreen';
+        if (gfxDisplayMode) gfxDisplayMode.value = savedMode;
+
+        const savedRes = localStorage.getItem('dicy_gfx_resolution') || 'native';
+        if (gfxResolution) gfxResolution.value = savedRes;
+
+        const applyDesktopGraphics = async (modeVal, resVal) => {
+            try {
+                const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
+                const win = getCurrentWindow();
+
+                // Apply Mode
+                if (modeVal === 'fullscreen') {
+                    await win.setFullscreen(true);
+                    await win.setDecorations(true);
+                } else if (modeVal === 'borderless') {
+                    await win.setFullscreen(false);
+                    await win.setDecorations(false);
+                    await win.maximize();
+                } else {
+                    // windowed
+                    await win.setFullscreen(false);
+                    await win.setDecorations(true);
+                    await win.unmaximize();
+                }
+
+                // Apply Resolution (only if not fullscreen/borderless, or if resizing is allowed)
+                if (modeVal === 'windowed' && resVal !== 'native') {
+                    const parts = resVal.split('x');
+                    if (parts.length === 2) {
+                        const w = parseInt(parts[0], 10);
+                        const h = parseInt(parts[1], 10);
+                        await win.setSize(new LogicalSize(w, h));
+                        await win.center();
+                    }
+                }
+            } catch (err) {
+                console.warn("Failed to apply Tauri window settings:", err);
+            }
+        };
+
+        // Apply on boot
+        setTimeout(() => applyDesktopGraphics(savedMode, savedRes), 500);
+
+        if (gfxDisplayMode) {
+            gfxDisplayMode.addEventListener('change', (e) => {
+                const val = e.target.value;
+                localStorage.setItem('dicy_gfx_display_mode', val);
+                applyDesktopGraphics(val, gfxResolution ? gfxResolution.value : 'native');
+            });
+        }
+
+        if (gfxResolution) {
+            gfxResolution.addEventListener('change', (e) => {
+                const val = e.target.value;
+                localStorage.setItem('dicy_gfx_resolution', val);
+                applyDesktopGraphics(gfxDisplayMode ? gfxDisplayMode.value : 'windowed', val);
+            });
+        }
+    }
+
     // Initialize Game Event Manager
     const gameEventManager = new GameEventManager(
         game, renderer, gameStarter, sessionManager, turnHistory, scenarioManager

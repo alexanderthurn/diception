@@ -524,6 +524,51 @@
                     </div>
                 </section>
 
+                <section id="howto-display-section">
+                    <h3>DISPLAY & GRAPHICS</h3>
+                    <p>Configure rendering options. Some changes may require a restart to apply.</p>
+
+                    <div id="desktop-display-controls" class="control-row hidden" style="margin-bottom: 10px;">
+                        <div class="control-group half">
+                            <label>Display Mode</label>
+                            <select id="gfx-display-mode">
+                                <option value="windowed">Windowed</option>
+                                <option value="fullscreen" selected>Fullscreen</option>
+                                <option value="borderless">Borderless</option>
+                            </select>
+                        </div>
+                        <div class="control-group half">
+                            <label>Resolution</label>
+                            <select id="gfx-resolution">
+                                <option value="native">Native (Auto)</option>
+                                <option value="3840x2160">3840 x 2160 (4K)</option>
+                                <option value="2560x1440">2560 x 1440 (1440p)</option>
+                                <option value="1920x1080" selected>1920 x 1080 (1080p)</option>
+                                <option value="1280x720">1280 x 720 (720p)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-group half">
+                            <label>Anti-Aliasing</label>
+                            <select id="gfx-antialias">
+                                <option value="on" selected>On (Smoother)</option>
+                                <option value="off">Off (Pixelated)</option>
+                            </select>
+                        </div>
+                        <div class="control-group half">
+                            <label>Framerate Limit</label>
+                            <select id="gfx-framerate">
+                                <option value="vsync" selected>VSync (Monitor)</option>
+                                <option value="120">120 FPS</option>
+                                <option value="60">60 FPS</option>
+                                <option value="30">30 FPS</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
                 <section id="howto-data-section">
                     <h3>DATA & STORAGE</h3>
                     <p>This game stores settings, progress, and campaigns in your browser's local storage.</p>
