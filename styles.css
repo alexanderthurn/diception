@@ -264,7 +264,7 @@ select {
 
 #player-dashboard {
     position: absolute;
-    top: 20px;
+    top: 70px;
     left: 20px;
     width: 280px;
     max-height: 80vh;
@@ -525,11 +525,32 @@ select {
 }
 
 .log-title {
-    margin: 0 0 10px 0;
+    margin: 0 0 8px 0;
     font-size: 12px;
     color: var(--accent-color);
     text-transform: uppercase;
     letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.log-save-btn {
+    background: transparent;
+    border: 1px solid rgba(0, 255, 255, 0.25);
+    color: rgba(0, 255, 255, 0.5);
+    padding: 1px 5px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+    margin-left: auto;
+}
+
+.log-save-btn:hover {
+    background: rgba(0, 255, 255, 0.15);
+    border-color: var(--border-color);
+    color: var(--border-color);
 }
 
 .dash-title {
@@ -543,22 +564,25 @@ select {
 
 .player-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px;
-    margin-bottom: 5px;
-    border-left: 4px solid transparent;
-    background: rgba(255, 255, 255, 0.05);
+    flex-direction: column;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    border-left: 3px solid transparent;
+    border-top: 1px solid rgba(0, 255, 255, 0.06);
+    border-bottom: 1px solid transparent;
+    background: rgba(0, 0, 0, 0.2);
+    transition: background 0.2s, box-shadow 0.2s;
 }
 
 .player-item.active {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: var(--panel-glow);
+    background: rgba(0, 255, 255, 0.06);
+    border-top: 1px solid rgba(0, 255, 255, 0.22);
+    border-bottom: 1px solid rgba(0, 255, 255, 0.22);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.08), inset 0 0 10px rgba(0, 255, 255, 0.03);
 }
 
 .player-item.dead {
-    opacity: 0.5;
+    opacity: 0.4;
     text-decoration: line-through;
 }
 
@@ -1095,49 +1119,31 @@ select {
 /* Turn-based grouped log */
 .turn-group {
     margin-bottom: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 0;
-    overflow: hidden;
 }
 
 .turn-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 8px;
-    background: rgba(255, 255, 255, 0.05);
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.turn-header:hover {
-    background: rgba(255, 255, 255, 0.1);
+    padding: 3px 0;
 }
 
 .turn-player {
     font-weight: bold;
+    font-size: 11px;
 }
 
 .turn-summary {
     flex: 1;
     font-size: 11px;
-    color: #888;
-}
-
-.turn-toggle {
-    font-size: 10px;
     color: #666;
 }
 
 .turn-details {
-    display: none;
-    padding: 4px 8px;
-    background: rgba(0, 0, 0, 0.3);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.turn-group.expanded .turn-details {
     display: block;
+    padding: 2px 0 4px 8px;
+    border-left: 2px solid rgba(0, 255, 255, 0.12);
+    margin-left: 2px;
 }
 
 .log-entry {
@@ -3482,29 +3488,6 @@ select {
     justify-content: flex-end;
 }
 
-/* Turn Log Action Buttons */
-.turn-actions {
-    display: flex;
-    gap: 5px;
-    margin-left: auto;
-}
-
-.turn-action-btn {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #888;
-    padding: 2px 6px;
-    font-size: 10px;
-    cursor: pointer;
-    border-radius: 0;
-    transition: all 0.2s;
-}
-
-.turn-action-btn:hover {
-    background: rgba(0, 255, 255, 0.2);
-    border-color: var(--border-color);
-    color: var(--border-color);
-}
 
 /* Empty state for scenario browser */
 .scenario-empty {

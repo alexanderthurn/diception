@@ -28,9 +28,11 @@ export class BackgroundRenderer {
         this.quality = 'high';
         this.enabled = true;
 
-        // Grid lines
+        // Grid/scanline/gradient container
         this.gridContainer = new Container();
         this.container.addChild(this.gridContainer);
+        this.scanLineObjects = [];
+        this.gradientPhase = 0;
 
         // Ambient particles
         this.particleContainer = new Container();
@@ -81,56 +83,71 @@ export class BackgroundRenderer {
         if (quality === 'off') {
             this.clearAmbientParticles();
         } else {
-            // Recreate with appropriate density
+            this.createGrid();
             this.createAmbientParticles();
         }
     }
 
     createGrid() {
         this.gridContainer.removeChildren();
+        this.scanLineObjects = [];
+        this.gradientPhase = 0;
 
         if (!this.enabled) return;
 
-        const gridGfx = new Graphics();
-        const spacing = 80;
-        const color = 0x00ffff;
-        const alpha = 0.12;
-
-        // Horizontal lines
-        for (let y = 0; y < this.height + spacing; y += spacing) {
-            gridGfx.moveTo(0, y);
-            gridGfx.lineTo(this.width, y);
+        if (this.quality === 'high') {
+            this._createScanlines();
+        } else if (this.quality === 'medium') {
+            this._createGradientOverlay();
         }
+        // 'off': nothing
+    }
 
-        // Vertical lines
-        for (let x = 0; x < this.width + spacing; x += spacing) {
-            gridGfx.moveTo(x, 0);
-            gridGfx.lineTo(x, this.height);
+    _createScanlines() {
+        // Horizontal glowing bands that drift slowly downward — Tron CRT feel
+        const count = 5;
+        const bandColors = [0x00ffff, 0x0088ff, 0x00ffff, 0xAA00FF, 0x00ffff];
+
+        for (let i = 0; i < count; i++) {
+            const gfx = new Graphics();
+            const h = 80 + Math.random() * 140;
+            gfx.rect(0, 0, this.width, h);
+            gfx.fill({ color: bandColors[i % bandColors.length], alpha: 0.025 + Math.random() * 0.02 });
+            gfx.blendMode = 'add';
+
+            const sl = {
+                graphics: gfx,
+                y: Math.random() * this.height,
+                speed: 0.12 + Math.random() * 0.18,
+                height: h
+            };
+            gfx.y = sl.y;
+
+            this.gridContainer.addChild(gfx);
+            this.scanLineObjects.push(sl);
         }
+    }
 
-        gridGfx.stroke({ width: 1, color: color, alpha: alpha });
-        gridGfx.blendMode = 'add';
+    _createGradientOverlay() {
+        // Radial purple-to-black gradient matching the loading screen feel
+        const cx = this.width / 2;
+        const cy = this.height / 2;
+        const maxR = Math.sqrt(cx * cx + cy * cy);
+        const steps = 14;
 
-        this.gridContainer.addChild(gridGfx);
-
-        // Add occasional brighter accent lines
-        const accentGfx = new Graphics();
-        const accentSpacing = spacing * 4;
-
-        for (let y = 0; y < this.height + accentSpacing; y += accentSpacing) {
-            accentGfx.moveTo(0, y);
-            accentGfx.lineTo(this.width, y);
+        const gradGfx = new Graphics();
+        // Draw concentric circles from largest (edge, no tint) to smallest (center, most tint)
+        for (let i = steps; i >= 1; i--) {
+            const r = (i / steps) * maxR;
+            const t = 1 - i / steps; // 0 at edges → 1 at center
+            const alpha = t * 0.13;
+            if (alpha > 0.003) {
+                gradGfx.circle(cx, cy, r);
+                gradGfx.fill({ color: 0xaa00ff, alpha });
+            }
         }
-
-        for (let x = 0; x < this.width + accentSpacing; x += accentSpacing) {
-            accentGfx.moveTo(x, 0);
-            accentGfx.lineTo(x, this.height);
-        }
-
-        accentGfx.stroke({ width: 1, color: color, alpha: 0.22 });
-        accentGfx.blendMode = 'add';
-
-        this.gridContainer.addChild(accentGfx);
+        gradGfx.blendMode = 'add';
+        this.gridContainer.addChild(gradGfx);
     }
 
     createAmbientParticles() {
@@ -139,7 +156,7 @@ export class BackgroundRenderer {
         if (!this.enabled) return;
 
         // Particle count based on quality
-        let count = 20; // Medium (merged with low)
+        let count = 20; // Medium
         if (this.quality === 'high') count = 40;
 
         const colors = [0x00ffff, 0xAA00FF, 0x00ff88, 0x0088ff];
@@ -204,8 +221,6 @@ export class BackgroundRenderer {
         this.flareActive = true;
     }
 
-
-
     update() {
         if (!this.enabled) return;
 
@@ -213,17 +228,14 @@ export class BackgroundRenderer {
 
         // Update ambient particles
         for (const p of this.ambientParticles) {
-            // Move
             p.x += p.vx;
             p.y += p.vy;
 
-            // Wrap around screen
             if (p.x < -10) p.x = this.width + 10;
             if (p.x > this.width + 10) p.x = -10;
             if (p.y < -10) p.y = this.height + 10;
             if (p.y > this.height + 10) p.y = -10;
 
-            // Pulse alpha
             p.alphaPhase += p.alphaSpeed;
             const alphaMod = Math.sin(p.alphaPhase) * 0.3 + 0.7;
 
@@ -245,13 +257,24 @@ export class BackgroundRenderer {
             }
         }
 
-        // Apply pulse to grid
-        const baseAlpha = this.introMode ? 1.5 : 1;
-        this.gridContainer.alpha = baseAlpha + this.pulseAlpha * 2 + (this.winIntensity * 0.5);
+        // Animate scanlines (high quality) and gradient/pulse (medium)
+        if (this.quality === 'high') {
+            for (const sl of this.scanLineObjects) {
+                sl.y += sl.speed;
+                if (sl.y > this.height) sl.y = -sl.height;
+                sl.graphics.y = sl.y;
+            }
+            const baseAlpha = this.introMode ? 1.5 : 1;
+            this.gridContainer.alpha = baseAlpha + this.pulseAlpha * 2 + (this.winIntensity * 0.5);
+        } else if (this.quality === 'medium') {
+            this.gradientPhase += 0.008;
+            const breathe = 0.8 + Math.sin(this.gradientPhase) * 0.2;
+            this.gridContainer.alpha = breathe + this.pulseAlpha * 2;
+        }
 
         // Intensify ambient particles based on winIntensity
         if (this.winIntensity > 0) {
-            this.winIntensity *= 0.99; // Slower decay (was 0.98)
+            this.winIntensity *= 0.99;
             if (this.winIntensity < 0.01) this.winIntensity = 0;
 
             for (const p of this.ambientParticles) {
@@ -261,18 +284,17 @@ export class BackgroundRenderer {
 
         // Update growing flare effect
         if (this.flareActive) {
-            this.flareProgress += 0.012; // Controls growth speed
+            this.flareProgress += 0.012;
 
             this.flareGfx.clear();
             const maxDim = Math.max(this.width, this.height);
-            const flareSize = this.flareProgress * maxDim * 2.5; // Grow to fill screen
+            const flareSize = this.flareProgress * maxDim * 2.5;
             const flareAlpha = Math.min(0.6, (1.0 - this.flareProgress) * 1.2);
 
             if (this.flareProgress >= 1.0) {
                 this.flareActive = false;
                 this.flareProgress = 0;
             } else {
-                // Center the growing square
                 this.flareGfx.rect(
                     this.width / 2 - flareSize / 2,
                     this.height / 2 - flareSize / 2,
@@ -285,6 +307,7 @@ export class BackgroundRenderer {
         } else {
             this.flareGfx.clear();
         }
+
         // Update floating dice (intro mode)
         if (this.introMode) {
             this.updateFloatingDice();
@@ -318,26 +341,20 @@ export class BackgroundRenderer {
         this.introMode = enabled;
 
         if (enabled) {
-            // Intensify grid
             this.gridContainer.alpha = 1.5;
-            // Speed up ambient particles
             for (const p of this.ambientParticles) {
                 p.vx *= 2;
                 p.vy *= 2;
                 p.baseAlpha = Math.min(1, p.baseAlpha * 1.5);
             }
-            // Create floating dice
             this.createFloatingDice();
         } else {
-            // Reset grid
             this.gridContainer.alpha = 1;
-            // Slow down ambient particles
             for (const p of this.ambientParticles) {
                 p.vx /= 2;
                 p.vy /= 2;
                 p.baseAlpha = Math.max(0.2, p.baseAlpha / 1.5);
             }
-            // Remove floating dice
             this.clearFloatingDice();
         }
     }
@@ -349,15 +366,14 @@ export class BackgroundRenderer {
 
         const count = this.quality === 'high' ? 8 : 4;
         const colors = [0x00ffff, 0xAA00FF, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
-        const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20]; // Variety of dice types
+        const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20];
 
         for (let i = 0; i < count; i++) {
-            const size = 40 + Math.random() * 30; // 40-70 pixels
-            const diceCount = 1 + Math.floor(Math.random() * 6); // 1-6 dice
+            const size = 40 + Math.random() * 30;
+            const diceCount = 1 + Math.floor(Math.random() * 6);
             const diceSides = diceSidesOptions[Math.floor(Math.random() * diceSidesOptions.length)];
             const color = colors[i % colors.length];
 
-            // Create tile using TileRenderer
             const tileContainer = TileRenderer.createTile({
                 size,
                 diceCount,
@@ -367,7 +383,6 @@ export class BackgroundRenderer {
                 showBorder: true
             });
 
-            // Center the tile (TileRenderer creates at 0,0)
             tileContainer.pivot.set(size / 2, size / 2);
             tileContainer.alpha = 0.6;
 
@@ -377,7 +392,7 @@ export class BackgroundRenderer {
                 y: Math.random() * this.height,
                 vx: (Math.random() - 0.5) * 0.5,
                 vy: (Math.random() - 0.5) * 0.5,
-                rotation: (Math.random() - 0.5) * 0.3, // Slight tilt only
+                rotation: (Math.random() - 0.5) * 0.3,
                 rotationSpeed: (Math.random() - 0.5) * 0.005,
                 baseAlpha: 0.4 + Math.random() * 0.3,
                 alphaPhase: Math.random() * Math.PI * 2
@@ -403,18 +418,15 @@ export class BackgroundRenderer {
 
     updateFloatingDice() {
         for (const d of this.floatingDice) {
-            // Move
             d.x += d.vx;
             d.y += d.vy;
             d.rotation += d.rotationSpeed;
 
-            // Wrap around screen
             if (d.x < -50) d.x = this.width + 50;
             if (d.x > this.width + 50) d.x = -50;
             if (d.y < -50) d.y = this.height + 50;
             if (d.y > this.height + 50) d.y = -50;
 
-            // Pulse alpha
             d.alphaPhase += 0.02;
             const alphaMod = Math.sin(d.alphaPhase) * 0.2 + 0.8;
 
