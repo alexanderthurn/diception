@@ -209,12 +209,6 @@ async function init() {
             const w = window.innerWidth;
             const h = window.innerHeight;
 
-            // Update container size explicitly if needed (though CSS should handle it)
-            if (container) {
-                container.style.width = `${w}px`;
-                container.style.height = `${h}px`;
-            }
-
             if (renderer.app && renderer.app.renderer) {
                 renderer.app.renderer.resize(w, h);
             }

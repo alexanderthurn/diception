@@ -54,6 +54,17 @@ export class GamepadCursorManager {
         this._setupModalAutoFocus();
     }
 
+    /** Return the current UI scale factor (from CSS --ui-scale). */
+    _uiScale() {
+        return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale')) || 1;
+    }
+
+    /** Position a cursor DOM element at viewport coordinates (x, y). */
+    _positionCursor(cursor) {
+        const s = this._uiScale();
+        cursor.element.style.transform = `translate(${cursor.x / s}px, ${cursor.y / s}px)`;
+    }
+
     /** Read current gamepad bindings from InputManager, falling back to defaults. */
     _gb() {
         const gb = this.inputManager.bindings?.gamepad ?? {};
@@ -220,7 +231,7 @@ export class GamepadCursorManager {
             cursor.x = x;
             cursor.y = y;
             GamepadCursorManager.savedPositions.set(index, { x, y });
-            cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+            this._positionCursor(cursor);
             cursor.element.style.opacity = '0.35';
             this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, index);
         };
@@ -281,7 +292,7 @@ export class GamepadCursorManager {
                     GamepadCursorManager.savedPositions.set(i, { x: cursor.x, y: cursor.y });
 
                     // Update DOM element
-                    cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+                    this._positionCursor(cursor);
                     cursor.element.style.opacity = '1.0';
 
                     // Trigger mousemove on current position
@@ -418,7 +429,7 @@ export class GamepadCursorManager {
         };
 
         // Set initial position and opacity
-        el.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+        el.style.transform = `translate(${cursor.x / this._uiScale()}px, ${cursor.y / this._uiScale()}px)`;
         el.style.opacity = '1.0';
 
         this.container.appendChild(el);
@@ -643,8 +654,8 @@ export class GamepadCursorManager {
             : '';
         feedback.innerHTML = iconHTML + `<span>${text}</span>`;
         feedback.style.position = 'fixed';
-        feedback.style.left = `${cursor.x}px`;
-        feedback.style.top = `${cursor.y - 40}px`;
+        feedback.style.left = `${cursor.x / this._uiScale()}px`;
+        feedback.style.top = `${(cursor.y - 40) / this._uiScale()}px`;
         feedback.style.transform = 'translateX(-50%)';
         feedback.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
         feedback.style.color = 'white';
@@ -664,7 +675,7 @@ export class GamepadCursorManager {
 
         // Animate and remove
         requestAnimationFrame(() => {
-            feedback.style.top = `${cursor.y - 80}px`;
+            feedback.style.top = `${(cursor.y - 80) / this._uiScale()}px`;
             feedback.style.opacity = '0';
         });
 
@@ -711,7 +722,7 @@ export class GamepadCursorManager {
         const rect = el.getBoundingClientRect();
         cursor.x = Math.max(0, Math.min(window.innerWidth, rect.left + rect.width / 2));
         cursor.y = Math.max(0, Math.min(window.innerHeight, rect.top + rect.height / 2));
-        cursor.element.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+        this._positionCursor(cursor);
         cursor.element.style.opacity = '1.0';
         this._setCursorMode(cursor, 'dpad');
         this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0);

@@ -70,13 +70,6 @@
     --title-glow: 0 0 20px rgba(0, 255, 255, 0.4);
 }
 
-/* High-DPI UI scaling: zoom applied to html element scales the entire
- * viewport uniformly — centering, fixed positioning, and modals all
- * stay correct because the viewport definition itself is scaled. */
-html {
-    zoom: var(--ui-scale);
-}
-
 /* Effect Level Overrides */
 body.fx-off {
     --glow-strength: 0;
@@ -114,6 +107,18 @@ body {
     -webkit-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+}
+
+/* High-DPI UI scaling: transform on body scales all HTML overlay content.
+ * transform creates a new containing block for position:fixed descendants,
+ * so centering and fixed positioning all work correctly within the scaled body.
+ * Width/height are reduced so body visually fills the viewport after scaling.
+ * The canvas container uses inverse scaling to render at native resolution. */
+body {
+    transform: scale(var(--ui-scale));
+    transform-origin: top left;
+    width: calc(100% / var(--ui-scale));
+    height: calc(100dvh / var(--ui-scale));
 }
 
 /* Scanline Effect for High Quality */
@@ -178,8 +183,12 @@ select {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    /* Inverse scale: cancel body scaling so canvas renders at native resolution.
+     * Dimensions are expanded to fill the full physical viewport. */
+    transform: scale(calc(1 / var(--ui-scale)));
+    transform-origin: top left;
+    width: calc(100% * var(--ui-scale));
+    height: calc(100% * var(--ui-scale));
 }
 
 #ui-overlay {
