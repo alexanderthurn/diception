@@ -912,10 +912,17 @@ export class GridRenderer {
                     } else {
                         const defenderDice = neighborTile.dice;
                         const probability = getWinProbability(attackerDice, defenderDice, this.diceSides);
-                        let probabilityPercent = Math.round(probability * 100);
-                        if (probabilityPercent === 100 && probability < 1.0) probabilityPercent = 99;
+                        const percentValue = probability * 100;
+                        let percentStr;
+                        if (percentValue < 1) {
+                            percentStr = percentValue.toFixed(2).replace(/^0/, '');
+                        } else {
+                            let rounded = Math.round(percentValue);
+                            if (rounded === 100 && probability < 1.0) rounded = 99;
+                            percentStr = rounded.toString();
+                        }
                         const probColor = getProbabilityHexColor(probability);
-                        this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, `${probabilityPercent}%`, probColor, neighbor.edge);
+                        this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, `${percentStr}%`, probColor, neighbor.edge);
                     }
                 }
             }
