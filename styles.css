@@ -1270,6 +1270,16 @@ select {
         display: none;
     }
 
+    /* Make new-game-btn a square icon button on mobile (matches audio/zoom buttons) */
+    #new-game-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     /* Keep howto button rectangular/normal */
     #howto-btn {
         width: 54px !important;
