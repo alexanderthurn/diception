@@ -424,22 +424,18 @@ async function init() {
         const savedMode = localStorage.getItem('dicy_gfx_display_mode') || 'fullscreen';
         if (gfxDisplayMode) gfxDisplayMode.value = savedMode;
 
-        const savedRes = localStorage.getItem('dicy_gfx_resolution') || 'native';
+        const savedRes = localStorage.getItem('dicy_gfx_resolution') || '1.0';
         if (gfxResolution) gfxResolution.value = savedRes;
 
-        const applyDesktopGraphics = async (modeVal, resVal) => {
+        const applyDesktopGraphics = async (modeVal, scaleVal) => {
             try {
-                const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
+                const { getCurrentWindow } = await import('@tauri-apps/api/window');
                 const win = getCurrentWindow();
 
                 // Apply Mode
                 if (modeVal === 'fullscreen') {
                     await win.setFullscreen(true);
                     await win.setDecorations(true);
-                } else if (modeVal === 'borderless') {
-                    await win.setFullscreen(false);
-                    await win.setDecorations(false);
-                    await win.maximize();
                 } else {
                     // windowed
                     await win.setFullscreen(false);
@@ -447,16 +443,22 @@ async function init() {
                     await win.unmaximize();
                 }
 
-                // Apply Resolution (only if not fullscreen/borderless, or if resizing is allowed)
-                if (modeVal === 'windowed' && resVal !== 'native') {
-                    const parts = resVal.split('x');
-                    if (parts.length === 2) {
-                        const w = parseInt(parts[0], 10);
-                        const h = parseInt(parts[1], 10);
-                        await win.setSize(new LogicalSize(w, h));
-                        await win.center();
+                if (renderer && renderer.app && renderer.app.renderer) {
+                    const scaleRatio = parseFloat(scaleVal);
+
+                    if (!isNaN(scaleRatio) && scaleRatio < 1.0) {
+                        renderer.app.renderer.resolution = scaleRatio * Math.min(window.devicePixelRatio || 1, 1.5);
+                        renderer.app.canvas.style.imageRendering = 'pixelated';
+                    } else {
+                        // Reset to standard DPI bounds
+                        renderer.app.renderer.resolution = Math.min(window.devicePixelRatio || 1, 1.5);
+                        renderer.app.canvas.style.imageRendering = 'auto';
                     }
+
+                    // Force resize event to apply new resolution scaling inside Pixi
+                    window.dispatchEvent(new Event('resize'));
                 }
+
             } catch (err) {
                 console.warn("Failed to apply Tauri window settings:", err);
             }
@@ -469,7 +471,7 @@ async function init() {
             gfxDisplayMode.addEventListener('change', (e) => {
                 const val = e.target.value;
                 localStorage.setItem('dicy_gfx_display_mode', val);
-                applyDesktopGraphics(val, gfxResolution ? gfxResolution.value : 'native');
+                window.location.reload();
             });
         }
 
@@ -477,7 +479,7 @@ async function init() {
             gfxResolution.addEventListener('change', (e) => {
                 const val = e.target.value;
                 localStorage.setItem('dicy_gfx_resolution', val);
-                applyDesktopGraphics(gfxDisplayMode ? gfxDisplayMode.value : 'windowed', val);
+                window.location.reload();
             });
         }
     }

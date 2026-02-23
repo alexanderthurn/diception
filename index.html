@@ -534,20 +534,15 @@
                             <select id="gfx-display-mode">
                                 <option value="windowed">Windowed</option>
                                 <option value="fullscreen" selected>Fullscreen</option>
-                                <option value="borderless">Borderless</option>
                             </select>
                         </div>
                         <div class="control-group half">
-                            <label>Resolution</label>
+                            <label>Scale Down Res</label>
                             <select id="gfx-resolution">
-                                <option value="native">Native (Auto)</option>
-                                <option value="3840x2160">3840 x 2160 (4K)</option>
-                                <option value="2560x1440">2560 x 1440 (1440p)</option>
-                                <option value="1920x1080" selected>1920 x 1080 (1080p)</option>
-                                <option value="1280x800">1280 x 800 (Steam Deck)</option>
-                                <option value="1280x720">1280 x 720 (720p)</option>
-                                <option value="800x600">800 x 600 (SVGA)</option>
-                                <option value="480x320">480 x 320 (HVGA)</option>
+                                <option value="1.0" selected>1.0 (Native)</option>
+                                <option value="0.75">0.75 (Performance)</option>
+                                <option value="0.5">0.5 (Fast)</option>
+                                <option value="0.25">0.25 (Potato)</option>
                             </select>
                         </div>
                     </div>
@@ -660,7 +655,8 @@
                     <!-- Populated by JS -->
                 </div>
                 <hr class="dash-divider">
-                <h4 class="log-title">BATTLE LOG<button id="log-save-btn" class="log-save-btn" title="Save current state as scenario"><span class="sprite-icon icon-save"></span></button></h4>
+                <h4 class="log-title">BATTLE LOG<button id="log-save-btn" class="log-save-btn"
+                        title="Save current state as scenario"><span class="sprite-icon icon-save"></span></button></h4>
                 <div id="log-entries">
                     <!-- Populated by JS -->
                 </div>
