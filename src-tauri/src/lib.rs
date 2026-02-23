@@ -87,6 +87,13 @@ fn storage_write_all(app_handle: tauri::AppHandle, data: String) -> Result<(), S
     std::fs::write(&path, data).map_err(|e| format!("write error: {e}"))
 }
 
+/// Return the absolute path of the save file (for diagnostics).
+#[tauri::command]
+fn storage_get_path(app_handle: tauri::AppHandle) -> Result<String, String> {
+    let path = get_save_path(&app_handle)?;
+    Ok(path.to_string_lossy().to_string())
+}
+
 // ─── Existing commands ────────────────────────────────────────────────────────
 
 #[tauri::command]
@@ -331,6 +338,7 @@ pub fn run() {
             steam_input_show_binding_panel,
             storage_read_all,
             storage_write_all,
+            storage_get_path,
         ]);
 
     if steam_available {

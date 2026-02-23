@@ -3,143 +3,124 @@
  *
  * On Tauri/Steam  : localStorage is the runtime cache.
  *                   On startup, `initStorage()` seeds localStorage from
- *                   `diception_save.json` (Steam Cloud syncs that file).
- *                   Every write schedules a flush back to disk.
- * On Web/Android  : pure localStorage, initStorage() is a no-op.
- *
- * All existing code that calls localStorage.getItem/setItem/removeItem
- * continues to work unchanged — this module only needs to be imported
- * once (in main.js) to wire up the flush mechanism.
+ *                   `diception_save.sav` (Steam Cloud syncs that file).
+ *                   Every localStorage write schedules a debounced flush (100 ms).
+ *                   Call `flushStorage()` before any reload() or quit().
+ * On Web/Android  : pure localStorage, both functions are no-ops.
  */
 
 import { isTauriContext } from '../scenarios/user-identity.js';
 
-/** Filename written into the Tauri app-data directory and synced by Steam Cloud. */
 export const SAVE_FILENAME = 'diception_save.sav';
 
-const FLUSH_DELAY_MS = 1000;    // debounce writes
-const FLUSH_INTERVAL_MS = 10000; // periodic safety flush
+const DEBOUNCE_MS = 100; // flush shortly after each write
 
-let _flushTimer = null;
+let _debounceTimer = null;
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
- * Call once at app startup (before any localStorage reads) when running on Tauri.
- * Reads `diception_save.json` from disk and merges its contents into localStorage
- * so that Steam Cloud data takes precedence over stale local WebView storage.
+ * Call once at the very start of init() — before any localStorage reads.
+ * Merges the on-disk save into localStorage (Steam Cloud data wins).
  */
 export async function initStorage() {
-    if (!isTauriContext()) return;
+    if (!isTauriContext()) {
+        console.log('[storage] Web/Android — localStorage only');
+        return;
+    }
+
+    console.log('[storage] Tauri — file-backed storage initialising');
 
     try {
         const json = await window.__TAURI_INTERNALS__.invoke('storage_read_all');
         const data = JSON.parse(json || '{}');
-        // File keys override localStorage keys (cloud data wins)
         for (const [key, value] of Object.entries(data)) {
             localStorage.setItem(key, value);
         }
-        console.log('[storage] Loaded from', SAVE_FILENAME);
+        console.log(`[storage] Loaded ${Object.keys(data).length} keys from ${SAVE_FILENAME}`);
     } catch (e) {
-        console.warn('[storage] Could not load save file, using localStorage as-is:', e);
+        console.error('[storage] storage_read_all failed — Rust not recompiled?', e);
     }
 
-    // Intercept all future localStorage mutations so every write triggers a flush
+    // Log the exact save path so Steam Cloud config can be verified
+    try {
+        const path = await window.__TAURI_INTERNALS__.invoke('storage_get_path');
+        console.log('[storage] Save path:', path);
+    } catch (_) { /* optional helper command */ }
+
+    // Patch localStorage so every write triggers a debounced flush automatically.
+    // This covers all existing code without requiring any call-site changes.
     _patchLocalStorage();
 
-    // Safety net: flush periodically even if patch misses something
-    setInterval(_flush, FLUSH_INTERVAL_MS);
-
-    // Flush on close/reload
     window.addEventListener('beforeunload', () => {
-        _cancelScheduled();
-        _flushSync(); // best-effort synchronous write on unload
+        // Fire-and-forget — best effort if process hasn't been killed yet
+        _invokeWrite().catch(() => {});
     });
 }
 
 /**
- * Force an immediate async flush to disk.
- * Call before intentional app exits if you want guaranteed durability.
+ * Await this before window.location.reload() or steam.quit() / app close.
+ * Ensures the save file is written before the process exits.
  */
 export async function flushStorage() {
-    _cancelScheduled();
+    if (!isTauriContext()) return;
+    if (_debounceTimer) {
+        clearTimeout(_debounceTimer);
+        _debounceTimer = null;
+    }
     await _flush();
 }
 
 // ─── Internals ────────────────────────────────────────────────────────────────
 
 function _scheduleFlush() {
-    if (!isTauriContext()) return;
-    if (_flushTimer) clearTimeout(_flushTimer);
-    _flushTimer = setTimeout(_flush, FLUSH_DELAY_MS);
-}
-
-function _cancelScheduled() {
-    if (_flushTimer) {
-        clearTimeout(_flushTimer);
-        _flushTimer = null;
-    }
+    if (_debounceTimer) clearTimeout(_debounceTimer);
+    _debounceTimer = setTimeout(_flush, DEBOUNCE_MS);
 }
 
 async function _flush() {
-    _flushTimer = null;
+    _debounceTimer = null;
     if (!isTauriContext()) return;
     try {
-        const data = _snapshotLocalStorage();
-        await window.__TAURI_INTERNALS__.invoke('storage_write_all', {
-            data: JSON.stringify(data),
-        });
+        await _invokeWrite();
     } catch (e) {
-        console.warn('[storage] Flush failed:', e);
+        console.error('[storage] Flush failed:', e);
     }
 }
 
-/** Best-effort synchronous flush used in beforeunload (fire-and-forget). */
-function _flushSync() {
-    if (!isTauriContext()) return;
-    const data = _snapshotLocalStorage();
-    // invoke() returns a Promise — we kick it off without awaiting
-    window.__TAURI_INTERNALS__
-        .invoke('storage_write_all', { data: JSON.stringify(data) })
-        .catch(() => {});
-}
-
-function _snapshotLocalStorage() {
+function _invokeWrite() {
     const data = {};
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         data[key] = localStorage.getItem(key);
     }
-    return data;
+    return window.__TAURI_INTERNALS__.invoke('storage_write_all', {
+        data: JSON.stringify(data),
+    });
 }
 
 let _patched = false;
 
-/**
- * Wrap the three mutating localStorage methods so every change triggers a flush.
- * We patch the prototype once; all calls (even from existing code) go through.
- */
 function _patchLocalStorage() {
-    if (_patched || !isTauriContext()) return;
+    if (_patched) return;
     _patched = true;
 
-    const proto = Object.getPrototypeOf(localStorage);
+    const proto = Object.getPrototypeOf(localStorage); // Storage.prototype
 
-    const _setItem = proto.setItem.bind(localStorage);
+    const orig_setItem    = proto.setItem;
+    const orig_removeItem = proto.removeItem;
+    const orig_clear      = proto.clear;
+
     proto.setItem = function(key, value) {
-        _setItem(key, value);
+        orig_setItem.call(this, key, value);
         _scheduleFlush();
     };
-
-    const _removeItem = proto.removeItem.bind(localStorage);
     proto.removeItem = function(key) {
-        _removeItem(key);
+        orig_removeItem.call(this, key);
         _scheduleFlush();
     };
-
-    const _clear = proto.clear.bind(localStorage);
     proto.clear = function() {
-        _clear();
+        orig_clear.call(this);
         _scheduleFlush();
     };
 }

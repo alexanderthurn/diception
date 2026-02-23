@@ -33,7 +33,7 @@ import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode } from './cheat.js';
 import { isTauriContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
-import { initStorage } from './core/storage.js';
+import { initStorage, flushStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { initCustomSelects } from './ui/custom-select.js';
 import {
@@ -117,6 +117,7 @@ async function init() {
             quitBtn.classList.remove('hidden');
             quitBtn.addEventListener('click', async () => {
                 if (await Dialog.confirm('Are you sure you want to exit the game?', 'EXIT GAME?')) {
+                    await flushStorage();
                     if (window.steam) {
                         window.steam.quit();
                     } else if (isTauriContext()) {
@@ -397,7 +398,7 @@ async function init() {
         gfxAntialias.addEventListener('change', async (e) => {
             localStorage.setItem('dicy_gfx_antialias', e.target.value);
             const ok = await Dialog.confirm('Changing Anti-Aliasing requires a restart. Reload now?', 'RESTART REQUIRED');
-            if (ok) window.location.reload();
+            if (ok) { await flushStorage(); window.location.reload(); }
         });
     }
 
@@ -463,17 +464,19 @@ async function init() {
         setTimeout(() => applyDesktopGraphics(savedMode, savedRes), 500);
 
         if (gfxDisplayMode) {
-            gfxDisplayMode.addEventListener('change', (e) => {
+            gfxDisplayMode.addEventListener('change', async (e) => {
                 const val = e.target.value;
                 localStorage.setItem('dicy_gfx_display_mode', val);
+                await flushStorage();
                 window.location.reload();
             });
         }
 
         if (gfxResolution) {
-            gfxResolution.addEventListener('change', (e) => {
+            gfxResolution.addEventListener('change', async (e) => {
                 const val = e.target.value;
                 localStorage.setItem('dicy_gfx_resolution', val);
+                await flushStorage();
                 window.location.reload();
             });
         }
