@@ -77,9 +77,9 @@ export class InputController {
         if (this.game.gameOver) return;
         if (this.game.currentPlayer.isBot) return;
 
-        // Hide mouse hover, show keyboard cursor
+        // Hide mouse hover, show keyboard cursor (leave gamepad hovers visible)
         this.cursorVisible = true;
-        this.renderer.setHover(null, null);
+        this.renderer.setHover(null, null, 'mouse');
 
         // If tile is selected, try to attack/interact in direction
         if (this.selectedTile) {
@@ -244,8 +244,14 @@ export class InputController {
     onPointerDown(e) {
         if (this.waitTillNoTouch) return;
 
-        // Track the pointer
-        this.activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
+        // Only track real (non-gamepad) pointers — gamepad cursors are independent
+        // and should not affect pinch/multi-touch logic
+        const isSimulatedDown = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
+            (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
+            e.isGamepadSimulated;
+        if (!isSimulatedDown) {
+            this.activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
+        }
 
         // Mouse/pointer interaction hides keyboard cursor - keep coordinates to prevent jumping
         this.cursorVisible = false;
@@ -352,6 +358,12 @@ export class InputController {
                 this.renderer.setCursor(null, null);
             }
 
+            // Derive cursor ID: gamepads use pointerId 100+index (see gamepad-cursor-manager.js)
+            let cursorId = 'mouse';
+            if (isSimulated && e.pointerId >= 100) {
+                cursorId = 'gamepad-' + (e.pointerId - 100);
+            }
+
             const globalPos = e.global;
             const localPos = this.renderer.grid.container.toLocal(globalPos);
 
@@ -360,9 +372,9 @@ export class InputController {
 
             const tileRaw = this.game.map.getTileRaw(tileX, tileY);
             if (tileRaw) {
-                this.renderer.setHover(tileX, tileY);
+                this.renderer.setHover(tileX, tileY, cursorId);
             } else {
-                this.renderer.setHover(null, null);
+                this.renderer.setHover(null, null, cursorId);
             }
         }
     }

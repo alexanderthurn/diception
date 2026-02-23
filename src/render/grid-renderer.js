@@ -38,7 +38,8 @@ export class GridRenderer {
         });
 
         this.selectedTile = null; // {x, y}
-        this.hoverTile = null; // {x, y}
+        this.hoverTiles = new Map(); // cursorId -> {x, y} — one hover per input cursor
+        this._lastHoverCursorId = null; // Which cursor was moved most recently (for primary targeting)
         this.cursorTile = null; // {x, y} - keyboard/gamepad cursor
         this.cursorPulse = 0; // For animation
         this.gameSpeed = 'beginner'; // Speed level: beginner, normal, fast
@@ -92,14 +93,38 @@ export class GridRenderer {
 
         // Persistent overlay elements
         this.selectionGfx = new Graphics();
-        this.hoverGfx = new Graphics();
+        this._hoverGfxPool = new Map(); // cursorId -> Graphics (lazy-created)
         this.cursorGfx = new Graphics();
         this.neighborHighlighters = []; // Pool of Graphics
         this.probabilityBadges = []; // Pool of Containers
 
         this.overlayContainer.addChild(this.selectionGfx);
-        this.overlayContainer.addChild(this.hoverGfx);
         this.overlayContainer.addChild(this.cursorGfx);
+    }
+
+    /** Returns or creates a hover Graphics object for the given cursor ID */
+    _getHoverGfx(cursorId) {
+        if (!this._hoverGfxPool.has(cursorId)) {
+            const gfx = new Graphics();
+            // Insert before cursorGfx so cursor renders on top
+            const cursorIdx = this.overlayContainer.children.indexOf(this.cursorGfx);
+            if (cursorIdx >= 0) {
+                this.overlayContainer.addChildAt(gfx, cursorIdx);
+            } else {
+                this.overlayContainer.addChild(gfx);
+            }
+            this._hoverGfxPool.set(cursorId, gfx);
+        }
+        return this._hoverGfxPool.get(cursorId);
+    }
+
+    /** Primary hover tile — used for selection/attack targeting. Most-recently-moved cursor wins. */
+    get hoverTile() {
+        if (this._lastHoverCursorId && this.hoverTiles.has(this._lastHoverCursorId)) {
+            return this.hoverTiles.get(this._lastHoverCursorId);
+        }
+        const first = this.hoverTiles.values().next();
+        return first.done ? null : first.value;
     }
 
     /**
@@ -178,9 +203,14 @@ export class GridRenderer {
         this.drawOverlay(); // Redraw highlighting
     }
 
-    setHover(x, y) {
-        if (x === null) this.hoverTile = null;
-        else this.hoverTile = { x, y };
+    setHover(x, y, cursorId = 'mouse') {
+        if (x === null) {
+            this.hoverTiles.delete(cursorId);
+            if (this._lastHoverCursorId === cursorId) this._lastHoverCursorId = null;
+        } else {
+            this.hoverTiles.set(cursorId, { x, y });
+            this._lastHoverCursorId = cursorId;
+        }
         this.drawOverlay();
     }
 
@@ -739,22 +769,23 @@ export class GridRenderer {
         // Hide all human-centric overlay elements during bot turns (but allow in paint mode for editor)
         if (!this.paintMode && this.game.currentPlayer?.isBot) {
             this.selectionGfx.visible = false;
-            this.hoverGfx.visible = false;
             this.cursorGfx.visible = false;
             this.hidePools();
             return;
         }
 
-        // In paint mode (editor), just show simple hover highlight
+        // In paint mode (editor), just show simple hover highlight (mouse cursor only)
         if (this.paintMode) {
             this.selectionGfx.visible = false;
             this.cursorGfx.visible = false;
             this.hidePools();
 
-            if (this.hoverTile) {
-                this.hoverGfx.clear();
-                this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
-                this.hoverGfx.stroke({
+            const mouseHover = this.hoverTiles.get('mouse');
+            if (mouseHover) {
+                const hoverGfx = this._getHoverGfx('mouse');
+                hoverGfx.clear();
+                hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
+                hoverGfx.stroke({
                     width: 3,
                     color: 0xffffff,
                     alpha: 0.8,
@@ -762,11 +793,9 @@ export class GridRenderer {
                     cap: 'square',
                     alignment: 0 // Force inner
                 });
-                this.hoverGfx.x = this.hoverTile.x * (this.tileSize + this.gap);
-                this.hoverGfx.y = this.hoverTile.y * (this.tileSize + this.gap);
-                this.hoverGfx.visible = true;
-            } else {
-                this.hoverGfx.visible = false;
+                hoverGfx.x = mouseHover.x * (this.tileSize + this.gap);
+                hoverGfx.y = mouseHover.y * (this.tileSize + this.gap);
+                hoverGfx.visible = true;
             }
             return;
         }
@@ -928,8 +957,10 @@ export class GridRenderer {
             }
 
             // Draw Target Hover or Cursor target
+            // Primary hover (last-moved cursor) determines the attack target indicator.
             const isCursorOnDifferentTile = this.cursorTile && (this.cursorTile.x !== this.selectedTile.x || this.cursorTile.y !== this.selectedTile.y);
-            const targetTile = this.hoverTile || (isCursorOnDifferentTile ? this.cursorTile : null);
+            const primaryHover = this.hoverTile; // getter — most-recently-moved cursor
+            const targetTile = primaryHover || (isCursorOnDifferentTile ? this.cursorTile : null);
 
             if (targetTile) {
                 // If adjacent to selection, show attack indicator
@@ -955,37 +986,47 @@ export class GridRenderer {
                     hGfx.x = targetTile.x * (this.tileSize + this.gap);
                     hGfx.y = targetTile.y * (this.tileSize + this.gap);
                     hGfx.visible = true;
-                    this.hoverGfx.visible = false;
+                    // Hide the primary cursor's hover gfx (attack indicator replaces it)
+                    if (this._lastHoverCursorId) this._getHoverGfx(this._lastHoverCursorId).visible = false;
                 } else {
-                    // Non-adjacent hover: show normal smart highlight
-                    const { nextBadgeIdx } = this._renderSmartHover(targetTile.x, targetTile.y, badgeIdx);
+                    // Non-adjacent hover: show normal smart highlight for primary cursor
+                    const primaryCursorId = this._lastHoverCursorId || 'mouse';
+                    const { nextBadgeIdx } = this._renderSmartHover(targetTile.x, targetTile.y, badgeIdx, primaryCursorId);
                     badgeIdx = nextBadgeIdx;
                 }
-            } else {
-                this.hoverGfx.visible = false;
             }
-        } else if (this.hoverTile) {
+
+            // Render all non-primary cursors' hovers independently (alongside the primary above)
+            for (const [cursorId, tile] of this.hoverTiles) {
+                if (cursorId === this._lastHoverCursorId) continue; // Already handled as primary
+                const { nextBadgeIdx } = this._renderSmartHover(tile.x, tile.y, badgeIdx, cursorId);
+                badgeIdx = nextBadgeIdx;
+            }
+
+        } else if (this.hoverTiles.size > 0) {
             this.selectionGfx.visible = false;
-            // Just hovering without selection - show smart highlight
-            if (this.game.currentPlayer?.isBot) {
-                this.hoverGfx.visible = false;
-            } else {
-                this._renderSmartHover(this.hoverTile.x, this.hoverTile.y, badgeIdx);
+            // Hovering without selection - show smart highlight for every cursor
+            if (!this.game.currentPlayer?.isBot) {
+                for (const [cursorId, tile] of this.hoverTiles) {
+                    const { nextBadgeIdx } = this._renderSmartHover(tile.x, tile.y, badgeIdx, cursorId);
+                    badgeIdx = nextBadgeIdx;
+                }
             }
         } else {
             this.selectionGfx.visible = false;
-            this.hoverGfx.visible = false;
         }
     }
 
     /**
      * Internal helper to draw the "smart" hover highlight for a tile.
      * Differentiates between own attackable tiles, static own tiles, and non-interactable tiles.
+     * cursorId identifies which cursor's Graphics object to use from the pool.
      */
-    _renderSmartHover(x, y, badgeIdx) {
+    _renderSmartHover(x, y, badgeIdx, cursorId = 'mouse') {
+        const hoverGfx = this._getHoverGfx(cursorId);
         const tileRaw = this.game.map.getTileRaw(x, y);
         if (!tileRaw || tileRaw.blocked) {
-            this.hoverGfx.visible = false;
+            hoverGfx.visible = false;
             return { nextBadgeIdx: badgeIdx };
         }
 
@@ -1003,22 +1044,22 @@ export class GridRenderer {
             isUniquelyAttackable = !!uniqueAttacker;
         }
 
-        this.hoverGfx.clear();
+        hoverGfx.clear();
         // Pattern for fill
-        this.hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
+        hoverGfx.rect(0, 0, this.tileSize, this.tileSize);
 
         if (isUniquelyAttackable) {
             // Attack shortcut available: Red static highlight on target (hover)
-            this.hoverGfx.fill({ color: 0xff0000, alpha: 0.2 });
+            hoverGfx.fill({ color: 0xff0000, alpha: 0.2 });
             // Individual CW segments for stroke
-            this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
-            this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
-            this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
-            this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
-            this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
-            this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
-            this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
-            this.hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(0, 0); hoverGfx.lineTo(this.tileSize, 0);
+            hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(this.tileSize, 0); hoverGfx.lineTo(this.tileSize, this.tileSize);
+            hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(this.tileSize, this.tileSize); hoverGfx.lineTo(0, this.tileSize);
+            hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(0, this.tileSize); hoverGfx.lineTo(0, 0);
+            hoverGfx.stroke({ width: 3, color: 0xff0000, alpha: 0.8, alignment: 0, cap: 'butt' });
 
             // Position between hovered tile and attacker
             const hoverPx = x * (this.tileSize + this.gap);
@@ -1033,36 +1074,36 @@ export class GridRenderer {
             this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, '', 0xffffff, 'direct');
         } else if (canAttackFrom) {
             // Selectable & Actionable: Large white static border (badges only when selected, not on hover)
-            this.hoverGfx.fill({ color: 0xffffff, alpha: 0.15 });
+            hoverGfx.fill({ color: 0xffffff, alpha: 0.15 });
             // Individual CW segments for stroke
-            this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
-            this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
-            this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
-            this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
-            this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
-            this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
-            this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
-            this.hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(0, 0); hoverGfx.lineTo(this.tileSize, 0);
+            hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(this.tileSize, 0); hoverGfx.lineTo(this.tileSize, this.tileSize);
+            hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(this.tileSize, this.tileSize); hoverGfx.lineTo(0, this.tileSize);
+            hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(0, this.tileSize); hoverGfx.lineTo(0, 0);
+            hoverGfx.stroke({ width: 3, color: 0xffffff, alpha: 0.8, alignment: 0, cap: 'butt' });
         } else if (isOwned) {
             // Selectable but no action: Subtle static white
-            this.hoverGfx.fill({ color: 0xffffff, alpha: 0.1 });
+            hoverGfx.fill({ color: 0xffffff, alpha: 0.1 });
             // Individual CW segments for stroke
-            this.hoverGfx.moveTo(0, 0); this.hoverGfx.lineTo(this.tileSize, 0);
-            this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
-            this.hoverGfx.moveTo(this.tileSize, 0); this.hoverGfx.lineTo(this.tileSize, this.tileSize);
-            this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
-            this.hoverGfx.moveTo(this.tileSize, this.tileSize); this.hoverGfx.lineTo(0, this.tileSize);
-            this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
-            this.hoverGfx.moveTo(0, this.tileSize); this.hoverGfx.lineTo(0, 0);
-            this.hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(0, 0); hoverGfx.lineTo(this.tileSize, 0);
+            hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(this.tileSize, 0); hoverGfx.lineTo(this.tileSize, this.tileSize);
+            hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(this.tileSize, this.tileSize); hoverGfx.lineTo(0, this.tileSize);
+            hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
+            hoverGfx.moveTo(0, this.tileSize); hoverGfx.lineTo(0, 0);
+            hoverGfx.stroke({ width: 1, color: 0xffffff, alpha: 0.6, alignment: 0, cap: 'butt' });
         } else {
             // Not interactable: Very subtle dimmed highlight
-            this.hoverGfx.fill({ color: 0x000000, alpha: 0.15 });
+            hoverGfx.fill({ color: 0x000000, alpha: 0.15 });
         }
 
-        this.hoverGfx.x = x * (this.tileSize + this.gap);
-        this.hoverGfx.y = y * (this.tileSize + this.gap);
-        this.hoverGfx.visible = true;
+        hoverGfx.x = x * (this.tileSize + this.gap);
+        hoverGfx.y = y * (this.tileSize + this.gap);
+        hoverGfx.visible = true;
 
         return { nextBadgeIdx: badgeIdx };
     }
@@ -1070,6 +1111,7 @@ export class GridRenderer {
     hidePools() {
         for (const h of this.neighborHighlighters) h.visible = false;
         for (const b of this.probabilityBadges) b.visible = false;
+        for (const gfx of this._hoverGfxPool.values()) gfx.visible = false;
     }
 
     getNeighborHighlighter(index) {

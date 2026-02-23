@@ -168,8 +168,8 @@ export class Renderer {
         this.draw(); // Trigger redraw to show highlight
     }
 
-    setHover(x, y) {
-        this.grid.setHover(x, y);
+    setHover(x, y, cursorId = 'mouse') {
+        this.grid.setHover(x, y, cursorId);
     }
 
     setCursor(x, y) {
