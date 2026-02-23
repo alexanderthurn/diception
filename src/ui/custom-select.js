@@ -140,31 +140,56 @@ export function isCustomSelectOpen() {
 }
 
 /**
- * Position the dropdown near the select element.
+ * Position the dropdown near the select element, using as much screen space as possible.
  */
 function positionDropdown(selectEl, dropdown) {
     const rect = selectEl.getBoundingClientRect();
     const uiScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale')) || 1;
+    const pad = 8; // minimum padding from screen edges (in scaled px)
 
-    // Convert viewport coords to scaled coords
-    const scaledTop = rect.bottom / uiScale;
-    const scaledLeft = rect.left / uiScale;
-    const scaledWidth = rect.width / uiScale;
+    // Viewport size in scaled coords
+    const viewW = window.innerWidth / uiScale;
+    const viewH = window.innerHeight / uiScale;
+
+    // Select position in scaled coords
+    const selTop = rect.top / uiScale;
+    const selBottom = rect.bottom / uiScale;
+    const selLeft = rect.left / uiScale;
+    const selWidth = rect.width / uiScale;
+
+    // Available space above and below the select
+    const spaceBelow = viewH - selBottom - pad;
+    const spaceAbove = selTop - pad;
 
     dropdown.style.position = 'absolute';
-    dropdown.style.left = `${scaledLeft}px`;
-    dropdown.style.top = `${scaledTop + 2}px`;
-    dropdown.style.minWidth = `${scaledWidth}px`;
+    dropdown.style.minWidth = `${selWidth}px`;
 
-    // After rendering, check if it goes off-screen and flip above if needed
+    // Choose direction: prefer below unless above has significantly more room
+    const openAbove = spaceBelow < 100 && spaceAbove > spaceBelow;
+
+    if (openAbove) {
+        dropdown.style.bottom = `${viewH - selTop + 2}px`;
+        dropdown.style.top = '';
+        dropdown.style.maxHeight = `${spaceAbove}px`;
+    } else {
+        dropdown.style.top = `${selBottom + 2}px`;
+        dropdown.style.bottom = '';
+        dropdown.style.maxHeight = `${spaceBelow}px`;
+    }
+
+    // Horizontal: align to left of select, but clamp to stay on screen
+    let left = selLeft;
+    // After render, check if it overflows to the right and adjust
+    dropdown.style.left = `${left}px`;
+
     requestAnimationFrame(() => {
         const dropRect = dropdown.getBoundingClientRect();
-        const viewH = window.innerHeight;
-        if (dropRect.bottom > viewH - 10) {
-            // Position above the select instead
-            const scaledBottom = rect.top / uiScale;
-            dropdown.style.top = '';
-            dropdown.style.bottom = `calc(100% - ${scaledBottom - 2}px)`;
+        const dropW = dropRect.width / uiScale;
+
+        // Clamp right edge
+        if (left + dropW > viewW - pad) {
+            left = Math.max(pad, viewW - dropW - pad);
+            dropdown.style.left = `${left}px`;
         }
     });
 }
