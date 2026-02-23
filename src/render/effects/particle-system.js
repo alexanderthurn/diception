@@ -164,6 +164,55 @@ export const EffectPresets = {
         gravity: 0,
         fadeOut: true,
         shrink: false
+    },
+    // Reinforcement sparkle — tiny radial burst that drifts upward on each reinforced tile.
+    // Override `colors` via emit() options to match the player colour.
+    reinforceSpark: {
+        count: 5,
+        speed: { min: 0.8, max: 2.5 },
+        life: { min: 18, max: 32 },
+        size: { min: 1.5, max: 3 },
+        colors: [0xffffff, 0xffff88],
+        gravity: -0.06,   // floats upward
+        fadeOut: true,
+        shrink: true
+    },
+    // Close-call burst — tight ring of white sparks at attacker/defender tile
+    // when |attackerSum - defenderSum| ≤ 1.
+    closeCallBurst: {
+        count: 8,
+        speed: { min: 0.6, max: 2.2 },
+        life: { min: 14, max: 24 },
+        size: { min: 2, max: 4 },
+        colors: [0xffffff, 0xffee88, 0xff8800],
+        gravity: 0,
+        fadeOut: true,
+        shrink: true
+    },
+    // Brave charge burst — intense outward explosion from the attacker tile
+    // when they attack with strictly fewer dice than the defender.
+    // Override `colors` via emit() options to match the attacker colour.
+    braveBurst: {
+        count: 22,
+        speed: { min: 3, max: 9 },
+        life: { min: 22, max: 50 },
+        size: { min: 2, max: 6 },
+        colors: [0xffffff, 0xffaa00, 0xff6600],
+        gravity: 0,
+        fadeOut: true,
+        shrink: true
+    },
+    // Merge flare — golden burst when capturing a tile connects two separate
+    // friendly regions. Override `colors` to include attacker colour.
+    mergeFlare: {
+        count: 18,
+        speed: { min: 2, max: 6 },
+        life: { min: 28, max: 50 },
+        size: { min: 2, max: 5 },
+        colors: [0xffffff, 0xffdd00, 0xff8800],
+        gravity: 0,
+        fadeOut: true,
+        shrink: true
     }
 };
 
@@ -292,8 +341,9 @@ export class ParticleSystem {
         // Size
         data.scale = this.randomRange(config.size.min, config.size.max);
 
-        // Color
-        data.color = config.colors[Math.floor(Math.random() * config.colors.length)];
+        // Color (options.colors overrides the preset palette for this emit batch)
+        const colors = options.colors || config.colors;
+        data.color = colors[Math.floor(Math.random() * colors.length)];
 
         // Config refs
         data.gravity = config.gravity || 0;
