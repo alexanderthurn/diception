@@ -1,6 +1,7 @@
 import { Container } from 'pixi.js';
 import { ParticleSystem, EffectPresets } from './particle-system.js';
 import { BackgroundRenderer } from './background-renderer.js';
+import { BoardEffects } from './board-effects.js';
 
 /**
  * Effects Manager - Central coordinator for all visual effects
@@ -57,6 +58,15 @@ export class EffectsManager {
         this.lastWinTime = 0;
         this.streakDecayTimer = null;
 
+        // Board-space effects (conquest ripple, last stand, etc.)
+        // Created here so pooled Graphics/Filters are allocated at startup,
+        // not during gameplay — zero GC pressure per-attack.
+        this.boardEffects = new BoardEffects(this.container, this.tileSize, this.gap);
+
+        // Pending elimination: playerEliminated fires BEFORE attackResult,
+        // so we store the data here and consume it in onAttack.
+        this._pendingElimination = null;
+
     }
 
     bindEvents() {
@@ -80,6 +90,11 @@ export class EffectsManager {
         // Player elimination
         this.game.on('playerEliminated', (player) => {
             this.onPlayerEliminated(player);
+        });
+
+        // Reinforcement sparkle (high only)
+        this.game.on('reinforcements', (data) => {
+            this.onReinforcements(data);
         });
     }
 
@@ -375,6 +390,121 @@ export class EffectsManager {
                 this.background.pulse(0xAA00FF, 0.5); // Bigger/longer pulse on loss (was 0.3)
             }
         }, 100); // Small delay for trail to reach target
+
+        // ── High-quality board effects ────────────────────────────────────────
+        if (this.quality === 'high') {
+            const attacker    = this.game.players.find(p => p.id === result.attackerId);
+            // Bots at expert speed batch all turns in one call — skip board fx.
+            const skipBoardFx = attacker?.isBot && this.renderer?.gameSpeed === 'expert';
+
+            if (skipBoardFx) {
+                // Clear any pending elimination so it doesn't bleed into the next attack.
+                this._pendingElimination = null;
+            } else {
+                const aColor       = attacker?.color || 0xffffff;
+                const attackerDice = result.attackerRolls?.length ?? 1;
+                const defenderDice = result.defenderRolls?.length ?? 1;
+                // "Underdog attack": attacker had equal or fewer dice than defender.
+                const underdogAttack = attackerDice <= defenderDice;
+                // "Brave attack": attacker had strictly fewer dice (most daring).
+                const braveAttack    = attackerDice < defenderDice;
+
+                // Brave charge: fires regardless of win/loss — the bravery is in the attempt.
+                if (braveAttack) {
+                    this.boardEffects.braveCharge(result.from.x, result.from.y, aColor);
+                    this.particles.emit(from.x, from.y, 'braveBurst', {
+                        colors: [aColor, 0xffffff, 0xffaa00],
+                    });
+                }
+
+                if (result.won) {
+                    // Close call tremor + burst: attacker had ≤ dice but still won.
+                    if (underdogAttack) {
+                        this.boardEffects.closeCallTremor(result.from.x, result.from.y);
+                        this.boardEffects.closeCallTremor(result.to.x, result.to.y);
+                        this.particles.emit(from.x, from.y, 'closeCallBurst');
+                        this.particles.emit(to.x, to.y, 'closeCallBurst');
+                    }
+
+                    // Conquest ripple only on underdog wins.
+                    if (underdogAttack) {
+                        this.boardEffects.conquestRipple(result.to.x, result.to.y, aColor);
+                    }
+
+                    // Regional merge detection.
+                    this._checkAndEmitMergeFlare(result, aColor);
+
+                    // Consume pending elimination (playerEliminated fires before attackResult).
+                    if (this._pendingElimination) {
+                        const { color: elimColor } = this._pendingElimination;
+                        this._pendingElimination = null;
+                        this.boardEffects.eliminationWave(result.to.x, result.to.y, elimColor);
+                    }
+                }
+                // On a normal loss: no board effects — brave effects already fired above if applicable.
+            }
+        }
+    }
+
+    /**
+     * BFS to detect whether capturing result.to merged two previously
+     * separate friendly regions. Emits mergeFlare if so.
+     * @private
+     */
+    _checkAndEmitMergeFlare(result, attackerColor) {
+        const map     = this.game.map;
+        const toX     = result.to.x;
+        const toY     = result.to.y;
+        const ownerId = result.attackerId;
+        const dirs    = [[0,-1],[1,0],[0,1],[-1,0]];
+
+        // Collect attacker-owned neighbors of result.to
+        const friendlyNeighbors = [];
+        for (const [dx, dy] of dirs) {
+            const nx = toX + dx, ny = toY + dy;
+            if (nx < 0 || nx >= map.width || ny < 0 || ny >= map.height) continue;
+            const tile = map.tiles[ny * map.width + nx];
+            if (tile && !tile.blocked && tile.owner === ownerId) {
+                friendlyNeighbors.push({ x: nx, y: ny });
+            }
+        }
+        if (friendlyNeighbors.length < 2) return; // Need ≥2 neighbours to have a merge
+
+        // BFS from the first neighbor, traversing attacker tiles but SKIPPING
+        // result.to. If any other neighbor is unreachable → it was in a
+        // different region before this capture → merge detected.
+        const visited = new Set();
+        const start   = friendlyNeighbors[0];
+        visited.add(start.y * map.width + start.x);
+        const queue = [start];
+
+        while (queue.length > 0) {
+            const curr = queue.shift();
+            for (const [dx, dy] of dirs) {
+                const nx2 = curr.x + dx, ny2 = curr.y + dy;
+                if (nx2 === toX && ny2 === toY) continue; // Skip just-captured tile
+                if (nx2 < 0 || nx2 >= map.width || ny2 < 0 || ny2 >= map.height) continue;
+                const idx2 = ny2 * map.width + nx2;
+                const t2   = map.tiles[idx2];
+                if (t2 && !t2.blocked && t2.owner === ownerId && !visited.has(idx2)) {
+                    visited.add(idx2);
+                    queue.push({ x: nx2, y: ny2 });
+                }
+            }
+        }
+
+        for (let i = 1; i < friendlyNeighbors.length; i++) {
+            const n = friendlyNeighbors[i];
+            if (!visited.has(n.y * map.width + n.x)) {
+                // Merge confirmed — gold ring + particle burst at bridge tile
+                const pos = this.tileToWorld(toX, toY);
+                this.boardEffects.mergeRing(toX, toY);
+                this.particles.emit(pos.x, pos.y, 'mergeFlare', {
+                    colors: [attackerColor, 0xffffff, 0xffdd00],
+                });
+                return; // Only need to detect once
+            }
+        }
     }
 
     /**
@@ -458,6 +588,34 @@ export class EffectsManager {
         if (this.renderer) {
             this.renderer.screenShake(20, 800);
         }
+
+        // Store for onAttack (which fires right after) to emit the board-space wave
+        if (this.quality === 'high') {
+            this._pendingElimination = { color: player.color };
+        }
+    }
+
+    /**
+     * Reinforcement sparkle — tiny upward particle bursts on each reinforced tile.
+     * High quality only; tiles are staggered by 40 ms to feel like a wave.
+     */
+    onReinforcements(data) {
+        if (this.quality !== 'high') return;
+        if (!data.placements || data.placements.length === 0) return;
+
+        const playerColor = data.player.color;
+        const maxSparks   = Math.min(data.placements.length, 12); // cap for perf
+
+        for (let i = 0; i < maxSparks; i++) {
+            setTimeout(() => {
+                if (this.quality !== 'high') return;
+                const tile = data.placements[i];
+                const pos  = this.tileToWorld(tile.x, tile.y);
+                this.particles.emit(pos.x, pos.y, 'reinforceSpark', {
+                    colors: [playerColor, 0xffffff, playerColor],
+                });
+            }, i * 40);
+        }
     }
 
     /**
@@ -482,6 +640,7 @@ export class EffectsManager {
         this.background.destroy();
         this.particles.destroy();
         this.screenParticles.destroy();
+        this.boardEffects.destroy();
         this.container.destroy({ children: true });
     }
 }
