@@ -5153,3 +5153,137 @@ body:has(.editor-overlay:not(.hidden)) .separator.zoom-control {
     height: 60% !important;
     margin: 0;
 }
+
+/* ============================================
+   CUSTOM SELECT DROPDOWN
+   ============================================ */
+
+.custom-select-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 10010;
+    backdrop-filter: blur(1px);
+    animation: custom-select-fade-in 0.12s ease-out;
+}
+
+.custom-select-overlay.custom-select-fade-out {
+    animation: custom-select-fade-out 0.15s ease-in forwards;
+}
+
+@keyframes custom-select-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes custom-select-fade-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.custom-select-dropdown {
+    background: #0a0a1a;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.6);
+    max-height: 50vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+    min-width: 120px;
+    max-width: 400px;
+    z-index: 10011;
+    animation: custom-select-slide-in 0.12s ease-out;
+}
+
+@keyframes custom-select-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-select-dropdown::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+}
+
+.custom-select-header {
+    padding: 6px 12px 4px;
+    font-size: 0.75em;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: bold;
+}
+
+.custom-select-option {
+    display: block;
+    width: 100%;
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    border-left: 3px solid transparent;
+    color: #ccc;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95em;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.1s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.custom-select-option:hover,
+.custom-select-option:focus,
+.custom-select-option.gamepad-focused {
+    background: rgba(0, 255, 255, 0.1);
+    color: #fff;
+    border-left-color: var(--accent-color);
+    outline: none;
+    text-shadow: var(--text-glow);
+}
+
+.custom-select-option.selected {
+    background: rgba(0, 255, 255, 0.08);
+    color: var(--accent-color);
+    border-left-color: var(--accent-color);
+    font-weight: bold;
+}
+
+.custom-select-option.selected:hover,
+.custom-select-option.selected:focus {
+    background: rgba(0, 255, 255, 0.15);
+    color: #fff;
+}
+
+.custom-select-option+.custom-select-option {
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}

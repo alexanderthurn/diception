@@ -34,6 +34,7 @@ import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode } from './cheat.js';
 import { isTauriContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
+import { initCustomSelects } from './ui/custom-select.js';
 import {
     GAME_ACTIONS,
     loadBindings,
@@ -43,6 +44,9 @@ import {
 
 // Pre-compute probability tables at startup
 initializeProbabilityTables();
+
+// Initialize custom select dropdowns (replaces native <select> with styled HTML)
+initCustomSelects();
 
 // High-DPI UI scaling: on 4K/high-res displays without OS DPI scaling,
 // HTML elements (buttons, dialogs, text) render at tiny physical sizes.

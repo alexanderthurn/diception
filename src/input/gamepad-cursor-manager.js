@@ -547,6 +547,20 @@ export class GamepadCursorManager {
             if (cursor && cursor.dragTarget && cursor.dragTarget.tagName === 'INPUT' && cursor.dragTarget.type === 'range') {
                 this.updateSliderFromX(cursor.dragTarget, x);
             }
+
+            // Gamepad hover highlight: apply .gamepad-focused to the element under the cursor
+            const hoverOption = target.closest('.custom-select-option');
+            const prevFocused = document.querySelector('.gamepad-focused');
+            if (hoverOption) {
+                if (prevFocused !== hoverOption) {
+                    if (prevFocused) prevFocused.classList.remove('gamepad-focused');
+                    hoverOption.classList.add('gamepad-focused');
+                    hoverOption.focus({ preventScroll: false });
+                    hoverOption.scrollIntoView({ block: 'nearest' });
+                }
+            } else if (prevFocused && !target.closest('.custom-select-dropdown')) {
+                prevFocused.classList.remove('gamepad-focused');
+            }
         }
 
         if (type === 'click') {
@@ -564,23 +578,15 @@ export class GamepadCursorManager {
      * Clicking a RANGE input (slider) jumps to the clicked position.
      */
     handleUiCycle(target, x, y, direction = 1) {
-        // 1. Handle <select> elements
-        if (target.tagName === 'SELECT') {
-            const len = target.options.length;
-            const nextIndex = (target.selectedIndex + direction + len) % len;
-            target.selectedIndex = nextIndex;
+        // NOTE: <select> elements are handled by the custom-select.js mousedown
+        // interceptor (installed by initCustomSelects). No handling needed here.
 
-            // Dispatch events so the app responds to the change
-            target.dispatchEvent(new Event('change', { bubbles: true }));
-            target.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-
-        // 2. Handle <input type="range"> elements (Jump to point)
-        else if (target.tagName === 'INPUT' && target.type === 'range') {
+        // 1. Handle <input type="range"> elements (Jump to point)
+        if (target.tagName === 'INPUT' && target.type === 'range') {
             this.updateSliderFromX(target, x);
         }
 
-        // 3. Handle <input type="checkbox"> for completeness
+        // 2. Handle <input type="checkbox"> for completeness
         else if (target.tagName === 'INPUT' && target.type === 'checkbox') {
             target.checked = !target.checked;
             target.dispatchEvent(new Event('change', { bubbles: true }));
@@ -698,6 +704,7 @@ export class GamepadCursorManager {
     /** Return the topmost open modal/dialog container. */
     getOpenModal() {
         return (
+            document.querySelector('.custom-select-overlay') ||
             document.querySelector('.dialog-overlay') ||
             document.querySelector('.modal:not(.hidden)') ||
             document.querySelector('.editor-overlay:not(.hidden)')
@@ -765,6 +772,10 @@ export class GamepadCursorManager {
         const target = candidates[nextIdx];
         target.focus({ preventScroll: false });
         this.moveCursorToElement(cursor, target);
+
+        // Explicitly add highlight class (browsers may not show :focus for programmatic focus)
+        if (current) current.classList.remove('gamepad-focused');
+        target.classList.add('gamepad-focused');
     }
 
     /**
