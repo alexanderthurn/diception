@@ -3521,6 +3521,10 @@ select {
         .map-size-row {
             margin-right: 50px;
         }
+
+        .style-mode-row {
+            margin-right: 50px;
+        }
     }
 
     .map-size-row input[type="range"] {
@@ -4907,27 +4911,7 @@ canvas {
     opacity: 0.3;
 }
 
-/* Zoom controls: hidden for mouse/wheel users, shown for touch or no-mousewheel (class set by JS) */
-body:not(.needs-zoom-controls) .zoom-control {
-    display: none;
-}
-
-/* Always hidden in menus (even for touch users — nothing to zoom there) */
-body:has(#setup-modal:not(.hidden)) .zoom-control,
-#scenario-browser-modal:not(.hidden)~.bottom-controls .zoom-control,
-#scenario-browser-modal:not(.hidden)~* .zoom-control,
-body:has(#scenario-browser-modal:not(.hidden)) .zoom-control {
-    display: none !important;
-}
-
-/* Always shown in map editor regardless of input type */
-body:has(.editor-overlay:not(.hidden)) .zoom-control {
-    display: inline-flex !important;
-}
-
-body:has(.editor-overlay:not(.hidden)) .separator.zoom-control {
-    display: block !important;
-}
+/* Zoom controls: always visible (removed conditional needs-zoom-controls logic) */
 
 .scenario-browser-top-bar {
     position: absolute;
