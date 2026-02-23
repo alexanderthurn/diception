@@ -2065,13 +2065,17 @@ select {
     }
 }
 
+/* Start row: stretch so howto-btn fills height when EXIT is visible */
+.start-row {
+    align-items: stretch;
+}
+
 /* Match height of large button but square-ish */
 #howto-btn {
     font-size: 1.5em;
     padding: 0;
     width: 54px;
-    height: 54px;
-    /* Explicit matching height */
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
