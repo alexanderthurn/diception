@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 use serde::Serialize;
+use tauri::Manager;
 
 // ─── State types ─────────────────────────────────────────────────────────────
 
@@ -51,6 +53,38 @@ fn input_type_str(t: &steamworks::InputType) -> &'static str {
         steamworks::InputType::SteamController    => "steam",
         _ => "unknown",
     }
+}
+
+// ─── Storage helpers ─────────────────────────────────────────────────────────
+
+const SAVE_FILENAME: &str = "diception_save.sav";
+
+fn get_save_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let data_dir = app_handle
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("app_data_dir error: {e}"))?;
+    std::fs::create_dir_all(&data_dir)
+        .map_err(|e| format!("mkdir error: {e}"))?;
+    Ok(data_dir.join(SAVE_FILENAME))
+}
+
+/// Read all saved key-value pairs as a JSON object string.
+/// Returns `"{}"` if the save file does not yet exist.
+#[tauri::command]
+fn storage_read_all(app_handle: tauri::AppHandle) -> Result<String, String> {
+    let path = get_save_path(&app_handle)?;
+    if !path.exists() {
+        return Ok("{}".to_string());
+    }
+    std::fs::read_to_string(&path).map_err(|e| format!("read error: {e}"))
+}
+
+/// Persist all key-value pairs (JSON object string) to the save file.
+#[tauri::command]
+fn storage_write_all(app_handle: tauri::AppHandle, data: String) -> Result<(), String> {
+    let path = get_save_path(&app_handle)?;
+    std::fs::write(&path, data).map_err(|e| format!("write error: {e}"))
 }
 
 // ─── Existing commands ────────────────────────────────────────────────────────
@@ -295,6 +329,8 @@ pub fn run() {
             steam_input_get_controller_type,
             steam_input_get_glyphs,
             steam_input_show_binding_panel,
+            storage_read_all,
+            storage_write_all,
         ]);
 
     if steam_available {

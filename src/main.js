@@ -33,6 +33,7 @@ import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode } from './cheat.js';
 import { isTauriContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
+import { initStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { initCustomSelects } from './ui/custom-select.js';
 import {
@@ -74,6 +75,9 @@ window.addEventListener('resize', updateUIScale);
 
 
 async function init() {
+    // Load cloud save data into localStorage before anything else reads it
+    await initStorage();
+
     // Load spritesheet
     try {
         await Assets.load('gfx/diception.json');
