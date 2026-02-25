@@ -4,7 +4,7 @@
 	"ContentRoot" "../dist-tauri/win"
 	"FileMapping"
 	{
-		"LocalPath" "diception.exe"
+		"LocalPath" "DICEPTION.exe"
 		"DepotPath" "."
 		"recursive" "0"
 	}

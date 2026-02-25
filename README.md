@@ -96,7 +96,7 @@ Output lands in `dist-tauri/<platform>/`, ready for Steam upload.
 
 ```bash
 npm run tauri:build:mac      # → dist-tauri/mac/DICEPTION.app
-npm run tauri:build:win      # → dist-tauri/win/diception.exe + steam_api64.dll
+npm run tauri:build:win      # → dist-tauri/win/DICEPTION.exe + steam_api64.dll
 npm run tauri:build:linux    # → dist-tauri/linux/diception + libsteam_api.so
 npm run tauri:build:android  # → dist-tauri/android/DICEPTION.apk (unsigned)
 ```
