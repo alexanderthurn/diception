@@ -292,7 +292,7 @@ async function init() {
 
 
         // Web only: show promotional dialog on 2nd visit, then every 5th visit
-        if (!window.steam && !localStorage.getItem('dicy_enjoying_dialog_disabled')) {
+        if (!window.steam && !isAndroid() && !localStorage.getItem('dicy_enjoying_dialog_disabled')) {
             const count = parseInt(localStorage.getItem('dicy_web_visit_count') || '0', 10) + 1;
             localStorage.setItem('dicy_web_visit_count', String(count));
             if (count % 5 === 0) {

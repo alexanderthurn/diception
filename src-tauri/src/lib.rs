@@ -1,13 +1,18 @@
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-use serde::Serialize;
 use tauri::Manager;
 
-// ─── State types ─────────────────────────────────────────────────────────────
+// ─── Steam state (desktop only) ───────────────────────────────────────────────
+
+#[cfg(not(target_os = "android"))]
+use std::collections::HashMap;
+
+#[cfg(not(target_os = "android"))]
+use serde::Serialize;
 
 /// Cached action handles for Steam Input.
+#[cfg(not(target_os = "android"))]
 struct InputHandles {
     action_set_game: u64,
     digital: HashMap<String, u64>,
@@ -16,6 +21,7 @@ struct InputHandles {
 
 /// Full Steam state kept alive for the lifetime of the app.
 /// Client is Send + Sync in steamworks 0.12 (static_assert_send/sync in Client::init).
+#[cfg(not(target_os = "android"))]
 struct SteamApp {
     client: steamworks::Client,
     user_name: String,
@@ -23,10 +29,12 @@ struct SteamApp {
     input_handles: Option<InputHandles>,
 }
 
+#[cfg(not(target_os = "android"))]
 type AppState = Mutex<Option<SteamApp>>;
 
-// ─── Serialisable output types ────────────────────────────────────────────────
+// ─── Serialisable output types (desktop only) ─────────────────────────────────
 
+#[cfg(not(target_os = "android"))]
 #[derive(Serialize)]
 struct ControllerState {
     handle: u64,
@@ -38,8 +46,9 @@ struct ControllerState {
     analogs: HashMap<String, [f32; 2]>,
 }
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
+// ─── Helper (desktop only) ────────────────────────────────────────────────────
 
+#[cfg(not(target_os = "android"))]
 fn input_type_str(t: &steamworks::InputType) -> &'static str {
     match t {
         steamworks::InputType::PS4Controller      => "ps4",
@@ -55,47 +64,9 @@ fn input_type_str(t: &steamworks::InputType) -> &'static str {
     }
 }
 
-// ─── Storage helpers ─────────────────────────────────────────────────────────
+// ─── Steam commands (desktop only) ────────────────────────────────────────────
 
-const SAVE_FILENAME: &str = "diception_save.sav";
-
-fn get_save_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
-    let data_dir = app_handle
-        .path()
-        .app_data_dir()
-        .map_err(|e| format!("app_data_dir error: {e}"))?;
-    std::fs::create_dir_all(&data_dir)
-        .map_err(|e| format!("mkdir error: {e}"))?;
-    Ok(data_dir.join(SAVE_FILENAME))
-}
-
-/// Read all saved key-value pairs as a JSON object string.
-/// Returns `"{}"` if the save file does not yet exist.
-#[tauri::command]
-fn storage_read_all(app_handle: tauri::AppHandle) -> Result<String, String> {
-    let path = get_save_path(&app_handle)?;
-    if !path.exists() {
-        return Ok("{}".to_string());
-    }
-    std::fs::read_to_string(&path).map_err(|e| format!("read error: {e}"))
-}
-
-/// Persist all key-value pairs (JSON object string) to the save file.
-#[tauri::command]
-fn storage_write_all(app_handle: tauri::AppHandle, data: String) -> Result<(), String> {
-    let path = get_save_path(&app_handle)?;
-    std::fs::write(&path, data).map_err(|e| format!("write error: {e}"))
-}
-
-/// Return the absolute path of the save file (for diagnostics).
-#[tauri::command]
-fn storage_get_path(app_handle: tauri::AppHandle) -> Result<String, String> {
-    let path = get_save_path(&app_handle)?;
-    Ok(path.to_string_lossy().to_string())
-}
-
-// ─── Existing commands ────────────────────────────────────────────────────────
-
+#[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn steam_get_user_name(state: tauri::State<AppState>) -> Result<String, String> {
     let guard = state.lock().map_err(|e| e.to_string())?;
@@ -104,6 +75,7 @@ fn steam_get_user_name(state: tauri::State<AppState>) -> Result<String, String> 
         .ok_or_else(|| "Steam not initialized".to_string())
 }
 
+#[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn steam_get_steam_id(state: tauri::State<AppState>) -> Result<u64, String> {
     let guard = state.lock().map_err(|e| e.to_string())?;
@@ -112,20 +84,21 @@ fn steam_get_steam_id(state: tauri::State<AppState>) -> Result<u64, String> {
         .ok_or_else(|| "Steam not initialized".to_string())
 }
 
+#[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn steam_is_dev() -> bool {
     cfg!(debug_assertions)
 }
 
+#[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn steam_quit(app_handle: tauri::AppHandle) {
     app_handle.exit(0);
 }
 
-// ─── Steam Input commands ─────────────────────────────────────────────────────
-
 /// Initialise the Steam Input API and cache action handles.
 /// Call once from JS after the page loads (window.steam.inputInit()).
+#[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn steam_input_init(state: tauri::State<AppState>) -> Result<bool, String> {
     let mut guard = state.lock().map_err(|e| e.to_string())?;
@@ -175,8 +148,7 @@ fn steam_input_init(state: tauri::State<AppState>) -> Result<bool, String> {
 }
 
 /// Poll all connected Steam Input controllers.
-/// Returns a JSON array of ControllerState, one entry per controller.
-/// Call this every frame from JS (window.steam.inputPoll()).
+#[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn steam_input_poll(state: tauri::State<AppState>) -> Result<Vec<ControllerState>, String> {
     let guard = state.lock().map_err(|e| e.to_string())?;
@@ -194,7 +166,6 @@ fn steam_input_poll(state: tauri::State<AppState>) -> Result<Vec<ControllerState
     for handle in controllers {
         if handle == 0 { continue; }
 
-        // Keep the correct action set active (cheap to call repeatedly)
         input.activate_action_set_handle(handle, hdls.action_set_game);
 
         let input_type = input_type_str(&input.get_input_type_for_handle(handle)).to_string();
@@ -217,8 +188,7 @@ fn steam_input_poll(state: tauri::State<AppState>) -> Result<Vec<ControllerState
     Ok(result)
 }
 
-/// Return the controller type string for a Steam Input handle.
-/// Use this to override navigator.getGamepads() id-string detection when Steam is active.
+#[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn steam_input_get_controller_type(
     state: tauri::State<AppState>,
@@ -229,9 +199,7 @@ fn steam_input_get_controller_type(
     Ok(input_type_str(&app.client.input().get_input_type_for_handle(controller_handle)).to_string())
 }
 
-/// Return Steam-provided glyph file paths for every digital action on one controller.
-/// The paths point to PNG files inside the Steam installation — load them via the
-/// `asset://` protocol or convert to a data-URL on the Rust side if needed.
+#[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn steam_input_get_glyphs(
     state: tauri::State<AppState>,
@@ -261,7 +229,7 @@ fn steam_input_get_glyphs(
     Ok(glyphs)
 }
 
-/// Open the Steam overlay binding panel for the given controller.
+#[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn steam_input_show_binding_panel(
     state: tauri::State<AppState>,
@@ -272,8 +240,60 @@ fn steam_input_show_binding_panel(
     Ok(app.client.input().show_binding_panel(controller_handle))
 }
 
-// ─── JS init script injected before the page runs ────────────────────────────
+// ─── Storage helpers (all platforms) ─────────────────────────────────────────
 
+const SAVE_FILENAME: &str = "diception_save.sav";
+
+fn get_save_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let data_dir = app_handle
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("app_data_dir error: {e}"))?;
+    std::fs::create_dir_all(&data_dir)
+        .map_err(|e| format!("mkdir error: {e}"))?;
+    Ok(data_dir.join(SAVE_FILENAME))
+}
+
+/// Read all saved key-value pairs as a JSON object string.
+/// Returns `"{}"` if the save file does not yet exist.
+#[tauri::command]
+fn storage_read_all(app_handle: tauri::AppHandle) -> Result<String, String> {
+    let path = get_save_path(&app_handle)?;
+    if !path.exists() {
+        return Ok("{}".to_string());
+    }
+    std::fs::read_to_string(&path).map_err(|e| format!("read error: {e}"))
+}
+
+/// Persist all key-value pairs (JSON object string) to the save file.
+#[tauri::command]
+fn storage_write_all(app_handle: tauri::AppHandle, data: String) -> Result<(), String> {
+    let path = get_save_path(&app_handle)?;
+    std::fs::write(&path, data).map_err(|e| format!("write error: {e}"))
+}
+
+/// Return the absolute path of the save file (for diagnostics).
+#[tauri::command]
+fn storage_get_path(app_handle: tauri::AppHandle) -> Result<String, String> {
+    let path = get_save_path(&app_handle)?;
+    Ok(path.to_string_lossy().to_string())
+}
+
+// ─── Android commands ─────────────────────────────────────────────────────────
+
+#[tauri::command]
+fn android_quit(app_handle: tauri::AppHandle) {
+    app_handle.exit(0);
+}
+
+#[tauri::command]
+fn android_is_dev() -> bool {
+    cfg!(debug_assertions)
+}
+
+// ─── JS init scripts ──────────────────────────────────────────────────────────
+
+#[cfg(not(target_os = "android"))]
 const STEAM_INIT_SCRIPT: &str = r#"
 (function() {
     var ipc = window.__TAURI_INTERNALS__;
@@ -302,53 +322,91 @@ const STEAM_INIT_SCRIPT: &str = r#"
 })();
 "#;
 
+const ANDROID_INIT_SCRIPT: &str = r#"
+(function() {
+    var ipc = window.__TAURI_INTERNALS__;
+    if (!ipc) return;
+    window.android = {
+        quit:  function() { return ipc.invoke('android_quit'); },
+        isDev: function() { return ipc.invoke('android_is_dev'); },
+    };
+})();
+"#;
+
 // ─── Entry point ──────────────────────────────────────────────────────────────
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let steam_result = steamworks::Client::init();
+    let mut builder = tauri::Builder::default();
 
-    let (steam_app, steam_available) = match steam_result {
-        Ok(client) => {
-            let user_name = client.friends().name();
-            let steam_id  = client.user().steam_id().raw();
-            eprintln!("[Steam] Initialized OK: {} (ID: {})", user_name, steam_id);
-            let app = SteamApp { client, user_name, steam_id, input_handles: None };
-            (Some(app), true)
+    // ── Desktop (Steam) setup ─────────────────────────────────────────────────
+    #[cfg(not(target_os = "android"))]
+    {
+        let steam_result = steamworks::Client::init();
+
+        let (steam_app, steam_available) = match steam_result {
+            Ok(client) => {
+                let user_name = client.friends().name();
+                let steam_id  = client.user().steam_id().raw();
+                eprintln!("[Steam] Initialized OK: {} (ID: {})", user_name, steam_id);
+                let app = SteamApp { client, user_name, steam_id, input_handles: None };
+                (Some(app), true)
+            }
+            Err(e) => {
+                eprintln!("[Steam] Init FAILED: {:?}", e);
+                (None, false)
+            }
+        };
+
+        let app_state: AppState = Mutex::new(steam_app);
+
+        builder = builder
+            .manage(app_state)
+            .invoke_handler(tauri::generate_handler![
+                steam_get_user_name,
+                steam_get_steam_id,
+                steam_is_dev,
+                steam_quit,
+                steam_input_init,
+                steam_input_poll,
+                steam_input_get_controller_type,
+                steam_input_get_glyphs,
+                steam_input_show_binding_panel,
+                storage_read_all,
+                storage_write_all,
+                storage_get_path,
+                android_quit,
+                android_is_dev,
+            ]);
+
+        if steam_available {
+            builder = builder.plugin(
+                tauri::plugin::Builder::<tauri::Wry, ()>::new("steam-bridge")
+                    .js_init_script(STEAM_INIT_SCRIPT.to_string())
+                    .build(),
+            );
         }
-        Err(e) => {
-            eprintln!("[Steam] Init FAILED: {:?}", e);
-            (None, false)
-        }
-    };
-
-    let app_state: AppState = Mutex::new(steam_app);
-
-    let mut builder = tauri::Builder::default()
-        .manage(app_state)
-        .invoke_handler(tauri::generate_handler![
-            steam_get_user_name,
-            steam_get_steam_id,
-            steam_is_dev,
-            steam_quit,
-            steam_input_init,
-            steam_input_poll,
-            steam_input_get_controller_type,
-            steam_input_get_glyphs,
-            steam_input_show_binding_panel,
-            storage_read_all,
-            storage_write_all,
-            storage_get_path,
-        ]);
-
-    if steam_available {
-        builder = builder.plugin(
-            tauri::plugin::Builder::<tauri::Wry, ()>::new("steam-bridge")
-                .js_init_script(STEAM_INIT_SCRIPT.to_string())
-                .build(),
-        );
     }
 
+    // ── Android setup ─────────────────────────────────────────────────────────
+    #[cfg(target_os = "android")]
+    {
+        builder = builder
+            .invoke_handler(tauri::generate_handler![
+                storage_read_all,
+                storage_write_all,
+                storage_get_path,
+                android_quit,
+                android_is_dev,
+            ])
+            .plugin(
+                tauri::plugin::Builder::<tauri::Wry, ()>::new("android-bridge")
+                    .js_init_script(ANDROID_INIT_SCRIPT.to_string())
+                    .build(),
+            );
+    }
+
+    // ── Common setup ──────────────────────────────────────────────────────────
     builder
         .setup(|app| {
             if cfg!(debug_assertions) {
