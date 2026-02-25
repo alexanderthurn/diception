@@ -151,6 +151,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Init Android project
+        run: npm run android:init
+
       - name: Build Android
         run: npm run tauri:build:android
         env:
