@@ -1,4 +1,4 @@
-name: "Publish Release"
+name: Tauri Build
 
 on:
   push:
@@ -7,75 +7,160 @@ on:
   workflow_dispatch:
 
 jobs:
-  publish:
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: "macos-latest"
-            args: "--bundles app,dmg"
-          - platform: "windows-latest"
-            args: "--bundles nsis"
 
-    runs-on: ${{ matrix.platform }}
+  # ─── Mac ──────────────────────────────────────────────────────────────────────
+  build-mac:
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: 'npm'
 
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
 
-      - name: install frontend dependencies
-        run: npm install
-
-      - name: build tauri app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: Swatinem/rust-cache@v2
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "DICEPTION ${{ github.ref_name }}"
-          # WICHTIG: Verhindert das Hochladen der Standard-Installer (DMG, Setup.exe)
-          includeRelease: false 
-          args: ${{ matrix.args }}
+          workspaces: src-tauri
 
-      # --- STEAM ZIP LOGIK ---
-
-      - name: Zip Mac App for Steam
-        if: matrix.platform == 'macos-latest'
+      - name: Fetch Steam SDK
         run: |
-          cd src-tauri/target/release/bundle/macos/
-          zip -r "${{ github.workspace }}/DICEPTION_macos.zip" *.app
-          
-      - name: Zip Windows Files for Steam
-        if: matrix.platform == 'windows-latest'
+          curl -fsSL "${{ secrets.STEAM_SDK_ZIP_URL }}" -o steam_sdk.zip
+          unzip -o steam_sdk.zip -d steam_sdk_tmp
+          cp steam_sdk_tmp/osx/libsteam_api.dylib src-tauri/resources/libsteam_api.dylib
+
+      - run: npm ci
+
+      - run: npm run tauri:build:mac
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac
+          path: dist-tauri/mac/
+
+  # ─── Windows ──────────────────────────────────────────────────────────────────
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Fetch Steam SDK
         shell: pwsh
         run: |
-          cd src-tauri/target/release/
-          Compress-Archive -Path "diception.exe", "*.dll" -DestinationPath "${{ github.workspace }}/DICEPTION_windows.zip" -Force
+          Invoke-WebRequest -Uri "${{ secrets.STEAM_SDK_ZIP_URL }}" -OutFile steam_sdk.zip
+          Expand-Archive -Path steam_sdk.zip -DestinationPath steam_sdk_tmp -Force
+          Copy-Item steam_sdk_tmp/win64/steam_api64.dll src-tauri/resources/steam_api64.dll
 
-      - name: Upload Steam Zips
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+      - run: npm ci
+
+      - run: npm run tauri:build:win
+
+      - uses: actions/upload-artifact@v4
         with:
-          files: |
-            ${{ github.workspace }}/DICEPTION_macos.zip
-            ${{ github.workspace }}/DICEPTION_windows.zip
-          tag_name: ${{ github.ref_name }}
-          fail_on_unmatched_files: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: win
+          path: dist-tauri/win/
 
-  # FTP-DEPLOY (Nur bei Tag auf Main)
+  # ─── Linux / Steam Deck ───────────────────────────────────────────────────────
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Fetch Steam SDK
+        run: |
+          curl -fsSL "${{ secrets.STEAM_SDK_ZIP_URL }}" -o steam_sdk.zip
+          unzip -o steam_sdk.zip -d steam_sdk_tmp
+          cp steam_sdk_tmp/linux64/libsteam_api.so src-tauri/resources/libsteam_api.so
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - run: npm ci
+
+      - run: npm run tauri:build:linux
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist-tauri/linux/
+
+  # ─── Android ──────────────────────────────────────────────────────────────────
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK 25
+        run: sdkmanager "ndk;25.2.9519653"
+
+      - run: npm ci
+
+      - name: Build Android
+        run: npm run tauri:build:android
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/25.2.9519653
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: dist-tauri/android/DICEPTION.apk
+
+  # ─── Web deploy (only when tag is on main) ────────────────────────────────────
   deploy-web:
-    needs: publish
+    needs: [build-mac, build-win, build-linux, build-android]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -83,25 +168,30 @@ jobs:
           fetch-depth: 0
 
       - name: Check if tag is on main
+        id: branch-check
         run: |
           git fetch origin main
-          if ! git branch -r --contains ${{ github.sha }} | grep -q "origin/main"; then
-            echo "Tag ist NICHT auf dem Main-Branch. FTP-Upload wird übersprungen."
-            exit 0
+          if git branch -r --contains ${{ github.sha }} | grep -q "origin/main"; then
+            echo "on_main=true" >> $GITHUB_OUTPUT
+          else
+            echo "on_main=false" >> $GITHUB_OUTPUT
+            echo "Tag is not on main — skipping FTP deploy."
           fi
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
+        if: steps.branch-check.outputs.on_main == 'true'
         with:
           node-version: '22'
           cache: 'npm'
 
       - name: Install & Build
+        if: steps.branch-check.outputs.on_main == 'true'
         run: |
           npm ci
           npm run build
 
       - name: Deploy to FTP (Prod)
+        if: steps.branch-check.outputs.on_main == 'true'
         run: |
           sudo apt-get update && sudo apt-get install -y lftp
           lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_SERVER }}" <<EOF

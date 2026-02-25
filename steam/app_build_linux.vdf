@@ -1,13 +1,11 @@
 "AppBuild"
 {
 	"AppID" "4429000"
-	"Desc" "DICEPTION Build"
+	"Desc" "DICEPTION Linux-only Build"
 	"ContentRoot" ".."
 	"BuildOutput" "steam/output"
 	"Depots"
 	{
-		"4429001" "depot_build_win.vdf"
-		"4429002" "depot_build_mac.vdf"
 		"4429003" "depot_build_linux.vdf"
 	}
 }

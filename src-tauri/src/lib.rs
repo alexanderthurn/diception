@@ -1,4 +1,6 @@
 use std::path::PathBuf;
+
+#[cfg(not(target_os = "android"))]
 use std::sync::Mutex;
 
 use tauri::Manager;

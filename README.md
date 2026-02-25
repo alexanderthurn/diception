@@ -57,20 +57,58 @@ Click the **"?"** / **How to Play** button in the main setup menu to view:
 The game is bundled with **Tauri** for native desktop support.
 
 ### Development
-To run the game in the Tauri container during development:
-1. Run the development command:
-   ```bash
-   npm run tauri:dev
-   ```
-
-### Building the Desktop Version
-To create a bundled desktop application for your current OS:
+Run the dev server for your current OS:
 ```bash
-npm run tauri:build
+npm run tauri:dev:mac
+npm run tauri:dev:win
+npm run tauri:dev:linux
+npm run tauri:dev:android
 ```
 
-### Steam Integration Details
-Steam integration is currently being migrated to Tauri plugins. Local development and builds primarily use Tauri v2 features for window management and native performance.
+### Steam SDK Setup (required for distribution builds)
+
+The Steamworks SDK runtime libraries are not committed to the repo. Before building
+for Steam you need to place them in `src-tauri/resources/`:
+
+| Platform | File | Source in Steamworks SDK |
+|---|---|---|
+| macOS | `libsteam_api.dylib` | `redistributable_bin/osx/libsteam_api.dylib` |
+| Windows | `steam_api64.dll` | `redistributable_bin/win64/steam_api64.dll` |
+| Linux | `libsteam_api.so` | `redistributable_bin/linux64/libsteam_api.so` |
+
+**One-time setup** — set the path to your Steamworks SDK, then run the copy script:
+```bash
+export STEAMWORKS_SDK_PATH=/path/to/steamworks_sdk
+npm run copy-steam-sdk:mac    # or :win / :linux
+```
+
+If `STEAMWORKS_SDK_PATH` is not set the script is skipped silently, so local dev
+builds (without Steam) still work.
+
+### Building for Steam
+
+Outputs go into `dist-tauri/<platform>/`, ready for `./steam/upload_steam.sh`.
+
+```bash
+npm run tauri:build:mac
+npm run tauri:build:win
+npm run tauri:build:linux
+npm run tauri:build:android
+```
+
+CI (GitHub Actions) builds all platforms automatically on every `v*` tag push
+or via manual workflow dispatch. Artifacts are available for download from the
+Actions run. The Steam SDK libraries are fetched in CI from a private zip — see
+the `STEAM_SDK_ZIP_URL` repository secret.
+
+### Uploading to Steam
+```bash
+./steam/upload_steam.sh mac     # upload only mac depot
+./steam/upload_steam.sh win     # upload only win depot
+./steam/upload_steam.sh linux   # upload only linux depot
+./steam/upload_steam.sh         # upload all depots
+```
+Requires `steamcmd` on PATH and `STEAM_USER` env var set.
 
 ## Documentation
 

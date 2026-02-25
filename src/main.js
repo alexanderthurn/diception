@@ -120,6 +120,8 @@ async function init() {
                     await flushStorage();
                     if (window.steam) {
                         window.steam.quit();
+                    } else if (window.android) {
+                        window.android.quit();
                     } else if (isTauriContext()) {
                         try {
                             const { getCurrentWindow } = await import('@tauri-apps/api/window');
@@ -128,8 +130,6 @@ async function init() {
                             console.error('Tauri exit failed:', e);
                             window.close();
                         }
-                    } else if (isAndroid()) {
-                        window.close();
                     } else {
                         window.close();
                     }

@@ -1,16 +1,16 @@
 "DepotBuild"
 {
-	"DepotID" "4429001"
-	"ContentRoot" "../dist-tauri/win"
+	"DepotID" "4429003"
+	"ContentRoot" "../dist-tauri/linux"
 	"FileMapping"
 	{
-		"LocalPath" "diception.exe"
+		"LocalPath" "diception"
 		"DepotPath" "."
 		"recursive" "0"
 	}
 	"FileMapping"
 	{
-		"LocalPath" "steam_api64.dll"
+		"LocalPath" "libsteam_api.so"
 		"DepotPath" "."
 		"recursive" "0"
 	}

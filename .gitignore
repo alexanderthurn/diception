@@ -1,5 +1,5 @@
 dist/
-dist-steam/
+dist-tauri/
 .DS_Store
 node_modules/
 *.bak

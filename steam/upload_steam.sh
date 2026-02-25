@@ -2,9 +2,10 @@
 # Upload a built dist-steam directory to Steam via SteamCMD.
 #
 # Usage:
-#   ./steam/upload_steam.sh          # upload both mac + win depots
-#   ./steam/upload_steam.sh mac      # upload only the mac depot
-#   ./steam/upload_steam.sh win      # upload only the win depot
+#   ./steam/upload_steam.sh            # upload mac + win + linux depots
+#   ./steam/upload_steam.sh mac        # upload only the mac depot
+#   ./steam/upload_steam.sh win        # upload only the win depot
+#   ./steam/upload_steam.sh linux      # upload only the linux depot
 #
 # Requirements:
 #   - steamcmd must be installed and on your PATH
@@ -13,8 +14,9 @@
 #   - STEAM_USER env var must be set (or hardcoded below)
 #       export STEAM_USER=your_steam_account
 #   - Build before uploading:
-#       npm run tauri:build:mac   →  then  ./steam/upload_steam.sh mac
-#       npm run tauri:build:win   →  then  ./steam/upload_steam.sh win
+#       npm run tauri:build:mac     →  then  ./steam/upload_steam.sh mac
+#       npm run tauri:build:win     →  then  ./steam/upload_steam.sh win
+#       npm run tauri:build:linux   →  then  ./steam/upload_steam.sh linux
 
 set -e
 
@@ -31,7 +33,7 @@ STEAM_USER="${STEAM_USER:-}"
 # ─── Paths (always relative to this script, not the caller's cwd) ─────────────
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DIST_DIR="$SCRIPT_DIR/../dist-steam"
+DIST_DIR="$SCRIPT_DIR/../dist-tauri"
 
 # ─── Validation ───────────────────────────────────────────────────────────────
 
@@ -42,8 +44,8 @@ if [ -z "$STEAM_USER" ]; then
 fi
 
 if [ ! -d "$DIST_DIR" ] || [ -z "$(ls -A "$DIST_DIR" 2>/dev/null)" ]; then
-    echo "Error: dist-steam/ is empty or missing."
-    echo "  Run 'npm run tauri:build:mac' or 'npm run tauri:build:win' first."
+    echo "Error: dist-tauri/ is empty or missing."
+    echo "  Run 'npm run tauri:build:mac', 'npm run tauri:build:win', or 'npm run tauri:build:linux' first."
     exit 1
 fi
 
@@ -58,12 +60,13 @@ fi
 
 PLATFORM="${1:-}"
 case "$PLATFORM" in
-    mac) VDF="$SCRIPT_DIR/app_build_mac.vdf" ;;
-    win) VDF="$SCRIPT_DIR/app_build_win.vdf" ;;
-    "")  VDF="$SCRIPT_DIR/app_build.vdf"     ;;
+    mac)   VDF="$SCRIPT_DIR/app_build_mac.vdf"   ;;
+    win)   VDF="$SCRIPT_DIR/app_build_win.vdf"   ;;
+    linux) VDF="$SCRIPT_DIR/app_build_linux.vdf" ;;
+    "")    VDF="$SCRIPT_DIR/app_build.vdf"        ;;
     *)
-        echo "Usage: $0 [mac|win]"
-        echo "  no argument = upload both platforms using app_build.vdf"
+        echo "Usage: $0 [mac|win|linux]"
+        echo "  no argument = upload all platforms using app_build.vdf"
         exit 1
         ;;
 esac

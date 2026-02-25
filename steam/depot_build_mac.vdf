@@ -1,7 +1,7 @@
 "DepotBuild"
 {
 	"DepotID" "4429002"
-	"ContentRoot" "../dist-steam"
+	"ContentRoot" "../dist-tauri/mac"
 	"FileMapping"
 	{
 		"LocalPath" "DICEPTION.app/*"
