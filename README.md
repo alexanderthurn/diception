@@ -57,58 +57,74 @@ Click the **"?"** / **How to Play** button in the main setup menu to view:
 The game is bundled with **Tauri** for native desktop support.
 
 ### Development
-Run the dev server for your current OS:
+
+Run the dev server on the matching OS (no cross-compilation):
 ```bash
-npm run tauri:dev:mac
-npm run tauri:dev:win
-npm run tauri:dev:linux
-npm run tauri:dev:android
+npm run tauri:dev:mac      # on macOS
+npm run tauri:dev:win      # on Windows
+npm run tauri:dev:linux    # on Linux
+npm run tauri:dev:android  # on any OS with Android SDK
 ```
 
 ### Steam SDK Setup (required for distribution builds)
 
 The Steamworks SDK runtime libraries are not committed to the repo. Before building
-for Steam you need to place them in `src-tauri/resources/`:
+for Steam, fetch them once with:
 
-| Platform | File | Source in Steamworks SDK |
-|---|---|---|
-| macOS | `libsteam_api.dylib` | `redistributable_bin/osx/libsteam_api.dylib` |
-| Windows | `steam_api64.dll` | `redistributable_bin/win64/steam_api64.dll` |
-| Linux | `libsteam_api.so` | `redistributable_bin/linux64/libsteam_api.so` |
-
-**One-time setup** — set the path to your Steamworks SDK, then run the copy script:
 ```bash
-export STEAMWORKS_SDK_PATH=/path/to/steamworks_sdk
-npm run copy-steam-sdk:mac    # or :win / :linux
+export STEAM_SDK_ZIP_URL=https://your-webspace/steam_sdk_redist.zip
+npm run fetch-steam-sdk
 ```
 
-If `STEAMWORKS_SDK_PATH` is not set the script is skipped silently, so local dev
-builds (without Steam) still work.
+This downloads the zip from `STEAM_SDK_ZIP_URL` and places the following files in
+`src-tauri/resources/`. The script finds them by matching `<dir>/<file>` regardless
+of any extra nesting in the zip (e.g. `redistributable_bin/` wrapper is handled
+automatically):
+
+| Destination | Located in zip under |
+|---|---|
+| `src-tauri/resources/libsteam_api.dylib` | `osx/libsteam_api.dylib` |
+| `src-tauri/resources/steam_api64.dll` | `win64/steam_api64.dll` |
+| `src-tauri/resources/libsteam_api.so` | `linux64/libsteam_api.so` |
+
+Re-run only when Valve releases a new SDK version. The files are gitignored.
 
 ### Building for Steam
 
-Outputs go into `dist-tauri/<platform>/`, ready for `./steam/upload_steam.sh`.
+Run each build command on its target OS (or let CI do it — see below).
+Output lands in `dist-tauri/<platform>/`, ready for Steam upload.
 
 ```bash
-npm run tauri:build:mac
-npm run tauri:build:win
-npm run tauri:build:linux
-npm run tauri:build:android
+npm run tauri:build:mac      # → dist-tauri/mac/DICEPTION.app
+npm run tauri:build:win      # → dist-tauri/win/diception.exe + steam_api64.dll
+npm run tauri:build:linux    # → dist-tauri/linux/diception + libsteam_api.so
+npm run tauri:build:android  # → dist-tauri/android/DICEPTION.apk (unsigned)
 ```
 
-CI (GitHub Actions) builds all platforms automatically on every `v*` tag push
-or via manual workflow dispatch. Artifacts are available for download from the
-Actions run. The Steam SDK libraries are fetched in CI from a private zip — see
-the `STEAM_SDK_ZIP_URL` repository secret.
+> **Android:** the APK is unsigned. Download it from the CI artifacts and sign it
+> manually with your keystore before distributing.
+
+> **First-time Android setup:** run `npm run android:init` once to generate the
+> `src-tauri/gen/android/` project files.
+
+### CI Builds (GitHub Actions)
+
+All four platforms are built automatically on every `v*` tag push or via manual
+workflow dispatch. Artifacts are available for download from the Actions run.
+
+The `STEAM_SDK_ZIP_URL` repository secret must be set in GitHub →
+Settings → Secrets → Actions for the Steam API libraries to be included.
 
 ### Uploading to Steam
+
+Requires `steamcmd` on PATH and `STEAM_USER` set:
 ```bash
+export STEAM_USER=your_steam_username
 ./steam/upload_steam.sh mac     # upload only mac depot
 ./steam/upload_steam.sh win     # upload only win depot
 ./steam/upload_steam.sh linux   # upload only linux depot
 ./steam/upload_steam.sh         # upload all depots
 ```
-Requires `steamcmd` on PATH and `STEAM_USER` env var set.
 
 ## Documentation
 

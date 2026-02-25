@@ -29,7 +29,7 @@ jobs:
         run: |
           curl -fsSL "${{ secrets.STEAM_SDK_ZIP_URL }}" -o steam_sdk.zip
           unzip -o steam_sdk.zip -d steam_sdk_tmp
-          cp steam_sdk_tmp/osx/libsteam_api.dylib src-tauri/resources/libsteam_api.dylib
+          find steam_sdk_tmp -path "*/osx/libsteam_api.dylib" -exec cp {} src-tauri/resources/libsteam_api.dylib \;
 
       - run: npm ci
 
@@ -62,7 +62,7 @@ jobs:
         run: |
           Invoke-WebRequest -Uri "${{ secrets.STEAM_SDK_ZIP_URL }}" -OutFile steam_sdk.zip
           Expand-Archive -Path steam_sdk.zip -DestinationPath steam_sdk_tmp -Force
-          Copy-Item steam_sdk_tmp/win64/steam_api64.dll src-tauri/resources/steam_api64.dll
+          Get-ChildItem -Recurse steam_sdk_tmp -Filter steam_api64.dll | Where-Object { $_.Directory.Name -eq 'win64' } | Copy-Item -Destination src-tauri/resources/steam_api64.dll
 
       - run: npm ci
 
@@ -94,7 +94,7 @@ jobs:
         run: |
           curl -fsSL "${{ secrets.STEAM_SDK_ZIP_URL }}" -o steam_sdk.zip
           unzip -o steam_sdk.zip -d steam_sdk_tmp
-          cp steam_sdk_tmp/linux64/libsteam_api.so src-tauri/resources/libsteam_api.so
+          find steam_sdk_tmp -path "*/linux64/libsteam_api.so" -exec cp {} src-tauri/resources/libsteam_api.so \;
 
       - name: Install Linux dependencies
         run: |
