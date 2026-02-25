@@ -27,6 +27,7 @@ jobs:
 
       - name: Fetch Steam SDK
         run: |
+          mkdir -p src-tauri/resources
           curl -fsSL "${{ secrets.STEAM_SDK_ZIP_URL }}" -o steam_sdk.zip
           unzip -o steam_sdk.zip -d steam_sdk_tmp
           find steam_sdk_tmp -path "*/osx/libsteam_api.dylib" -exec cp {} src-tauri/resources/libsteam_api.dylib \;
@@ -60,6 +61,7 @@ jobs:
       - name: Fetch Steam SDK
         shell: pwsh
         run: |
+          New-Item -ItemType Directory -Force -Path src-tauri/resources | Out-Null
           Invoke-WebRequest -Uri "${{ secrets.STEAM_SDK_ZIP_URL }}" -OutFile steam_sdk.zip
           Expand-Archive -Path steam_sdk.zip -DestinationPath steam_sdk_tmp -Force
           Get-ChildItem -Recurse steam_sdk_tmp -Filter steam_api64.dll | Where-Object { $_.Directory.Name -eq 'win64' } | Copy-Item -Destination src-tauri/resources/steam_api64.dll
@@ -92,6 +94,7 @@ jobs:
 
       - name: Fetch Steam SDK
         run: |
+          mkdir -p src-tauri/resources
           curl -fsSL "${{ secrets.STEAM_SDK_ZIP_URL }}" -o steam_sdk.zip
           unzip -o steam_sdk.zip -d steam_sdk_tmp
           find steam_sdk_tmp -path "*/linux64/libsteam_api.so" -exec cp {} src-tauri/resources/libsteam_api.so \;
