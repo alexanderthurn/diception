@@ -1,6 +1,6 @@
 {
   "name": "dicy",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "A fast-paced, neon-styled dice strategy game. Inspired by the tactical depth of DiceWars and Kdice, Diception delivers quick turns and intense territory conquest.",
   "type": "module",
   "scripts": {
@@ -18,7 +18,7 @@
     "tauri:build:win": "tauri build && (mkdir dist-tauri\\win 2>nul & copy /Y src-tauri\\target\\release\\diception.exe dist-tauri\\win\\DICEPTION.exe && copy /Y src-tauri\\resources\\steam_api64.dll dist-tauri\\win\\ && copy /Y steam\\game_actions_X.vdf dist-tauri\\win\\game_actions_X.vdf)",
     "tauri:build:linux": "tauri build && mkdir -p dist-tauri/linux && cp src-tauri/target/release/diception dist-tauri/linux/ && { cp src-tauri/resources/libsteam_api.so dist-tauri/linux/ 2>/dev/null || true; } && cp steam/game_actions_X.vdf dist-tauri/linux/game_actions_X.vdf",
     "tauri:build:android": "npm run android:sync-version && tauri android build && mkdir -p dist-tauri/android && cp src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk dist-tauri/android/DICEPTION.apk",
-    "android:init": "tauri android init && tauri android icon ./public/icon.png",
+    "android:init": "tauri android init && tauri icon ./public/icon.png",
     "android:sync-version": "node -e \"const fs=require('fs');const v=require('./package.json').version;const p='src-tauri/gen/android/app/build.gradle.kts';fs.writeFileSync(p,fs.readFileSync(p,'utf8').replace(/versionName = \\\"[^\\\"]+\\\"/,'versionName = \\\"'+v+'\\\"'))\"",
     "generate-icons": "npm run tauri icon ./public/icon.png"
   },
