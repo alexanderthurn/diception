@@ -376,9 +376,10 @@ async function init() {
     const gfxResolution = document.getElementById('gfx-resolution');
     const gfxAntialias = document.getElementById('gfx-antialias');
     const gfxFramerate = document.getElementById('gfx-framerate');
+    const gfxFps = document.getElementById('gfx-fps');
 
     // 1. Initialize Values from Storage
-    const savedAA = localStorage.getItem('dicy_gfx_antialias') || 'on';
+    const savedAA = localStorage.getItem('dicy_gfx_antialias') || 'off';
     if (gfxAntialias) gfxAntialias.value = savedAA;
 
     const savedFPS = localStorage.getItem('dicy_gfx_framerate') || 'vsync';
@@ -411,6 +412,16 @@ async function init() {
 
         // Apply immediately
         applyFramerate(savedFPS);
+    }
+
+    const savedFPSDisplay = localStorage.getItem('dicy_gfx_fps') || 'off';
+    if (gfxFps) {
+        gfxFps.value = savedFPSDisplay;
+        gfxFps.addEventListener('change', (e) => {
+            localStorage.setItem('dicy_gfx_fps', e.target.value);
+            const fpsCounter = document.getElementById('fps-counter');
+            if (fpsCounter) fpsCounter.classList.toggle('hidden', e.target.value !== 'on');
+        });
     }
 
     // 2. Tauri / Desktop Only Settings
@@ -630,35 +641,36 @@ async function init() {
 // Helper: Setup FPS Counter
 function setupFPSCounter(renderer) {
     const fpsCounter = document.getElementById('fps-counter');
+    if (!fpsCounter || !renderer.app) return;
+
     const urlParams = new URLSearchParams(window.location.search);
-    const showFPS = urlParams.get('fps') === 'true';
+    const showFPS = urlParams.get('fps') === 'true' || localStorage.getItem('dicy_gfx_fps') === 'on';
+    if (showFPS) fpsCounter.classList.remove('hidden');
 
-    if (showFPS && fpsCounter && renderer.app) {
-        fpsCounter.classList.remove('hidden');
-        let frameCount = 0;
-        let lastTime = performance.now();
-        let lastFPS = 0;
+    let frameCount = 0;
+    let lastTime = performance.now();
+    let lastFPS = 0;
 
-        const updateFPSStatus = () => {
-            const canvas = renderer.app && (renderer.app.canvas || renderer.app.view);
-            const width = canvas ? canvas.width : -3;
-            const height = canvas ? canvas.height : -1;
-            fpsCounter.textContent = `FPS: ${lastFPS} · v${import.meta.env.VITE_APP_VERSION} · ${width}x${height}`;
-        };
+    const updateFPSStatus = () => {
+        const canvas = renderer.app && (renderer.app.canvas || renderer.app.view);
+        const width = canvas ? canvas.width : -3;
+        const height = canvas ? canvas.height : -1;
+        fpsCounter.textContent = `FPS: ${lastFPS} · v${import.meta.env.VITE_APP_VERSION} · ${width}x${height}`;
+    };
 
-        renderer.app.ticker.add(() => {
-            frameCount++;
-            const currentTime = performance.now();
-            if (currentTime - lastTime >= 1000) {
-                lastFPS = Math.round((frameCount * 1000) / (currentTime - lastTime));
-                updateFPSStatus();
-                frameCount = 0;
-                lastTime = currentTime;
-            }
-        });
+    renderer.app.ticker.add(() => {
+        if (fpsCounter.classList.contains('hidden')) return;
+        frameCount++;
+        const currentTime = performance.now();
+        if (currentTime - lastTime >= 1000) {
+            lastFPS = Math.round((frameCount * 1000) / (currentTime - lastTime));
+            updateFPSStatus();
+            frameCount = 0;
+            lastTime = currentTime;
+        }
+    });
 
-        window.addEventListener('resize', updateFPSStatus);
-    }
+    window.addEventListener('resize', updateFPSStatus);
 }
 
 // Helper: Setup UI Buttons
