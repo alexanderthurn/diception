@@ -15,14 +15,8 @@ export class BackgroundRenderer {
         // Insert at the beginning of stage (behind game)
         stage.addChildAt(this.container, 0);
 
-        this.width = options.width || (window.visualViewport ? window.visualViewport.width : document.documentElement.clientWidth);
-        this.height = options.height || (window.visualViewport ? window.visualViewport.height : document.documentElement.clientHeight);
-
-        // Try to get actual renderer dimensions if available (most accurate for game-space)
-        if (stage.renderer) {
-            this.width = stage.renderer.screen.width;
-            this.height = stage.renderer.screen.height;
-        }
+        this.width = options.width || window.innerWidth;
+        this.height = options.height || window.innerHeight;
 
         // Effect settings
         this.quality = 'high';
@@ -240,13 +234,35 @@ export class BackgroundRenderer {
     // ── Resize / destroy ─────────────────────────────────────────────────────
 
     onResize() {
-        if (this.container.stage?.renderer) {
-            this.width = this.container.stage.renderer.screen.width;
-            this.height = this.container.stage.renderer.screen.height;
-        } else {
-            const viewport = window.visualViewport;
-            this.width = viewport ? viewport.width : document.documentElement.clientWidth;
-            this.height = viewport ? viewport.height : document.documentElement.clientHeight;
+        const oldWidth = this.width;
+        const oldHeight = this.height;
+
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+
+        if (oldWidth === 0 || oldHeight === 0 || (oldWidth === this.width && oldHeight === this.height)) return;
+
+        const rx = this.width / oldWidth;
+        const ry = this.height / oldHeight;
+
+        // Proportionally reposition ambient particles so they stay distributed across the screen
+        for (const p of this.ambientParticles) {
+            p.x *= rx;
+            p.y *= ry;
+            p.graphics.x = p.x;
+            p.graphics.y = p.y;
+        }
+
+        // Proportionally reposition floating dice so they maintain their visual positions
+        if (this.introMode && this.floatingDice.length > 0) {
+            this.diceContainer.x *= rx;
+            this.diceContainer.y *= ry;
+            for (const d of this.floatingDice) {
+                d.x *= rx;
+                d.y *= ry;
+                d.graphics.x = d.x;
+                d.graphics.y = d.y;
+            }
         }
     }
 
