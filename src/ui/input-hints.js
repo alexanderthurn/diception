@@ -4,6 +4,8 @@
  */
 import { loadBindings, getKeyDisplayName, getGamepadButtonName } from '../input/key-bindings.js';
 import { detectControllerType, buttonIconHTML, buttonTextureName } from '../input/controller-icons.js';
+import { steamInput } from '../input/steam-input-adapter.js';
+import { resolveInputMode } from '../input/input-mode.js';
 
 // Action constants
 export const ACTION_MOVE_UP = 'move_up';
@@ -91,6 +93,8 @@ export function getActiveInputType(inputManager) {
     //    Check both gamepadStates (populated after first poll) and raw navigator API
     //    (catches gamepads connected before the first polling cycle runs).
     if (inputManager?.gamepadStates?.size > 0) return 'gamepad';
+    // In Steam Input mode, controllers are tracked by the cursor manager not navigator.
+    if (resolveInputMode() === 'steam' && steamInput.activeHandle !== null) return 'gamepad';
     const rawGamepads = navigator.getGamepads();
     if (rawGamepads && Array.from(rawGamepads).some(gp => gp !== null)) return 'gamepad';
 
@@ -138,6 +142,20 @@ export function getInputHint(action, inputManager, preferHumanIndex) {
             const buttons = bindings.gamepad[bindingId];
             if (buttons && buttons.length > 0) {
                 const btnIndex = buttons[0];
+                const isSteam = resolveInputMode() === 'steam';
+                const glyphs = isSteam ? steamInput.activeGlyphs : null;
+
+                // Prefer Steam glyphs when in Steam mode and loaded.
+                if (glyphs) {
+                    const html = steamInput.glyphHTMLForButton(btnIndex, glyphs);
+                    const textureName = steamInput.glyphTexturePathForButton(btnIndex, glyphs);
+                    const controllerType = steamInput.activeHandle
+                        ? 'xbox' // type display label only; glyphs override sprites
+                        : 'xbox';
+                    const label = getButtonLabel(controllerType, btnIndex);
+                    if (html) return { html, label, textureName, type: 'gamepad', style: 'gamepad-sprite' };
+                }
+
                 const gp = getActiveGamepad(inputManager, preferHumanIndex);
                 const controllerType = gp ? detectControllerType(gp) : 'xbox';
                 const label = getButtonLabel(controllerType, btnIndex);

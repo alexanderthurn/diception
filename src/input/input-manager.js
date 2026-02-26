@@ -1,5 +1,6 @@
 import { isDesktopContext } from '../scenarios/user-identity.js';
 import { loadBindings } from './key-bindings.js';
+import { resolveInputMode, setStoredInputMode } from './input-mode.js';
 
 /**
  * InputManager - Unified input handling for keyboard and gamepad.
@@ -33,6 +34,9 @@ export class InputManager {
 
         // Input suspension (e.g. during key-binding wizard)
         this.suspended = false;
+
+        // When false, skip navigator.getGamepads() polling (Steam Input mode).
+        this.useNavigatorGamepads = (resolveInputMode() !== 'steam');
 
         // Track animation frame and bound handlers for cleanup
         this.animationFrameId = null;
@@ -151,6 +155,21 @@ export class InputManager {
         return mapped !== undefined ? mapped : rawGamepadIndex;
     }
 
+    /**
+     * Switch the controller input mode at runtime.
+     * @param {'auto'|'browser'|'steam'} mode
+     */
+    setInputMode(mode) {
+        setStoredInputMode(mode);
+        this.useNavigatorGamepads = (resolveInputMode() !== 'steam');
+        if (this.useNavigatorGamepads) {
+            // Reconnect to navigator gamepads on switch back to browser mode
+            this.gamepadStates.clear();
+            this.connectedGamepadIndices.clear();
+            this.gamepadToHumanMap.clear();
+        }
+    }
+
     setupKeyboard() {
         document.addEventListener('keydown', this.boundKeyDown);
         document.addEventListener('keyup', this.boundKeyUp);
@@ -257,7 +276,10 @@ export class InputManager {
         // Always poll gamepads so GamepadCursorManager receives button events
         // even during suspension (allows clicking Skip/Cancel via the cursor).
         // processGamepadButtons guards semantic events with !this.suspended internally.
-        this.processGamepads();
+        // In Steam Input mode this is skipped — Steam polling in main.js drives events.
+        if (this.useNavigatorGamepads) {
+            this.processGamepads();
+        }
     }
 
     pollGamepads() {

@@ -27,6 +27,19 @@
  *   the helper emitEvents().
  */
 
+/**
+ * Convert an absolute OS file path to a URL that Tauri's asset:// protocol
+ * can serve to the WebView.  Mirrors @tauri-apps/api convertFileSrc() so we
+ * don't need that package as a dependency.
+ */
+function convertFileSrc(filePath) {
+    const encoded = encodeURIComponent(filePath);
+    // On Windows Tauri uses https://asset.localhost/; on macOS/Linux asset://localhost/
+    return navigator.userAgent.includes('Windows')
+        ? `https://asset.localhost/${encoded}`
+        : `asset://localhost/${encoded}`;
+}
+
 // Action name → standard gamepad button index (W3C Standard Gamepad mapping).
 // Used when translating Steam digital actions back into button indices so the
 // rest of the codebase (gamepad-cursor-manager, input-hints) keeps working.
@@ -46,6 +59,11 @@ const ACTION_TO_BUTTON_INDEX = {
     move_right:        15,
 };
 
+// Reverse map: button index → action name (for glyph lookups by button index).
+const BUTTON_INDEX_TO_ACTION = Object.fromEntries(
+    Object.entries(ACTION_TO_BUTTON_INDEX).map(([action, idx]) => [idx, action])
+);
+
 export class SteamInputAdapter {
     constructor() {
         this._initialized = false;
@@ -56,6 +74,9 @@ export class SteamInputAdapter {
 
         // Cached glyph maps { handle → { actionName → filePath } }
         this._glyphCache = new Map();
+
+        // Most-recently-active controller handle (updated on any button press).
+        this.activeHandle = null;
     }
 
     /** True when running inside the Steam/Tauri build. */
@@ -117,6 +138,9 @@ export class SteamInputAdapter {
             const btnIndex = ACTION_TO_BUTTON_INDEX[actionName];
 
             if (pressed && !wasPrev) {
+                // Track the most-recently-active controller handle.
+                this.activeHandle = handle;
+
                 // Button down
                 inputManager.emit('gamepadButtonDown', { index: handle, button: btnIndex });
 
@@ -209,6 +233,60 @@ export class SteamInputAdapter {
         } catch {
             return false;
         }
+    }
+
+    /**
+     * Synchronously return the cached glyph map for a handle, or null if not
+     * yet loaded.  Use getGlyphs(handle) to fetch and cache asynchronously.
+     */
+    getCachedGlyphs(handle) {
+        return this._glyphCache.get(handle) ?? null;
+    }
+
+    // ── Glyph helpers ──────────────────────────────────────────────────────────
+
+    /**
+     * The cached glyph map for the most-recently-active controller, or null if
+     * glyphs have not been loaded yet.
+     */
+    get activeGlyphs() {
+        if (this.activeHandle === null) return null;
+        return this._glyphCache.get(this.activeHandle) ?? null;
+    }
+
+    /**
+     * Return an <img> HTML string for a W3C gamepad button index using the
+     * Steam-provided glyph PNG, or null if no glyph is available.
+     *
+     * @param {number} buttonIndex  W3C standard gamepad button index (0-15)
+     * @param {Object} glyphMap  { actionName → absoluteFilePath } from getGlyphs()
+     * @returns {string|null}
+     */
+    glyphHTMLForButton(buttonIndex, glyphMap) {
+        if (!glyphMap) return null;
+        const action = BUTTON_INDEX_TO_ACTION[buttonIndex];
+        if (!action) return null;
+        const path = glyphMap[action];
+        if (!path) return null;
+        const src = convertFileSrc(path);
+        return `<img src="${src}" class="steam-glyph" style="width:20px;height:20px;vertical-align:middle;image-rendering:pixelated">`;
+    }
+
+    /**
+     * Return an asset:// URL for a W3C gamepad button index using the
+     * Steam-provided glyph PNG, suitable for use as a PixiJS texture path.
+     *
+     * @param {number} buttonIndex
+     * @param {Object} glyphMap
+     * @returns {string|null}
+     */
+    glyphTexturePathForButton(buttonIndex, glyphMap) {
+        if (!glyphMap) return null;
+        const action = BUTTON_INDEX_TO_ACTION[buttonIndex];
+        if (!action) return null;
+        const path = glyphMap[action];
+        if (!path) return null;
+        return convertFileSrc(path);
     }
 }
 

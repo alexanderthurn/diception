@@ -33,6 +33,8 @@ import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode } from './cheat.js';
 import { isTauriContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
+import { steamInput } from './input/steam-input-adapter.js';
+import { resolveInputMode } from './input/input-mode.js';
 import { initStorage, flushStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { initCustomSelects } from './ui/custom-select.js';
@@ -138,14 +140,7 @@ async function init() {
         }
     }
 
-    // Steam Input — initialise in the background; non-blocking, optional
-    if (window.steam?.inputInit) {
-        import('./input/steam-input-adapter.js').then(({ steamInput }) => {
-            steamInput.init().then(ok => {
-                if (ok) console.log('[SteamInput] Ready');
-            });
-        });
-    }
+    // Steam Input is initialised after gamepadCursors is created (see below).
 
     // Steam-specific identity display
     if (window.steam) {
@@ -200,6 +195,64 @@ async function init() {
 
     // Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);
+
+    // Steam Input — initialise and, when in steam mode, start per-frame polling.
+    if (window.steam?.inputInit) {
+        steamInput.init().then(ok => {
+            if (!ok) return;
+            console.log('[SteamInput] Ready');
+
+            if (resolveInputMode() !== 'steam') return;
+
+            // Per-frame polling loop: drives button events and cursor movement
+            // in place of navigator.getGamepads().
+            let steamPollActive = true;
+            const steamPoll = async () => {
+                if (!steamPollActive || gamepadCursors.disposed) return;
+
+                try {
+                    const states = await steamInput.poll();
+                    const connectedHandles = new Set();
+
+                    for (const state of states) {
+                        connectedHandles.add(state.handle);
+
+                        // Emit button / movement events to InputManager.
+                        steamInput.emitEvents(state, inputManager);
+
+                        // Feed analog stick values to the cursor manager.
+                        const cursor_move = state.analogs?.cursor_move ?? [0, 0];
+                        const map_pan    = state.analogs?.map_pan    ?? [0, 0];
+                        gamepadCursors.feedSteamAnalog(
+                            state.handle,
+                            cursor_move[0], cursor_move[1],
+                            map_pan[0],     map_pan[1],
+                            state.input_type
+                        );
+
+                        // Pre-load (and cache) glyphs for this controller so
+                        // showFeedback and input-hints can use them synchronously.
+                        steamInput.getGlyphs(state.handle).then(glyphs => {
+                            const cursor = gamepadCursors.cursors.get(
+                                gamepadCursors._steamHandleIndex.get(state.handle)
+                            );
+                            if (cursor) cursor.glyphMap = glyphs;
+                        });
+                    }
+
+                    gamepadCursors.pruneSteamCursors(connectedHandles);
+                } catch (e) {
+                    console.warn('[SteamInput] poll error:', e);
+                }
+
+                requestAnimationFrame(steamPoll);
+            };
+            requestAnimationFrame(steamPoll);
+
+            // Stop the Steam poll when the page unloads.
+            window.addEventListener('unload', () => { steamPollActive = false; });
+        });
+    }
 
     // FPS Counter
     setupFPSCounter(renderer);
@@ -256,6 +309,12 @@ async function init() {
     configManager.setupInputListeners(effectsManager, renderer, () => {
         scenarioBrowser.clearPendingScenario();
     });
+
+    // Wire controller input mode switching — applies immediately when user changes the select.
+    configManager.onInputModeChange = (mode) => {
+        inputManager.setInputMode(mode);
+        gamepadCursors.setInputMode(mode);
+    };
 
     const gameStarter = new GameStarter(
         game, renderer, effectsManager, turnHistory,

@@ -262,6 +262,17 @@
                 </div>
             </div>
 
+            <div id="controller-input-row" class="control-row hidden" style="margin-top: 10px;">
+                <div class="control-group full">
+                    <label>Controller Input</label>
+                    <select id="controller-input-mode">
+                        <option value="auto">Auto (Steam Input if available)</option>
+                        <option value="steam">Steam Input</option>
+                        <option value="browser">Browser API (navigator.getGamepads)</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="control-row start-row" style="margin-top: 20px; gap: 10px;">
                 <button id="howto-btn" class="tron-btn small" style="flex: 0 0 auto; width: auto; padding: 0 15px;"
                     title="How to Play"><span class="sprite-icon icon-help"></span></button>

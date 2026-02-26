@@ -43,11 +43,17 @@ export class ConfigManager {
             tournamentGamesInput: document.getElementById('tournament-games'),
             tournamentConfig: document.getElementById('tournament-config'),
             scenariosBtn: document.getElementById('scenarios-btn'),
-            deselectScenarioBtn: document.getElementById('deselect-scenario-btn')
+            deselectScenarioBtn: document.getElementById('deselect-scenario-btn'),
+            controllerInputModeInput: document.getElementById('controller-input-mode'),
+            controllerInputRow: document.getElementById('controller-input-row'),
         };
 
         // Current selected bot AI
         this.selectedBotAI = localStorage.getItem('dicy_botAI') || 'easy';
+
+        // Callback invoked when the user changes the controller input mode.
+        // Set from main.js: (mode) => { inputManager.setInputMode(mode); gamepadCursors.setInputMode(mode); }
+        this.onInputModeChange = null;
     }
 
     /**
@@ -131,6 +137,15 @@ export class ConfigManager {
 
         // Initial map size display
         this.updateMapSizeDisplay();
+
+        // Controller input mode — only show when the Steam bridge is present.
+        if (el.controllerInputRow && el.controllerInputModeInput) {
+            if (window.steam) {
+                el.controllerInputRow.classList.remove('hidden');
+                const savedMode = localStorage.getItem('dicy_inputMode') || 'auto';
+                el.controllerInputModeInput.value = savedMode;
+            }
+        }
     }
 
     /**
@@ -207,6 +222,15 @@ export class ConfigManager {
             if (renderer) renderer.setEffectsQuality(newQuality);
             this.updateEffectsQualityClass(newQuality);
         });
+
+        // Controller input mode - apply immediately
+        if (el.controllerInputModeInput) {
+            el.controllerInputModeInput.addEventListener('change', () => {
+                const mode = el.controllerInputModeInput.value;
+                localStorage.setItem('dicy_inputMode', mode);
+                if (this.onInputModeChange) this.onInputModeChange(mode);
+            });
+        }
     }
 
     /**

@@ -1,6 +1,18 @@
 import { GAME } from '../core/constants.js';
 import { isDesktopContext } from '../scenarios/user-identity.js';
 import { detectControllerType, buttonIconHTML } from './controller-icons.js';
+import { resolveInputMode, setStoredInputMode } from './input-mode.js';
+import { steamInput } from './steam-input-adapter.js';
+
+/**
+ * Normalise a Steam Input controller type string to a token that
+ * controller-icons.js understands: 'xbox' | 'ps4' | 'ps5'
+ */
+function normalizeControllerType(type) {
+    if (type === 'ps4' || type === 'ps5') return type;
+    if (type === 'xbox' || type === 'xbox360') return 'xbox';
+    return 'xbox'; // switch, deck, steam, unknown → xbox-layout fallback
+}
 
 /**
  * GamepadCursorManager - Handles artificial cursors for gamepad players.
@@ -14,9 +26,16 @@ export class GamepadCursorManager {
     constructor(game, inputManager) {
         this.game = game;
         this.inputManager = inputManager;
-        this.cursors = new Map(); // gamepadIndex -> { x, y, element, player }
+        this.cursors = new Map(); // displayIndex -> { x, y, element, player, ... }
         const isDesktop = isDesktopContext();
         this.cursorSpeed = isDesktop ? 12 : 20;
+
+        // Steam Input mode: skip navigator.getGamepads() for cursor movement.
+        this.useSteamInput = (resolveInputMode() === 'steam');
+
+        // Steam handle → sequential display index (0, 1, 2, …, supports >4 controllers)
+        this._steamHandleIndex = new Map();
+        this._nextSteamIndex = 0;
 
         // Container for all virtual cursors
         this.container = document.createElement('div');
@@ -58,6 +77,36 @@ export class GamepadCursorManager {
         return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale')) || 1;
     }
 
+    /**
+     * In Steam Input mode, map a raw Steam handle to the sequential display
+     * index stored in this.cursors.  In browser mode, the raw index IS the
+     * display index, so it is returned unchanged.
+     */
+    _resolveIndex(rawIndex) {
+        if (!this.useSteamInput) return rawIndex;
+        return this._steamHandleIndex.get(rawIndex) ?? rawIndex;
+    }
+
+    /**
+     * Switch input mode at runtime (called from config-manager via main.js).
+     * @param {'auto'|'browser'|'steam'} mode
+     */
+    setInputMode(mode) {
+        setStoredInputMode(mode);
+        const newUseSteam = (resolveInputMode() === 'steam');
+        if (newUseSteam !== this.useSteamInput) {
+            this.useSteamInput = newUseSteam;
+            if (!newUseSteam) {
+                // Switching back to browser mode: remove all Steam-mode cursors.
+                this._steamHandleIndex.clear();
+                this._nextSteamIndex = 0;
+                for (const [idx] of [...this.cursors]) {
+                    this.removeCursor(idx);
+                }
+            }
+        }
+    }
+
     /** Position a cursor DOM element at viewport coordinates (x, y). */
     _positionCursor(cursor) {
         const s = this._uiScale();
@@ -87,8 +136,12 @@ export class GamepadCursorManager {
     setupEventListeners() {
         // Define and store bound handlers for cleanup
         this.boundEventHandlers.gamepadButtonDown = ({ index, button }) => {
-            const cursor = this.cursors.get(index);
+            const cursor = this.cursors.get(this._resolveIndex(index));
             if (!cursor) return;
+
+            // Track drag-button state for Steam Input cursor panning.
+            const b0 = this._gb();
+            if (button === b0.drag) cursor.dragHeld = true;
 
             // Ensure cursor is visible on button press
             cursor.element.style.opacity = '1.0';
@@ -138,7 +191,7 @@ export class GamepadCursorManager {
 
                 // Beginner: show hints everywhere. Normal/Expert: only in the main menu.
                 if (isBeginner || isMainMenu) {
-                    this.showFeedback(index, label, button);
+                    this.showFeedback(this._resolveIndex(index), label, button);
                 }
             }
 
@@ -168,10 +221,11 @@ export class GamepadCursorManager {
                 }
             }
 
+            const resolvedIdx = this._resolveIndex(index);
             if (button === b.confirm) {
-                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
+                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, resolvedIdx);
             } else if (button === b.cancel) {
-                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
+                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, resolvedIdx);
             } else if (button === b.endTurn) {
                 if (isEditorOpen) {
                     // In editor: end_turn button = Paint mode
@@ -180,7 +234,7 @@ export class GamepadCursorManager {
                 } else {
                     // In game: End Turn
                     const currentPlayer = this.game.currentPlayer;
-                    const humanIndex = this.inputManager.getHumanIndex(index);
+                    const humanIndex = this.inputManager.getHumanIndex(resolvedIdx);
                     if (currentPlayer && !currentPlayer.isBot && currentPlayer.id === humanIndex) {
                         const endTurnBtn = document.getElementById('end-turn-btn');
                         if (endTurnBtn && !endTurnBtn.classList.contains('hidden')) {
@@ -191,35 +245,38 @@ export class GamepadCursorManager {
                     }
                 }
             } else if (button === b.drag) {
-                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
+                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, resolvedIdx);
             } else if (button === b.cursorSpeedDown) {
                 // Persistent Speed: slower (0.5x)
                 cursor.speedMultiplier *= 0.5;
-                localStorage.setItem('dicy_gamepad_speed_' + index, cursor.speedMultiplier);
+                localStorage.setItem('dicy_gamepad_speed_' + resolvedIdx, cursor.speedMultiplier);
             } else if (button === b.cursorSpeedUp) {
                 // Persistent Speed: faster (2x)
                 cursor.speedMultiplier *= 2.0;
-                localStorage.setItem('dicy_gamepad_speed_' + index, cursor.speedMultiplier);
+                localStorage.setItem('dicy_gamepad_speed_' + resolvedIdx, cursor.speedMultiplier);
             }
             // zoom_in / zoom_out are handled by InputManager → input-controller via 'zoom' event
         };
 
         this.boundEventHandlers.gamepadButtonUp = ({ index, button }) => {
-            const cursor = this.cursors.get(index);
+            const resolvedIdx = this._resolveIndex(index);
+            const cursor = this.cursors.get(resolvedIdx);
             if (!cursor) return;
 
             const b = this._gb();
+            if (button === b.drag) cursor.dragHeld = false;
+
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
             if (isMenuOpen && button !== b.confirm && button !== b.cancel) return;
 
             if (button === b.confirm) {
-                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
-                this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
+                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, resolvedIdx);
+                this.simulateMouseEvent('click', cursor.x, cursor.y, 0, resolvedIdx);
             } else if (button === b.cancel) {
-                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
-                this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
+                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, resolvedIdx);
+                this.simulateMouseEvent('click', cursor.x, cursor.y, 2, resolvedIdx);
             } else if (button === b.drag) {
-                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 1, index);
+                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 1, resolvedIdx);
             }
         };
 
@@ -244,90 +301,188 @@ export class GamepadCursorManager {
     update() {
         if (this.disposed) return;
 
-        const gamepads = navigator.getGamepads();
+        if (!this.useSteamInput) {
+            const gamepads = navigator.getGamepads();
 
-        for (let i = 0; i < gamepads.length; i++) {
-            const gp = gamepads[i];
-            if (!gp) {
-                if (this.cursors.has(i)) {
-                    this.removeCursor(i);
+            for (let i = 0; i < gamepads.length; i++) {
+                const gp = gamepads[i];
+                if (!gp) {
+                    if (this.cursors.has(i)) {
+                        this.removeCursor(i);
+                    }
+                    continue;
                 }
-                continue;
-            }
 
-            let cursor = this.cursors.get(i);
-            if (!cursor) {
-                cursor = this.createCursor(i, gp);
-            }
-
-            // Move cursor based on left stick
-            let dx = gp.axes[0] || 0;
-            let dy = gp.axes[1] || 0;
-
-            // Load dynamically saved deadzone per gamepad, default to 0.15
-            const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.index);
-            const currentDeadZone = savedDeadzone ? parseFloat(savedDeadzone) : 0.15;
-
-            // Apply deadzone
-            if (Math.abs(dx) < currentDeadZone) dx = 0;
-            if (Math.abs(dy) < currentDeadZone) dy = 0;
-
-            if (dx !== 0 || dy !== 0) {
-                const scale = (val) => Math.sign(val) * Math.pow(Math.abs(val), 1.5);
-                const b = this._gb();
-                const dragHeld = gp.buttons[b.drag]?.pressed ?? false;
-
-                if (dragHeld) {
-                    // Hold drag button + left stick = pan map (same as right stick)
-                    this.inputManager.emit('panAnalog', { x: -dx, y: -dy });
-                } else {
-                    // Normal: move cursor with left stick — switch to analog visual mode
-                    this._setCursorMode(cursor, 'analog');
-                    let speedMultiplier = cursor.speedMultiplier || 1.0;
-
-                    cursor.x += scale(dx) * this.cursorSpeed * speedMultiplier;
-                    cursor.y += scale(dy) * this.cursorSpeed * speedMultiplier;
-
-                    // Clamp to screen bounds
-                    cursor.x = Math.max(0, Math.min(window.innerWidth, cursor.x));
-                    cursor.y = Math.max(0, Math.min(window.innerHeight, cursor.y));
-
-                    GamepadCursorManager.savedPositions.set(i, { x: cursor.x, y: cursor.y });
-
-                    // Update DOM element
-                    this._positionCursor(cursor);
-                    cursor.element.style.opacity = '1.0';
-
-                    // Trigger mousemove on current position
-                    this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, i);
+                let cursor = this.cursors.get(i);
+                if (!cursor) {
+                    cursor = this.createCursor(i, gp);
                 }
-            }
 
-            // Scroll Logic using Right Stick
-            // axes[2] is scroll horizontal, axes[3] is scroll vertical
-            let sx = gp.axes[2] || 0;
-            let sy = gp.axes[3] || 0;
+                // Move cursor based on left stick
+                let dx = gp.axes[0] || 0;
+                let dy = gp.axes[1] || 0;
 
-            if (Math.abs(sx) < currentDeadZone) sx = 0;
-            if (Math.abs(sy) < currentDeadZone) sy = 0;
+                // Load dynamically saved deadzone per gamepad, default to 0.15
+                const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.index);
+                const currentDeadZone = savedDeadzone ? parseFloat(savedDeadzone) : 0.15;
 
-            if (sx !== 0 || sy !== 0) {
-                const scrollX = sx * 15; // Scroll speed
-                const scrollY = sy * 15;
-                const target = document.elementFromPoint(cursor.x, cursor.y);
-                if (target) {
-                    const scrollable = this.findScrollableParent(target);
-                    if (scrollable) {
-                        scrollable.scrollBy(scrollX, scrollY);
+                // Apply deadzone
+                if (Math.abs(dx) < currentDeadZone) dx = 0;
+                if (Math.abs(dy) < currentDeadZone) dy = 0;
+
+                if (dx !== 0 || dy !== 0) {
+                    const scale = (val) => Math.sign(val) * Math.pow(Math.abs(val), 1.5);
+                    const b = this._gb();
+                    const dragHeld = gp.buttons[b.drag]?.pressed ?? false;
+
+                    if (dragHeld) {
+                        // Hold drag button + left stick = pan map (same as right stick)
+                        this.inputManager.emit('panAnalog', { x: -dx, y: -dy });
+                    } else {
+                        // Normal: move cursor with left stick — switch to analog visual mode
+                        this._setCursorMode(cursor, 'analog');
+                        let speedMultiplier = cursor.speedMultiplier || 1.0;
+
+                        cursor.x += scale(dx) * this.cursorSpeed * speedMultiplier;
+                        cursor.y += scale(dy) * this.cursorSpeed * speedMultiplier;
+
+                        // Clamp to screen bounds
+                        cursor.x = Math.max(0, Math.min(window.innerWidth, cursor.x));
+                        cursor.y = Math.max(0, Math.min(window.innerHeight, cursor.y));
+
+                        GamepadCursorManager.savedPositions.set(i, { x: cursor.x, y: cursor.y });
+
+                        // Update DOM element
+                        this._positionCursor(cursor);
+                        cursor.element.style.opacity = '1.0';
+
+                        // Trigger mousemove on current position
+                        this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, i);
                     }
                 }
-            }
 
-            // Periodically check if player info changed (e.g. game started)
-            this.updateCursorColor(cursor, i);
+                // Scroll Logic using Right Stick
+                // axes[2] is scroll horizontal, axes[3] is scroll vertical
+                let sx = gp.axes[2] || 0;
+                let sy = gp.axes[3] || 0;
+
+                if (Math.abs(sx) < currentDeadZone) sx = 0;
+                if (Math.abs(sy) < currentDeadZone) sy = 0;
+
+                if (sx !== 0 || sy !== 0) {
+                    const scrollX = sx * 15; // Scroll speed
+                    const scrollY = sy * 15;
+                    const target = document.elementFromPoint(cursor.x, cursor.y);
+                    if (target) {
+                        const scrollable = this.findScrollableParent(target);
+                        if (scrollable) {
+                            scrollable.scrollBy(scrollX, scrollY);
+                        }
+                    }
+                }
+
+                // Periodically check if player info changed (e.g. game started)
+                this.updateCursorColor(cursor, i);
+            }
         }
 
         this.animationFrameId = requestAnimationFrame(this.update);
+    }
+
+    /**
+     * Feed analog stick values from Steam Input for a single controller.
+     * Called every frame from the Steam polling loop in main.js.
+     *
+     * @param {number} handle         Steam Input controller handle (u64)
+     * @param {number} cursorX        Left stick X  (-1 … +1), cursor_move action
+     * @param {number} cursorY        Left stick Y  (-1 … +1), cursor_move action
+     * @param {number} scrollX        Right stick X (-1 … +1), map_pan action
+     * @param {number} scrollY        Right stick Y (-1 … +1), map_pan action
+     * @param {string} controllerType Steam controller type string (e.g. 'ps4', 'xbox')
+     */
+    feedSteamAnalog(handle, cursorX, cursorY, scrollX, scrollY, controllerType) {
+        if (this.disposed) return;
+
+        // Assign a sequential display index to this handle on first appearance.
+        if (!this._steamHandleIndex.has(handle)) {
+            const idx = this._nextSteamIndex++;
+            this._steamHandleIndex.set(handle, idx);
+        }
+        const index = this._steamHandleIndex.get(handle);
+
+        // Create cursor if it doesn't exist yet.
+        let cursor = this.cursors.get(index);
+        if (!cursor) {
+            cursor = this.createCursor(index, null, normalizeControllerType(controllerType ?? 'xbox'));
+            cursor.steamHandle = handle;
+        }
+
+        // Update controller type if Steam reports a new one.
+        const normalizedType = normalizeControllerType(controllerType ?? 'xbox');
+        if (cursor.controllerType !== normalizedType) {
+            cursor.controllerType = normalizedType;
+        }
+
+        // Attach latest glyph map to the cursor for use in showFeedback.
+        const glyphs = steamInput.getCachedGlyphs(handle);
+        if (glyphs) cursor.glyphMap = glyphs;
+
+        const DEADZONE = 0.15;
+
+        let dx = Math.abs(cursorX) < DEADZONE ? 0 : cursorX;
+        let dy = Math.abs(cursorY) < DEADZONE ? 0 : cursorY;
+
+        if (dx !== 0 || dy !== 0) {
+            const scale = (val) => Math.sign(val) * Math.pow(Math.abs(val), 1.5);
+
+            if (cursor.dragHeld) {
+                // Hold drag + left stick = pan map
+                this.inputManager.emit('panAnalog', { x: -dx, y: -dy });
+            } else {
+                this._setCursorMode(cursor, 'analog');
+                const speedMultiplier = cursor.speedMultiplier || 1.0;
+
+                cursor.x += scale(dx) * this.cursorSpeed * speedMultiplier;
+                cursor.y += scale(dy) * this.cursorSpeed * speedMultiplier;
+
+                cursor.x = Math.max(0, Math.min(window.innerWidth, cursor.x));
+                cursor.y = Math.max(0, Math.min(window.innerHeight, cursor.y));
+
+                GamepadCursorManager.savedPositions.set(index, { x: cursor.x, y: cursor.y });
+                this._positionCursor(cursor);
+                cursor.element.style.opacity = '1.0';
+
+                this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, index);
+            }
+        }
+
+        // Right stick (map_pan) → scroll modal if one is open.
+        let sx = Math.abs(scrollX) < DEADZONE ? 0 : scrollX;
+        let sy = Math.abs(scrollY) < DEADZONE ? 0 : scrollY;
+
+        if (sx !== 0 || sy !== 0) {
+            const target = document.elementFromPoint(cursor.x, cursor.y);
+            if (target) {
+                const scrollable = this.findScrollableParent(target);
+                if (scrollable) scrollable.scrollBy(sx * 15, sy * 15);
+            }
+        }
+
+        this.updateCursorColor(cursor, index);
+    }
+
+    /**
+     * Remove cursors for Steam handles that are no longer connected.
+     * Call once per frame after all feedSteamAnalog() calls.
+     * @param {Set<number>} connectedHandles  Set of handles seen this frame.
+     */
+    pruneSteamCursors(connectedHandles) {
+        for (const [handle, index] of this._steamHandleIndex) {
+            if (!connectedHandles.has(handle)) {
+                this.removeCursor(index);
+                this._steamHandleIndex.delete(handle);
+            }
+        }
     }
 
     /**
@@ -376,10 +531,12 @@ export class GamepadCursorManager {
         this.container = null;
     }
 
-    createCursor(index, gamepad) {
+    createCursor(index, gamepad, controllerTypeOverride = null) {
         if (gamepad) {
             const type = detectControllerType(gamepad);
             console.log(`[GamepadCursor] Controller ${index}: "${gamepad.id}" → ${type}`);
+        } else if (controllerTypeOverride) {
+            console.log(`[GamepadCursor] Steam Controller ${index}: ${controllerTypeOverride}`);
         }
         const el = document.createElement('div');
         el.className = 'gamepad-cursor';
@@ -423,12 +580,15 @@ export class GamepadCursorManager {
             x: initialX,
             y: initialY,
             element: el,
-            controllerType: gamepad ? detectControllerType(gamepad) : 'xbox',
+            controllerType: controllerTypeOverride ?? (gamepad ? detectControllerType(gamepad) : 'xbox'),
             lastPlayerId: -1,
             lastColor: '',
             speedMultiplier: parseFloat(localStorage.getItem('dicy_gamepad_speed_' + index)) || 1.0,
             dragTarget: null,
+            dragHeld: false,
             mode: 'dpad',
+            steamHandle: null,
+            glyphMap: null,
         };
 
         // Set initial position and opacity
@@ -658,8 +818,11 @@ export class GamepadCursorManager {
 
         const feedback = document.createElement('div');
         feedback.className = 'gamepad-feedback';
+        const glyphMap = this.useSteamInput ? (cursor.glyphMap ?? null) : null;
         const iconHTML = (button !== undefined)
-            ? (buttonIconHTML(cursor.controllerType ?? 'xbox', button) ?? '')
+            ? (glyphMap
+                ? (steamInput.glyphHTMLForButton(button, glyphMap) ?? buttonIconHTML(cursor.controllerType ?? 'xbox', button) ?? '')
+                : (buttonIconHTML(cursor.controllerType ?? 'xbox', button) ?? ''))
             : '';
         feedback.innerHTML = iconHTML + `<span>${text}</span>`;
         feedback.style.position = 'fixed';
