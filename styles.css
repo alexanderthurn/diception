@@ -264,13 +264,19 @@ select {
 
 #player-dashboard {
     position: absolute;
-    top: 70px;
+    top: 20px;
     left: 20px;
     width: 280px;
     max-height: 80vh;
     overflow-y: auto;
     z-index: 10;
     transition: all 0.3s ease;
+}
+
+@container (max-width: 1024px) {
+    #player-dashboard {
+        top: 70px;
+    }
 }
 
 /* Global End Turn Button - Fixed bottom right on all devices */
