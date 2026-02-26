@@ -151,13 +151,10 @@ async function init() {
     if (window.steam) {
         window.steam.getUserName().then(name => {
             console.log('Steam User:', name);
-            const credits = document.querySelector('.credits');
-            if (credits) {
-                // Remove existing if any to avoid duplicates on hot reload or similar
-                const existing = credits.querySelector('.steam-login-info');
-                if (existing) existing.remove();
-                credits.innerHTML += `<br><span class="steam-login-info" style="color: #66c0f4">Logged in as ${name} (Steam)</span>`;
-            }
+            const creditsElements = document.querySelectorAll('.credits');
+            creditsElements.forEach(credits => {
+                credits.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">Hi, ${name} (Steam)</span>`;
+            });
         });
     }
 
