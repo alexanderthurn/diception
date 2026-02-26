@@ -61,6 +61,23 @@ export class PlayerDashboard {
         this.playerDashboard.classList.add('hidden');
     }
 
+    /**
+     * Trigger a rumble animation on the active player tile
+     * @param {boolean} won - true for win rumble, false for loss rumble
+     */
+    rumbleActive(won) {
+        const activeTile = this.collapsedList.querySelector('.player-tile.active');
+        if (!activeTile) return;
+        const cls = won ? 'rumble-win' : 'rumble-lose';
+        activeTile.classList.remove('rumble-win', 'rumble-lose');
+        // Force reflow so re-adding same class restarts animation
+        void activeTile.offsetWidth;
+        activeTile.classList.add(cls);
+        activeTile.addEventListener('animationend', () => {
+            activeTile.classList.remove(cls);
+        }, { once: true });
+    }
+
     updateCollapsedView() {
         const stats = this.game.getPlayerStats();
         this.collapsedList.innerHTML = '';

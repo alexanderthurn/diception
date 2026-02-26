@@ -413,6 +413,16 @@ export class GameEventManager {
         }
 
         if (this.playerDashboard) this.playerDashboard.update();
+
+        // Rumble active tile on attack outcome
+        // Always for humans, for bots only on beginner/medium (not expert)
+        if (this.playerDashboard) {
+            const isHuman = attacker && !attacker.isBot && !autoplayPlayers.has(attacker.id);
+            const isBotWithAnimation = attacker && (attacker.isBot || autoplayPlayers.has(attacker.id)) && gameSpeed !== 'expert';
+            if (isHuman || isBotWithAnimation) {
+                this.playerDashboard.rumbleActive(result.won);
+            }
+        }
     }
 
     handlePlayerEliminated(player) {

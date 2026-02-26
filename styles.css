@@ -587,6 +587,68 @@ select {
     }
 }
 
+/* Rumble animations for attack outcomes */
+@keyframes tile-rumble-win {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    20% {
+        transform: rotate(-8deg);
+    }
+
+    40% {
+        transform: rotate(8deg);
+    }
+
+    60% {
+        transform: rotate(-5deg);
+    }
+
+    80% {
+        transform: rotate(5deg);
+    }
+}
+
+@keyframes tile-rumble-lose {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    20% {
+        transform: translateY(-3px);
+    }
+
+    40% {
+        transform: translateY(3px);
+    }
+
+    60% {
+        transform: translateY(-2px);
+    }
+
+    80% {
+        transform: translateY(2px);
+    }
+}
+
+.player-tile.rumble-win {
+    animation: tile-rumble-win 0.3s ease-in-out;
+}
+
+.player-tile.rumble-lose {
+    animation: tile-rumble-lose 0.3s ease-in-out;
+}
+
+body.fx-off .player-tile.rumble-win,
+body.fx-off .player-tile.rumble-lose {
+    animation: none;
+}
+
 .dash-header {
     margin: 0;
     padding: 10px;
