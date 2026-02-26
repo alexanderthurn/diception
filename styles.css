@@ -492,6 +492,101 @@ select {
     display: none;
 }
 
+/* Hide header text when collapsed — the tile strip itself is the toggle */
+#player-dashboard.collapsed .dash-header {
+    display: none;
+}
+
+/* Collapsed tile list: visible only when collapsed */
+#player-collapsed-list {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+#player-collapsed-list:hover {
+    filter: brightness(1.2);
+}
+
+#player-dashboard.collapsed #player-collapsed-list {
+    display: flex;
+}
+
+/* Individual player tile: square, colored, like game tiles */
+.player-tile {
+    width: 36px;
+    height: 36px;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 0;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.player-tile.active {
+    box-shadow: inset 0 0 0 2px #ffffff, 0 0 6px rgba(255, 255, 255, 0.4);
+}
+
+.player-tile.dead {
+    opacity: 0.4;
+}
+
+/* Player type icon inside tile */
+.player-tile-icon {
+    width: 14px !important;
+    height: 14px !important;
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+/* Dice count label under icon */
+.player-tile-dice {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* Dead X overlay — fills full tile */
+.player-tile-dead {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0.9;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Wider screens: bigger tiles with dice count */
+@container (min-width: 768px) {
+    .player-tile {
+        width: 48px;
+        height: 48px;
+    }
+
+    .player-tile-icon {
+        width: 22px !important;
+        height: 22px !important;
+    }
+
+    .player-tile-dice {
+        font-size: 16px;
+    }
+}
+
 .dash-header {
     margin: 0;
     padding: 10px;

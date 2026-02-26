@@ -103,6 +103,9 @@ export class GameEventManager {
         this.playerText.textContent = `${name}'s Turn`;
         this.playerText.style.color = '#' + data.player.color.toString(16).padStart(6, '0');
 
+        // Update dashboard to reflect new active player
+        if (this.playerDashboard) this.playerDashboard.update();
+
         // Start a new turn group in the log
         if (this.startTurnLog) this.startTurnLog(data.player);
 
