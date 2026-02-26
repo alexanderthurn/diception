@@ -153,7 +153,7 @@ async function init() {
             console.log('Steam User:', name);
             const creditsElements = document.querySelectorAll('.credits');
             creditsElements.forEach(credits => {
-                credits.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">Hi, ${name} (Steam)</span>`;
+                credits.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">Hi, ${name}</span>`;
             });
         });
     }
