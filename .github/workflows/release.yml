@@ -8,6 +8,30 @@ on:
 
 jobs:
 
+  # ─── Common Assets ────────────────────────────────────────────────────────────
+  build-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+      
+      # Generates sprites.css so it's fresh
+      - run: npm run generate-icons
+      - run: node scripts/generate-css.js
+      
+      - run: npm run tauri:build:assets
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: common-assets
+          path: dist-tauri/common/assets.zip
+
   # ─── Mac ──────────────────────────────────────────────────────────────────────
   build-mac:
     runs-on: macos-latest

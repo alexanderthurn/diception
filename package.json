@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "tauri:dev": "tauri dev",
+    "tauri:dev": "npm run tauri:build:assets && tauri dev",
+    "tauri:build:assets": "node scripts/bundle-steam-assets.js",
     "tauri:dev:android": "npm run android:sync-version && tauri android dev",
     "fetch-steam-sdk": "node scripts/fetch-steam-sdk.js",
     "tauri:build:mac": "tauri build --bundles app && mkdir -p dist-tauri/mac && cp -r src-tauri/target/release/bundle/macos/*.app dist-tauri/mac/ && cp src-tauri/resources/libsteam_api.dylib dist-tauri/mac/DICEPTION.app/Contents/MacOS/ 2>/dev/null || true && cp steam/game_actions_X.vdf dist-tauri/mac/DICEPTION.app/Contents/MacOS/game_actions_X.vdf",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.10.0",
+    "archiver": "^7.0.1",
     "png-to-ico": "^3.0.1",
     "sharp": "^0.34.5",
     "vite": "^6.4.1"
