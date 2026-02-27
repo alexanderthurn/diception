@@ -13,6 +13,7 @@
     "windows": [
       {
         "title": "DICEPTION",
+        "additionalBrowserArgs": "--disable-frame-rate-limit --enable-features=SharedArrayBuffer --ignore-gpu-blocklist --enable-gpu-rasterization --enable-zero-copy",
         "width": 800,
         "height": 600,
         "resizable": true,
