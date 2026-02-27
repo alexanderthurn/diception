@@ -6,8 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Resolve paths relative to this script
-const jsonPath = path.join(__dirname, '../public/gfx/diception.json');
-const outPath = path.join(__dirname, '../public/gfx/sprites.css');
+const jsonPath = path.join(__dirname, '../public/assets/gfx/diception.json');
+const outPath = path.join(__dirname, '../public/assets/gfx/sprites.css');
 
 const json = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
 

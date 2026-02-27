@@ -1,7 +1,7 @@
 // Sound Manager - SFX playback using @pixi/sound
 import { sound } from '@pixi/sound';
 
-const SFX_PATH = './sfx/';
+const SFX_PATH = './assets/sfx/';
 
 const SFX_FILES = {
     turnStart: 'turn-start.ogg',

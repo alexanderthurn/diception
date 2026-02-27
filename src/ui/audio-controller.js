@@ -111,7 +111,7 @@ export class AudioController {
         this._musicInstance = null;
         this._musicPaused = false;
 
-        const songPath = './music/' + encodeURIComponent(this.availableSongs[index]);
+        const songPath = './assets/music/' + encodeURIComponent(this.availableSongs[index]);
         console.log('Loading music:', songPath);
 
         this._musicSound = sound.add('music', {

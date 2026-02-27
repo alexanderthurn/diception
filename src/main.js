@@ -80,7 +80,7 @@ async function init() {
 
     // Load spritesheet
     try {
-        await Assets.load('gfx/diception.json');
+        await Assets.load('assets/gfx/diception.json');
         console.log('Spritesheet loaded');
     } catch (e) {
         console.error('Failed to load spritesheet:', e);
