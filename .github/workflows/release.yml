@@ -236,3 +236,38 @@ jobs:
             --verbose
           quit
           EOF
+
+  deploy-steam:
+    needs: [build-mac, build-win, build-linux] # Android brauchen wir hier nicht
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Alle OS-Builds herunterladen
+      - uses: actions/download-artifact@v4
+        with:
+          path: steam-builds
+
+      # 2. Upload zu Steam
+      - name: Publish to Steam
+        uses: game-ci/steam-deploy@v3
+        with:
+          username: ${{ secrets.STEAM_USERNAME }}
+          # Das Secret aus Schritt 1
+          configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
+          appId: ${{ secrets.STEAM_APP_ID }}
+          buildDescription: "v${{ github.ref_name }} (GitHub Action)"
+          
+          # Hier legst du fest, welcher Branch bespielt wird
+          releaseBranch: "default" 
+          
+          # Mappings für deine 3 Depots
+          # Pfade beziehen sich auf den 'steam-builds' Ordner oben
+          depot1Id: "${{ secrets.STEAM_DEPOT_ID_WIN }}"
+          depot1Path: "steam-builds/win"
+          
+          depot2Id: "${{ secrets.STEAM_DEPOT_ID_MAC }}"
+          depot2Path: "steam-builds/mac"
+          
+          depot3Id: "${{ secrets.STEAM_DEPOT_ID_LINUX }}"
+          depot3Path: "steam-builds/linux"

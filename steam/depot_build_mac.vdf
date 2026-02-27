@@ -4,7 +4,7 @@
 	"ContentRoot" "../dist-tauri/mac"
 	"FileMapping"
 	{
-		"LocalPath" "DICEPTION.app/*"
+		"LocalPath" "*"
 		"DepotPath" "."
 		"recursive" "1"
 	}

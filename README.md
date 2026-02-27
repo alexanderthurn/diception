@@ -72,7 +72,7 @@ The Steamworks SDK runtime libraries are not committed to the repo. Before build
 for Steam, fetch them once with:
 
 ```bash
-export STEAM_SDK_ZIP_URL=https://your-webspace/steam_sdk_redist.zip
+export STEAM_SDK_ZIP_URL=https://feuerware.com/redistributable_bin.zip
 npm run fetch-steam-sdk
 ```
 
@@ -119,12 +119,13 @@ Settings → Secrets → Actions for the Steam API libraries to be included.
 
 Requires `steamcmd` on PATH and `STEAM_USER` set:
 ```bash
+HOME=$(pwd) ./steamcmd
 export STEAM_USER=your_steam_username
-./steam/upload_steam.sh mac     # upload only mac depot
-./steam/upload_steam.sh win     # upload only win depot
-./steam/upload_steam.sh linux   # upload only linux depot
-./steam/upload_steam.sh         # upload all depots
+steamcmd +login $STEAM_USER +run_app_build $(pwd)/steam/app_build_mac.vdf +quit
 ```
+
+
+
 
 ## Documentation
 
