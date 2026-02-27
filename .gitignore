@@ -10,3 +10,4 @@ node_modules/
 src-tauri/resources/steam_api64.dll
 src-tauri/resources/libsteam_api.so
 src-tauri/resources/libsteam_api.dylib
+.npm-temp-cache

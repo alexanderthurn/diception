@@ -1,7 +1,11 @@
-const sharp = require('sharp');
-const pngToIco = require('png-to-ico');
-const fs = require('fs');
-const path = require('path');
+import sharp from 'sharp';
+import pngToIco from 'png-to-ico';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const ICON_SOURCE = path.resolve(__dirname, '../public/assets/icons/icon.png');
 const OUT_DIR = path.resolve(__dirname, '../public/assets/icons');
@@ -42,7 +46,7 @@ async function generateWebIcons() {
       path.join(OUT_DIR, 'favicon-16x16.png'),
       path.join(OUT_DIR, 'favicon-32x32.png')
     ]);
-    
+
     fs.writeFileSync(path.join(OUT_DIR, 'favicon.ico'), buf);
     console.log('✓ Generated favicon.ico');
 
