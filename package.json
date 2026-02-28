@@ -9,7 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "tauri:dev": "npm run tauri:build:assets && tauri dev",
+    "tauri:dev": "tauri dev",
     "tauri:build:assets": "node scripts/bundle-steam-assets.js",
     "tauri:dev:android": "npm run android:sync-version && tauri android dev",
     "fetch-steam-sdk": "node scripts/fetch-steam-sdk.js",
