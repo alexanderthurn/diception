@@ -368,30 +368,31 @@ export class ParticleSystem {
         this.particles.push(data);
     }
 
-    update() {
+    update(ticker) {
         if (this.quality === 'off') return;
+        const dt = ticker.deltaTime;
 
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
 
             // Handle spawn delay
             if (p.delay && p.delay > 0) {
-                p.delay--;
+                p.delay -= dt;
                 continue;
             }
 
-            if (p.delay === 0) {
+            if (p.delay <= 0 && p.delay !== undefined) {
                 p.graphics.visible = true;
                 p.delay = undefined;
             }
 
             // Update physics
-            p.vy += p.gravity;
-            p.x += p.vx;
-            p.y += p.vy;
+            p.vy += p.gravity * dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
 
             // Update life
-            p.life--;
+            p.life -= dt;
             const lifeRatio = p.life / p.maxLife;
 
             // Update graphics

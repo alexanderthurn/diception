@@ -159,22 +159,23 @@ export class BackgroundRenderer {
 
     // ── Main update loop ──────────────────────────────────────────────────────
 
-    update() {
+    update(ticker) {
         if (!this.enabled) return;
+        const dt = ticker.deltaTime;
 
-        this.time++;
+        this.time += dt;
 
         // Ambient particles
         for (const p of this.ambientParticles) {
-            p.x += p.vx;
-            p.y += p.vy;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
 
             if (p.x < -10) p.x = this.width + 10;
             if (p.x > this.width + 10) p.x = -10;
             if (p.y < -10) p.y = this.height + 10;
             if (p.y > this.height + 10) p.y = -10;
 
-            p.alphaPhase += p.alphaSpeed;
+            p.alphaPhase += p.alphaSpeed * dt;
             const alphaMod = Math.sin(p.alphaPhase) * 0.3 + 0.7;
 
             p.graphics.x = p.x;
@@ -184,16 +185,16 @@ export class BackgroundRenderer {
 
         // Pulse decay
         if (this.pulseTarget > 0) {
-            this.pulseAlpha += (this.pulseTarget - this.pulseAlpha) * 0.1;
+            this.pulseAlpha += (this.pulseTarget - this.pulseAlpha) * (0.1 * dt);
             if (this.pulseAlpha >= this.pulseTarget * 0.9) this.pulseTarget = 0;
         } else {
-            this.pulseAlpha *= 0.92;
+            this.pulseAlpha *= Math.pow(0.92, dt);
             if (this.pulseAlpha < 0.01) this.pulseAlpha = 0;
         }
 
         // Win intensity (brightens particles)
         if (this.winIntensity > 0) {
-            this.winIntensity *= 0.99;
+            this.winIntensity *= Math.pow(0.99, dt);
             if (this.winIntensity < 0.01) this.winIntensity = 0;
 
             for (const p of this.ambientParticles) {
@@ -203,7 +204,7 @@ export class BackgroundRenderer {
 
         // Elimination flare (growing square, event-driven — unchanged)
         if (this.flareActive) {
-            this.flareProgress += 0.012;
+            this.flareProgress += 0.012 * dt;
             this.flareGfx.clear();
             const maxDim = Math.max(this.width, this.height);
             const flareSize = this.flareProgress * maxDim * 2.5;
@@ -227,7 +228,7 @@ export class BackgroundRenderer {
 
         // Floating dice (intro only)
         if (this.introMode) {
-            this.updateFloatingDice();
+            this.updateFloatingDice(dt);
         }
     }
 
@@ -444,7 +445,7 @@ export class BackgroundRenderer {
         this.diceContainer.scale.set(1, 1);
     }
 
-    updateFloatingDice() {
+    updateFloatingDice(dt) {
         const sc = this.diceContainer.scale.x;
         const ox = this.diceContainer.x;
         const oy = this.diceContainer.y;
@@ -452,9 +453,9 @@ export class BackgroundRenderer {
 
         for (let i = this.floatingDice.length - 1; i >= 0; i--) {
             const d = this.floatingDice[i];
-            d.x += d.vx;
-            d.y += d.vy;
-            d.rotation += d.rotationSpeed;
+            d.x += d.vx * dt;
+            d.y += d.vy * dt;
+            d.rotation += d.rotationSpeed * dt;
 
             // Cull dice that have drifted far off-screen (no wrap-back)
             const screenX = ox + d.x * sc;
@@ -467,7 +468,7 @@ export class BackgroundRenderer {
                 continue;
             }
 
-            d.alphaPhase += 0.015;
+            d.alphaPhase += 0.015 * dt;
             const alphaMod = Math.sin(d.alphaPhase) * 0.2 + 0.8;
 
             d.graphics.x = d.x;

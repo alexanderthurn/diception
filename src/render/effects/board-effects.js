@@ -207,14 +207,15 @@ export class BoardEffects {
 
     // ── Update loop ────────────────────────────────────────────────────────────
 
-    _update() {
+    _update(ticker) {
+        const dt = ticker.deltaTime;
         for (let i = this._activeRings.length - 1; i >= 0; i--) {
             const r = this._activeRings[i];
 
-            if (r.delay > 0) { r.delay--; continue; }
+            if (r.delay > 0) { r.delay -= dt; continue; }
             if (!r.g.visible) r.g.visible = true;
 
-            r.life--;
+            r.life -= dt;
             const progress = 1 - r.life / r.maxLife;
             const alpha    = r.life / r.maxLife;
             const sc       = r.scale;
