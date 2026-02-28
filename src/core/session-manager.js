@@ -110,6 +110,16 @@ export class SessionManager {
 
         this.resetUI();
 
+        // Clear lingering selection/hover highlights
+        if (this.renderer) {
+            this.renderer.setSelection(null, null);
+            this.renderer.setCursor(null, null);
+            if (this.renderer.grid && this.renderer.grid.hoverTiles) {
+                this.renderer.grid.hoverTiles.clear();
+                this.renderer.grid._lastHoverCursorId = null;
+            }
+        }
+
         // Clear renderer
         this.renderer.draw(); // Will draw empty grid
     }
