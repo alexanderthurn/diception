@@ -234,7 +234,7 @@ jobs:
           buildDescription: "v${{ github.ref_name }} (GitHub Action)"
           
           # Hier legst du fest, welcher Branch bespielt wird
-          releaseBranch: "default" 
+          releaseBranch:  ${{ secrets.STEAM_RELEASE_BRANCH }}
           depot1Path: "steam-builds/win"
           depot2Path: "steam-builds/mac"
           depot3Path: "steam-builds/linux"
