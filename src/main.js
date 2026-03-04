@@ -138,15 +138,6 @@ async function init() {
         }
     }
 
-    // Steam Input — initialise in the background; non-blocking, optional
-    if (window.steam?.inputInit) {
-        import('./input/steam-input-adapter.js').then(({ steamInput }) => {
-            steamInput.init().then(ok => {
-                if (ok) console.log('[SteamInput] Ready');
-            });
-        });
-    }
-
     // Steam-specific identity display
     if (window.steam) {
         window.steam.getUserName().then(name => {
@@ -488,6 +479,8 @@ async function init() {
                 window.location.reload();
             });
         }
+        // Gamepad type toggle
+        // (wired in refreshControlsSection below)
     }
 
     // Initialize Game Event Manager
@@ -943,6 +936,13 @@ function setupHowToPlay(effectsManager, audioController, inputManager) {
         let configHtml = '<div class="controls-configure-row" style="flex-wrap: wrap; gap: 15px;">';
         configHtml += '<div><button class="tron-btn small" id="configure-keyboard-btn" style="margin-bottom:10px;">CONFIGURE KEYBOARD</button></div>';
 
+        // Gamepad Type toggle button (desktop only)
+        if (isDesktopContext()) {
+            const currentBackend = inputManager.backend || 'auto';
+            const label = currentBackend === 'navigator' ? 'GAMEPAD: BROWSER' : 'GAMEPAD: NATIVE';
+            configHtml += `<div><button class="tron-btn small" id="gamepad-type-toggle-btn" style="margin-bottom:10px;">${label}</button></div>`;
+        }
+
         const connectedGamepads = Array.from(inputManager.connectedGamepadIndices || []).sort();
         connectedGamepads.forEach((rawIdx) => {
             const humanIdx = inputManager.getHumanIndex(rawIdx);
@@ -975,6 +975,13 @@ function setupHowToPlay(effectsManager, audioController, inputManager) {
         document.getElementById('configure-keyboard-btn')?.addEventListener('click', async () => {
             const saved = await KeyBindingDialog.configureKeyboard(inputManager);
             if (saved) refreshControlsSection();
+        });
+
+        // Gamepad Type toggle button
+        document.getElementById('gamepad-type-toggle-btn')?.addEventListener('click', () => {
+            const next = inputManager.backend === 'navigator' ? 'auto' : 'navigator';
+            inputManager.setBackend(next);
+            refreshControlsSection();
         });
 
         // Gamepad configure buttons

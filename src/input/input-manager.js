@@ -1,13 +1,14 @@
 import { isDesktopContext } from '../scenarios/user-identity.js';
 import { loadBindings } from './key-bindings.js';
+import { gilrsAdapter } from './gilrs-input-adapter.js';
 
 /**
  * InputManager - Unified input handling for keyboard and gamepad.
  * Emits semantic game events that InputController consumes.
  *
  * Uses configurable key bindings loaded from key-bindings.js.
- * Designed to be swappable: a SteamInput adapter would implement the same
- * emit() interface and bypass this binding system entirely.
+ * Supports two gamepad backends: gilrs (native, via Tauri IPC) and
+ * navigator.getGamepads() (browser, max 4).  Backend is switchable at runtime.
  */
 export class InputManager {
     constructor() {
@@ -43,6 +44,17 @@ export class InputManager {
         // Load bindings and build lookup maps
         this.bindings = loadBindings();
         this._buildMaps();
+
+        // Gamepad backend: 'auto' | 'gilrs' | 'navigator'
+        //  auto      = gilrs if available, else navigator.getGamepads()
+        //  gilrs     = force gilrs (Tauri desktop only)
+        //  navigator = force browser Gamepad API (4-gamepad limit)
+        const saved = localStorage.getItem('dicy_gamepad_backend') || 'auto';
+        this._backend = saved;
+        this._useGilrs = this._resolveGilrs(saved);
+        // Pending gilrs poll result (updated asynchronously)
+        this._gilrsPending = false;
+        this._gilrsGamepads = [];
 
         // Bind keyboard events
         this.setupKeyboard();
@@ -110,6 +122,53 @@ export class InputManager {
         this.heldKeys.clear();
         this.panState = { x: 0, y: 0 };
         this.emit('bindingsReloaded');
+    }
+
+    /** Resolve whether to use gilrs given a backend preference string. */
+    _resolveGilrs(mode) {
+        if (mode === 'gilrs') return gilrsAdapter.isAvailable;
+        if (mode === 'navigator') return false;
+        // 'auto'
+        return gilrsAdapter.isAvailable;
+    }
+
+    /**
+     * Switch gamepad backend at runtime.
+     * @param {'auto'|'gilrs'|'navigator'} mode
+     */
+    setBackend(mode) {
+        this._backend = mode;
+        this._useGilrs = this._resolveGilrs(mode);
+        localStorage.setItem('dicy_gamepad_backend', mode);
+        // Reset gamepad state so stale data doesn't linger
+        this.gamepadStates.clear();
+        this.connectedGamepadIndices = new Set();
+        this.gamepadToHumanMap.clear();
+        this._gilrsGamepads = [];
+        this.emit('gamepadChange', []);
+    }
+
+    /** Return the current backend mode string. */
+    get backend() { return this._backend; }
+
+    /**
+     * Return a normalised array of connected gamepads from the active backend.
+     * Each entry has: { index, id, buttons: [{pressed}], axes: number[] }
+     * Other code should use this instead of navigator.getGamepads() directly
+     * to avoid duplicate gamepads when gilrs and the browser see different
+     * views of the same physical controller.
+     */
+    getGamepads() {
+        if (this._useGilrs) {
+            return this._gilrsGamepads.map(gp => ({
+                index: gp.id,
+                id: gp.name || `gilrs-${gp.id}`,
+                buttons: gp.buttons.map(b => ({ pressed: b })),
+                axes: gp.axes,
+            }));
+        }
+        // Standard W3C: return as-is (iterable of Gamepad | null)
+        return Array.from(navigator.getGamepads()).filter(Boolean);
     }
 
     /**
@@ -292,26 +351,58 @@ export class InputManager {
     }
 
     processGamepads() {
-        const gamepads = navigator.getGamepads();
+        // Choose gamepad source based on backend setting
+        let gpList;
+        if (this._useGilrs) {
+            // Use cached gilrs data (updated asynchronously)
+            gpList = this._gilrsGamepads;
+            // Kick off next async poll if not already pending
+            if (!this._gilrsPending) {
+                this._gilrsPending = true;
+                gilrsAdapter.poll().then(snapshots => {
+                    this._gilrsPending = false;
+                    this._gilrsGamepads = snapshots;
+                }).catch(() => {
+                    this._gilrsPending = false;
+                });
+            }
+        } else {
+            // Standard W3C Gamepad API
+            gpList = navigator.getGamepads();
+        }
+
         const currentIndices = new Set();
 
-        for (const gp of gamepads) {
+        for (const gp of gpList) {
             if (!gp) continue;
-            currentIndices.add(gp.index);
 
-            const prevState = this.gamepadStates.get(gp.index) || {
-                buttons: new Array(gp.buttons.length).fill(false),
+            // Normalise: gilrs snapshots use { id, name, buttons: bool[], axes: number[] }
+            // navigator gamepads use { index, buttons: GamepadButton[], axes: number[] }
+            const gpIndex = gp.index ?? gp.id;
+            currentIndices.add(gpIndex);
+
+            const prevState = this.gamepadStates.get(gpIndex) || {
+                buttons: new Array(16).fill(false),
                 axes: [0, 0, 0, 0],
                 moveRepeat: { active: false, dir: null, started: 0, lastFire: 0 }
             };
 
-            this.processGamepadButtons(gp, prevState);
-            this.processGamepadMovement(gp, prevState);
-            this.processGamepadPan(gp);
+            // Build a normalised gamepad-like object for the processing methods
+            const normalised = this._useGilrs
+                ? {
+                    index: gpIndex,
+                    buttons: gp.buttons.map(b => ({ pressed: b })),
+                    axes: gp.axes,
+                }
+                : { index: gp.index, buttons: gp.buttons, axes: [...gp.axes] };
 
-            this.gamepadStates.set(gp.index, {
-                buttons: gp.buttons.map(b => b.pressed),
-                axes: [...gp.axes],
+            this.processGamepadButtons(normalised, prevState);
+            this.processGamepadMovement(normalised, prevState);
+            this.processGamepadPan(normalised);
+
+            this.gamepadStates.set(gpIndex, {
+                buttons: normalised.buttons.map(b => b.pressed),
+                axes: [...normalised.axes],
                 moveRepeat: prevState.moveRepeat
             });
         }
@@ -341,8 +432,9 @@ export class InputManager {
     }
 
     processGamepadButtons(gp, prevState) {
-        for (let i = 0; i < gp.buttons.length; i++) {
-            const pressed = gp.buttons[i].pressed;
+        const numButtons = gp.buttons.length;
+        for (let i = 0; i < numButtons; i++) {
+            const pressed = gp.buttons[i]?.pressed ?? false;
             const wasPressed = prevState.buttons[i];
 
             if (pressed && !wasPressed) {
@@ -384,7 +476,7 @@ export class InputManager {
 
         for (const [btnIdx, dir] of Object.entries(dpMap)) {
             const i = parseInt(btnIdx);
-            const pressed = gp.buttons[i]?.pressed;
+            const pressed = gp.buttons[i]?.pressed ?? false;
             const wasPressed = prevState.buttons[i];
 
             if (pressed && !wasPressed) {

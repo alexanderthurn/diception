@@ -26,6 +26,7 @@ tauri-plugin-log = "2"
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 steamworks = "0.12"
+gilrs = "0.11"
 
 [profile.release]
 panic = "abort"   # Verringert die Größe, indem im Fehlerfall sofort abgebrochen wird

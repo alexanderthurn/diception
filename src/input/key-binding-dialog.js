@@ -49,7 +49,7 @@ export class KeyBindingDialog {
         const pending = { ...bindings.gamepad };
 
         const saved = await this._runWizard({
-            title: `CONFIGURE GAMEPAD ${inputManager.getHumanIndex(gamepadIndex) + 1}`,
+            title: `GAMEPAD ${inputManager.getHumanIndex(gamepadIndex) + 1}`,
             actions,
             device: 'gamepad',
             gamepadIndex,

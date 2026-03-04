@@ -49,6 +49,10 @@ export class GamepadCursorManager {
         // Listen for button events from input manager
         this.setupEventListeners();
 
+        // Clamp all cursors when the window resizes (e.g. resolution change)
+        this._boundResize = () => this._clampAllCursors();
+        window.addEventListener('resize', this._boundResize);
+
         // Auto-focus first element when a modal becomes visible
         this._setupModalAutoFocus();
     }
@@ -244,20 +248,18 @@ export class GamepadCursorManager {
     update() {
         if (this.disposed) return;
 
-        const gamepads = navigator.getGamepads();
+        // Use InputManager's unified gamepad source (gilrs or navigator, never both)
+        const gamepads = this.inputManager.getGamepads();
+        const activeIndices = new Set();
 
-        for (let i = 0; i < gamepads.length; i++) {
-            const gp = gamepads[i];
-            if (!gp) {
-                if (this.cursors.has(i)) {
-                    this.removeCursor(i);
-                }
-                continue;
-            }
+        for (const gp of gamepads) {
+            if (!gp) continue;
+            const idx = gp.index;
+            activeIndices.add(idx);
 
-            let cursor = this.cursors.get(i);
+            let cursor = this.cursors.get(idx);
             if (!cursor) {
-                cursor = this.createCursor(i, gp);
+                cursor = this.createCursor(idx, gp);
             }
 
             // Move cursor based on left stick
@@ -265,7 +267,7 @@ export class GamepadCursorManager {
             let dy = gp.axes[1] || 0;
 
             // Load dynamically saved deadzone per gamepad, default to 0.15
-            const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.index);
+            const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + idx);
             const currentDeadZone = savedDeadzone ? parseFloat(savedDeadzone) : 0.15;
 
             // Apply deadzone
@@ -292,14 +294,14 @@ export class GamepadCursorManager {
                     cursor.x = Math.max(0, Math.min(window.innerWidth, cursor.x));
                     cursor.y = Math.max(0, Math.min(window.innerHeight, cursor.y));
 
-                    GamepadCursorManager.savedPositions.set(i, { x: cursor.x, y: cursor.y });
+                    GamepadCursorManager.savedPositions.set(idx, { x: cursor.x, y: cursor.y });
 
                     // Update DOM element
                     this._positionCursor(cursor);
                     cursor.element.style.opacity = '1.0';
 
                     // Trigger mousemove on current position
-                    this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, i);
+                    this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, idx);
                 }
             }
 
@@ -324,7 +326,14 @@ export class GamepadCursorManager {
             }
 
             // Periodically check if player info changed (e.g. game started)
-            this.updateCursorColor(cursor, i);
+            this.updateCursorColor(cursor, idx);
+        }
+
+        // Remove cursors for gamepads that are no longer connected
+        for (const [idx] of this.cursors) {
+            if (!activeIndices.has(idx)) {
+                this.removeCursor(idx);
+            }
         }
 
         this.animationFrameId = requestAnimationFrame(this.update);
@@ -361,6 +370,12 @@ export class GamepadCursorManager {
             }
         }
 
+        // Remove resize listener
+        if (this._boundResize) {
+            window.removeEventListener('resize', this._boundResize);
+            this._boundResize = null;
+        }
+
         // Remove all cursor elements
         for (const [index, cursor] of this.cursors) {
             if (cursor.element) {
@@ -374,6 +389,18 @@ export class GamepadCursorManager {
             this.container.parentNode.removeChild(this.container);
         }
         this.container = null;
+    }
+
+    /** Clamp every cursor to the current viewport bounds. */
+    _clampAllCursors() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        for (const [index, cursor] of this.cursors) {
+            cursor.x = Math.max(0, Math.min(w, cursor.x));
+            cursor.y = Math.max(0, Math.min(h, cursor.y));
+            GamepadCursorManager.savedPositions.set(index, { x: cursor.x, y: cursor.y });
+            this._positionCursor(cursor);
+        }
     }
 
     createCursor(index, gamepad) {
@@ -406,8 +433,8 @@ export class GamepadCursorManager {
         const saved = GamepadCursorManager.savedPositions.get(index);
         let initialX, initialY;
         if (saved) {
-            initialX = saved.x;
-            initialY = saved.y;
+            initialX = Math.max(0, Math.min(window.innerWidth, saved.x));
+            initialY = Math.max(0, Math.min(window.innerHeight, saved.y));
         } else {
             const humanIndex = this.inputManager.getHumanIndex(index);
             const padding = 0;
