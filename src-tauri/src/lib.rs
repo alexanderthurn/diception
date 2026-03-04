@@ -350,6 +350,10 @@ pub fn run() {
     }
 
     // ── Common setup ──────────────────────────────────────────────────────────
+    // NOTE: Steam Overlay cannot work with Tauri/WebView-based apps.
+    // Steam overlay hooks into DirectX/OpenGL/Vulkan rendering; WKWebView (macOS)
+    // and WebView2 (Windows) don't use those pipelines, so there's no surface
+    // for Steam to inject into.  This is a known platform limitation.
     builder
         .setup(|app| {
             if cfg!(debug_assertions) {
