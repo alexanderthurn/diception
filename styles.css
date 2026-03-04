@@ -2049,9 +2049,7 @@ select {
         font-size: 2.2rem;
     }
 
-    .tron-title {
-        font-size: 4.2rem;
-    }
+
 
     .loading-icons {
         font-size: 4rem;
@@ -5082,8 +5080,6 @@ canvas {
     pointer-events: none;
     opacity: 0.3;
 }
-
-/* Zoom controls: always visible (removed conditional needs-zoom-controls logic) */
 
 .scenario-browser-top-bar {
     position: absolute;

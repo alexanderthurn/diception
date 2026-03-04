@@ -75,10 +75,6 @@ export class ScenarioBrowser {
         await this.showCampaignView();
         this.restoreLastSelectedCampaign();
         if (this.effectsManager) this.effectsManager.stopIntroMode();
-
-        // Hide zoom buttons in campaign view
-        const zoomBtns = document.querySelectorAll('.zoom-control');
-        zoomBtns.forEach(btn => btn.classList.add('hidden'));
     }
 
     hasHoverCapability() {
@@ -98,10 +94,6 @@ export class ScenarioBrowser {
                 this.scenarioBrowserModal.classList.add('hidden');
                 this.setupModal.classList.remove('hidden');
                 if (this.effectsManager) this.effectsManager.startIntroMode();
-
-                // Show zoom buttons again
-                const zoomBtns = document.querySelectorAll('.zoom-control');
-                zoomBtns.forEach(btn => btn.classList.remove('hidden'));
             });
         }
 

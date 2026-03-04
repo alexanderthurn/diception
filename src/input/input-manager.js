@@ -213,11 +213,23 @@ export class InputManager {
     setupKeyboard() {
         document.addEventListener('keydown', this.boundKeyDown);
         document.addEventListener('keyup', this.boundKeyUp);
+
+        // Clear all held keys when window loses focus (e.g. devtools opens,
+        // Alt-Tab, etc.) to prevent stuck movement.
+        this._boundBlur = () => {
+            this.heldDirections.clear();
+            this.heldKeys.clear();
+            this.panState = { x: 0, y: 0 };
+        };
+        window.addEventListener('blur', this._boundBlur);
     }
 
     onKeyDown(e) {
         // Ignore if typing in an input field
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        // Ignore when Cmd/Ctrl/Alt are held — those are browser shortcuts
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
 
         const code = e.code.toLowerCase();
 
@@ -341,6 +353,9 @@ export class InputManager {
 
         document.removeEventListener('keydown', this.boundKeyDown);
         document.removeEventListener('keyup', this.boundKeyUp);
+        if (this._boundBlur) {
+            window.removeEventListener('blur', this._boundBlur);
+        }
 
         this.listeners = {};
         this.gamepadStates.clear();
