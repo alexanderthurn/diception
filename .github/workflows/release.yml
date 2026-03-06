@@ -164,54 +164,6 @@ jobs:
           name: android
           path: dist-tauri/android/DICEPTION.apk
 
-  # ─── Web deploy (only when tag is on main) ────────────────────────────────────
-  deploy-web:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check if tag is on main
-        id: branch-check
-        run: |
-          git fetch origin main
-          if git branch -r --contains ${{ github.sha }} | grep -q "origin/main"; then
-            echo "on_main=true" >> $GITHUB_OUTPUT
-          else
-            echo "on_main=false" >> $GITHUB_OUTPUT
-            echo "Tag is not on main — skipping FTP deploy."
-          fi
-
-      - uses: actions/setup-node@v4
-        if: steps.branch-check.outputs.on_main == 'true'
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install & Build
-        if: steps.branch-check.outputs.on_main == 'true'
-        run: |
-          npm ci
-          npm run build
-
-      - name: Deploy to FTP (Prod)
-        if: steps.branch-check.outputs.on_main == 'true'
-        run: |
-          sudo apt-get update && sudo apt-get install -y lftp
-          lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_SERVER }}" <<EOF
-          set ftp:ssl-allow no
-          set ftp:passive-mode true
-          mkdir -p "/prod"
-          mirror -R "./dist/" "/prod" \
-            --delete \
-            --parallel=10 \
-            --exclude-glob .htaccess \
-            --exclude-glob .htpasswd \
-            --verbose
-          quit
-          EOF
-
   deploy-steam:
     needs: [build-mac, build-win, build-linux] # Android brauchen wir hier nicht
     runs-on: ubuntu-latest
