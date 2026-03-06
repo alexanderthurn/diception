@@ -190,6 +190,10 @@
             { id: 'windows_bg_4k', name: 'Windows Background 4K', w: 3840, h: 2160, type: 'title' },
         ];
 
+        const CUSTOM_ASSETS = [
+            { id: 'store_front_map', name: 'Store Front Map', w: 1024, h: 1024, type: 'game_map' },
+        ];
+
         // ── Colors ──
         const TITLE_COLOR = '#00FFFF';
         const HUMAN1_COLOR = '#AA00FF';
@@ -232,14 +236,24 @@
                     section.appendChild(wrapper);
 
                     container.appendChild(section);
-                    renderAsset(canvas, asset);
+                    pendingRenders.push({ canvas, asset });
                 });
             }
 
             addSection('Store Assets', STORE_ASSETS);
             addSection('Library Assets', LIBRARY_ASSETS);
             addSection('Windows Assets (Preview Only)', WINDOWS_ASSETS);
+            addSection('Custom Assets', CUSTOM_ASSETS);
+
+            // Load spritesheet then render all assets
+            spriteSheet.onload = () => pendingRenders.forEach(r => renderAsset(r.canvas, r.asset));
+            if (spriteSheet.complete) pendingRenders.forEach(r => renderAsset(r.canvas, r.asset));
         });
+
+        // ── Global spritesheet & pending renders ──
+        const spriteSheet = new Image();
+        spriteSheet.src = '../public/assets/gfx/diception.png';
+        const pendingRenders = [];
 
         // ── Seeded random for deterministic rendering ──
         function mulberry32(seed) {
@@ -258,17 +272,22 @@
         ];
         const PARTICLE_COLORS = ['#00FFFF', '#AA00FF', '#00ff88', '#0088ff'];
 
-        // ── Dice dot patterns (classic die faces) ──
-        const DICE_PATTERNS = {
+        // ── D6 sprite in spritesheet ──
+        const DICE_SPRITE = { x: 1, y: 259, w: 204, h: 202 };
+
+        // ── Dice face layouts (matching game TileRenderer) ──
+        const SPRITE_PATTERNS = {
             1: [[0, 0]],
-            2: [[-0.6, -0.6], [0.6, 0.6]],
-            3: [[-0.6, -0.6], [0, 0], [0.6, 0.6]],
-            4: [[-0.6, -0.6], [0.6, -0.6], [-0.6, 0.6], [0.6, 0.6]],
-            5: [[-0.6, -0.6], [0.6, -0.6], [-0.6, 0.6], [0.6, 0.6], [0, 0]],
-            6: [[-0.6, -0.7], [0.6, -0.7], [-0.6, 0], [0.6, 0], [-0.6, 0.7], [0.6, 0.7]],
+            2: [[-0.8, -0.8], [0.8, 0.8]],
+            3: [[-1, -1], [0, 0], [1, 1]],
+            4: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+            5: [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, 0]],
+            6: [[-0.8, -1], [0.8, -1], [-0.8, 0], [0.8, 0], [-0.8, 1], [0.8, 1]],
+            7: [[-0.8, -1], [0.8, -1], [-0.8, 0], [0.8, 0], [-0.8, 1], [0.8, 1], [0, 0]],
+            8: [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]],
         };
 
-        // ── Draw a single dice tile ──
+        // ── Draw a single dice tile with real sprites ──
         function drawDiceTile(ctx, cx, cy, size, diceCount, color, alpha, rotation) {
             ctx.save();
             ctx.translate(cx, cy);
@@ -291,15 +310,19 @@
 
             ctx.shadowBlur = 0;
 
-            // Dice dots
-            const dots = DICE_PATTERNS[Math.min(diceCount, 6)] || DICE_PATTERNS[6];
-            const dotRadius = size * 0.09;
-            ctx.fillStyle = '#ffffff';
-            ctx.globalAlpha = alpha * 1.0;
-            for (const [dx, dy] of dots) {
-                ctx.beginPath();
-                ctx.arc(dx * size * 0.3, dy * size * 0.3, dotRadius, 0, Math.PI * 2);
-                ctx.fill();
+            // Draw real dice sprites
+            const positions = SPRITE_PATTERNS[Math.min(diceCount, 8)] || SPRITE_PATTERNS[8];
+            const spacing = size * 0.22;
+            const spriteSize = size * 0.2;
+            ctx.globalAlpha = alpha;
+            for (const [px, py] of positions) {
+                const dx = px * spacing - spriteSize / 2;
+                const dy = py * spacing - spriteSize / 2;
+                ctx.drawImage(
+                    spriteSheet,
+                    DICE_SPRITE.x, DICE_SPRITE.y, DICE_SPRITE.w, DICE_SPRITE.h,
+                    dx, dy, spriteSize, spriteSize
+                );
             }
 
             ctx.restore();
@@ -372,6 +395,12 @@
                 return;
             }
 
+            if (asset.type === 'game_map') {
+                ctx.clearRect(0, 0, w, h);
+                drawGameMap(ctx, w, h);
+                return;
+            }
+
             // ── Base gradient background ──
             ctx.fillStyle = '#080820';
             ctx.fillRect(0, 0, w, h);
@@ -438,6 +467,95 @@
             drawTitleBlock(ctx, w, h, asset);
         }
 
+        // ── Draw a full game map on transparent background ──
+        // Hand-crafted 7×7 diamond map with 4 player territories
+        function drawGameMap(ctx, w, h) {
+            const gridSize = 7;
+            const gap = 2;
+            const tileSize = Math.floor(Math.min(w, h) / (gridSize + 1.5));
+            const offsetX = Math.floor((w - gridSize * (tileSize + gap)) / 2);
+            const offsetY = Math.floor((h - gridSize * (tileSize + gap)) / 2);
+
+            const P = '#AA00FF', B = '#0088FF', R = '#FF0055', G = '#00AA44';
+            const _ = null;
+
+            // Diamond-shaped map — each cell is [color, diceCount] or null
+            const MAP = [
+                [_, _, _, [P, 3], _, _, _],
+                [_, _, [P, 5], [P, 2], [B, 4], _, _],
+                [_, [P, 1], [P, 8], [B, 3], [B, 6], [B, 2], _],
+                [[R, 4], [R, 6], [P, 2], [R, 1], [B, 5], [G, 3], [G, 7]],
+                [_, [R, 3], [R, 5], [G, 4], [G, 2], [G, 8], _],
+                [_, _, [R, 7], [G, 6], [G, 1], _, _],
+                [_, _, _, [R, 2], _, _, _],
+            ];
+
+            for (let gy = 0; gy < gridSize; gy++) {
+                for (let gx = 0; gx < gridSize; gx++) {
+                    const cell = MAP[gy][gx];
+                    if (!cell) continue;
+
+                    const [color, diceCount] = cell;
+                    const tx = offsetX + gx * (tileSize + gap);
+                    const ty = offsetY + gy * (tileSize + gap);
+
+                    // Glow
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = tileSize * 0.3;
+
+                    // Tile fill (matching game's fillAlpha: 0.4)
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = 0.4;
+                    ctx.fillRect(tx, ty, tileSize, tileSize);
+
+                    ctx.shadowBlur = 0;
+
+                    // Border — thicker on edges facing different owners
+                    ctx.globalAlpha = 0.85;
+                    ctx.strokeStyle = color;
+                    const thin = Math.max(1, tileSize * 0.02);
+                    const thick = Math.max(2, tileSize * 0.06);
+
+                    for (const [dx, dy, bx, by, bw, bh] of [
+                        [0, -1, tx, ty, tileSize, 0],
+                        [0, 1, tx, ty + tileSize, tileSize, 0],
+                        [-1, 0, tx, ty, 0, tileSize],
+                        [1, 0, tx + tileSize, ty, 0, tileSize],
+                    ]) {
+                        const nx = gx + dx, ny = gy + dy;
+                        const neighbor = (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize) ? MAP[ny][nx] : null;
+                        const neighborSame = neighbor && neighbor[0] === color;
+                        ctx.lineWidth = neighborSame ? thin : thick;
+                        ctx.beginPath();
+                        ctx.moveTo(bx, by);
+                        ctx.lineTo(bx + bw, by + bh);
+                        ctx.stroke();
+                    }
+
+                    // Draw dice sprites
+                    const positions = SPRITE_PATTERNS[Math.min(diceCount, 8)] || SPRITE_PATTERNS[8];
+                    const spacing = tileSize * 0.22;
+                    const spriteSize = tileSize * 0.2;
+                    const cx = tx + tileSize / 2;
+                    const cy = ty + tileSize / 2;
+
+                    ctx.globalAlpha = 1.0;
+                    for (const [px, py] of positions) {
+                        const ddx = cx + px * spacing - spriteSize / 2;
+                        const ddy = cy + py * spacing - spriteSize / 2;
+                        ctx.drawImage(
+                            spriteSheet,
+                            DICE_SPRITE.x, DICE_SPRITE.y, DICE_SPRITE.w, DICE_SPRITE.h,
+                            ddx, ddy, spriteSize, spriteSize
+                        );
+                    }
+                }
+            }
+
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+        }
+
         function drawTitleBlock(ctx, w, h, asset) {
             // Compute title font size: fill ~75% of width
             const targetTitleWidth = w * 0.75;
@@ -455,6 +573,14 @@
                 measured = ctx.measureText(TITLE_TEXT).width;
                 titleFontSize = titleFontSize * (targetSmall / measured);
                 titleFontSize = Math.min(titleFontSize, h * 0.6);
+            }
+
+            // 4K wallpaper: smaller, subtler title
+            if (asset.id === 'windows_bg_4k') {
+                const targetSmall = w * 0.4;
+                ctx.font = `700 ${titleFontSize}px Rajdhani`;
+                measured = ctx.measureText(TITLE_TEXT).width;
+                titleFontSize = titleFontSize * (targetSmall / measured);
             }
 
             const subtitleFontSize = Math.max(titleFontSize * 0.25, 12);
@@ -513,7 +639,7 @@
         }
 
         function downloadAll() {
-            const all = [...STORE_ASSETS, ...LIBRARY_ASSETS, ...WINDOWS_ASSETS];
+            const all = [...STORE_ASSETS, ...LIBRARY_ASSETS, ...WINDOWS_ASSETS, ...CUSTOM_ASSETS];
             all.forEach((asset, i) => {
                 setTimeout(() => {
                     downloadCanvas(asset.id, `${asset.id}_${asset.w}x${asset.h}.png`);
