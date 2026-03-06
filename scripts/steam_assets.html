@@ -273,24 +273,29 @@
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate(rotation);
-            ctx.globalAlpha = alpha;
+
+            // Outer glow
+            ctx.shadowColor = color;
+            ctx.shadowBlur = size * 0.5;
 
             // Tile background
             ctx.fillStyle = color;
-            ctx.globalAlpha = alpha * 0.45;
+            ctx.globalAlpha = alpha * 0.65;
             ctx.fillRect(-size / 2, -size / 2, size, size);
 
             // Border
             ctx.strokeStyle = color;
-            ctx.globalAlpha = alpha * 0.7;
-            ctx.lineWidth = Math.max(1, size * 0.04);
+            ctx.globalAlpha = alpha * 0.9;
+            ctx.lineWidth = Math.max(1, size * 0.05);
             ctx.strokeRect(-size / 2, -size / 2, size, size);
+
+            ctx.shadowBlur = 0;
 
             // Dice dots
             const dots = DICE_PATTERNS[Math.min(diceCount, 6)] || DICE_PATTERNS[6];
-            const dotRadius = size * 0.08;
+            const dotRadius = size * 0.09;
             ctx.fillStyle = '#ffffff';
-            ctx.globalAlpha = alpha * 0.9;
+            ctx.globalAlpha = alpha * 1.0;
             for (const [dx, dy] of dots) {
                 ctx.beginPath();
                 ctx.arc(dx * size * 0.3, dy * size * 0.3, dotRadius, 0, Math.PI * 2);
@@ -307,7 +312,7 @@
             const gridH = 3 + Math.floor(rng() * 3);
             const gap = tileSize * 0.06;
             const color = PLAYER_COLORS[Math.floor(rng() * PLAYER_COLORS.length)];
-            const baseAlpha = 0.08 + rng() * 0.12;
+            const baseAlpha = 0.15 + rng() * 0.18;
 
             for (let gx = 0; gx < gridW; gx++) {
                 for (let gy = 0; gy < gridH; gy++) {
@@ -402,7 +407,7 @@
                 const size = (20 + rng() * 40) * scale;
                 const dice = 1 + Math.floor(rng() * 6);
                 const color = PLAYER_COLORS[Math.floor(rng() * PLAYER_COLORS.length)];
-                const alpha = 0.06 + rng() * 0.18;
+                const alpha = 0.12 + rng() * 0.25;
                 const rot = (rng() - 0.5) * 0.6;
                 drawDiceTile(ctx, x, y, size, dice, color, alpha, rot);
             }
