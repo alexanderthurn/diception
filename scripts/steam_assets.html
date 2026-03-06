@@ -186,6 +186,10 @@
             { id: 'library_logo', name: 'Library Logo', w: 1280, h: 720, type: 'logo_transparent' },
         ];
 
+        const WINDOWS_ASSETS = [
+            { id: 'windows_bg_4k', name: 'Windows Background 4K', w: 3840, h: 2160, type: 'title' },
+        ];
+
         // ── Colors ──
         const TITLE_COLOR = '#00FFFF';
         const HUMAN1_COLOR = '#AA00FF';
@@ -234,6 +238,7 @@
 
             addSection('Store Assets', STORE_ASSETS);
             addSection('Library Assets', LIBRARY_ASSETS);
+            addSection('Windows Assets (Preview Only)', WINDOWS_ASSETS);
         });
 
         // ── Rendering ──
@@ -334,7 +339,7 @@
         }
 
         function downloadAll() {
-            const all = [...STORE_ASSETS, ...LIBRARY_ASSETS];
+            const all = [...STORE_ASSETS, ...LIBRARY_ASSETS, ...WINDOWS_ASSETS];
             all.forEach((asset, i) => {
                 setTimeout(() => {
                     downloadCanvas(asset.id, `${asset.id}_${asset.w}x${asset.h}.png`);
