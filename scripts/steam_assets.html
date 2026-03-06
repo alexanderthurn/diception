@@ -176,6 +176,8 @@
             { id: 'small_capsule', name: 'Small Capsule', w: 462, h: 174, type: 'title' },
             { id: 'main_capsule', name: 'Main Capsule', w: 1232, h: 706, type: 'title' },
             { id: 'vertical_capsule', name: 'Vertical Capsule', w: 748, h: 896, type: 'title' },
+            { id: 'cover_image', name: 'Cover Image', w: 800, h: 450, type: 'title' },
+            { id: 'header_image', name: 'Header Image', w: 1920, h: 622, type: 'title' },
             { id: 'page_background', name: 'Page Background', w: 1438, h: 810, type: 'bg_only' },
         ];
 
@@ -573,6 +575,14 @@
                 measured = ctx.measureText(TITLE_TEXT).width;
                 titleFontSize = titleFontSize * (targetSmall / measured);
                 titleFontSize = Math.min(titleFontSize, h * 0.6);
+            }
+
+            // Header image: smaller, subtler title
+            if (asset.id === 'header_image') {
+                const targetSmall = w * 0.35;
+                ctx.font = `700 ${titleFontSize}px Rajdhani`;
+                measured = ctx.measureText(TITLE_TEXT).width;
+                titleFontSize = titleFontSize * (targetSmall / measured);
             }
 
             // 4K wallpaper: smaller, subtler title
