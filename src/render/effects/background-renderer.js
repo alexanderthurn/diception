@@ -321,7 +321,20 @@ export class BackgroundRenderer {
 
         const s = this._scale();
         const minDim = Math.min(this.width, this.height);
-        const size = (0.03 + Math.random() * 0.04) * minDim;
+        const sc = this.diceContainer.scale.x;
+        const ox = this.diceContainer.x;
+        const oy = this.diceContainer.y;
+
+        // Visible bounds in local space
+        const localLeft  = -ox / sc;
+        const localRight = (this.width - ox) / sc;
+        const localTop   = -oy / sc;
+        const localWidth = localRight - localLeft;
+
+        // Scale size and speed inversely so they appear consistent on screen
+        const size      = (0.03 + Math.random() * 0.04) * minDim / sc;
+        const fallSpeed = (0.4 + Math.random() * 0.8) * s / sc;
+        const drift     = (Math.random() - 0.5) * 0.15 * s / sc;
 
         const colors = [0x00ffff, 0xAA00FF, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
         const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20];
@@ -335,17 +348,14 @@ export class BackgroundRenderer {
         });
         tileContainer.pivot.set(size / 2, size / 2);
 
-        const fallSpeed = (0.4 + Math.random() * 0.8) * s;
-        const drift = (Math.random() - 0.5) * 0.15 * s;
-
-        // scattered = spread across whole screen on init; otherwise spawn just above top
+        // Spawn across the visible width, above the visible top
         const startY = scattered
-            ? -size - Math.random() * this.height
-            : -size - Math.random() * 100;
+            ? localTop - size - Math.random() * (this.height / sc)
+            : localTop - size - Math.random() * (100 / sc);
 
         const dice = {
             graphics: tileContainer,
-            x: Math.random() * this.width,
+            x: localLeft + Math.random() * localWidth,
             y: startY,
             vx: drift,
             vy: fallSpeed,
@@ -395,7 +405,8 @@ export class BackgroundRenderer {
 
         const s = this._scale();
         const minDim = Math.min(this.width, this.height);
-        const size = (0.04 + Math.random() * 0.02) * minDim;
+        // Scale size and speed inversely so they appear consistent on screen
+        const size = (0.04 + Math.random() * 0.02) * minDim / sc;
 
         const colors = [0x00ffff, 0xAA00FF, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
         const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20];
@@ -410,7 +421,7 @@ export class BackgroundRenderer {
         tileContainer.pivot.set(size / 2, size / 2);
 
         const angle = Math.random() * Math.PI * 2;
-        const speed = (0.3 + Math.random() * 0.3) * s;
+        const speed = (0.3 + Math.random() * 0.3) * s / sc;
 
         const dice = {
             graphics: tileContainer,
