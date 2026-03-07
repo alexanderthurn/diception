@@ -1090,7 +1090,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             if (localStorage.getItem('dicy_campaignMode')) {
                 await sessionManagerRef.quitToCampaignScreen();
             } else {
-                sessionManagerRef.quitToMainMenu();
+                sessionManagerRef.quitToCustomGame();
             }
             return;
         }
@@ -1126,13 +1126,15 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         }
     });
 
-    // Auto-hide global back btn when on main menu
+    // Auto-hide global back btn when on main menu or pause modal
     const globalBackBtn = document.getElementById('global-back-btn');
-    if (mainMenu && globalBackBtn) {
-        new MutationObserver(() => {
-            globalBackBtn.classList.toggle('hidden', !mainMenu.classList.contains('hidden'));
-        }).observe(mainMenu, { attributes: true, attributeFilter: ['class'] });
+    function updateGlobalBackVisibility() {
+        const onMainMenu = mainMenu && !mainMenu.classList.contains('hidden');
+        const pauseOpen = pauseModal && !pauseModal.classList.contains('hidden');
+        globalBackBtn?.classList.toggle('hidden', onMainMenu || pauseOpen);
     }
+    if (mainMenu) new MutationObserver(updateGlobalBackVisibility).observe(mainMenu, { attributes: true, attributeFilter: ['class'] });
+    if (pauseModal) new MutationObserver(updateGlobalBackVisibility).observe(pauseModal, { attributes: true, attributeFilter: ['class'] });
 
     // --- Pause menu wiring ---
 
@@ -1158,7 +1160,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         if (localStorage.getItem('dicy_campaignMode')) {
             await sessionManagerRef.quitToCampaignScreen();
         } else {
-            sessionManagerRef.quitToMainMenu();
+            sessionManagerRef.quitToCustomGame();
         }
     });
 

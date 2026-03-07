@@ -50,7 +50,7 @@ export class SessionManager {
         const isCampaignMode = localStorage.getItem('dicy_campaignMode');
         const mainMenuBtn = document.getElementById('pause-mainmenu-btn');
         if (mainMenuBtn) {
-            mainMenuBtn.textContent = isCampaignMode ? 'Back to Campaign' : 'Main Menu';
+            mainMenuBtn.textContent = isCampaignMode ? 'Back to Campaign' : 'Back to Custom Game';
         }
     }
 
@@ -142,6 +142,19 @@ export class SessionManager {
 
         document.getElementById('main-menu')?.classList.remove('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
+        if (this.effectsManager) this.effectsManager.startIntroMode();
+    }
+
+    /**
+     * Quit back to the custom game setup screen
+     */
+    quitToCustomGame() {
+        this.resetGameSession();
+        if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
+        localStorage.removeItem('dicy_campaignMode');
+        localStorage.removeItem('dicy_customLevelMode');
+        document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
+        this.setupModal.classList.remove('hidden');
         if (this.effectsManager) this.effectsManager.startIntroMode();
     }
 
