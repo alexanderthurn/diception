@@ -106,7 +106,7 @@
             <button id="retry-game-btn" class="tron-btn small hidden" title="Retry Game" style="display:none"><span
                     class="btn-text">Restart Game</span><span class="btn-icon"><span
                         class="sprite-icon icon-retry"></span></span></button>
-            <button id="new-game-btn" class="tron-btn small game-ui hidden" title="Menu"><span
+            <button id="new-game-btn" class="tron-btn small hidden" title="Menu" style="display:none"><span
                     class="btn-text">Menu</span><span class="btn-icon"><span
                         class="sprite-icon icon-settings"></span></span><span id="new-game-hint"
                     class="input-hint hidden"></span></button>
@@ -123,7 +123,6 @@
 
         <div id="setup-modal" class="modal hidden">
             <div class="modal-header">
-                <button id="custom-back-btn" class="close-btn">×</button>
                 <h2 class="tron-title small">CUSTOM GAME</h2>
             </div>
             <div class="control-group">
@@ -247,7 +246,7 @@
             <div class="credits" id="main-menu-credits">by Alexander Thurn</div>
             <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;width:100%;min-width:220px;">
                 <button id="main-custom-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span> Custom Game</button>
-                <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span> Campaign</button>
+                <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span> Campaigns</button>
                 <button id="main-settings-btn" class="tron-btn large"><span class="sprite-icon icon-settings"></span> Settings</button>
                 <div style="display:flex;gap:10px;">
                     <button id="main-howto-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-help"></span> How To</button>
@@ -270,7 +269,6 @@
 
         <div id="howto-modal" class="modal hidden large-modal">
             <div class="modal-header">
-                <button id="howto-close-btn" class="close-btn">×</button>
                 <h2 class="tron-title small">HOW TO</h2>
             </div>
             <div class="howto-content">
@@ -405,7 +403,6 @@
         <!-- Settings Modal (shared: main menu + in-game pause) -->
         <div id="settings-modal" class="modal hidden large-modal">
             <div class="modal-header">
-                <button id="settings-close-btn" class="close-btn">×</button>
                 <h2 class="tron-title small">SETTINGS</h2>
             </div>
             <div class="howto-content">
@@ -548,7 +545,6 @@
         <!-- About Modal -->
         <div id="about-modal" class="modal hidden large-modal">
             <div class="modal-header">
-                <button id="about-close-btn" class="close-btn">×</button>
                 <h2 class="tron-title small">ABOUT</h2>
             </div>
             <div class="howto-content">
@@ -632,40 +628,38 @@
             </div>
         </div>
 
-        <!-- Scenario Browser (full-screen overlay like editor, back button at top-left) -->
+        <!-- Scenario Browser (full-screen overlay) -->
         <div id="scenario-browser-modal" class="scenario-browser-overlay hidden">
-            <div class="scenario-browser-top-bar">
-                <button id="scenario-browser-close-btn" class="scenario-browser-close-btn tron-btn small"
-                    aria-label="Close">
-                    <span class="scenario-close-desktop">← Back</span>
-                    <span class="scenario-close-mobile">×</span>
-                </button>
-            </div>
-            <div class="scenario-browser-inner modal wide-modal">
-                <div class="modal-header compact-header">
-                    <h2 class="modal-title">Campaigns</h2>
+            <!-- close btn hidden; triggered programmatically by global-back-btn -->
+            <button id="scenario-browser-close-btn" style="display:none" aria-label="Close"></button>
+
+            <!-- View 1: Campaign Selection -->
+            <div id="campaign-select-view" class="modal large-modal">
+                <div class="modal-header">
+                    <h2 class="tron-title small">CAMPAIGNS</h2>
                 </div>
-                <div class="scenario-browser-content split-view">
-                    <div class="scenario-browser-left">
-                        <div class="scenario-list-container">
-                            <select id="campaign-select" class="campaign-select-mobile"
-                                aria-label="Select campaign"></select>
-                            <div id="campaign-list"></div>
-                        </div>
-                    </div>
-                    <div class="scenario-browser-right">
-                        <div id="level-grid-container" class="hidden">
-                            <div id="level-grid-header"></div>
-                            <div id="level-grid"></div>
-                        </div>
-                        <div id="scenario-preview-content">
-                            <div class="empty-message-large">
-                                Select a campaign
-                            </div>
-                        </div>
-                    </div>
+                <div id="campaign-button-list" class="campaign-button-list howto-content">
+                    <!-- populated by JS -->
                 </div>
             </div>
+
+            <!-- View 2: Campaign Detail (level grid) -->
+            <div id="campaign-detail-view" class="modal large-modal hidden">
+                <div class="modal-header">
+                    <h2 id="campaign-detail-title" class="tron-title small"></h2>
+                </div>
+                <div class="howto-content">
+                    <div id="level-grid-container">
+                        <div id="level-grid-header"></div>
+                        <div id="level-grid"></div>
+                    </div>
+                    <div id="scenario-preview-content" class="hidden"></div>
+                </div>
+            </div>
+
+            <!-- Legacy refs kept hidden for JS compatibility -->
+            <div id="campaign-list" style="display:none"></div>
+            <select id="campaign-select" style="display:none" aria-label="Select campaign"></select>
         </div>
 
         <!-- Map/Scenario Editor Overlay (uses main game canvas) -->
@@ -874,6 +868,7 @@
     </div>
 
     <div id="game-version" class="game-version-display"></div>
+    <button id="global-back-btn" class="global-back-btn hidden" aria-label="Back">×</button>
 
     <script type="module" src="src/main.js"></script>
 </body>

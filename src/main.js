@@ -313,6 +313,8 @@ async function init() {
     showStartupDialogs();
 
     onLoadingDismiss = async () => {
+        // Reveal global back button (was hidden during loading)
+        document.getElementById('global-back-btn')?.classList.remove('hidden');
         if (game.players.length > 0) return; // game already running (auto-resume)
         if (localStorage.getItem('dicy_campaignMode')) {
             await scenarioBrowser.showCampaignView();
@@ -812,11 +814,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const mainMenu = document.getElementById('main-menu');
     const setupModal = document.getElementById('setup-modal');
     const howtoModal = document.getElementById('howto-modal');
-    const howtoCloseBtn = document.getElementById('howto-close-btn');
     const settingsModal = document.getElementById('settings-modal');
-    const settingsCloseBtn = document.getElementById('settings-close-btn');
     const aboutModal = document.getElementById('about-modal');
-    const aboutCloseBtn = document.getElementById('about-close-btn');
     const pauseModal = document.getElementById('pause-modal');
     const keepCampaignsRow = document.getElementById('howto-keep-campaigns-row');
     const keepCampaignsCheck = document.getElementById('howto-keep-campaigns');
@@ -1034,12 +1033,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         settingsModal.classList.remove('hidden');
     }
 
-    settingsCloseBtn?.addEventListener('click', () => {
-        settingsModal.classList.add('hidden');
-        if (settingsBackCallback) settingsBackCallback();
-        settingsBackCallback = null;
-    });
-
     // Game speed — apply immediately to running game (effects-quality is handled by configManager)
     document.getElementById('game-speed')?.addEventListener('change', (e) => {
         const speed = e.target.value;
@@ -1055,19 +1048,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         aboutModal.classList.remove('hidden');
         aboutModal._onBack = onBack;
     }
-
-    aboutCloseBtn?.addEventListener('click', () => {
-        aboutModal.classList.add('hidden');
-        if (aboutModal._onBack) aboutModal._onBack();
-        aboutModal._onBack = null;
-    });
-
-    // --- How To open/close ---
-    howtoCloseBtn?.addEventListener('click', () => {
-        howtoModal.classList.add('hidden');
-        mainMenu.classList.remove('hidden');
-        effectsManager.startIntroMode();
-    });
 
     // --- Main Menu button wiring ---
     document.getElementById('main-campaign-btn')?.addEventListener('click', () => {
@@ -1103,16 +1083,58 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         });
     });
 
-    // --- Custom Game back button ---
-    document.getElementById('custom-back-btn')?.addEventListener('click', () => {
-        setupModal.classList.add('hidden');
-        mainMenu.classList.remove('hidden');
+    // --- Global back button (handles all screens) ---
+    document.getElementById('global-back-btn')?.addEventListener('click', async () => {
+        if (pauseModal && !pauseModal.classList.contains('hidden')) {
+            pauseModal.classList.add('hidden');
+            if (localStorage.getItem('dicy_campaignMode')) {
+                await sessionManagerRef.quitToCampaignScreen();
+            } else {
+                sessionManagerRef.quitToMainMenu();
+            }
+            return;
+        }
+        if (settingsModal && !settingsModal.classList.contains('hidden')) {
+            settingsModal.classList.add('hidden');
+            if (settingsBackCallback) { settingsBackCallback(); settingsBackCallback = null; }
+            return;
+        }
+        if (howtoModal && !howtoModal.classList.contains('hidden')) {
+            howtoModal.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+            effectsManager.startIntroMode();
+            return;
+        }
+        if (aboutModal && !aboutModal.classList.contains('hidden')) {
+            aboutModal.classList.add('hidden');
+            if (aboutModal._onBack) { aboutModal._onBack(); aboutModal._onBack = null; }
+            return;
+        }
+        if (setupModal && !setupModal.classList.contains('hidden')) {
+            setupModal.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+            return;
+        }
+        const scenarioBrowserModal = document.getElementById('scenario-browser-modal');
+        if (scenarioBrowserModal && !scenarioBrowserModal.classList.contains('hidden')) {
+            document.getElementById('scenario-browser-close-btn')?.click();
+            return;
+        }
+        // In-game (no modal open) → open pause menu
+        if (sessionManagerRef && sessionManagerRef.isGameInProgress()) {
+            pauseModal.classList.remove('hidden');
+        }
     });
 
+    // Auto-hide global back btn when on main menu
+    const globalBackBtn = document.getElementById('global-back-btn');
+    if (mainMenu && globalBackBtn) {
+        new MutationObserver(() => {
+            globalBackBtn.classList.toggle('hidden', !mainMenu.classList.contains('hidden'));
+        }).observe(mainMenu, { attributes: true, attributeFilter: ['class'] });
+    }
+
     // --- Pause menu wiring ---
-    document.getElementById('new-game-btn')?.addEventListener('click', () => {
-        pauseModal.classList.remove('hidden');
-    });
 
     document.getElementById('pause-resume-btn')?.addEventListener('click', () => {
         pauseModal.classList.add('hidden');
