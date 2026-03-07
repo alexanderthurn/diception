@@ -262,49 +262,15 @@ async function init() {
 
     const showStartupDialogs = async () => {
         if (!localStorage.getItem('dicy_steam_welcome_shown')) {
-            const choice = await Dialog.show({
-                title: 'Welcome',
-                message: 'Choose your game speed:',
-                buttons: [
-                    { text: 'Beginner (shows all rolls)', value: 'beginner', className: 'tron-btn' },
-                    { text: 'Normal', value: 'normal', className: 'tron-btn' },
-                    { text: 'Expert (no time to waste)', value: 'expert', className: 'tron-btn' }
-                ]
-            });
-            const speed = choice;
-            localStorage.setItem('dicy_gameSpeed', speed);
             localStorage.setItem('dicy_steam_welcome_shown', '1');
+            localStorage.setItem('dicy_gameSpeed', 'beginner');
             if (configManager.elements?.gameSpeedInput) {
-                configManager.elements.gameSpeedInput.value = speed;
+                configManager.elements.gameSpeedInput.value = 'beginner';
             }
-
-            if (speed === 'beginner') {
-                const tutorialCampaign = scenarioBrowser.campaignManager.getCampaign('tutorial');
-                if (tutorialCampaign) {
-                    scenarioBrowser.selectedCampaign = tutorialCampaign;
-                    scenarioBrowser.selectAndPlayLevel(0, { immediateStart: true });
-                }
-            }
-        }
-
-
-        // Web only: show promotional dialog on 2nd visit, then every 5th visit
-        if (!window.steam && !isAndroid() && !localStorage.getItem('dicy_enjoying_dialog_disabled')) {
-            const count = parseInt(localStorage.getItem('dicy_web_visit_count') || '0', 10) + 1;
-            localStorage.setItem('dicy_web_visit_count', String(count));
-            if (count % 5 === 0) {
-                const choice = await Dialog.show({
-                    title: 'ENJOYING?',
-                    message: 'If you want to support this game, you can buy an extended version (including more campaigns):',
-                    content: '<div class="dialog-store-links"><p><a href="https://store.steampowered.com/app/STEAM_APPID" target="_blank" rel="noopener" class="highlight-link">Steam</a> – Cloud Saves, Achievements</p><p><a href="https://play.google.com/store/apps/details?id=PLACEHOLDER_PACKAGE" target="_blank" rel="noopener" class="highlight-link">Google Play</a> – Android version</p></div>',
-                    buttons: [
-                        { text: 'Later', value: true, className: 'tron-btn' },
-                        { text: "Don't show again", value: 'dont_show', className: 'tron-btn' }
-                    ]
-                });
-                if (choice === 'dont_show') {
-                    localStorage.setItem('dicy_enjoying_dialog_disabled', '1');
-                }
+            const tutorialCampaign = scenarioBrowser.campaignManager.getCampaign('tutorial');
+            if (tutorialCampaign) {
+                scenarioBrowser.selectedCampaign = tutorialCampaign;
+                scenarioBrowser.selectAndPlayLevel(0, { immediateStart: true });
             }
         }
     };
@@ -593,7 +559,7 @@ async function init() {
     setupInputEvents(game, inputManager, sessionManager);
 
     // Menu Navigation
-    setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer);
+    setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor);
 
 
     // Check for auto-resume
@@ -800,7 +766,7 @@ function setupInputEvents(game, inputManager, sessionManager) {
 }
 
 // Helper: Setup all menu navigation (main menu, settings, howto, about, pause)
-function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer) {
+function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor) {
     const mainMenu = document.getElementById('main-menu');
     const setupModal = document.getElementById('setup-modal');
     const howtoModal = document.getElementById('howto-modal');
@@ -1126,23 +1092,40 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             document.getElementById('scenario-browser-close-btn')?.click();
             return;
         }
+        // Editor open → on mobile close settings panel first, otherwise close editor
+        if (mapEditor?.isOpen) {
+            const isMobile = window.matchMedia('(max-width: 900px)').matches;
+            const settingsOpen = mapEditor.elements?.settingsPanel?.classList.contains('editor-settings-open');
+            if (isMobile && settingsOpen) {
+                mapEditor.elements.settingsPanel.classList.remove('editor-settings-open');
+            } else {
+                mapEditor.close();
+            }
+            return;
+        }
         // In-game (no modal open) → open pause menu
         if (sessionManagerRef && sessionManagerRef.isGameInProgress()) {
             pauseModal.classList.remove('hidden');
+            initGameSpeedSegmented();
+            syncPauseAudioBtns();
         }
     });
 
     // Auto-hide global back btn when on main menu or pause modal; switch icon based on context
     const globalBackBtn = document.getElementById('global-back-btn');
+    const editorOverlay = document.getElementById('editor-overlay');
+    const steamMenuBtn = document.getElementById('main-menu-steam-btn');
+    const showSteamMenuBtn = !isTauriContext() && !isAndroid();
     function updateGlobalBackVisibility() {
         const onMainMenu = mainMenu && !mainMenu.classList.contains('hidden');
         const pauseOpen = pauseModal && !pauseModal.classList.contains('hidden');
         globalBackBtn?.classList.toggle('hidden', onMainMenu || pauseOpen);
+        steamMenuBtn?.classList.toggle('hidden', !(onMainMenu && showSteamMenuBtn));
 
-        // Switch icon: gear = in-game with no modal open (next click opens pause); close = everything else
+        // Switch icon: gear = in-game with no modal/editor open (next click opens pause); close = everything else
         if (globalBackBtn) {
             const anyModalOpen = [settingsModal, howtoModal, aboutModal, setupModal,
-                document.getElementById('scenario-browser-modal')]
+                document.getElementById('scenario-browser-modal'), editorOverlay]
                 .some(el => el && !el.classList.contains('hidden'));
             const showGear = !anyModalOpen && sessionManagerRef?.isGameInProgress();
             globalBackBtn.querySelector('.icon-close')?.classList.toggle('hidden', !!showGear);
@@ -1158,8 +1141,34 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     if (setupModal) new MutationObserver(updateGlobalBackVisibility).observe(setupModal, obsOpts);
     const sbModal = document.getElementById('scenario-browser-modal');
     if (sbModal) new MutationObserver(updateGlobalBackVisibility).observe(sbModal, obsOpts);
+    if (editorOverlay) new MutationObserver(updateGlobalBackVisibility).observe(editorOverlay, obsOpts);
 
     // --- Pause menu wiring ---
+
+    function syncPauseAudioBtns() {
+        const musicBtn = document.getElementById('pause-music-toggle');
+        const sfxBtn = document.getElementById('pause-sfx-toggle');
+        if (musicBtn) {
+            const on = audioController.musicPlaying;
+            musicBtn.innerHTML = `<span class="sprite-icon icon-music-${on ? 'on' : 'off'}"></span> Music`;
+            musicBtn.classList.toggle('active', on);
+        }
+        if (sfxBtn) {
+            const on = audioController.sfx.enabled;
+            sfxBtn.innerHTML = `<span class="sprite-icon icon-sfx-${on ? 'on' : 'off'}"></span> Sound`;
+            sfxBtn.classList.toggle('active', on);
+        }
+    }
+
+    document.getElementById('pause-music-toggle')?.addEventListener('click', () => {
+        audioController.handleMusicToggle();
+        syncPauseAudioBtns();
+    });
+
+    document.getElementById('pause-sfx-toggle')?.addEventListener('click', () => {
+        audioController.handleSfxToggle();
+        syncPauseAudioBtns();
+    });
 
     document.getElementById('pause-resume-btn')?.addEventListener('click', () => {
         pauseModal.classList.add('hidden');
@@ -1169,13 +1178,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         pauseModal.classList.add('hidden');
         const retryBtn = document.getElementById('retry-game-btn');
         retryBtn?.click();
-    });
-
-    document.getElementById('pause-settings-btn')?.addEventListener('click', () => {
-        pauseModal.classList.add('hidden');
-        openSettings(() => {
-            pauseModal.classList.remove('hidden');
-        });
     });
 
     document.getElementById('pause-mainmenu-btn')?.addEventListener('click', async () => {

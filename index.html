@@ -68,8 +68,9 @@
             <span class="dice-icon-sprite drifting d8"></span>
         </div>
         <div class="loading-platforms">
-            <img src="assets/icons/steam-logo.png" alt="Steam" class="platform-icon">
-            <img src="assets/icons/android-logo.png" alt="Android" class="platform-icon">
+            <a href="https://store.steampowered.com/app/4429000/DICEPTION/" target="_blank" rel="noopener">
+                <img src="assets/icons/steam-logo.png" alt="Steam" class="platform-icon">
+            </a>
         </div>
         <div class="loading-footer">feuerware.com</div>
         <div class="loading-border-lights">
@@ -267,11 +268,32 @@
         <!-- Pause Menu (in-game) -->
         <div id="pause-modal" class="modal hidden">
             <h2 class="tron-title small">PAUSED</h2>
-            <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;width:100%;min-width:220px;">
+            <div style="display:flex;flex-direction:column;gap:16px;margin-top:20px;width:100%;min-width:220px;">
+                <!-- Inline settings -->
+                <div class="control-group" style="margin:0">
+                    <label>Game Speed</label>
+                    <div class="segmented-btn game-speed-segmented">
+                        <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
+                        <button type="button" class="segmented-option" data-value="normal">Normal</button>
+                        <button type="button" class="segmented-option" data-value="expert">Expert</button>
+                    </div>
+                </div>
+                <div class="control-group" style="margin:0">
+                    <label>Audio</label>
+                    <div style="display:flex;gap:8px;">
+                        <button id="pause-music-toggle" class="tron-btn small" title="Music" style="flex:1">
+                            <span class="sprite-icon icon-music-on"></span> Music
+                        </button>
+                        <button id="pause-sfx-toggle" class="tron-btn small" title="Sound Effects" style="flex:1">
+                            <span class="sprite-icon icon-sfx-on"></span> Sound
+                        </button>
+                    </div>
+                </div>
+                <hr style="border-color:rgba(0,255,255,0.2);margin:0">
+                <!-- Navigation -->
                 <button id="pause-resume-btn" class="tron-btn large">Resume</button>
                 <button id="pause-retry-btn" class="tron-btn large">Retry</button>
-                <button id="pause-settings-btn" class="tron-btn large">Settings</button>
-                <button id="pause-mainmenu-btn" class="tron-btn large">Main Menu</button>
+                <button id="pause-mainmenu-btn" class="tron-btn large">Exit</button>
             </div>
         </div>
 
@@ -296,63 +318,6 @@
                         <li><strong>TURN LIMIT:</strong> If no player conquers all territories within 999 turns, the
                             game ends and the player with the most total dice (on the board + in reserve) wins.</li>
                     </ul>
-                </section>
-
-                <section>
-                    <h3>MAP EDITOR CONTROLS</h3>
-                    <p>When editing maps or scenarios, controls change:</p>
-                    <table class="control-table">
-                        <tr>
-                            <th>Action</th>
-                            <th>Keyboard</th>
-                            <th>Gamepad</th>
-                        </tr>
-                        <tr>
-                            <td>Move cursor</td>
-                            <td>Mouse</td>
-                            <td>Left Stick</td>
-                        </tr>
-                        <tr>
-                            <td>Pan map</td>
-                            <td>WASD / Arrows</td>
-                            <td>D-Pad Up/Down / Right Stick</td>
-                        </tr>
-                        <tr>
-                            <td>Add / Paint tile</td>
-                            <td>Left Click</td>
-                            <td>A Button</td>
-                        </tr>
-                        <tr>
-                            <td>Remove tile</td>
-                            <td>Right Click</td>
-                            <td>X Button</td>
-                        </tr>
-                        <tr>
-                            <td>Dice mode</td>
-                            <td>F</td>
-                            <td>D-Pad Left</td>
-                        </tr>
-                        <tr>
-                            <td>Assign mode</td>
-                            <td>R</td>
-                            <td>D-Pad Right</td>
-                        </tr>
-                        <tr>
-                            <td>Paint mode</td>
-                            <td>Y</td>
-                            <td>Y Button</td>
-                        </tr>
-                        <tr>
-                            <td>Zoom</td>
-                            <td>Wheel</td>
-                            <td>L2 / R2</td>
-                        </tr>
-                        <tr>
-                            <td>Cursor speed</td>
-                            <td>-</td>
-                            <td>L1 / R1</td>
-                        </tr>
-                    </table>
                 </section>
 
                 <section>
@@ -417,28 +382,26 @@
                 <details class="settings-group" open>
                     <summary class="settings-group-header">GAMEPLAY</summary>
                     <div class="settings-group-body">
-                        <div class="control-row">
-                            <div class="control-group half">
-                                <label>Game Speed</label>
-                                <div class="segmented-btn game-speed-segmented">
-                                    <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
-                                    <button type="button" class="segmented-option" data-value="normal">Normal</button>
-                                    <button type="button" class="segmented-option" data-value="expert">Expert</button>
-                                </div>
-                                <select id="game-speed" style="display:none">
-                                    <option value="beginner">Beginner</option>
-                                    <option value="normal">Normal</option>
-                                    <option value="expert">Expert</option>
-                                </select>
+                        <div class="control-group">
+                            <label>Game Speed</label>
+                            <div class="segmented-btn game-speed-segmented">
+                                <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
+                                <button type="button" class="segmented-option" data-value="normal">Normal</button>
+                                <button type="button" class="segmented-option" data-value="expert">Expert</button>
                             </div>
-                            <div class="control-group half">
-                                <label>Visual Effects</label>
-                                <select id="effects-quality">
-                                    <option value="high">High</option>
-                                    <option value="medium" selected>Medium</option>
-                                    <option value="off">Off</option>
-                                </select>
-                            </div>
+                            <select id="game-speed" style="display:none">
+                                <option value="beginner">Beginner</option>
+                                <option value="normal">Normal</option>
+                                <option value="expert">Expert</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Visual Effects</label>
+                            <select id="effects-quality">
+                                <option value="high">High</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="off">Off</option>
+                            </select>
                         </div>
                     </div>
                 </details>
@@ -470,6 +433,7 @@
                 <details class="settings-group">
                     <summary class="settings-group-header">CONTROLS</summary>
                     <div class="settings-group-body">
+                        <div id="controls-configure-area" class="controls-configure-area"></div>
                         <table class="control-table" id="controls-table">
                             <thead>
                                 <tr>
@@ -481,7 +445,60 @@
                             <tbody id="controls-table-body">
                             </tbody>
                         </table>
-                        <div id="controls-configure-area" class="controls-configure-area"></div>
+                        <h3 style="color:var(--border-color);border-bottom:1px solid rgba(0,255,255,0.3);padding-bottom:5px;margin-top:20px;">MAP EDITOR</h3>
+                        <p style="margin-top:0">When editing maps or scenarios, controls change:</p>
+                        <table class="control-table">
+                            <tr>
+                                <th>Action</th>
+                                <th>Keyboard</th>
+                                <th>Gamepad</th>
+                            </tr>
+                            <tr>
+                                <td>Move cursor</td>
+                                <td>Mouse</td>
+                                <td>Left Stick</td>
+                            </tr>
+                            <tr>
+                                <td>Pan map</td>
+                                <td>WASD / Arrows</td>
+                                <td>D-Pad Up/Down / Right Stick</td>
+                            </tr>
+                            <tr>
+                                <td>Add / Paint tile</td>
+                                <td>Left Click</td>
+                                <td>A Button</td>
+                            </tr>
+                            <tr>
+                                <td>Remove tile</td>
+                                <td>Right Click</td>
+                                <td>X Button</td>
+                            </tr>
+                            <tr>
+                                <td>Dice mode</td>
+                                <td>F</td>
+                                <td>D-Pad Left</td>
+                            </tr>
+                            <tr>
+                                <td>Assign mode</td>
+                                <td>R</td>
+                                <td>D-Pad Right</td>
+                            </tr>
+                            <tr>
+                                <td>Paint mode</td>
+                                <td>Y</td>
+                                <td>Y Button</td>
+                            </tr>
+                            <tr>
+                                <td>Zoom</td>
+                                <td>Wheel</td>
+                                <td>L2 / R2</td>
+                            </tr>
+                            <tr>
+                                <td>Cursor speed</td>
+                                <td>-</td>
+                                <td>L1 / R1</td>
+                            </tr>
+                        </table>
                     </div>
                 </details>
 
@@ -678,7 +695,6 @@
         <!-- Map/Scenario Editor Overlay (uses main game canvas) -->
         <div id="editor-overlay" class="editor-overlay hidden">
             <div class="editor-top-bar">
-                <button id="editor-back-btn" class="tron-btn small">← Back</button>
             </div>
 
             <!-- Random dialog (top-left, like player-dashboard) -->
@@ -881,6 +897,9 @@
     </div>
 
     <div id="game-version" class="game-version-display"></div>
+    <a id="main-menu-steam-btn" href="https://store.steampowered.com/app/4429000/DICEPTION/" target="_blank" rel="noopener" class="hidden">
+        <img src="assets/icons/steam-logo.png" alt="Steam" class="platform-icon">
+    </a>
     <button id="global-back-btn" class="tron-btn small global-back-btn hidden" aria-label="Back">
         <span class="sprite-icon icon-close"></span>
         <span class="sprite-icon icon-settings hidden"></span>

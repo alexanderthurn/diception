@@ -50,7 +50,7 @@ export class SessionManager {
         const isCampaignMode = localStorage.getItem('dicy_campaignMode');
         const mainMenuBtn = document.getElementById('pause-mainmenu-btn');
         if (mainMenuBtn) {
-            mainMenuBtn.textContent = isCampaignMode ? 'Back to Campaign' : 'Back to Custom Game';
+            mainMenuBtn.textContent = 'Exit';
         }
     }
 
