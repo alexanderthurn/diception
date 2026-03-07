@@ -434,7 +434,8 @@ select {
     gap: 6px;
 }
 
-#dice-result-content .dice-group {
+#dice-result-content .dice-group,
+.howto-example .dice-group {
     display: flex;
     align-items: center;
     gap: 2px;
@@ -445,13 +446,15 @@ select {
     animation: dice-shake 0.3s ease-in-out;
 }
 
-#dice-result-content .dice-plus {
+#dice-result-content .dice-plus,
+.howto-example .dice-plus {
     font-size: 10px;
     opacity: 0.5;
     margin: 0 1px;
 }
 
-#dice-result-content .dice-sum {
+#dice-result-content .dice-sum,
+.howto-example .dice-sum {
     font-weight: bold;
     font-size: 18px;
     margin-left: 4px;
@@ -477,17 +480,20 @@ select {
     margin-bottom: 2px;
 }
 
-#dice-result-content .vs-indicator {
+#dice-result-content .vs-indicator,
+.howto-example .vs-indicator {
     font-size: 16px;
     font-weight: bold;
     margin: 0 8px;
 }
 
-#dice-result-content .vs-indicator.win {
+#dice-result-content .vs-indicator.win,
+.howto-example .vs-indicator.win {
     color: #00ff00;
 }
 
-#dice-result-content .vs-indicator.loss {
+#dice-result-content .vs-indicator.loss,
+.howto-example .vs-indicator.loss {
     color: #ff0000;
 }
 
@@ -2359,6 +2365,10 @@ select {
     max-width: 100%;
 }
 
+#settings-modal .howto-content {
+    max-height: calc(90vh - 120px);
+}
+
 #pause-modal, #setup-modal {
     background: #000;
     padding: 30px;
@@ -2494,6 +2504,51 @@ select {
 .setting-explain strong,
 .setting-explain em {
     color: #fff;
+}
+
+/* How To visualizations */
+.howto-example {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px 14px;
+    margin: 8px 0 4px 0;
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+
+/* Reinforce map visualization */
+.howto-reinforce {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.howto-tile-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.howto-tile-gap {
+    width: 12px;
+}
+
+.howto-tile {
+    width: 28px;
+    height: 28px;
+    border-radius: 0;
+}
+
+.howto-tile.connected {
+    background: rgba(170, 0, 255, 0.25);
+    border: 1px solid rgba(170, 0, 255, 0.7);
+}
+
+.howto-tile.barrier {
+    background: rgba(255, 0, 55, 0.25);
+    border: 1px solid rgba(255, 0, 55, 0.7);
 }
 
 #start-game-btn {
@@ -3188,7 +3243,7 @@ select {
     z-index: 10001;
     background: rgba(0, 0, 0, 0.9);
     border: 2px solid var(--accent-color);
-    border-radius: 4px;
+    border-radius: 0;
     padding: 4px;
     pointer-events: none;
 }
@@ -3287,7 +3342,7 @@ select {
 /* Override global canvas 100vw/100vh - preview uses --preview-size set in JS */
 .level-preview-canvas {
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
+    border-radius: 0;
     width: var(--preview-size, 160px) !important;
     height: var(--preview-size, 160px) !important;
 }
@@ -3327,7 +3382,7 @@ select {
     line-height: 1;
     background: rgba(0, 0, 0, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
+    border-radius: 0;
     cursor: pointer;
     opacity: 0.8;
 }

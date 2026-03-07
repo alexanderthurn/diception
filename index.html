@@ -308,18 +308,79 @@
             </div>
             <div class="howto-content">
                 <section>
-                    <h3>PROTOCOL: BASICS</h3>
+                    <h3>BASICS</h3>
                     <p><strong>OBJECTIVE:</strong> Conquer all tiles of the grid.</p>
                     <ul class="howto-list">
-                        <li><strong>COMBAT:</strong> Dice attack dice. Your attack power is the sum of all your dice
-                            values. Highest sum wins.</li>
-                        <li><strong>WINNING:</strong> If you have a higher total than the defender, you win. You take
-                            over the territory and move your dice there (leaving 1 behind).</li>
-                        <li><strong>LOSING:</strong> If you have equal or fewer points, you lose. Your dice count drops
-                            to 1 and your turn ends immediately.</li>
-                        <li><strong>REINFORCE:</strong> At the end of your turn, you get new dice. You get dice based on
-                            your biggest connected territories amount. Like if you have 3 territories, but only 2 are
-                            adjacent, you get 2 dice.</li>
+                        <li>
+                            <strong>COMBAT:</strong> Dice attack dice. Your attack power is the sum of all your dice values. Highest sum wins.
+                            <div class="howto-example">
+                                <div class="dice-group">
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-sum" style="color:#aa00ff">10</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>WINNING:</strong> If you have a higher total than the defender, you win. You take over the territory and move your dice there (leaving 1 behind).
+                            <div class="howto-example">
+                                <div class="dice-group">
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-sum" style="color:#aa00ff">13</span>
+                                </div>
+                                <span class="vs-indicator win">&gt;</span>
+                                <div class="dice-group">
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-sum" style="color:#ff4444">7</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>LOSING:</strong> If you have equal or fewer points, you lose. Your dice count drops to 1 and your turn ends immediately.
+                            <div class="howto-example">
+                                <div class="dice-group">
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-sum" style="color:#aa00ff">4</span>
+                                </div>
+                                <span class="vs-indicator loss">&#8804;</span>
+                                <div class="dice-group">
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-sum" style="color:#ff4444">9</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>REINFORCE:</strong> At the end of your turn, you get new dice. You get dice based on your biggest connected territories amount. Like if you have 4 territories, but only 3 are adjacent, you get 3 dice.
+                            <div class="howto-example">
+                                <div class="howto-reinforce">
+                                    <div class="howto-tile-row">
+                                        <div class="howto-tile connected" title="Connected"></div>
+                                        <div class="howto-tile connected" title="Connected"></div>
+                                        <div class="howto-tile connected" title="Connected"></div>
+                                        <div class="howto-tile barrier"></div>
+                                        <div class="howto-tile connected" title="Isolated"></div>
+                                    </div>
+                                    <span style="color:#aa00ff; font-size:24px; font-weight:bold; display:flex; align-items:center; gap:6px; margin-top:6px;">
+                                        +3 <span class="dice-icon-sprite howto-dice-sprite" style="width:24px; height:24px; background-color:#aa00ff;"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
                         <li><strong>TURN LIMIT:</strong> If no player conquers all territories within 999 turns, the
                             game ends and the player with the most total dice (on the board + in reserve) wins.</li>
                     </ul>
@@ -331,22 +392,21 @@
                                 class="prob-high-text">Green ≥75%</span> <span class="prob-medium-text">Yellow
                                 25-74%</span> <span class="prob-low-text">Red &lt;25%</span></span></p>
                     <div class="probability-controls">
-                        <label>Dice Sides:
-                            <select id="prob-dice-sides">
-                                <option value="1">D1 (1-sided)</option>
-                                <option value="2">D2 (2-sided)</option>
-                                <option value="3">D3 (3-sided)</option>
-                                <option value="4">D4 (4-sided)</option>
-                                <option value="5">D5 (5-sided)</option>
-                                <option value="6" selected>D6 (6-sided)</option>
-                                <option value="7">D7 (7-sided)</option>
-                                <option value="8">D8 (8-sided)</option>
-                                <option value="9">D9 (9-sided)</option>
-                                <option value="10">D10 (10-sided)</option>
-                                <option value="11">D11 (11-sided)</option>
-                                <option value="12">D12 (12-sided)</option>
-                            </select>
-                        </label>
+                        <label for="prob-dice-sides">Dice Sides:</label>
+                        <select id="prob-dice-sides">
+                            <option value="1">D1</option>
+                            <option value="2">D2</option>
+                            <option value="3">D3</option>
+                            <option value="4">D4</option>
+                            <option value="5">D5</option>
+                            <option value="6" selected>D6</option>
+                            <option value="7">D7</option>
+                            <option value="8">D8</option>
+                            <option value="9">D9</option>
+                            <option value="10">D10</option>
+                            <option value="11">D11</option>
+                            <option value="12">D12</option>
+                        </select>
                     </div>
                     <div class="probability-table-wrapper">
                         <table id="probability-table" class="probability-table">
@@ -508,7 +568,7 @@
                 </details>
 
                 <details class="settings-group" id="howto-display-section">
-                    <summary class="settings-group-header">DISPLAY & GRAPHICS</summary>
+                    <summary class="settings-group-header">GRAPHICS</summary>
                     <div class="settings-group-body">
                         <p style="margin-top:0">Configure rendering options. Some changes may require a restart to apply.</p>
                         <div id="desktop-display-controls" class="control-row hidden" style="margin-bottom: 10px;">
@@ -560,7 +620,7 @@
                 </details>
 
                 <details class="settings-group" id="howto-data-section">
-                    <summary class="settings-group-header">DATA & STORAGE</summary>
+                    <summary class="settings-group-header">STORAGE</summary>
                     <div class="settings-group-body">
                         <p style="margin-top:0">This game stores settings, progress, and campaigns in your browser's local storage.</p>
                         <div id="howto-clear-area" class="howto-clear-area">
