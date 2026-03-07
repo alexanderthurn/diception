@@ -376,8 +376,12 @@ export class ScenarioBrowser {
         el.appendChild(info);
         document.body.appendChild(el);
         const rect = tile.getBoundingClientRect();
-        el.style.left = Math.min(rect.left, window.innerWidth - size - 16) + 'px';
-        el.style.top = (rect.top - size - 12) + 'px';
+        const uiScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale')) || 1;
+        const localLeft = rect.left / uiScale;
+        const localTop = rect.top / uiScale;
+        const localViewW = window.innerWidth / uiScale;
+        el.style.left = Math.min(localLeft, localViewW - size - 16) + 'px';
+        el.style.top = (localTop - size - 12) + 'px';
         this.hoverPreviewEl = el;
 
         if (level.type === 'config') {
