@@ -526,11 +526,6 @@ export class ScenarioBrowser {
             playBtn.onclick = () => finish('play');
             primaryRow.appendChild(playBtn);
 
-            const customBtn = document.createElement('button');
-            customBtn.className = 'tron-btn';
-            customBtn.textContent = 'Custom Game';
-            customBtn.onclick = () => finish('custom');
-            primaryRow.appendChild(customBtn);
 
             if (this.isOwner) {
                 const editBtn = document.createElement('button');
@@ -607,7 +602,6 @@ export class ScenarioBrowser {
         }).then(result => {
             const idx = currentIndex;
             if (result === 'play') this.selectAndPlayLevel(idx, { immediateStart: true });
-            else if (result === 'custom') this.selectAndPlayLevel(idx, { customMode: true });
             else if (result === 'edit') this.openEditorForLevel(idx);
             else if (result === 'delete') this.deleteLevel(idx);
         });
@@ -736,12 +730,6 @@ export class ScenarioBrowser {
             this.setupModal.classList.add('hidden');
             if (this.effectsManager) this.effectsManager.stopIntroMode();
             if (this.onStartGame) this.onStartGame();
-        } else if (opts.customMode) {
-            localStorage.removeItem('dicy_campaignMode');
-            localStorage.setItem('dicy_customLevelMode', '1');
-            this.scenarioBrowserModal.classList.add('hidden');
-            this.setupModal.classList.remove('hidden');
-            if (this.effectsManager) this.effectsManager.startIntroMode();
         } else {
             localStorage.removeItem('dicy_campaignMode');
             localStorage.removeItem('dicy_customLevelMode');

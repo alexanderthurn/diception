@@ -232,6 +232,14 @@
             </div>
 
             <div class="control-row start-row" style="margin-top: 20px; gap: 10px; flex-direction: column;">
+                <div class="control-group" style="margin:0">
+                    <label>Game Speed</label>
+                    <div class="segmented-btn game-speed-segmented">
+                        <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
+                        <button type="button" class="segmented-option" data-value="normal">Normal</button>
+                        <button type="button" class="segmented-option" data-value="expert">Expert</button>
+                    </div>
+                </div>
                 <button id="start-game-btn" class="tron-btn large" style="width: 100%;">START</button>
                 <button id="quit-game-btn" class="tron-btn small hidden" style="width: 100%; padding: 10px;"
                     title="Quit Game">EXIT</button>
@@ -245,8 +253,8 @@
             <h1 class="tron-title">DICEPTION</h1>
             <div class="credits" id="main-menu-credits">by Alexander Thurn</div>
             <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;width:100%;min-width:220px;">
-                <button id="main-custom-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span> Custom Game</button>
-                <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span> Campaigns</button>
+                <button id="main-custom-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span> Play Game</button>
+                <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span> Levels</button>
                 <button id="main-settings-btn" class="tron-btn large"><span class="sprite-icon icon-settings"></span> Settings</button>
                 <div style="display:flex;gap:10px;">
                     <button id="main-howto-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-help"></span> How To</button>
@@ -412,8 +420,13 @@
                         <div class="control-row">
                             <div class="control-group half">
                                 <label>Game Speed</label>
-                                <select id="game-speed">
-                                    <option value="beginner" selected>Beginner</option>
+                                <div class="segmented-btn game-speed-segmented">
+                                    <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
+                                    <button type="button" class="segmented-option" data-value="normal">Normal</button>
+                                    <button type="button" class="segmented-option" data-value="expert">Expert</button>
+                                </div>
+                                <select id="game-speed" style="display:none">
+                                    <option value="beginner">Beginner</option>
                                     <option value="normal">Normal</option>
                                     <option value="expert">Expert</option>
                                 </select>
@@ -455,7 +468,7 @@
                 </details>
 
                 <details class="settings-group">
-                    <summary class="settings-group-header">INTERFACE CONTROLS</summary>
+                    <summary class="settings-group-header">CONTROLS</summary>
                     <div class="settings-group-body">
                         <table class="control-table" id="controls-table">
                             <thead>
@@ -549,14 +562,6 @@
             </div>
             <div class="howto-content">
                 <section>
-                    <h3>MUSIC</h3>
-                    <p>Toggle tracks to include/exclude from the play loop.</p>
-                    <ul id="howto-music-list" class="howto-music-list">
-                        <!-- Populated by JavaScript -->
-                    </ul>
-                </section>
-
-                <section>
                     <h3>CREDITS</h3>
                     <div class="setting-explain">
                         <p>This game was made by <strong>Alexander Thurn</strong>.</p>
@@ -576,6 +581,14 @@
                         <p>Music made with <a href="https://suno.com/invite/@werteherren" target="_blank"
                                 class="about-link highlight-link">Suno</a> (Suno Pro).</p>
                     </div>
+                </section>
+
+                <section>
+                    <h3>MUSIC</h3>
+                    <p>Toggle tracks to include/exclude from the play loop.</p>
+                    <ul id="howto-music-list" class="howto-music-list">
+                        <!-- Populated by JavaScript -->
+                    </ul>
                 </section>
 
                 <section>
@@ -868,7 +881,10 @@
     </div>
 
     <div id="game-version" class="game-version-display"></div>
-    <button id="global-back-btn" class="tron-btn small global-back-btn hidden" aria-label="Back">×</button>
+    <button id="global-back-btn" class="tron-btn small global-back-btn hidden" aria-label="Back">
+        <span class="sprite-icon icon-close"></span>
+        <span class="sprite-icon icon-settings hidden"></span>
+    </button>
 
     <script type="module" src="src/main.js"></script>
 </body>

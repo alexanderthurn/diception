@@ -256,6 +256,45 @@ select {
     color: #000;
 }
 
+/* Segmented button control */
+.segmented-btn {
+    display: flex;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--button-glow);
+    width: 100%;
+}
+
+.segmented-option {
+    flex: 1;
+    background: #000;
+    border: none;
+    border-right: 1px solid var(--border-color);
+    color: var(--border-color);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: bold;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 6px 4px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    touch-action: manipulation;
+}
+
+.segmented-option:last-child {
+    border-right: none;
+}
+
+.segmented-option.active {
+    background: var(--border-color);
+    color: #000;
+}
+
+.segmented-option:hover:not(.active) {
+    background: rgba(0, 255, 255, 0.15);
+    color: #fff;
+}
+
 .separator {
     color: #555;
     padding: 0 5px;
@@ -865,6 +904,16 @@ body.fx-off .player-tile.rumble-lose {
     max-width: 320px;
     width: 100%;
     margin: 20px auto 0;
+}
+
+#campaign-select-view,
+#campaign-detail-view {
+    background: transparent;
+}
+
+#campaign-select-view .howto-content,
+#campaign-detail-view .howto-content {
+    max-height: 75vh;
 }
 
 #main-menu .tron-btn.large .sprite-icon {
@@ -2367,6 +2416,12 @@ select {
     top: 12px;
     left: 12px;
     z-index: 9999;
+}
+
+#global-back-btn .sprite-icon {
+    width: 60%;
+    height: auto;
+    margin: 0;
 }
 
 .modal-header .tron-title {

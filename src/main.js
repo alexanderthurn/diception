@@ -757,49 +757,39 @@ function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboar
 
 // Helper: Setup Input Events
 function setupInputEvents(game, inputManager, sessionManager) {
-    const setupModal = document.getElementById('setup-modal');
-    const mainMenu = document.getElementById('main-menu');
-
     inputManager.on('menu', () => {
-        const isMenuOpen = !mainMenu.classList.contains('hidden') || !setupModal.classList.contains('hidden');
-
         if (Dialog.activeOverlay) {
             Dialog.close(Dialog.activeOverlay);
             return;
         }
 
-        if (isMenuOpen) {
-            if (isTauriContext() && game.players.length === 0) {
-                Dialog.confirm('Are you sure you want to exit to desktop?', 'QUIT GAME?').then(async choice => {
-                    if (choice) {
-                        if (window.steam) {
-                            window.steam.quit();
-                        } else if (isTauriContext()) {
-                            try {
-                                const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                                await getCurrentWindow().close();
-                            } catch (e) {
-                                console.error('Tauri exit failed:', e);
-                                window.close();
-                            }
-                        } else if (isAndroid()) {
-                            window.close();
-                        }
-                    }
-                });
-                return;
-            }
-
-            if (game.players.length > 0) {
-                sessionManager.effectsManager?.stopIntroMode();
-                setupModal.classList.add('hidden');
-                document.getElementById('main-menu')?.classList.add('hidden');
-                document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
-            }
+        const globalBackBtn = document.getElementById('global-back-btn');
+        if (globalBackBtn && !globalBackBtn.classList.contains('hidden')) {
+            globalBackBtn.click();
             return;
         }
 
-        sessionManager.quitToMainMenu();
+        // global-back-btn is hidden → on main menu or loading screen
+        // On Tauri with no game running → offer quit to desktop
+        if (isTauriContext() && game.players.length === 0) {
+            Dialog.confirm('Are you sure you want to exit to desktop?', 'QUIT GAME?').then(async choice => {
+                if (choice) {
+                    if (window.steam) {
+                        window.steam.quit();
+                    } else if (isTauriContext()) {
+                        try {
+                            const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                            await getCurrentWindow().close();
+                        } catch (e) {
+                            console.error('Tauri exit failed:', e);
+                            window.close();
+                        }
+                    } else if (isAndroid()) {
+                        window.close();
+                    }
+                }
+            });
+        }
     });
 
     inputManager.on('cancel', () => {
@@ -1030,16 +1020,32 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         refreshHowtoSections();
         bindMusicToggles();
         refreshControlsSection();
+        initGameSpeedSegmented();
         settingsModal.classList.remove('hidden');
     }
 
-    // Game speed — apply immediately to running game (effects-quality is handled by configManager)
-    document.getElementById('game-speed')?.addEventListener('change', (e) => {
-        const speed = e.target.value;
-        localStorage.setItem('dicy_gameSpeed', speed);
-        if (gameStarter) gameStarter.gameSpeed = speed;
-        if (renderer) renderer.setGameSpeed(speed);
-    });
+    // Segmented game speed buttons — synced across all instances, immediate effect in-game
+    function initGameSpeedSegmented() {
+        const current = localStorage.getItem('dicy_gameSpeed') || 'beginner';
+        document.querySelectorAll('.game-speed-segmented .segmented-option').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === current);
+            btn.addEventListener('click', () => {
+                const val = btn.dataset.value;
+                localStorage.setItem('dicy_gameSpeed', val);
+                // Sync hidden select so configManager.getGameConfig() stays accurate
+                const sel = document.getElementById('game-speed');
+                if (sel) { sel.value = val; sel.dispatchEvent(new Event('change')); }
+                // Apply immediately to running game
+                if (gameStarter) gameStarter.gameSpeed = val;
+                if (renderer) renderer.setGameSpeed(val);
+                // Update active state on every instance
+                document.querySelectorAll('.game-speed-segmented .segmented-option').forEach(o => {
+                    o.classList.toggle('active', o.dataset.value === val);
+                });
+            });
+        });
+    }
+    initGameSpeedSegmented();
 
     // --- About open/close ---
     function openAbout(onBack) {
@@ -1126,15 +1132,32 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         }
     });
 
-    // Auto-hide global back btn when on main menu or pause modal
+    // Auto-hide global back btn when on main menu or pause modal; switch icon based on context
     const globalBackBtn = document.getElementById('global-back-btn');
     function updateGlobalBackVisibility() {
         const onMainMenu = mainMenu && !mainMenu.classList.contains('hidden');
         const pauseOpen = pauseModal && !pauseModal.classList.contains('hidden');
         globalBackBtn?.classList.toggle('hidden', onMainMenu || pauseOpen);
+
+        // Switch icon: gear = in-game with no modal open (next click opens pause); close = everything else
+        if (globalBackBtn) {
+            const anyModalOpen = [settingsModal, howtoModal, aboutModal, setupModal,
+                document.getElementById('scenario-browser-modal')]
+                .some(el => el && !el.classList.contains('hidden'));
+            const showGear = !anyModalOpen && sessionManagerRef?.isGameInProgress();
+            globalBackBtn.querySelector('.icon-close')?.classList.toggle('hidden', !!showGear);
+            globalBackBtn.querySelector('.icon-settings')?.classList.toggle('hidden', !showGear);
+        }
     }
-    if (mainMenu) new MutationObserver(updateGlobalBackVisibility).observe(mainMenu, { attributes: true, attributeFilter: ['class'] });
-    if (pauseModal) new MutationObserver(updateGlobalBackVisibility).observe(pauseModal, { attributes: true, attributeFilter: ['class'] });
+    const obsOpts = { attributes: true, attributeFilter: ['class'] };
+    if (mainMenu) new MutationObserver(updateGlobalBackVisibility).observe(mainMenu, obsOpts);
+    if (pauseModal) new MutationObserver(updateGlobalBackVisibility).observe(pauseModal, obsOpts);
+    if (settingsModal) new MutationObserver(updateGlobalBackVisibility).observe(settingsModal, obsOpts);
+    if (howtoModal) new MutationObserver(updateGlobalBackVisibility).observe(howtoModal, obsOpts);
+    if (aboutModal) new MutationObserver(updateGlobalBackVisibility).observe(aboutModal, obsOpts);
+    if (setupModal) new MutationObserver(updateGlobalBackVisibility).observe(setupModal, obsOpts);
+    const sbModal = document.getElementById('scenario-browser-modal');
+    if (sbModal) new MutationObserver(updateGlobalBackVisibility).observe(sbModal, obsOpts);
 
     // --- Pause menu wiring ---
 
