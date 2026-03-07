@@ -304,60 +304,64 @@ export class BackgroundRenderer {
 
         if (!this.enabled) return;
 
-        const count = this.quality === 'high' ? 32 : 8;
+        const count = this.quality === 'high' ? 60 : 20;
         this.baseCount = count;
-        this.maxExtra = this.quality === 'high' ? 60 : 20;
+        this.maxExtra = this.quality === 'high' ? 200 : 60;
+        this.matrixSpawnTimer = 0;
+        this.matrixSpawnInterval = this.quality === 'high' ? 6 : 15;
+
+        // Stagger initial dice across y range so screen fills immediately
+        for (let i = 0; i < count; i++) {
+            this._spawnFallingDie(true);
+        }
+    }
+
+    _spawnFallingDie(scattered = false) {
+        if (!this.enabled) return;
+
+        const s = this._scale();
+        const minDim = Math.min(this.width, this.height);
+        const size = (0.03 + Math.random() * 0.04) * minDim;
 
         const colors = [0x00ffff, 0xAA00FF, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
         const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20];
-        const s = this._scale();
-        const minDim = Math.min(this.width, this.height);
+        const diceCount = 1 + Math.floor(Math.random() * 6);
+        const diceSides = diceSidesOptions[Math.floor(Math.random() * diceSidesOptions.length)];
+        const color = colors[Math.floor(Math.random() * colors.length)];
 
-        const cx = this.width / 2;
-        const cy = this.height / 2;
+        const tileContainer = TileRenderer.createTile({
+            size, diceCount, diceSides, color,
+            fillAlpha: 0.7, showBorder: true
+        });
+        tileContainer.pivot.set(size / 2, size / 2);
 
-        for (let i = 0; i < count; i++) {
-            const size = (0.04 + Math.random() * 0.02) * minDim;
-            const diceCount = 1 + Math.floor(Math.random() * 6);
-            const diceSides = diceSidesOptions[Math.floor(Math.random() * diceSidesOptions.length)];
-            const color = colors[i % colors.length];
+        const fallSpeed = (0.4 + Math.random() * 0.8) * s;
+        const drift = (Math.random() - 0.5) * 0.15 * s;
 
-            const tileContainer = TileRenderer.createTile({
-                size,
-                diceCount,
-                diceSides,
-                color,
-                fillAlpha: 0.7,
-                showBorder: true
-            });
+        // scattered = spread across whole screen on init; otherwise spawn just above top
+        const startY = scattered
+            ? -size - Math.random() * this.height
+            : -size - Math.random() * 100;
 
-            tileContainer.pivot.set(size / 2, size / 2);
+        const dice = {
+            graphics: tileContainer,
+            x: Math.random() * this.width,
+            y: startY,
+            vx: drift,
+            vy: fallSpeed,
+            rotation: (Math.random() - 0.5) * 0.5,
+            rotationSpeed: (Math.random() - 0.5) * 0.003,
+            baseAlpha: 0.5 + Math.random() * 0.4,
+            alphaPhase: Math.random() * Math.PI * 2
+        };
 
-            // Start tightly clustered at center, radiate outward
-            const spawnRadius = minDim * 0.02;
-            const angle = Math.random() * Math.PI * 2;
-            const speed = (0.3 + Math.random() * 0.3) * s;
+        tileContainer.x = dice.x;
+        tileContainer.y = dice.y;
+        tileContainer.rotation = dice.rotation;
+        tileContainer.alpha = dice.baseAlpha;
 
-            const dice = {
-                graphics: tileContainer,
-                x: cx + (Math.random() - 0.5) * spawnRadius,
-                y: cy + (Math.random() - 0.5) * spawnRadius,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                rotation: (Math.random() - 0.5) * 0.3,
-                rotationSpeed: (Math.random() - 0.5) * 0.004,
-                baseAlpha: 0.65 + Math.random() * 0.25,
-                alphaPhase: Math.random() * Math.PI * 2
-            };
-
-            tileContainer.x = dice.x;
-            tileContainer.y = dice.y;
-            tileContainer.rotation = dice.rotation;
-            tileContainer.alpha = dice.baseAlpha;
-
-            this.diceContainer.addChild(tileContainer);
-            this.floatingDice.push(dice);
-        }
+        this.diceContainer.addChild(tileContainer);
+        this.floatingDice.push(dice);
     }
 
     panDice(dx, dy) {
@@ -449,7 +453,17 @@ export class BackgroundRenderer {
         const sc = this.diceContainer.scale.x;
         const ox = this.diceContainer.x;
         const oy = this.diceContainer.y;
-        const cullMargin = 2000; // screen pixels — far enough to never be visible
+        const sideCullMargin = 400;
+        const bottomCullMargin = 80;
+
+        // Matrix rain: continuously spawn new dice above screen
+        this.matrixSpawnTimer = (this.matrixSpawnTimer || 0) + dt;
+        if (this.matrixSpawnTimer >= (this.matrixSpawnInterval || 10)) {
+            this.matrixSpawnTimer = 0;
+            if (this.floatingDice.length < this.baseCount + this.maxExtra) {
+                this._spawnFallingDie(false);
+            }
+        }
 
         for (let i = this.floatingDice.length - 1; i >= 0; i--) {
             const d = this.floatingDice[i];
@@ -457,11 +471,13 @@ export class BackgroundRenderer {
             d.y += d.vy * dt;
             d.rotation += d.rotationSpeed * dt;
 
-            // Cull dice that have drifted far off-screen (no wrap-back)
             const screenX = ox + d.x * sc;
             const screenY = oy + d.y * sc;
-            if (screenX < -cullMargin || screenX > this.width  + cullMargin ||
-                screenY < -cullMargin || screenY > this.height + cullMargin) {
+
+            // Cull: off the bottom/sides, or far above (for click-spawned dice flying up)
+            if (screenY > this.height + bottomCullMargin ||
+                screenY < -sideCullMargin ||
+                screenX < -sideCullMargin || screenX > this.width + sideCullMargin) {
                 d.graphics.destroy();
                 this.floatingDice.splice(i, 1);
                 if (i < this.baseCount) this.baseCount = Math.max(0, this.baseCount - 1);

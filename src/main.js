@@ -1146,28 +1146,48 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     // --- Pause menu wiring ---
 
     function syncPauseAudioBtns() {
-        const musicBtn = document.getElementById('pause-music-toggle');
-        const sfxBtn = document.getElementById('pause-sfx-toggle');
-        if (musicBtn) {
-            const on = audioController.musicPlaying;
-            musicBtn.innerHTML = `<span class="sprite-icon icon-music-${on ? 'on' : 'off'}"></span> Music`;
-            musicBtn.classList.toggle('active', on);
+        // Sync toggle icons from the main (settings) toggle buttons
+        const mainMusicBtn = document.getElementById('music-toggle');
+        const mainSfxBtn = document.getElementById('sfx-toggle');
+        const pauseMusicBtn = document.getElementById('pause-music-toggle');
+        const pauseSfxBtn = document.getElementById('pause-sfx-toggle');
+        if (pauseMusicBtn && mainMusicBtn) {
+            pauseMusicBtn.innerHTML = mainMusicBtn.innerHTML;
+            pauseMusicBtn.classList.toggle('active', mainMusicBtn.classList.contains('active'));
         }
-        if (sfxBtn) {
-            const on = audioController.sfx.enabled;
-            sfxBtn.innerHTML = `<span class="sprite-icon icon-sfx-${on ? 'on' : 'off'}"></span> Sound`;
-            sfxBtn.classList.toggle('active', on);
+        if (pauseSfxBtn && mainSfxBtn) {
+            pauseSfxBtn.innerHTML = mainSfxBtn.innerHTML;
+            pauseSfxBtn.classList.toggle('active', mainSfxBtn.classList.contains('active'));
         }
+        // Sync slider values from settings sliders
+        const pauseMusicVol = document.getElementById('pause-music-volume');
+        const pauseSfxVol = document.getElementById('pause-sfx-volume');
+        const mainMusicVol = document.getElementById('music-volume');
+        const mainSfxVol = document.getElementById('sfx-volume');
+        if (pauseMusicVol && mainMusicVol) pauseMusicVol.value = mainMusicVol.value;
+        if (pauseSfxVol && mainSfxVol) pauseSfxVol.value = mainSfxVol.value;
     }
 
+    // Toggles delegate to the main buttons so AudioController handles everything
     document.getElementById('pause-music-toggle')?.addEventListener('click', () => {
-        audioController.handleMusicToggle();
+        document.getElementById('music-toggle')?.click();
         syncPauseAudioBtns();
     });
 
     document.getElementById('pause-sfx-toggle')?.addEventListener('click', () => {
-        audioController.handleSfxToggle();
+        document.getElementById('sfx-toggle')?.click();
         syncPauseAudioBtns();
+    });
+
+    // Sliders mirror to the settings sliders and dispatch input so AudioController picks them up
+    document.getElementById('pause-music-volume')?.addEventListener('input', (e) => {
+        const main = document.getElementById('music-volume');
+        if (main) { main.value = e.target.value; main.dispatchEvent(new Event('input')); }
+    });
+
+    document.getElementById('pause-sfx-volume')?.addEventListener('input', (e) => {
+        const main = document.getElementById('sfx-volume');
+        if (main) { main.value = e.target.value; main.dispatchEvent(new Event('input')); }
     });
 
     document.getElementById('pause-resume-btn')?.addEventListener('click', () => {

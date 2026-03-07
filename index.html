@@ -278,15 +278,20 @@
                         <button type="button" class="segmented-option" data-value="expert">Expert</button>
                     </div>
                 </div>
-                <div class="control-group" style="margin:0">
-                    <label>Audio</label>
-                    <div style="display:flex;gap:8px;">
-                        <button id="pause-music-toggle" class="tron-btn small" title="Music" style="flex:1">
-                            <span class="sprite-icon icon-music-on"></span> Music
-                        </button>
-                        <button id="pause-sfx-toggle" class="tron-btn small" title="Sound Effects" style="flex:1">
-                            <span class="sprite-icon icon-sfx-on"></span> Sound
-                        </button>
+                <div class="control-row" style="margin:0;gap:10px;">
+                    <div class="control-group half">
+                        <label>Music</label>
+                        <div class="range-row">
+                            <button id="pause-music-toggle" class="tron-btn small" title="Music"><span class="sprite-icon icon-music-on"></span></button>
+                            <input type="range" id="pause-music-volume" min="0" max="100" value="50" title="Music Volume">
+                        </div>
+                    </div>
+                    <div class="control-group half">
+                        <label>Sound Effects</label>
+                        <div class="range-row">
+                            <button id="pause-sfx-toggle" class="tron-btn small active" title="Sound Effects"><span class="sprite-icon icon-sfx-on"></span></button>
+                            <input type="range" id="pause-sfx-volume" min="0" max="100" value="50" title="SFX Volume">
+                        </div>
                     </div>
                 </div>
                 <hr style="border-color:rgba(0,255,255,0.2);margin:0">

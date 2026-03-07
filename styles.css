@@ -5468,7 +5468,9 @@ canvas {
 #zoom-in-btn,
 #zoom-out-btn,
 #music-toggle,
-#sfx-toggle {
+#sfx-toggle,
+#pause-music-toggle,
+#pause-sfx-toggle {
     width: 36px !important;
     height: 36px !important;
     padding: 0 !important;
