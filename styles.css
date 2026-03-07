@@ -833,6 +833,19 @@ body.fx-off .player-tile.rumble-lose {
     /* Handled by container gap/margin now */
 }
 
+#main-menu .tron-btn.large {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+#main-menu .tron-btn.large .sprite-icon {
+    height: 1em;
+    transform: none;
+    flex-shrink: 0;
+}
+
 .modal {
     position: absolute;
     top: 50%;
@@ -2260,6 +2273,12 @@ select {
     text-align: left;
     padding: 30px;
     background: black;
+}
+
+#pause-modal, #setup-modal {
+    background: #000;
+    padding: 30px;
+    border: 1px solid rgba(0, 255, 255, 0.2);
 }
 
 #howto-modal {
@@ -4577,15 +4596,65 @@ select {
 
 #fps-counter {
     position: fixed;
-    top: 5px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 8px;
+    left: 12px;
     color: #00ff00;
     font-family: 'Rajdhani', monospace;
-    font-size: 20px;
+    font-size: 13px;
     z-index: 1000;
     pointer-events: none;
-    opacity: 0.8;
+    opacity: 0.7;
+}
+
+.game-version-display {
+    position: fixed;
+    bottom: 8px;
+    right: 12px;
+    color: rgba(0, 255, 255, 0.4);
+    font-family: 'Rajdhani', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+/* Collapsible settings groups */
+.settings-group {
+    border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+    margin-bottom: 0;
+}
+
+.settings-group-header {
+    list-style: none;
+    cursor: pointer;
+    padding: 12px 0;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #00ffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+}
+
+.settings-group-header::-webkit-details-marker { display: none; }
+
+.settings-group-header::before {
+    content: '▶';
+    font-size: 10px;
+    opacity: 0.6;
+    transition: transform 0.2s;
+    display: inline-block;
+}
+
+.settings-group[open] > .settings-group-header::before {
+    transform: rotate(90deg);
+}
+
+.settings-group-body {
+    padding-bottom: 16px;
 }
 
 canvas {

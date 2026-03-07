@@ -45,15 +45,12 @@ export class SessionManager {
      * Update new-game button label based on campaign mode (desktop: text + title)
      */
     updateNewGameBtnLabel() {
+        // Button now opens pause menu — label stays "Menu"
         if (!this.newGameBtn) return;
         const isCampaignMode = localStorage.getItem('dicy_campaignMode');
-        const btnText = this.newGameBtn.querySelector('.btn-text');
-        if (isCampaignMode) {
-            this.newGameBtn.title = 'Back to Campaign';
-            if (btnText) btnText.textContent = 'BACK TO CAMPAIGN';
-        } else {
-            this.newGameBtn.title = 'Main Menu';
-            if (btnText) btnText.textContent = 'MAIN MENU';
+        const mainMenuBtn = document.getElementById('pause-mainmenu-btn');
+        if (mainMenuBtn) {
+            mainMenuBtn.textContent = isCampaignMode ? 'Back to Campaign' : 'Main Menu';
         }
     }
 
@@ -143,7 +140,7 @@ export class SessionManager {
             this.configManager.updateLoadedLevelDisplay(null, null);
         }
 
-        this.setupModal.classList.remove('hidden');
+        document.getElementById('main-menu')?.classList.remove('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
         if (this.effectsManager) this.effectsManager.startIntroMode();
     }
@@ -239,6 +236,7 @@ export class SessionManager {
             }
 
             this.setupModal.classList.add('hidden');
+            document.getElementById('main-menu')?.classList.add('hidden');
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
             this.updateNewGameBtnLabel();
             this.updateRetryBtnVisibility();

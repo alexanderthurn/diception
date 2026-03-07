@@ -92,7 +92,7 @@ export class ScenarioBrowser {
                 this._disconnectGridResizeObserver();
                 localStorage.removeItem('dicy_campaignMode');
                 this.scenarioBrowserModal.classList.add('hidden');
-                this.setupModal.classList.remove('hidden');
+                document.getElementById('main-menu')?.classList.remove('hidden');
                 if (this.effectsManager) this.effectsManager.startIntroMode();
             });
         }

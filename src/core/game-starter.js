@@ -115,6 +115,7 @@ export class GameStarter {
 
         // Show Game UI
         this.setupModal.classList.add('hidden');
+        document.getElementById('main-menu')?.classList.add('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
 
         // Load pending scenario/level if needed
