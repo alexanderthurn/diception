@@ -892,6 +892,12 @@ body.fx-off .player-tile.rumble-lose {
     flex-direction: column;
     gap: 2px;
     width: 100%;
+    box-shadow: 0 0 3px rgba(0, 255, 255, 0.08);
+    text-shadow: none;
+}
+
+.campaign-select-btn:hover {
+    box-shadow: 0 0 5px rgba(0, 255, 255, 0.15);
 }
 
 .campaign-btn-sub {
@@ -906,10 +912,24 @@ body.fx-off .player-tile.rumble-lose {
 .campaign-button-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    align-items: stretch;
+    gap: 0;
     max-width: 320px;
     width: 100%;
     margin: 20px auto 0;
+}
+
+.campaign-list-node {
+    width: 100%;
+}
+
+.campaign-list-connector {
+    width: 2px;
+    height: 28px;
+    background: linear-gradient(to bottom, rgba(0, 255, 255, 0.6), rgba(0, 255, 255, 0.15));
+    align-self: center;
+    flex-shrink: 0;
+    margin: 0 auto;
 }
 
 #campaign-select-view,
@@ -2476,7 +2496,6 @@ select {
 .howto-content {
     max-height: 60vh;
     overflow-y: auto;
-    padding-right: 10px;
 }
 
 .howto-content section {
@@ -3883,13 +3902,6 @@ select {
     }
 }
 
-@media (max-width: 420px) and (max-height: 749px) {
-
-    .map-size-row,
-    .style-mode-row {
-        margin-right: 50px;
-    }
-}
 
 
 /* ============================================
@@ -5528,6 +5540,9 @@ canvas {
 #pause-sfx-toggle {
     width: 36px !important;
     height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    aspect-ratio: 1 / 1 !important;
     padding: 0 !important;
     display: inline-flex;
     align-items: center;
@@ -5536,7 +5551,7 @@ canvas {
     vertical-align: middle;
     box-sizing: border-box;
     /* Ensure no flex stretching inherits */
-    flex: 0 0 auto;
+    flex: 0 0 36px;
 }
 
 /* Minus is wide, so constrain width */

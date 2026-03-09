@@ -165,6 +165,16 @@ export class ScenarioBrowser {
         this.renderLevelGrid(campaign);
     }
 
+    getCampaignDisplayName(c) {
+        const nameMap = {
+            'steam-campaign': 'Chapter 1',
+            'maps': 'Chapter 2',
+            'scenarios': 'Chapter 3',
+        };
+        if (c.isUserCampaign) return 'Your Campaign';
+        return nameMap[c.owner] ?? c.owner;
+    }
+
     async renderCampaignList() {
         const campaigns = this.campaignManager.listCampaigns();
 
@@ -183,11 +193,14 @@ export class ScenarioBrowser {
         if (!this.campaignButtonList) return;
         this.campaignButtonList.innerHTML = '';
 
-        campaigns.forEach(c => {
+        campaigns.forEach((c, idx) => {
             const levelCount = c.levels?.length ?? 0;
             const solvedCount = getSolvedLevels(c.owner).length;
             const allComplete = levelCount > 0 && solvedCount >= levelCount;
-            const displayName = c.isUserCampaign ? 'Your Campaign' : c.owner;
+            const displayName = this.getCampaignDisplayName(c);
+
+            const nodeDiv = document.createElement('div');
+            nodeDiv.className = 'campaign-list-node';
 
             const btn = document.createElement('button');
             btn.className = 'tron-btn large campaign-select-btn';
@@ -208,7 +221,14 @@ export class ScenarioBrowser {
                 this.showLevelGridView(target);
             });
 
-            this.campaignButtonList.appendChild(btn);
+            nodeDiv.appendChild(btn);
+            this.campaignButtonList.appendChild(nodeDiv);
+
+            if (idx < campaigns.length - 1) {
+                const connector = document.createElement('div');
+                connector.className = 'campaign-list-connector';
+                this.campaignButtonList.appendChild(connector);
+            }
         });
     }
 
