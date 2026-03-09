@@ -1141,8 +1141,12 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     function syncToolbarAudioBtns() {
         const mainMusicBtn = document.getElementById('music-toggle');
         const mainSfxBtn = document.getElementById('sfx-toggle');
+        const mainMusicVol = document.getElementById('music-volume');
+        const mainSfxVol = document.getElementById('sfx-volume');
         const tbMusicBtn = document.getElementById('toolbar-music-toggle');
         const tbSfxBtn = document.getElementById('toolbar-sfx-toggle');
+        const tbMusicVol = document.getElementById('toolbar-music-volume');
+        const tbSfxVol = document.getElementById('toolbar-sfx-volume');
         if (tbMusicBtn && mainMusicBtn) {
             tbMusicBtn.innerHTML = mainMusicBtn.innerHTML;
             tbMusicBtn.classList.toggle('active', mainMusicBtn.classList.contains('active'));
@@ -1151,6 +1155,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             tbSfxBtn.innerHTML = mainSfxBtn.innerHTML;
             tbSfxBtn.classList.toggle('active', mainSfxBtn.classList.contains('active'));
         }
+        if (tbMusicVol && mainMusicVol) tbMusicVol.value = mainMusicVol.value;
+        if (tbSfxVol && mainSfxVol) tbSfxVol.value = mainSfxVol.value;
     }
 
     function updateZoomVisibility() {
@@ -1220,13 +1226,37 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     });
 
     document.getElementById('toolbar-music-toggle')?.addEventListener('click', () => {
+        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 600;
+        const tbVol = document.getElementById('toolbar-music-volume');
+        if (isMobile && tbVol) {
+            const isVisible = tbVol.classList.contains('visible');
+            document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
+            if (!isVisible) tbVol.classList.add('visible');
+        }
         document.getElementById('music-toggle')?.click();
         syncToolbarAudioBtns();
     });
 
     document.getElementById('toolbar-sfx-toggle')?.addEventListener('click', () => {
+        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 600;
+        const tbVol = document.getElementById('toolbar-sfx-volume');
+        if (isMobile && tbVol) {
+            const isVisible = tbVol.classList.contains('visible');
+            document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
+            if (!isVisible) tbVol.classList.add('visible');
+        }
         document.getElementById('sfx-toggle')?.click();
         syncToolbarAudioBtns();
+    });
+
+    document.getElementById('toolbar-music-volume')?.addEventListener('input', (e) => {
+        const main = document.getElementById('music-volume');
+        if (main) { main.value = e.target.value; main.dispatchEvent(new Event('input')); }
+    });
+
+    document.getElementById('toolbar-sfx-volume')?.addEventListener('input', (e) => {
+        const main = document.getElementById('sfx-volume');
+        if (main) { main.value = e.target.value; main.dispatchEvent(new Event('input')); }
     });
 
     // Sliders mirror to the settings sliders and dispatch input so AudioController picks them up
