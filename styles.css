@@ -2687,6 +2687,31 @@ select {
     }
 }
 
+@container (max-width: 640px) {
+    #settings-modal,
+    #setup-modal,
+    #about-modal,
+    #pause-modal {
+        inset: 0;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        transform: none !important;
+        border-radius: 0;
+        overflow-y: auto;
+        padding-top: max(16px, env(safe-area-inset-top));
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+        box-sizing: border-box;
+    }
+
+    .howto-content {
+        max-height: none;
+    }
+}
+
 /* About Link */
 .about-link {
     color: var(--accent-color);
@@ -4976,6 +5001,40 @@ canvas {
     .dialog-body p {
         font-size: 15px;
         /* Better readability on mobile */
+    }
+
+    .highscore-title {
+        margin: 0 0 8px 0;
+    }
+
+    .last-game-section {
+        margin: 8px 0;
+        padding: 0;
+        background: none;
+        border: none;
+    }
+
+    .human-stats-section {
+        margin-top: 8px;
+        padding: 8px;
+    }
+
+    .human-stats-section .highscore-title {
+        margin-bottom: 8px;
+    }
+
+    .dice-obituary {
+        margin: 10px 0;
+        font-size: 14px;
+    }
+
+    .timeline-section-horizontal {
+        margin-top: 10px;
+        padding-top: 8px;
+    }
+
+    #highscore-list {
+        margin-bottom: 8px;
     }
 }
 
