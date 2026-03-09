@@ -5534,7 +5534,7 @@ canvas {
     vertical-align: middle;
     box-sizing: border-box;
     /* Ensure no flex stretching inherits */
-    flex: 0 0 36px;
+    flex: 0 0 36px !important;
 }
 
 /* Minus is wide, so constrain width */

@@ -76,6 +76,15 @@ fn steam_quit(app_handle: tauri::AppHandle) {
     app_handle.exit(0);
 }
 
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
+fn steam_activate_overlay(state: tauri::State<SteamState>, dialog: String) -> Result<(), String> {
+    let guard = state.lock().map_err(|e| e.to_string())?;
+    guard.as_ref()
+        .map(|s| { s.client.friends().activate_game_overlay(&dialog); })
+        .ok_or_else(|| "Steam not initialized".to_string())
+}
+
 // ─── Gilrs commands (desktop only) ────────────────────────────────────────────
 
 /// Map a gilrs Button to W3C Standard Gamepad button index (0-15).
@@ -241,11 +250,21 @@ const STEAM_INIT_SCRIPT: &str = r#"
     var ipc = window.__TAURI_INTERNALS__;
     if (!ipc) return;
     window.steam = {
-        getUserName:  function()       { return ipc.invoke('steam_get_user_name'); },
-        getSteamId:   function()       { return ipc.invoke('steam_get_steam_id'); },
-        isDev:        function()       { return ipc.invoke('steam_is_dev'); },
-        quit:         function()       { return ipc.invoke('steam_quit'); },
+        getUserName:      function()         { return ipc.invoke('steam_get_user_name'); },
+        getSteamId:       function()         { return ipc.invoke('steam_get_steam_id'); },
+        isDev:            function()         { return ipc.invoke('steam_is_dev'); },
+        quit:             function()         { return ipc.invoke('steam_quit'); },
+        activateOverlay:  function(dialog)   { return ipc.invoke('steam_activate_overlay', { dialog: dialog || 'Friends' }); },
     };
+    // Shift+Tab: prevent browser focus cycling and open overlay manually.
+    // On macOS, Steam cannot inject into WKWebView's Metal surface, so we
+    // must trigger it ourselves rather than relying on Steam's global hook.
+    window.addEventListener('keydown', function(e) {
+        if (e.shiftKey && e.key === 'Tab') {
+            e.preventDefault();
+            window.steam.activateOverlay('Friends');
+        }
+    }, true);
 })();
 "#;
 
@@ -287,6 +306,17 @@ pub fn run() {
                 let user_name = client.friends().name();
                 let steam_id  = client.user().steam_id().raw();
                 eprintln!("[Steam] Initialized OK: {} (ID: {})", user_name, steam_id);
+
+                // Pump Steam callbacks on a background thread so the overlay
+                // can communicate, render, and respond to Shift+Tab.
+                let cb_client = client.clone();
+                std::thread::spawn(move || {
+                    loop {
+                        cb_client.run_callbacks();
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                    }
+                });
+
                 let app = SteamApp { client, user_name, steam_id };
                 (Some(app), true)
             }
@@ -307,6 +337,7 @@ pub fn run() {
                 steam_get_steam_id,
                 steam_is_dev,
                 steam_quit,
+                steam_activate_overlay,
                 gilrs_poll,
                 storage_read_all,
                 storage_write_all,
@@ -350,10 +381,6 @@ pub fn run() {
     }
 
     // ── Common setup ──────────────────────────────────────────────────────────
-    // NOTE: Steam Overlay cannot work with Tauri/WebView-based apps.
-    // Steam overlay hooks into DirectX/OpenGL/Vulkan rendering; WKWebView (macOS)
-    // and WebView2 (Windows) don't use those pipelines, so there's no surface
-    // for Steam to inject into.  This is a known platform limitation.
     builder
         .setup(|app| {
             if cfg!(debug_assertions) {
