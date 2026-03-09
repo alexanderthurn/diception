@@ -311,7 +311,6 @@ async function init() {
     const gameLog = new GameLog(game, turnHistory, scenarioManager);
     gameLog.setPlayerNameGetter(getPlayerName);
     gameLog.setDiceDataURL(TileRenderer.diceDataURL);
-    gameLog.setSaveScenarioCallback((index) => openSaveScenarioDialog(index));
 
     // Wrapper functions
     const addLog = (message, type = '') => gameLog.addEntry(message, type);
@@ -583,9 +582,14 @@ async function init() {
             const levelIndex = scenarioBrowser.campaignManager.userCampaign.levels.length + 1;
             scenarioBrowser.campaignManager.setUserLevel(-1, scenario);
 
-            Dialog.alert(`Saved as #${levelIndex}`);
+            Dialog.alert(`Saved as #${levelIndex} in 'Your Campaign'`);
         }
     };
+
+    // Pause menu save button
+    document.getElementById('pause-save-btn')?.addEventListener('click', async () => {
+        await openSaveScenarioDialog(gameLog.latestSnapshotIndex);
+    });
 }
 
 // Loading screen logic is now handled in LoadingScreen class in src/ui/loading-screen.js
@@ -1100,30 +1104,46 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const steamMenuBtn = document.getElementById('main-menu-steam-btn');
     const showSteamMenuBtn = !isTauriContext() && !isAndroid();
     function updateGlobalBackVisibility() {
+        const loadingScreen = document.getElementById('loading-screen');
+        const loading = loadingScreen && loadingScreen.style.display !== 'none';
+
         const onMainMenu = mainMenu && !mainMenu.classList.contains('hidden');
         const pauseOpen = pauseModal && !pauseModal.classList.contains('hidden');
-        globalBackBtn?.classList.toggle('hidden', onMainMenu || pauseOpen);
-        steamMenuBtn?.classList.toggle('hidden', !(onMainMenu && showSteamMenuBtn));
 
-        // Switch icon: gear = in-game with no modal/editor open (next click opens pause); close = everything else
+        // Don't touch visibility while loading
+        if (!loading) {
+            // Hidden on main menu; visible when game running (with or without pause open)
+            globalBackBtn?.classList.toggle('hidden', onMainMenu);
+            steamMenuBtn?.classList.toggle('hidden', !(onMainMenu && showSteamMenuBtn));
+        }
+
+        // Always update icon state so it's correct when the button becomes visible
         if (globalBackBtn) {
-            const anyModalOpen = [settingsModal, howtoModal, aboutModal, setupModal,
-                document.getElementById('scenario-browser-modal'), editorOverlay]
-                .some(el => el && !el.classList.contains('hidden'));
-            const showGear = !anyModalOpen && sessionManagerRef?.isGameInProgress();
-            globalBackBtn.querySelector('.icon-close')?.classList.toggle('hidden', !!showGear);
-            globalBackBtn.querySelector('.icon-settings')?.classList.toggle('hidden', !showGear);
+            // Show x when pause is open, gear when game running with no overlay
+            if (pauseOpen) {
+                globalBackBtn.querySelector('.icon-close')?.classList.remove('hidden');
+                globalBackBtn.querySelector('.icon-settings')?.classList.add('hidden');
+            } else {
+                const anyModalOpen = [settingsModal, howtoModal, aboutModal, setupModal,
+                    document.getElementById('scenario-browser-modal'), editorOverlay]
+                    .some(el => el && !el.classList.contains('hidden'));
+                const showGear = !anyModalOpen && sessionManagerRef?.isGameInProgress();
+                globalBackBtn.querySelector('.icon-close')?.classList.toggle('hidden', !!showGear);
+                globalBackBtn.querySelector('.icon-settings')?.classList.toggle('hidden', !showGear);
+            }
         }
     }
-    // Zoom buttons: visible only on main menu, in editor, or while game is playing
-    // Use #player-dashboard as the game-active indicator — it's shown for the full game session
-    // and only hidden when the game actually ends (unlike end-turn-btn which hides during AI turns)
+    // Zoom buttons: visible only on bare main menu, in editor, or while game is running without any overlay
+    // Use #player-dashboard as the game-active indicator — shown for the full session, not per-turn
     const playerDashboard = document.getElementById('player-dashboard');
+    const sbModal = document.getElementById('scenario-browser-modal');
+    const zoomDialogs = [pauseModal, settingsModal, howtoModal, aboutModal, setupModal, sbModal];
     function updateZoomVisibility() {
         const onMainMenu = mainMenu && !mainMenu.classList.contains('hidden');
         const inEditor = editorOverlay && !editorOverlay.classList.contains('hidden');
         const gameActive = playerDashboard && !playerDashboard.classList.contains('hidden');
-        const show = onMainMenu || inEditor || gameActive;
+        const anyDialogOpen = zoomDialogs.some(el => el && !el.classList.contains('hidden'));
+        const show = !anyDialogOpen && (onMainMenu || inEditor || gameActive);
         document.querySelectorAll('.zoom-control').forEach(el => el.classList.toggle('hidden', !show));
     }
 
@@ -1134,15 +1154,15 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     if (howtoModal) new MutationObserver(updateGlobalBackVisibility).observe(howtoModal, obsOpts);
     if (aboutModal) new MutationObserver(updateGlobalBackVisibility).observe(aboutModal, obsOpts);
     if (setupModal) new MutationObserver(updateGlobalBackVisibility).observe(setupModal, obsOpts);
-    const sbModal = document.getElementById('scenario-browser-modal');
     if (sbModal) new MutationObserver(updateGlobalBackVisibility).observe(sbModal, obsOpts);
     if (editorOverlay) new MutationObserver(updateGlobalBackVisibility).observe(editorOverlay, obsOpts);
 
-    // Wire zoom visibility to state changes
+    // Wire zoom visibility to all relevant state changes
     const zoomObs = new MutationObserver(updateZoomVisibility);
     if (mainMenu) zoomObs.observe(mainMenu, obsOpts);
     if (editorOverlay) zoomObs.observe(editorOverlay, obsOpts);
     if (playerDashboard) zoomObs.observe(playerDashboard, obsOpts);
+    zoomDialogs.forEach(el => { if (el) zoomObs.observe(el, obsOpts); });
     updateZoomVisibility();
 
     // --- Pause menu wiring ---

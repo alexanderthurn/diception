@@ -293,7 +293,10 @@
                 <hr style="border-color:rgba(0,255,255,0.2);margin:0">
                 <!-- Navigation -->
                 <button id="pause-resume-btn" class="tron-btn large">Resume</button>
-                <button id="pause-retry-btn" class="tron-btn large">Retry</button>
+                <div style="display:flex;gap:10px;">
+                    <button id="pause-save-btn" class="tron-btn large" style="flex:1">Save</button>
+                    <button id="pause-retry-btn" class="tron-btn large" style="flex:1">Restart</button>
+                </div>
                 <button id="pause-mainmenu-btn" class="tron-btn large">Exit</button>
             </div>
         </div>
@@ -440,11 +443,10 @@
                 <h2 class="tron-title small">SETTINGS</h2>
             </div>
             <div class="howto-content">
-                <details class="settings-group" open>
-                    <summary class="settings-group-header">GAMEPLAY</summary>
+                <div class="settings-group settings-group-flat">
+                    <div class="settings-group-header">GAME SPEED</div>
                     <div class="settings-group-body">
                         <div class="control-group">
-                            <label>Game Speed</label>
                             <div class="segmented-btn game-speed-segmented">
                                 <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
                                 <button type="button" class="segmented-option" data-value="normal">Normal</button>
@@ -456,19 +458,11 @@
                                 <option value="expert">Expert</option>
                             </select>
                         </div>
-                        <div class="control-group">
-                            <label>Visual Effects</label>
-                            <select id="effects-quality">
-                                <option value="high">High</option>
-                                <option value="medium" selected>Medium</option>
-                                <option value="off">Off</option>
-                            </select>
-                        </div>
                     </div>
-                </details>
+                </div>
 
-                <details class="settings-group">
-                    <summary class="settings-group-header">AUDIO</summary>
+                <div class="settings-group settings-group-flat">
+                    <div class="settings-group-header">AUDIO</div>
                     <div class="settings-group-body">
                         <div class="control-row">
                             <div class="control-group half">
@@ -487,6 +481,20 @@
                                     <input type="range" id="sfx-volume" min="0" max="100" value="50" title="SFX Volume">
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <details class="settings-group">
+                    <summary class="settings-group-header">GRAPHICS</summary>
+                    <div class="settings-group-body">
+                        <div class="control-group">
+                            <label>Visual Effects</label>
+                            <select id="effects-quality">
+                                <option value="high">High</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="off">Off</option>
+                            </select>
                         </div>
                     </div>
                 </details>
@@ -697,8 +705,7 @@
                     <!-- Populated by JS -->
                 </div>
                 <hr class="dash-divider">
-                <h4 class="log-title">BATTLE LOG<button id="log-save-btn" class="log-save-btn"
-                        title="Save current state as scenario"><span class="sprite-icon icon-save"></span></button></h4>
+                <h4 class="log-title">BATTLE LOG</h4>
                 <div id="log-entries">
                     <!-- Populated by JS -->
                 </div>

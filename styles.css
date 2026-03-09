@@ -740,28 +740,8 @@ body.fx-off .player-tile.rumble-lose {
     color: var(--accent-color);
     text-transform: uppercase;
     letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
-.log-save-btn {
-    background: transparent;
-    border: 1px solid rgba(0, 255, 255, 0.25);
-    color: rgba(0, 255, 255, 0.5);
-    padding: 1px 5px;
-    font-size: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    line-height: 1;
-    margin-left: auto;
-}
-
-.log-save-btn:hover {
-    background: rgba(0, 255, 255, 0.15);
-    border-color: var(--border-color);
-    color: var(--border-color);
-}
 
 .dash-title {
     margin: 5px 0 15px 0;
@@ -4826,6 +4806,15 @@ select {
 
 .settings-group[open] > .settings-group-header::before {
     transform: rotate(90deg);
+}
+
+.settings-group-flat .settings-group-header {
+    cursor: default;
+    user-select: auto;
+}
+
+.settings-group-flat .settings-group-header::before {
+    display: none;
 }
 
 .settings-group-body {
