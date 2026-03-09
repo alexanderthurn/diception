@@ -1816,11 +1816,6 @@ select {
     animation: pulse-fast 0.6s infinite ease-in-out !important;
 }
 
-#loading-screen.completed .loading-prompt {
-    opacity: 1;
-    visibility: visible;
-}
-
 .loading-status {
     color: var(--border-color);
     font-family: 'Rajdhani', monospace;
@@ -1854,7 +1849,8 @@ select {
 }
 
 .loading-prompt {
-    position: static;
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1866,18 +1862,23 @@ select {
     letter-spacing: 1px;
     padding: 0;
     box-sizing: border-box;
-    animation: pulse-opacity 2s infinite ease-in-out;
-    transition: opacity 1s ease, visibility 1s ease, flex 0.8s ease;
-    margin: 0;
-    flex: 0 0 0;
-    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
 }
 
 #loading-screen.completed .loading-prompt {
     opacity: 1;
     visibility: visible;
-    flex: 1;
-    max-height: 200px;
+    pointer-events: auto;
+}
+
+#loading-screen.completed .system-logs,
+#loading-screen.completed .loading-bar-container {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
 }
 
 .loading-dice {
@@ -2059,17 +2060,7 @@ select {
     width: 100%;
     max-width: 600px;
     flex: 0 0 auto;
-    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease, flex 0.8s ease, height 0.8s ease, margin 0.8s ease;
-}
-
-.loading-content.completed {
-    opacity: 0 !important;
-    flex: 0 0 0;
-    height: 0;
-    margin: 0;
-    overflow: hidden;
-    pointer-events: none;
-    animation: none !important;
+    position: relative;
 }
 
 .loading-bar-container {
@@ -2476,6 +2467,7 @@ select {
 .howto-content {
     max-height: 60vh;
     overflow-y: auto;
+    padding-right: 10px;
 }
 
 .howto-content section {
@@ -3053,9 +3045,9 @@ select {
     display: flex;
     flex-direction: column;
     gap: 25px;
-    height: 100%;
+    height: auto;
+    min-height: 256px;
     padding-top: 10px;
-    overflow-x: hidden;
 }
 
 #level-grid-header {
@@ -5526,7 +5518,9 @@ canvas {
 #music-toggle,
 #sfx-toggle,
 #pause-music-toggle,
-#pause-sfx-toggle {
+#pause-sfx-toggle,
+#toolbar-music-toggle,
+#toolbar-sfx-toggle {
     width: 36px !important;
     height: 36px !important;
     min-width: 36px !important;
