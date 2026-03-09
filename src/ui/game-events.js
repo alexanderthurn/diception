@@ -491,9 +491,8 @@ export class GameEventManager {
             this.highscoreManager.recordWin(name, humanPlayed, humanWon);
         }
 
-        // Mark campaign level as solved when human wins (not in custom mode)
-        const isCustomMode = localStorage.getItem('dicy_customLevelMode');
-        if (humanWon && !isCustomMode) {
+        // Mark campaign level as solved when human wins
+        if (humanWon) {
             const owner = localStorage.getItem('dicy_loadedCampaign');
             const idxStr = localStorage.getItem('dicy_loadedLevelIndex');
             if (owner != null && idxStr != null) {
@@ -670,13 +669,11 @@ export class GameEventManager {
             // If campaign is finished, clear the loaded campaign data
             if (campaignFinished && this.scenarioBrowser) {
                 this.scenarioBrowser.clearPendingScenario();
-                localStorage.removeItem('dicy_customLevelMode');
             }
             this.sessionManager.quitToMainMenu();
         } else if (choice === 'clone') {
             this.sessionManager.restartCurrentGame(this.addLog, this.gameStarter.getAutoplayPlayers());
         } else if (choice === 'campaign') {
-            localStorage.removeItem('dicy_customLevelMode');
             await this.sessionManager.quitToCampaignScreen();
         } else if (choice === 'next') {
             const campaign = owner ? this.scenarioBrowser.campaignManager.getCampaign(owner) : null;

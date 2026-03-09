@@ -16,18 +16,6 @@ export class GameLog {
         // Callbacks
         this.getPlayerName = null; // Set by main
         this.diceDataURL = null; // Set by main
-        this.onSaveScenario = null; // Set by main
-
-        // Hook up global save button
-        const saveBtn = document.getElementById('log-save-btn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => {
-                if (this.onSaveScenario && this.latestSnapshotIndex !== undefined) {
-                    const name = this.latestSnapshot ? `Turn ${this.latestSnapshot.turn}` : 'Current State';
-                    this.onSaveScenario(this.latestSnapshotIndex, name);
-                }
-            });
-        }
     }
 
     setPlayerNameGetter(fn) {
@@ -36,10 +24,6 @@ export class GameLog {
 
     setDiceDataURL(url) {
         this.diceDataURL = url;
-    }
-
-    setSaveScenarioCallback(fn) {
-        this.onSaveScenario = fn;
     }
 
     clear() {

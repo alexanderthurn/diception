@@ -23,6 +23,11 @@ export class ScenarioBrowser {
 
         this.scenarioBrowserModal = document.getElementById('scenario-browser-modal');
         this.scenarioBrowserCloseBtn = document.getElementById('scenario-browser-close-btn');
+        this.campaignSelectView = document.getElementById('campaign-select-view');
+        this.campaignDetailView = document.getElementById('campaign-detail-view');
+        this.campaignDetailTitle = document.getElementById('campaign-detail-title');
+        this.campaignButtonList = document.getElementById('campaign-button-list');
+        // Legacy refs (hidden, kept for compat)
         this.campaignList = document.getElementById('campaign-list');
         this.campaignSelect = document.getElementById('campaign-select');
         this.levelGridContainer = document.getElementById('level-grid-container');
@@ -73,7 +78,6 @@ export class ScenarioBrowser {
         this.scenarioBrowserModal.classList.remove('hidden');
         this.pendingLevel = null;
         await this.showCampaignView();
-        this.restoreLastSelectedCampaign();
         if (this.effectsManager) this.effectsManager.stopIntroMode();
     }
 
@@ -88,13 +92,7 @@ export class ScenarioBrowser {
         }
 
         if (this.scenarioBrowserCloseBtn) {
-            this.scenarioBrowserCloseBtn.addEventListener('click', () => {
-                this._disconnectGridResizeObserver();
-                localStorage.removeItem('dicy_campaignMode');
-                this.scenarioBrowserModal.classList.add('hidden');
-                this.setupModal.classList.remove('hidden');
-                if (this.effectsManager) this.effectsManager.startIntroMode();
-            });
+            this.scenarioBrowserCloseBtn.addEventListener('click', () => this.handleBack());
         }
 
     }
@@ -129,44 +127,27 @@ export class ScenarioBrowser {
     async showCampaignView() {
         this.selectedCampaign = null;
         this._disconnectGridResizeObserver();
-        this.levelGridContainer.classList.add('hidden');
-        this.previewContent.classList.remove('hidden');
-        this.previewContent.innerHTML = '<div class="empty-message-large">Select a campaign</div>';
+        if (this.campaignSelectView) this.campaignSelectView.classList.remove('hidden');
+        if (this.campaignDetailView) this.campaignDetailView.classList.add('hidden');
         await this.renderCampaignList();
     }
 
     restoreLastSelectedCampaign() {
         const last = localStorage.getItem('dicy_lastCampaign');
+        const campaigns = this.campaignManager.listCampaigns();
         let campaign = null;
-        let owner = last;
 
         if (last) {
-            const item = this.campaignList.querySelector(`[data-owner="${CSS.escape(last)}"]`);
-            if (item) {
-                document.querySelectorAll('#campaign-list .scenario-list-item').forEach(i => i.classList.remove('selected'));
-                item.classList.add('selected');
-                if (this.campaignSelect) this.campaignSelect.value = last;
-                campaign = this.campaignManager.getCampaign(last);
-                if (!campaign && last === 'Your Campaign') {
-                    campaign = { owner: 'Your Campaign', levels: [], isEmpty: true, isUserCampaign: true };
-                }
+            campaign = this.campaignManager.getCampaign(last);
+            if (!campaign && last === 'Your Campaign') {
+                campaign = { owner: 'Your Campaign', levels: [], isEmpty: true, isUserCampaign: true };
             }
         }
 
-        if (!campaign) {
-            const campaigns = this.campaignManager.listCampaigns();
+        if (!campaign && campaigns.length > 0) {
             const first = campaigns[0];
-            if (first) {
-                owner = first.owner;
-                const item = this.campaignList.querySelector(`[data-owner="${CSS.escape(owner)}"]`);
-                if (item) {
-                    document.querySelectorAll('#campaign-list .scenario-list-item').forEach(i => i.classList.remove('selected'));
-                    item.classList.add('selected');
-                    if (this.campaignSelect) this.campaignSelect.value = owner;
-                }
-                campaign = first.isEmpty || (first.levels?.length === 0 && first.isUserCampaign)
-                    ? { ...first, isEmpty: true } : first;
-            }
+            campaign = (first.isEmpty || (first.levels?.length === 0 && first.isUserCampaign))
+                ? { ...first, isEmpty: true } : first;
         }
 
         if (campaign) {
@@ -178,16 +159,25 @@ export class ScenarioBrowser {
     showLevelGridView(campaign) {
         this.selectedCampaign = campaign;
         if (campaign?.owner) localStorage.setItem('dicy_lastCampaign', campaign.owner);
-        this.levelGridContainer.classList.remove('hidden');
-        this.previewContent.classList.add('hidden');
+        if (this.campaignSelectView) this.campaignSelectView.classList.add('hidden');
+        if (this.campaignDetailView) this.campaignDetailView.classList.remove('hidden');
         this._connectGridResizeObserver();
         this.renderLevelGrid(campaign);
+    }
+
+    getCampaignDisplayName(c) {
+        const nameMap = {
+            'steam-campaign': 'Chapter 1',
+            'maps': 'Chapter 2',
+            'scenarios': 'Chapter 3',
+        };
+        if (c.isUserCampaign) return 'Your Campaign';
+        return nameMap[c.owner] ?? c.owner;
     }
 
     async renderCampaignList() {
         const campaigns = this.campaignManager.listCampaigns();
 
-        // Ensure user has a campaign slot (empty if none)
         getCachedIdentity();
         const hasUserCampaign = campaigns.some(c => c.isUserCampaign);
         if (!hasUserCampaign) {
@@ -200,54 +190,60 @@ export class ScenarioBrowser {
             });
         }
 
-        this.campaignList.innerHTML = '';
-        if (this.campaignSelect) {
-            this.campaignSelect.innerHTML = '';
-            campaigns.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.owner;
-                const levelCount = c.levels?.length ?? 0;
-                const solvedCount = getSolvedLevels(c.owner).length;
-                const allComplete = levelCount > 0 && solvedCount >= levelCount;
-                const displayName = c.isUserCampaign ? 'Your Campaign' : c.owner;
-                opt.textContent = allComplete ? `✓ ${displayName} (${levelCount} levels)` : `${displayName} (${levelCount} levels)`;
-                this.campaignSelect.appendChild(opt);
-            }
-            );
-            this.campaignSelect.value = this.selectedCampaign?.owner || (campaigns[0]?.owner ?? '');
-            this.campaignSelect.onchange = () => {
-                const c = campaigns.find(x => x.owner === this.campaignSelect.value);
-                if (c) {
-                    localStorage.setItem('dicy_lastCampaign', c.owner);
-                    document.querySelectorAll('#campaign-list .scenario-list-item').forEach(i => i.classList.remove('selected'));
-                    const item = this.campaignList.querySelector(`[data-owner="${CSS.escape(c.owner)}"]`);
-                    if (item) item.classList.add('selected');
-                    this.showLevelGridView(c.isEmpty || (c.levels && c.levels.length === 0 && c.isUserCampaign) ? { ...c, isEmpty: true } : c);
-                }
-            };
-        }
-        campaigns.forEach(c => {
-            const item = document.createElement('div');
-            item.className = 'scenario-list-item' + (this.selectedCampaign?.owner === c.owner ? ' selected' : '');
-            item.dataset.owner = c.owner;
+        if (!this.campaignButtonList) return;
+        this.campaignButtonList.innerHTML = '';
+
+        campaigns.forEach((c, idx) => {
             const levelCount = c.levels?.length ?? 0;
             const solvedCount = getSolvedLevels(c.owner).length;
             const allComplete = levelCount > 0 && solvedCount >= levelCount;
-            const displayName = c.isUserCampaign ? 'Your Campaign' : c.owner;
-            item.innerHTML = `
-                <span class="list-item-campaign-check">${allComplete ? '✓' : ''}</span>
-                <span class="list-item-name">${displayName}</span>
-                <span class="list-item-date">${levelCount} levels</span>
-            `;
-            item.addEventListener('click', () => {
-                localStorage.setItem('dicy_lastCampaign', c.owner);
-                document.querySelectorAll('#campaign-list .scenario-list-item').forEach(i => i.classList.remove('selected'));
-                item.classList.add('selected');
-                if (this.campaignSelect) this.campaignSelect.value = c.owner;
-                this.showLevelGridView(c.isEmpty || (c.levels && c.levels.length === 0 && c.isUserCampaign) ? { ...c, isEmpty: true } : c);
+            const displayName = this.getCampaignDisplayName(c);
+
+            const nodeDiv = document.createElement('div');
+            nodeDiv.className = 'campaign-list-node';
+
+            const btn = document.createElement('button');
+            btn.className = 'tron-btn large campaign-select-btn';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = (allComplete ? '✓ ' : '') + displayName;
+
+            const subSpan = document.createElement('span');
+            subSpan.className = 'campaign-btn-sub';
+            subSpan.textContent = `${levelCount} levels${solvedCount > 0 ? ` · ${solvedCount} solved` : ''}`;
+
+            btn.appendChild(nameSpan);
+            btn.appendChild(subSpan);
+
+            btn.addEventListener('click', () => {
+                const target = (c.isEmpty || (c.levels && c.levels.length === 0 && c.isUserCampaign))
+                    ? { ...c, isEmpty: true } : c;
+                this.showLevelGridView(target);
             });
-            this.campaignList.appendChild(item);
+
+            nodeDiv.appendChild(btn);
+            this.campaignButtonList.appendChild(nodeDiv);
+
+            if (idx < campaigns.length - 1) {
+                const connector = document.createElement('div');
+                connector.className = 'campaign-list-connector';
+                this.campaignButtonList.appendChild(connector);
+            }
         });
+    }
+
+    handleBack() {
+        if (this.campaignDetailView && !this.campaignDetailView.classList.contains('hidden')) {
+            // Detail view → go back to campaign selection
+            this.showCampaignView();
+        } else {
+            // Selection view → close browser, go to main menu
+            this._disconnectGridResizeObserver();
+            localStorage.removeItem('dicy_campaignMode');
+            this.scenarioBrowserModal.classList.add('hidden');
+            document.getElementById('main-menu')?.classList.remove('hidden');
+            if (this.effectsManager) this.effectsManager.startIntroMode();
+        }
     }
 
     async renderLevelGrid(campaign) {
@@ -262,6 +258,7 @@ export class ScenarioBrowser {
         const levels = campaign.levels || [];
 
         const ownerLabel = isUserCampaign ? 'Your Campaign' : (campaign.owner || 'Unnamed Campaign');
+        if (this.campaignDetailTitle) this.campaignDetailTitle.textContent = ownerLabel;
         const totalSlots = this.isOwner ? levels.length + 1 : levels.length;
         const containerWidth = this.levelGridContainer.offsetWidth
             || this.levelGridContainer.parentElement?.offsetWidth
@@ -293,7 +290,6 @@ export class ScenarioBrowser {
 
             if (this.configManager) {
                 this.configManager.updateConfigFromLevel(level);
-                this.configManager.updateLoadedLevelDisplay(campaign.owner, firstUnsolvedIndex + 1);
             }
 
             localStorage.setItem('dicy_loadedCampaign', campaign.owner);
@@ -399,8 +395,12 @@ export class ScenarioBrowser {
         el.appendChild(info);
         document.body.appendChild(el);
         const rect = tile.getBoundingClientRect();
-        el.style.left = Math.min(rect.left, window.innerWidth - size - 16) + 'px';
-        el.style.top = (rect.top - size - 12) + 'px';
+        const uiScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale')) || 1;
+        const localLeft = rect.left / uiScale;
+        const localTop = rect.top / uiScale;
+        const localViewW = window.innerWidth / uiScale;
+        el.style.left = Math.min(localLeft, localViewW - size - 16) + 'px';
+        el.style.top = (localTop - size - 12) + 'px';
         this.hoverPreviewEl = el;
 
         if (level.type === 'config') {
@@ -549,11 +549,6 @@ export class ScenarioBrowser {
             playBtn.onclick = () => finish('play');
             primaryRow.appendChild(playBtn);
 
-            const customBtn = document.createElement('button');
-            customBtn.className = 'tron-btn';
-            customBtn.textContent = 'Custom Game';
-            customBtn.onclick = () => finish('custom');
-            primaryRow.appendChild(customBtn);
 
             if (this.isOwner) {
                 const editBtn = document.createElement('button');
@@ -630,7 +625,6 @@ export class ScenarioBrowser {
         }).then(result => {
             const idx = currentIndex;
             if (result === 'play') this.selectAndPlayLevel(idx, { immediateStart: true });
-            else if (result === 'custom') this.selectAndPlayLevel(idx, { customMode: true });
             else if (result === 'edit') this.openEditorForLevel(idx);
             else if (result === 'delete') this.deleteLevel(idx);
         });
@@ -742,7 +736,6 @@ export class ScenarioBrowser {
         this.selectedLevelIndex = index;
 
         this.configManager.updateConfigFromLevel(level);
-        this.configManager.updateLoadedLevelDisplay(this.selectedCampaign.owner, index + 1);
 
         localStorage.setItem('dicy_loadedCampaign', this.selectedCampaign.owner);
         localStorage.setItem('dicy_loadedLevelIndex', String(index));
@@ -754,20 +747,12 @@ export class ScenarioBrowser {
 
         if (opts.immediateStart) {
             localStorage.setItem('dicy_campaignMode', '1');
-            localStorage.removeItem('dicy_customLevelMode');
             this.scenarioBrowserModal.classList.add('hidden');
             this.setupModal.classList.add('hidden');
             if (this.effectsManager) this.effectsManager.stopIntroMode();
             if (this.onStartGame) this.onStartGame();
-        } else if (opts.customMode) {
-            localStorage.removeItem('dicy_campaignMode');
-            localStorage.setItem('dicy_customLevelMode', '1');
-            this.scenarioBrowserModal.classList.add('hidden');
-            this.setupModal.classList.remove('hidden');
-            if (this.effectsManager) this.effectsManager.startIntroMode();
         } else {
             localStorage.removeItem('dicy_campaignMode');
-            localStorage.removeItem('dicy_customLevelMode');
             this.scenarioBrowserModal.classList.add('hidden');
             this.setupModal.classList.remove('hidden');
             if (this.effectsManager) this.effectsManager.startIntroMode();
@@ -854,7 +839,6 @@ export class ScenarioBrowser {
             this.pendingCampaign = campaign;
             this.selectedLevelIndex = index;
             this.configManager.updateConfigFromLevel(level);
-            this.configManager.updateLoadedLevelDisplay(campaign.owner, index + 1);
         }
     }
 
@@ -866,9 +850,6 @@ export class ScenarioBrowser {
         this.pendingLevel = null;
         this.pendingCampaign = null;
         this.selectedLevelIndex = null;
-        if (this.configManager) {
-            this.configManager.updateLoadedLevelDisplay(null);
-        }
         localStorage.removeItem('dicy_loadedCampaign');
         localStorage.removeItem('dicy_loadedLevelIndex');
         localStorage.removeItem('dicy_loadedCampaignId');

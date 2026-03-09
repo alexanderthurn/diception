@@ -164,97 +164,28 @@ export class EffectsManager {
         this.introModeActive = true;
         this.background.setIntroMode(true);
 
-        // Redirect pan/zoom input to move the floating dice instead of the game grid
+        // Redirect zoom to dice container; pan is a no-op (matrix rain doesn't need it)
         if (this.renderer) {
             this.renderer.setPanOverride((dx, dy) => this.background.panDice(dx, dy));
             this.renderer.setZoomOverride((delta, x, y) => this.background.zoomDice(delta, x, y));
         }
 
-        // Hold-to-spawn dice at pointer position
-        this._pointerHeld = false;
-        this._spawnX = this.background.width / 2;
-        this._spawnY = this.background.height / 2;
-
+        // Click spawns one die flying in a random direction
         const canvas = this.renderer?.app?.canvas;
         if (canvas) {
             this._boundPointerDown = (e) => {
+                if (this.quality === 'off') return;
                 const rect = canvas.getBoundingClientRect();
                 this._spawnX = e.clientX - rect.left;
                 this._spawnY = e.clientY - rect.top;
-                this._pointerHeld = true;
+                this.background.spawnDiceAt(this._spawnX, this._spawnY);
             };
-            this._boundPointerMove = (e) => {
-                if (!this._pointerHeld) return;
-                const rect = canvas.getBoundingClientRect();
-                this._spawnX = e.clientX - rect.left;
-                this._spawnY = e.clientY - rect.top;
-            };
-            this._boundPointerUp = () => { this._pointerHeld = false; };
+            this._boundPointerUp = () => {};
 
             canvas.addEventListener('pointerdown', this._boundPointerDown);
-            window.addEventListener('pointermove', this._boundPointerMove);
             window.addEventListener('pointerup', this._boundPointerUp);
             window.addEventListener('pointercancel', this._boundPointerUp);
         }
-
-        this._holdSpawnInterval = setInterval(() => {
-            if (this.quality === 'off') return;
-            if (this._pointerHeld) {
-                this.background.spawnDiceAt(this._spawnX, this._spawnY);
-            }
-            // Gamepad: any face button held spawns at last known pointer position
-            if (typeof navigator.getGamepads === 'function') {
-                for (const gp of navigator.getGamepads()) {
-                    if (!gp) continue;
-                    if ([0, 1, 2, 3].some(i => gp.buttons[i]?.pressed)) {
-                        this.background.spawnDiceAt(this._spawnX, this._spawnY);
-                        break;
-                    }
-                }
-            }
-        }, 150);
-
-        // Spawn periodic particle streams
-        this.introInterval = setInterval(() => {
-            if (this.quality === 'off') return;
-
-            // Diagonal particle streams from corners
-            const side = Math.floor(Math.random() * 4);
-            let x, y, dirX, dirY;
-
-            const viewport = window.visualViewport;
-            const screenWidth = this.renderer?.app?.screen?.width || (viewport ? viewport.width : document.documentElement.clientWidth);
-            const screenHeight = this.renderer?.app?.screen?.height || (viewport ? viewport.height : document.documentElement.clientHeight);
-
-            switch (side) {
-                case 0: // Top
-                    x = Math.random() * screenWidth;
-                    y = -20;
-                    dirX = (Math.random() - 0.5) * 0.5;
-                    dirY = 1;
-                    break;
-                case 1: // Right
-                    x = screenWidth + 20;
-                    y = Math.random() * screenHeight;
-                    dirX = -1;
-                    dirY = (Math.random() - 0.5) * 0.5;
-                    break;
-                case 2: // Bottom
-                    x = Math.random() * screenWidth;
-                    y = screenHeight + 20;
-                    dirX = (Math.random() - 0.5) * 0.5;
-                    dirY = -1;
-                    break;
-                case 3: // Left
-                    x = -20;
-                    y = Math.random() * screenHeight;
-                    dirX = 1;
-                    dirY = (Math.random() - 0.5) * 0.5;
-                    break;
-            }
-
-            this.screenParticles.emit(x, y, 'introStream', { directionX: dirX, directionY: dirY });
-        }, 200);
     }
 
     /**
@@ -264,32 +195,20 @@ export class EffectsManager {
         this.introModeActive = false;
         this.background.setIntroMode(false);
 
-        // Restore normal pan/zoom behaviour
+        // Restore normal pan/zoom
         if (this.renderer) {
             this.renderer.setPanOverride(null);
             this.renderer.setZoomOverride(null);
         }
 
-        // Clean up hold-to-spawn
+        // Clean up click-to-spawn
         const canvas = this.renderer?.app?.canvas;
         if (canvas && this._boundPointerDown) {
             canvas.removeEventListener('pointerdown', this._boundPointerDown);
-            window.removeEventListener('pointermove', this._boundPointerMove);
             window.removeEventListener('pointerup', this._boundPointerUp);
             window.removeEventListener('pointercancel', this._boundPointerUp);
         }
-        this._boundPointerDown = this._boundPointerMove = this._boundPointerUp = null;
-        this._pointerHeld = false;
-
-        if (this._holdSpawnInterval) {
-            clearInterval(this._holdSpawnInterval);
-            this._holdSpawnInterval = null;
-        }
-
-        if (this.introInterval) {
-            clearInterval(this.introInterval);
-            this.introInterval = null;
-        }
+        this._boundPointerDown = this._boundPointerUp = null;
 
         // Clear any remaining screen particles
         this.screenParticles.clear();

@@ -352,7 +352,6 @@ export class MapEditor {
         // Cache elements
         this.elements = {
             overlay: document.getElementById('editor-overlay'),
-            backBtn: document.getElementById('editor-back-btn'),
             settingsToggle: document.getElementById('editor-settings-toggle'),
             settingsPanel: document.querySelector('.editor-settings'),
 
@@ -433,17 +432,6 @@ export class MapEditor {
      * Bind all event handlers
      */
     bindEvents() {
-        // Close/back button: on mobile with settings open, close settings first; otherwise close editor
-        this.elements.backBtn?.addEventListener('click', () => {
-            const isMobile = window.matchMedia('(max-width: 900px)').matches;
-            const settingsOpen = this.elements.settingsPanel?.classList.contains('editor-settings-open');
-            if (isMobile && settingsOpen) {
-                this.elements.settingsPanel?.classList.remove('editor-settings-open');
-            } else {
-                this.close();
-            }
-        });
-
         // Settings toggle (mobile: full-screen panel; same button opens and closes)
         this.elements.settingsToggle?.addEventListener('click', () => {
             this.elements.settingsPanel?.classList.toggle('editor-settings-open');

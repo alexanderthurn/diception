@@ -66,9 +66,11 @@ export class DiceHUD {
         this.diceResultHud.classList.remove('hidden');
 
         clearTimeout(this.hideTimeout);
-        this.hideTimeout = setTimeout(() => {
-            this.diceResultHud.classList.add('hidden');
-        }, 1500);
+        if (gameSpeed !== 'beginner') {
+            this.hideTimeout = setTimeout(() => {
+                this.diceResultHud.classList.add('hidden');
+            }, 1500);
+        }
     }
 
     showReinforcements(data, gameSpeed, autoplayPlayers) {
@@ -99,10 +101,12 @@ export class DiceHUD {
             }, { once: true });
         }
 
-        const hideDelay = isHuman ? 3000 : 2000;
         clearTimeout(this.hideTimeout);
-        this.hideTimeout = setTimeout(() => {
-            this.diceResultHud.classList.add('hidden');
-        }, hideDelay);
+        if (gameSpeed !== 'beginner') {
+            const hideDelay = isHuman ? 3000 : 2000;
+            this.hideTimeout = setTimeout(() => {
+                this.diceResultHud.classList.add('hidden');
+            }, hideDelay);
+        }
     }
 }

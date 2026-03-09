@@ -47,8 +47,8 @@
             <div class="loading-bar-container">
                 <div id="loading-bar-fill" class="loading-bar-fill"></div>
             </div>
+            <div id="loading-prompt" class="loading-prompt">INITIALIZING SYSTEM...</div>
         </div>
-        <div id="loading-prompt" class="loading-prompt">INITIALIZING SYSTEM...</div>
 
         <div id="loading-icons" class="loading-icons hidden" title="Mouse + Keyboard, Gamepad, or Touch">
             <span class="loading-input-group" title="Mouse + Keyboard"><span
@@ -68,8 +68,9 @@
             <span class="dice-icon-sprite drifting d8"></span>
         </div>
         <div class="loading-platforms">
-            <img src="assets/icons/steam-logo.png" alt="Steam" class="platform-icon">
-            <img src="assets/icons/android-logo.png" alt="Android" class="platform-icon">
+            <a href="https://store.steampowered.com/app/4429000/DICEPTION/" target="_blank" rel="noopener">
+                <img src="assets/icons/steam-logo.png" alt="Steam" class="platform-icon">
+            </a>
         </div>
         <div class="loading-footer">feuerware.com</div>
         <div class="loading-border-lights">
@@ -102,30 +103,20 @@
                 class="sprite-icon icon-autoplay"></span></button>
 
         <div id="music-controls" class="panel">
-            <button id="retry-game-btn" class="tron-btn small game-ui hidden" title="Retry Game"><span
+            <!-- retry-game-btn kept in DOM for JS reference, never shown in toolbar -->
+            <button id="retry-game-btn" class="tron-btn small hidden" title="Retry Game" style="display:none"><span
                     class="btn-text">Restart Game</span><span class="btn-icon"><span
                         class="sprite-icon icon-retry"></span></span></button>
-            <span class="separator retry-separator hidden"></span>
-            <button id="new-game-btn" class="tron-btn small game-ui hidden" title="Main Menu"><span
-                    class="btn-text">Main Menu</span><span class="btn-icon"><span
+            <button id="new-game-btn" class="tron-btn small hidden" title="Menu" style="display:none"><span
+                    class="btn-text">Menu</span><span class="btn-icon"><span
                         class="sprite-icon icon-settings"></span></span><span id="new-game-hint"
                     class="input-hint hidden"></span></button>
-            <span class="separator"></span>
-            <div class="audio-group">
-                <button id="music-toggle" class="tron-btn small" title="Music"><span
-                        class="sprite-icon icon-music-on"></span></button>
-                <input type="range" id="music-volume" min="0" max="100" value="50" title="Music Volume">
-            </div>
-            <span class="separator"></span>
-            <div class="audio-group">
-                <button id="sfx-toggle" class="tron-btn small active" title="Sound Effects"><span
-                        class="sprite-icon icon-sfx-on"></span></button>
-                <input type="range" id="sfx-volume" min="0" max="100" value="50" title="SFX Volume">
-            </div>
-            <span class="separator zoom-control"></span>
-            <button id="zoom-out-btn" class="tron-btn small zoom-control" title="Zoom Out"><span
+            <button id="toolbar-music-toggle" class="tron-btn small main-menu-control hidden" title="Music"><span class="sprite-icon icon-music-on"></span></button>
+            <button id="toolbar-sfx-toggle" class="tron-btn small main-menu-control hidden" title="Sound Effects"><span class="sprite-icon icon-sfx-on"></span></button>
+            <span class="separator zoom-control hidden"></span>
+            <button id="zoom-out-btn" class="tron-btn small zoom-control hidden" title="Zoom Out"><span
                     class="sprite-icon icon-zoom-out"></span></button>
-            <button id="zoom-in-btn" class="tron-btn small zoom-control" title="Zoom In"><span
+            <button id="zoom-in-btn" class="tron-btn small zoom-control hidden" title="Zoom In"><span
                     class="sprite-icon icon-zoom-in"></span></button>
             <button id="editor-settings-toggle" class="tron-btn small editor-settings-toggle hidden" title="Settings"
                 aria-label="Settings"><span class="sprite-icon icon-campaigns"></span></button>
@@ -133,20 +124,15 @@
 
 
 
-        <div id="setup-modal" class="modal">
-            <h1 class="tron-title">DICEPTION</h1>
-            <div class="credits">by Alexander Thurn</div>
+        <div id="setup-modal" class="modal hidden">
+            <div class="modal-header">
+                <h2 class="tron-title small">CUSTOM GAME</h2>
+            </div>
             <div class="control-group">
-                <label id="map-size-label">Map Size</label>
+                <label>Map Size</label>
                 <div class="map-size-row">
-                    <button id="loaded-scenario-name" class="tron-btn loaded-scenario-text"
-                        style="display: none;"></button>
                     <input type="range" id="map-size" min="1" max="10" value="2">
                     <span id="map-size-val">4x4</span>
-                    <button id="scenarios-btn" class="tron-btn small" title="Campaigns"><span
-                            class="sprite-icon icon-campaigns"></span></button>
-                    <button id="deselect-scenario-btn" class="tron-btn small hidden" title="Deselect Map"><span
-                            class="sprite-icon icon-close"></span></button>
                 </div>
             </div>
 
@@ -244,235 +230,161 @@
                 </div>
             </div>
 
-            <div class="control-row" style="margin-top: 10px;">
-                <div class="control-group half">
+            <div class="control-row start-row" style="margin-top: 20px; gap: 10px; flex-direction: column;">
+                <div class="control-group" style="margin:0">
                     <label>Game Speed</label>
-                    <select id="game-speed">
-                        <option value="beginner" selected>Beginner</option>
-                        <option value="normal">Normal</option>
-                        <option value="expert">Expert</option>
-                    </select>
+                    <div class="segmented-btn game-speed-segmented">
+                        <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
+                        <button type="button" class="segmented-option" data-value="normal">Normal</button>
+                        <button type="button" class="segmented-option" data-value="expert">Expert</button>
+                    </div>
                 </div>
-                <div class="control-group half">
-                    <label>Visual Effects</label>
-                    <select id="effects-quality">
-                        <option value="high">High</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="off">Off</option>
-                    </select>
-                </div>
+                <button id="start-game-btn" class="tron-btn large" style="width: 100%;">START</button>
+                <button id="quit-game-btn" class="tron-btn small hidden" style="width: 100%; padding: 10px;"
+                    title="Quit Game">EXIT</button>
             </div>
-
-            <div class="control-row start-row" style="margin-top: 20px; gap: 10px;">
-                <button id="howto-btn" class="tron-btn small" style="flex: 0 0 auto; width: auto; padding: 0 15px;"
-                    title="How to Play"><span class="sprite-icon icon-help"></span></button>
-                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; align-items: flex-end;">
-                    <button id="start-game-btn" class="tron-btn large" style="width: 100%;">START</button>
-                    <button id="quit-game-btn" class="tron-btn small hidden" style="width: 100%; padding: 10px;"
-                        title="Quit Game">EXIT</button>
-                </div>
-            </div>
-            <div id="setup-version" class="setup-version"></div>
         </div>
 
 
 
+        <!-- Main Menu -->
+        <div id="main-menu" class="modal hidden">
+            <h1 class="tron-title">DICEPTION</h1>
+            <div class="credits" id="main-menu-credits">by Alexander Thurn</div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;width:100%;min-width:220px;">
+                <button id="main-custom-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span> Play Game</button>
+                <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span> Campaign</button>
+                <button id="main-settings-btn" class="tron-btn large"><span class="sprite-icon icon-settings"></span> Settings</button>
+                <div style="display:flex;gap:10px;">
+                    <button id="main-howto-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-help"></span> How To</button>
+                    <button id="main-about-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-scenario"></span> About</button>
+                </div>
+                <button id="main-quit-btn" class="tron-btn large hidden" style="margin-top:auto;"><span class="sprite-icon icon-close"></span> Quit</button>
+            </div>
+        </div>
+
+        <!-- Pause Menu (in-game) -->
+        <div id="pause-modal" class="modal hidden">
+            <h2 class="tron-title small">PAUSED</h2>
+            <div style="display:flex;flex-direction:column;gap:16px;margin-top:20px;width:100%;min-width:220px;">
+                <!-- Inline settings -->
+                <div class="control-group" style="margin:0">
+                    <label>Game Speed</label>
+                    <div class="segmented-btn game-speed-segmented">
+                        <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
+                        <button type="button" class="segmented-option" data-value="normal">Normal</button>
+                        <button type="button" class="segmented-option" data-value="expert">Expert</button>
+                    </div>
+                </div>
+                <div class="control-row" style="margin:0;gap:10px;">
+                    <div class="control-group half">
+                        <label>Music</label>
+                        <div class="range-row">
+                            <button id="pause-music-toggle" class="tron-btn small" title="Music"><span class="sprite-icon icon-music-on"></span></button>
+                            <input type="range" id="pause-music-volume" min="0" max="100" value="50" title="Music Volume">
+                        </div>
+                    </div>
+                    <div class="control-group half">
+                        <label>Sound Effects</label>
+                        <div class="range-row">
+                            <button id="pause-sfx-toggle" class="tron-btn small active" title="Sound Effects"><span class="sprite-icon icon-sfx-on"></span></button>
+                            <input type="range" id="pause-sfx-volume" min="0" max="100" value="50" title="SFX Volume">
+                        </div>
+                    </div>
+                </div>
+                <hr style="border-color:rgba(0,255,255,0.2);margin:0">
+                <!-- Navigation -->
+                <button id="pause-resume-btn" class="tron-btn large">Resume</button>
+                <div style="display:flex;gap:10px;">
+                    <button id="pause-save-btn" class="tron-btn large" style="flex:1">Save</button>
+                    <button id="pause-retry-btn" class="tron-btn large" style="flex:1">Restart</button>
+                </div>
+                <button id="pause-mainmenu-btn" class="tron-btn large">Exit</button>
+            </div>
+        </div>
+
         <div id="howto-modal" class="modal hidden large-modal">
             <div class="modal-header">
-                <button id="howto-close-btn" class="close-btn">×</button>
-                <h2 class="tron-title small">DICEPTION</h2>
+                <h2 class="tron-title small">HOW TO</h2>
             </div>
             <div class="howto-content">
                 <section>
-                    <h3>PROTOCOL: BASICS</h3>
+                    <h3>BASICS</h3>
                     <p><strong>OBJECTIVE:</strong> Conquer all tiles of the grid.</p>
                     <ul class="howto-list">
-                        <li><strong>COMBAT:</strong> Dice attack dice. Your attack power is the sum of all your dice
-                            values. Highest sum wins.</li>
-                        <li><strong>WINNING:</strong> If you have a higher total than the defender, you win. You take
-                            over the territory and move your dice there (leaving 1 behind).</li>
-                        <li><strong>LOSING:</strong> If you have equal or fewer points, you lose. Your dice count drops
-                            to 1 and your turn ends immediately.</li>
-                        <li><strong>REINFORCE:</strong> At the end of your turn, you get new dice. You get dice based on
-                            your biggest connected territories amount. Like if you have 3 territories, but only 2 are
-                            adjacent, you get 2 dice.</li>
+                        <li>
+                            <strong>COMBAT:</strong> Dice attack dice. Your attack power is the sum of all your dice values. Highest sum wins.
+                            <div class="howto-example">
+                                <div class="dice-group">
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-sum" style="color:#aa00ff">10</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>WINNING:</strong> If you have a higher total than the defender, you win. You take over the territory and move your dice there (leaving 1 behind).
+                            <div class="howto-example">
+                                <div class="dice-group">
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-sum" style="color:#aa00ff">13</span>
+                                </div>
+                                <span class="vs-indicator win">&gt;</span>
+                                <div class="dice-group">
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-sum" style="color:#ff4444">7</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>LOSING:</strong> If you have equal or fewer points, you lose. Your dice count drops to 1 and your turn ends immediately.
+                            <div class="howto-example">
+                                <div class="dice-group">
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-sum" style="color:#aa00ff">4</span>
+                                </div>
+                                <span class="vs-indicator loss">&#8804;</span>
+                                <div class="dice-group">
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-plus">+</span>
+                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-sum" style="color:#ff4444">9</span>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>REINFORCE:</strong> At the end of your turn, you get new dice. You get dice based on your biggest connected territories amount. Like if you have 4 territories, but only 3 are adjacent, you get 3 dice.
+                            <div class="howto-example">
+                                <div class="howto-reinforce">
+                                    <div class="howto-tile-row">
+                                        <div class="howto-tile connected" title="Connected"></div>
+                                        <div class="howto-tile connected" title="Connected"></div>
+                                        <div class="howto-tile connected" title="Connected"></div>
+                                        <div class="howto-tile barrier"></div>
+                                        <div class="howto-tile connected" title="Isolated"></div>
+                                    </div>
+                                    <span style="color:#aa00ff; font-size:24px; font-weight:bold; display:flex; align-items:center; gap:6px; margin-top:6px;">
+                                        +3 <span class="dice-icon-sprite howto-dice-sprite" style="width:24px; height:24px; background-color:#aa00ff;"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
                         <li><strong>TURN LIMIT:</strong> If no player conquers all territories within 999 turns, the
                             game ends and the player with the most total dice (on the board + in reserve) wins.</li>
                     </ul>
-                </section>
-
-                <section>
-                    <h3>INTERFACE CONTROLS</h3>
-                    <table class="control-table" id="controls-table">
-                        <thead>
-                            <tr>
-                                <th>Action</th>
-                                <th>Keyboard</th>
-                                <th>Gamepad</th>
-                            </tr>
-                        </thead>
-                        <tbody id="controls-table-body">
-                            <!-- Dynamically populated by JS -->
-                            <tr>
-                                <td>Navigate Cursor</td>
-                                <td>-</td>
-                                <td>Left Stick</td>
-                            </tr>
-                            <tr>
-                                <td>Select / Attack</td>
-                                <td>R.Shift / E</td>
-                                <td>A</td>
-                            </tr>
-                            <tr>
-                                <td>Attack Up</td>
-                                <td>W / ↑</td>
-                                <td>D↑</td>
-                            </tr>
-                            <tr>
-                                <td>Attack Down</td>
-                                <td>S / ↓</td>
-                                <td>D↓</td>
-                            </tr>
-                            <tr>
-                                <td>Attack Left</td>
-                                <td>A / ←</td>
-                                <td>D←</td>
-                            </tr>
-                            <tr>
-                                <td>Attack Right</td>
-                                <td>D / →</td>
-                                <td>D→</td>
-                            </tr>
-                            <tr>
-                                <td>Cancel / Deselect</td>
-                                <td>Q</td>
-                                <td>X</td>
-                            </tr>
-                            <tr>
-                                <td>End Turn</td>
-                                <td>Space / Enter</td>
-                                <td>Y</td>
-                            </tr>
-                            <tr>
-                                <td>Camera Up</td>
-                                <td>I</td>
-                                <td>Right Stick</td>
-                            </tr>
-                            <tr>
-                                <td>Camera Down</td>
-                                <td>K</td>
-                                <td>Right Stick</td>
-                            </tr>
-                            <tr>
-                                <td>Camera Left</td>
-                                <td>J</td>
-                                <td>Right Stick</td>
-                            </tr>
-                            <tr>
-                                <td>Camera Right</td>
-                                <td>L</td>
-                                <td>Right Stick</td>
-                            </tr>
-                            <tr>
-                                <td>Zoom</td>
-                                <td>Wheel</td>
-                                <td>L2 / R2</td>
-                            </tr>
-                            <tr>
-                                <td>Cursor Speed</td>
-                                <td>-</td>
-                                <td>L1 / R1</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div id="controls-configure-area" class="controls-configure-area">
-                        <!-- Configure buttons inserted by JS -->
-                    </div>
-                </section>
-
-                <section>
-                    <h3>MAP EDITOR CONTROLS</h3>
-                    <p>When editing maps or scenarios, controls change:</p>
-                    <table class="control-table">
-                        <tr>
-                            <th>Action</th>
-                            <th>Keyboard</th>
-                            <th>Gamepad</th>
-                        </tr>
-                        <tr>
-                            <td>Move cursor</td>
-                            <td>Mouse</td>
-                            <td>Left Stick</td>
-                        </tr>
-                        <tr>
-                            <td>Pan map</td>
-                            <td>WASD / Arrows</td>
-                            <td>D-Pad Up/Down / Right Stick</td>
-                        </tr>
-                        <tr>
-                            <td>Add / Paint tile</td>
-                            <td>Left Click</td>
-                            <td>A Button</td>
-                        </tr>
-                        <tr>
-                            <td>Remove tile</td>
-                            <td>Right Click</td>
-                            <td>X Button</td>
-                        </tr>
-                        <tr>
-                            <td>Dice mode</td>
-                            <td>F</td>
-                            <td>D-Pad Left</td>
-                        </tr>
-                        <tr>
-                            <td>Assign mode</td>
-                            <td>R</td>
-                            <td>D-Pad Right</td>
-                        </tr>
-                        <tr>
-                            <td>Paint mode</td>
-                            <td>Y</td>
-                            <td>Y Button</td>
-                        </tr>
-                        <tr>
-                            <td>Zoom</td>
-                            <td>Wheel</td>
-                            <td>L2 / R2</td>
-                        </tr>
-                        <tr>
-                            <td>Cursor speed</td>
-                            <td>-</td>
-                            <td>L1 / R1</td>
-                        </tr>
-                    </table>
-                </section>
-
-                <section>
-                    <h3>SYSTEM CONFIGURATION</h3>
-                    <div class="setting-explain">
-                        <p><strong>Config:</strong></p>
-                        <ul>
-                            <li><em>Map Size:</em> Controls the dimensions of the grid. Larger maps take longer to
-                                conquer.</li>
-                            <li><em>Map Style:</em> Shape of the world (e.g., Continents, Maze, Swiss Cheese). Affects
-                                movement paths.</li>
-                            <li><em>Start Mode:</em> "Classic" gives each player a reasonable amount of dice, but the
-                                later you start the more dice you get (+1 per player).
-                                "Fair Start" gives everyone equal. "2 of 2": every country has 2 dices, "full madness":
-                                every country is fully stacked.</li>
-                            <li><em>Max Dice:</em> The maximum number of dice a single tile can hold.</li>
-                            <li><em>Dice Sides:</em> A normal dice has 6 sides. Here you can change that. Values always
-                                start with 1,2,3,...</li>
-                            <li><em>Humans:</em> Set number of human players.</li>
-                            <li><em>Bots:</em> Set number of AIs</li>
-                            <li><em>Game Speed:</em> <strong>Beginner</strong> shows all rolls and animations.
-                                <strong>Normal</strong> is standard. <strong>Expert</strong> skips most animations.
-                            </li>
-                            <li><em>Visual Effects:</em> "High" for full neon glow with particles. "Low/Off" for better
-                                performance on
-                                slow devices.</li>
-                        </ul>
-                    </div>
                 </section>
 
                 <section>
@@ -481,22 +393,21 @@
                                 class="prob-high-text">Green ≥75%</span> <span class="prob-medium-text">Yellow
                                 25-74%</span> <span class="prob-low-text">Red &lt;25%</span></span></p>
                     <div class="probability-controls">
-                        <label>Dice Sides:
-                            <select id="prob-dice-sides">
-                                <option value="1">D1 (1-sided)</option>
-                                <option value="2">D2 (2-sided)</option>
-                                <option value="3">D3 (3-sided)</option>
-                                <option value="4">D4 (4-sided)</option>
-                                <option value="5">D5 (5-sided)</option>
-                                <option value="6" selected>D6 (6-sided)</option>
-                                <option value="7">D7 (7-sided)</option>
-                                <option value="8">D8 (8-sided)</option>
-                                <option value="9">D9 (9-sided)</option>
-                                <option value="10">D10 (10-sided)</option>
-                                <option value="11">D11 (11-sided)</option>
-                                <option value="12">D12 (12-sided)</option>
-                            </select>
-                        </label>
+                        <label for="prob-dice-sides">Dice Sides:</label>
+                        <select id="prob-dice-sides">
+                            <option value="1">D1</option>
+                            <option value="2">D2</option>
+                            <option value="3">D3</option>
+                            <option value="4">D4</option>
+                            <option value="5">D5</option>
+                            <option value="6" selected>D6</option>
+                            <option value="7">D7</option>
+                            <option value="8">D8</option>
+                            <option value="9">D9</option>
+                            <option value="10">D10</option>
+                            <option value="11">D11</option>
+                            <option value="12">D12</option>
+                        </select>
                     </div>
                     <div class="probability-table-wrapper">
                         <table id="probability-table" class="probability-table">
@@ -525,131 +436,261 @@
                     </div>
                 </section>
 
-                <section id="howto-display-section">
-                    <h3>DISPLAY & GRAPHICS</h3>
-                    <p>Configure rendering options. Some changes may require a restart to apply.</p>
+            </div>
+        </div>
 
-                    <div id="desktop-display-controls" class="control-row hidden" style="margin-bottom: 10px;">
-                        <div class="control-group half">
-                            <label>Display Mode</label>
-                            <select id="gfx-display-mode">
-                                <option value="windowed">Windowed</option>
-                                <option value="fullscreen" selected>Fullscreen</option>
-                            </select>
-                        </div>
-                        <div class="control-group half">
-                            <label>Scale Down Res</label>
-                            <select id="gfx-resolution">
-                                <option value="1.0" selected>1.0 (Native)</option>
-                                <option value="0.75">0.75 (Performance)</option>
-                                <option value="0.5">0.5 (Fast)</option>
-                                <option value="0.25">0.25 (Potato)</option>
+        <!-- Settings Modal (shared: main menu + in-game pause) -->
+        <div id="settings-modal" class="modal hidden large-modal">
+            <div class="modal-header">
+                <h2 class="tron-title small">SETTINGS</h2>
+            </div>
+            <div class="howto-content">
+                <div class="settings-group settings-group-flat">
+                    <div class="settings-group-header">GAME SPEED</div>
+                    <div class="settings-group-body">
+                        <div class="control-group">
+                            <div class="segmented-btn game-speed-segmented">
+                                <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
+                                <button type="button" class="segmented-option" data-value="normal">Normal</button>
+                                <button type="button" class="segmented-option" data-value="expert">Expert</button>
+                            </div>
+                            <select id="game-speed" style="display:none">
+                                <option value="beginner">Beginner</option>
+                                <option value="normal">Normal</option>
+                                <option value="expert">Expert</option>
                             </select>
                         </div>
                     </div>
+                </div>
 
-                    <div class="control-row">
-                        <div class="control-group third">
-                            <label>Anti-Aliasing</label>
-                            <select id="gfx-antialias">
-                                <option value="on">On (Smoother)</option>
-                                <option value="off" selected>Off (Faster)</option>
+                <div class="settings-group settings-group-flat">
+                    <div class="settings-group-header">AUDIO</div>
+                    <div class="settings-group-body">
+                        <div class="control-row">
+                            <div class="control-group half">
+                                <label>Music</label>
+                                <div class="range-row">
+                                    <button id="music-toggle" class="tron-btn small" title="Music"><span
+                                            class="sprite-icon icon-music-on"></span></button>
+                                    <input type="range" id="music-volume" min="0" max="100" value="50" title="Music Volume">
+                                </div>
+                            </div>
+                            <div class="control-group half">
+                                <label>Sound Effects</label>
+                                <div class="range-row">
+                                    <button id="sfx-toggle" class="tron-btn small active" title="Sound Effects"><span
+                                            class="sprite-icon icon-sfx-on"></span></button>
+                                    <input type="range" id="sfx-volume" min="0" max="100" value="50" title="SFX Volume">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <details class="settings-group">
+                    <summary class="settings-group-header">GRAPHICS</summary>
+                    <div class="settings-group-body">
+                        <div class="control-group">
+                            <label>Visual Effects</label>
+                            <select id="effects-quality">
+                                <option value="high">High</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="off">Off</option>
                             </select>
                         </div>
-                        <div class="control-group third">
-                            <label>Framerate Limit</label>
-                            <select id="gfx-framerate">
-                                <option value="vsync" selected>VSync (Monitor)</option>
-                                <option value="400">400 FPS</option>
-                                <option value="120">120 FPS</option>
-                                <option value="60">60 FPS</option>
-                                <option value="30">30 FPS</option>
-                                <option value="10">10 FPS</option>
-                            </select>
+                    </div>
+                </details>
+
+                <details class="settings-group">
+                    <summary class="settings-group-header">CONTROLS</summary>
+                    <div class="settings-group-body">
+                        <div id="controls-configure-area" class="controls-configure-area"></div>
+                        <table class="control-table" id="controls-table">
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>Keyboard</th>
+                                    <th>Gamepad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="controls-table-body">
+                            </tbody>
+                        </table>
+                        <h3 style="color:var(--border-color);border-bottom:1px solid rgba(0,255,255,0.3);padding-bottom:5px;margin-top:20px;">MAP EDITOR</h3>
+                        <p style="margin-top:0">When editing maps or scenarios, controls change:</p>
+                        <table class="control-table">
+                            <tr>
+                                <th>Action</th>
+                                <th>Keyboard</th>
+                                <th>Gamepad</th>
+                            </tr>
+                            <tr>
+                                <td>Move cursor</td>
+                                <td>Mouse</td>
+                                <td>Left Stick</td>
+                            </tr>
+                            <tr>
+                                <td>Pan map</td>
+                                <td>WASD / Arrows</td>
+                                <td>D-Pad Up/Down / Right Stick</td>
+                            </tr>
+                            <tr>
+                                <td>Add / Paint tile</td>
+                                <td>Left Click</td>
+                                <td>A Button</td>
+                            </tr>
+                            <tr>
+                                <td>Remove tile</td>
+                                <td>Right Click</td>
+                                <td>X Button</td>
+                            </tr>
+                            <tr>
+                                <td>Dice mode</td>
+                                <td>F</td>
+                                <td>D-Pad Left</td>
+                            </tr>
+                            <tr>
+                                <td>Assign mode</td>
+                                <td>R</td>
+                                <td>D-Pad Right</td>
+                            </tr>
+                            <tr>
+                                <td>Paint mode</td>
+                                <td>Y</td>
+                                <td>Y Button</td>
+                            </tr>
+                            <tr>
+                                <td>Zoom</td>
+                                <td>Wheel</td>
+                                <td>L2 / R2</td>
+                            </tr>
+                            <tr>
+                                <td>Cursor speed</td>
+                                <td>-</td>
+                                <td>L1 / R1</td>
+                            </tr>
+                        </table>
+                    </div>
+                </details>
+
+                <details class="settings-group" id="howto-display-section">
+                    <summary class="settings-group-header">GRAPHICS</summary>
+                    <div class="settings-group-body">
+                        <p style="margin-top:0">Configure rendering options. Some changes may require a restart to apply.</p>
+                        <div id="desktop-display-controls" class="control-row hidden" style="margin-bottom: 10px;">
+                            <div class="control-group half">
+                                <label>Display Mode</label>
+                                <select id="gfx-display-mode">
+                                    <option value="windowed">Windowed</option>
+                                    <option value="fullscreen" selected>Fullscreen</option>
+                                </select>
+                            </div>
+                            <div class="control-group half">
+                                <label>Scale Down Res</label>
+                                <select id="gfx-resolution">
+                                    <option value="1.0" selected>1.0 (Native)</option>
+                                    <option value="0.75">0.75 (Performance)</option>
+                                    <option value="0.5">0.5 (Fast)</option>
+                                    <option value="0.25">0.25 (Potato)</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="control-group third">
-                            <label>FPS Counter</label>
-                            <select id="gfx-fps">
-                                <option value="off" selected>Off</option>
-                                <option value="on">On</option>
-                            </select>
+                        <div class="control-row">
+                            <div class="control-group third">
+                                <label>Anti-Aliasing</label>
+                                <select id="gfx-antialias">
+                                    <option value="on">On (Smoother)</option>
+                                    <option value="off" selected>Off (Faster)</option>
+                                </select>
+                            </div>
+                            <div class="control-group third">
+                                <label>Framerate Limit</label>
+                                <select id="gfx-framerate">
+                                    <option value="vsync" selected>VSync (Monitor)</option>
+                                    <option value="400">400 FPS</option>
+                                    <option value="120">120 FPS</option>
+                                    <option value="60">60 FPS</option>
+                                    <option value="30">30 FPS</option>
+                                    <option value="10">10 FPS</option>
+                                </select>
+                            </div>
+                            <div class="control-group third">
+                                <label>FPS Counter</label>
+                                <select id="gfx-fps">
+                                    <option value="off" selected>Off</option>
+                                    <option value="on">On</option>
+                                </select>
+                            </div>
                         </div>
+                    </div>
+                </details>
+
+                <details class="settings-group" id="howto-data-section">
+                    <summary class="settings-group-header">STORAGE</summary>
+                    <div class="settings-group-body">
+                        <p style="margin-top:0">This game stores settings, progress, and campaigns in your browser's local storage.</p>
+                        <div id="howto-clear-area" class="howto-clear-area">
+                            <div id="howto-keep-campaigns-row" class="howto-keep-campaigns hidden">
+                                <label class="howto-checkbox-label">
+                                    <input type="checkbox" id="howto-keep-campaigns" checked>
+                                    Keep my campaigns (<code>dicy_userCampaign</code>)
+                                </label>
+                            </div>
+                            <button id="howto-clear-storage-btn" class="tron-btn small">Clear All Storage</button>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- About Modal -->
+        <div id="about-modal" class="modal hidden large-modal">
+            <div class="modal-header">
+                <h2 class="tron-title small">ABOUT</h2>
+            </div>
+            <div class="howto-content">
+                <section>
+                    <h3>CREDITS</h3>
+                    <div class="setting-explain">
+                        <p>This game was made by <strong>Alexander Thurn</strong>.</p>
+                        <p>Its core is <strong>open source</strong> under the <strong>GNU GPL v3</strong>.</p>
+                        <p>The <strong>web version</strong> is free. It is a subset of the full game,
+                            but contains all of the core engine and a tutorial. The
+                            <strong>paid version</strong> contains more features, like handcrafted campaigns and in case
+                            of Steam: cloud saving and achievements.
+                        </p>
+                        <p>GitHub: <a href="https://github.com/alexanderthurn/diception" target="_blank"
+                                class="about-link highlight-link">alexanderthurn/diception</a></p>
+                        <p>Visit <a href="https://feuerware.com" target="_blank"
+                                class="about-link highlight-link">feuerware.com</a> for more games.</p>
+                        <p><strong>Gamepad &amp; Keyboard Icons</strong> by <a
+                                href="https://kenney.nl/assets/input-prompts" target="_blank"
+                                class="about-link highlight-link">Kenney.nl</a> (CC0)</p>
+                        <p>Music made with <a href="https://suno.com/invite/@werteherren" target="_blank"
+                                class="about-link highlight-link">Suno</a> (Suno Pro).</p>
                     </div>
                 </section>
 
-                <section id="howto-data-section">
-                    <h3>DATA & STORAGE</h3>
-                    <p>This game stores settings, progress, and campaigns in your browser's local storage.</p>
-                    <div id="howto-clear-area" class="howto-clear-area">
-                        <div id="howto-keep-campaigns-row" class="howto-keep-campaigns hidden">
-                            <label class="howto-checkbox-label">
-                                <input type="checkbox" id="howto-keep-campaigns" checked>
-                                Keep my campaigns (<code>dicy_userCampaign</code>)
-                            </label>
-                        </div>
-                        <button id="howto-clear-storage-btn" class="tron-btn small">Clear All Storage</button>
-                    </div>
-                </section>
-
-                <section id="howto-music-section">
+                <section>
                     <h3>MUSIC</h3>
-                    <p>Direct links to tracks used in the game. Toggle inactive to exclude from the play loop (all
-                        active by default).</p>
+                    <p>Toggle tracks to include/exclude from the play loop.</p>
                     <ul id="howto-music-list" class="howto-music-list">
                         <!-- Populated by JavaScript -->
                     </ul>
                 </section>
 
                 <section>
-                    <h3>ABOUT</h3>
+                    <h3>LEGAL NOTICE (IMPRINT)</h3>
                     <div class="setting-explain">
-                        <p>This game was made by <strong>Alexander Thurn</strong>.</p>
-                        <p>Its core is <strong>open source</strong> under the <strong>GNU GPL v3</strong>.
-                        </p>
-                        <p>The <strong>web version</strong> is free. It is a subset of the full game,
-                            but contains all of the core engine and a tutorial. The
-                            <strong>paid version</strong> contains more features, like handcrafted campaigns and in case
-                            of steam cloud saving and achievements.
-                        </p>
-                        <p>GitHub: <a href="https://github.com/alexanderthurn/diception" target="_blank"
-                                class="about-link highlight-link">alexanderthurn/diception</a></p>
-                        <p>Visit <a href="https://feuerware.com" target="_blank"
-                                class="about-link  highlight-link">feuerware.com</a>
-                            for more games.</p>
-                        <p><strong>Gamepad &amp; Keyboard Icons</strong> by <a
-                                href="https://kenney.nl/assets/input-prompts" target="_blank"
-                                class="about-link highlight-link">Kenney.nl</a> (CC0)</p>
-                        <p>Music was made with a paid Suno Pro Account <a href="https://suno.com/invite/@werteherren"
-                                target="_blank" class="about-link  highlight-link">suno.com</a>
-                            for more games.</p>
-
-
-                        <h2>Legal Notice (Imprint)</h2>
-
-                        <p>
-                            <strong>Service Provider:</strong><br>
-                            Alexander Thurn<br>
-                            Gerhardstr. 14<br>
-                            53229 Bonn<br>
-                            Germany
-                        </p>
-
-                        <p>
-                            <strong>Contact Information:</strong><br>
+                        <p><strong>Service Provider:</strong><br>
+                            Alexander Thurn<br>Gerhardstr. 14<br>53229 Bonn<br>Germany</p>
+                        <p><strong>Contact:</strong><br>
                             Email: <a class="about-link highlight-link"
                                 href="mailto:alex@feuerware.com">alex@feuerware.com</a><br>
-                            Phone: +49 (0) 176 23570002
-                        </p>
-
+                            Phone: +49 (0) 176 23570002</p>
                         <hr>
-
-                        <p>
-                            <em>Information according to § 5 DDG:</em><br>
-                            Responsible for content according to § 18 Abs. 2 MStV: Alexander Thurn (address as stated
-                            above).
-                        </p>
-
-
+                        <p><em>Information according to § 5 DDG:</em><br>
+                            Responsible for content according to § 18 Abs. 2 MStV: Alexander Thurn (address as stated above).</p>
                     </div>
                 </section>
             </div>
@@ -666,8 +707,7 @@
                     <!-- Populated by JS -->
                 </div>
                 <hr class="dash-divider">
-                <h4 class="log-title">BATTLE LOG<button id="log-save-btn" class="log-save-btn"
-                        title="Save current state as scenario"><span class="sprite-icon icon-save"></span></button></h4>
+                <h4 class="log-title">BATTLE LOG</h4>
                 <div id="log-entries">
                     <!-- Populated by JS -->
                 </div>
@@ -688,46 +728,43 @@
             </div>
         </div>
 
-        <!-- Scenario Browser (full-screen overlay like editor, back button at top-left) -->
+        <!-- Scenario Browser (full-screen overlay) -->
         <div id="scenario-browser-modal" class="scenario-browser-overlay hidden">
-            <div class="scenario-browser-top-bar">
-                <button id="scenario-browser-close-btn" class="scenario-browser-close-btn tron-btn small"
-                    aria-label="Close">
-                    <span class="scenario-close-desktop">← Back</span>
-                    <span class="scenario-close-mobile">×</span>
-                </button>
-            </div>
-            <div class="scenario-browser-inner modal wide-modal">
-                <div class="modal-header compact-header">
-                    <h2 class="modal-title">Campaigns</h2>
+            <!-- close btn hidden; triggered programmatically by global-back-btn -->
+            <button id="scenario-browser-close-btn" style="display:none" aria-label="Close"></button>
+
+            <!-- View 1: Campaign Selection -->
+            <div id="campaign-select-view" class="modal large-modal">
+                <div class="modal-header">
+                    <h2 class="tron-title small">CAMPAIGNS</h2>
                 </div>
-                <div class="scenario-browser-content split-view">
-                    <div class="scenario-browser-left">
-                        <div class="scenario-list-container">
-                            <select id="campaign-select" class="campaign-select-mobile"
-                                aria-label="Select campaign"></select>
-                            <div id="campaign-list"></div>
-                        </div>
-                    </div>
-                    <div class="scenario-browser-right">
-                        <div id="level-grid-container" class="hidden">
-                            <div id="level-grid-header"></div>
-                            <div id="level-grid"></div>
-                        </div>
-                        <div id="scenario-preview-content">
-                            <div class="empty-message-large">
-                                Select a campaign
-                            </div>
-                        </div>
-                    </div>
+                <div id="campaign-button-list" class="campaign-button-list howto-content">
+                    <!-- populated by JS -->
                 </div>
             </div>
+
+            <!-- View 2: Campaign Detail (level grid) -->
+            <div id="campaign-detail-view" class="modal large-modal hidden">
+                <div class="modal-header">
+                    <h2 id="campaign-detail-title" class="tron-title small"></h2>
+                </div>
+                <div class="howto-content">
+                    <div id="level-grid-container">
+                        <div id="level-grid-header"></div>
+                        <div id="level-grid"></div>
+                    </div>
+                    <div id="scenario-preview-content" class="hidden"></div>
+                </div>
+            </div>
+
+            <!-- Legacy refs kept hidden for JS compatibility -->
+            <div id="campaign-list" style="display:none"></div>
+            <select id="campaign-select" style="display:none" aria-label="Select campaign"></select>
         </div>
 
         <!-- Map/Scenario Editor Overlay (uses main game canvas) -->
         <div id="editor-overlay" class="editor-overlay hidden">
             <div class="editor-top-bar">
-                <button id="editor-back-btn" class="tron-btn small">← Back</button>
             </div>
 
             <!-- Random dialog (top-left, like player-dashboard) -->
@@ -928,6 +965,15 @@
 
 
     </div>
+
+    <div id="game-version" class="game-version-display"></div>
+    <a id="main-menu-steam-btn" href="https://store.steampowered.com/app/4429000/DICEPTION/" target="_blank" rel="noopener" class="hidden">
+        <img src="assets/icons/steam-logo.png" alt="Steam" class="platform-icon">
+    </a>
+    <button id="global-back-btn" class="tron-btn small global-back-btn hidden" aria-label="Back">
+        <span class="sprite-icon icon-close"></span>
+        <span class="sprite-icon icon-settings hidden"></span>
+    </button>
 
     <script type="module" src="src/main.js"></script>
 </body>

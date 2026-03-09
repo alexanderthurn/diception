@@ -25,10 +25,7 @@ export class ConfigManager {
         this.elements = {
             mapSizeInput: document.getElementById('map-size'),
             mapSizeVal: document.getElementById('map-size-val'),
-            mapSizeLabel: document.getElementById('map-size-label'),
-            mapSizeRow: document.querySelector('.map-size-row'),
             mapStyleGroup: document.getElementById('map-style-group'),
-            loadedScenarioName: document.getElementById('loaded-scenario-name'),
             humanCountInput: document.getElementById('human-count'),
             botCountInput: document.getElementById('bot-count'),
             maxDiceInput: document.getElementById('max-dice'),
@@ -42,8 +39,6 @@ export class ConfigManager {
             botAISelect: document.getElementById('bot-ai-select'),
             tournamentGamesInput: document.getElementById('tournament-games'),
             tournamentConfig: document.getElementById('tournament-config'),
-            scenariosBtn: document.getElementById('scenarios-btn'),
-            deselectScenarioBtn: document.getElementById('deselect-scenario-btn')
         };
 
         // Current selected bot AI
@@ -238,43 +233,6 @@ export class ConfigManager {
     updateMapSizeDisplay() {
         const size = this.getMapSize(parseInt(this.elements.mapSizeInput.value));
         this.elements.mapSizeVal.textContent = size.label;
-    }
-
-    /**
-     * Update loaded scenario display (or reset to slider mode)
-     */
-    updateLoadedScenarioDisplay(scenarioName) {
-        this.updateLoadedLevelDisplay(scenarioName ? { owner: scenarioName } : null, scenarioName ? 0 : null);
-    }
-
-    /**
-     * Update loaded level display (campaign owner + level index)
-     */
-    updateLoadedLevelDisplay(campaignOwner, levelIndex) {
-        const el = this.elements;
-        if (campaignOwner != null) {
-            const label = levelIndex != null ? `${campaignOwner} #${levelIndex}` : campaignOwner;
-            el.loadedScenarioName.textContent = label;
-            el.loadedScenarioName.style.display = 'block';
-            el.loadedScenarioName.title = 'Click to open campaign browser';
-            el.mapSizeInput.style.display = 'none';
-            el.mapSizeVal.style.display = 'none';
-            el.mapStyleGroup.style.display = 'none';
-            el.mapSizeLabel.textContent = 'Map';
-
-            if (el.scenariosBtn) el.scenariosBtn.classList.add('hidden');
-            if (el.deselectScenarioBtn) el.deselectScenarioBtn.classList.remove('hidden');
-        } else {
-            el.loadedScenarioName.textContent = '';
-            el.loadedScenarioName.style.display = 'none';
-            el.mapSizeInput.style.display = 'block';
-            el.mapSizeVal.style.display = 'inline';
-            el.mapStyleGroup.style.display = 'block';
-            el.mapSizeLabel.textContent = 'Map Size';
-
-            if (el.scenariosBtn) el.scenariosBtn.classList.remove('hidden');
-            if (el.deselectScenarioBtn) el.deselectScenarioBtn.classList.add('hidden');
-        }
     }
 
     /**

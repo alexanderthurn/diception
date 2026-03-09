@@ -93,7 +93,7 @@ async function init() {
         if (el) el.textContent = `v${version}`;
     };
     setVersionText('loading-version');
-    setVersionText('setup-version');
+    setVersionText('game-version');
 
     // Wrap letters for title animation
     const wrapLetters = (selector) => {
@@ -112,29 +112,36 @@ async function init() {
 
     // App Integration (Tauri)
     if (isTauriContext()) {
+        // Show and wire all quit buttons
+        const handleQuit = async () => {
+            if (await Dialog.confirm('Are you sure you want to exit the game?', 'EXIT GAME?')) {
+                await flushStorage();
+                if (window.steam) {
+                    window.steam.quit();
+                } else if (window.android) {
+                    window.android.quit();
+                } else if (isTauriContext()) {
+                    try {
+                        const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                        await getCurrentWindow().close();
+                    } catch (e) {
+                        console.error('Tauri exit failed:', e);
+                        window.close();
+                    }
+                } else {
+                    window.close();
+                }
+            }
+        };
         const quitBtn = document.getElementById('quit-game-btn');
         if (quitBtn) {
             quitBtn.classList.remove('hidden');
-            quitBtn.addEventListener('click', async () => {
-                if (await Dialog.confirm('Are you sure you want to exit the game?', 'EXIT GAME?')) {
-                    await flushStorage();
-                    if (window.steam) {
-                        window.steam.quit();
-                    } else if (window.android) {
-                        window.android.quit();
-                    } else if (isTauriContext()) {
-                        try {
-                            const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                            await getCurrentWindow().close();
-                        } catch (e) {
-                            console.error('Tauri exit failed:', e);
-                            window.close();
-                        }
-                    } else {
-                        window.close();
-                    }
-                }
-            });
+            quitBtn.addEventListener('click', handleQuit);
+        }
+        const mainQuitBtn = document.getElementById('main-quit-btn');
+        if (mainQuitBtn) {
+            mainQuitBtn.classList.remove('hidden');
+            mainQuitBtn.addEventListener('click', handleQuit);
         }
     }
 
@@ -241,61 +248,27 @@ async function init() {
     sessionManager.setConfigManager(configManager);
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
-    configManager.setupInputListeners(effectsManager, renderer, () => {
-        scenarioBrowser.clearPendingScenario();
-    });
+    configManager.setupInputListeners(effectsManager, renderer);
 
     const gameStarter = new GameStarter(
         game, renderer, effectsManager, turnHistory,
         configManager, scenarioBrowser, scenarioManager
     );
     scenarioBrowser.setOnStartGame(() => gameStarter.startGame());
+    scenarioBrowserOpen = () => scenarioBrowser.open();
+    sessionManagerRef = sessionManager;
 
     const showStartupDialogs = async () => {
         if (!localStorage.getItem('dicy_steam_welcome_shown')) {
-            const choice = await Dialog.show({
-                title: 'Welcome',
-                message: 'Choose your game speed:',
-                buttons: [
-                    { text: 'Beginner (shows all rolls)', value: 'beginner', className: 'tron-btn' },
-                    { text: 'Normal', value: 'normal', className: 'tron-btn' },
-                    { text: 'Expert (no time to waste)', value: 'expert', className: 'tron-btn' }
-                ]
-            });
-            const speed = choice;
-            localStorage.setItem('dicy_gameSpeed', speed);
             localStorage.setItem('dicy_steam_welcome_shown', '1');
+            localStorage.setItem('dicy_gameSpeed', 'beginner');
             if (configManager.elements?.gameSpeedInput) {
-                configManager.elements.gameSpeedInput.value = speed;
+                configManager.elements.gameSpeedInput.value = 'beginner';
             }
-
-            if (speed === 'beginner') {
-                const tutorialCampaign = scenarioBrowser.campaignManager.getCampaign('tutorial');
-                if (tutorialCampaign) {
-                    scenarioBrowser.selectedCampaign = tutorialCampaign;
-                    scenarioBrowser.selectAndPlayLevel(0, { immediateStart: true });
-                }
-            }
-        }
-
-
-        // Web only: show promotional dialog on 2nd visit, then every 5th visit
-        if (!window.steam && !isAndroid() && !localStorage.getItem('dicy_enjoying_dialog_disabled')) {
-            const count = parseInt(localStorage.getItem('dicy_web_visit_count') || '0', 10) + 1;
-            localStorage.setItem('dicy_web_visit_count', String(count));
-            if (count % 5 === 0) {
-                const choice = await Dialog.show({
-                    title: 'ENJOYING?',
-                    message: 'If you want to support this game, you can buy an extended version (including more campaigns):',
-                    content: '<div class="dialog-store-links"><p><a href="https://store.steampowered.com/app/STEAM_APPID" target="_blank" rel="noopener" class="highlight-link">Steam</a> – Cloud Saves, Achievements</p><p><a href="https://play.google.com/store/apps/details?id=PLACEHOLDER_PACKAGE" target="_blank" rel="noopener" class="highlight-link">Google Play</a> – Android version</p></div>',
-                    buttons: [
-                        { text: 'Later', value: true, className: 'tron-btn' },
-                        { text: "Don't show again", value: 'dont_show', className: 'tron-btn' }
-                    ]
-                });
-                if (choice === 'dont_show') {
-                    localStorage.setItem('dicy_enjoying_dialog_disabled', '1');
-                }
+            const tutorialCampaign = scenarioBrowser.campaignManager.getCampaign('tutorial');
+            if (tutorialCampaign) {
+                scenarioBrowser.selectedCampaign = tutorialCampaign;
+                scenarioBrowser.selectAndPlayLevel(0, { immediateStart: true });
             }
         }
     };
@@ -304,12 +277,16 @@ async function init() {
     showStartupDialogs();
 
     onLoadingDismiss = async () => {
+        // Reveal global back button (was hidden during loading)
+        document.getElementById('global-back-btn')?.classList.remove('hidden');
+        if (game.players.length > 0) return; // game already running (auto-resume)
         if (localStorage.getItem('dicy_campaignMode')) {
-            if (game.players.length > 0) return;
-            document.getElementById('setup-modal').classList.add('hidden');
             await scenarioBrowser.showCampaignView();
             scenarioBrowser.restoreLastSelectedCampaign();
             scenarioBrowser.scenarioBrowserModal.classList.remove('hidden');
+            effectsManager.startIntroMode();
+        } else {
+            document.getElementById('main-menu').classList.remove('hidden');
             effectsManager.startIntroMode();
         }
     };
@@ -334,7 +311,6 @@ async function init() {
     const gameLog = new GameLog(game, turnHistory, scenarioManager);
     gameLog.setPlayerNameGetter(getPlayerName);
     gameLog.setDiceDataURL(TileRenderer.diceDataURL);
-    gameLog.setSaveScenarioCallback((index) => openSaveScenarioDialog(index));
 
     // Wrapper functions
     const addLog = (message, type = '') => gameLog.addEntry(message, type);
@@ -498,21 +474,6 @@ async function init() {
     // Tournament Runner
     const tournamentRunner = new TournamentRunner(configManager);
 
-    // Setup scenario name click to open campaign browser
-    if (configManager.elements.loadedScenarioName) {
-        configManager.elements.loadedScenarioName.addEventListener('click', () => {
-            scenarioBrowser.open();
-        });
-    }
-
-    // Setup deselect button to unload scenario
-    if (configManager.elements.deselectScenarioBtn) {
-        configManager.elements.deselectScenarioBtn.addEventListener('click', () => {
-            scenarioBrowser.clearPendingScenario();
-            configManager.updateLoadedLevelDisplay(null, null);
-        });
-    }
-
     // Autoplay toggle function
     const toggleAutoplay = (playerId, forceState) => {
         const autoplayPlayers = gameStarter.getAutoplayPlayers();
@@ -579,8 +540,8 @@ async function init() {
     // Input Manager Events
     setupInputEvents(game, inputManager, sessionManager);
 
-    // How to Play Modal
-    setupHowToPlay(effectsManager, audioController, inputManager);
+    // Menu Navigation
+    setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor);
 
 
     // Check for auto-resume
@@ -621,9 +582,14 @@ async function init() {
             const levelIndex = scenarioBrowser.campaignManager.userCampaign.levels.length + 1;
             scenarioBrowser.campaignManager.setUserLevel(-1, scenario);
 
-            Dialog.alert(`Saved as #${levelIndex}`);
+            Dialog.alert(`Saved as #${levelIndex} in 'Your Campaign'`);
         }
     };
+
+    // Pause menu save button
+    document.getElementById('pause-save-btn')?.addEventListener('click', async () => {
+        await openSaveScenarioDialog(gameLog.latestSnapshotIndex);
+    });
 }
 
 // Loading screen logic is now handled in LoadingScreen class in src/ui/loading-screen.js
@@ -645,7 +611,7 @@ function setupFPSCounter(renderer) {
         const canvas = renderer.app && (renderer.app.canvas || renderer.app.view);
         const width = canvas ? canvas.width : -3;
         const height = canvas ? canvas.height : -1;
-        fpsCounter.textContent = `FPS: ${lastFPS} · v${import.meta.env.VITE_APP_VERSION} · ${width}x${height}`;
+        fpsCounter.textContent = `FPS: ${lastFPS} · ${width}x${height}`;
     };
 
     renderer.app.ticker.add(() => {
@@ -689,14 +655,7 @@ function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboar
         game.endTurn();
     });
 
-    // New Game Button (Back to Campaign when started from campaign)
-    newGameBtn.addEventListener('click', async () => {
-        if (localStorage.getItem('dicy_campaignMode')) {
-            await sessionManager.quitToCampaignScreen();
-        } else {
-            sessionManager.quitToMainMenu();
-        }
-    });
+    // New Game Button — now opens the pause menu (wired in setupMenuNavigation)
 
     // Retry Current Game Button
     if (retryGameBtn) {
@@ -751,47 +710,39 @@ function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboar
 
 // Helper: Setup Input Events
 function setupInputEvents(game, inputManager, sessionManager) {
-    const setupModal = document.getElementById('setup-modal');
-
     inputManager.on('menu', () => {
-        const isSetupOpen = !setupModal.classList.contains('hidden');
-
         if (Dialog.activeOverlay) {
             Dialog.close(Dialog.activeOverlay);
             return;
         }
 
-        if (isSetupOpen) {
-            if (isTauriContext() && game.players.length === 0) {
-                Dialog.confirm('Are you sure you want to exit to desktop?', 'QUIT GAME?').then(async choice => {
-                    if (choice) {
-                        if (window.steam) {
-                            window.steam.quit();
-                        } else if (isTauriContext()) {
-                            try {
-                                const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                                await getCurrentWindow().close();
-                            } catch (e) {
-                                console.error('Tauri exit failed:', e);
-                                window.close();
-                            }
-                        } else if (isAndroid()) {
-                            window.close();
-                        }
-                    }
-                });
-                return;
-            }
-
-            if (game.players.length > 0) {
-                sessionManager.effectsManager?.stopIntroMode();
-                setupModal.classList.add('hidden');
-                document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
-            }
+        const globalBackBtn = document.getElementById('global-back-btn');
+        if (globalBackBtn && !globalBackBtn.classList.contains('hidden')) {
+            globalBackBtn.click();
             return;
         }
 
-        sessionManager.quitToMainMenu();
+        // global-back-btn is hidden → on main menu or loading screen
+        // On Tauri with no game running → offer quit to desktop
+        if (isTauriContext() && game.players.length === 0) {
+            Dialog.confirm('Are you sure you want to exit to desktop?', 'QUIT GAME?').then(async choice => {
+                if (choice) {
+                    if (window.steam) {
+                        window.steam.quit();
+                    } else if (isTauriContext()) {
+                        try {
+                            const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                            await getCurrentWindow().close();
+                        } catch (e) {
+                            console.error('Tauri exit failed:', e);
+                            window.close();
+                        }
+                    } else if (isAndroid()) {
+                        window.close();
+                    }
+                }
+            });
+        }
     });
 
     inputManager.on('cancel', () => {
@@ -801,12 +752,14 @@ function setupInputEvents(game, inputManager, sessionManager) {
     });
 }
 
-// Helper: Setup How to Play Modal
-function setupHowToPlay(effectsManager, audioController, inputManager) {
-    const howtoBtn = document.getElementById('howto-btn');
-    const howtoModal = document.getElementById('howto-modal');
-    const howtoCloseBtn = document.getElementById('howto-close-btn');
+// Helper: Setup all menu navigation (main menu, settings, howto, about, pause)
+function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor) {
+    const mainMenu = document.getElementById('main-menu');
     const setupModal = document.getElementById('setup-modal');
+    const howtoModal = document.getElementById('howto-modal');
+    const settingsModal = document.getElementById('settings-modal');
+    const aboutModal = document.getElementById('about-modal');
+    const pauseModal = document.getElementById('pause-modal');
     const keepCampaignsRow = document.getElementById('howto-keep-campaigns-row');
     const keepCampaignsCheck = document.getElementById('howto-keep-campaigns');
     const clearStorageBtn = document.getElementById('howto-clear-storage-btn');
@@ -1012,24 +965,298 @@ function setupHowToPlay(effectsManager, audioController, inputManager) {
         inputManager.on('gamepadChange', () => refreshControlsSection());
     }
 
-    howtoBtn.addEventListener('click', () => {
-        setupModal.classList.add('hidden');
-        howtoModal.classList.remove('hidden');
-        effectsManager.stopIntroMode();
+    // --- Settings open/close (shared between main menu and pause) ---
+    let settingsBackCallback = null;
+
+    function openSettings(onBack) {
+        settingsBackCallback = onBack;
         refreshHowtoSections();
         bindMusicToggles();
         refreshControlsSection();
+        initGameSpeedSegmented();
+        settingsModal.classList.remove('hidden');
+    }
 
-        // Initialize probability calculator on first open
+    // Segmented game speed buttons — synced across all instances, immediate effect in-game
+    function initGameSpeedSegmented() {
+        const current = localStorage.getItem('dicy_gameSpeed') || 'beginner';
+        document.querySelectorAll('.game-speed-segmented .segmented-option').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.value === current);
+            btn.addEventListener('click', () => {
+                const val = btn.dataset.value;
+                localStorage.setItem('dicy_gameSpeed', val);
+                // Sync hidden select so configManager.getGameConfig() stays accurate
+                const sel = document.getElementById('game-speed');
+                if (sel) { sel.value = val; sel.dispatchEvent(new Event('change')); }
+                // Apply immediately to running game
+                if (gameStarter) gameStarter.gameSpeed = val;
+                if (renderer) renderer.setGameSpeed(val);
+                // Update active state on every instance
+                document.querySelectorAll('.game-speed-segmented .segmented-option').forEach(o => {
+                    o.classList.toggle('active', o.dataset.value === val);
+                });
+            });
+        });
+    }
+    initGameSpeedSegmented();
+
+    // --- About open/close ---
+    function openAbout(onBack) {
+        refreshHowtoSections();
+        bindMusicToggles();
+        aboutModal.classList.remove('hidden');
+        aboutModal._onBack = onBack;
+    }
+
+    // --- Main Menu button wiring ---
+    document.getElementById('main-campaign-btn')?.addEventListener('click', () => {
+        mainMenu.classList.add('hidden');
+        scenarioBrowserOpen();
+    });
+
+    document.getElementById('main-custom-btn')?.addEventListener('click', () => {
+        mainMenu.classList.add('hidden');
+        setupModal.classList.remove('hidden');
+    });
+
+    document.getElementById('main-howto-btn')?.addEventListener('click', () => {
+        mainMenu.classList.add('hidden');
+        howtoModal.classList.remove('hidden');
+        effectsManager.stopIntroMode();
         if (!probabilityCalculator) {
             probabilityCalculator = new ProbabilityCalculator();
         }
     });
 
-    howtoCloseBtn.addEventListener('click', () => {
-        howtoModal.classList.add('hidden');
-        setupModal.classList.remove('hidden');
-        effectsManager.startIntroMode();
+    document.getElementById('main-settings-btn')?.addEventListener('click', () => {
+        mainMenu.classList.add('hidden');
+        openSettings(() => {
+            mainMenu.classList.remove('hidden');
+        });
+    });
+
+    document.getElementById('main-about-btn')?.addEventListener('click', () => {
+        mainMenu.classList.add('hidden');
+        openAbout(() => {
+            mainMenu.classList.remove('hidden');
+        });
+    });
+
+    // --- Global back button (handles all screens) ---
+    document.getElementById('global-back-btn')?.addEventListener('click', async () => {
+        if (pauseModal && !pauseModal.classList.contains('hidden')) {
+            pauseModal.classList.add('hidden');
+            if (localStorage.getItem('dicy_campaignMode')) {
+                await sessionManagerRef.quitToCampaignScreen();
+            } else {
+                sessionManagerRef.quitToCustomGame();
+            }
+            return;
+        }
+        if (settingsModal && !settingsModal.classList.contains('hidden')) {
+            settingsModal.classList.add('hidden');
+            if (settingsBackCallback) { settingsBackCallback(); settingsBackCallback = null; }
+            return;
+        }
+        if (howtoModal && !howtoModal.classList.contains('hidden')) {
+            howtoModal.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+            effectsManager.startIntroMode();
+            return;
+        }
+        if (aboutModal && !aboutModal.classList.contains('hidden')) {
+            aboutModal.classList.add('hidden');
+            if (aboutModal._onBack) { aboutModal._onBack(); aboutModal._onBack = null; }
+            return;
+        }
+        if (setupModal && !setupModal.classList.contains('hidden')) {
+            setupModal.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+            return;
+        }
+        const scenarioBrowserModal = document.getElementById('scenario-browser-modal');
+        if (scenarioBrowserModal && !scenarioBrowserModal.classList.contains('hidden')) {
+            document.getElementById('scenario-browser-close-btn')?.click();
+            return;
+        }
+        // Editor open → on mobile close settings panel first, otherwise close editor
+        if (mapEditor?.isOpen) {
+            const isMobile = window.matchMedia('(max-width: 900px)').matches;
+            const settingsOpen = mapEditor.elements?.settingsPanel?.classList.contains('editor-settings-open');
+            if (isMobile && settingsOpen) {
+                mapEditor.elements.settingsPanel.classList.remove('editor-settings-open');
+            } else {
+                mapEditor.close();
+            }
+            return;
+        }
+        // In-game (no modal open) → open pause menu
+        if (sessionManagerRef && sessionManagerRef.isGameInProgress()) {
+            pauseModal.classList.remove('hidden');
+            initGameSpeedSegmented();
+            syncPauseAudioBtns();
+        }
+    });
+
+    // Auto-hide global back btn when on main menu or pause modal; switch icon based on context
+    const globalBackBtn = document.getElementById('global-back-btn');
+    const editorOverlay = document.getElementById('editor-overlay');
+    const steamMenuBtn = document.getElementById('main-menu-steam-btn');
+    const showSteamMenuBtn = !isTauriContext() && !isAndroid();
+    function updateGlobalBackVisibility() {
+        const loadingScreen = document.getElementById('loading-screen');
+        const loading = loadingScreen && loadingScreen.style.display !== 'none';
+
+        const onMainMenu = mainMenu && !mainMenu.classList.contains('hidden');
+        const pauseOpen = pauseModal && !pauseModal.classList.contains('hidden');
+
+        // Don't touch visibility while loading
+        if (!loading) {
+            // Hidden on main menu; visible when game running (with or without pause open)
+            globalBackBtn?.classList.toggle('hidden', onMainMenu);
+            steamMenuBtn?.classList.toggle('hidden', !(onMainMenu && showSteamMenuBtn));
+        }
+
+        // Always update icon state so it's correct when the button becomes visible
+        if (globalBackBtn) {
+            // Show x when pause is open, gear when game running with no overlay
+            if (pauseOpen) {
+                globalBackBtn.querySelector('.icon-close')?.classList.remove('hidden');
+                globalBackBtn.querySelector('.icon-settings')?.classList.add('hidden');
+            } else {
+                const anyModalOpen = [settingsModal, howtoModal, aboutModal, setupModal,
+                    document.getElementById('scenario-browser-modal'), editorOverlay]
+                    .some(el => el && !el.classList.contains('hidden'));
+                const showGear = !anyModalOpen && sessionManagerRef?.isGameInProgress();
+                globalBackBtn.querySelector('.icon-close')?.classList.toggle('hidden', !!showGear);
+                globalBackBtn.querySelector('.icon-settings')?.classList.toggle('hidden', !showGear);
+            }
+        }
+    }
+    // Zoom buttons: visible only on bare main menu, in editor, or while game is running without any overlay
+    // Use #player-dashboard as the game-active indicator — shown for the full session, not per-turn
+    const playerDashboard = document.getElementById('player-dashboard');
+    const sbModal = document.getElementById('scenario-browser-modal');
+    const zoomDialogs = [pauseModal, settingsModal, howtoModal, aboutModal, setupModal, sbModal];
+    function syncToolbarAudioBtns() {
+        const mainMusicBtn = document.getElementById('music-toggle');
+        const mainSfxBtn = document.getElementById('sfx-toggle');
+        const tbMusicBtn = document.getElementById('toolbar-music-toggle');
+        const tbSfxBtn = document.getElementById('toolbar-sfx-toggle');
+        if (tbMusicBtn && mainMusicBtn) {
+            tbMusicBtn.innerHTML = mainMusicBtn.innerHTML;
+            tbMusicBtn.classList.toggle('active', mainMusicBtn.classList.contains('active'));
+        }
+        if (tbSfxBtn && mainSfxBtn) {
+            tbSfxBtn.innerHTML = mainSfxBtn.innerHTML;
+            tbSfxBtn.classList.toggle('active', mainSfxBtn.classList.contains('active'));
+        }
+    }
+
+    function updateZoomVisibility() {
+        const onMainMenu = mainMenu && !mainMenu.classList.contains('hidden');
+        const inEditor = editorOverlay && !editorOverlay.classList.contains('hidden');
+        const gameActive = playerDashboard && !playerDashboard.classList.contains('hidden');
+        const anyDialogOpen = zoomDialogs.some(el => el && !el.classList.contains('hidden'));
+        const show = !anyDialogOpen && (onMainMenu || inEditor || gameActive);
+        document.querySelectorAll('.zoom-control').forEach(el => el.classList.toggle('hidden', !show));
+        const showAudio = !anyDialogOpen && onMainMenu;
+        document.querySelectorAll('.main-menu-control').forEach(el => el.classList.toggle('hidden', !showAudio));
+        if (showAudio) syncToolbarAudioBtns();
+    }
+
+    const obsOpts = { attributes: true, attributeFilter: ['class'] };
+    if (mainMenu) new MutationObserver(updateGlobalBackVisibility).observe(mainMenu, obsOpts);
+    if (pauseModal) new MutationObserver(updateGlobalBackVisibility).observe(pauseModal, obsOpts);
+    if (settingsModal) new MutationObserver(updateGlobalBackVisibility).observe(settingsModal, obsOpts);
+    if (howtoModal) new MutationObserver(updateGlobalBackVisibility).observe(howtoModal, obsOpts);
+    if (aboutModal) new MutationObserver(updateGlobalBackVisibility).observe(aboutModal, obsOpts);
+    if (setupModal) new MutationObserver(updateGlobalBackVisibility).observe(setupModal, obsOpts);
+    if (sbModal) new MutationObserver(updateGlobalBackVisibility).observe(sbModal, obsOpts);
+    if (editorOverlay) new MutationObserver(updateGlobalBackVisibility).observe(editorOverlay, obsOpts);
+
+    // Wire zoom visibility to all relevant state changes
+    const zoomObs = new MutationObserver(updateZoomVisibility);
+    if (mainMenu) zoomObs.observe(mainMenu, obsOpts);
+    if (editorOverlay) zoomObs.observe(editorOverlay, obsOpts);
+    if (playerDashboard) zoomObs.observe(playerDashboard, obsOpts);
+    zoomDialogs.forEach(el => { if (el) zoomObs.observe(el, obsOpts); });
+    updateZoomVisibility();
+
+    // --- Pause menu wiring ---
+
+    function syncPauseAudioBtns() {
+        // Sync toggle icons from the main (settings) toggle buttons
+        const mainMusicBtn = document.getElementById('music-toggle');
+        const mainSfxBtn = document.getElementById('sfx-toggle');
+        const pauseMusicBtn = document.getElementById('pause-music-toggle');
+        const pauseSfxBtn = document.getElementById('pause-sfx-toggle');
+        if (pauseMusicBtn && mainMusicBtn) {
+            pauseMusicBtn.innerHTML = mainMusicBtn.innerHTML;
+            pauseMusicBtn.classList.toggle('active', mainMusicBtn.classList.contains('active'));
+        }
+        if (pauseSfxBtn && mainSfxBtn) {
+            pauseSfxBtn.innerHTML = mainSfxBtn.innerHTML;
+            pauseSfxBtn.classList.toggle('active', mainSfxBtn.classList.contains('active'));
+        }
+        // Sync slider values from settings sliders
+        const pauseMusicVol = document.getElementById('pause-music-volume');
+        const pauseSfxVol = document.getElementById('pause-sfx-volume');
+        const mainMusicVol = document.getElementById('music-volume');
+        const mainSfxVol = document.getElementById('sfx-volume');
+        if (pauseMusicVol && mainMusicVol) pauseMusicVol.value = mainMusicVol.value;
+        if (pauseSfxVol && mainSfxVol) pauseSfxVol.value = mainSfxVol.value;
+    }
+
+    // Toggles delegate to the main buttons so AudioController handles everything
+    document.getElementById('pause-music-toggle')?.addEventListener('click', () => {
+        document.getElementById('music-toggle')?.click();
+        syncPauseAudioBtns();
+    });
+
+    document.getElementById('pause-sfx-toggle')?.addEventListener('click', () => {
+        document.getElementById('sfx-toggle')?.click();
+        syncPauseAudioBtns();
+    });
+
+    document.getElementById('toolbar-music-toggle')?.addEventListener('click', () => {
+        document.getElementById('music-toggle')?.click();
+        syncToolbarAudioBtns();
+    });
+
+    document.getElementById('toolbar-sfx-toggle')?.addEventListener('click', () => {
+        document.getElementById('sfx-toggle')?.click();
+        syncToolbarAudioBtns();
+    });
+
+    // Sliders mirror to the settings sliders and dispatch input so AudioController picks them up
+    document.getElementById('pause-music-volume')?.addEventListener('input', (e) => {
+        const main = document.getElementById('music-volume');
+        if (main) { main.value = e.target.value; main.dispatchEvent(new Event('input')); }
+    });
+
+    document.getElementById('pause-sfx-volume')?.addEventListener('input', (e) => {
+        const main = document.getElementById('sfx-volume');
+        if (main) { main.value = e.target.value; main.dispatchEvent(new Event('input')); }
+    });
+
+    document.getElementById('pause-resume-btn')?.addEventListener('click', () => {
+        pauseModal.classList.add('hidden');
+    });
+
+    document.getElementById('pause-retry-btn')?.addEventListener('click', () => {
+        pauseModal.classList.add('hidden');
+        const retryBtn = document.getElementById('retry-game-btn');
+        retryBtn?.click();
+    });
+
+    document.getElementById('pause-mainmenu-btn')?.addEventListener('click', async () => {
+        pauseModal.classList.add('hidden');
+        if (localStorage.getItem('dicy_campaignMode')) {
+            await sessionManagerRef.quitToCampaignScreen();
+        } else {
+            sessionManagerRef.quitToCustomGame();
+        }
     });
 
     clearStorageBtn?.addEventListener('click', async () => {
@@ -1045,6 +1272,10 @@ function setupHowToPlay(effectsManager, audioController, inputManager) {
         }
     });
 }
+
+// scenarioBrowserOpen / sessionManagerRef set by caller via module-level vars
+let scenarioBrowserOpen = () => {};
+let sessionManagerRef = null;
 
 // --- Benchmark Tool (console only) ---
 window.benchmarkAI = async () => {

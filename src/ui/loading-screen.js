@@ -103,11 +103,6 @@ export class LoadingScreen {
             this.el.classList.add('completed');
         }
 
-        // Shrink loading content
-        if (this.content) {
-            this.content.classList.add('completed');
-        }
-
         // Show prompt with original logic
         if (this.prompt) {
             const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
