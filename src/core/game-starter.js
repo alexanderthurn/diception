@@ -118,79 +118,72 @@ export class GameStarter {
         document.getElementById('main-menu')?.classList.add('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
 
-        // Load pending scenario/level if needed
-        this.scenarioBrowser.loadPendingScenarioIfNeeded();
-        const pendingLevel = this.scenarioBrowser.getPendingScenario();
-        const isCustomMode = localStorage.getItem('dicy_customLevelMode');
+        const isCampaignMode = localStorage.getItem('dicy_campaignMode');
 
-        if (pendingLevel?.type === 'config' && !isCustomMode) {
-            // Procedural level - build gameConfig from level
-            const [w, h] = (pendingLevel.mapSize || '6x6').split('x').map(Number);
-            const gameConfig = {
-                humanCount: 1,
-                botCount: pendingLevel.bots ?? 1,
-                mapWidth: w,
-                mapHeight: h,
-                maxDice: pendingLevel.maxDice ?? 8,
-                diceSides: pendingLevel.diceSides ?? 6,
-                mapStyle: pendingLevel.mapStyle || 'full',
-                gameMode: pendingLevel.gameMode || 'classic'
-            };
-            this.game.startGame(gameConfig);
-            this.initializePlayerAIs(pendingLevel.botAI || 'easy');
-        } else if (pendingLevel?.type === 'config' && isCustomMode) {
-            // Custom mode - use config from UI
-            const gameConfig = {
-                humanCount: config.humanCount,
-                botCount: config.botCount,
-                mapWidth: config.mapWidth,
-                mapHeight: config.mapHeight,
-                maxDice: config.maxDice,
-                diceSides: config.diceSides,
-                mapStyle: config.mapStyle,
-                gameMode: config.gameMode
-            };
-            this.game.startGame(gameConfig);
-            this.initializePlayerAIs(config.botAI);
-        } else if (pendingLevel && pendingLevel.type !== 'map') {
-            // Scenario type - apply fixed state
-            this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);
-            this.game.emit('gameStart', { players: this.game.players, map: this.game.map });
-            this.game.startTurn();
-            this.initializePlayerAIs(config.botAI);
+        if (isCampaignMode) {
+            // Playing directly from campaign browser (immediateStart) — use the pending level
+            this.scenarioBrowser.loadPendingScenarioIfNeeded();
+            const pendingLevel = this.scenarioBrowser.getPendingScenario();
 
-            const sizePreset = this.configManager.getMapSize(parseInt(this.configManager.elements.mapSizeInput.value));
-            this.configManager.elements.mapSizeVal.textContent = sizePreset.label;
-        } else {
-            // New Game (Random Map or Preset Map)
-            const gameConfig = {
-                humanCount: config.humanCount,
-                botCount: config.botCount,
-                mapWidth: config.mapWidth,
-                mapHeight: config.mapHeight,
-                maxDice: config.maxDice,
-                diceSides: config.diceSides,
-                mapStyle: config.mapStyle,
-                gameMode: config.gameMode
-            };
-
-            // If it's a map type level, pass as preset and use level's game settings if present
-            if (pendingLevel && pendingLevel.type === 'map') {
-                gameConfig.predefinedMap = pendingLevel;
-                gameConfig.mapWidth = pendingLevel.width;
-                gameConfig.mapHeight = pendingLevel.height;
-                if (pendingLevel.bots != null) gameConfig.botCount = pendingLevel.bots;
-                if (pendingLevel.maxDice != null) gameConfig.maxDice = pendingLevel.maxDice;
-                if (pendingLevel.diceSides != null) gameConfig.diceSides = pendingLevel.diceSides;
+            if (pendingLevel?.type === 'config') {
+                // Procedural level - build gameConfig from level
+                const [w, h] = (pendingLevel.mapSize || '6x6').split('x').map(Number);
+                const gameConfig = {
+                    humanCount: 1,
+                    botCount: pendingLevel.bots ?? 1,
+                    mapWidth: w,
+                    mapHeight: h,
+                    maxDice: pendingLevel.maxDice ?? 8,
+                    diceSides: pendingLevel.diceSides ?? 6,
+                    mapStyle: pendingLevel.mapStyle || 'full',
+                    gameMode: pendingLevel.gameMode || 'classic'
+                };
+                this.game.startGame(gameConfig);
+                this.initializePlayerAIs(pendingLevel.botAI || 'easy');
+            } else if (pendingLevel && pendingLevel.type !== 'map') {
+                // Scenario type - apply fixed state
+                this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);
+                this.game.emit('gameStart', { players: this.game.players, map: this.game.map });
+                this.game.startTurn();
+                this.initializePlayerAIs(config.botAI);
+            } else {
+                // Map type or fallback
+                const gameConfig = {
+                    humanCount: config.humanCount,
+                    botCount: config.botCount,
+                    mapWidth: config.mapWidth,
+                    mapHeight: config.mapHeight,
+                    maxDice: config.maxDice,
+                    diceSides: config.diceSides,
+                    mapStyle: config.mapStyle,
+                    gameMode: config.gameMode
+                };
+                if (pendingLevel?.type === 'map') {
+                    gameConfig.predefinedMap = pendingLevel;
+                    gameConfig.mapWidth = pendingLevel.width;
+                    gameConfig.mapHeight = pendingLevel.height;
+                    if (pendingLevel.bots != null) gameConfig.botCount = pendingLevel.bots;
+                    if (pendingLevel.maxDice != null) gameConfig.maxDice = pendingLevel.maxDice;
+                    if (pendingLevel.diceSides != null) gameConfig.diceSides = pendingLevel.diceSides;
+                }
+                this.game.startGame(gameConfig);
+                const botAI = (pendingLevel?.type === 'map' && pendingLevel?.botAI) || config.botAI;
+                this.initializePlayerAIs(botAI);
             }
-
+        } else {
+            // Custom game from setup modal — always use UI config, ignore any pending level
+            const gameConfig = {
+                humanCount: config.humanCount,
+                botCount: config.botCount,
+                mapWidth: config.mapWidth,
+                mapHeight: config.mapHeight,
+                maxDice: config.maxDice,
+                diceSides: config.diceSides,
+                mapStyle: config.mapStyle,
+                gameMode: config.gameMode
+            };
             this.game.startGame(gameConfig);
-        }
-
-        // Initialize AI for map/random (config and scenario done above)
-        if (!pendingLevel || pendingLevel.type === 'map') {
-            const botAI = (pendingLevel?.type === 'map' && pendingLevel?.botAI) || config.botAI;
-            this.initializePlayerAIs(botAI);
+            this.initializePlayerAIs(config.botAI);
         }
 
         // Save the initial state for "Play Again" functionality

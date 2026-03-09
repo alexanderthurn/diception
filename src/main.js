@@ -248,9 +248,7 @@ async function init() {
     sessionManager.setConfigManager(configManager);
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
-    configManager.setupInputListeners(effectsManager, renderer, () => {
-        scenarioBrowser.clearPendingScenario();
-    });
+    configManager.setupInputListeners(effectsManager, renderer);
 
     const gameStarter = new GameStarter(
         game, renderer, effectsManager, turnHistory,
@@ -476,21 +474,6 @@ async function init() {
 
     // Tournament Runner
     const tournamentRunner = new TournamentRunner(configManager);
-
-    // Setup scenario name click to open campaign browser
-    if (configManager.elements.loadedScenarioName) {
-        configManager.elements.loadedScenarioName.addEventListener('click', () => {
-            scenarioBrowser.open();
-        });
-    }
-
-    // Setup deselect button to unload scenario
-    if (configManager.elements.deselectScenarioBtn) {
-        configManager.elements.deselectScenarioBtn.addEventListener('click', () => {
-            scenarioBrowser.clearPendingScenario();
-            configManager.updateLoadedLevelDisplay(null, null);
-        });
-    }
 
     // Autoplay toggle function
     const toggleAutoplay = (playerId, forceState) => {
@@ -1132,6 +1115,18 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             globalBackBtn.querySelector('.icon-settings')?.classList.toggle('hidden', !showGear);
         }
     }
+    // Zoom buttons: visible only on main menu, in editor, or while game is playing
+    // Use #player-dashboard as the game-active indicator — it's shown for the full game session
+    // and only hidden when the game actually ends (unlike end-turn-btn which hides during AI turns)
+    const playerDashboard = document.getElementById('player-dashboard');
+    function updateZoomVisibility() {
+        const onMainMenu = mainMenu && !mainMenu.classList.contains('hidden');
+        const inEditor = editorOverlay && !editorOverlay.classList.contains('hidden');
+        const gameActive = playerDashboard && !playerDashboard.classList.contains('hidden');
+        const show = onMainMenu || inEditor || gameActive;
+        document.querySelectorAll('.zoom-control').forEach(el => el.classList.toggle('hidden', !show));
+    }
+
     const obsOpts = { attributes: true, attributeFilter: ['class'] };
     if (mainMenu) new MutationObserver(updateGlobalBackVisibility).observe(mainMenu, obsOpts);
     if (pauseModal) new MutationObserver(updateGlobalBackVisibility).observe(pauseModal, obsOpts);
@@ -1142,6 +1137,13 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const sbModal = document.getElementById('scenario-browser-modal');
     if (sbModal) new MutationObserver(updateGlobalBackVisibility).observe(sbModal, obsOpts);
     if (editorOverlay) new MutationObserver(updateGlobalBackVisibility).observe(editorOverlay, obsOpts);
+
+    // Wire zoom visibility to state changes
+    const zoomObs = new MutationObserver(updateZoomVisibility);
+    if (mainMenu) zoomObs.observe(mainMenu, obsOpts);
+    if (editorOverlay) zoomObs.observe(editorOverlay, obsOpts);
+    if (playerDashboard) zoomObs.observe(playerDashboard, obsOpts);
+    updateZoomVisibility();
 
     // --- Pause menu wiring ---
 

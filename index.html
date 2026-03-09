@@ -111,10 +111,10 @@
                     class="btn-text">Menu</span><span class="btn-icon"><span
                         class="sprite-icon icon-settings"></span></span><span id="new-game-hint"
                     class="input-hint hidden"></span></button>
-            <span class="separator zoom-control"></span>
-            <button id="zoom-out-btn" class="tron-btn small zoom-control" title="Zoom Out"><span
+            <span class="separator zoom-control hidden"></span>
+            <button id="zoom-out-btn" class="tron-btn small zoom-control hidden" title="Zoom Out"><span
                     class="sprite-icon icon-zoom-out"></span></button>
-            <button id="zoom-in-btn" class="tron-btn small zoom-control" title="Zoom In"><span
+            <button id="zoom-in-btn" class="tron-btn small zoom-control hidden" title="Zoom In"><span
                     class="sprite-icon icon-zoom-in"></span></button>
             <button id="editor-settings-toggle" class="tron-btn small editor-settings-toggle hidden" title="Settings"
                 aria-label="Settings"><span class="sprite-icon icon-campaigns"></span></button>
@@ -127,14 +127,10 @@
                 <h2 class="tron-title small">CUSTOM GAME</h2>
             </div>
             <div class="control-group">
-                <label id="map-size-label">Map Size</label>
+                <label>Map Size</label>
                 <div class="map-size-row">
-                    <button id="loaded-scenario-name" class="tron-btn loaded-scenario-text"
-                        style="display: none;"></button>
                     <input type="range" id="map-size" min="1" max="10" value="2">
                     <span id="map-size-val">4x4</span>
-                    <button id="deselect-scenario-btn" class="tron-btn small hidden" title="Deselect Map"><span
-                            class="sprite-icon icon-close"></span></button>
                 </div>
             </div>
 

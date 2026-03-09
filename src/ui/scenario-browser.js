@@ -290,7 +290,6 @@ export class ScenarioBrowser {
 
             if (this.configManager) {
                 this.configManager.updateConfigFromLevel(level);
-                this.configManager.updateLoadedLevelDisplay(campaign.owner, firstUnsolvedIndex + 1);
             }
 
             localStorage.setItem('dicy_loadedCampaign', campaign.owner);
@@ -737,7 +736,6 @@ export class ScenarioBrowser {
         this.selectedLevelIndex = index;
 
         this.configManager.updateConfigFromLevel(level);
-        this.configManager.updateLoadedLevelDisplay(this.selectedCampaign.owner, index + 1);
 
         localStorage.setItem('dicy_loadedCampaign', this.selectedCampaign.owner);
         localStorage.setItem('dicy_loadedLevelIndex', String(index));
@@ -749,14 +747,12 @@ export class ScenarioBrowser {
 
         if (opts.immediateStart) {
             localStorage.setItem('dicy_campaignMode', '1');
-            localStorage.removeItem('dicy_customLevelMode');
             this.scenarioBrowserModal.classList.add('hidden');
             this.setupModal.classList.add('hidden');
             if (this.effectsManager) this.effectsManager.stopIntroMode();
             if (this.onStartGame) this.onStartGame();
         } else {
             localStorage.removeItem('dicy_campaignMode');
-            localStorage.removeItem('dicy_customLevelMode');
             this.scenarioBrowserModal.classList.add('hidden');
             this.setupModal.classList.remove('hidden');
             if (this.effectsManager) this.effectsManager.startIntroMode();
@@ -843,7 +839,6 @@ export class ScenarioBrowser {
             this.pendingCampaign = campaign;
             this.selectedLevelIndex = index;
             this.configManager.updateConfigFromLevel(level);
-            this.configManager.updateLoadedLevelDisplay(campaign.owner, index + 1);
         }
     }
 
@@ -855,9 +850,6 @@ export class ScenarioBrowser {
         this.pendingLevel = null;
         this.pendingCampaign = null;
         this.selectedLevelIndex = null;
-        if (this.configManager) {
-            this.configManager.updateLoadedLevelDisplay(null);
-        }
         localStorage.removeItem('dicy_loadedCampaign');
         localStorage.removeItem('dicy_loadedLevelIndex');
         localStorage.removeItem('dicy_loadedCampaignId');

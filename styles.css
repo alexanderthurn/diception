@@ -2856,27 +2856,6 @@ select {
     font-weight: bold;
 }
 
-.loaded-scenario-row {
-    margin-top: 5px;
-}
-
-.loaded-scenario-text {
-    flex: 1;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding: 6px 10px;
-    font-size: 13px;
-    text-transform: none;
-    /* Keep original scenario name casing */
-    background: rgba(0, 255, 255, 0.1);
-}
-
-.loaded-scenario-text:hover {
-    background: rgba(0, 255, 255, 0.2);
-    border-color: #fff;
-}
 
 /* Scenario Browser Modal */
 .scenario-browser-content {
@@ -3895,10 +3874,6 @@ select {
 
     .map-size-row span {
         order: 2;
-    }
-
-    .map-size-row button {
-        order: 3;
     }
 }
 
@@ -5496,40 +5471,6 @@ canvas {
     transform: translateY(-0.1em);
 }
 
-/* Fix: map/close buttons square and matching slider height */
-#scenarios-btn,
-#deselect-scenario-btn {
-    width: 36px;
-    height: 36px;
-    padding: 0 !important;
-    display: inline-flex;
-    /* No !important so .hidden works */
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    vertical-align: middle;
-    box-sizing: border-box;
-}
-
-#scenarios-btn .sprite-icon,
-#deselect-scenario-btn .sprite-icon {
-    width: 18px !important;
-    /* 50% of button size */
-    height: 18px !important;
-    transform: none;
-    margin: 0;
-}
-
-/* Ensure loaded-scenario-name matches/aligns */
-#loaded-scenario-name {
-    height: 36px;
-    line-height: normal;
-    /* dependent on flex centering */
-    padding: 0 15px;
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-}
 
 /* Fix Zoom and Audio Buttons to be square (36px) and handle icon aspect ratios */
 #zoom-in-btn,

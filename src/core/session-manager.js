@@ -128,16 +128,10 @@ export class SessionManager {
         this.resetGameSession();
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
         localStorage.removeItem('dicy_campaignMode');
-        localStorage.removeItem('dicy_customLevelMode');
 
         // Clear any pending scenario/level in memory
         if (this.scenarioBrowser) {
             this.scenarioBrowser.clearPendingScenario();
-        }
-
-        // Update ConfigManager UI to clear loaded level display
-        if (this.configManager) {
-            this.configManager.updateLoadedLevelDisplay(null, null);
         }
 
         document.getElementById('main-menu')?.classList.remove('hidden');
@@ -152,7 +146,6 @@ export class SessionManager {
         this.resetGameSession();
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
         localStorage.removeItem('dicy_campaignMode');
-        localStorage.removeItem('dicy_customLevelMode');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
         this.setupModal.classList.remove('hidden');
         if (this.effectsManager) this.effectsManager.startIntroMode();
