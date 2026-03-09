@@ -1138,6 +1138,21 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const playerDashboard = document.getElementById('player-dashboard');
     const sbModal = document.getElementById('scenario-browser-modal');
     const zoomDialogs = [pauseModal, settingsModal, howtoModal, aboutModal, setupModal, sbModal];
+    function syncToolbarAudioBtns() {
+        const mainMusicBtn = document.getElementById('music-toggle');
+        const mainSfxBtn = document.getElementById('sfx-toggle');
+        const tbMusicBtn = document.getElementById('toolbar-music-toggle');
+        const tbSfxBtn = document.getElementById('toolbar-sfx-toggle');
+        if (tbMusicBtn && mainMusicBtn) {
+            tbMusicBtn.innerHTML = mainMusicBtn.innerHTML;
+            tbMusicBtn.classList.toggle('active', mainMusicBtn.classList.contains('active'));
+        }
+        if (tbSfxBtn && mainSfxBtn) {
+            tbSfxBtn.innerHTML = mainSfxBtn.innerHTML;
+            tbSfxBtn.classList.toggle('active', mainSfxBtn.classList.contains('active'));
+        }
+    }
+
     function updateZoomVisibility() {
         const onMainMenu = mainMenu && !mainMenu.classList.contains('hidden');
         const inEditor = editorOverlay && !editorOverlay.classList.contains('hidden');
@@ -1145,6 +1160,9 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         const anyDialogOpen = zoomDialogs.some(el => el && !el.classList.contains('hidden'));
         const show = !anyDialogOpen && (onMainMenu || inEditor || gameActive);
         document.querySelectorAll('.zoom-control').forEach(el => el.classList.toggle('hidden', !show));
+        const showAudio = !anyDialogOpen && onMainMenu;
+        document.querySelectorAll('.main-menu-control').forEach(el => el.classList.toggle('hidden', !showAudio));
+        if (showAudio) syncToolbarAudioBtns();
     }
 
     const obsOpts = { attributes: true, attributeFilter: ['class'] };
@@ -1199,6 +1217,16 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     document.getElementById('pause-sfx-toggle')?.addEventListener('click', () => {
         document.getElementById('sfx-toggle')?.click();
         syncPauseAudioBtns();
+    });
+
+    document.getElementById('toolbar-music-toggle')?.addEventListener('click', () => {
+        document.getElementById('music-toggle')?.click();
+        syncToolbarAudioBtns();
+    });
+
+    document.getElementById('toolbar-sfx-toggle')?.addEventListener('click', () => {
+        document.getElementById('sfx-toggle')?.click();
+        syncToolbarAudioBtns();
     });
 
     // Sliders mirror to the settings sliders and dispatch input so AudioController picks them up
