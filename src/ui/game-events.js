@@ -112,8 +112,8 @@ export class GameEventManager {
         // Check if this player should be automated
         const shouldAutomate = data.player.isBot || autoplayPlayers.has(data.player.id);
 
-        // Update turn indicator (Beginner mode only, bots only)
-        if (gameSpeed === 'beginner' && data.player.isBot) {
+        // Update turn indicator (bots only)
+        if (data.player.isBot) {
             const colorHex = '#' + data.player.color.toString(16).padStart(6, '0');
             const playerAI = playerAIs.get(data.player.id);
             const aiName = playerAI?.name || 'Bot';
