@@ -4774,11 +4774,14 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+#main-menu-branding a {
     opacity: 0.6;
     transition: opacity 0.2s;
 }
 
-#main-menu-branding:hover {
+#main-menu-branding a:hover {
     opacity: 1;
 }
 
@@ -5829,7 +5832,6 @@ canvas {
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         background: rgba(0, 0, 0, 0.75);
-        border-left: 3px solid rgba(0, 255, 255, 0.3);
     }
 
     /* HUD cluster: dice above end-turn, auto-win closer */

@@ -133,11 +133,6 @@ async function init() {
                 }
             }
         };
-        const quitBtn = document.getElementById('quit-game-btn');
-        if (quitBtn) {
-            quitBtn.classList.remove('hidden');
-            quitBtn.addEventListener('click', handleQuit);
-        }
         const mainQuitBtn = document.getElementById('main-quit-btn');
         if (mainQuitBtn) {
             mainQuitBtn.classList.remove('hidden');
@@ -1101,9 +1096,9 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const editorOverlay = document.getElementById('editor-overlay');
     const steamMenuBtn = document.getElementById('main-menu-steam-btn');
     const mainMenuBranding = document.getElementById('main-menu-branding');
-    // Show branding on desktop non-Android builds; hide Steam link when running inside Steam
+    // Always show feuerware branding; hide Steam link when running inside Steam
     const isSteamBuild = isSteamContext();
-    const showBranding = !isTauriContext() && !isAndroid();
+    const showBranding = !isAndroid();
     if (steamMenuBtn) steamMenuBtn.classList.toggle('hidden', isSteamBuild);
     function updateGlobalBackVisibility() {
         const loadingScreen = document.getElementById('loading-screen');
