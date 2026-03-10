@@ -533,6 +533,8 @@ select {
     width: auto;
     max-height: none;
     overflow: visible;
+    top: 20px;
+    transform: none;
 }
 
 #player-dashboard.collapsed #dash-content {
@@ -912,10 +914,7 @@ body.fx-off .player-tile.rumble-lose {
     margin: 0 auto;
 }
 
-#campaign-select-view,
-#campaign-detail-view {
-    background: transparent;
-}
+/* Campaign views use standard modal background (no override) */
 
 #campaign-select-view .howto-content,
 #campaign-detail-view .howto-content {
@@ -1469,8 +1468,8 @@ select {
         top: 10px;
         right: 10px;
         left: auto;
-        flex-direction: column;
-        align-items: flex-end;
+        flex-direction: row;
+        align-items: center;
         gap: 8px;
         padding: 0;
         background: transparent;
@@ -1479,19 +1478,21 @@ select {
         /* Above modal */
     }
 
+    /* In-game on mobile: hide music/audio buttons (zoom + back still visible) */
+    body:has(#player-dashboard:not(.hidden)) .main-menu-control {
+        display: none !important;
+    }
+
     .music-display {
         font-size: 10px;
         max-width: 100px;
-        text-align: right;
     }
 
     .audio-group {
         display: flex;
         flex-direction: row;
         align-items: center;
-        justify-content: flex-end;
         width: auto;
-        /* Allow natural width */
         position: relative;
         /* For absolute slider positioning */
     }
@@ -2346,10 +2347,11 @@ select {
     max-width: 100%;
     text-align: left;
     padding: 30px;
-    background: black;
+    background: rgba(0, 0, 5, 0.90);
 }
 
 #settings-modal,
+#about-modal,
 #campaign-detail-view,
 #campaign-select-view {
     width: 560px;
@@ -2361,47 +2363,16 @@ select {
 }
 
 #pause-modal, #setup-modal {
-    background: #000;
     padding: 30px;
-    border: 1px solid rgba(0, 255, 255, 0.2);
 }
 
 #howto-modal {
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
-    max-width: none;
-    transform: none;
     display: flex;
     flex-direction: column;
-    box-sizing: border-box;
-    padding: 20px;
-    padding-top: max(20px, env(safe-area-inset-top));
-    padding-bottom: max(20px, env(safe-area-inset-bottom));
-}
-
-#howto-modal .modal-header {
-    flex-shrink: 0;
-    justify-content: flex-start;
-    gap: 15px;
-}
-
-#howto-modal .modal-header .tron-title {
-    flex: 1;
-    text-align: center;
-}
-
-#howto-modal #howto-close-btn {
-    position: static;
-    flex: 0 0 auto;
-    order: -1;
 }
 
 #howto-modal .howto-content {
-    max-height: none;
-    flex: 1;
-    min-height: 0;
+    max-height: calc(90vh - 120px);
     overflow-y: auto;
 }
 
@@ -2417,13 +2388,43 @@ select {
     justify-content: center;
     align-items: center;
     margin-bottom: 20px;
+    position: relative;
+}
+
+.modal-close-btn {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .global-back-btn {
+    /* Flows inside #music-controls flex by default (gear/game-running case).
+     * Pulled out to fixed position when showing the X icon (modal-close case). */
+    flex-shrink: 0;
+}
+
+/* X icon shown (any modal open): pull out of toolbar to top-left */
+#global-back-btn:has(.icon-close:not(.hidden)) {
     position: fixed;
     top: 12px;
     left: 12px;
     z-index: 9999;
+}
+
+/* Hide zoom controls when pause modal is open */
+body:has(#pause-modal:not(.hidden)) .zoom-control {
+    display: none !important;
+}
+
+/* Modals that have their own close button: hide the global X */
+body:has(#setup-modal:not(.hidden)) #global-back-btn,
+body:has(#settings-modal:not(.hidden)) #global-back-btn,
+body:has(#about-modal:not(.hidden)) #global-back-btn,
+body:has(#howto-modal:not(.hidden)) #global-back-btn,
+body:has(#pause-modal:not(.hidden)) #global-back-btn,
+body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
+    display: none !important;
 }
 
 #global-back-btn {
@@ -2440,6 +2441,7 @@ select {
     width: 60% !important;
     height: auto !important;
     margin: 0;
+    transform: none;
 }
 
 .modal-header .tron-title {
@@ -2702,6 +2704,17 @@ select {
     .howto-content {
         max-height: none;
     }
+}
+
+.about-feuerware-logo {
+    height: 32px;
+    width: auto;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+}
+
+.about-feuerware-logo:hover {
+    opacity: 1;
 }
 
 /* About Link */
@@ -3317,6 +3330,17 @@ select {
     gap: 10px;
     padding: 8px;
     position: relative;
+}
+
+@container (min-width: 900px) {
+    .level-preview-dialog-content {
+        padding: 20px;
+        gap: 16px;
+    }
+
+    .level-preview-dialog .dialog-body {
+        padding: 0 32px;
+    }
 }
 
 .level-preview-dialog-content.level-preview-solved::before {
@@ -4740,27 +4764,30 @@ select {
     display: block;
 }
 
-#main-menu-steam-btn {
+#main-menu-branding {
     position: fixed;
     bottom: 12px;
     left: 12px;
     z-index: 200;
-    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0.6;
     transition: opacity 0.2s;
 }
 
-#main-menu-steam-btn:hover {
+#main-menu-branding:hover {
     opacity: 1;
 }
 
-#main-menu-steam-btn .platform-icon {
-    height: 24px;
+#main-menu-branding .platform-icon {
+    height: 22px;
     width: auto;
     display: block;
 }
 
 @media (max-width: 768px) {
-    #main-menu-steam-btn {
+    #main-menu-branding {
         display: none !important;
     }
 }
@@ -5339,31 +5366,6 @@ canvas {
     }
 }
 
-#scenario-browser-modal.scenario-browser-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 100;
-    background: radial-gradient(circle at center, #0a0a2a 0%, #050510 100%);
-}
-
-#scenario-browser-modal.scenario-browser-overlay::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image:
-        linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-    background-size: 40px 40px;
-    background-position: center center;
-    pointer-events: none;
-    opacity: 0.3;
-}
 
 .scenario-browser-top-bar {
     position: absolute;
@@ -5551,6 +5553,19 @@ canvas {
     margin: 0;
 }
 
+/* Music/SFX icons: pin height so width derives correctly from aspect-ratio */
+#music-toggle .sprite-icon,
+#sfx-toggle .sprite-icon,
+#pause-music-toggle .sprite-icon,
+#pause-sfx-toggle .sprite-icon,
+#toolbar-music-toggle .sprite-icon,
+#toolbar-sfx-toggle .sprite-icon {
+    height: 60% !important;
+    width: auto !important;
+    margin: 0;
+    transform: none;
+}
+
 /* Editor settings toggle - same size as zoom buttons (36px), display controlled by .editor-settings-toggle */
 #editor-settings-toggle {
     width: 36px !important;
@@ -5698,4 +5713,212 @@ canvas {
 
 .custom-select-option+.custom-select-option {
     border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ============================================================
+   DESKTOP POLISH — Added UI improvements for ≥900px viewports
+   ============================================================ */
+
+/* ── 1. Button Polish ── */
+
+.tron-btn {
+    background: linear-gradient(135deg, #000 0%, #030a0a 100%);
+}
+
+.tron-btn:hover {
+    background: rgba(0, 255, 255, 0.1);
+    transform: translateX(-1px);
+}
+
+.tron-btn:active {
+    transform: scale(0.98);
+}
+
+.tron-btn.large {
+    letter-spacing: 1.5px;
+    font-size: 1.15em;
+}
+
+#main-menu .tron-btn {
+    background: #000;
+}
+
+/* ── 2. Global Modal Visual Polish ── */
+
+.modal {
+    background: rgba(0, 0, 5, 0.90);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(0, 255, 255, 0.35);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), var(--panel-glow);
+}
+
+/* Main menu is transparent — canvas background shows through */
+#main-menu {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-top: none;
+    box-shadow: none;
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0, 255, 255, 0.12);
+    padding-top: 16px;
+    padding-bottom: 16px;
+    margin-top: -16px;
+    margin-bottom: 24px;
+}
+
+.howto-content h3 {
+    font-size: 1.15em;
+}
+
+/* ── 3. Segmented Buttons Polish ── */
+
+.segmented-btn {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.segmented-option.active {
+    background: rgba(0, 255, 255, 0.18);
+    color: #fff;
+}
+
+.segmented-option {
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* ── 4. Close Button Polish ── */
+
+.close-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(0, 255, 255, 0.25);
+    background: rgba(0, 0, 0, 0.4);
+    font-size: 22px;
+    border-radius: 2px;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: rgba(0, 255, 255, 0.12);
+    border-color: rgba(0, 255, 255, 0.6);
+}
+
+/* ── 5. Desktop breakpoint: HUD + Dashboard + Music polish (≥900px) ── */
+
+@container (min-width: 900px) {
+    /* Player dashboard: top-anchored, wider, frosted */
+    #player-dashboard {
+        top: 20px;
+        transform: none;
+        width: 300px;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        background: rgba(0, 0, 0, 0.75);
+        border-left: 3px solid rgba(0, 255, 255, 0.3);
+    }
+
+    /* HUD cluster: dice above end-turn, auto-win closer */
+    #dice-result-hud {
+        bottom: 110px;
+        right: 40px;
+        left: auto;
+        transform: none;
+    }
+
+    /* Large buttons: more generous padding */
+    .tron-btn.large {
+        padding: 14px 28px;
+    }
+
+    /* Music controls: wider sliders on desktop */
+    #music-controls {
+        gap: 12px;
+    }
+
+    #music-controls input[type="range"] {
+        width: 100px;
+    }
+
+    .music-display {
+        max-width: 150px;
+    }
+}
+
+/* ── 6. Desktop: wider settings/about modals (≥1024px) ── */
+
+@container (min-width: 1024px) {
+    #settings-modal {
+        width: 720px;
+    }
+
+    .modal.large-modal {
+        padding: 40px 50px;
+    }
+}
+
+/* ── 7. Desktop typography scaling ── */
+
+@container (min-width: 900px) {
+    #main-menu .tron-title {
+        font-size: 3.2rem;
+        margin-bottom: 6px;
+        letter-spacing: 8px;
+    }
+
+    #main-menu #main-menu-credits {
+        font-size: 14px;
+        margin-bottom: 36px;
+    }
+}
+
+@container (min-width: 1200px) {
+    #main-menu .tron-title {
+        font-size: 4.5rem;
+        letter-spacing: 12px;
+    }
+
+    .modal-header .tron-title {
+        font-size: 1.8em;
+    }
+
+    .howto-content h3 {
+        font-size: 1.2em;
+        letter-spacing: 2px;
+    }
+
+    .credits {
+        font-size: 13px;
+    }
+
+    .howto-list li,
+    .setting-explain ul li {
+        font-size: 1.05em;
+    }
+
+    /* Larger player tiles */
+    .player-tile {
+        width: 52px;
+        height: 52px;
+    }
+}
+
+/* Stack settings control-row columns on small screens (settings modal only) */
+@container (max-width: 600px) {
+    #settings-modal .control-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    #settings-modal .control-group.third,
+    #settings-modal .control-group.half,
+    #settings-modal .control-group.quarter {
+        flex: unset;
+        width: 100%;
+    }
 }

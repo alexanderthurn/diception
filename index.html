@@ -68,6 +68,9 @@
             <span class="dice-icon-sprite drifting d8"></span>
         </div>
         <div class="loading-platforms">
+            <a href="https://feuerware.com" target="_blank" rel="noopener">
+                <img src="assets/icons/fw-logo.png" alt="Feuerware" class="platform-icon">
+            </a>
             <a href="https://store.steampowered.com/app/4429000/DICEPTION/" target="_blank" rel="noopener">
                 <img src="assets/icons/steam-logo.png" alt="Steam" class="platform-icon">
             </a>
@@ -103,6 +106,10 @@
                 class="sprite-icon icon-autoplay"></span></button>
 
         <div id="music-controls" class="panel">
+            <button id="global-back-btn" class="tron-btn small global-back-btn hidden" aria-label="Back">
+                <span class="sprite-icon icon-close"></span>
+                <span class="sprite-icon icon-settings hidden"></span>
+            </button>
             <!-- retry-game-btn kept in DOM for JS reference, never shown in toolbar -->
             <button id="retry-game-btn" class="tron-btn small hidden" title="Retry Game" style="display:none"><span
                     class="btn-text">Restart Game</span><span class="btn-icon"><span
@@ -115,7 +122,6 @@
             <input type="range" id="toolbar-music-volume" class="main-menu-control hidden" min="0" max="100" value="50" title="Music Volume">
             <button id="toolbar-sfx-toggle" class="tron-btn small main-menu-control hidden" title="Sound Effects"><span class="sprite-icon icon-sfx-on"></span></button>
             <input type="range" id="toolbar-sfx-volume" class="main-menu-control hidden" min="0" max="100" value="50" title="SFX Volume">
-            <span class="separator zoom-control hidden"></span>
             <button id="zoom-out-btn" class="tron-btn small zoom-control hidden" title="Zoom Out"><span
                     class="sprite-icon icon-zoom-out"></span></button>
             <button id="zoom-in-btn" class="tron-btn small zoom-control hidden" title="Zoom In"><span
@@ -129,6 +135,7 @@
         <div id="setup-modal" class="modal hidden">
             <div class="modal-header">
                 <h2 class="tron-title small">CUSTOM GAME</h2>
+                <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
             </div>
             <div class="control-group">
                 <label>Map Size</label>
@@ -267,8 +274,11 @@
 
         <!-- Pause Menu (in-game) -->
         <div id="pause-modal" class="modal hidden">
-            <h2 class="tron-title small">PAUSED</h2>
-            <div style="display:flex;flex-direction:column;gap:16px;margin-top:20px;width:100%;min-width:220px;">
+            <div class="modal-header">
+                <button class="close-btn modal-close-btn" aria-label="Resume" onclick="document.getElementById('global-back-btn').click()">×</button>
+                <h2 class="tron-title small">PAUSED</h2>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px;width:100%;min-width:220px;">
                 <!-- Inline settings -->
                 <div class="control-group" style="margin:0">
                     <label>Game Speed</label>
@@ -307,6 +317,7 @@
 
         <div id="howto-modal" class="modal hidden large-modal">
             <div class="modal-header">
+                <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
                 <h2 class="tron-title small">HOW TO</h2>
             </div>
             <div class="howto-content">
@@ -445,6 +456,7 @@
         <div id="settings-modal" class="modal hidden large-modal">
             <div class="modal-header">
                 <h2 class="tron-title small">SETTINGS</h2>
+                <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
             </div>
             <div class="howto-content">
                 <div class="settings-group settings-group-flat">
@@ -489,19 +501,6 @@
                     </div>
                 </div>
 
-                <details class="settings-group">
-                    <summary class="settings-group-header">GRAPHICS</summary>
-                    <div class="settings-group-body">
-                        <div class="control-group">
-                            <label>Visual Effects</label>
-                            <select id="effects-quality">
-                                <option value="high">High</option>
-                                <option value="medium" selected>Medium</option>
-                                <option value="off">Off</option>
-                            </select>
-                        </div>
-                    </div>
-                </details>
 
                 <details class="settings-group">
                     <summary class="settings-group-header">CONTROLS</summary>
@@ -599,6 +598,14 @@
                         </div>
                         <div class="control-row">
                             <div class="control-group third">
+                                <label>Visual Effects</label>
+                                <select id="effects-quality">
+                                    <option value="high">High</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="off">Off</option>
+                                </select>
+                            </div>
+                            <div class="control-group third">
                                 <label>Anti-Aliasing</label>
                                 <select id="gfx-antialias">
                                     <option value="on">On (Smoother)</option>
@@ -649,6 +656,7 @@
         <div id="about-modal" class="modal hidden large-modal">
             <div class="modal-header">
                 <h2 class="tron-title small">ABOUT</h2>
+                <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
             </div>
             <div class="howto-content">
                 <section>
@@ -663,6 +671,11 @@
                         </p>
                         <p>GitHub: <a href="https://github.com/alexanderthurn/diception" target="_blank"
                                 class="about-link highlight-link">alexanderthurn/diception</a></p>
+                        <p>
+                            <a href="https://feuerware.com" target="_blank" rel="noopener">
+                                <img src="assets/icons/fw-logo.png" alt="Feuerware" class="about-feuerware-logo">
+                            </a>
+                        </p>
                         <p>Visit <a href="https://feuerware.com" target="_blank"
                                 class="about-link highlight-link">feuerware.com</a> for more games.</p>
                         <p><strong>Gamepad &amp; Keyboard Icons</strong> by <a
@@ -731,13 +744,14 @@
         </div>
 
         <!-- Scenario Browser (full-screen overlay) -->
-        <div id="scenario-browser-modal" class="scenario-browser-overlay hidden">
+        <div id="scenario-browser-modal" class="hidden">
             <!-- close btn hidden; triggered programmatically by global-back-btn -->
             <button id="scenario-browser-close-btn" style="display:none" aria-label="Close"></button>
 
             <!-- View 1: Campaign Selection -->
             <div id="campaign-select-view" class="modal large-modal">
                 <div class="modal-header">
+                    <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
                     <h2 class="tron-title small">CAMPAIGNS</h2>
                 </div>
                 <div id="campaign-button-list" class="campaign-button-list howto-content">
@@ -748,6 +762,7 @@
             <!-- View 2: Campaign Detail (level grid) -->
             <div id="campaign-detail-view" class="modal large-modal hidden">
                 <div class="modal-header">
+                    <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
                     <h2 id="campaign-detail-title" class="tron-title small"></h2>
                 </div>
                 <div class="howto-content">
@@ -969,13 +984,14 @@
     </div>
 
     <div id="game-version" class="game-version-display"></div>
-    <a id="main-menu-steam-btn" href="https://store.steampowered.com/app/4429000/DICEPTION/" target="_blank" rel="noopener" class="hidden">
-        <img src="assets/icons/steam-logo.png" alt="Steam" class="platform-icon">
-    </a>
-    <button id="global-back-btn" class="tron-btn small global-back-btn hidden" aria-label="Back">
-        <span class="sprite-icon icon-close"></span>
-        <span class="sprite-icon icon-settings hidden"></span>
-    </button>
+    <div id="main-menu-branding" class="main-menu-branding hidden">
+        <a href="https://feuerware.com" target="_blank" rel="noopener">
+            <img src="assets/icons/fw-logo.png" alt="Feuerware" class="platform-icon">
+        </a>
+        <a id="main-menu-steam-btn" href="https://store.steampowered.com/app/4429000/DICEPTION/" target="_blank" rel="noopener">
+            <img src="assets/icons/steam-logo.png" alt="Steam" class="platform-icon">
+        </a>
+    </div>
 
     <script type="module" src="src/main.js"></script>
 </body>
