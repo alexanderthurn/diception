@@ -2362,7 +2362,8 @@ select {
     max-height: calc(90vh - 120px);
 }
 
-#pause-modal, #setup-modal {
+#pause-modal,
+#setup-modal {
     padding: 30px;
 }
 
@@ -2682,6 +2683,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 }
 
 @container (max-width: 640px) {
+
     #settings-modal,
     #setup-modal,
     #about-modal,
@@ -4838,7 +4840,9 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     user-select: none;
 }
 
-.settings-group-header::-webkit-details-marker { display: none; }
+.settings-group-header::-webkit-details-marker {
+    display: none;
+}
 
 .settings-group-header::before {
     content: '▶';
@@ -4848,7 +4852,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     display: inline-block;
 }
 
-.settings-group[open] > .settings-group-header::before {
+.settings-group[open]>.settings-group-header::before {
     transform: rotate(90deg);
 }
 
@@ -5781,8 +5785,11 @@ canvas {
 }
 
 .segmented-option.active {
-    background: rgba(0, 255, 255, 0.18);
+    background: rgba(0, 255, 255, 0.55);
     color: #fff;
+    font-weight: 900;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 1), 0 0 20px rgba(0, 255, 255, 0.5);
+    box-shadow: inset 0 0 12px rgba(0, 255, 255, 0.35), 0 0 6px rgba(0, 255, 255, 0.3);
 }
 
 .segmented-option {
@@ -5813,6 +5820,7 @@ canvas {
 /* ── 5. Desktop breakpoint: HUD + Dashboard + Music polish (≥900px) ── */
 
 @container (min-width: 900px) {
+
     /* Player dashboard: top-anchored, wider, frosted */
     #player-dashboard {
         top: 20px;
@@ -5915,6 +5923,7 @@ canvas {
         flex-direction: column;
         gap: 0;
     }
+
     #settings-modal .control-group.third,
     #settings-modal .control-group.half,
     #settings-modal .control-group.quarter {
