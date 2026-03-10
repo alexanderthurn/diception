@@ -27,7 +27,7 @@ export class AudioController {
         this.isFirstRunEver = false;
         this.musicPlaying = false;
         this.shouldAutoplayMusic = false;
-        this.musicVolume_value = 0.5;
+        this.musicVolume_value = 0.3;
 
         // The @pixi/sound Sound instance for the current song
         this._musicSound = null;
@@ -67,9 +67,9 @@ export class AudioController {
 
         // Load volume/enabled settings
         const savedMusicEnabled = localStorage.getItem('dicy_musicEnabled') !== 'false';
-        const savedMusicVolume = parseFloat(localStorage.getItem('dicy_musicVolume') ?? '0.5');
+        const savedMusicVolume = parseFloat(localStorage.getItem('dicy_musicVolume') ?? '0.3');
         const savedSfxEnabled = localStorage.getItem('dicy_sfxEnabled') !== 'false';
-        const savedSfxVolume = parseFloat(localStorage.getItem('dicy_sfxVolume') ?? '0.5');
+        const savedSfxVolume = parseFloat(localStorage.getItem('dicy_sfxVolume') ?? '0.3');
 
         this.musicVolume_value = savedMusicVolume;
         this.shouldAutoplayMusic = savedMusicEnabled;

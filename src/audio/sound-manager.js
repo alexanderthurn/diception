@@ -17,7 +17,7 @@ const SFX_FILES = {
 export class SoundManager {
     constructor() {
         this.enabled = true;
-        this.volume = 0.5;
+        this.volume = 0.3;
         this.winStreak = 0;
         this.isPreloaded = false;
     }
