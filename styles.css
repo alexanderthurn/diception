@@ -5863,11 +5863,25 @@ canvas {
     }
 }
 
-/* ── 7. Desktop typography scaling (≥1200px) ── */
+/* ── 7. Desktop typography scaling ── */
+
+@container (min-width: 900px) {
+    #main-menu .tron-title {
+        font-size: 3.2rem;
+        margin-bottom: 6px;
+        letter-spacing: 8px;
+    }
+
+    #main-menu #main-menu-credits {
+        font-size: 14px;
+        margin-bottom: 36px;
+    }
+}
 
 @container (min-width: 1200px) {
     #main-menu .tron-title {
-        font-size: 3.5rem;
+        font-size: 4.5rem;
+        letter-spacing: 12px;
     }
 
     .modal-header .tron-title {
