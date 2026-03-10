@@ -13,6 +13,11 @@
     "core:window:allow-set-size",
     "core:window:allow-maximize",
     "core:window:allow-unmaximize",
-    "core:window:allow-center"
+    "core:window:allow-center",
+    "core:window:allow-set-position",
+    "core:window:allow-is-fullscreen",
+    "core:window:allow-outer-size",
+    "core:window:allow-available-monitors",
+    "core:window:allow-current-monitor"
   ]
 }
