@@ -5735,9 +5735,12 @@ canvas {
 }
 
 .tron-btn.large {
-    border-left: 3px solid var(--accent-color);
     letter-spacing: 1.5px;
     font-size: 1.15em;
+}
+
+#main-menu .tron-btn {
+    background: #000;
 }
 
 /* ── 2. Global Modal Visual Polish ── */
