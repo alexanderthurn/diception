@@ -2441,6 +2441,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     width: 60% !important;
     height: auto !important;
     margin: 0;
+    transform: none;
 }
 
 .modal-header .tron-title {
@@ -5550,6 +5551,19 @@ canvas {
     height: 60% !important;
     width: auto !important;
     margin: 0;
+}
+
+/* Music/SFX icons: pin height so width derives correctly from aspect-ratio */
+#music-toggle .sprite-icon,
+#sfx-toggle .sprite-icon,
+#pause-music-toggle .sprite-icon,
+#pause-sfx-toggle .sprite-icon,
+#toolbar-music-toggle .sprite-icon,
+#toolbar-sfx-toggle .sprite-icon {
+    height: 60% !important;
+    width: auto !important;
+    margin: 0;
+    transform: none;
 }
 
 /* Editor settings toggle - same size as zoom buttons (36px), display controlled by .editor-settings-toggle */
