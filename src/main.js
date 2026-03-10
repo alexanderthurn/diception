@@ -1022,7 +1022,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     document.getElementById('main-howto-btn')?.addEventListener('click', () => {
         mainMenu.classList.add('hidden');
         howtoModal.classList.remove('hidden');
-        effectsManager.stopIntroMode();
         if (!probabilityCalculator) {
             probabilityCalculator = new ProbabilityCalculator();
         }
@@ -1061,7 +1060,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         if (howtoModal && !howtoModal.classList.contains('hidden')) {
             howtoModal.classList.add('hidden');
             mainMenu.classList.remove('hidden');
-            effectsManager.startIntroMode();
             return;
         }
         if (aboutModal && !aboutModal.classList.contains('hidden')) {
@@ -1163,12 +1161,9 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         const onMainMenu = mainMenu && !mainMenu.classList.contains('hidden');
         const inEditor = editorOverlay && !editorOverlay.classList.contains('hidden');
         const gameActive = playerDashboard && !playerDashboard.classList.contains('hidden');
-        const anyDialogOpen = zoomDialogs.some(el => el && !el.classList.contains('hidden'));
-        const show = !anyDialogOpen && (onMainMenu || inEditor || gameActive);
+        const show = inEditor || gameActive;
         document.querySelectorAll('.zoom-control').forEach(el => el.classList.toggle('hidden', !show));
-        const showAudio = !anyDialogOpen && onMainMenu;
-        document.querySelectorAll('.main-menu-control').forEach(el => el.classList.toggle('hidden', !showAudio));
-        if (showAudio) syncToolbarAudioBtns();
+        document.querySelectorAll('.main-menu-control').forEach(el => el.classList.add('hidden'));
     }
 
     const obsOpts = { attributes: true, attributeFilter: ['class'] };

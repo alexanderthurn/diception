@@ -140,10 +140,8 @@ export class Renderer {
             this.rootContainer.x = leftInset;
             this.rootContainer.y = this.app.screen.height - scaledHeight - bottomInset;
         } else {
-            // Center the map with offset for left sidebar on desktop
-            const isMobile = this.app.screen.width <= 768 || this.app.screen.height <= 720;
-            const sidebarOffset = isMobile ? 0 : 140;
-            this.rootContainer.x = (this.app.screen.width - scaledWidth) / 2 + sidebarOffset;
+            // Center the map in the full screen
+            this.rootContainer.x = (this.app.screen.width - scaledWidth) / 2;
             this.rootContainer.y = (this.app.screen.height - scaledHeight) / 2;
         }
 

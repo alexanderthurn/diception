@@ -693,9 +693,11 @@ export class MapEditor {
         }
 
         // Position offset from mouse (avoid covering cursor)
+        // clientX/clientY are physical viewport coords; body is scaled by --ui-scale
+        const scale = parseFloat(getComputedStyle(document.body).getPropertyValue('--ui-scale')) || 1;
         const offset = 24;
-        el.style.left = `${clientX + offset}px`;
-        el.style.top = `${clientY + offset}px`;
+        el.style.left = `${(clientX + offset) / scale}px`;
+        el.style.top = `${(clientY + offset) / scale}px`;
 
         // Always show both resulting color and dice in one combined preview
         content.className = 'editor-hover-preview-content';

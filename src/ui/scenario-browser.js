@@ -78,7 +78,6 @@ export class ScenarioBrowser {
         this.scenarioBrowserModal.classList.remove('hidden');
         this.pendingLevel = null;
         await this.showCampaignView();
-        if (this.effectsManager) this.effectsManager.stopIntroMode();
     }
 
     hasHoverCapability() {
@@ -764,6 +763,7 @@ export class ScenarioBrowser {
         if (!level) return;
 
         this.scenarioBrowserModal.classList.add('hidden');
+        if (this.effectsManager) this.effectsManager.stopIntroMode();
         this.mapEditor.open(level, {
             campaign: this.selectedCampaign,
             levelIndex: index,
@@ -778,6 +778,7 @@ export class ScenarioBrowser {
                 setTimeout(() => { this.justSavedLevelIndex = null; this.renderLevelGrid(this.selectedCampaign); }, 2000);
             },
             onClose: () => {
+                if (this.effectsManager) this.effectsManager.startIntroMode();
                 this.scenarioBrowserModal.classList.remove('hidden');
                 this.renderLevelGrid(this.selectedCampaign);
             }
@@ -801,6 +802,7 @@ export class ScenarioBrowser {
             tiles: []
         };
 
+        if (this.effectsManager) this.effectsManager.stopIntroMode();
         this.mapEditor.open(template, {
             campaign,
             levelIndex: actualIndex,
@@ -814,6 +816,7 @@ export class ScenarioBrowser {
                 setTimeout(() => { this.justSavedLevelIndex = null; this.renderLevelGrid(this.selectedCampaign); }, 2000);
             },
             onClose: () => {
+                if (this.effectsManager) this.effectsManager.startIntroMode();
                 this.scenarioBrowserModal.classList.remove('hidden');
                 if (this.selectedCampaign?.levels?.length) {
                     this.renderLevelGrid(this.selectedCampaign);

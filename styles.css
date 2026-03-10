@@ -1468,8 +1468,8 @@ select {
         top: 10px;
         right: 10px;
         left: auto;
-        flex-direction: column;
-        align-items: flex-end;
+        flex-direction: row;
+        align-items: center;
         gap: 8px;
         padding: 0;
         background: transparent;
@@ -1478,19 +1478,21 @@ select {
         /* Above modal */
     }
 
+    /* In-game on mobile: hide music/audio buttons (zoom + back still visible) */
+    body:has(#player-dashboard:not(.hidden)) .main-menu-control {
+        display: none !important;
+    }
+
     .music-display {
         font-size: 10px;
         max-width: 100px;
-        text-align: right;
     }
 
     .audio-group {
         display: flex;
         flex-direction: row;
         align-items: center;
-        justify-content: flex-end;
         width: auto;
-        /* Allow natural width */
         position: relative;
         /* For absolute slider positioning */
     }
@@ -2408,6 +2410,11 @@ select {
     top: 12px;
     left: 12px;
     z-index: 9999;
+}
+
+/* Hide zoom controls when pause modal is open */
+body:has(#pause-modal:not(.hidden)) .zoom-control {
+    display: none !important;
 }
 
 /* Modals that have their own close button: hide the global X */
@@ -5843,5 +5850,19 @@ canvas {
     .player-tile {
         width: 52px;
         height: 52px;
+    }
+}
+
+/* Stack control-row columns on small screens */
+@container (max-width: 600px) {
+    .control-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    .control-group.third,
+    .control-group.half,
+    .control-group.quarter {
+        flex: unset;
+        width: 100%;
     }
 }
