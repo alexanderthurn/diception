@@ -577,14 +577,20 @@
                     <div class="settings-group-body">
                         <p style="margin-top:0">Configure rendering options. Some changes may require a restart to apply.</p>
                         <div id="desktop-display-controls" class="control-row hidden" style="margin-bottom: 10px;">
-                            <div class="control-group half">
+                            <div class="control-group third">
                                 <label>Display Mode</label>
                                 <select id="gfx-display-mode">
                                     <option value="windowed">Windowed</option>
                                     <option value="fullscreen" selected>Fullscreen</option>
                                 </select>
                             </div>
-                            <div class="control-group half">
+                            <div class="control-group third">
+                                <label>Monitor</label>
+                                <select id="gfx-monitor">
+                                    <option value="">Loading...</option>
+                                </select>
+                            </div>
+                            <div class="control-group third">
                                 <label>Scale Down Res</label>
                                 <select id="gfx-resolution">
                                     <option value="1.0" selected>1.0 (Native)</option>

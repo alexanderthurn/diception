@@ -393,45 +393,135 @@ async function init() {
         const savedRes = localStorage.getItem('dicy_gfx_resolution') || '1.0';
         if (gfxResolution) gfxResolution.value = savedRes;
 
-        const applyDesktopGraphics = async (modeVal, scaleVal) => {
-            try {
-                const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                const win = getCurrentWindow();
+        // Monitor selection — populate dropdown and apply saved monitor
+        const gfxMonitor = document.getElementById('gfx-monitor');
+        const savedMonitorIndex = parseInt(localStorage.getItem('dicy_gfx_monitor') ?? '-1', 10);
 
-                // Apply Mode
+        const applyMonitor = async (win, monitors, monitorIndex) => {
+            if (monitorIndex < 0 || monitorIndex >= monitors.length) {
+                console.log('[monitor] applyMonitor: index out of range', monitorIndex, monitors.length);
+                return;
+            }
+            const mon = monitors[monitorIndex];
+            const { PhysicalPosition } = await import('@tauri-apps/api/dpi');
+            // Place the window at the top-left of the target monitor with a small offset
+            // (avoids issues with centering when window is larger than monitor)
+            const x = mon.position.x + 60;
+            const y = mon.position.y + 60;
+            console.log(`[monitor] moving to monitor ${monitorIndex} "${mon.name}" at physical (${x}, ${y})`);
+            await win.setPosition(new PhysicalPosition(x, y));
+        };
+
+        const applyDesktopGraphics = async (modeVal, scaleVal, monitorIndex) => {
+            try {
+                const { getCurrentWindow, availableMonitors } = await import('@tauri-apps/api/window');
+                const win = getCurrentWindow();
+                const monitors = await availableMonitors();
+
+                console.log(`[monitor] applyDesktopGraphics mode=${modeVal} monitorIndex=${monitorIndex} monitors=${monitors.length}`);
+
+                // Must exit fullscreen before setPosition works — the OS ignores
+                // position changes while the window is in fullscreen mode.
+                const isFS = await win.isFullscreen();
+                if (isFS) {
+                    await win.setFullscreen(false);
+                    // Wait for the OS to finish restoring the windowed frame
+                    await new Promise(r => setTimeout(r, 400));
+                }
+
+                // Move to target monitor
+                await applyMonitor(win, monitors, monitorIndex);
+
+                // Apply desired display mode
                 if (modeVal === 'fullscreen') {
                     await win.setFullscreen(true);
                     await win.setDecorations(true);
                 } else {
-                    // windowed
-                    await win.setFullscreen(false);
                     await win.setDecorations(true);
                     await win.unmaximize();
                 }
 
                 if (renderer && renderer.app && renderer.app.renderer) {
                     const scaleRatio = parseFloat(scaleVal);
-
                     if (!isNaN(scaleRatio) && scaleRatio < 1.0) {
                         renderer.app.renderer.resolution = scaleRatio * Math.min(window.devicePixelRatio || 1, 1.5);
                         renderer.app.canvas.style.imageRendering = 'pixelated';
                     } else {
-                        // Reset to standard DPI bounds
                         renderer.app.renderer.resolution = Math.min(window.devicePixelRatio || 1, 1.5);
                         renderer.app.canvas.style.imageRendering = 'auto';
                     }
-
-                    // Force resize event to apply new resolution scaling inside Pixi
                     window.dispatchEvent(new Event('resize'));
                 }
-
             } catch (err) {
                 console.warn("Failed to apply Tauri window settings:", err);
             }
         };
 
-        // Apply on boot
-        setTimeout(() => applyDesktopGraphics(savedMode, savedRes), 500);
+        // Populate monitor dropdown
+        if (gfxMonitor) {
+            (async () => {
+                try {
+                    const { availableMonitors, currentMonitor } = await import('@tauri-apps/api/window');
+                    const monitors = await availableMonitors();
+                    const current = await currentMonitor();
+
+                    gfxMonitor.innerHTML = '';
+                    monitors.forEach((mon, i) => {
+                        const label = mon.name || `Monitor ${i + 1}`;
+                        const opt = document.createElement('option');
+                        opt.value = String(i);
+                        opt.textContent = `${i + 1}: ${label} (${mon.size.width}×${mon.size.height})`;
+                        gfxMonitor.appendChild(opt);
+                    });
+
+                    // Select saved, otherwise default to current monitor
+                    if (savedMonitorIndex >= 0 && savedMonitorIndex < monitors.length) {
+                        gfxMonitor.value = String(savedMonitorIndex);
+                    } else {
+                        const currentIdx = monitors.findIndex(m => m.name === current?.name);
+                        gfxMonitor.value = String(currentIdx >= 0 ? currentIdx : 0);
+                    }
+
+                    // Auto-save monitor when the user drags the window to another screen
+                    const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                    const win = getCurrentWindow();
+                    let lastMonitorName = current?.name;
+                    win.onMoved(async () => {
+                        try {
+                            const { currentMonitor: getCurrent, availableMonitors: getMonitors } = await import('@tauri-apps/api/window');
+                            const nowMonitor = await getCurrent();
+                            if (!nowMonitor || nowMonitor.name === lastMonitorName) return;
+                            lastMonitorName = nowMonitor.name;
+                            const allMonitors = await getMonitors();
+                            const idx = allMonitors.findIndex(m => m.name === nowMonitor.name);
+                            if (idx < 0) return;
+                            localStorage.setItem('dicy_gfx_monitor', String(idx));
+                            if (gfxMonitor) gfxMonitor.value = String(idx);
+                            // Flush immediately so the save survives an OS-level close
+                            await flushStorage();
+                        } catch (_) {}
+                    });
+                } catch (err) {
+                    console.warn('[monitor] Could not list monitors:', err);
+                    if (gfxMonitor) gfxMonitor.innerHTML = '<option value="">N/A</option>';
+                }
+            })();
+
+            gfxMonitor.addEventListener('change', async (e) => {
+                const idx = parseInt(e.target.value, 10);
+                localStorage.setItem('dicy_gfx_monitor', e.target.value);
+                await flushStorage();
+                await applyDesktopGraphics(
+                    localStorage.getItem('dicy_gfx_display_mode') || 'fullscreen',
+                    localStorage.getItem('dicy_gfx_resolution') || '1.0',
+                    idx
+                );
+            });
+        }
+
+        // Apply on boot — delay lets the OS finish restoring window state first
+        console.log(`[monitor] boot: savedMonitorIndex=${savedMonitorIndex} savedMode=${savedMode}`);
+        setTimeout(() => applyDesktopGraphics(savedMode, savedRes, savedMonitorIndex), 800);
 
         if (gfxDisplayMode) {
             gfxDisplayMode.addEventListener('change', async (e) => {
