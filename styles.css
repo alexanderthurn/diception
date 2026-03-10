@@ -5909,15 +5909,15 @@ canvas {
     }
 }
 
-/* Stack control-row columns on small screens */
+/* Stack settings control-row columns on small screens (settings modal only) */
 @container (max-width: 600px) {
-    .control-row {
+    #settings-modal .control-row {
         flex-direction: column;
         gap: 0;
     }
-    .control-group.third,
-    .control-group.half,
-    .control-group.quarter {
+    #settings-modal .control-group.third,
+    #settings-modal .control-group.half,
+    #settings-modal .control-group.quarter {
         flex: unset;
         width: 100%;
     }
