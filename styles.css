@@ -5724,7 +5724,9 @@ canvas {
 
 .modal-header {
     border-bottom: 1px solid rgba(0, 255, 255, 0.12);
+    padding-top: 16px;
     padding-bottom: 16px;
+    margin-top: -16px;
     margin-bottom: 24px;
 }
 
