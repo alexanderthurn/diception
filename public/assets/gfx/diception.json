@@ -1,8 +1,552 @@
 {"frames": {
 
+"achievements/ACH_CHAPTER1.png":
+{
+	"frame": {"x":322,"y":644,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER1_locked.png":
+{
+	"frame": {"x":322,"y":710,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER2.png":
+{
+	"frame": {"x":412,"y":591,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER2_locked.png":
+{
+	"frame": {"x":478,"y":591,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER3.png":
+{
+	"frame": {"x":544,"y":591,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER3_locked.png":
+{
+	"frame": {"x":388,"y":657,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER4.png":
+{
+	"frame": {"x":454,"y":657,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER4_locked.png":
+{
+	"frame": {"x":520,"y":657,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER5.png":
+{
+	"frame": {"x":388,"y":723,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER5_locked.png":
+{
+	"frame": {"x":454,"y":723,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER6.png":
+{
+	"frame": {"x":520,"y":723,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER6_locked.png":
+{
+	"frame": {"x":1039,"y":485,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER7.png":
+{
+	"frame": {"x":1039,"y":551,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER7_locked.png":
+{
+	"frame": {"x":1105,"y":480,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER8.png":
+{
+	"frame": {"x":1105,"y":546,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_CHAPTER8_locked.png":
+{
+	"frame": {"x":1171,"y":476,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_DAVID.png":
+{
+	"frame": {"x":1171,"y":542,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_DAVID_locked.png":
+{
+	"frame": {"x":1244,"y":447,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_FIRST_WIN.png":
+{
+	"frame": {"x":1237,"y":513,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_FIRST_WIN_locked.png":
+{
+	"frame": {"x":1310,"y":447,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_10.png":
+{
+	"frame": {"x":1303,"y":513,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_10_locked.png":
+{
+	"frame": {"x":1376,"y":433,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_50.png":
+{
+	"frame": {"x":1442,"y":433,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_50_locked.png":
+{
+	"frame": {"x":1237,"y":579,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_100.png":
+{
+	"frame": {"x":1303,"y":579,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_100_locked.png":
+{
+	"frame": {"x":1171,"y":608,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_150.png":
+{
+	"frame": {"x":1105,"y":612,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_150_locked.png":
+{
+	"frame": {"x":1237,"y":645,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_200.png":
+{
+	"frame": {"x":1303,"y":645,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_200_locked.png":
+{
+	"frame": {"x":1171,"y":674,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_300.png":
+{
+	"frame": {"x":1237,"y":711,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_300_locked.png":
+{
+	"frame": {"x":1303,"y":711,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_400.png":
+{
+	"frame": {"x":610,"y":607,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_400_locked.png":
+{
+	"frame": {"x":676,"y":607,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_500.png":
+{
+	"frame": {"x":586,"y":673,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_500_locked.png":
+{
+	"frame": {"x":652,"y":673,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_1000.png":
+{
+	"frame": {"x":586,"y":739,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_1000_locked.png":
+{
+	"frame": {"x":652,"y":739,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_10000.png":
+{
+	"frame": {"x":742,"y":609,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_GAMES_10000_locked.png":
+{
+	"frame": {"x":808,"y":609,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_STREAK_3.png":
+{
+	"frame": {"x":874,"y":609,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_STREAK_3_locked.png":
+{
+	"frame": {"x":940,"y":611,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_STREAK_4.png":
+{
+	"frame": {"x":718,"y":675,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_STREAK_4_locked.png":
+{
+	"frame": {"x":784,"y":675,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_STREAK_5.png":
+{
+	"frame": {"x":850,"y":675,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_STREAK_5_locked.png":
+{
+	"frame": {"x":718,"y":741,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_STREAK_6.png":
+{
+	"frame": {"x":784,"y":741,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_STREAK_6_locked.png":
+{
+	"frame": {"x":850,"y":741,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_STREAK_7.png":
+{
+	"frame": {"x":916,"y":677,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_STREAK_7_locked.png":
+{
+	"frame": {"x":916,"y":743,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_SURVIVOR.png":
+{
+	"frame": {"x":1006,"y":617,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_SURVIVOR_locked.png":
+{
+	"frame": {"x":982,"y":683,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_TUTORIAL.png":
+{
+	"frame": {"x":982,"y":749,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_TUTORIAL_locked.png":
+{
+	"frame": {"x":1048,"y":683,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_5.png":
+{
+	"frame": {"x":1048,"y":749,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_5_locked.png":
+{
+	"frame": {"x":1166,"y":740,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_10.png":
+{
+	"frame": {"x":1166,"y":806,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_10_locked.png":
+{
+	"frame": {"x":1232,"y":777,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_50.png":
+{
+	"frame": {"x":1298,"y":777,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_50_locked.png":
+{
+	"frame": {"x":1232,"y":843,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_100.png":
+{
+	"frame": {"x":1298,"y":843,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_100_locked.png":
+{
+	"frame": {"x":322,"y":776,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_500.png":
+{
+	"frame": {"x":388,"y":789,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_500_locked.png":
+{
+	"frame": {"x":454,"y":789,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_1000.png":
+{
+	"frame": {"x":520,"y":789,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_1000_locked.png":
+{
+	"frame": {"x":586,"y":805,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_10000.png":
+{
+	"frame": {"x":652,"y":805,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+"achievements/ACH_UNDERDOG_10000_locked.png":
+{
+	"frame": {"x":718,"y":807,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
 "controls/keyboard/Default/keyboard_0.png":
 {
-	"frame": {"x":308,"y":582,"w":50,"h":50},
+	"frame": {"x":308,"y":592,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -10,7 +554,7 @@
 },
 "controls/keyboard/Default/keyboard_1.png":
 {
-	"frame": {"x":184,"y":825,"w":50,"h":50},
+	"frame": {"x":425,"y":402,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -18,7 +562,7 @@
 },
 "controls/keyboard/Default/keyboard_2.png":
 {
-	"frame": {"x":236,"y":825,"w":50,"h":50},
+	"frame": {"x":360,"y":592,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -26,7 +570,7 @@
 },
 "controls/keyboard/Default/keyboard_3.png":
 {
-	"frame": {"x":288,"y":825,"w":50,"h":50},
+	"frame": {"x":1114,"y":678,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -34,7 +578,7 @@
 },
 "controls/keyboard/Default/keyboard_4.png":
 {
-	"frame": {"x":182,"y":877,"w":50,"h":50},
+	"frame": {"x":1114,"y":730,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -42,7 +586,7 @@
 },
 "controls/keyboard/Default/keyboard_5.png":
 {
-	"frame": {"x":182,"y":929,"w":50,"h":50},
+	"frame": {"x":1114,"y":782,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -50,7 +594,7 @@
 },
 "controls/keyboard/Default/keyboard_6.png":
 {
-	"frame": {"x":234,"y":877,"w":50,"h":50},
+	"frame": {"x":784,"y":807,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -58,7 +602,7 @@
 },
 "controls/keyboard/Default/keyboard_7.png":
 {
-	"frame": {"x":182,"y":981,"w":50,"h":50},
+	"frame": {"x":836,"y":807,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -66,7 +610,7 @@
 },
 "controls/keyboard/Default/keyboard_8.png":
 {
-	"frame": {"x":234,"y":929,"w":50,"h":50},
+	"frame": {"x":916,"y":809,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -74,7 +618,7 @@
 },
 "controls/keyboard/Default/keyboard_9.png":
 {
-	"frame": {"x":286,"y":877,"w":50,"h":50},
+	"frame": {"x":968,"y":815,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -82,7 +626,7 @@
 },
 "controls/keyboard/Default/keyboard_a.png":
 {
-	"frame": {"x":182,"y":1033,"w":50,"h":50},
+	"frame": {"x":1020,"y":815,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -90,7 +634,7 @@
 },
 "controls/keyboard/Default/keyboard_alt.png":
 {
-	"frame": {"x":598,"y":1175,"w":50,"h":38},
+	"frame": {"x":1110,"y":834,"w":50,"h":38},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":13,"w":50,"h":38},
@@ -98,7 +642,7 @@
 },
 "controls/keyboard/Default/keyboard_arrow_down.png":
 {
-	"frame": {"x":234,"y":981,"w":50,"h":50},
+	"frame": {"x":184,"y":812,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -106,7 +650,7 @@
 },
 "controls/keyboard/Default/keyboard_arrow_left.png":
 {
-	"frame": {"x":286,"y":929,"w":50,"h":50},
+	"frame": {"x":182,"y":864,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -114,7 +658,7 @@
 },
 "controls/keyboard/Default/keyboard_arrow_right.png":
 {
-	"frame": {"x":182,"y":1085,"w":50,"h":50},
+	"frame": {"x":182,"y":916,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -122,7 +666,7 @@
 },
 "controls/keyboard/Default/keyboard_arrow_up.png":
 {
-	"frame": {"x":234,"y":1033,"w":50,"h":50},
+	"frame": {"x":236,"y":812,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -130,7 +674,7 @@
 },
 "controls/keyboard/Default/keyboard_b.png":
 {
-	"frame": {"x":286,"y":981,"w":50,"h":50},
+	"frame": {"x":234,"y":864,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -138,7 +682,7 @@
 },
 "controls/keyboard/Default/keyboard_backspace_icon.png":
 {
-	"frame": {"x":182,"y":1189,"w":50,"h":34},
+	"frame": {"x":1376,"y":499,"w":50,"h":34},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
@@ -146,7 +690,7 @@
 },
 "controls/keyboard/Default/keyboard_c.png":
 {
-	"frame": {"x":182,"y":1137,"w":50,"h":50},
+	"frame": {"x":234,"y":916,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -154,7 +698,7 @@
 },
 "controls/keyboard/Default/keyboard_ctrl.png":
 {
-	"frame": {"x":650,"y":1175,"w":50,"h":38},
+	"frame": {"x":182,"y":968,"w":50,"h":38},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":13,"w":50,"h":38},
@@ -162,7 +706,7 @@
 },
 "controls/keyboard/Default/keyboard_d.png":
 {
-	"frame": {"x":234,"y":1085,"w":50,"h":50},
+	"frame": {"x":1369,"y":535,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -170,7 +714,7 @@
 },
 "controls/keyboard/Default/keyboard_e.png":
 {
-	"frame": {"x":286,"y":1033,"w":50,"h":50},
+	"frame": {"x":1369,"y":587,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -178,7 +722,7 @@
 },
 "controls/keyboard/Default/keyboard_end.png":
 {
-	"frame": {"x":234,"y":1137,"w":50,"h":50},
+	"frame": {"x":1369,"y":639,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -186,7 +730,7 @@
 },
 "controls/keyboard/Default/keyboard_escape.png":
 {
-	"frame": {"x":286,"y":1085,"w":50,"h":50},
+	"frame": {"x":1369,"y":691,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -194,7 +738,7 @@
 },
 "controls/keyboard/Default/keyboard_f.png":
 {
-	"frame": {"x":286,"y":1137,"w":50,"h":50},
+	"frame": {"x":1428,"y":499,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -202,7 +746,7 @@
 },
 "controls/keyboard/Default/keyboard_f1.png":
 {
-	"frame": {"x":338,"y":892,"w":50,"h":50},
+	"frame": {"x":1421,"y":551,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -210,7 +754,7 @@
 },
 "controls/keyboard/Default/keyboard_f2.png":
 {
-	"frame": {"x":390,"y":892,"w":50,"h":50},
+	"frame": {"x":1421,"y":603,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -218,7 +762,7 @@
 },
 "controls/keyboard/Default/keyboard_f3.png":
 {
-	"frame": {"x":338,"y":944,"w":50,"h":50},
+	"frame": {"x":1421,"y":655,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -226,7 +770,7 @@
 },
 "controls/keyboard/Default/keyboard_f4.png":
 {
-	"frame": {"x":442,"y":892,"w":50,"h":50},
+	"frame": {"x":1421,"y":707,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -234,7 +778,7 @@
 },
 "controls/keyboard/Default/keyboard_f5.png":
 {
-	"frame": {"x":338,"y":996,"w":50,"h":50},
+	"frame": {"x":1369,"y":743,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -242,7 +786,7 @@
 },
 "controls/keyboard/Default/keyboard_f6.png":
 {
-	"frame": {"x":390,"y":944,"w":50,"h":50},
+	"frame": {"x":1364,"y":795,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -250,7 +794,7 @@
 },
 "controls/keyboard/Default/keyboard_f7.png":
 {
-	"frame": {"x":338,"y":1048,"w":50,"h":50},
+	"frame": {"x":1364,"y":847,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -258,7 +802,7 @@
 },
 "controls/keyboard/Default/keyboard_f8.png":
 {
-	"frame": {"x":390,"y":996,"w":50,"h":50},
+	"frame": {"x":1421,"y":759,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -266,7 +810,7 @@
 },
 "controls/keyboard/Default/keyboard_f9.png":
 {
-	"frame": {"x":442,"y":944,"w":50,"h":50},
+	"frame": {"x":1416,"y":811,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -274,7 +818,7 @@
 },
 "controls/keyboard/Default/keyboard_f10.png":
 {
-	"frame": {"x":338,"y":1100,"w":50,"h":50},
+	"frame": {"x":1416,"y":863,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -282,7 +826,7 @@
 },
 "controls/keyboard/Default/keyboard_f11.png":
 {
-	"frame": {"x":390,"y":1048,"w":50,"h":50},
+	"frame": {"x":1480,"y":499,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -290,7 +834,7 @@
 },
 "controls/keyboard/Default/keyboard_f12.png":
 {
-	"frame": {"x":442,"y":996,"w":50,"h":50},
+	"frame": {"x":1473,"y":551,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -298,7 +842,7 @@
 },
 "controls/keyboard/Default/keyboard_g.png":
 {
-	"frame": {"x":338,"y":1152,"w":50,"h":50},
+	"frame": {"x":1473,"y":603,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -306,7 +850,7 @@
 },
 "controls/keyboard/Default/keyboard_h.png":
 {
-	"frame": {"x":390,"y":1100,"w":50,"h":50},
+	"frame": {"x":1473,"y":655,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -314,7 +858,7 @@
 },
 "controls/keyboard/Default/keyboard_home.png":
 {
-	"frame": {"x":442,"y":1048,"w":50,"h":50},
+	"frame": {"x":1473,"y":707,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -322,7 +866,7 @@
 },
 "controls/keyboard/Default/keyboard_i.png":
 {
-	"frame": {"x":390,"y":1152,"w":50,"h":50},
+	"frame": {"x":1473,"y":759,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -330,7 +874,7 @@
 },
 "controls/keyboard/Default/keyboard_j.png":
 {
-	"frame": {"x":442,"y":1100,"w":50,"h":50},
+	"frame": {"x":1468,"y":811,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -338,7 +882,7 @@
 },
 "controls/keyboard/Default/keyboard_k.png":
 {
-	"frame": {"x":442,"y":1152,"w":50,"h":50},
+	"frame": {"x":1468,"y":863,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -346,7 +890,7 @@
 },
 "controls/keyboard/Default/keyboard_l.png":
 {
-	"frame": {"x":494,"y":899,"w":50,"h":50},
+	"frame": {"x":1364,"y":899,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -354,7 +898,7 @@
 },
 "controls/keyboard/Default/keyboard_m.png":
 {
-	"frame": {"x":494,"y":951,"w":50,"h":50},
+	"frame": {"x":1416,"y":915,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -362,7 +906,7 @@
 },
 "controls/keyboard/Default/keyboard_n.png":
 {
-	"frame": {"x":546,"y":899,"w":50,"h":50},
+	"frame": {"x":1468,"y":915,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -370,7 +914,7 @@
 },
 "controls/keyboard/Default/keyboard_o.png":
 {
-	"frame": {"x":494,"y":1003,"w":50,"h":50},
+	"frame": {"x":784,"y":859,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -378,7 +922,7 @@
 },
 "controls/keyboard/Default/keyboard_p.png":
 {
-	"frame": {"x":546,"y":951,"w":50,"h":50},
+	"frame": {"x":836,"y":859,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -386,7 +930,7 @@
 },
 "controls/keyboard/Default/keyboard_page_down.png":
 {
-	"frame": {"x":494,"y":1055,"w":50,"h":50},
+	"frame": {"x":888,"y":861,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -394,7 +938,7 @@
 },
 "controls/keyboard/Default/keyboard_page_up.png":
 {
-	"frame": {"x":546,"y":1003,"w":50,"h":50},
+	"frame": {"x":940,"y":867,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -402,7 +946,7 @@
 },
 "controls/keyboard/Default/keyboard_q.png":
 {
-	"frame": {"x":494,"y":1107,"w":50,"h":50},
+	"frame": {"x":992,"y":867,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -410,7 +954,7 @@
 },
 "controls/keyboard/Default/keyboard_r.png":
 {
-	"frame": {"x":546,"y":1055,"w":50,"h":50},
+	"frame": {"x":1044,"y":867,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -418,7 +962,7 @@
 },
 "controls/keyboard/Default/keyboard_return.png":
 {
-	"frame": {"x":546,"y":1107,"w":50,"h":50},
+	"frame": {"x":1096,"y":874,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -426,7 +970,7 @@
 },
 "controls/keyboard/Default/keyboard_s.png":
 {
-	"frame": {"x":494,"y":1159,"w":50,"h":50},
+	"frame": {"x":1148,"y":874,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -434,7 +978,7 @@
 },
 "controls/keyboard/Default/keyboard_shift_icon.png":
 {
-	"frame": {"x":234,"y":1189,"w":50,"h":34},
+	"frame": {"x":286,"y":968,"w":50,"h":34},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
@@ -442,7 +986,7 @@
 },
 "controls/keyboard/Default/keyboard_space_icon.png":
 {
-	"frame": {"x":546,"y":1159,"w":50,"h":50},
+	"frame": {"x":286,"y":864,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -450,7 +994,7 @@
 },
 "controls/keyboard/Default/keyboard_t.png":
 {
-	"frame": {"x":598,"y":915,"w":50,"h":50},
+	"frame": {"x":286,"y":916,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -458,7 +1002,7 @@
 },
 "controls/keyboard/Default/keyboard_tab.png":
 {
-	"frame": {"x":702,"y":1175,"w":50,"h":38},
+	"frame": {"x":234,"y":968,"w":50,"h":38},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":13,"w":50,"h":38},
@@ -466,7 +1010,7 @@
 },
 "controls/keyboard/Default/keyboard_u.png":
 {
-	"frame": {"x":598,"y":967,"w":50,"h":50},
+	"frame": {"x":338,"y":890,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -474,7 +1018,7 @@
 },
 "controls/keyboard/Default/keyboard_v.png":
 {
-	"frame": {"x":650,"y":915,"w":50,"h":50},
+	"frame": {"x":338,"y":942,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -482,7 +1026,7 @@
 },
 "controls/keyboard/Default/keyboard_w.png":
 {
-	"frame": {"x":598,"y":1019,"w":50,"h":50},
+	"frame": {"x":390,"y":855,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -490,7 +1034,7 @@
 },
 "controls/keyboard/Default/keyboard_x.png":
 {
-	"frame": {"x":650,"y":967,"w":50,"h":50},
+	"frame": {"x":442,"y":855,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -498,7 +1042,7 @@
 },
 "controls/keyboard/Default/keyboard_y.png":
 {
-	"frame": {"x":702,"y":915,"w":50,"h":50},
+	"frame": {"x":390,"y":907,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -506,7 +1050,7 @@
 },
 "controls/keyboard/Default/keyboard_z.png":
 {
-	"frame": {"x":598,"y":1071,"w":50,"h":50},
+	"frame": {"x":494,"y":855,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -514,7 +1058,7 @@
 },
 "controls/keyboard/Default/mouse_left.png":
 {
-	"frame": {"x":984,"y":594,"w":36,"h":46},
+	"frame": {"x":1072,"y":815,"w":36,"h":46},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":14,"y":9,"w":36,"h":46},
@@ -522,7 +1066,7 @@
 },
 "controls/keyboard/Default/mouse_right.png":
 {
-	"frame": {"x":962,"y":1001,"w":36,"h":46},
+	"frame": {"x":1508,"y":433,"w":36,"h":46},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":14,"y":9,"w":36,"h":46},
@@ -530,7 +1074,7 @@
 },
 "controls/keyboard/Default/mouse_scroll.png":
 {
-	"frame": {"x":962,"y":1049,"w":36,"h":46},
+	"frame": {"x":546,"y":855,"w":36,"h":46},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":14,"y":9,"w":36,"h":46},
@@ -538,7 +1082,7 @@
 },
 "controls/keyboard/Default/mouse_scroll_down.png":
 {
-	"frame": {"x":962,"y":1097,"w":36,"h":46},
+	"frame": {"x":1326,"y":909,"w":36,"h":46},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":14,"y":9,"w":36,"h":46},
@@ -546,7 +1090,7 @@
 },
 "controls/keyboard/Default/mouse_scroll_up.png":
 {
-	"frame": {"x":984,"y":539,"w":36,"h":53},
+	"frame": {"x":387,"y":402,"w":36,"h":53},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":14,"y":2,"w":36,"h":53},
@@ -554,7 +1098,7 @@
 },
 "controls/playstation/Default/playstation4_button_options.png":
 {
-	"frame": {"x":910,"y":1155,"w":46,"h":46},
+	"frame": {"x":338,"y":842,"w":46,"h":46},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":9,"y":9,"w":46,"h":46},
@@ -562,7 +1106,7 @@
 },
 "controls/playstation/Default/playstation4_button_share.png":
 {
-	"frame": {"x":958,"y":1155,"w":36,"h":46},
+	"frame": {"x":1326,"y":957,"w":36,"h":46},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":14,"y":9,"w":36,"h":46},
@@ -570,7 +1114,7 @@
 },
 "controls/playstation/Default/playstation5_button_create.png":
 {
-	"frame": {"x":990,"y":1,"w":26,"h":47},
+	"frame": {"x":888,"y":807,"w":26,"h":47},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":17,"y":10,"w":26,"h":47},
@@ -578,7 +1122,7 @@
 },
 "controls/playstation/Default/playstation5_button_options.png":
 {
-	"frame": {"x":990,"y":50,"w":22,"h":48},
+	"frame": {"x":1072,"y":617,"w":22,"h":48},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":21,"y":9,"w":22,"h":48},
@@ -586,7 +1130,7 @@
 },
 "controls/playstation/Default/playstation_button_color_circle.png":
 {
-	"frame": {"x":650,"y":1019,"w":50,"h":50},
+	"frame": {"x":442,"y":907,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -594,7 +1138,7 @@
 },
 "controls/playstation/Default/playstation_button_color_cross.png":
 {
-	"frame": {"x":702,"y":967,"w":50,"h":50},
+	"frame": {"x":494,"y":907,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -602,7 +1146,7 @@
 },
 "controls/playstation/Default/playstation_button_color_square.png":
 {
-	"frame": {"x":598,"y":1123,"w":50,"h":50},
+	"frame": {"x":390,"y":959,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -610,7 +1154,7 @@
 },
 "controls/playstation/Default/playstation_button_color_triangle.png":
 {
-	"frame": {"x":650,"y":1071,"w":50,"h":50},
+	"frame": {"x":442,"y":959,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -618,7 +1162,7 @@
 },
 "controls/playstation/Default/playstation_button_l3.png":
 {
-	"frame": {"x":702,"y":1019,"w":50,"h":50},
+	"frame": {"x":494,"y":959,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -626,7 +1170,7 @@
 },
 "controls/playstation/Default/playstation_button_r3.png":
 {
-	"frame": {"x":650,"y":1123,"w":50,"h":50},
+	"frame": {"x":546,"y":903,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -634,7 +1178,7 @@
 },
 "controls/playstation/Default/playstation_dpad_down.png":
 {
-	"frame": {"x":702,"y":1071,"w":50,"h":50},
+	"frame": {"x":546,"y":955,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -642,7 +1186,7 @@
 },
 "controls/playstation/Default/playstation_dpad_left.png":
 {
-	"frame": {"x":702,"y":1123,"w":50,"h":50},
+	"frame": {"x":598,"y":871,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -650,7 +1194,7 @@
 },
 "controls/playstation/Default/playstation_dpad_right.png":
 {
-	"frame": {"x":754,"y":915,"w":50,"h":50},
+	"frame": {"x":598,"y":923,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -658,7 +1202,7 @@
 },
 "controls/playstation/Default/playstation_dpad_up.png":
 {
-	"frame": {"x":754,"y":967,"w":50,"h":50},
+	"frame": {"x":650,"y":871,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -666,7 +1210,7 @@
 },
 "controls/playstation/Default/playstation_stick_l.png":
 {
-	"frame": {"x":754,"y":1019,"w":50,"h":50},
+	"frame": {"x":650,"y":923,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -674,7 +1218,7 @@
 },
 "controls/playstation/Default/playstation_stick_r.png":
 {
-	"frame": {"x":754,"y":1071,"w":50,"h":50},
+	"frame": {"x":702,"y":873,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -682,7 +1226,7 @@
 },
 "controls/playstation/Default/playstation_trigger_l1.png":
 {
-	"frame": {"x":806,"y":913,"w":42,"h":46},
+	"frame": {"x":858,"y":965,"w":42,"h":46},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":11,"y":9,"w":42,"h":46},
@@ -690,7 +1234,7 @@
 },
 "controls/playstation/Default/playstation_trigger_l2.png":
 {
-	"frame": {"x":754,"y":1123,"w":50,"h":50},
+	"frame": {"x":702,"y":925,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -698,7 +1242,7 @@
 },
 "controls/playstation/Default/playstation_trigger_r1.png":
 {
-	"frame": {"x":806,"y":961,"w":42,"h":46},
+	"frame": {"x":1274,"y":961,"w":42,"h":46},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":11,"y":9,"w":42,"h":46},
@@ -706,7 +1250,7 @@
 },
 "controls/playstation/Default/playstation_trigger_r2.png":
 {
-	"frame": {"x":850,"y":915,"w":50,"h":50},
+	"frame": {"x":754,"y":911,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -714,7 +1258,7 @@
 },
 "controls/xbox/Default/xbox_button_back_icon.png":
 {
-	"frame": {"x":286,"y":1189,"w":50,"h":34},
+	"frame": {"x":598,"y":975,"w":50,"h":34},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
@@ -722,7 +1266,7 @@
 },
 "controls/xbox/Default/xbox_button_color_a.png":
 {
-	"frame": {"x":806,"y":1009,"w":50,"h":50},
+	"frame": {"x":806,"y":911,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -730,7 +1274,7 @@
 },
 "controls/xbox/Default/xbox_button_color_b.png":
 {
-	"frame": {"x":806,"y":1061,"w":50,"h":50},
+	"frame": {"x":858,"y":913,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -738,7 +1282,7 @@
 },
 "controls/xbox/Default/xbox_button_color_x.png":
 {
-	"frame": {"x":806,"y":1113,"w":50,"h":50},
+	"frame": {"x":910,"y":919,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -746,7 +1290,7 @@
 },
 "controls/xbox/Default/xbox_button_color_y.png":
 {
-	"frame": {"x":806,"y":1165,"w":50,"h":50},
+	"frame": {"x":962,"y":919,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -754,7 +1298,7 @@
 },
 "controls/xbox/Default/xbox_button_menu.png":
 {
-	"frame": {"x":858,"y":1003,"w":50,"h":50},
+	"frame": {"x":1014,"y":919,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -762,7 +1306,7 @@
 },
 "controls/xbox/Default/xbox_button_start_icon.png":
 {
-	"frame": {"x":850,"y":967,"w":50,"h":34},
+	"frame": {"x":650,"y":975,"w":50,"h":34},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
@@ -770,7 +1314,7 @@
 },
 "controls/xbox/Default/xbox_button_view.png":
 {
-	"frame": {"x":858,"y":1055,"w":50,"h":50},
+	"frame": {"x":1066,"y":926,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -778,7 +1322,7 @@
 },
 "controls/xbox/Default/xbox_dpad_down.png":
 {
-	"frame": {"x":858,"y":1107,"w":50,"h":50},
+	"frame": {"x":1118,"y":926,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -786,7 +1330,7 @@
 },
 "controls/xbox/Default/xbox_dpad_left.png":
 {
-	"frame": {"x":858,"y":1159,"w":50,"h":50},
+	"frame": {"x":1170,"y":926,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -794,7 +1338,7 @@
 },
 "controls/xbox/Default/xbox_dpad_right.png":
 {
-	"frame": {"x":902,"y":915,"w":50,"h":50},
+	"frame": {"x":1222,"y":909,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -802,7 +1346,7 @@
 },
 "controls/xbox/Default/xbox_dpad_up.png":
 {
-	"frame": {"x":954,"y":913,"w":50,"h":50},
+	"frame": {"x":1274,"y":909,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -810,7 +1354,7 @@
 },
 "controls/xbox/Default/xbox_lb.png":
 {
-	"frame": {"x":902,"y":967,"w":50,"h":34},
+	"frame": {"x":702,"y":977,"w":50,"h":34},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
@@ -818,7 +1362,7 @@
 },
 "controls/xbox/Default/xbox_ls.png":
 {
-	"frame": {"x":910,"y":1003,"w":50,"h":50},
+	"frame": {"x":1364,"y":951,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -826,7 +1370,7 @@
 },
 "controls/xbox/Default/xbox_lt.png":
 {
-	"frame": {"x":754,"y":1175,"w":50,"h":46},
+	"frame": {"x":754,"y":963,"w":50,"h":46},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":9,"w":50,"h":46},
@@ -834,7 +1378,7 @@
 },
 "controls/xbox/Default/xbox_rb.png":
 {
-	"frame": {"x":954,"y":965,"w":50,"h":34},
+	"frame": {"x":902,"y":971,"w":50,"h":34},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":15,"w":50,"h":34},
@@ -842,7 +1386,7 @@
 },
 "controls/xbox/Default/xbox_rs.png":
 {
-	"frame": {"x":910,"y":1055,"w":50,"h":50},
+	"frame": {"x":1222,"y":961,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -850,7 +1394,7 @@
 },
 "controls/xbox/Default/xbox_rt.png":
 {
-	"frame": {"x":910,"y":1107,"w":50,"h":46},
+	"frame": {"x":806,"y":963,"w":50,"h":46},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":9,"w":50,"h":46},
@@ -858,7 +1402,7 @@
 },
 "controls/xbox/Default/xbox_stick_l.png":
 {
-	"frame": {"x":754,"y":1019,"w":50,"h":50},
+	"frame": {"x":650,"y":923,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -866,7 +1410,7 @@
 },
 "controls/xbox/Default/xbox_stick_r.png":
 {
-	"frame": {"x":754,"y":1071,"w":50,"h":50},
+	"frame": {"x":702,"y":873,"w":50,"h":50},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":7,"y":7,"w":50,"h":50},
@@ -882,7 +1426,7 @@
 },
 "game/die_d1.png":
 {
-	"frame": {"x":308,"y":458,"w":60,"h":122},
+	"frame": {"x":572,"y":467,"w":60,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":91,"y":65,"w":60,"h":122},
@@ -890,7 +1434,7 @@
 },
 "game/die_d2.png":
 {
-	"frame": {"x":389,"y":404,"w":86,"h":122},
+	"frame": {"x":863,"y":485,"w":86,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":82,"y":65,"w":86,"h":122},
@@ -898,7 +1442,7 @@
 },
 "game/die_d3.png":
 {
-	"frame": {"x":389,"y":278,"w":86,"h":124},
+	"frame": {"x":951,"y":485,"w":86,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":84,"y":65,"w":86,"h":124},
@@ -906,7 +1450,7 @@
 },
 "game/die_d4.png":
 {
-	"frame": {"x":530,"y":775,"w":91,"h":122},
+	"frame": {"x":387,"y":278,"w":91,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":82,"y":65,"w":91,"h":122},
@@ -914,7 +1458,7 @@
 },
 "game/die_d5.png":
 {
-	"frame": {"x":761,"y":789,"w":87,"h":122},
+	"frame": {"x":774,"y":485,"w":87,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":85,"y":67,"w":87,"h":122},
@@ -930,7 +1474,7 @@
 },
 "game/die_d7.png":
 {
-	"frame": {"x":936,"y":791,"w":84,"h":120},
+	"frame": {"x":1158,"y":354,"w":84,"h":120},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":85,"y":67,"w":84,"h":120},
@@ -938,7 +1482,7 @@
 },
 "game/die_d8.png":
 {
-	"frame": {"x":850,"y":789,"w":84,"h":124},
+	"frame": {"x":985,"y":359,"w":84,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":85,"y":65,"w":84,"h":124},
@@ -946,7 +1490,7 @@
 },
 "game/die_d9.png":
 {
-	"frame": {"x":936,"y":665,"w":85,"h":124},
+	"frame": {"x":1071,"y":354,"w":85,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":84,"y":65,"w":85,"h":124},
@@ -954,7 +1498,7 @@
 },
 "game/die_d10.png":
 {
-	"frame": {"x":364,"y":766,"w":164,"h":124},
+	"frame": {"x":1360,"y":307,"w":164,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":164,"h":124},
@@ -962,7 +1506,7 @@
 },
 "game/die_d11.png":
 {
-	"frame": {"x":795,"y":665,"w":138,"h":122},
+	"frame": {"x":634,"y":483,"w":138,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":52,"y":65,"w":138,"h":122},
@@ -970,7 +1514,7 @@
 },
 "game/die_d12.png":
 {
-	"frame": {"x":629,"y":654,"w":164,"h":122},
+	"frame": {"x":406,"y":467,"w":164,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":164,"h":122},
@@ -978,7 +1522,7 @@
 },
 "game/die_d13.png":
 {
-	"frame": {"x":364,"y":640,"w":165,"h":124},
+	"frame": {"x":818,"y":359,"w":165,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":165,"h":124},
@@ -986,7 +1530,7 @@
 },
 "game/die_d14.png":
 {
-	"frame": {"x":477,"y":516,"w":168,"h":122},
+	"frame": {"x":480,"y":343,"w":168,"h":122},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":168,"h":122},
@@ -994,7 +1538,7 @@
 },
 "game/die_d15.png":
 {
-	"frame": {"x":647,"y":528,"w":167,"h":124},
+	"frame": {"x":1360,"y":181,"w":167,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":167,"h":124},
@@ -1002,7 +1546,7 @@
 },
 "game/die_d16.png":
 {
-	"frame": {"x":816,"y":539,"w":166,"h":124},
+	"frame": {"x":650,"y":357,"w":166,"h":124},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":48,"y":65,"w":166,"h":124},
@@ -1010,7 +1554,7 @@
 },
 "game/icon_assign.png":
 {
-	"frame": {"x":1,"y":1010,"w":179,"h":178},
+	"frame": {"x":1172,"y":1,"w":179,"h":178},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":37,"y":33,"w":179,"h":178},
@@ -1026,7 +1570,7 @@
 },
 "game/icon_autoplay.png":
 {
-	"frame": {"x":659,"y":357,"w":160,"h":169},
+	"frame": {"x":1198,"y":181,"w":160,"h":169},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":47,"y":34,"w":160,"h":169},
@@ -1042,7 +1586,7 @@
 },
 "game/icon_close.png":
 {
-	"frame": {"x":623,"y":778,"w":136,"h":135},
+	"frame": {"x":184,"y":646,"w":136,"h":135},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":60,"y":60,"w":136,"h":135},
@@ -1074,7 +1618,7 @@
 },
 "game/icon_help.png":
 {
-	"frame": {"x":531,"y":640,"w":96,"h":133},
+	"frame": {"x":308,"y":457,"w":96,"h":133},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":80,"y":58,"w":96,"h":133},
@@ -1098,7 +1642,7 @@
 },
 "game/icon_music_off.png":
 {
-	"frame": {"x":821,"y":359,"w":178,"h":178},
+	"frame": {"x":1353,"y":1,"w":178,"h":178},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":35,"w":178,"h":178},
@@ -1106,7 +1650,7 @@
 },
 "game/icon_music_on.png":
 {
-	"frame": {"x":184,"y":646,"w":178,"h":177},
+	"frame": {"x":207,"y":278,"w":178,"h":177},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":36,"w":178,"h":177},
@@ -1138,7 +1682,7 @@
 },
 "game/icon_scenario.png":
 {
-	"frame": {"x":477,"y":343,"w":180,"h":171},
+	"frame": {"x":1016,"y":181,"w":180,"h":171},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":36,"y":36,"w":180,"h":171},
@@ -1162,7 +1706,7 @@
 },
 "game/icon_sfx_on.png":
 {
-	"frame": {"x":207,"y":278,"w":180,"h":178},
+	"frame": {"x":990,"y":1,"w":180,"h":178},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":37,"y":33,"w":180,"h":178},
@@ -1170,7 +1714,7 @@
 },
 "game/icon_zoom_in.png":
 {
-	"frame": {"x":370,"y":528,"w":95,"h":93},
+	"frame": {"x":1244,"y":352,"w":95,"h":93},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":80,"y":80,"w":95,"h":93},
@@ -1178,13 +1722,14 @@
 },
 "game/icon_zoom_out.png":
 {
-	"frame": {"x":1,"y":1190,"w":95,"h":27},
+	"frame": {"x":184,"y":783,"w":95,"h":27},
 	"rotated": false,
 	"trimmed": true,
 	"spriteSourceSize": {"x":80,"y":113,"w":95,"h":27},
 	"sourceSize": {"w":256,"h":256}
 }},
 "animations": {
+	"achievements/ACH_CHAPTER": ["achievements/ACH_CHAPTER1.png","achievements/ACH_CHAPTER2.png","achievements/ACH_CHAPTER3.png","achievements/ACH_CHAPTER4.png","achievements/ACH_CHAPTER5.png","achievements/ACH_CHAPTER6.png","achievements/ACH_CHAPTER7.png","achievements/ACH_CHAPTER8.png"],
 	"controls/keyboard/Default/keyboard": ["controls/keyboard/Default/keyboard_0.png","controls/keyboard/Default/keyboard_1.png","controls/keyboard/Default/keyboard_2.png","controls/keyboard/Default/keyboard_3.png","controls/keyboard/Default/keyboard_4.png","controls/keyboard/Default/keyboard_5.png","controls/keyboard/Default/keyboard_6.png","controls/keyboard/Default/keyboard_7.png","controls/keyboard/Default/keyboard_8.png","controls/keyboard/Default/keyboard_9.png"],
 	"controls/keyboard/Default/keyboard_f": ["controls/keyboard/Default/keyboard_f1.png","controls/keyboard/Default/keyboard_f2.png","controls/keyboard/Default/keyboard_f3.png","controls/keyboard/Default/keyboard_f4.png","controls/keyboard/Default/keyboard_f5.png","controls/keyboard/Default/keyboard_f6.png","controls/keyboard/Default/keyboard_f7.png","controls/keyboard/Default/keyboard_f8.png","controls/keyboard/Default/keyboard_f9.png","controls/keyboard/Default/keyboard_f10.png","controls/keyboard/Default/keyboard_f11.png","controls/keyboard/Default/keyboard_f12.png"],
 	"controls/playstation/Default/playstation_trigger_l": ["controls/playstation/Default/playstation_trigger_l1.png","controls/playstation/Default/playstation_trigger_l2.png"],
@@ -1196,8 +1741,8 @@
 	"version": "1.1",
 	"image": "diception.png",
 	"format": "RGBA8888",
-	"size": {"w":1022,"h":1224},
+	"size": {"w":1545,"h":1012},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:6985ca0f2708e89907e655d8ced623cc:d6a468c74ea3dc4fbf67637b9ff7ff3c:c8957ea805ce385ea1446de7aef809f3$"
+	"smartupdate": "$TexturePacker:SmartUpdate:a0f0488bb0403deffa5b372d5a71ecaf:987bfcfc9565308d0c8a14d1c87cab63:c8957ea805ce385ea1446de7aef809f3$"
 }
 }

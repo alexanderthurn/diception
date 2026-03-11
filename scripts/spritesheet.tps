@@ -124,7 +124,7 @@
             <key>data</key>
             <struct type="DataFile">
                 <key>name</key>
-                <filename>../public/gfx/diception.json</filename>
+                <filename>../public/assets/gfx/diception.json</filename>
             </struct>
         </map>
         <key>multiPackMode</key>
