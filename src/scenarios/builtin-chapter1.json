@@ -1,6 +1,6 @@
 {
-  "id": "classic",
-  "owner": "steam-campaign",
+  "id": "chapter1",
+  "owner": "chapter1",
   "levels": [
     {
       "type": "config",

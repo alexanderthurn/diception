@@ -166,9 +166,11 @@ export class ScenarioBrowser {
 
     getCampaignDisplayName(c) {
         const nameMap = {
-            'steam-campaign': 'Chapter 1',
-            'maps': 'Chapter 2',
-            'scenarios': 'Chapter 3',
+            'Tutorial': 'Tutorial',
+            'chapter1': 'Chapter 1',
+            'chapter2': 'Chapter 2',
+            'chapter3': 'Chapter 3',
+            'chapter4': 'Chapter 4',
         };
         if (c.isUserCampaign) return 'Your Campaign';
         return nameMap[c.owner] ?? c.owner;

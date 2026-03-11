@@ -1,0 +1,46 @@
+{
+  "id": "chapter4",
+  "owner": "chapter4",
+  "levels": [
+    {
+      "type": "config",
+      "mapSize": "9x9",
+      "mapStyle": "random",
+      "gameMode": "classic",
+      "bots": 5,
+      "botAI": "hard",
+      "maxDice": 9,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "10x10",
+      "mapStyle": "continents",
+      "gameMode": "madness",
+      "bots": 6,
+      "botAI": "hard",
+      "maxDice": 12,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "11x11",
+      "mapStyle": "tunnels",
+      "gameMode": "classic",
+      "bots": 6,
+      "botAI": "hard",
+      "maxDice": 12,
+      "diceSides": 6
+    },
+    {
+      "type": "config",
+      "mapSize": "12x12",
+      "mapStyle": "random",
+      "gameMode": "classic",
+      "bots": 7,
+      "botAI": "hard",
+      "maxDice": 12,
+      "diceSides": 6
+    }
+  ]
+}

@@ -5,9 +5,10 @@
 
 import { validateCampaign, validateLevel, getGridDimensions } from './campaign-data.js';
 import { getCachedIdentity } from './user-identity.js';
-import builtinCampaign from './builtin-campaign.json';
-import builtinMaps from './builtin-maps.json';
-import builtinScenarios from './builtin-scenarios.json';
+import builtinChapter1 from './builtin-chapter1.json';
+import builtinChapter2 from './builtin-chapter2.json';
+import builtinChapter3 from './builtin-chapter3.json';
+import builtinChapter4 from './builtin-chapter4.json';
 import builtinTutorial from './builtin-tutorial.json';
 
 const STORAGE_KEY = 'dicy_userCampaign';
@@ -16,9 +17,10 @@ export class CampaignManager {
     constructor() {
         this.builtinCampaigns = [
             { ...builtinTutorial, isBuiltIn: true },
-            { ...builtinCampaign, isBuiltIn: true },
-            { ...builtinMaps, isBuiltIn: true },
-            { ...builtinScenarios, isBuiltIn: true }
+            { ...builtinChapter1, isBuiltIn: true },
+            { ...builtinChapter2, isBuiltIn: true },
+            { ...builtinChapter3, isBuiltIn: true },
+            { ...builtinChapter4, isBuiltIn: true }
         ];
         this.userCampaign = null;
         this.onlineCampaigns = []; // Fetched from backend
