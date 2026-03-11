@@ -71,6 +71,7 @@ export function incrementStat(stat, amount = 1) {
     const stats = loadStats();
     stats[stat] = (stats[stat] || 0) + amount;
     saveStats(stats);
+    pushStatToSteam(stat, stats[stat]);
 
     for (const ach of ACHIEVEMENTS) {
         if (ach.type === 'stat' && ach.stat === stat && stats[stat] >= ach.threshold) {
@@ -114,6 +115,7 @@ export function setStatValue(stat, value) {
     const stats = loadStats();
     stats[stat] = Math.max(0, value);
     saveStats(stats);
+    pushStatToSteam(stat, stats[stat]);
     for (const ach of ACHIEVEMENTS) {
         if (ach.type === 'stat' && ach.stat === stat && stats[stat] >= ach.threshold) {
             unlockAchievement(ach.id);
