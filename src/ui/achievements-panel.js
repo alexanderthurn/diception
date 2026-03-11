@@ -79,32 +79,32 @@ export class AchievementsPanel {
                     </div>`;
             }
 
-            const iconId = 'icon-ach-' + ach.id.toLowerCase().replace(/_/g, '-');
+            // Class matches spritesheet: ACH_TUTORIAL.png → ACH-TUTORIAL (or ACH-TUTORIAL-locked)
+            const iconClass = isUnlocked
+                ? ach.id.replace(/_/g, '-')
+                : ach.id.replace(/_/g, '-') + '-locked';
+
             const card = document.createElement('div');
             card.style.cssText = `
                 display:flex; gap:12px; align-items:flex-start;
                 padding:12px;
                 background:rgba(255,255,255,0.02);
                 border:1px solid ${isUnlocked ? 'var(--border-color)' : '#222'};
-                opacity:${isUnlocked ? '1' : '0.5'};
-                ${isUnlocked ? 'box-shadow:0 0 8px rgba(0,200,200,0.1);' : ''}
             `;
             card.innerHTML = `
-                <span class="sprite-icon ${iconId}" style="
+                <span class="sprite-icon ${iconClass}" style="
                     width:64px; height:64px; flex-shrink:0; display:block;
-                    background:rgba(255,255,255,0.05);
-                    border:1px solid #333;
                     image-rendering:pixelated;
                 "></span>
                 <div style="flex:1; min-width:0;">
                     <div style="
                         font-family:Rajdhani,sans-serif; font-weight:700; font-size:14px;
-                        color:${isUnlocked ? '#fff' : '#888'};
+                        color:#fff;
                         letter-spacing:1px; text-transform:uppercase; margin-bottom:3px;
                     ">${ach.id.replace('ACH_','').replace(/_/g,' ')}</div>
                     <div style="
                         font-family:Rajdhani,sans-serif; font-size:13px;
-                        color:${isUnlocked ? '#ccc' : '#555'}; line-height:1.4;
+                        color:#ccc; line-height:1.4;
                     ">${getDescription(ach)}</div>
                     ${progressHTML}
                 </div>

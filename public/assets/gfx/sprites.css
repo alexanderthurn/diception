@@ -13,6 +13,346 @@
 }
 
 /* Specific icons */
+.ACH-CHAPTER1 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 21.7421% 67.9325%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER1-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 21.7421% 74.8945%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER2 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 27.8190% 62.3418%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER2-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 32.2755% 62.3418%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER3 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 36.7319% 62.3418%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER3-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 26.1985% 69.3038%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER4 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 30.6550% 69.3038%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER4-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 35.1114% 69.3038%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER5 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 26.1985% 76.2658%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER5-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 30.6550% 76.2658%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER6 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 35.1114% 76.2658%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER6-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 70.1553% 51.1603%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER7 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 70.1553% 58.1224%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER7-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 74.6117% 50.6329%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER8 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 74.6117% 57.5949%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-CHAPTER8-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 79.0682% 50.2110%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-DAVID {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 79.0682% 57.1730%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-DAVID-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 83.9973% 47.1519%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-FIRST-WIN {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 83.5246% 54.1139%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-FIRST-WIN-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 88.4537% 47.1519%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-10 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 87.9811% 54.1139%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-10-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 92.9102% 45.6751%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-50 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 97.3666% 45.6751%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-50-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 83.5246% 61.0759%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-100 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 87.9811% 61.0759%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-100-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 79.0682% 64.1350%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-150 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 74.6117% 64.5570%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-150-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 83.5246% 68.0380%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-200 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 87.9811% 68.0380%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-200-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 79.0682% 71.0970%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-300 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 83.5246% 75.0000%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-300-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 87.9811% 75.0000%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-400 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 41.1884% 64.0295%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-400-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 45.6448% 64.0295%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-500 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 39.5679% 70.9916%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-500-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 44.0243% 70.9916%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-1000 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 39.5679% 77.9536%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-1000-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 44.0243% 77.9536%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-10000 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 50.1013% 64.2405%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-GAMES-10000-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 54.5577% 64.2405%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-STREAK-3 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 59.0142% 64.2405%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-STREAK-3-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 63.4706% 64.4515%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-STREAK-4 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 48.4808% 71.2025%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-STREAK-4-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 52.9372% 71.2025%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-STREAK-5 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 57.3937% 71.2025%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-STREAK-5-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 48.4808% 78.1646%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-STREAK-6 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 52.9372% 78.1646%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-STREAK-6-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 57.3937% 78.1646%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-STREAK-7 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 61.8501% 71.4135%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-STREAK-7-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 61.8501% 78.3755%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-SURVIVOR {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 67.9271% 65.0844%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-SURVIVOR-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 66.3065% 72.0464%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-TUTORIAL {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 66.3065% 79.0084%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-TUTORIAL-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 70.7630% 72.0464%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-5 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 70.7630% 79.0084%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-5-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 78.7306% 78.0591%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-10 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 78.7306% 85.0211%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-10-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 83.1870% 81.9620%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-50 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 87.6435% 81.9620%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-50-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 83.1870% 88.9241%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-100 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 87.6435% 88.9241%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-100-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 21.7421% 81.8565%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-500 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 26.1985% 83.2278%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-500-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 30.6550% 83.2278%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-1000 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 35.1114% 83.2278%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-1000-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 39.5679% 84.9156%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-10000 {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 44.0243% 84.9156%;
+    aspect-ratio: 64 / 64;
+}
+.ACH-UNDERDOG-10000-locked {
+    background-size: 2414.0625% 1581.2500%;
+    background-position: 48.4808% 85.1266%;
+    aspect-ratio: 64 / 64;
+}
 .keyboard-0 {
     background-size: 3090.0000% 2024.0000%;
     background-position: 20.6020% 61.5385%;
@@ -557,6 +897,91 @@
     background-size: 3090.0000% 2024.0000%;
     background-position: 46.9565% 90.7484%;
     aspect-ratio: 50 / 50;
+}
+.bg {
+    background-size: 603.5156% 395.3125%;
+    background-position: 0.0776% 0.1323%;
+    aspect-ratio: 256 / 256;
+}
+.die-d1 {
+    background-size: 2575.0000% 829.5082%;
+    background-position: 38.5185% 52.4719%;
+    aspect-ratio: 60 / 122;
+}
+.die-d2 {
+    background-size: 1796.5116% 829.5082%;
+    background-position: 59.1501% 54.4944%;
+    aspect-ratio: 86 / 122;
+}
+.die-d3 {
+    background-size: 1796.5116% 816.1290%;
+    background-position: 65.1816% 54.6171%;
+    aspect-ratio: 86 / 124;
+}
+.die-d4 {
+    background-size: 1697.8022% 829.5082%;
+    background-position: 26.6162% 31.2360%;
+    aspect-ratio: 91 / 122;
+}
+.die-d5 {
+    background-size: 1775.8621% 829.5082%;
+    background-position: 53.0864% 54.4944%;
+    aspect-ratio: 87 / 122;
+}
+.die-d6 {
+    background-size: 757.3529% 500.9901%;
+    background-position: 0.0746% 31.9753%;
+    aspect-ratio: 204 / 202;
+}
+.die-d7 {
+    background-size: 1839.2857% 843.3333%;
+    background-position: 79.2608% 39.6861%;
+    aspect-ratio: 84 / 120;
+}
+.die-d8 {
+    background-size: 1839.2857% 816.1290%;
+    background-position: 67.4196% 40.4279%;
+    aspect-ratio: 84 / 124;
+}
+.die-d9 {
+    background-size: 1817.6471% 816.1290%;
+    background-position: 73.3562% 39.8649%;
+    aspect-ratio: 85 / 124;
+}
+.die-d10 {
+    background-size: 942.0732% 816.1290%;
+    background-position: 98.4794% 34.5721%;
+    aspect-ratio: 164 / 124;
+}
+.die-d11 {
+    background-size: 1119.5652% 829.5082%;
+    background-position: 45.0604% 54.2697%;
+    aspect-ratio: 138 / 122;
+}
+.die-d12 {
+    background-size: 942.0732% 829.5082%;
+    background-position: 29.3990% 52.4719%;
+    aspect-ratio: 164 / 122;
+}
+.die-d13 {
+    background-size: 936.3636% 816.1290%;
+    background-position: 59.2754% 40.4279%;
+    aspect-ratio: 165 / 124;
+}
+.die-d14 {
+    background-size: 919.6429% 829.5082%;
+    background-position: 34.8584% 38.5393%;
+    aspect-ratio: 168 / 122;
+}
+.die-d15 {
+    background-size: 925.1497% 816.1290%;
+    background-position: 98.6938% 20.3829%;
+    aspect-ratio: 167 / 124;
+}
+.die-d16 {
+    background-size: 930.7229% 816.1290%;
+    background-position: 47.1356% 40.2027%;
+    aspect-ratio: 166 / 124;
 }
 .icon-assign {
     background-size: 863.1285% 568.5393%;
