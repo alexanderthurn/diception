@@ -97,6 +97,18 @@ fn steam_unlock_achievement(state: tauri::State<SteamState>, achievement_id: Str
         .ok_or_else(|| "Steam not initialized".to_string())
 }
 
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
+fn steam_set_stat(state: tauri::State<SteamState>, stat_name: String, value: i32) -> Result<(), String> {
+    let guard = state.lock().map_err(|e| e.to_string())?;
+    guard.as_ref()
+        .map(|s| {
+            s.client.user_stats().set_stat_i32(&stat_name, value).ok();
+            s.client.user_stats().store_stats().ok();
+        })
+        .ok_or_else(|| "Steam not initialized".to_string())
+}
+
 // ─── Gilrs commands (desktop only) ────────────────────────────────────────────
 
 /// Map a gilrs Button to W3C Standard Gamepad button index (0-15).
@@ -268,6 +280,7 @@ const STEAM_INIT_SCRIPT: &str = r#"
         quit:             function()         { return ipc.invoke('steam_quit'); },
         activateOverlay:  function(dialog)   { return ipc.invoke('steam_activate_overlay', { dialog: dialog || 'Friends' }); },
         unlockAchievement:function(id)       { return ipc.invoke('steam_unlock_achievement', { achievementId: id }); },
+        setStat:          function(name, val){ return ipc.invoke('steam_set_stat', { statName: name, value: val }); },
     };
     // Shift+Tab: prevent browser focus cycling and open overlay manually.
     // On macOS, Steam cannot inject into WKWebView's Metal surface, so we
@@ -352,6 +365,7 @@ pub fn run() {
                 steam_quit,
                 steam_activate_overlay,
                 steam_unlock_achievement,
+                steam_set_stat,
                 gilrs_poll,
                 storage_read_all,
                 storage_write_all,

@@ -31,7 +31,9 @@ import { GameStarter } from './core/game-starter.js';
 import { GameEventManager } from './ui/game-events.js';
 import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
-import { initCheatCode } from './cheat.js';
+import { initCheatCode, registerCheatContext } from './cheat.js';
+import { markLevelSolved, unmarkLevelSolved } from './scenarios/campaign-progress.js';
+import { unlockAchievement, removeAchievement } from './core/achievement-manager.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
 import { initStorage, flushStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
@@ -162,6 +164,29 @@ async function init() {
     await renderer.init();
 
     initCheatCode(game, renderer);
+
+    // Cheat: ccc/vvv on campaign level tiles (mark/unmark solved)
+    if (window.location.hostname === 'localhost') {
+        registerCheatContext({
+            isActive: () => scenarioBrowser?._hoveredLevelIndex != null,
+            onCCC: () => {
+                const owner = scenarioBrowser.selectedCampaign?.owner;
+                const idx = scenarioBrowser._hoveredLevelIndex;
+                if (owner == null || idx == null) return;
+                markLevelSolved(owner, idx);
+                scenarioBrowser.renderLevelGrid(scenarioBrowser.selectedCampaign);
+                console.log(`🎮 CHEAT: marked level ${idx} solved in ${owner}`);
+            },
+            onVVV: () => {
+                const owner = scenarioBrowser.selectedCampaign?.owner;
+                const idx = scenarioBrowser._hoveredLevelIndex;
+                if (owner == null || idx == null) return;
+                unmarkLevelSolved(owner, idx);
+                scenarioBrowser.renderLevelGrid(scenarioBrowser.selectedCampaign);
+                console.log(`🎮 CHEAT: unmarked level ${idx} in ${owner}`);
+            },
+        });
+    }
 
     window.gameApp = renderer.app;
 

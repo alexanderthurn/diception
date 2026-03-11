@@ -395,6 +395,7 @@
             <key type="filename">gfx/game/die_d7.png</key>
             <key type="filename">gfx/game/die_d8.png</key>
             <key type="filename">gfx/game/die_d9.png</key>
+            <key type="filename">gfx/game/icon_achievements.png</key>
             <key type="filename">gfx/game/icon_assign.png</key>
             <key type="filename">gfx/game/icon_attack.png</key>
             <key type="filename">gfx/game/icon_autoplay.png</key>

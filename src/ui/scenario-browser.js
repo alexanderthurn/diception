@@ -334,8 +334,8 @@ export class ScenarioBrowser {
             tile.appendChild(typeIcon);
 
             if (this.hasHoverCapability()) {
-                tile.addEventListener('mouseenter', () => this.showHoverPreview(level, tile));
-                tile.addEventListener('mouseleave', () => this.hideHoverPreview());
+                tile.addEventListener('mouseenter', () => { this._hoveredLevelIndex = i; this.showHoverPreview(level, tile); });
+                tile.addEventListener('mouseleave', () => { this._hoveredLevelIndex = null; this.hideHoverPreview(); });
             }
             tile.addEventListener('click', () => this.showLevelPreviewDialog(level, i));
             this.levelGrid.appendChild(tile);

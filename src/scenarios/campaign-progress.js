@@ -36,3 +36,16 @@ export function markLevelSolved(campaignOwner, levelIndex) {
 export function isLevelSolved(campaignOwner, levelIndex) {
     return getSolvedLevels(campaignOwner).includes(levelIndex);
 }
+
+export function unmarkLevelSolved(campaignOwner, levelIndex) {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const data = raw ? JSON.parse(raw) : {};
+        let arr = data[campaignOwner];
+        if (!Array.isArray(arr)) return;
+        data[campaignOwner] = arr.filter(i => i !== levelIndex);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+        console.warn('Failed to unmark campaign progress:', e);
+    }
+}

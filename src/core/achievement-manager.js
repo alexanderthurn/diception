@@ -12,6 +12,13 @@ import { getSolvedLevels } from '../scenarios/campaign-progress.js';
 const STATS_KEY    = 'dicy_ach_stats';
 const UNLOCKED_KEY = 'dicy_ach_unlocked';
 
+// Maps localStorage stat key → Steam stat API name
+const STEAM_STAT_NAMES = {
+    gamesPlayed:  'STAT_GAMES_PLAYED',
+    gamesWon:     'STAT_GAMES_WON',
+    underdogWins: 'STAT_UNDERDOG_WINS',
+};
+
 // ── Internal helpers ─────────────────────────────────────────────────────────
 
 function loadStats() {
@@ -28,6 +35,13 @@ function loadUnlocked() {
 
 function saveUnlocked(list) {
     localStorage.setItem(UNLOCKED_KEY, JSON.stringify(list));
+}
+
+function pushStatToSteam(stat, value) {
+    const steamName = STEAM_STAT_NAMES[stat];
+    if (steamName && window.steam?.setStat) {
+        window.steam.setStat(steamName, value);
+    }
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
@@ -83,6 +97,30 @@ export function fireAchievementEvent(event) {
  * @param {string} campaignOwner - campaign.owner (e.g. 'chapter1')
  * @param {number} totalLevels   - total levels in the campaign
  */
+/**
+ * Remove a single achievement by ID (cheat/test use only).
+ * Removes from localStorage; Steam state is not cleared automatically.
+ */
+export function removeAchievement(id) {
+    const unlocked = loadUnlocked().filter(u => u !== id);
+    saveUnlocked(unlocked);
+    console.log(`🗑️ ACHIEVEMENT REMOVED: ${id}`);
+}
+
+/**
+ * Directly set a stat value and re-check all thresholds (cheat/test use only).
+ */
+export function setStatValue(stat, value) {
+    const stats = loadStats();
+    stats[stat] = Math.max(0, value);
+    saveStats(stats);
+    for (const ach of ACHIEVEMENTS) {
+        if (ach.type === 'stat' && ach.stat === stat && stats[stat] >= ach.threshold) {
+            unlockAchievement(ach.id);
+        }
+    }
+}
+
 export function checkCampaignAchievement(campaignOwner, totalLevels) {
     const solved = getSolvedLevels(campaignOwner);
     if (solved.length < totalLevels) return;

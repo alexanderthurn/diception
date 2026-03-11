@@ -2,9 +2,20 @@
  * Cheat codes - localhost only.
  * Press C three times quickly: near-win state (human dominates).
  * Press V three times quickly: near-lose state (bot dominates).
+ *
+ * Additional contexts can register via registerCheatContext() to hook
+ * ccc/vvv while a specific UI (campaign browser, achievements panel) is active.
  */
 
 const TRIPLE_PRESS_MS = 500;
+
+// { isActive(): bool, onCCC(): void, onVVV(): void }
+const _cheatContexts = [];
+
+/** Register an additional cheat context. isActive() gates when it fires. */
+export function registerCheatContext(ctx) {
+    _cheatContexts.push(ctx);
+}
 
 export function initCheatCode(game, renderer) {
     if (window.location.hostname !== 'localhost') return;
@@ -20,6 +31,9 @@ export function initCheatCode(game, renderer) {
             if (pressTimesC.length > 3) pressTimesC.shift();
             if (pressTimesC.length === 3 && pressTimesC[2] - pressTimesC[0] <= TRIPLE_PRESS_MS) {
                 pressTimesC = [];
+                // Try registered contexts first
+                const ctx = _cheatContexts.find(c => c.isActive());
+                if (ctx) { ctx.onCCC(); return; }
                 triggerInstantWin(game, renderer);
             } else if (pressTimesC.length === 3) {
                 pressTimesC = [pressTimesC[1], pressTimesC[2]];
@@ -33,6 +47,8 @@ export function initCheatCode(game, renderer) {
             if (pressTimesV.length > 3) pressTimesV.shift();
             if (pressTimesV.length === 3 && pressTimesV[2] - pressTimesV[0] <= TRIPLE_PRESS_MS) {
                 pressTimesV = [];
+                const ctx = _cheatContexts.find(c => c.isActive());
+                if (ctx) { ctx.onVVV(); return; }
                 triggerInstantLose(game, renderer);
             } else if (pressTimesV.length === 3) {
                 pressTimesV = [pressTimesV[1], pressTimesV[2]];

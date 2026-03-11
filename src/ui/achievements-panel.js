@@ -5,6 +5,8 @@
  */
 
 import { ACHIEVEMENTS } from '../core/achievements.js';
+import { unlockAchievement, removeAchievement, setStatValue } from '../core/achievement-manager.js';
+import { registerCheatContext } from '../cheat.js';
 
 const STATS_KEY    = 'dicy_ach_stats';
 const UNLOCKED_KEY = 'dicy_ach_unlocked';
@@ -38,6 +40,43 @@ export class AchievementsPanel {
         this._modal    = modalEl;
         this._subtitle = modalEl?.querySelector('#ach-subtitle');
         this._grid     = modalEl?.querySelector('#ach-grid');
+        this._hoveredId = null;
+
+        if (window.location.hostname === 'localhost') {
+            registerCheatContext({
+                isActive: () => !this._modal?.classList.contains('hidden'),
+                onCCC: () => {
+                    if (!this._hoveredId) return;
+                    const ach = ACHIEVEMENTS.find(a => a.id === this._hoveredId);
+                    if (ach?.type === 'stat') {
+                        const stats = loadStats();
+                        const delta = Math.ceil(ach.threshold * 0.5);
+                        const next  = (stats[ach.stat] || 0) + delta;
+                        setStatValue(ach.stat, next);
+                        console.log(`🎮 CHEAT: ${ach.stat} +${delta} → ${next}`);
+                    } else {
+                        unlockAchievement(this._hoveredId);
+                        console.log(`🎮 CHEAT: unlocked ${this._hoveredId}`);
+                    }
+                    this._refresh();
+                },
+                onVVV: () => {
+                    if (!this._hoveredId) return;
+                    const ach = ACHIEVEMENTS.find(a => a.id === this._hoveredId);
+                    if (ach?.type === 'stat') {
+                        const stats = loadStats();
+                        const delta = Math.ceil(ach.threshold * 0.5);
+                        const next  = Math.max(0, (stats[ach.stat] || 0) - delta);
+                        setStatValue(ach.stat, next);
+                        console.log(`🎮 CHEAT: ${ach.stat} -${delta} → ${next}`);
+                    } else {
+                        removeAchievement(this._hoveredId);
+                        console.log(`🎮 CHEAT: removed ${this._hoveredId}`);
+                    }
+                    this._refresh();
+                },
+            });
+        }
     }
 
     open() {
@@ -109,6 +148,8 @@ export class AchievementsPanel {
                     ${progressHTML}
                 </div>
             `;
+            card.addEventListener('mouseenter', () => { this._hoveredId = ach.id; });
+            card.addEventListener('mouseleave', () => { this._hoveredId = null; });
             this._grid.appendChild(card);
         });
     }
