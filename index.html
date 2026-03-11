@@ -263,6 +263,7 @@
                 <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span> Campaign</button>
                 <button id="main-settings-btn" class="tron-btn large"><span class="sprite-icon icon-settings"></span> Settings</button>
                 <div style="display:flex;gap:10px;">
+                    <button id="main-achievements-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-campaigns"></span> Achievements</button>
                     <button id="main-howto-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-help"></span> How To</button>
                     <button id="main-about-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-scenario"></span> About</button>
                 </div>
@@ -653,6 +654,18 @@
                         </div>
                     </div>
                 </details>
+            </div>
+        </div>
+
+        <!-- Achievements Modal -->
+        <div id="achievements-modal" class="modal hidden large-modal">
+            <div class="modal-header">
+                <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
+                <h2 class="tron-title small">ACHIEVEMENTS</h2>
+            </div>
+            <div class="howto-content">
+                <p id="ach-subtitle" style="color:var(--border-color);font-family:Rajdhani,sans-serif;font-size:13px;letter-spacing:2px;margin-bottom:16px;"></p>
+                <div id="ach-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;"></div>
             </div>
         </div>
 

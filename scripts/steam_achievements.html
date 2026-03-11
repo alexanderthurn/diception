@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DICEPTION — Achievement Icons</title>
+    <style>
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 400;
+            src: url('../public/assets/fonts/Rajdhani-Regular.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 600;
+            src: url('../public/assets/fonts/Rajdhani-SemiBold.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'Rajdhani';
+            font-style: normal;
+            font-weight: 700;
+            src: url('../public/assets/fonts/Rajdhani-Bold.ttf') format('truetype');
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a1a;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            padding: 30px;
+        }
+
+        h1 { color: #00FFFF; font-size: 28px; letter-spacing: 4px; margin-bottom: 8px; }
+
+        h2.section-title {
+            color: #AA00FF;
+            font-size: 20px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+        }
+
+        .page-subtitle { color: #888; font-size: 14px; margin-bottom: 30px; }
+
+        .download-all-btn {
+            font-family: 'Rajdhani', sans-serif;
+            background: rgba(0,255,255,0.15);
+            border: 2px solid #00FFFF;
+            color: #00FFFF;
+            padding: 12px 30px;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+        .download-all-btn:hover { background: rgba(0,255,255,0.3); }
+
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 16px;
+        }
+
+        .ach-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #222;
+            padding: 16px;
+        }
+
+        .ach-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .ach-name { color: #00FFFF; font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+        .ach-id   { color: #444; font-size: 11px; font-family: monospace; }
+
+        .ach-canvases { display: flex; gap: 10px; align-items: flex-start; }
+        .canvas-col { display: flex; flex-direction: column; align-items: center; gap: 4px; width: calc(50% - 5px); flex-shrink: 0; }
+        .canvas-label { color: #555; font-size: 11px; letter-spacing: 1px; }
+
+        canvas {
+            width: 100%;
+            aspect-ratio: 1;
+            display: block;
+            border: 1px solid #222;
+        }
+
+        .ach-meta { margin-bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
+        .ach-meta-row { display: flex; align-items: baseline; gap: 6px; }
+        .ach-meta-label { color: #444; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; width: 34px; flex-shrink: 0; }
+        .ach-meta-value { color: #ccc; font-size: 12px; flex: 1; }
+        .ach-meta-value.ach-id { color: #555; font-family: monospace; font-size: 11px; }
+
+        .copy-btn {
+            font-family: monospace;
+            background: #111;
+            border: 1px solid #333;
+            color: #555;
+            font-size: 12px;
+            width: 22px; height: 22px;
+            cursor: pointer;
+            flex-shrink: 0;
+            line-height: 1;
+            padding: 0;
+            transition: all 0.15s;
+        }
+        .copy-btn:hover { border-color: #00FFFF; color: #00FFFF; }
+
+        .download-btn {
+            font-family: 'Rajdhani', sans-serif;
+            background: #000;
+            border: 1px solid #00FFFF;
+            color: #00FFFF;
+            padding: 4px 10px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+            width: 100%;
+            transition: all 0.15s;
+        }
+        .download-btn:hover { background: rgba(0,255,255,0.15); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #1a1a1a;
+            padding: 12px 14px;
+        }
+        .stat-item-name {
+            color: #00FFFF;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .ach-meta-value.stat-name { color: #00FFFF; font-family: monospace; font-size: 11px; }
+        .ach-meta-value.num { color: #FFCC00; font-family: monospace; }
+        .progress-bar-wrap { background: #111; height: 4px; border-radius: 2px; overflow: hidden; margin: 6px 0 2px; }
+        .progress-bar-fill { height: 100%; background: #00FFFF; transition: width 0.3s; }
+        .progress-label { color: #555; font-size: 10px; font-family: monospace; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+    <h1>ACHIEVEMENT ICONS</h1>
+    <p class="page-subtitle">DICEPTION — 256×256 px each. Color (left) + Greyscale/locked (right). Add both to spritesheet.</p>
+    <button class="download-all-btn" onclick="downloadAll()">⬇ Download All as ZIP</button>
+    <div id="container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script type="module">
+        // ── Import achievement definitions directly from game code ─────────────
+        import { ACHIEVEMENTS } from '../src/core/achievements.js';
+
+        const W = 256, H = 256;
+
+        // ── Spritesheet (same path as steam_assets.html) ──────────────────────
+        const spriteSheet = new Image();
+        spriteSheet.src = '../public/assets/gfx/diception.png';
+
+        // ── Seeded random — exact copy from steam_assets.html ─────────────────
+        function mulberry32(seed) {
+            return function () {
+                seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+                let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+                t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+        }
+
+        // ── Colors — mirrors game constants.js ────────────────────────────────
+        const PLAYER_COLORS = ['#AA00FF','#0088FF','#FFCC00','#00AA44','#FF0055','#55FF00','#FF00AA','#FF8800'];
+        const PARTICLE_COLORS = ['#00FFFF','#AA00FF','#00ff88','#0088ff'];
+
+        // ── D6 sprite coords — exact copy from steam_assets.html ──────────────
+        const DICE_SPRITE = { x: 1, y: 259, w: 204, h: 202 };
+
+        // ── Dice face dot layouts — exact copy from steam_assets.html ─────────
+        const SPRITE_PATTERNS = {
+            1: [[0,0]],
+            2: [[-0.8,-0.8],[0.8,0.8]],
+            3: [[-1,-1],[0,0],[1,1]],
+            4: [[-1,-1],[1,-1],[-1,1],[1,1]],
+            5: [[-1,-1],[1,-1],[-1,1],[1,1],[0,0]],
+            6: [[-0.8,-1],[0.8,-1],[-0.8,0],[0.8,0],[-0.8,1],[0.8,1]],
+            7: [[-0.8,-1],[0.8,-1],[-0.8,0],[0.8,0],[-0.8,1],[0.8,1],[0,0]],
+            8: [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]],
+        };
+
+        // ── drawDiceTile — exact copy from steam_assets.html ──────────────────
+        function drawDiceTile(ctx, cx, cy, size, diceCount, color, alpha, rotation = 0) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(rotation);
+
+            ctx.shadowColor = color;
+            ctx.shadowBlur = size * 0.5;
+
+            ctx.fillStyle = color;
+            ctx.globalAlpha = alpha * 0.65;
+            ctx.fillRect(-size/2, -size/2, size, size);
+
+            ctx.strokeStyle = color;
+            ctx.globalAlpha = alpha * 0.9;
+            ctx.lineWidth = Math.max(1, size * 0.05);
+            ctx.strokeRect(-size/2, -size/2, size, size);
+
+            ctx.shadowBlur = 0;
+
+            const positions = SPRITE_PATTERNS[Math.min(diceCount, 8)] || SPRITE_PATTERNS[8];
+            const spacing = size * 0.22;
+            const spriteSize = size * 0.2;
+            ctx.globalAlpha = alpha;
+            for (const [px, py] of positions) {
+                ctx.drawImage(spriteSheet,
+                    DICE_SPRITE.x, DICE_SPRITE.y, DICE_SPRITE.w, DICE_SPRITE.h,
+                    px * spacing - spriteSize/2, py * spacing - spriteSize/2, spriteSize, spriteSize
+                );
+            }
+            ctx.restore();
+            ctx.globalAlpha = 1;
+        }
+
+        // ── drawParticles — exact copy from steam_assets.html ─────────────────
+        function drawParticles(ctx, w, h, count, rng) {
+            for (let i = 0; i < count; i++) {
+                const x = rng() * w, y = rng() * h;
+                const radius = 1 + rng() * 3;
+                const color = PARTICLE_COLORS[Math.floor(rng() * PARTICLE_COLORS.length)];
+                const alpha = 0.2 + rng() * 0.5;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.globalAlpha = alpha;
+                ctx.fill();
+                if (rng() > 0.6) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius * 4, 0, Math.PI * 2);
+                    const g = ctx.createRadialGradient(x, y, 0, x, y, radius * 4);
+                    g.addColorStop(0, color);
+                    g.addColorStop(1, 'transparent');
+                    ctx.fillStyle = g;
+                    ctx.globalAlpha = alpha * 0.3;
+                    ctx.fill();
+                }
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // ── Shared helpers (new, built on top of the game primitives) ─────────
+
+        function drawBackground(ctx, glowColor, rng) {
+            // Base dark fill
+            ctx.fillStyle = '#080820';
+            ctx.fillRect(0, 0, W, H);
+            // Radial glow — same style as steam_assets.html title glow
+            const g = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W * 0.65);
+            g.addColorStop(0,   glowColor + '55');
+            g.addColorStop(0.5, glowColor + '1A');
+            g.addColorStop(1,   'rgba(0,0,0,0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, W, H);
+            // Ambient particles
+            drawParticles(ctx, W, H, 40, rng);
+        }
+
+        function drawVignette(ctx) {
+            const v = ctx.createRadialGradient(W/2, H/2, W*0.2, W/2, H/2, W*0.78);
+            v.addColorStop(0, 'rgba(0,0,0,0)');
+            v.addColorStop(1, 'rgba(0,0,0,0.6)');
+            ctx.fillStyle = v;
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        function drawLabel(ctx, text, cx, cy, fontSize, color, weight = 700, alpha = 1) {
+            ctx.save();
+            ctx.font = `${weight} ${fontSize}px Rajdhani`;
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.globalAlpha = alpha;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = fontSize * 0.5;
+            ctx.fillText(text, cx, cy);
+            ctx.restore();
+        }
+
+        function drawBorder(ctx, color) {
+            ctx.strokeStyle = color;
+            ctx.globalAlpha = 0.08;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(2, 2, W-4, H-4);
+            ctx.globalAlpha = 1;
+        }
+
+        function toGreyscale(srcCanvas) {
+            const dst = document.createElement('canvas');
+            dst.width = W; dst.height = H;
+            const ctx = dst.getContext('2d');
+            ctx.drawImage(srcCanvas, 0, 0);
+            const img = ctx.getImageData(0, 0, W, H);
+            for (let i = 0; i < img.data.length; i += 4) {
+                const lum = 0.299*img.data[i] + 0.587*img.data[i+1] + 0.114*img.data[i+2];
+                img.data[i] = img.data[i+1] = img.data[i+2] = lum * 0.4;
+            }
+            ctx.putImageData(img, 0, 0);
+            return dst;
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // PER-ACHIEVEMENT RENDERERS
+        // Each draws a complete 512×512 icon using the game's visual primitives.
+        // ══════════════════════════════════════════════════════════════════════
+
+        // Draw a single die centered on the canvas.
+        // diceCount 0 = blank tile (no dots), matches "tutorial" feel.
+        function renderSingleDie(ctx, color, diceCount, seed) {
+            const rng = mulberry32(seed);
+            drawBackground(ctx, color, rng);
+            const ts = W; // full bleed
+            if (diceCount === 0) {
+                // Blank tile — background + border only, no sprite dots
+                ctx.save();
+                ctx.shadowColor = color;
+                ctx.shadowBlur = ts * 0.5;
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.65;
+                ctx.fillRect(0, 0, W, H);
+                ctx.strokeStyle = color;
+                ctx.globalAlpha = 0.9;
+                ctx.lineWidth = Math.max(1, ts * 0.05);
+                ctx.strokeRect(0, 0, W, H);
+                ctx.restore();
+                ctx.globalAlpha = 1;
+            } else {
+                drawDiceTile(ctx, W/2, H/2, ts, diceCount, color, 0.92);
+            }
+            drawVignette(ctx);
+            drawBorder(ctx, color);
+        }
+
+        // Human colors from game constants (GAME.HUMAN_COLORS), plus extras for future chapters
+        const HUMAN_COLORS = ['#AA00FF', '#0088FF', '#FFCC00', '#00AA44', '#FF0055',
+                               '#55FF00', '#FF00AA', '#FF8800', '#00FFFF'];
+
+        function render_ACH_TUTORIAL(ctx)  { renderSingleDie(ctx, HUMAN_COLORS[0], 0, 1001); }
+        function render_ACH_CHAPTER1(ctx)  { renderSingleDie(ctx, HUMAN_COLORS[1], 1, 1002); }
+        function render_ACH_CHAPTER2(ctx)  { renderSingleDie(ctx, HUMAN_COLORS[2], 2, 1003); }
+        function render_ACH_CHAPTER3(ctx)  { renderSingleDie(ctx, HUMAN_COLORS[3], 3, 1004); }
+        function render_ACH_CHAPTER4(ctx)  { renderSingleDie(ctx, HUMAN_COLORS[4], 4, 1005); }
+        function render_ACH_CHAPTER5(ctx)  { renderSingleDie(ctx, HUMAN_COLORS[5], 5, 1006); }
+        function render_ACH_CHAPTER6(ctx)  { renderSingleDie(ctx, HUMAN_COLORS[6], 6, 1007); }
+        function render_ACH_CHAPTER7(ctx)  { renderSingleDie(ctx, HUMAN_COLORS[7], 7, 1008); }
+        function render_ACH_CHAPTER8(ctx)  { renderSingleDie(ctx, HUMAN_COLORS[8], 8, 1009); }
+
+        function renderGamesPlayed(ctx, n, color) {
+            const rng = mulberry32(n + 2000);
+            drawBackground(ctx, color, rng);
+            // Full-bleed blank tile (same as tutorial, no dots)
+            ctx.save();
+            ctx.shadowColor = color;
+            ctx.shadowBlur = W * 0.5;
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.65;
+            ctx.fillRect(0, 0, W, H);
+            ctx.strokeStyle = color;
+            ctx.globalAlpha = 0.9;
+            ctx.lineWidth = Math.max(1, W * 0.05);
+            ctx.strokeRect(0, 0, W, H);
+            ctx.restore();
+            ctx.globalAlpha = 1;
+            drawVignette(ctx);
+            // Number centered on tile
+            const label = n >= 1000 ? (n/1000)+'K' : String(n);
+            drawLabel(ctx, label, W/2, H/2, W*0.42, '#FFFFFF', 700);
+            drawBorder(ctx, color);
+        }
+
+        function render_ACH_FIRST_WIN(ctx) {
+            const rng = mulberry32(3001);
+            drawBackground(ctx, '#FFCC00', rng);
+            // Large purple winner tile, small red loser tile
+            drawDiceTile(ctx, W*0.35, H*0.5, W*0.30, 6, '#AA00FF', 0.95);
+            drawDiceTile(ctx, W*0.70, H*0.5, W*0.18, 1, '#FF0055', 0.72);
+            // Arrow →
+            ctx.save();
+            ctx.strokeStyle = '#FFCC00'; ctx.lineWidth = W*0.016;
+            ctx.globalAlpha = 0.75;
+            ctx.beginPath(); ctx.moveTo(W*0.52, H*0.5); ctx.lineTo(W*0.60, H*0.5); ctx.stroke();
+            ctx.restore();
+            drawVignette(ctx);
+            drawBorder(ctx, '#FFCC00');
+        }
+
+        function renderUnderdog(ctx, attackDice, defDice, countLabel, seed, attackColor) {
+            const rng = mulberry32(seed);
+            const epicLabels = ['×100', '×500', '×1K', '×10K'];
+            const glowColor = epicLabels.includes(countLabel) ? '#FFCC00' : '#FF8800';
+            drawBackground(ctx, glowColor, rng);
+            // Tiles + arrow centered as a unit — dense, low border
+            const ats = W * 0.36;
+            const dts = W * 0.42;
+            const arrowGap = W * 0.05;
+            const halfTotal = (ats + arrowGap + dts) / 2;
+            const ax = W/2 - halfTotal + ats/2;
+            const dx = W/2 + halfTotal - dts/2;
+            const ty = H * 0.44;
+            drawDiceTile(ctx, ax, ty, ats, attackDice, attackColor, 0.95);
+            drawDiceTile(ctx, dx, ty, dts, defDice,    '#FF0055', 0.9);
+            // Arrow from attacker right edge to defender left edge
+            const x0 = ax + ats * 0.52, x1 = dx - dts * 0.52;
+            ctx.save();
+            ctx.strokeStyle = glowColor; ctx.lineWidth = W * 0.016;
+            ctx.globalAlpha = 0.75;
+            ctx.beginPath(); ctx.moveTo(x0, ty); ctx.lineTo(x1, ty); ctx.stroke();
+            ctx.restore();
+            drawVignette(ctx);
+            drawLabel(ctx, countLabel, W/2, H*0.8, W*0.15, '#FFFFFF', 700);
+            drawBorder(ctx, glowColor);
+        }
+
+        function render_ACH_UNDERDOG_5(ctx)     { renderUnderdog(ctx, 2, 5, '×5',     4001, PLAYER_COLORS[0]); }
+        function render_ACH_UNDERDOG_10(ctx)    { renderUnderdog(ctx, 2, 5, '×10',    4002, PLAYER_COLORS[1]); }
+        function render_ACH_UNDERDOG_50(ctx)    { renderUnderdog(ctx, 2, 5, '×50',    4003, PLAYER_COLORS[2]); }
+        function render_ACH_UNDERDOG_100(ctx)   { renderUnderdog(ctx, 2, 5, '×100',   4004, PLAYER_COLORS[3]); }
+        function render_ACH_UNDERDOG_500(ctx)   { renderUnderdog(ctx, 2, 5, '×500',   4005, PLAYER_COLORS[4]); }
+        function render_ACH_UNDERDOG_1000(ctx)  { renderUnderdog(ctx, 2, 5, '×1K',    4006, PLAYER_COLORS[5]); }
+        function render_ACH_UNDERDOG_10000(ctx) { renderUnderdog(ctx, 2, 5, '×10K',   4007, PLAYER_COLORS[6]); }
+
+        function render_ACH_DAVID(ctx) {
+            const rng = mulberry32(5001);
+            drawBackground(ctx, '#FF8800', rng);
+            drawDiceTile(ctx, W*0.29, H*0.5, W*0.25, 2, '#AA00FF', 0.95);
+            drawDiceTile(ctx, W*0.71, H*0.5, W*0.25, 6, '#FF0055', 0.9);
+            drawLabel(ctx, 'VS', W*0.5, H*0.5, W*0.092, '#FF8800');
+            drawVignette(ctx);
+            drawBorder(ctx, '#FF8800');
+        }
+
+        function renderStreak(ctx, n, seed) {
+            const rng = mulberry32(seed);
+            drawBackground(ctx, '#AA00FF', rng);
+            // n tiles in a diagonal chain, centered
+            const ts = W * (0.17 - n * 0.006);
+            const step = (W * 0.88) / n;
+            const cxStart = W/2 - ((n - 1) / 2) * step;
+            const cyStart = H/2 + ((n - 1) / 2) * step * 0.5;
+            for (let i = 0; i < n; i++) {
+                const cx = cxStart + i * step;
+                const cy = cyStart - i * step * 0.5;
+                drawDiceTile(ctx, cx, cy, ts, i+1, '#AA00FF', 0.88 - i*0.02);
+                if (i < n - 1) {
+                    ctx.save();
+                    ctx.strokeStyle = '#AA00FF'; ctx.lineWidth = W*0.01; ctx.globalAlpha = 0.45;
+                    ctx.beginPath();
+                    ctx.moveTo(cx + ts*0.52, cy - ts*0.25);
+                    ctx.lineTo(cx + step - ts*0.52, cy - step*0.5 + ts*0.25);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+            drawVignette(ctx);
+            drawBorder(ctx, '#AA00FF');
+        }
+
+        function render_ACH_STREAK_3(ctx) { renderStreak(ctx, 3, 6003); }
+        function render_ACH_STREAK_4(ctx) { renderStreak(ctx, 4, 6004); }
+        function render_ACH_STREAK_5(ctx) { renderStreak(ctx, 5, 6005); }
+        function render_ACH_STREAK_6(ctx) { renderStreak(ctx, 6, 6006); }
+        function render_ACH_STREAK_7(ctx) { renderStreak(ctx, 7, 6007); }
+
+        function render_ACH_SURVIVOR(ctx) {
+            const rng = mulberry32(7001);
+            drawBackground(ctx, '#00FFFF', rng);
+            // 7 tiles in a circle, one per opponent color
+            const radius = W * 0.3, ts = W * 0.13;
+            for (let i = 0; i < 7; i++) {
+                const angle = (i / 7) * Math.PI * 2 - Math.PI/2;
+                drawDiceTile(ctx,
+                    W/2 + Math.cos(angle) * radius,
+                    H/2 + Math.sin(angle) * radius,
+                    ts, i+1, PLAYER_COLORS[i+1], 0.9
+                );
+            }
+            drawVignette(ctx);
+            drawBorder(ctx, '#00FFFF');
+        }
+
+        // ── Map achievement ID → renderer function ─────────────────────────────
+        const RENDERERS = {
+            ACH_TUTORIAL:     render_ACH_TUTORIAL,
+            ACH_CHAPTER1:     render_ACH_CHAPTER1,
+            ACH_CHAPTER2:     render_ACH_CHAPTER2,
+            ACH_CHAPTER3:     render_ACH_CHAPTER3,
+            ACH_CHAPTER4:     render_ACH_CHAPTER4,
+            ACH_CHAPTER5:     render_ACH_CHAPTER5,
+            ACH_CHAPTER6:     render_ACH_CHAPTER6,
+            ACH_CHAPTER7:     render_ACH_CHAPTER7,
+            ACH_CHAPTER8:     render_ACH_CHAPTER8,
+            ACH_GAMES_10:     ctx => renderGamesPlayed(ctx, 10,    PLAYER_COLORS[0]),
+            ACH_GAMES_50:     ctx => renderGamesPlayed(ctx, 50,    PLAYER_COLORS[1]),
+            ACH_GAMES_100:    ctx => renderGamesPlayed(ctx, 100,   PLAYER_COLORS[2]),
+            ACH_GAMES_150:    ctx => renderGamesPlayed(ctx, 150,   PLAYER_COLORS[3]),
+            ACH_GAMES_200:    ctx => renderGamesPlayed(ctx, 200,   PLAYER_COLORS[4]),
+            ACH_GAMES_300:    ctx => renderGamesPlayed(ctx, 300,   PLAYER_COLORS[5]),
+            ACH_GAMES_400:    ctx => renderGamesPlayed(ctx, 400,   PLAYER_COLORS[6]),
+            ACH_GAMES_500:    ctx => renderGamesPlayed(ctx, 500,   PLAYER_COLORS[7]),
+            ACH_GAMES_1000:   ctx => renderGamesPlayed(ctx, 1000,  PLAYER_COLORS[0]),
+            ACH_GAMES_10000:  ctx => renderGamesPlayed(ctx, 10000, PLAYER_COLORS[1]),
+            ACH_FIRST_WIN:    render_ACH_FIRST_WIN,
+            ACH_UNDERDOG_5:     render_ACH_UNDERDOG_5,
+            ACH_UNDERDOG_10:    render_ACH_UNDERDOG_10,
+            ACH_UNDERDOG_50:    render_ACH_UNDERDOG_50,
+            ACH_UNDERDOG_100:   render_ACH_UNDERDOG_100,
+            ACH_UNDERDOG_500:   render_ACH_UNDERDOG_500,
+            ACH_UNDERDOG_1000:  render_ACH_UNDERDOG_1000,
+            ACH_UNDERDOG_10000: render_ACH_UNDERDOG_10000,
+            ACH_DAVID:        render_ACH_DAVID,
+            ACH_STREAK_3:     render_ACH_STREAK_3,
+            ACH_STREAK_4:     render_ACH_STREAK_4,
+            ACH_STREAK_5:     render_ACH_STREAK_5,
+            ACH_STREAK_6:     render_ACH_STREAK_6,
+            ACH_STREAK_7:     render_ACH_STREAK_7,
+            ACH_SURVIVOR:     render_ACH_SURVIVOR,
+        };
+
+        // ── Titles and descriptions for each achievement (used on Steam) ─────────
+        const TITLES = {
+            ACH_TUTORIAL:      'First Steps',
+            ACH_CHAPTER1:      'Chapter 1 Complete',
+            ACH_CHAPTER2:      'Chapter 2 Complete',
+            ACH_CHAPTER3:      'Chapter 3 Complete',
+            ACH_CHAPTER4:      'Chapter 4 Complete',
+            ACH_CHAPTER5:      'Chapter 5 Complete',
+            ACH_CHAPTER6:      'Chapter 6 Complete',
+            ACH_CHAPTER7:      'Chapter 7 Complete',
+            ACH_CHAPTER8:      'Chapter 8 Complete',
+            ACH_GAMES_10:      'Warming Up',
+            ACH_GAMES_50:      'Getting Serious',
+            ACH_GAMES_100:     'Centurion',
+            ACH_GAMES_150:     'Dedicated',
+            ACH_GAMES_200:     'Veteran',
+            ACH_GAMES_300:     'Battle-Hardened',
+            ACH_GAMES_400:     'Tactician',
+            ACH_GAMES_500:     'Commander',
+            ACH_GAMES_1000:    'Warlord',
+            ACH_GAMES_10000:   'Legend',
+            ACH_FIRST_WIN:     'First Blood',
+            ACH_UNDERDOG_5:    'Lucky Shot',
+            ACH_UNDERDOG_10:   'Against the Odds',
+            ACH_UNDERDOG_50:   'Unlikely Hero',
+            ACH_UNDERDOG_100:  'Miracle Worker',
+            ACH_UNDERDOG_500:  "Fortune's Favorite",
+            ACH_UNDERDOG_1000: 'Blessed by Chaos',
+            ACH_UNDERDOG_10000:'The Dice God',
+            ACH_DAVID:         'David vs. Goliath',
+            ACH_STREAK_3:      'On a Roll',
+            ACH_STREAK_4:      'Hot Streak',
+            ACH_STREAK_5:      'Unstoppable',
+            ACH_STREAK_6:      'Relentless',
+            ACH_STREAK_7:      'Dominator',
+            ACH_SURVIVOR:      'Last Standing',
+        };
+
+        const DESCRIPTIONS = {
+            ACH_TUTORIAL:      'Complete the Tutorial chapter.',
+            ACH_CHAPTER1:      'Complete Chapter 1.',
+            ACH_CHAPTER2:      'Complete Chapter 2.',
+            ACH_CHAPTER3:      'Complete Chapter 3.',
+            ACH_CHAPTER4:      'Complete Chapter 4.',
+            ACH_CHAPTER5:      'Complete Chapter 5.',
+            ACH_CHAPTER6:      'Complete Chapter 6.',
+            ACH_CHAPTER7:      'Complete Chapter 7.',
+            ACH_CHAPTER8:      'Complete Chapter 8.',
+            ACH_GAMES_10:      'Play 10 games.',
+            ACH_GAMES_50:      'Play 50 games.',
+            ACH_GAMES_100:     'Play 100 games.',
+            ACH_GAMES_150:     'Play 150 games.',
+            ACH_GAMES_200:     'Play 200 games.',
+            ACH_GAMES_300:     'Play 300 games.',
+            ACH_GAMES_400:     'Play 400 games.',
+            ACH_GAMES_500:     'Play 500 games.',
+            ACH_GAMES_1000:    'Play 1,000 games.',
+            ACH_GAMES_10000:   'Play 10,000 games.',
+            ACH_FIRST_WIN:     'Win your first game.',
+            ACH_UNDERDOG_5:    'Win 5 attacks at less than 33% odds.',
+            ACH_UNDERDOG_10:   'Win 10 attacks at less than 33% odds.',
+            ACH_UNDERDOG_50:   'Win 50 attacks at less than 33% odds.',
+            ACH_UNDERDOG_100:  'Win 100 attacks at less than 33% odds.',
+            ACH_UNDERDOG_500:  'Win 500 attacks at less than 33% odds.',
+            ACH_UNDERDOG_1000: 'Win 1,000 attacks at less than 33% odds.',
+            ACH_UNDERDOG_10000:'Win 10,000 attacks at less than 33% odds.',
+            ACH_DAVID:         'Win an attack with 4 dice against 6 dice.',
+            ACH_STREAK_3:      'Win 3 consecutive attacks in one turn.',
+            ACH_STREAK_4:      'Win 4 consecutive attacks in one turn.',
+            ACH_STREAK_5:      'Win 5 consecutive attacks in one turn.',
+            ACH_STREAK_6:      'Win 6 consecutive attacks in one turn.',
+            ACH_STREAK_7:      'Win 7 consecutive attacks in one turn.',
+            ACH_SURVIVOR:      'Win a game against 7 opponents.',
+        };
+
+        // ── Copy helper ────────────────────────────────────────────────────────
+        window.copyText = (text, btn) => {
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = '✓';
+                setTimeout(() => btn.textContent = orig, 1200);
+            });
+        };
+
+        // ── Steam stat definitions ─────────────────────────────────────────────
+        // These are the stats you register in the Steamworks partner portal.
+        const STEAM_STATS = [
+            { apiName: 'STAT_GAMES_PLAYED',   displayName: 'Games Played',   type: 'INT', min: 0, max: 10000, default: 0 },
+            { apiName: 'STAT_GAMES_WON',      displayName: 'Games Won',      type: 'INT', min: 0, max: 1,     default: 0 },
+            { apiName: 'STAT_UNDERDOG_WINS',  displayName: 'Underdog Wins',  type: 'INT', min: 0, max: 10000, default: 0 },
+        ];
+
+        // Min progress value per achievement (= previous tier threshold, or 0)
+        const ACH_MIN = {
+            ACH_GAMES_10:      0,    ACH_GAMES_50:     10,   ACH_GAMES_100:   50,
+            ACH_GAMES_150:     100,  ACH_GAMES_200:    150,  ACH_GAMES_300:   200,
+            ACH_GAMES_400:     300,  ACH_GAMES_500:    400,  ACH_GAMES_1000:  500,
+            ACH_GAMES_10000:   1000,
+            ACH_FIRST_WIN:     0,
+            ACH_UNDERDOG_5:    0,    ACH_UNDERDOG_10:  5,    ACH_UNDERDOG_50:  10,
+            ACH_UNDERDOG_100:  50,   ACH_UNDERDOG_500: 100,  ACH_UNDERDOG_1000: 500,
+            ACH_UNDERDOG_10000:1000,
+        };
+
+        // Stat API name used per achievement
+        const ACH_STAT_API = {
+            ACH_GAMES_10:      'STAT_GAMES_PLAYED',
+            ACH_GAMES_50:      'STAT_GAMES_PLAYED',
+            ACH_GAMES_100:     'STAT_GAMES_PLAYED',
+            ACH_GAMES_150:     'STAT_GAMES_PLAYED',
+            ACH_GAMES_200:     'STAT_GAMES_PLAYED',
+            ACH_GAMES_300:     'STAT_GAMES_PLAYED',
+            ACH_GAMES_400:     'STAT_GAMES_PLAYED',
+            ACH_GAMES_500:     'STAT_GAMES_PLAYED',
+            ACH_GAMES_1000:    'STAT_GAMES_PLAYED',
+            ACH_GAMES_10000:   'STAT_GAMES_PLAYED',
+            ACH_FIRST_WIN:     'STAT_GAMES_WON',
+            ACH_UNDERDOG_5:    'STAT_UNDERDOG_WINS',
+            ACH_UNDERDOG_10:   'STAT_UNDERDOG_WINS',
+            ACH_UNDERDOG_50:   'STAT_UNDERDOG_WINS',
+            ACH_UNDERDOG_100:  'STAT_UNDERDOG_WINS',
+            ACH_UNDERDOG_500:  'STAT_UNDERDOG_WINS',
+            ACH_UNDERDOG_1000: 'STAT_UNDERDOG_WINS',
+            ACH_UNDERDOG_10000:'STAT_UNDERDOG_WINS',
+        };
+
+        // Read live progress from localStorage (game runs on same origin)
+        const lsStats = (() => { try { return JSON.parse(localStorage.getItem('dicy_ach_stats')) || {}; } catch { return {}; } })();
+        const lsStatMap = { STAT_GAMES_PLAYED: lsStats.gamesPlayed || 0, STAT_GAMES_WON: lsStats.gamesWon || 0, STAT_UNDERDOG_WINS: lsStats.underdogWins || 0 };
+
+        // ── Group achievements by type for section headings ────────────────────
+        const SECTIONS = [
+            { key: 'campaign', title: 'Campaign',       filter: a => a.type === 'campaign' },
+            { key: 'stat',     title: 'Games Played',   filter: a => a.type === 'stat'     },
+            { key: 'event',    title: 'Special Combat', filter: a => a.type === 'event'    },
+        ];
+
+        // ── Build DOM + canvas pairs ───────────────────────────────────────────
+        const container  = document.getElementById('container');
+        const allEntries = []; // { id, colorCanvas, greyCanvas }
+
+        const FUTURE_CAMPAIGNS = [
+            { id: 'ACH_CHAPTER5', type: 'campaign' },
+            { id: 'ACH_CHAPTER6', type: 'campaign' },
+            { id: 'ACH_CHAPTER7', type: 'campaign' },
+            { id: 'ACH_CHAPTER8', type: 'campaign' },
+        ];
+
+        // ── Steam Stats section ────────────────────────────────────────────────
+        {
+            const h2 = document.createElement('h2');
+            h2.className = 'section-title';
+            h2.textContent = 'Steam Stats';
+            container.appendChild(h2);
+
+            const grid = document.createElement('div');
+            grid.className = 'stats-grid';
+            container.appendChild(grid);
+
+            STEAM_STATS.forEach(stat => {
+                const current = lsStatMap[stat.apiName] || 0;
+                const pct = Math.min(100, Math.round((current / stat.max) * 100));
+                const item = document.createElement('div');
+                item.className = 'stat-item';
+                item.innerHTML = `
+                    <div class="stat-item-name">${stat.displayName}</div>
+                    <div class="ach-meta">
+                        <div class="ach-meta-row">
+                            <span class="ach-meta-label">API</span>
+                            <span class="ach-meta-value stat-name">${stat.apiName}</span>
+                            <button class="copy-btn" onclick="copyText('${stat.apiName}', this)">⎘</button>
+                        </div>
+                        <div class="ach-meta-row">
+                            <span class="ach-meta-label">TYPE</span>
+                            <span class="ach-meta-value ach-id">${stat.type}</span>
+                        </div>
+                        <div class="ach-meta-row">
+                            <span class="ach-meta-label">MIN</span>
+                            <span class="ach-meta-value num">${stat.min}</span>
+                            <span class="ach-meta-label" style="margin-left:10px">MAX</span>
+                            <span class="ach-meta-value num">${stat.max.toLocaleString()}</span>
+                        </div>
+                        <div class="ach-meta-row">
+                            <span class="ach-meta-label">DEFAULT</span>
+                            <span class="ach-meta-value num">${stat.default}</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+                    <div class="progress-label">${current.toLocaleString()} / ${stat.max.toLocaleString()} (live from localStorage)</div>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        SECTIONS.forEach(sec => {
+            let group = ACHIEVEMENTS.filter(sec.filter);
+            if (sec.key === 'campaign') group = group.concat(FUTURE_CAMPAIGNS);
+            if (!group.length) return;
+
+            const h2 = document.createElement('h2');
+            h2.className = 'section-title';
+            h2.textContent = sec.title;
+            container.appendChild(h2);
+
+            const grid = document.createElement('div');
+            grid.className = 'achievement-grid';
+            container.appendChild(grid);
+
+            group.forEach(ach => {
+                const colorCanvas = document.createElement('canvas');
+                colorCanvas.width = W; colorCanvas.height = H;
+                colorCanvas.id = 'color_' + ach.id;
+
+                const greyCanvas = document.createElement('canvas');
+                greyCanvas.width = W; greyCanvas.height = H;
+                greyCanvas.id = 'grey_' + ach.id;
+
+                const title   = TITLES[ach.id] || ach.id;
+                const desc    = DESCRIPTIONS[ach.id] || '';
+                const statApi = ACH_STAT_API[ach.id];
+                const minVal  = ACH_MIN[ach.id] ?? null;
+                const maxVal  = ach.threshold ?? null;
+
+                // Progress bar for stat achievements using live localStorage data
+                let progressHTML = '';
+                if (statApi && maxVal !== null) {
+                    const current = lsStatMap[statApi] || 0;
+                    const range   = maxVal - (minVal || 0);
+                    const pct     = range > 0 ? Math.min(100, Math.round(((current - (minVal || 0)) / range) * 100)) : (current >= maxVal ? 100 : 0);
+                    progressHTML = `
+                        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+                        <div class="progress-label">${current.toLocaleString()} / ${maxVal.toLocaleString()}</div>`;
+                }
+
+                const statRows = statApi ? `
+                        <div class="ach-meta-row">
+                            <span class="ach-meta-label">STAT</span>
+                            <span class="ach-meta-value stat-name">${statApi}</span>
+                            <button class="copy-btn" onclick="copyText('${statApi}', this)">⎘</button>
+                        </div>
+                        <div class="ach-meta-row">
+                            <span class="ach-meta-label">MIN</span>
+                            <span class="ach-meta-value num">${minVal ?? 0}</span>
+                            <span class="ach-meta-label" style="margin-left:10px">MAX</span>
+                            <span class="ach-meta-value num">${(maxVal ?? '').toLocaleString()}</span>
+                        </div>` : '';
+
+                const item = document.createElement('div');
+                item.className = 'ach-item';
+                item.innerHTML = `
+                    <div class="ach-meta">
+                        <div class="ach-meta-row">
+                            <span class="ach-meta-label">TITLE</span>
+                            <span class="ach-meta-value">${title}</span>
+                            <button class="copy-btn" onclick="copyText('${title.replace(/'/g,"\\'")}', this)">⎘</button>
+                        </div>
+                        <div class="ach-meta-row">
+                            <span class="ach-meta-label">ID</span>
+                            <span class="ach-meta-value ach-id">${ach.id}</span>
+                            <button class="copy-btn" onclick="copyText('${ach.id}', this)">⎘</button>
+                        </div>
+                        <div class="ach-meta-row">
+                            <span class="ach-meta-label">DESC</span>
+                            <span class="ach-meta-value">${desc}</span>
+                            <button class="copy-btn" onclick="copyText('${desc.replace(/'/g,"\\'")}', this)">⎘</button>
+                        </div>
+                        ${statRows}
+                    </div>
+                    ${progressHTML}
+                    <div class="ach-canvases">
+                        <div class="canvas-col" id="col_color_${ach.id}">
+                            <span class="canvas-label">UNLOCKED · color</span>
+                        </div>
+                        <div class="canvas-col" id="col_grey_${ach.id}">
+                            <span class="canvas-label">LOCKED · grey</span>
+                        </div>
+                    </div>`;
+
+                const colorCol = item.querySelector(`#col_color_${ach.id}`);
+                const greyCol  = item.querySelector(`#col_grey_${ach.id}`);
+
+                colorCol.appendChild(colorCanvas);
+                colorCol.insertAdjacentHTML('beforeend',
+                    `<button class="download-btn" onclick="downloadOne('${ach.id}',false)">⬇ ${ach.id}.png</button>`);
+
+                greyCol.appendChild(greyCanvas);
+                greyCol.insertAdjacentHTML('beforeend',
+                    `<button class="download-btn" onclick="downloadOne('${ach.id}',true)">⬇ ${ach.id}_locked.png</button>`);
+
+                grid.appendChild(item);
+                allEntries.push({ id: ach.id, colorCanvas, greyCanvas });
+            });
+        });
+
+        // ── Render everything once font + spritesheet are ready ───────────────
+        await document.fonts.ready;
+        await new Promise(resolve => {
+            if (spriteSheet.complete && spriteSheet.naturalWidth) resolve();
+            else { spriteSheet.onload = resolve; spriteSheet.onerror = resolve; }
+        });
+
+        for (const { id, colorCanvas, greyCanvas } of allEntries) {
+            const fn = RENDERERS[id];
+            if (!fn) { console.warn('No renderer for', id); continue; }
+            fn(colorCanvas.getContext('2d'));
+            greyCanvas.getContext('2d').drawImage(toGreyscale(colorCanvas), 0, 0);
+        }
+
+        // ── Download helpers ──────────────────────────────────────────────────
+        window.downloadOne = (id, grey) => {
+            const canvas = document.getElementById((grey ? 'grey_' : 'color_') + id);
+            if (!canvas) return;
+            const a = document.createElement('a');
+            a.download = grey ? `${id}_locked.png` : `${id}.png`;
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+        };
+
+        window.downloadAll = async () => {
+            const JSZip = window.JSZip;
+            const zip = new JSZip();
+            for (const { id, colorCanvas, greyCanvas } of allEntries) {
+                const toBlob = canvas => new Promise(res => canvas.toBlob(res, 'image/png'));
+                zip.file(`${id}.png`,        await toBlob(colorCanvas));
+                zip.file(`${id}_locked.png`, await toBlob(greyCanvas));
+            }
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const a = document.createElement('a');
+            a.download = 'diception_achievements.zip';
+            a.href = URL.createObjectURL(blob);
+            a.click();
+        };
+    </script>
+</body>
+</html>

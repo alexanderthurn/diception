@@ -3,6 +3,8 @@ import { createAI } from '../core/ai/index.js';
 import { GAME } from '../core/constants.js';
 import { shouldShowInputHints, getInputHint, ACTION_END_TURN, ACTION_MENU } from './input-hints.js';
 import { markLevelSolved } from '../scenarios/campaign-progress.js';
+import { getWinProbability } from '../core/probability.js';
+import { incrementStat, fireAchievementEvent, checkCampaignAchievement } from '../core/achievement-manager.js';
 
 /**
  * GameEventManager - Handles all game event subscriptions and turn flow
@@ -92,6 +94,9 @@ export class GameEventManager {
         const autoplayPlayers = this.gameStarter.getAutoplayPlayers();
         const playerAIs = this.gameStarter.getPlayerAIs();
         const gameSpeed = this.gameStarter.getGameSpeed();
+
+        // 🏆 ACHIEVEMENT: ACH_STREAK_3/4/5/6/7 — reset consecutive-attack streak each new turn
+        if (!data.player.isBot) this._attackStreak = 0;
 
         // Hide dice result HUD when turn starts
         if (this.diceHUD) this.diceHUD.hide();
@@ -372,6 +377,33 @@ export class GameEventManager {
             this.gameLog.recordAttack(result.won);
         }
 
+        // ── Achievement hooks (human attacks only) ───────────────────────────
+        const attackerPlayer = this.game.players.find(p => p.id === result.attackerId);
+        if (attackerPlayer && !attackerPlayer.isBot) {
+            const attackerDice = result.attackerRolls.length;
+            const defenderDice = result.defenderRolls.length;
+
+            if (result.won) {
+                // 🏆 ACHIEVEMENT: ACH_UNDERDOG_5/10/50/100/500/1000/10000
+                const winChance = getWinProbability(attackerDice, defenderDice, this.game.diceSides);
+                if (winChance < 1 / 3) incrementStat('underdogWins');
+
+                // 🏆 ACHIEVEMENT: ACH_DAVID
+                if (attackerDice === 4 && defenderDice === 6) fireAchievementEvent('won4vs6');
+
+                // 🏆 ACHIEVEMENT: ACH_STREAK_3/4/5/6/7
+                this._attackStreak = (this._attackStreak || 0) + 1;
+                if (this._attackStreak >= 3) fireAchievementEvent('attackStreak3');
+                if (this._attackStreak >= 4) fireAchievementEvent('attackStreak4');
+                if (this._attackStreak >= 5) fireAchievementEvent('attackStreak5');
+                if (this._attackStreak >= 6) fireAchievementEvent('attackStreak6');
+                if (this._attackStreak >= 7) fireAchievementEvent('attackStreak7');
+            } else {
+                // 🏆 ACHIEVEMENT: ACH_STREAK_3/4/5/6/7 — reset on any loss
+                this._attackStreak = 0;
+            }
+        }
+
         const attacker = this.game.players.find(p => p.id === result.attackerId);
         const defender = this.game.players.find(p => p.id === result.defenderId);
         const defenderName = defender ? this.getPlayerName(defender) : `Player ${result.defenderId}`;
@@ -491,12 +523,27 @@ export class GameEventManager {
             this.highscoreManager.recordWin(name, humanPlayed, humanWon);
         }
 
+        // 🏆 ACHIEVEMENT: ACH_GAMES_10 / 50 / 100 / 150 / 200 / 300 / 400 / 500 / 1000 / 10000
+        if (humanPlayed) incrementStat('gamesPlayed');
+
+        if (humanWon) {
+            // 🏆 ACHIEVEMENT: ACH_FIRST_WIN
+            incrementStat('gamesWon');
+
+            // 🏆 ACHIEVEMENT: ACH_SURVIVOR
+            if (this.game.players.length >= 8) fireAchievementEvent('won8PlayerGame');
+        }
+
         // Mark campaign level as solved when human wins
         if (humanWon) {
             const owner = localStorage.getItem('dicy_loadedCampaign');
             const idxStr = localStorage.getItem('dicy_loadedLevelIndex');
             if (owner != null && idxStr != null) {
                 markLevelSolved(owner, parseInt(idxStr, 10));
+
+                // 🏆 ACHIEVEMENT: ACH_TUTORIAL / ACH_CHAPTER1 / ACH_CHAPTER2 / ACH_CHAPTER3 / ACH_CHAPTER4
+                const campaign = this.scenarioBrowser?.campaignManager.getCampaign(owner);
+                if (campaign) checkCampaignAchievement(owner, campaign.levels.length);
             }
         }
 

@@ -35,6 +35,7 @@ import { initCheatCode } from './cheat.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
 import { initStorage, flushStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
+import { AchievementsPanel } from './ui/achievements-panel.js';
 import { initCustomSelects } from './ui/custom-select.js';
 import {
     GAME_ACTIONS,
@@ -844,6 +845,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const howtoModal = document.getElementById('howto-modal');
     const settingsModal = document.getElementById('settings-modal');
     const aboutModal = document.getElementById('about-modal');
+    const achievementsModal = document.getElementById('achievements-modal');
     const pauseModal = document.getElementById('pause-modal');
     const keepCampaignsRow = document.getElementById('howto-keep-campaigns-row');
     const keepCampaignsCheck = document.getElementById('howto-keep-campaigns');
@@ -1094,6 +1096,13 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     }
 
     // --- Main Menu button wiring ---
+    const achievementsPanel = new AchievementsPanel(achievementsModal);
+
+    document.getElementById('main-achievements-btn')?.addEventListener('click', () => {
+        mainMenu.classList.add('hidden');
+        achievementsPanel.open();
+    });
+
     document.getElementById('main-campaign-btn')?.addEventListener('click', () => {
         mainMenu.classList.add('hidden');
         scenarioBrowserOpen();
@@ -1144,6 +1153,11 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         }
         if (howtoModal && !howtoModal.classList.contains('hidden')) {
             howtoModal.classList.add('hidden');
+            mainMenu.classList.remove('hidden');
+            return;
+        }
+        if (achievementsModal && !achievementsModal.classList.contains('hidden')) {
+            achievementsModal.classList.add('hidden');
             mainMenu.classList.remove('hidden');
             return;
         }

@@ -173,6 +173,88 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
+            <key type="filename">gfx/achievements/ACH_CHAPTER1.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER1_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER2.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER2_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER3.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER3_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER4.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER4_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER5.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER5_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER6.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER6_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER7.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER7_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER8.png</key>
+            <key type="filename">gfx/achievements/ACH_CHAPTER8_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_DAVID.png</key>
+            <key type="filename">gfx/achievements/ACH_DAVID_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_FIRST_WIN.png</key>
+            <key type="filename">gfx/achievements/ACH_FIRST_WIN_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_10.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_100.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_1000.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_10000.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_10000_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_1000_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_100_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_10_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_150.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_150_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_200.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_200_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_300.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_300_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_400.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_400_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_50.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_500.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_500_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_GAMES_50_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_3.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_3_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_4.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_4_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_5.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_5_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_6.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_6_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_7.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_7_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_SURVIVOR.png</key>
+            <key type="filename">gfx/achievements/ACH_SURVIVOR_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_TUTORIAL.png</key>
+            <key type="filename">gfx/achievements/ACH_TUTORIAL_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_10.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_100.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_1000.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_10000.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_10000_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_1000_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_100_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_10_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_5.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_50.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_500.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_500_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_50_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_UNDERDOG_5_locked.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>spriteScale</key>
+                <double>0.25</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>64,64,128,128</rect>
+                <key>scale9Paddings</key>
+                <rect>64,64,128,128</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">gfx/controls/keyboard/Default/keyboard_0.png</key>
             <key type="filename">gfx/controls/keyboard/Default/keyboard_1.png</key>
             <key type="filename">gfx/controls/keyboard/Default/keyboard_2.png</key>
