@@ -89,6 +89,18 @@ async function _flush() {
 }
 
 function _invokeWrite() {
+    // Stamp every write with OS + time so cross-device sync can be verified.
+    // Check: localStorage.getItem('dicy_debug_stamp') in the browser console.
+    const stamp = {
+        os:      navigator.platform || navigator.userAgent,
+        time:    new Date().toISOString(),
+        count:   (JSON.parse(localStorage.getItem('dicy_debug_stamp') || '{}').count || 0) + 1,
+    };
+    // Write directly to avoid triggering another flush cycle
+    Object.getPrototypeOf(localStorage).setItem.call(
+        localStorage, 'dicy_debug_stamp', JSON.stringify(stamp)
+    );
+
     const data = {};
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
