@@ -954,6 +954,24 @@ function setupInputEvents(game, inputManager, sessionManager) {
 // Helper: Setup all menu navigation (main menu, settings, howto, about, pause)
 function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor) {
     const mainMenu = document.getElementById('main-menu');
+
+    // Update stats display whenever the main menu becomes visible
+    const _statGamesPlayed = document.getElementById('stat-games-played');
+    const _statGamesWon    = document.getElementById('stat-games-won');
+    const _statWinrate     = document.getElementById('stat-winrate');
+    const _refreshMenuStats = () => {
+        const stats   = JSON.parse(localStorage.getItem('dicy_ach_stats') || '{}');
+        const played  = stats.gamesPlayed || 0;
+        const won     = stats.gamesWon    || 0;
+        const pct     = played > 0 ? Math.round((won / played) * 100) : 0;
+        if (_statGamesPlayed) _statGamesPlayed.textContent = played.toLocaleString();
+        if (_statGamesWon)    _statGamesWon.textContent    = won.toLocaleString();
+        if (_statWinrate)     _statWinrate.textContent     = played > 0 ? `${pct}%` : '—';
+    };
+    new MutationObserver(() => {
+        if (!mainMenu.classList.contains('hidden')) _refreshMenuStats();
+    }).observe(mainMenu, { attributes: true, attributeFilter: ['class'] });
+
     const setupModal = document.getElementById('setup-modal');
     const howtoModal = document.getElementById('howto-modal');
     const settingsModal = document.getElementById('settings-modal');
