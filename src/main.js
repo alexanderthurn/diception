@@ -38,6 +38,7 @@ import { isTauriContext, isSteamContext, isDesktopContext, isAndroid } from './s
 import { initStorage, flushStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { AchievementsPanel } from './ui/achievements-panel.js';
+import { ACHIEVEMENTS } from './core/achievements.js';
 import { initCustomSelects } from './ui/custom-select.js';
 import {
     GAME_ACTIONS,
@@ -80,6 +81,26 @@ window.addEventListener('resize', updateUIScale);
 async function init() {
     // Load cloud save data into localStorage before anything else reads it
     await initStorage();
+
+    // Sync achievement state from Steam — Steam's backend is authoritative,
+    // so if the .sav file wasn't synced (e.g. first launch on a new machine),
+    // achievements already unlocked in Steam will be merged in.
+    if (window.steam?.getUnlockedAchievements) {
+        try {
+            const allIds = ACHIEVEMENTS.map(a => a.id);
+            const steamUnlocked = await window.steam.getUnlockedAchievements(allIds);
+            if (steamUnlocked.length > 0) {
+                const local = JSON.parse(localStorage.getItem('dicy_ach_unlocked') || '[]');
+                const merged = [...new Set([...local, ...steamUnlocked])];
+                if (merged.length > local.length) {
+                    localStorage.setItem('dicy_ach_unlocked', JSON.stringify(merged));
+                    console.log(`[achievements] Synced ${merged.length - local.length} achievement(s) from Steam`);
+                }
+            }
+        } catch (e) {
+            console.warn('[achievements] Steam sync failed:', e);
+        }
+    }
 
     // Load spritesheet
     try {

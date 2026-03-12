@@ -99,6 +99,19 @@ fn steam_unlock_achievement(state: tauri::State<SteamState>, achievement_id: Str
 
 #[cfg(not(target_os = "android"))]
 #[tauri::command]
+fn steam_get_unlocked_achievements(state: tauri::State<SteamState>, ids: Vec<String>) -> Result<Vec<String>, String> {
+    let guard = state.lock().map_err(|e| e.to_string())?;
+    guard.as_ref()
+        .map(|s| {
+            ids.into_iter()
+                .filter(|id| s.client.user_stats().achievement(id).get().unwrap_or(false))
+                .collect()
+        })
+        .ok_or_else(|| "Steam not initialized".to_string())
+}
+
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
 fn steam_set_stat(state: tauri::State<SteamState>, stat_name: String, value: i32) -> Result<(), String> {
     let guard = state.lock().map_err(|e| e.to_string())?;
     guard.as_ref()
@@ -279,8 +292,9 @@ const STEAM_INIT_SCRIPT: &str = r#"
         isDev:            function()         { return ipc.invoke('steam_is_dev'); },
         quit:             function()         { return ipc.invoke('steam_quit'); },
         activateOverlay:  function(dialog)   { return ipc.invoke('steam_activate_overlay', { dialog: dialog || 'Friends' }); },
-        unlockAchievement:function(id)       { return ipc.invoke('steam_unlock_achievement', { achievementId: id }); },
-        setStat:          function(name, val){ return ipc.invoke('steam_set_stat', { statName: name, value: val }); },
+        unlockAchievement:       function(id)    { return ipc.invoke('steam_unlock_achievement', { achievementId: id }); },
+        getUnlockedAchievements: function(ids)   { return ipc.invoke('steam_get_unlocked_achievements', { ids: ids }); },
+        setStat:                 function(name, val){ return ipc.invoke('steam_set_stat', { statName: name, value: val }); },
     };
     // Shift+Tab: prevent browser focus cycling and open overlay manually.
     // On macOS, Steam cannot inject into WKWebView's Metal surface, so we
@@ -365,6 +379,7 @@ pub fn run() {
                 steam_quit,
                 steam_activate_overlay,
                 steam_unlock_achievement,
+                steam_get_unlocked_achievements,
                 steam_set_stat,
                 gilrs_poll,
                 storage_read_all,
