@@ -99,6 +99,15 @@ fn steam_unlock_achievement(state: tauri::State<SteamState>, achievement_id: Str
 
 #[cfg(not(target_os = "android"))]
 #[tauri::command]
+fn steam_get_stat_i32(state: tauri::State<SteamState>, stat_name: String) -> Result<i32, String> {
+    let guard = state.lock().map_err(|e| e.to_string())?;
+    guard.as_ref()
+        .map(|s| s.client.user_stats().get_stat_i32(&stat_name).unwrap_or(0))
+        .ok_or_else(|| "Steam not initialized".to_string())
+}
+
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
 fn steam_get_unlocked_achievements(state: tauri::State<SteamState>, ids: Vec<String>) -> Result<Vec<String>, String> {
     let guard = state.lock().map_err(|e| e.to_string())?;
     guard.as_ref()
@@ -293,7 +302,8 @@ const STEAM_INIT_SCRIPT: &str = r#"
         quit:             function()         { return ipc.invoke('steam_quit'); },
         activateOverlay:  function(dialog)   { return ipc.invoke('steam_activate_overlay', { dialog: dialog || 'Friends' }); },
         unlockAchievement:       function(id)    { return ipc.invoke('steam_unlock_achievement', { achievementId: id }); },
-        getUnlockedAchievements: function(ids)   { return ipc.invoke('steam_get_unlocked_achievements', { ids: ids }); },
+        getUnlockedAchievements: function(ids)    { return ipc.invoke('steam_get_unlocked_achievements', { ids: ids }); },
+        getStatI32:              function(name)   { return ipc.invoke('steam_get_stat_i32', { statName: name }); },
         setStat:                 function(name, val){ return ipc.invoke('steam_set_stat', { statName: name, value: val }); },
     };
     // Shift+Tab: prevent browser focus cycling and open overlay manually.
@@ -380,6 +390,7 @@ pub fn run() {
                 steam_activate_overlay,
                 steam_unlock_achievement,
                 steam_get_unlocked_achievements,
+                steam_get_stat_i32,
                 steam_set_stat,
                 gilrs_poll,
                 storage_read_all,

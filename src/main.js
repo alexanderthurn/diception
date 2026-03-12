@@ -102,6 +102,35 @@ async function init() {
         }
     }
 
+    // Sync stats from Steam — Steam's stat backend is always authoritative.
+    // Whichever device was used most recently may have overwritten the .sav
+    // with lower values, so we take the max of local and Steam.
+    if (window.steam?.getStatI32) {
+        const STEAM_STATS = [
+            { localKey: 'gamesPlayed',  steamName: 'STAT_GAMES_PLAYED'  },
+            { localKey: 'gamesWon',     steamName: 'STAT_GAMES_WON'     },
+            { localKey: 'underdogWins', steamName: 'STAT_UNDERDOG_WINS' },
+        ];
+        try {
+            const localStats = JSON.parse(localStorage.getItem('dicy_ach_stats') || '{}');
+            let changed = false;
+            for (const { localKey, steamName } of STEAM_STATS) {
+                const steamVal = await window.steam.getStatI32(steamName);
+                const localVal = localStats[localKey] || 0;
+                if (steamVal > localVal) {
+                    localStats[localKey] = steamVal;
+                    changed = true;
+                    console.log(`[stats] Synced ${localKey} from Steam: ${localVal} → ${steamVal}`);
+                }
+            }
+            if (changed) {
+                localStorage.setItem('dicy_ach_stats', JSON.stringify(localStats));
+            }
+        } catch (e) {
+            console.warn('[stats] Steam sync failed:', e);
+        }
+    }
+
     // Load spritesheet
     try {
         await Assets.load('assets/gfx/diception.json');
