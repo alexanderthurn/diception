@@ -89,13 +89,21 @@ async function init() {
         try {
             const allIds = ACHIEVEMENTS.map(a => a.id);
             const steamUnlocked = await window.steam.getUnlockedAchievements(allIds);
-            if (steamUnlocked.length > 0) {
-                const local = JSON.parse(localStorage.getItem('dicy_ach_unlocked') || '[]');
-                const merged = [...new Set([...local, ...steamUnlocked])];
-                if (merged.length > local.length) {
-                    localStorage.setItem('dicy_ach_unlocked', JSON.stringify(merged));
-                    console.log(`[achievements] Synced ${merged.length - local.length} achievement(s) from Steam`);
-                }
+            const local = JSON.parse(localStorage.getItem('dicy_ach_unlocked') || '[]');
+            const merged = [...new Set([...local, ...steamUnlocked])];
+
+            // Steam → localStorage: pull any Steam achievements missing locally
+            if (merged.length > local.length) {
+                localStorage.setItem('dicy_ach_unlocked', JSON.stringify(merged));
+                console.log(`[achievements] Pulled ${merged.length - local.length} achievement(s) from Steam`);
+            }
+
+            // localStorage → Steam: push any local achievements missing in Steam
+            const steamSet = new Set(steamUnlocked);
+            const topush = local.filter(id => !steamSet.has(id));
+            for (const id of topush) {
+                await window.steam.unlockAchievement(id);
+                console.log(`[achievements] Pushed to Steam: ${id}`);
             }
         } catch (e) {
             console.warn('[achievements] Steam sync failed:', e);
