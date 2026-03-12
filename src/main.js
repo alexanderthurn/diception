@@ -465,6 +465,19 @@ async function init() {
                 } else {
                     await win.setDecorations(true);
                     await win.unmaximize();
+                    // Restore saved window size and position
+                    const savedW = parseInt(localStorage.getItem('dicy_win_w'), 10);
+                    const savedH = parseInt(localStorage.getItem('dicy_win_h'), 10);
+                    const savedWinX = parseInt(localStorage.getItem('dicy_win_x'), 10);
+                    const savedWinY = parseInt(localStorage.getItem('dicy_win_y'), 10);
+                    if (!isNaN(savedW) && savedW > 100 && !isNaN(savedH) && savedH > 100) {
+                        const { PhysicalSize } = await import('@tauri-apps/api/dpi');
+                        await win.setSize(new PhysicalSize(savedW, savedH));
+                    }
+                    if (!isNaN(savedWinX) && !isNaN(savedWinY)) {
+                        const { PhysicalPosition: PP } = await import('@tauri-apps/api/dpi');
+                        await win.setPosition(new PP(savedWinX, savedWinY));
+                    }
                 }
 
                 if (renderer && renderer.app && renderer.app.renderer) {
@@ -514,6 +527,13 @@ async function init() {
                     let lastMonitorName = current?.name;
                     win.onMoved(async () => {
                         try {
+                            // Save window position (only in windowed mode)
+                            const isFS = await win.isFullscreen();
+                            if (!isFS) {
+                                const pos = await win.outerPosition();
+                                localStorage.setItem('dicy_win_x', String(pos.x));
+                                localStorage.setItem('dicy_win_y', String(pos.y));
+                            }
                             const { currentMonitor: getCurrent, availableMonitors: getMonitors } = await import('@tauri-apps/api/window');
                             const nowMonitor = await getCurrent();
                             if (!nowMonitor || nowMonitor.name === lastMonitorName) return;
@@ -525,6 +545,16 @@ async function init() {
                             if (gfxMonitor) gfxMonitor.value = String(idx);
                             // Flush immediately so the save survives an OS-level close
                             await flushStorage();
+                        } catch (_) {}
+                    });
+                    win.onResized(async () => {
+                        try {
+                            const isFS = await win.isFullscreen();
+                            if (!isFS) {
+                                const size = await win.outerSize();
+                                localStorage.setItem('dicy_win_w', String(size.width));
+                                localStorage.setItem('dicy_win_h', String(size.height));
+                            }
                         } catch (_) {}
                     });
                 } catch (err) {
