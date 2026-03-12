@@ -654,6 +654,23 @@ async function init() {
                 window.location.reload();
             });
         }
+        // Alt+Enter: toggle fullscreen ↔ windowed
+        window.addEventListener('keydown', async (e) => {
+            if (e.altKey && e.key === 'Enter') {
+                e.preventDefault();
+                const current = localStorage.getItem('dicy_gfx_display_mode') || 'fullscreen';
+                const next    = current === 'fullscreen' ? 'window' : 'fullscreen';
+                localStorage.setItem('dicy_gfx_display_mode', next);
+                if (gfxDisplayMode) gfxDisplayMode.value = next;
+                await flushStorage();
+                await applyDesktopGraphics(
+                    next,
+                    localStorage.getItem('dicy_gfx_resolution') || '1.0',
+                    parseInt(localStorage.getItem('dicy_gfx_monitor') ?? '-1', 10)
+                );
+            }
+        });
+
         // Gamepad type toggle
         // (wired in refreshControlsSection below)
     }

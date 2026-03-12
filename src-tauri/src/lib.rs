@@ -99,6 +99,14 @@ fn steam_unlock_achievement(state: tauri::State<SteamState>, achievement_id: Str
 
 #[cfg(not(target_os = "android"))]
 #[tauri::command]
+fn open_devtools(window: tauri::WebviewWindow) {
+    // No-op in release builds; only active when debug_assertions are on.
+    #[cfg(debug_assertions)]
+    window.open_devtools();
+}
+
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
 fn steam_get_stat_i32(state: tauri::State<SteamState>, stat_name: String) -> Result<i32, String> {
     let guard = state.lock().map_err(|e| e.to_string())?;
     guard.as_ref()
@@ -309,10 +317,18 @@ const STEAM_INIT_SCRIPT: &str = r#"
     // Shift+Tab: prevent browser focus cycling and open overlay manually.
     // On macOS, Steam cannot inject into WKWebView's Metal surface, so we
     // must trigger it ourselves rather than relying on Steam's global hook.
+    // F12: blocked so Steam can use it for screenshots. F8 opens devtools instead.
     window.addEventListener('keydown', function(e) {
         if (e.shiftKey && e.key === 'Tab') {
             e.preventDefault();
             window.steam.activateOverlay('Friends');
+        }
+        if (e.key === 'F12') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }
+        if (e.key === 'F8') {
+            ipc.invoke('open_devtools').catch(function() {});
         }
     }, true);
 })();
@@ -388,6 +404,7 @@ pub fn run() {
                 steam_is_dev,
                 steam_quit,
                 steam_activate_overlay,
+                open_devtools,
                 steam_unlock_achievement,
                 steam_get_unlocked_achievements,
                 steam_get_stat_i32,
