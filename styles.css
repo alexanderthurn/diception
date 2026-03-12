@@ -2372,7 +2372,8 @@ select {
     flex-direction: column;
 }
 
-#howto-modal .howto-content {
+#howto-modal .howto-content,
+#achievements-modal .howto-content {
     max-height: calc(90vh - 120px);
     overflow-y: auto;
 }

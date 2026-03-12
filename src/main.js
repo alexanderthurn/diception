@@ -973,17 +973,24 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const mainMenu = document.getElementById('main-menu');
 
     // Update stats display whenever the main menu becomes visible
-    const _statGamesPlayed = document.getElementById('stat-games-played');
-    const _statGamesWon    = document.getElementById('stat-games-won');
-    const _statWinrate     = document.getElementById('stat-winrate');
+    const _achBtnProgress  = document.getElementById('ach-btn-progress');
+    const _achStatPlayed   = document.getElementById('ach-stat-played');
+    const _achStatWon      = document.getElementById('ach-stat-won');
+    const _achStatWinrate  = document.getElementById('ach-stat-winrate');
     const _refreshMenuStats = () => {
-        const stats   = JSON.parse(localStorage.getItem('dicy_ach_stats') || '{}');
-        const played  = stats.gamesPlayed || 0;
-        const won     = stats.gamesWon    || 0;
-        const pct     = played > 0 ? Math.round((won / played) * 100) : 0;
-        if (_statGamesPlayed) _statGamesPlayed.textContent = played.toLocaleString();
-        if (_statGamesWon)    _statGamesWon.textContent    = won.toLocaleString();
-        if (_statWinrate)     _statWinrate.textContent     = played > 0 ? `${pct}%` : '—';
+        const stats    = JSON.parse(localStorage.getItem('dicy_ach_stats') || '{}');
+        const unlocked = JSON.parse(localStorage.getItem('dicy_ach_unlocked') || '[]');
+        const played   = stats.gamesPlayed || 0;
+        const won      = stats.gamesWon    || 0;
+        const pct      = played > 0 ? Math.round((won / played) * 100) : 0;
+
+        // Achievement button: unlocked / total
+        if (_achBtnProgress) _achBtnProgress.textContent = `${unlocked.length} / ${ACHIEVEMENTS.length}`;
+
+        // Achievements modal stats
+        if (_achStatPlayed)  _achStatPlayed.textContent  = played.toLocaleString();
+        if (_achStatWon)     _achStatWon.textContent     = won.toLocaleString();
+        if (_achStatWinrate) _achStatWinrate.textContent = played > 0 ? `${pct}%` : '—';
     };
     new MutationObserver(() => {
         if (!mainMenu.classList.contains('hidden')) _refreshMenuStats();

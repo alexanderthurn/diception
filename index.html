@@ -258,26 +258,14 @@
         <div id="main-menu" class="modal hidden">
             <h1 class="tron-title">DICEPTION</h1>
             <div class="credits" id="main-menu-credits">by Alexander Thurn</div>
-            <div id="main-menu-stats" style="display:flex;gap:24px;justify-content:center;margin-top:12px;font-family:Rajdhani,sans-serif;letter-spacing:1px;">
-                <div style="text-align:center;">
-                    <div style="font-size:22px;font-weight:700;color:#00FFFF;" id="stat-games-played">—</div>
-                    <div style="font-size:11px;color:#555;text-transform:uppercase;">Games</div>
-                </div>
-                <div style="text-align:center;">
-                    <div style="font-size:22px;font-weight:700;color:#00FFFF;" id="stat-games-won">—</div>
-                    <div style="font-size:11px;color:#555;text-transform:uppercase;">Won</div>
-                </div>
-                <div style="text-align:center;">
-                    <div style="font-size:22px;font-weight:700;color:#00FFFF;" id="stat-winrate">—</div>
-                    <div style="font-size:11px;color:#555;text-transform:uppercase;">Win Rate</div>
-                </div>
-            </div>
             <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;width:100%;min-width:220px;">
                 <button id="main-custom-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span> Play Game</button>
                 <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span> Campaign</button>
-                <button id="main-settings-btn" class="tron-btn large"><span class="sprite-icon icon-settings"></span> Settings</button>
                 <div style="display:flex;gap:10px;">
-                    <button id="main-achievements-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-achievements"></span> Achievements</button>
+                    <button id="main-settings-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-settings"></span> Settings</button>
+                    <button id="main-achievements-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-achievements"></span> <span id="ach-btn-progress"></span></button>
+                </div>
+                <div style="display:flex;gap:10px;">
                     <button id="main-howto-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-help"></span> How To</button>
                     <button id="main-about-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-scenario"></span> About</button>
                 </div>
@@ -677,7 +665,24 @@
                 <h2 class="tron-title small">ACHIEVEMENTS</h2>
             </div>
             <div class="howto-content">
-                <p id="ach-subtitle" style="color:var(--border-color);font-family:Rajdhani,sans-serif;font-size:13px;letter-spacing:2px;margin-bottom:16px;"></p>
+                <table style="width:100%;font-family:Rajdhani,sans-serif;border-collapse:collapse;margin-bottom:20px;">
+                    <tr style="border-bottom:1px solid #222;">
+                        <td style="padding:8px 0;color:#888;letter-spacing:1px;text-transform:uppercase;font-size:13px;">Achievements</td>
+                        <td style="padding:8px 0;color:#00FFFF;font-size:20px;font-weight:700;text-align:right;" id="ach-subtitle">—</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #222;">
+                        <td style="padding:8px 0;color:#888;letter-spacing:1px;text-transform:uppercase;font-size:13px;">Games Played</td>
+                        <td style="padding:8px 0;color:#00FFFF;font-size:20px;font-weight:700;text-align:right;" id="ach-stat-played">—</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #222;">
+                        <td style="padding:8px 0;color:#888;letter-spacing:1px;text-transform:uppercase;font-size:13px;">Games Won</td>
+                        <td style="padding:8px 0;color:#00FFFF;font-size:20px;font-weight:700;text-align:right;" id="ach-stat-won">—</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:8px 0;color:#888;letter-spacing:1px;text-transform:uppercase;font-size:13px;">Win Rate</td>
+                        <td style="padding:8px 0;color:#00FFFF;font-size:20px;font-weight:700;text-align:right;" id="ach-stat-winrate">—</td>
+                    </tr>
+                </table>
                 <div id="ach-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;"></div>
             </div>
         </div>

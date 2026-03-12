@@ -94,7 +94,7 @@ export class AchievementsPanel {
         const unlocked = loadUnlocked();
 
         if (this._subtitle) {
-            this._subtitle.textContent = `${unlocked.length} / ${ACHIEVEMENTS.length} UNLOCKED`;
+            this._subtitle.textContent = `${unlocked.length} / ${ACHIEVEMENTS.length}`;
         }
 
         this._grid.innerHTML = '';
