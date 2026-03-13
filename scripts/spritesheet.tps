@@ -251,6 +251,64 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">gfx/achievements/ACH_PURE_BOTS.png</key>
+            <key type="filename">gfx/achievements/ACH_PURE_BOTS_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_PURE_HUMANS.png</key>
+            <key type="filename">gfx/achievements/ACH_PURE_HUMANS_locked.png</key>
+            <key type="filename">gfx/game/bg.png</key>
+            <key type="filename">gfx/game/die_d1.png</key>
+            <key type="filename">gfx/game/die_d10.png</key>
+            <key type="filename">gfx/game/die_d11.png</key>
+            <key type="filename">gfx/game/die_d12.png</key>
+            <key type="filename">gfx/game/die_d13.png</key>
+            <key type="filename">gfx/game/die_d14.png</key>
+            <key type="filename">gfx/game/die_d15.png</key>
+            <key type="filename">gfx/game/die_d16.png</key>
+            <key type="filename">gfx/game/die_d2.png</key>
+            <key type="filename">gfx/game/die_d3.png</key>
+            <key type="filename">gfx/game/die_d4.png</key>
+            <key type="filename">gfx/game/die_d5.png</key>
+            <key type="filename">gfx/game/die_d6.png</key>
+            <key type="filename">gfx/game/die_d7.png</key>
+            <key type="filename">gfx/game/die_d8.png</key>
+            <key type="filename">gfx/game/die_d9.png</key>
+            <key type="filename">gfx/game/icon_achievements.png</key>
+            <key type="filename">gfx/game/icon_assign.png</key>
+            <key type="filename">gfx/game/icon_attack.png</key>
+            <key type="filename">gfx/game/icon_autoplay.png</key>
+            <key type="filename">gfx/game/icon_campaigns.png</key>
+            <key type="filename">gfx/game/icon_close.png</key>
+            <key type="filename">gfx/game/icon_defend.png</key>
+            <key type="filename">gfx/game/icon_dice.png</key>
+            <key type="filename">gfx/game/icon_gamepad.png</key>
+            <key type="filename">gfx/game/icon_help.png</key>
+            <key type="filename">gfx/game/icon_input_mk.png</key>
+            <key type="filename">gfx/game/icon_map.png</key>
+            <key type="filename">gfx/game/icon_music_off.png</key>
+            <key type="filename">gfx/game/icon_music_on.png</key>
+            <key type="filename">gfx/game/icon_paint.png</key>
+            <key type="filename">gfx/game/icon_retry.png</key>
+            <key type="filename">gfx/game/icon_save.png</key>
+            <key type="filename">gfx/game/icon_scenario.png</key>
+            <key type="filename">gfx/game/icon_settings.png</key>
+            <key type="filename">gfx/game/icon_sfx_off.png</key>
+            <key type="filename">gfx/game/icon_sfx_on.png</key>
+            <key type="filename">gfx/game/icon_zoom_in.png</key>
+            <key type="filename">gfx/game/icon_zoom_out.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>64,64,128,128</rect>
+                <key>scale9Paddings</key>
+                <rect>64,64,128,128</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">gfx/controls/keyboard/Default/keyboard_0.png</key>
             <key type="filename">gfx/controls/keyboard/Default/keyboard_1.png</key>
             <key type="filename">gfx/controls/keyboard/Default/keyboard_2.png</key>
@@ -371,60 +429,6 @@
                 <rect>16,16,32,32</rect>
                 <key>scale9Paddings</key>
                 <rect>16,16,32,32</rect>
-                <key>scale9FromFile</key>
-                <false/>
-            </struct>
-            <key type="filename">gfx/game/bg.png</key>
-            <key type="filename">gfx/game/die_d1.png</key>
-            <key type="filename">gfx/game/die_d10.png</key>
-            <key type="filename">gfx/game/die_d11.png</key>
-            <key type="filename">gfx/game/die_d12.png</key>
-            <key type="filename">gfx/game/die_d13.png</key>
-            <key type="filename">gfx/game/die_d14.png</key>
-            <key type="filename">gfx/game/die_d15.png</key>
-            <key type="filename">gfx/game/die_d16.png</key>
-            <key type="filename">gfx/game/die_d2.png</key>
-            <key type="filename">gfx/game/die_d3.png</key>
-            <key type="filename">gfx/game/die_d4.png</key>
-            <key type="filename">gfx/game/die_d5.png</key>
-            <key type="filename">gfx/game/die_d6.png</key>
-            <key type="filename">gfx/game/die_d7.png</key>
-            <key type="filename">gfx/game/die_d8.png</key>
-            <key type="filename">gfx/game/die_d9.png</key>
-            <key type="filename">gfx/game/icon_achievements.png</key>
-            <key type="filename">gfx/game/icon_assign.png</key>
-            <key type="filename">gfx/game/icon_attack.png</key>
-            <key type="filename">gfx/game/icon_autoplay.png</key>
-            <key type="filename">gfx/game/icon_campaigns.png</key>
-            <key type="filename">gfx/game/icon_close.png</key>
-            <key type="filename">gfx/game/icon_defend.png</key>
-            <key type="filename">gfx/game/icon_dice.png</key>
-            <key type="filename">gfx/game/icon_gamepad.png</key>
-            <key type="filename">gfx/game/icon_help.png</key>
-            <key type="filename">gfx/game/icon_input_mk.png</key>
-            <key type="filename">gfx/game/icon_map.png</key>
-            <key type="filename">gfx/game/icon_music_off.png</key>
-            <key type="filename">gfx/game/icon_music_on.png</key>
-            <key type="filename">gfx/game/icon_paint.png</key>
-            <key type="filename">gfx/game/icon_retry.png</key>
-            <key type="filename">gfx/game/icon_save.png</key>
-            <key type="filename">gfx/game/icon_scenario.png</key>
-            <key type="filename">gfx/game/icon_settings.png</key>
-            <key type="filename">gfx/game/icon_sfx_off.png</key>
-            <key type="filename">gfx/game/icon_sfx_on.png</key>
-            <key type="filename">gfx/game/icon_zoom_in.png</key>
-            <key type="filename">gfx/game/icon_zoom_out.png</key>
-            <struct type="IndividualSpriteSettings">
-                <key>pivotPoint</key>
-                <point_f>0,0</point_f>
-                <key>spriteScale</key>
-                <double>1</double>
-                <key>scale9Enabled</key>
-                <false/>
-                <key>scale9Borders</key>
-                <rect>64,64,128,128</rect>
-                <key>scale9Paddings</key>
-                <rect>64,64,128,128</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
