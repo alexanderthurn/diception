@@ -96,7 +96,7 @@ export class GameEventManager {
         const gameSpeed = this.gameStarter.getGameSpeed();
 
         // 🏆 ACHIEVEMENT: ACH_STREAK_3/4/5/6/7 — reset consecutive-attack streak each new turn
-        if (!data.player.isBot) this._attackStreak = 0;
+        if (!data.player.isBot) { this._attackStreak = 0; this._streakTile = null; }
 
         // Hide dice result HUD when turn starts
         if (this.diceHUD) this.diceHUD.hide();
@@ -384,7 +384,7 @@ export class GameEventManager {
             const defenderDice = result.defenderRolls.length;
 
             if (result.won) {
-                // 🏆 ACHIEVEMENT: ACH_UNDERDOG_5/10/50/100/500/1000/10000
+                // 🏆 ACHIEVEMENT: ACH_UNDERDOG_5/10/50/100/500
                 const winChance = getWinProbability(attackerDice, defenderDice, this.game.diceSides);
                 if (winChance < 1 / 3) incrementStat('underdogWins');
 
@@ -392,7 +392,13 @@ export class GameEventManager {
                 if (attackerDice === 4 && defenderDice === 6) fireAchievementEvent('won4vs6');
 
                 // 🏆 ACHIEVEMENT: ACH_STREAK_3/4/5/6/7
+                // Streak only continues if attacking from the just-conquered territory
+                const fromMatchesLastConquest = this._streakTile
+                    && result.from.x === this._streakTile.x
+                    && result.from.y === this._streakTile.y;
+                if (!fromMatchesLastConquest) this._attackStreak = 0;
                 this._attackStreak = (this._attackStreak || 0) + 1;
+                this._streakTile = { x: result.to.x, y: result.to.y };
                 if (this._attackStreak >= 3) fireAchievementEvent('attackStreak3');
                 if (this._attackStreak >= 4) fireAchievementEvent('attackStreak4');
                 if (this._attackStreak >= 5) fireAchievementEvent('attackStreak5');
@@ -401,6 +407,7 @@ export class GameEventManager {
             } else {
                 // 🏆 ACHIEVEMENT: ACH_STREAK_3/4/5/6/7 — reset on any loss
                 this._attackStreak = 0;
+                this._streakTile = null;
             }
         }
 
@@ -523,8 +530,17 @@ export class GameEventManager {
             this.highscoreManager.recordWin(name, humanPlayed, humanWon);
         }
 
+        const allBots   = this.game.players.every(p => p.isBot);
+        const allHumans = this.game.players.every(p => !p.isBot);
+
         // 🏆 ACHIEVEMENT: ACH_GAMES_10 / 50 / 100 / 150 / 200 / 300 / 400 / 500 / 1000 / 10000
         if (humanPlayed) incrementStat('gamesPlayed');
+
+        // 🏆 ACHIEVEMENT: ACH_PURE_BOTS
+        if (allBots) fireAchievementEvent('pureBots');
+
+        // 🏆 ACHIEVEMENT: ACH_PURE_HUMANS
+        if (allHumans && this.game.players.length >= 2) fireAchievementEvent('pureHumans');
 
         if (humanWon) {
             // 🏆 ACHIEVEMENT: ACH_FIRST_WIN

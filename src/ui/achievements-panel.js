@@ -18,7 +18,7 @@ function getDescription(ach) {
     if (ach.type === 'stat') {
         if (ach.stat === 'gamesPlayed')  return `Play ${ach.threshold.toLocaleString()} games`;
         if (ach.stat === 'gamesWon')     return 'Win your first game';
-        if (ach.stat === 'underdogWins') return `Win ${ach.threshold.toLocaleString()} attacks with less than 33% chance`;
+        if (ach.stat === 'underdogWins') return `Win ${ach.threshold.toLocaleString()} attacks with less than 33% odds`;
     }
     if (ach.type === 'event') {
         if (ach.event === 'won4vs6')        return 'Win an attack with 4 dice against 6 dice';
@@ -28,6 +28,8 @@ function getDescription(ach) {
         if (ach.event === 'attackStreak6')  return 'Win 6 consecutive attacks in one turn';
         if (ach.event === 'attackStreak7')  return 'Win 7 consecutive attacks in one turn';
         if (ach.event === 'won8PlayerGame') return 'Win a game against 7 opponents';
+        if (ach.event === 'pureBots')       return 'Let a bots-only game run to completion';
+        if (ach.event === 'pureHumans')     return 'Play a game with 2+ humans and no bots';
     }
     return '';
 }

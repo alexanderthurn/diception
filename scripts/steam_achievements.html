@@ -393,7 +393,7 @@
             drawVignette(ctx);
             // Number centered on tile
             const label = n >= 1000 ? (n/1000)+'K' : String(n);
-            drawLabel(ctx, label, W/2, H/2, W*0.42, '#FFFFFF', 700);
+            drawLabel(ctx, label, W/2, H/2 + W*0.03, W*0.42, '#FFFFFF', 700);
             drawBorder(ctx, color);
         }
 
@@ -445,8 +445,35 @@
         function render_ACH_UNDERDOG_50(ctx)    { renderUnderdog(ctx, 2, 5, '×50',    4003, PLAYER_COLORS[2]); }
         function render_ACH_UNDERDOG_100(ctx)   { renderUnderdog(ctx, 2, 5, '×100',   4004, PLAYER_COLORS[3]); }
         function render_ACH_UNDERDOG_500(ctx)   { renderUnderdog(ctx, 2, 5, '×500',   4005, PLAYER_COLORS[4]); }
-        function render_ACH_UNDERDOG_1000(ctx)  { renderUnderdog(ctx, 2, 5, '×1K',    4006, PLAYER_COLORS[5]); }
-        function render_ACH_UNDERDOG_10000(ctx) { renderUnderdog(ctx, 2, 5, '×10K',   4007, PLAYER_COLORS[6]); }
+
+        // Draw a sprite from the spritesheet, centered at (cx, cy), scaled to size
+        function drawSprite(ctx, sx, sy, sw, sh, cx, cy, size, alpha = 1) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.drawImage(spriteSheet, sx, sy, sw, sh, cx - size/2, cy - size/2, size, size);
+            ctx.restore();
+        }
+
+        const SPRITE_AUTOPLAY = { x: 837, y: 181, w: 160, h: 169 }; // icon_autoplay.png
+        const SPRITE_ASSIGN   = { x: 1,   y: 1010, w: 179, h: 178 }; // icon_assign.png
+
+        function render_ACH_PURE_BOTS(ctx) {
+            const rng = mulberry32(8001);
+            drawBackground(ctx, '#FF8800', rng);
+            const s = SPRITE_AUTOPLAY;
+            drawSprite(ctx, s.x, s.y, s.w, s.h, W/2, H/2, W * 0.65);
+            drawVignette(ctx);
+            drawBorder(ctx, '#FF8800');
+        }
+
+        function render_ACH_PURE_HUMANS(ctx) {
+            const rng = mulberry32(8002);
+            drawBackground(ctx, '#00FFFF', rng);
+            const s = SPRITE_ASSIGN;
+            drawSprite(ctx, s.x, s.y, s.w, s.h, W/2, H/2, W * 0.65);
+            drawVignette(ctx);
+            drawBorder(ctx, '#00FFFF');
+        }
 
         function render_ACH_DAVID(ctx) {
             const rng = mulberry32(5001);
@@ -529,14 +556,14 @@
             ACH_GAMES_1000:   ctx => renderGamesPlayed(ctx, 1000,  PLAYER_COLORS[0]),
             ACH_GAMES_10000:  ctx => renderGamesPlayed(ctx, 10000, PLAYER_COLORS[1]),
             ACH_FIRST_WIN:    render_ACH_FIRST_WIN,
-            ACH_UNDERDOG_5:     render_ACH_UNDERDOG_5,
-            ACH_UNDERDOG_10:    render_ACH_UNDERDOG_10,
-            ACH_UNDERDOG_50:    render_ACH_UNDERDOG_50,
-            ACH_UNDERDOG_100:   render_ACH_UNDERDOG_100,
-            ACH_UNDERDOG_500:   render_ACH_UNDERDOG_500,
-            ACH_UNDERDOG_1000:  render_ACH_UNDERDOG_1000,
-            ACH_UNDERDOG_10000: render_ACH_UNDERDOG_10000,
+            ACH_UNDERDOG_5:    render_ACH_UNDERDOG_5,
+            ACH_UNDERDOG_10:   render_ACH_UNDERDOG_10,
+            ACH_UNDERDOG_50:   render_ACH_UNDERDOG_50,
+            ACH_UNDERDOG_100:  render_ACH_UNDERDOG_100,
+            ACH_UNDERDOG_500:  render_ACH_UNDERDOG_500,
             ACH_DAVID:        render_ACH_DAVID,
+            ACH_PURE_BOTS:    render_ACH_PURE_BOTS,
+            ACH_PURE_HUMANS:  render_ACH_PURE_HUMANS,
             ACH_STREAK_3:     render_ACH_STREAK_3,
             ACH_STREAK_4:     render_ACH_STREAK_4,
             ACH_STREAK_5:     render_ACH_STREAK_5,
@@ -572,9 +599,9 @@
             ACH_UNDERDOG_50:   'Unlikely Hero',
             ACH_UNDERDOG_100:  'Miracle Worker',
             ACH_UNDERDOG_500:  "Fortune's Favorite",
-            ACH_UNDERDOG_1000: 'Blessed by Chaos',
-            ACH_UNDERDOG_10000:'The Dice God',
             ACH_DAVID:         'David vs. Goliath',
+            ACH_PURE_BOTS:    'Bot Tournament',
+            ACH_PURE_HUMANS:  'Human Only',
             ACH_STREAK_3:      'On a Roll',
             ACH_STREAK_4:      'Hot Streak',
             ACH_STREAK_5:      'Unstoppable',
@@ -609,9 +636,9 @@
             ACH_UNDERDOG_50:   'Win 50 attacks at less than 33% odds.',
             ACH_UNDERDOG_100:  'Win 100 attacks at less than 33% odds.',
             ACH_UNDERDOG_500:  'Win 500 attacks at less than 33% odds.',
-            ACH_UNDERDOG_1000: 'Win 1,000 attacks at less than 33% odds.',
-            ACH_UNDERDOG_10000:'Win 10,000 attacks at less than 33% odds.',
             ACH_DAVID:         'Win an attack with 4 dice against 6 dice.',
+            ACH_PURE_BOTS:    'Let a bots-only game run to completion.',
+            ACH_PURE_HUMANS:  'Play a game with 2 or more humans and no bots.',
             ACH_STREAK_3:      'Win 3 consecutive attacks in one turn.',
             ACH_STREAK_4:      'Win 4 consecutive attacks in one turn.',
             ACH_STREAK_5:      'Win 5 consecutive attacks in one turn.',
@@ -645,8 +672,7 @@
             ACH_GAMES_10000:   1000,
             ACH_FIRST_WIN:     0,
             ACH_UNDERDOG_5:    0,    ACH_UNDERDOG_10:  5,    ACH_UNDERDOG_50:  10,
-            ACH_UNDERDOG_100:  50,   ACH_UNDERDOG_500: 100,  ACH_UNDERDOG_1000: 500,
-            ACH_UNDERDOG_10000:1000,
+            ACH_UNDERDOG_100:  50,   ACH_UNDERDOG_500: 100,
         };
 
         // Stat API name used per achievement
@@ -667,8 +693,6 @@
             ACH_UNDERDOG_50:   'STAT_UNDERDOG_WINS',
             ACH_UNDERDOG_100:  'STAT_UNDERDOG_WINS',
             ACH_UNDERDOG_500:  'STAT_UNDERDOG_WINS',
-            ACH_UNDERDOG_1000: 'STAT_UNDERDOG_WINS',
-            ACH_UNDERDOG_10000:'STAT_UNDERDOG_WINS',
         };
 
         // Read live progress from localStorage (game runs on same origin)
