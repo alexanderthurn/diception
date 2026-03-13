@@ -11,22 +11,71 @@ import { registerCheatContext } from '../cheat.js';
 const STATS_KEY    = 'dicy_ach_stats';
 const UNLOCKED_KEY = 'dicy_ach_unlocked';
 
+const TITLES = {
+    ACH_TUTORIAL:      'First Steps',
+    ACH_CHAPTER1:      'Chapter 1 Complete',
+    ACH_CHAPTER2:      'Chapter 2 Complete',
+    ACH_CHAPTER3:      'Chapter 3 Complete',
+    ACH_CHAPTER4:      'Chapter 4 Complete',
+    ACH_GAMES_10:      'Warming Up',
+    ACH_GAMES_50:      'Getting Serious',
+    ACH_GAMES_100:     'Centurion',
+    ACH_GAMES_150:     'Dedicated',
+    ACH_GAMES_200:     'Veteran',
+    ACH_GAMES_300:     'Battle-Hardened',
+    ACH_GAMES_400:     'Tactician',
+    ACH_GAMES_500:     'Commander',
+    ACH_GAMES_1000:    'Warlord',
+    ACH_GAMES_10000:   'Legend',
+    ACH_FIRST_WIN:     'Victor',
+    ACH_UNDERDOG_5:    'Lucky Shot',
+    ACH_UNDERDOG_10:   'Against the Odds',
+    ACH_UNDERDOG_50:   'Unlikely Hero',
+    ACH_UNDERDOG_100:  'Miracle Worker',
+    ACH_UNDERDOG_500:  "Fortune's Favorite",
+    ACH_DAVID:         'David vs. Goliath',
+    ACH_PURE_BOTS:     'Bot Tournament',
+    ACH_PURE_HUMANS:   'Human Only',
+    ACH_STREAK_3:      'On a Roll',
+    ACH_STREAK_4:      'Hot Streak',
+    ACH_STREAK_5:      'Unstoppable',
+    ACH_STREAK_6:      'Relentless',
+    ACH_STREAK_7:      'Dominator',
+    ACH_SURVIVOR:      'Last Standing',
+};
+
+const SECTIONS = [
+    {
+        label: 'Campaign',
+        filter: a => a.type === 'campaign',
+    },
+    {
+        label: 'Games Played',
+        filter: a => a.type === 'stat' && a.stat === 'gamesPlayed',
+    },
+    {
+        label: 'Special Combat',
+        filter: a => a.type === 'event' || (a.type === 'stat' && a.stat !== 'gamesPlayed'),
+    },
+];
+
 function getDescription(ach) {
     if (ach.type === 'campaign') {
-        return `Complete the ${ach.campaign.charAt(0).toUpperCase() + ach.campaign.slice(1)} chapter`;
+        const name = ach.campaign.charAt(0).toUpperCase() + ach.campaign.slice(1);
+        return `Complete the ${name} chapter`;
     }
     if (ach.type === 'stat') {
         if (ach.stat === 'gamesPlayed')  return `Play ${ach.threshold.toLocaleString()} games`;
-        if (ach.stat === 'gamesWon')     return 'Win your first game';
+        if (ach.stat === 'gamesWon')     return `Win ${ach.threshold.toLocaleString()} games`;
         if (ach.stat === 'underdogWins') return `Win ${ach.threshold.toLocaleString()} attacks with less than 33% odds`;
+        if (ach.stat === 'streak3') return `Chain 3 attacks from the same tile ${ach.threshold} times`;
+        if (ach.stat === 'streak4') return `Chain 4 attacks from the same tile ${ach.threshold} times`;
+        if (ach.stat === 'streak5') return `Chain 5 attacks from the same tile ${ach.threshold} times`;
+        if (ach.stat === 'streak6') return `Chain 6 attacks from the same tile ${ach.threshold} times`;
+        if (ach.stat === 'streak7') return `Chain 7 attacks from the same tile ${ach.threshold} times`;
     }
     if (ach.type === 'event') {
         if (ach.event === 'won4vs6')        return 'Win an attack with 4 dice against 6 dice';
-        if (ach.event === 'attackStreak3')  return 'Win 3 consecutive attacks in one turn';
-        if (ach.event === 'attackStreak4')  return 'Win 4 consecutive attacks in one turn';
-        if (ach.event === 'attackStreak5')  return 'Win 5 consecutive attacks in one turn';
-        if (ach.event === 'attackStreak6')  return 'Win 6 consecutive attacks in one turn';
-        if (ach.event === 'attackStreak7')  return 'Win 7 consecutive attacks in one turn';
         if (ach.event === 'won8PlayerGame') return 'Win a game against 7 opponents';
         if (ach.event === 'pureBots')       return 'Let a bots-only game run to completion';
         if (ach.event === 'pureHumans')     return 'Play a game with 2+ humans and no bots';
@@ -99,60 +148,95 @@ export class AchievementsPanel {
             this._subtitle.textContent = `${unlocked.length} / ${ACHIEVEMENTS.length}`;
         }
 
+        // Also refresh the stat cells in the modal header table
+        const played = stats.gamesPlayed || 0;
+        const won    = stats.gamesWon    || 0;
+        const pct    = played > 0 ? Math.round((won / played) * 100) : 0;
+        const statPlayed   = this._modal?.querySelector('#ach-stat-played');
+        const statWon      = this._modal?.querySelector('#ach-stat-won');
+        const statWinrate  = this._modal?.querySelector('#ach-stat-winrate');
+        if (statPlayed)  statPlayed.textContent  = played.toLocaleString();
+        if (statWon)     statWon.textContent      = won.toLocaleString();
+        if (statWinrate) statWinrate.textContent  = played > 0 ? `${pct}%` : '—';
+
         this._grid.innerHTML = '';
 
-        ACHIEVEMENTS.forEach(ach => {
-            const isUnlocked = unlocked.includes(ach.id);
+        SECTIONS.forEach(section => {
+            const group = ACHIEVEMENTS.filter(section.filter);
+            if (!group.length) return;
 
-            // Progress bar for stat achievements
-            let progressHTML = '';
-            if (ach.type === 'stat' && !isUnlocked) {
-                const current = Math.min(stats[ach.stat] || 0, ach.threshold);
-                const pct = Math.round((current / ach.threshold) * 100);
-                progressHTML = `
-                    <div style="margin-top:8px;">
-                        <div style="background:#1a1a1a;height:4px;border-radius:2px;overflow:hidden;">
-                            <div style="width:${pct}%;height:100%;background:var(--border-color);transition:width 0.3s;"></div>
-                        </div>
-                        <div style="color:#666;font-size:11px;margin-top:3px;font-family:Rajdhani,sans-serif;letter-spacing:1px;">
-                            ${(stats[ach.stat]||0).toLocaleString()} / ${ach.threshold.toLocaleString()}
-                        </div>
-                    </div>`;
-            }
-
-            // Class matches spritesheet: ACH_TUTORIAL.png → ACH-TUTORIAL (or ACH-TUTORIAL-locked)
-            const iconClass = isUnlocked
-                ? ach.id.replace(/_/g, '-')
-                : ach.id.replace(/_/g, '-') + '-locked';
-
-            const card = document.createElement('div');
-            card.style.cssText = `
-                display:flex; gap:12px; align-items:flex-start;
-                padding:12px;
-                background:rgba(255,255,255,0.02);
-                border:1px solid ${isUnlocked ? 'var(--border-color)' : '#222'};
+            // Section heading
+            const heading = document.createElement('div');
+            heading.style.cssText = `
+                grid-column: 1 / -1;
+                font-family: Rajdhani, sans-serif;
+                font-weight: 700;
+                font-size: 11px;
+                letter-spacing: 3px;
+                text-transform: uppercase;
+                color: #555;
+                padding: 6px 0 2px;
+                border-bottom: 1px solid #1a1a1a;
+                margin-bottom: 2px;
             `;
-            card.innerHTML = `
-                <span class="sprite-icon ${iconClass}" style="
-                    width:64px; height:64px; flex-shrink:0; display:block;
-                    image-rendering:pixelated;
-                "></span>
-                <div style="flex:1; min-width:0;">
-                    <div style="
-                        font-family:Rajdhani,sans-serif; font-weight:700; font-size:14px;
-                        color:#fff;
-                        letter-spacing:1px; text-transform:uppercase; margin-bottom:3px;
-                    ">${ach.id.replace('ACH_','').replace(/_/g,' ')}</div>
-                    <div style="
-                        font-family:Rajdhani,sans-serif; font-size:13px;
-                        color:#ccc; line-height:1.4;
-                    ">${getDescription(ach)}</div>
-                    ${progressHTML}
-                </div>
-            `;
-            card.addEventListener('mouseenter', () => { this._hoveredId = ach.id; });
-            card.addEventListener('mouseleave', () => { this._hoveredId = null; });
-            this._grid.appendChild(card);
+            heading.textContent = section.label;
+            this._grid.appendChild(heading);
+
+            group.forEach(ach => {
+                const isUnlocked = unlocked.includes(ach.id);
+
+                // Progress bar for stat achievements
+                let progressHTML = '';
+                if (ach.type === 'stat' && !isUnlocked) {
+                    const current = Math.min(stats[ach.stat] || 0, ach.threshold);
+                    const pct = Math.round((current / ach.threshold) * 100);
+                    progressHTML = `
+                        <div style="margin-top:8px;">
+                            <div style="background:#1a1a1a;height:4px;border-radius:2px;overflow:hidden;">
+                                <div style="width:${pct}%;height:100%;background:var(--border-color);transition:width 0.3s;"></div>
+                            </div>
+                            <div style="color:#555;font-size:11px;margin-top:3px;font-family:Rajdhani,sans-serif;letter-spacing:1px;">
+                                ${(stats[ach.stat]||0).toLocaleString()} / ${ach.threshold.toLocaleString()}
+                            </div>
+                        </div>`;
+                }
+
+                // Class matches spritesheet: ACH_TUTORIAL.png → ACH-TUTORIAL (or ACH-TUTORIAL-locked)
+                const iconClass = isUnlocked
+                    ? ach.id.replace(/_/g, '-')
+                    : ach.id.replace(/_/g, '-') + '-locked';
+
+                const title = TITLES[ach.id] || ach.id.replace('ACH_', '').replace(/_/g, ' ');
+
+                const card = document.createElement('div');
+                card.style.cssText = `
+                    display:flex; gap:12px; align-items:flex-start;
+                    padding:12px;
+                    background:rgba(255,255,255,0.02);
+                    border:1px solid ${isUnlocked ? 'var(--border-color)' : '#222'};
+                `;
+                card.innerHTML = `
+                    <span class="sprite-icon ${iconClass}" style="
+                        width:64px; height:64px; flex-shrink:0; display:block;
+                        image-rendering:pixelated;
+                    "></span>
+                    <div style="flex:1; min-width:0;">
+                        <div style="
+                            font-family:Rajdhani,sans-serif; font-weight:700; font-size:14px;
+                            color:${isUnlocked ? '#fff' : '#888'};
+                            letter-spacing:1px; text-transform:uppercase; margin-bottom:3px;
+                        ">${title}</div>
+                        <div style="
+                            font-family:Rajdhani,sans-serif; font-size:13px;
+                            color:${isUnlocked ? '#ccc' : '#555'}; line-height:1.4;
+                        ">${getDescription(ach)}</div>
+                        ${progressHTML}
+                    </div>
+                `;
+                card.addEventListener('mouseenter', () => { this._hoveredId = ach.id; });
+                card.addEventListener('mouseleave', () => { this._hoveredId = null; });
+                this._grid.appendChild(card);
+            });
         });
     }
 }

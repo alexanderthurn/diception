@@ -33,7 +33,7 @@ import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode, registerCheatContext } from './cheat.js';
 import { markLevelSolved, unmarkLevelSolved } from './scenarios/campaign-progress.js';
-import { unlockAchievement, removeAchievement } from './core/achievement-manager.js';
+import { unlockAchievement, removeAchievement, setUnlockCallback } from './core/achievement-manager.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
 import { initStorage, flushStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
@@ -118,6 +118,11 @@ async function init() {
             { localKey: 'gamesPlayed',  steamName: 'STAT_GAMES_PLAYED'  },
             { localKey: 'gamesWon',     steamName: 'STAT_GAMES_WON'     },
             { localKey: 'underdogWins', steamName: 'STAT_UNDERDOG_WINS' },
+            { localKey: 'streak3',      steamName: 'STAT_STREAK_3'      },
+            { localKey: 'streak4',      steamName: 'STAT_STREAK_4'      },
+            { localKey: 'streak5',      steamName: 'STAT_STREAK_5'      },
+            { localKey: 'streak6',      steamName: 'STAT_STREAK_6'      },
+            { localKey: 'streak7',      steamName: 'STAT_STREAK_7'      },
         ];
         try {
             const localStats = JSON.parse(localStorage.getItem('dicy_ach_stats') || '{}');
@@ -376,6 +381,63 @@ async function init() {
     sfxManager.preloadAll().catch(e => console.warn('Sound preload failed:', e));
     const audioController = new AudioController(sfxManager);
     audioController.init();
+
+    // Achievement toast notification
+    {
+        const toast     = document.getElementById('achievement-toast');
+        const toastIcon = document.getElementById('achievement-toast-icon');
+        const toastName = document.getElementById('achievement-toast-name');
+        const ACHIEVEMENTS_MAP = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));
+        let toastQueue = [];
+        let toastActive = false;
+
+        const showNext = () => {
+            if (!toastQueue.length) { toastActive = false; return; }
+            toastActive = true;
+            const { id, name } = toastQueue.shift();
+            const iconClass = id.replace(/_/g, '-');
+            toastIcon.className = `sprite-icon ${iconClass}`;
+            toastName.textContent = name;
+            // Slide in
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(0)';
+            sfxManager.victory();
+            // Hold then slide out
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(24px)';
+                setTimeout(showNext, 380);
+            }, 3500);
+        };
+
+        const getFriendlyName = (id) => {
+            const a = ACHIEVEMENTS_MAP[id];
+            if (!a) return id;
+            if (a.type === 'campaign') return a.campaign.replace(/^./, c => c.toUpperCase()) + ' Complete';
+            if (a.type === 'stat') {
+                if (a.stat === 'gamesPlayed')  return `${a.threshold.toLocaleString()} Games Played`;
+                if (a.stat === 'gamesWon')     return 'First Win';
+                if (a.stat === 'underdogWins') return `${a.threshold.toLocaleString()} Underdog Wins`;
+            }
+            if (a.type === 'event') {
+                if (a.event === 'won4vs6')       return 'David vs. Goliath';
+                if (a.event === 'attackStreak3') return '3 Attack Streak';
+                if (a.event === 'attackStreak4') return '4 Attack Streak';
+                if (a.event === 'attackStreak5') return '5 Attack Streak';
+                if (a.event === 'attackStreak6') return '6 Attack Streak';
+                if (a.event === 'attackStreak7') return '7 Attack Streak';
+                if (a.event === 'won8PlayerGame') return 'Last Standing';
+                if (a.event === 'pureBots')      return 'Bot Tournament';
+                if (a.event === 'pureHumans')    return 'Human Only';
+            }
+            return id;
+        };
+
+        setUnlockCallback((id) => {
+            toastQueue.push({ id, name: getFriendlyName(id) });
+            if (!toastActive) showNext();
+        });
+    }
 
     // Initialize UI Components
     const highscoreManager = new HighscoreManager();

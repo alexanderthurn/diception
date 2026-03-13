@@ -229,10 +229,6 @@
             <key type="filename">gfx/achievements/ACH_TUTORIAL_locked.png</key>
             <key type="filename">gfx/achievements/ACH_UNDERDOG_10.png</key>
             <key type="filename">gfx/achievements/ACH_UNDERDOG_100.png</key>
-            <key type="filename">gfx/achievements/ACH_UNDERDOG_1000.png</key>
-            <key type="filename">gfx/achievements/ACH_UNDERDOG_10000.png</key>
-            <key type="filename">gfx/achievements/ACH_UNDERDOG_10000_locked.png</key>
-            <key type="filename">gfx/achievements/ACH_UNDERDOG_1000_locked.png</key>
             <key type="filename">gfx/achievements/ACH_UNDERDOG_100_locked.png</key>
             <key type="filename">gfx/achievements/ACH_UNDERDOG_10_locked.png</key>
             <key type="filename">gfx/achievements/ACH_UNDERDOG_5.png</key>

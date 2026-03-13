@@ -17,6 +17,11 @@ const STEAM_STAT_NAMES = {
     gamesPlayed:  'STAT_GAMES_PLAYED',
     gamesWon:     'STAT_GAMES_WON',
     underdogWins: 'STAT_UNDERDOG_WINS',
+    streak3:      'STAT_STREAK_3',
+    streak4:      'STAT_STREAK_4',
+    streak5:      'STAT_STREAK_5',
+    streak6:      'STAT_STREAK_6',
+    streak7:      'STAT_STREAK_7',
 };
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
@@ -46,6 +51,16 @@ function pushStatToSteam(stat, value) {
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
+let _unlockCallback = null;
+
+/**
+ * Register a callback fired whenever a new achievement is unlocked.
+ * Called with the achievement id. Used for popup notifications.
+ */
+export function setUnlockCallback(fn) {
+    _unlockCallback = fn;
+}
+
 /**
  * Unlock a single achievement by ID.
  * Idempotent — safe to call multiple times.
@@ -61,6 +76,8 @@ export function unlockAchievement(id) {
     window.steam?.unlockAchievement(id);
 
     console.log(`🏆 ACHIEVEMENT UNLOCKED: ${id}`);
+
+    if (_unlockCallback) _unlockCallback(id);
 }
 
 /**

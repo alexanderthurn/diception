@@ -22,6 +22,8 @@ export function initCheatCode(game, renderer) {
 
     let pressTimesC = [];
     let pressTimesV = [];
+    let pressTimesX = [];
+    let pressTimesY = [];
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'c' || e.key === 'C') {
@@ -52,6 +54,30 @@ export function initCheatCode(game, renderer) {
                 triggerInstantLose(game, renderer);
             } else if (pressTimesV.length === 3) {
                 pressTimesV = [pressTimesV[1], pressTimesV[2]];
+            }
+        }
+        if (e.key === 'x' || e.key === 'X') {
+            if (e.repeat) return;
+            const now = Date.now();
+            pressTimesX.push(now);
+            if (pressTimesX.length > 3) pressTimesX.shift();
+            if (pressTimesX.length === 3 && pressTimesX[2] - pressTimesX[0] <= TRIPLE_PRESS_MS) {
+                pressTimesX = [];
+                setHoveredTileDice(game, renderer, 1);
+            } else if (pressTimesX.length === 3) {
+                pressTimesX = [pressTimesX[1], pressTimesX[2]];
+            }
+        }
+        if (e.key === 'y' || e.key === 'Y') {
+            if (e.repeat) return;
+            const now = Date.now();
+            pressTimesY.push(now);
+            if (pressTimesY.length > 3) pressTimesY.shift();
+            if (pressTimesY.length === 3 && pressTimesY[2] - pressTimesY[0] <= TRIPLE_PRESS_MS) {
+                pressTimesY = [];
+                setHoveredTileDice(game, renderer, game.maxDice);
+            } else if (pressTimesY.length === 3) {
+                pressTimesY = [pressTimesY[1], pressTimesY[2]];
             }
         }
     });
@@ -113,6 +139,18 @@ function triggerInstantWin(game, renderer) {
         renderer.forceUpdate?.();
         renderer.draw?.();
     }
+}
+
+function setHoveredTileDice(game, renderer, diceCount) {
+    if (!game || game.gameOver || !game.players?.length) return;
+    const hover = renderer?.grid?.hoverTiles?.get('mouse');
+    if (!hover) return;
+    const tile = game.map.getTile(hover.x, hover.y);
+    if (!tile || tile.blocked) return;
+    tile.dice = diceCount;
+    console.log(`🎮 CHEAT: tile (${hover.x},${hover.y}) dice → ${diceCount}`);
+    renderer.forceUpdate?.();
+    renderer.draw?.();
 }
 
 function triggerInstantLose(game, renderer) {

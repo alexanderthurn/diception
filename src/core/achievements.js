@@ -25,7 +25,7 @@ export const ACHIEVEMENTS = [
     { id: 'ACH_GAMES_10000',   type: 'stat', stat: 'gamesPlayed', threshold: 10000 },
 
     // ── Special Combat ────────────────────────────────────────────────────────
-    { id: 'ACH_FIRST_WIN',     type: 'stat', stat: 'gamesWon',     threshold: 1   },
+    { id: 'ACH_FIRST_WIN',     type: 'stat', stat: 'gamesWon',     threshold: 100 },
     { id: 'ACH_UNDERDOG_5',     type: 'stat', stat: 'underdogWins', threshold: 5     },
     { id: 'ACH_UNDERDOG_10',    type: 'stat', stat: 'underdogWins', threshold: 10    },
     { id: 'ACH_UNDERDOG_50',    type: 'stat', stat: 'underdogWins', threshold: 50    },
@@ -34,10 +34,10 @@ export const ACHIEVEMENTS = [
     { id: 'ACH_DAVID',         type: 'event', event: 'won4vs6'                    },
     { id: 'ACH_PURE_BOTS',    type: 'event', event: 'pureBots'                   },
     { id: 'ACH_PURE_HUMANS',  type: 'event', event: 'pureHumans'                 },
-    { id: 'ACH_STREAK_3',      type: 'event', event: 'attackStreak3'              },
-    { id: 'ACH_STREAK_4',      type: 'event', event: 'attackStreak4'              },
-    { id: 'ACH_STREAK_5',      type: 'event', event: 'attackStreak5'              },
-    { id: 'ACH_STREAK_6',      type: 'event', event: 'attackStreak6'              },
-    { id: 'ACH_STREAK_7',      type: 'event', event: 'attackStreak7'              },
+    { id: 'ACH_STREAK_3',      type: 'stat', stat: 'streak3', threshold: 30 },
+    { id: 'ACH_STREAK_4',      type: 'stat', stat: 'streak4', threshold: 15 },
+    { id: 'ACH_STREAK_5',      type: 'stat', stat: 'streak5', threshold: 5  },
+    { id: 'ACH_STREAK_6',      type: 'stat', stat: 'streak6', threshold: 2  },
+    { id: 'ACH_STREAK_7',      type: 'stat', stat: 'streak7', threshold: 1  },
     { id: 'ACH_SURVIVOR',      type: 'event', event: 'won8PlayerGame'             },
 ];

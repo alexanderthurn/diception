@@ -96,7 +96,11 @@ export class GameEventManager {
         const gameSpeed = this.gameStarter.getGameSpeed();
 
         // 🏆 ACHIEVEMENT: ACH_STREAK_3/4/5/6/7 — reset consecutive-attack streak each new turn
-        if (!data.player.isBot) { this._attackStreak = 0; this._streakTile = null; }
+        if (!data.player.isBot) {
+            this._flushStreakAchievement();
+            this._attackStreak = 0;
+            this._streakTile = null;
+        }
 
         // Hide dice result HUD when turn starts
         if (this.diceHUD) this.diceHUD.hide();
@@ -363,6 +367,16 @@ export class GameEventManager {
         this.newGameHint.classList.add('hidden');
     }
 
+    _flushStreakAchievement() {
+        clearTimeout(this._streakTimer);
+        this._streakTimer = null;
+        if (this._pendingStreakCount) {
+            // Increment only the exact peak streak stat (streak of 5 → streak5 only)
+            incrementStat(`streak${this._pendingStreakCount}`);
+            this._pendingStreakCount = null;
+        }
+    }
+
     handleAttackResult(result) {
         if (result.error) return;
 
@@ -392,20 +406,26 @@ export class GameEventManager {
                 if (attackerDice === 4 && defenderDice === 6) fireAchievementEvent('won4vs6');
 
                 // 🏆 ACHIEVEMENT: ACH_STREAK_3/4/5/6/7
-                // Streak only continues if attacking from the just-conquered territory
+                // Streak only continues if attacking FROM the just-conquered territory
                 const fromMatchesLastConquest = this._streakTile
                     && result.from.x === this._streakTile.x
                     && result.from.y === this._streakTile.y;
-                if (!fromMatchesLastConquest) this._attackStreak = 0;
+                if (!fromMatchesLastConquest) {
+                    this._flushStreakAchievement();
+                    this._attackStreak = 0;
+                }
                 this._attackStreak = (this._attackStreak || 0) + 1;
                 this._streakTile = { x: result.to.x, y: result.to.y };
-                if (this._attackStreak >= 3) fireAchievementEvent('attackStreak3');
-                if (this._attackStreak >= 4) fireAchievementEvent('attackStreak4');
-                if (this._attackStreak >= 5) fireAchievementEvent('attackStreak5');
-                if (this._attackStreak >= 6) fireAchievementEvent('attackStreak6');
-                if (this._attackStreak >= 7) fireAchievementEvent('attackStreak7');
+                // Debounce: only the peak streak of each chain increments its stat.
+                // Cancel any pending lower count and reschedule with the new peak.
+                clearTimeout(this._streakTimer);
+                if (this._attackStreak >= 3) {
+                    this._pendingStreakCount = Math.min(this._attackStreak, 7);
+                    this._streakTimer = setTimeout(() => this._flushStreakAchievement(), 800);
+                }
             } else {
                 // 🏆 ACHIEVEMENT: ACH_STREAK_3/4/5/6/7 — reset on any loss
+                this._flushStreakAchievement();
                 this._attackStreak = 0;
                 this._streakTile = null;
             }
