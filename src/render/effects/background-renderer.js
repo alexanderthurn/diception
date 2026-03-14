@@ -343,7 +343,7 @@ export class BackgroundRenderer {
 
         // Scale size and speed inversely so they appear consistent on screen
         const size      = (0.03 + Math.random() * 0.04) * minDim / sc;
-        const fallSpeed = (0.4 + Math.random() * 0.8) * s / sc;
+        const fallSpeed = -(0.4 + Math.random() * 0.8) * s / sc;  // negative = rise upward
         const drift     = (Math.random() - 0.5) * 0.15 * s / sc;
 
         const colors = [0x00ffff, 0xAA00FF, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
@@ -358,10 +358,11 @@ export class BackgroundRenderer {
         });
         tileContainer.pivot.set(size / 2, size / 2);
 
-        // Spawn across the visible width, above the visible top
+        // Spawn across the visible width, below the visible bottom
+        const localBottom = (this.height - oy) / sc;
         const startY = scattered
-            ? localTop - size - Math.random() * (this.height / sc)
-            : localTop - size - Math.random() * (100 / sc);
+            ? localBottom + size + Math.random() * (this.height / sc)
+            : localBottom + size + Math.random() * (100 / sc);
 
         const dice = {
             graphics: tileContainer,
@@ -477,7 +478,7 @@ export class BackgroundRenderer {
         const sideCullMargin = 400;
         const bottomCullMargin = 80;
 
-        // Matrix rain: continuously spawn new dice above screen
+        // Continuously spawn new dice below screen to float upward
         this.matrixSpawnTimer = (this.matrixSpawnTimer || 0) + dt;
         if (this.matrixSpawnTimer >= (this.matrixSpawnInterval || 10)) {
             this.matrixSpawnTimer = 0;
