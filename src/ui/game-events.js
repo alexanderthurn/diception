@@ -710,7 +710,7 @@ export class GameEventManager {
 
             if (!campaign) {
                 buttons = [{ text: 'Main Menu', value: 'restart', className: 'tron-btn' }];
-                if (this.turnHistory.hasInitialState() && !humanWon) buttons.push({ text: 'Try Again', value: 'clone', className: 'tron-btn' });
+                if (this.turnHistory.hasInitialState() && !humanWon) buttons.push({ text: 'Play Again', value: 'clone', className: 'tron-btn' });
             } else if (campaignFinished) {
                 title = 'CAMPAIGN COMPLETE!';
                 const celebrationEl = document.createElement('p');
@@ -738,7 +738,7 @@ export class GameEventManager {
         if (buttons.length === 0) {
             buttons.push({ text: 'Main Menu', value: 'restart', className: 'tron-btn' });
             if (this.turnHistory.hasInitialState()) {
-                buttons.push({ text: 'Try Again', value: 'clone', className: 'tron-btn' });
+                buttons.push({ text: 'Play Again', value: 'clone', className: 'tron-btn' });
             }
         }
 

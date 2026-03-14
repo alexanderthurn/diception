@@ -4981,6 +4981,7 @@ canvas {
     justify-content: center;
     gap: 15px;
     margin-top: 30px;
+    padding: 0 20px 24px;
 }
 
 .dialog-store-links p {

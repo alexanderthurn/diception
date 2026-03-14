@@ -50,7 +50,7 @@ export class SessionManager {
         const isCampaignMode = localStorage.getItem('dicy_campaignMode');
         const mainMenuBtn = document.getElementById('pause-mainmenu-btn');
         if (mainMenuBtn) {
-            mainMenuBtn.textContent = 'Exit';
+            mainMenuBtn.textContent = 'Exit to Menu';
         }
     }
 
