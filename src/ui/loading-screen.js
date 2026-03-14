@@ -98,6 +98,18 @@ export class LoadingScreen {
     onComplete() {
         this.isComplete = true;
 
+        // Smoothly dismiss the logo from its current animated state (no flash)
+        const logo = this.el?.querySelector('.loading-fw-logo');
+        if (logo) {
+            const computed = getComputedStyle(logo);
+            logo.style.opacity = computed.opacity;   // freeze current animated value
+            logo.style.animation = 'none';           // stop breathing
+            logo.offsetHeight;                       // force reflow
+            logo.style.transition = 'opacity 0.7s ease, filter 0.7s ease';
+            logo.style.filter = 'drop-shadow(0 0 20px rgba(170, 0, 255, 0.15))';
+            logo.style.opacity = '0';
+        }
+
         // Mark entire screen as completed
         if (this.el) {
             this.el.classList.add('completed');

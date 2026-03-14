@@ -20,6 +20,7 @@ export class SoundManager {
         this.volume = 0.3;
         this.winStreak = 0;
         this.isPreloaded = false;
+        this.isReady = false; // blocked until loading screen is dismissed
     }
 
     init() {
@@ -40,10 +41,16 @@ export class SoundManager {
         console.log(`Preloaded ${Object.keys(SFX_FILES).length} sound effects via @pixi/sound`);
     }
 
+    /** Unblock SFX playback — call once the loading screen is dismissed. */
+    markReady() {
+        this.isReady = true;
+    }
+
     /**
      * Play a loaded sound effect.
      */
     _play(alias, options = {}) {
+        if (!this.isReady) return;
         if (!this.enabled) return;
         if (!sound.exists(alias)) return;
         sound.play(alias, {

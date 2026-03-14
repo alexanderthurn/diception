@@ -273,7 +273,10 @@ async function init() {
     // Loading Screen - onDismiss set after scenarioBrowser is ready
     let onLoadingDismiss = null;
     const loadingScreen = new LoadingScreen(inputManager, {
-        onDismiss: () => { if (onLoadingDismiss) onLoadingDismiss(); }
+        onDismiss: () => {
+            sfxManager.markReady();
+            if (onLoadingDismiss) onLoadingDismiss();
+        }
     });
     loadingScreen.setInputController(input);
 
@@ -380,6 +383,13 @@ async function init() {
     const sfxManager = new SoundManager();
     // Pre-render all sound effects during loading for instant playback
     sfxManager.preloadAll().catch(e => console.warn('Sound preload failed:', e));
+
+    // Play feuerware logo sting immediately on startup (native Audio avoids pixi/sound race)
+    try {
+        const fwSting = new Audio('./assets/sfx/feuerware.ogg');
+        fwSting.volume = 0.5;
+        fwSting.play().catch(() => {}); // silently ignored if browser blocks autoplay
+    } catch (e) {}
     const audioController = new AudioController(sfxManager);
     audioController.init();
 
