@@ -2358,9 +2358,7 @@ select {
     max-width: 100%;
 }
 
-#settings-modal .howto-content {
-    max-height: calc(90vh - 120px);
-}
+/* max-height handled by .large-modal .howto-content */
 
 #pause-modal,
 #setup-modal {
@@ -2372,11 +2370,7 @@ select {
     flex-direction: column;
 }
 
-#howto-modal .howto-content,
-#achievements-modal .howto-content {
-    max-height: calc(90vh - 120px);
-    overflow-y: auto;
-}
+/* max-height handled by .large-modal .howto-content */
 
 .modal.wide-modal {
     width: 1000px;
@@ -4920,9 +4914,7 @@ canvas {
     animation: dialog-fade-out 0.3s ease-in forwards;
 }
 
-.dialog-header {
-    margin-bottom: 0;
-}
+/* .dialog-header visual styles defined in "Global Modal Visual Polish" block */
 
 .dialog-header-with-close {
     display: flex;
@@ -4972,9 +4964,8 @@ canvas {
 .dialog-body {
     margin: 20px 0;
     padding: 0 20px;
-    /* Base horizontal padding */
     text-align: center;
-    background-color: #000;
+    /* background set to transparent in "Global Modal Visual Polish" block */
 }
 
 .dialog-body p {
@@ -5735,7 +5726,6 @@ canvas {
 
 .tron-btn:hover {
     background: rgba(0, 255, 255, 0.1);
-    transform: translateX(-1px);
 }
 
 .tron-btn:active {
@@ -5770,6 +5760,19 @@ canvas {
     box-shadow: none;
 }
 
+/* dialog-box (JS-created dialogs) shares the same visual language as .modal */
+.dialog-box {
+    background: rgba(0, 0, 5, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(0, 255, 255, 0.35);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), var(--panel-glow);
+}
+
+.dialog-body {
+    background: transparent;
+}
+
 .modal-header {
     border-bottom: 1px solid rgba(0, 255, 255, 0.12);
     padding-top: 16px;
@@ -5778,8 +5781,231 @@ canvas {
     margin-bottom: 24px;
 }
 
+/* dialog-header mirrors modal-header spacing */
+.dialog-header {
+    border-bottom: 1px solid rgba(0, 255, 255, 0.12);
+    padding: 16px 20px;
+    margin-bottom: 0;
+}
+
 .howto-content h3 {
     font-size: 1.15em;
+}
+
+/* All large-modal scrollable content uses the same max-height */
+.large-modal .howto-content {
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+}
+
+/* ── Achievement Panel ── */
+
+.ach-stats-table {
+    width: 100%;
+    max-width: 320px;
+    font-family: Rajdhani, sans-serif;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.ach-stats-table tr {
+    border-bottom: 1px solid #222;
+}
+
+.ach-stats-table tr:last-child {
+    border-bottom: none;
+}
+
+.ach-stats-table td {
+    padding: 8px 0;
+}
+
+.ach-stats-label {
+    color: #888;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 13px;
+}
+
+.ach-stats-value {
+    color: var(--border-color);
+    font-size: 20px;
+    font-weight: 700;
+    text-align: right;
+}
+
+#ach-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+    gap: 10px;
+}
+
+.ach-section-header {
+    grid-column: 1 / -1;
+    font-family: Rajdhani, sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #555;
+    padding: 6px 0 2px;
+    border-bottom: 1px solid #1a1a1a;
+    margin-bottom: 2px;
+}
+
+.ach-card {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid #222;
+}
+
+.ach-card.unlocked {
+    border-color: var(--border-color);
+}
+
+.ach-icon {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    display: block;
+    image-rendering: pixelated;
+}
+
+.ach-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.ach-card-title {
+    font-family: Rajdhani, sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #888;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+.ach-card.unlocked .ach-card-title {
+    color: #fff;
+}
+
+.ach-card-desc {
+    font-family: Rajdhani, sans-serif;
+    font-size: 13px;
+    color: #555;
+    line-height: 1.4;
+}
+
+.ach-card.unlocked .ach-card-desc {
+    color: #ccc;
+}
+
+.ach-progress {
+    margin-top: 8px;
+}
+
+.ach-progress-bar {
+    background: #1a1a1a;
+    height: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.ach-progress-fill {
+    height: 100%;
+    background: var(--border-color);
+    transition: width 0.3s;
+}
+
+.ach-progress-label {
+    color: #555;
+    font-size: 11px;
+    margin-top: 3px;
+    font-family: Rajdhani, sans-serif;
+    letter-spacing: 1px;
+}
+
+/* ── Achievement Toast ── */
+
+#achievement-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0, 0, 5, 0.92);
+    border: 1px solid var(--border-color);
+    padding: 12px 16px;
+    max-width: 320px;
+    font-family: Rajdhani, sans-serif;
+    opacity: 0;
+    transform: translateX(24px);
+    transition: opacity 0.35s, transform 0.35s;
+    pointer-events: none;
+}
+
+#achievement-toast-icon {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    display: block;
+    image-rendering: pixelated;
+}
+
+.ach-toast-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--border-color);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.ach-toast-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* ── Pause Modal ── */
+
+.pause-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    min-width: 220px;
+}
+
+.pause-content .control-group {
+    margin: 0;
+}
+
+.pause-content hr {
+    border: none;
+    border-top: 1px solid rgba(0, 255, 255, 0.2);
+    margin: 0;
+}
+
+.pause-btn-row {
+    display: flex;
+    gap: 10px;
+}
+
+.pause-btn-row .tron-btn {
+    flex: 1;
+}
+
+.pause-control-row {
+    margin: 0;
+    gap: 10px;
 }
 
 /* ── 3. Segmented Buttons Polish ── */

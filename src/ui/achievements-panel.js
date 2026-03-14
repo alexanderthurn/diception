@@ -165,71 +165,40 @@ export class AchievementsPanel {
             const group = ACHIEVEMENTS.filter(section.filter);
             if (!group.length) return;
 
-            // Section heading
             const heading = document.createElement('div');
-            heading.style.cssText = `
-                grid-column: 1 / -1;
-                font-family: Rajdhani, sans-serif;
-                font-weight: 700;
-                font-size: 11px;
-                letter-spacing: 3px;
-                text-transform: uppercase;
-                color: #555;
-                padding: 6px 0 2px;
-                border-bottom: 1px solid #1a1a1a;
-                margin-bottom: 2px;
-            `;
+            heading.className = 'ach-section-header';
             heading.textContent = section.label;
             this._grid.appendChild(heading);
 
             group.forEach(ach => {
                 const isUnlocked = unlocked.includes(ach.id);
+                const iconClass = isUnlocked
+                    ? ach.id.replace(/_/g, '-')
+                    : ach.id.replace(/_/g, '-') + '-locked';
+                const title = TITLES[ach.id] || ach.id.replace('ACH_', '').replace(/_/g, ' ');
 
-                // Progress bar for stat achievements
                 let progressHTML = '';
                 if (ach.type === 'stat' && !isUnlocked) {
                     const current = Math.min(stats[ach.stat] || 0, ach.threshold);
                     const pct = Math.round((current / ach.threshold) * 100);
                     progressHTML = `
-                        <div style="margin-top:8px;">
-                            <div style="background:#1a1a1a;height:4px;border-radius:2px;overflow:hidden;">
-                                <div style="width:${pct}%;height:100%;background:var(--border-color);transition:width 0.3s;"></div>
+                        <div class="ach-progress">
+                            <div class="ach-progress-bar">
+                                <div class="ach-progress-fill" style="width:${pct}%"></div>
                             </div>
-                            <div style="color:#555;font-size:11px;margin-top:3px;font-family:Rajdhani,sans-serif;letter-spacing:1px;">
+                            <div class="ach-progress-label">
                                 ${(stats[ach.stat]||0).toLocaleString()} / ${ach.threshold.toLocaleString()}
                             </div>
                         </div>`;
                 }
 
-                // Class matches spritesheet: ACH_TUTORIAL.png → ACH-TUTORIAL (or ACH-TUTORIAL-locked)
-                const iconClass = isUnlocked
-                    ? ach.id.replace(/_/g, '-')
-                    : ach.id.replace(/_/g, '-') + '-locked';
-
-                const title = TITLES[ach.id] || ach.id.replace('ACH_', '').replace(/_/g, ' ');
-
                 const card = document.createElement('div');
-                card.style.cssText = `
-                    display:flex; gap:12px; align-items:flex-start;
-                    padding:12px;
-                    background:rgba(255,255,255,0.02);
-                    border:1px solid ${isUnlocked ? 'var(--border-color)' : '#222'};
-                `;
+                card.className = 'ach-card' + (isUnlocked ? ' unlocked' : '');
                 card.innerHTML = `
-                    <span class="sprite-icon ${iconClass}" style="
-                        width:64px; height:64px; flex-shrink:0; display:block;
-                        image-rendering:pixelated;
-                    "></span>
-                    <div style="flex:1; min-width:0;">
-                        <div style="
-                            font-family:Rajdhani,sans-serif; font-weight:700; font-size:14px;
-                            color:${isUnlocked ? '#fff' : '#888'};
-                            letter-spacing:1px; text-transform:uppercase; margin-bottom:3px;
-                        ">${title}</div>
-                        <div style="
-                            font-family:Rajdhani,sans-serif; font-size:13px;
-                            color:${isUnlocked ? '#ccc' : '#555'}; line-height:1.4;
-                        ">${getDescription(ach)}</div>
+                    <span class="sprite-icon ach-icon ${iconClass}"></span>
+                    <div class="ach-card-body">
+                        <div class="ach-card-title">${title}</div>
+                        <div class="ach-card-desc">${getDescription(ach)}</div>
                         ${progressHTML}
                     </div>
                 `;

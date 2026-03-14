@@ -279,9 +279,9 @@
                 <button class="close-btn modal-close-btn" aria-label="Resume" onclick="document.getElementById('global-back-btn').click()">×</button>
                 <h2 class="tron-title small">PAUSED</h2>
             </div>
-            <div style="display:flex;flex-direction:column;gap:16px;width:100%;min-width:220px;">
+            <div class="pause-content">
                 <!-- Inline settings -->
-                <div class="control-group" style="margin:0">
+                <div class="control-group">
                     <label>Game Speed</label>
                     <div class="segmented-btn game-speed-segmented">
                         <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
@@ -289,7 +289,7 @@
                         <button type="button" class="segmented-option" data-value="expert">Expert</button>
                     </div>
                 </div>
-                <div class="control-row" style="margin:0;gap:10px;">
+                <div class="control-row pause-control-row">
                     <div class="control-group half">
                         <label>Music</label>
                         <div class="range-row">
@@ -305,12 +305,12 @@
                         </div>
                     </div>
                 </div>
-                <hr style="border-color:rgba(0,255,255,0.2);margin:0">
+                <hr>
                 <!-- Navigation -->
                 <button id="pause-resume-btn" class="tron-btn large">Resume</button>
-                <div style="display:flex;gap:10px;">
-                    <button id="pause-save-btn" class="tron-btn large" style="flex:1">Save</button>
-                    <button id="pause-retry-btn" class="tron-btn large" style="flex:1">Restart</button>
+                <div class="pause-btn-row">
+                    <button id="pause-save-btn" class="tron-btn large">Save</button>
+                    <button id="pause-retry-btn" class="tron-btn large">Restart</button>
                 </div>
                 <button id="pause-mainmenu-btn" class="tron-btn large">Exit</button>
             </div>
@@ -660,20 +660,11 @@
         </div>
 
         <!-- Achievement Toast -->
-        <div id="achievement-toast" style="
-            position:fixed; bottom:24px; right:24px; z-index:9999;
-            display:flex; align-items:center; gap:12px;
-            background:rgba(0,0,5,0.92); border:1px solid #00FFFF;
-            padding:12px 16px; max-width:320px;
-            font-family:Rajdhani,sans-serif;
-            opacity:0; transform:translateX(24px);
-            transition:opacity 0.35s, transform 0.35s;
-            pointer-events:none;
-        ">
-            <span id="achievement-toast-icon" class="sprite-icon" style="width:48px;height:48px;flex-shrink:0;display:block;image-rendering:pixelated;"></span>
+        <div id="achievement-toast">
+            <span id="achievement-toast-icon" class="sprite-icon"></span>
             <div>
-                <div style="font-size:10px;letter-spacing:2px;color:#00FFFF;text-transform:uppercase;margin-bottom:2px;">Achievement Unlocked</div>
-                <div id="achievement-toast-name" style="font-size:15px;font-weight:700;color:#fff;letter-spacing:1px;text-transform:uppercase;"></div>
+                <div class="ach-toast-label">Achievement Unlocked</div>
+                <div id="achievement-toast-name" class="ach-toast-name"></div>
             </div>
         </div>
 
@@ -683,25 +674,25 @@
                 <h2 class="tron-title small">ACHIEVEMENTS</h2>
             </div>
             <div class="howto-content">
-                <table style="width:100%;font-family:Rajdhani,sans-serif;border-collapse:collapse;margin-bottom:20px;">
-                    <tr style="border-bottom:1px solid #222;">
-                        <td style="padding:8px 0;color:#888;letter-spacing:1px;text-transform:uppercase;font-size:13px;">Achievements</td>
-                        <td style="padding:8px 0;color:#00FFFF;font-size:20px;font-weight:700;text-align:right;" id="ach-subtitle">—</td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #222;">
-                        <td style="padding:8px 0;color:#888;letter-spacing:1px;text-transform:uppercase;font-size:13px;">Games Played</td>
-                        <td style="padding:8px 0;color:#00FFFF;font-size:20px;font-weight:700;text-align:right;" id="ach-stat-played">—</td>
-                    </tr>
-                    <tr style="border-bottom:1px solid #222;">
-                        <td style="padding:8px 0;color:#888;letter-spacing:1px;text-transform:uppercase;font-size:13px;">Games Won</td>
-                        <td style="padding:8px 0;color:#00FFFF;font-size:20px;font-weight:700;text-align:right;" id="ach-stat-won">—</td>
+                <table class="ach-stats-table">
+                    <tr>
+                        <td class="ach-stats-label">Achievements</td>
+                        <td class="ach-stats-value" id="ach-subtitle">—</td>
                     </tr>
                     <tr>
-                        <td style="padding:8px 0;color:#888;letter-spacing:1px;text-transform:uppercase;font-size:13px;">Win Rate</td>
-                        <td style="padding:8px 0;color:#00FFFF;font-size:20px;font-weight:700;text-align:right;" id="ach-stat-winrate">—</td>
+                        <td class="ach-stats-label">Games Played</td>
+                        <td class="ach-stats-value" id="ach-stat-played">—</td>
+                    </tr>
+                    <tr>
+                        <td class="ach-stats-label">Games Won</td>
+                        <td class="ach-stats-value" id="ach-stat-won">—</td>
+                    </tr>
+                    <tr>
+                        <td class="ach-stats-label">Win Rate</td>
+                        <td class="ach-stats-value" id="ach-stat-winrate">—</td>
                     </tr>
                 </table>
-                <div id="ach-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;"></div>
+                <div id="ach-grid"></div>
             </div>
         </div>
 
