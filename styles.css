@@ -143,20 +143,9 @@ body.fx-high::after {
 
 /* Pulse animation for High Quality */
 @keyframes tron-pulse {
-    0% {
-        opacity: 0.8;
-        box-shadow: var(--button-glow);
-    }
-
-    50% {
-        opacity: 1;
-        box-shadow: var(--button-hover-glow);
-    }
-
-    100% {
-        opacity: 0.8;
-        box-shadow: var(--button-glow);
-    }
+    0%   { box-shadow: var(--button-glow); }
+    50%  { box-shadow: var(--button-hover-glow); }
+    100% { box-shadow: var(--button-glow); }
 }
 
 body.fx-high .tron-btn {
@@ -201,7 +190,7 @@ select {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    transition: opacity 0.7s ease;
+    transition: opacity 0.5s ease 0.25s;
 }
 
 body.loading-active #ui-overlay {
@@ -1807,13 +1796,23 @@ select {
     animation: loading-reveal 1.0s cubic-bezier(0.4, 0, 0.2, 1) both 0.2s;
 }
 
-/* Title + credits fade in at top during loading */
+/* Title + credits + logo all fade in together at start */
 #loading-screen:not(.completed) .tron-title {
-    animation: loading-reveal 1.0s cubic-bezier(0.4, 0, 0.2, 1) both 0.3s;
+    animation: loading-reveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) both 0s;
 }
 
 #loading-screen:not(.completed) .credits {
-    animation: loading-reveal 1.0s cubic-bezier(0.4, 0, 0.2, 1) both 0.5s;
+    animation: loading-reveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) both 0.1s;
+}
+
+#loading-screen:not(.completed) .loading-fw-logo {
+    animation: loading-fade 0.6s cubic-bezier(0.4, 0, 0.2, 1) both 0s,
+               fw-logo-breathe 2.4s ease-in-out infinite 0.6s;
+}
+
+@keyframes loading-fade {
+    from { opacity: 0; filter: blur(5px); }
+    to   { opacity: 1; filter: blur(0); }
 }
 
 /* Once loaded: title/credits stay, rest reveals after logo fully gone (~1s) */
@@ -4838,8 +4837,8 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 
 #main-menu-branding {
     position: fixed;
-    bottom: 12px;
-    left: 12px;
+    bottom: 16px;
+    left: 16px;
     z-index: 200;
     display: flex;
     align-items: center;
@@ -4882,8 +4881,8 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 
 .game-version-display {
     position: fixed;
-    bottom: 8px;
-    right: 12px;
+    bottom: 16px;
+    right: 16px;
     color: rgba(0, 255, 255, 0.4);
     font-family: 'Rajdhani', monospace;
     font-size: 12px;

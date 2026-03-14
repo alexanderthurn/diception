@@ -6,6 +6,7 @@ export class LoadingScreen {
     constructor(inputManager, opts = {}) {
         this.inputManager = inputManager;
         this.onDismiss = opts.onDismiss || null;
+        this.onDismissStart = opts.onDismissStart || null;
         this.el = document.getElementById('loading-screen');
         this.content = document.querySelector('.loading-content');
         this.progressBar = document.getElementById('loading-bar-fill');
@@ -175,6 +176,9 @@ export class LoadingScreen {
             if (this.inputManager) {
                 this.inputManager.off('confirm', this.dismissHandler);
             }
+
+            // Fire immediately so background effects can start fading in during the CSS fade-out
+            if (this.onDismissStart) this.onDismissStart();
 
             // Wait for CSS fade-out to finish, then show game
             setTimeout(() => {

@@ -270,18 +270,33 @@ async function init() {
 
     // Hide game world until loading screen is gone — prevents showing resumed game during loading
     renderer.rootContainer.alpha = 0;
+    // Background dice also start hidden and fade in after loading screen
+    effectsManager.background.container.alpha = 0;
 
     const input = new InputController(game, renderer, inputManager);
 
     // Loading Screen - onDismiss set after scenarioBrowser is ready
     let onLoadingDismiss = null;
     const loadingScreen = new LoadingScreen(inputManager, {
+        onDismissStart: () => {
+            // Spawn dice immediately so they exist during the fade-in window
+            if (game.players.length === 0) effectsManager.startIntroMode();
+            // Fade in background dice over 700ms (across the 850ms loading-screen fade-out)
+            const bgStart = performance.now();
+            const bgDuration = 700;
+            const bgFadeTick = () => {
+                const t = Math.min(1, (performance.now() - bgStart) / bgDuration);
+                effectsManager.background.container.alpha = t;
+                if (t < 1) requestAnimationFrame(bgFadeTick);
+            };
+            requestAnimationFrame(bgFadeTick);
+        },
         onDismiss: () => {
             sfxManager.markReady();
             if (onLoadingDismiss) onLoadingDismiss();
-            // Fade in the game world over 0.5s using PixiJS ticker
+            // Fade in the game world over 0.3s
             const start = performance.now();
-            const duration = 500;
+            const duration = 300;
             const fadeTick = () => {
                 const t = Math.min(1, (performance.now() - start) / duration);
                 renderer.rootContainer.alpha = t;
@@ -380,14 +395,13 @@ async function init() {
         // Reveal global back button (was hidden during loading)
         document.getElementById('global-back-btn')?.classList.remove('hidden');
         if (game.players.length > 0) return; // game already running (auto-resume)
+        // startIntroMode() already called in onDismissStart for the fade-in effect
         if (localStorage.getItem('dicy_campaignMode')) {
             await scenarioBrowser.showCampaignView();
             scenarioBrowser.restoreLastSelectedCampaign();
             scenarioBrowser.scenarioBrowserModal.classList.remove('hidden');
-            effectsManager.startIntroMode();
         } else {
             document.getElementById('main-menu').classList.remove('hidden');
-            effectsManager.startIntroMode();
         }
     };
 
@@ -1440,7 +1454,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const editorOverlay = document.getElementById('editor-overlay');
     const steamMenuBtn = document.getElementById('main-menu-steam-btn');
     const mainMenuBranding = document.getElementById('main-menu-branding');
-    // Always show feuerware branding; hide Steam link when running inside Steam
     const isSteamBuild = isSteamContext();
     const showBranding = !isAndroid();
     if (steamMenuBtn) steamMenuBtn.classList.toggle('hidden', isSteamBuild);

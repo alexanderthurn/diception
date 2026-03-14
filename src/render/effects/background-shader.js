@@ -195,8 +195,15 @@ export class BackgroundShader {
         container.addChildAt(this._sprite, 0);
 
         this._resize();
-        this._onResize = this._resize.bind(this);
-        window.addEventListener('resize', this._onResize);
+        // Use PixiJS renderer resize event — fires after the app has updated its screen dimensions
+        this._onResize = (w, h) => {
+            this._sprite.width  = w;
+            this._sprite.height = h;
+            this._filter.setResolution(w, h);
+        };
+        if (this._app?.renderer) {
+            this._app.renderer.on('resize', this._onResize);
+        }
 
         this._tick = this._update.bind(this);
     }
@@ -233,7 +240,7 @@ export class BackgroundShader {
 
     destroy() {
         Ticker.shared.remove(this._tick);
-        window.removeEventListener('resize', this._onResize);
+        this._app?.renderer?.off('resize', this._onResize);
         this._sprite.destroy();
     }
 }
