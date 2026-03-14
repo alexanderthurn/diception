@@ -268,6 +268,9 @@ async function init() {
     effectsManager.setWorldTransform(renderer.rootContainer);
     // startIntroMode() called only after loading screen is dismissed (see onLoadingDismiss)
 
+    // Hide game world until loading screen is gone — prevents showing resumed game during loading
+    renderer.rootContainer.alpha = 0;
+
     const input = new InputController(game, renderer, inputManager);
 
     // Loading Screen - onDismiss set after scenarioBrowser is ready
@@ -276,6 +279,15 @@ async function init() {
         onDismiss: () => {
             sfxManager.markReady();
             if (onLoadingDismiss) onLoadingDismiss();
+            // Fade in the game world over 0.5s using PixiJS ticker
+            const start = performance.now();
+            const duration = 500;
+            const fadeTick = () => {
+                const t = Math.min(1, (performance.now() - start) / duration);
+                renderer.rootContainer.alpha = t;
+                if (t < 1) requestAnimationFrame(fadeTick);
+            };
+            requestAnimationFrame(fadeTick);
         }
     });
     loadingScreen.setInputController(input);

@@ -161,22 +161,27 @@ export class LoadingScreen {
         if (isTouchEvent && (Date.now() - this.fadeStartTime < 350)) return;
 
         if (this.el.style.display !== 'none') {
-            this.el.style.display = 'none';
+            this.el.classList.add('fade-out');
             document.body.classList.remove('interaction-shield');
-
-            if (this.onDismiss) this.onDismiss();
 
             if (this.inputController) {
                 this.inputController.waitTillNoTouch = false;
             }
 
-            // Cleanup
+            // Cleanup listeners
             window.removeEventListener('mousedown', this.dismissHandler);
             window.removeEventListener('touchstart', this.dismissHandler);
             window.removeEventListener('keydown', this.dismissHandler);
             if (this.inputManager) {
                 this.inputManager.off('confirm', this.dismissHandler);
             }
+
+            // Wait for CSS fade-out to finish, then show game
+            setTimeout(() => {
+                this.el.style.display = 'none';
+                document.body.classList.remove('loading-active');
+                if (this.onDismiss) this.onDismiss();
+            }, 850);
         }
     }
 }
