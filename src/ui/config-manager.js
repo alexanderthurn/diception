@@ -205,19 +205,10 @@ export class ConfigManager {
     }
 
     /**
-     * Update UI to show connected gamepads and their assigned colors
+     * Called when connected gamepads change (for any future UI updates).
      */
-    updateGamepadStatus(indices) {
-        const el = this.elements;
-
-
-        // Auto-adjust human count if more gamepads are connected than currently selected
-        // (but only if we aren't already in a game/scenario context which usually locks counts)
-        const currentHumans = parseInt(el.humanCountInput.value);
-        if (indices.length > currentHumans) {
-            el.humanCountInput.value = indices.length;
-            localStorage.setItem('dicy_humanCount', indices.length.toString());
-        }
+    updateGamepadStatus(_indices) {
+        // No-op: human count is set manually by the player.
     }
     /**
      * Get map size preset from slider value

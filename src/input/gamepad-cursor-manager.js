@@ -15,6 +15,7 @@ export class GamepadCursorManager {
         this.game = game;
         this.inputManager = inputManager;
         this.cursors = new Map(); // gamepadIndex -> { x, y, element, player }
+        this.activatedGamepads = new Set(); // indices that have pressed at least one button
         const isDesktop = isDesktopContext();
         this.cursorSpeed = isDesktop ? 12 : 20;
 
@@ -91,6 +92,13 @@ export class GamepadCursorManager {
     setupEventListeners() {
         // Define and store bound handlers for cleanup
         this.boundEventHandlers.gamepadButtonDown = ({ index, button }) => {
+            // First button press activates this gamepad's cursor
+            if (!this.activatedGamepads.has(index)) {
+                this.activatedGamepads.add(index);
+                const gp = this.inputManager.getGamepads().find(g => g && g.index === index);
+                this.createCursor(index, gp || null);
+            }
+
             const cursor = this.cursors.get(index);
             if (!cursor) return;
 
@@ -259,6 +267,8 @@ export class GamepadCursorManager {
 
             let cursor = this.cursors.get(idx);
             if (!cursor) {
+                // Don't show a cursor until the player has pressed at least one button
+                if (!this.activatedGamepads.has(idx)) continue;
                 cursor = this.createCursor(idx, gp);
             }
 
