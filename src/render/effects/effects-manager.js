@@ -163,6 +163,12 @@ export class EffectsManager {
         if (this.introModeActive) return;
 
         this.introModeActive = true;
+
+        // Default armies: all bot colors spread at evenly-spaced angles around the screen.
+        // Human players don't auto-spawn — they throw dice when they click/press.
+        const BOT_COLORS = [0xFF0055, 0x55FF00, 0xFF00AA, 0xFF8800, 0x00AAFF, 0xFFFF00, 0xFFFFFF];
+        this.background.setArmies(BOT_COLORS.map(color => ({ color, human: false })));
+
         this.background.setIntroMode(true);
 
         // Redirect zoom to dice container; pan is a no-op (matrix rain doesn't need it)
@@ -179,7 +185,7 @@ export class EffectsManager {
                 const rect = canvas.getBoundingClientRect();
                 this._spawnX = e.clientX - rect.left;
                 this._spawnY = e.clientY - rect.top;
-                this.background.spawnDiceAt(this._spawnX, this._spawnY);
+                this.spawnPlayerDie(0, this._spawnX, this._spawnY); // mouse = human 1
             };
             this._boundPointerUp = () => {};
 

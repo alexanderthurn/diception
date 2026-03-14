@@ -287,16 +287,29 @@ export class BackgroundRenderer {
 
     // ── Intro mode ────────────────────────────────────────────────────────────
 
-    /** Override the two army colours (e.g. to match connected player colours). */
-    setArmyColors(colors) {
-        this.armyColors = colors;
+    /**
+     * Set armies for intro mode.
+     * @param {Array<{color: number, human: boolean}>} armyDefs
+     *   Bot armies get evenly-spaced angles around the screen; human armies are player-only (no auto-spawn).
+     */
+    setArmies(armyDefs) {
+        // Only 2 directions: left→right and right→left — cycle armies through them
+        const CARDINALS = [Math.PI, 0];
+        let botIdx = 0;
+        this.armies = armyDefs.map(def => {
+            if (def.human) return { ...def };
+            const angle = CARDINALS[botIdx % 4];
+            botIdx++;
+            return { ...def, angle };
+        });
+        this._nextBotIdx = 0;
+        if (this.introMode) this.createFloatingDice();
     }
 
     setIntroMode(enabled) {
         this.introMode = enabled;
 
         if (enabled) {
-            this.armyColors = this.armyColors || [0xAA00FF, 0x0088FF];
             for (const p of this.ambientParticles) {
                 p.vx *= 2;
                 p.vy *= 2;
@@ -313,28 +326,40 @@ export class BackgroundRenderer {
         }
     }
 
-    // ── Floating dice — two armies clashing ───────────────────────────────────
+    // ── Floating dice — N armies from screen edges, comet perspective ──────────
 
     createFloatingDice() {
         this.clearFloatingDice();
-
         if (!this.enabled) return;
 
-        const count = this.quality === 'high' ? 40 : 14;
-        this.baseCount = count;
-        this.maxExtra  = this.quality === 'high' ? 60 : 20;
-        this.matrixSpawnTimer    = 0;
-        this.matrixSpawnInterval = this.quality === 'high' ? 5 : 12;
-        this._nextTeam = 0;
+        const armies = this.armies ?? [];
+        const botArmies = armies.filter(a => !a.human);
+        const perArmy   = this.quality === 'high' ? 7 : 4;
+        const count     = Math.max(perArmy, botArmies.length * perArmy);
 
-        // Fill screen immediately: stagger team 0 and 1 across full x range
+        this.baseCount = count;
+        this.maxExtra  = this.quality === 'high' ? 80 : 30;
+        this.matrixSpawnTimer    = 0;
+        this.matrixSpawnInterval = this.quality === 'high' ? 3 : 8;
+        this._nextBotIdx = 0;
+
+        // Stagger initial dice across each army's path so the screen fills instantly
+        const botIndices = armies.map((a, i) => a.human ? -1 : i).filter(i => i >= 0);
         for (let i = 0; i < count; i++) {
-            this._spawnArmyDie(i % 2, true);
+            if (botIndices.length === 0) break;
+            this._spawnArmyDie(botIndices[i % botIndices.length], true);
         }
     }
 
-    _spawnArmyDie(team, scattered = false) {
+    /**
+     * Spawn one bot-army die.
+     * @param {number} armyIndex  index into this.armies
+     * @param {boolean} scattered  if true, start at a random point along the path (fills screen on init)
+     */
+    _spawnArmyDie(armyIndex, scattered = false) {
         if (!this.enabled) return;
+        const army = this.armies?.[armyIndex];
+        if (!army || army.human) return;
 
         const s = this._scale();
         const minDim = Math.min(this.width, this.height);
@@ -342,57 +367,86 @@ export class BackgroundRenderer {
         const ox = this.diceContainer.x;
         const oy = this.diceContainer.y;
 
-        // Visible bounds in local space
-        const localLeft   = -ox / sc;
-        const localRight  = (this.width  - ox) / sc;
-        const localTop    = -oy / sc;
-        const localBottom = (this.height - oy) / sc;
-        const localWidth  = localRight - localLeft;
-        const localHeight = localBottom - localTop;
+        // Army direction: from screen edge toward center (and beyond)
+        const angle = army.angle;          // direction FROM center TO spawn edge
+        const cos   = Math.cos(angle);
+        const sin   = Math.sin(angle);
+        const cx    = this.width  / 2;
+        const cy    = this.height / 2;
+
+        // Find where the ray from center at `angle` hits the screen edge
+        let t = Infinity;
+        if ( cos >  1e-4) t = Math.min(t, (this.width  - cx) /  cos);
+        if ( cos < -1e-4) t = Math.min(t, -cx            /  cos);
+        if ( sin >  1e-4) t = Math.min(t, (this.height - cy)  /  sin);
+        if ( sin < -1e-4) t = Math.min(t, -cy             /  sin);
+
+        const offscreen = 80 + Math.random() * 40;           // pixels beyond edge
+        const crossDist = t * 2 + offscreen;                 // full crossing in screen px
+
+        // Edge point, then go off-screen
+        let spawnSX = cx + cos * t;
+        let spawnSY = cy + sin * t;
+
+        // Cardinal directions: fill the full spawn edge (not just the centre strip)
+        if (Math.abs(cos) > 0.5) {
+            spawnSY = Math.random() * this.height;  // horizontal army → random Y
+        } else {
+            spawnSX = Math.random() * this.width;   // vertical army → random X
+        }
+        spawnSX += cos * offscreen;
+        spawnSY += sin * offscreen;
+
+        if (scattered) {
+            const walk = Math.random() * crossDist;
+            spawnSX -= cos * walk;
+            spawnSY -= sin * walk;
+        }
+
+        // Convert to local (diceContainer) space
+        const startX = (spawnSX - ox) / sc;
+        const startY = (spawnSY - oy) / sc;
+
+        // Velocity: toward center (-angle), tiny perpendicular wobble
+        const speed  = (0.7 + Math.random() * 0.8) * s / sc;
+        const wobble = (Math.random() - 0.5) * 0.04 * s / sc;
+        const vx = -cos * speed + (-sin) * wobble;
+        const vy = -sin * speed +   cos  * wobble;
 
         const size      = (0.03 + Math.random() * 0.04) * minDim / sc;
-        const baseSpeed = (0.3  + Math.random() * 0.6)  * s / sc;
-        const drift     = (Math.random() - 0.5) * 0.06  * s / sc;  // subtle vertical drift
-
-        const color = this.armyColors?.[team] ?? (team === 0 ? 0xAA00FF : 0x0088FF);
-        const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20];
+        const diceSides = [6, 6, 6, 8, 10, 12, 20][Math.floor(Math.random() * 7)];
         const diceCount = 1 + Math.floor(Math.random() * 6);
-        const diceSides = diceSidesOptions[Math.floor(Math.random() * diceSidesOptions.length)];
 
         const tileContainer = TileRenderer.createTile({
-            size, diceCount, diceSides, color, fillAlpha: 0.7, showBorder: true
+            size, diceCount, diceSides, color: army.color, fillAlpha: 0.7, showBorder: true
         });
         tileContainer.pivot.set(size / 2, size / 2);
+        tileContainer.scale.set(0.04);   // starts tiny — grows via perspective as it nears center
+        tileContainer.x = startX;
+        tileContainer.y = startY;
+        tileContainer.rotation = Math.random() * Math.PI * 2;
+        tileContainer.alpha    = 0.5 + Math.random() * 0.4;
 
-        // Team 0: left → right.  Team 1: right → left.
-        const margin     = size + 60 / sc;
-        const travelDist = localWidth + margin * 2;
-        const vx         = team === 0 ? baseSpeed : -baseSpeed;
-        const startX     = team === 0
-            ? (scattered ? localLeft  - margin - Math.random() * localWidth : localLeft  - margin)
-            : (scattered ? localRight + margin + Math.random() * localWidth : localRight + margin);
-        const startY = localTop + Math.random() * localHeight;
-
-        const dice = {
-            graphics: tileContainer,
-            x: startX, y: startY,
-            vx, vy: drift,
-            baseVx: vx,
-            rotation: (Math.random() - 0.5) * 0.5,
-            rotationSpeed: (Math.random() - 0.5) * 0.003,
-            baseAlpha: 0.5 + Math.random() * 0.4,
-            alphaPhase: Math.random() * Math.PI * 2,
-            startX, travelDist, team,
-        };
-
-        tileContainer.scale.set(0.04); // starts tiny — grows as it crosses (comet feel)
-        tileContainer.x = dice.x;
-        tileContainer.y = dice.y;
-        tileContainer.rotation = dice.rotation;
-        tileContainer.alpha = dice.baseAlpha;
+        // Per-army cap: remove this army's oldest die before adding a new one
+        const armyKey  = `bot_${armyIndex}`;
+        const maxPerArmy = this.quality === 'high' ? 40 : 20;
+        const armyDice = this.floatingDice.filter(d => d.armyKey === armyKey);
+        if (armyDice.length >= maxPerArmy) {
+            const oldest = armyDice[0];
+            oldest.graphics.destroy();
+            this.floatingDice.splice(this.floatingDice.indexOf(oldest), 1);
+        }
 
         this.diceContainer.addChild(tileContainer);
-        this.floatingDice.push(dice);
+        this.floatingDice.push({
+            graphics: tileContainer,
+            x: startX, y: startY, vx, vy,
+            rotation: tileContainer.rotation,
+            rotationSpeed: (Math.random() - 0.5) * 0.003,
+            baseAlpha: tileContainer.alpha,
+            alphaPhase: Math.random() * Math.PI * 2,
+            armyKey,
+        });
     }
 
     panDice(dx, dy) {
@@ -404,13 +458,9 @@ export class BackgroundRenderer {
         const scaleFactor = 1.1;
         const currentScale = this.diceContainer.scale.x;
         const newScale = delta > 0 ? currentScale / scaleFactor : currentScale * scaleFactor;
-
         if (newScale < 0.3 || newScale > 4.0) return;
-
-        // Zoom towards mouse point
         const worldX = (x - this.diceContainer.x) / currentScale;
         const worldY = (y - this.diceContainer.y) / currentScale;
-
         this.diceContainer.scale.set(newScale, newScale);
         this.diceContainer.x = x - worldX * newScale;
         this.diceContainer.y = y - worldY * newScale;
@@ -418,72 +468,73 @@ export class BackgroundRenderer {
 
     /**
      * Spawn a player-thrown die at a screen position.
-     * It joins the army on that side of the screen (left half → rightward, right half → leftward).
+     * Flies toward screen center and beyond in the player's color.
      * @param {number} screenX
      * @param {number} screenY
-     * @param {number|null} color  hex colour; null → use army colour for that side
+     * @param {number|null} color  hex; null → cyan fallback
      */
     spawnDiceAt(screenX, screenY, color = null) {
         if (!this.enabled || !this.introMode) return;
 
-        const sc = this.diceContainer.scale.x;
-        const localX = (screenX - this.diceContainer.x) / sc;
-        const localY = (screenY - this.diceContainer.y) / sc;
-
-        const s = this._scale();
+        const sc  = this.diceContainer.scale.x;
+        const ox  = this.diceContainer.x;
+        const oy  = this.diceContainer.y;
+        const s   = this._scale();
         const minDim = Math.min(this.width, this.height);
-        const size = (0.04 + Math.random() * 0.02) * minDim / sc;
 
-        // Join the army on the side of the click
-        const team = screenX < this.width / 2 ? 0 : 1;
-        const effectiveColor = color ?? this.armyColors?.[team] ?? (team === 0 ? 0xAA00FF : 0x0088FF);
+        const localX = (screenX - ox) / sc;
+        const localY = (screenY - oy) / sc;
 
-        const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20];
+        // Direction: from click toward screen center (and beyond)
+        const cx = this.width / 2, cy = this.height / 2;
+        const ddx = cx - screenX, ddy = cy - screenY;
+        const dist = Math.sqrt(ddx * ddx + ddy * ddy) || 1;
+        const nx = ddx / dist, ny = ddy / dist;
+
+        const speed  = (0.5 + Math.random() * 0.4) * s / sc;
+        const wobble = (Math.random() - 0.5) * 0.05 * s / sc;
+        const vx = nx * speed + (-ny) * wobble;
+        const vy = ny * speed +   nx  * wobble;
+
+        const size      = (0.04 + Math.random() * 0.02) * minDim / sc;
+        const diceSides = [6, 6, 6, 8, 10, 12, 20][Math.floor(Math.random() * 7)];
         const diceCount = 1 + Math.floor(Math.random() * 6);
-        const diceSides = diceSidesOptions[Math.floor(Math.random() * diceSidesOptions.length)];
+        const effectiveColor = color ?? 0x00ffff;
 
         const tileContainer = TileRenderer.createTile({
             size, diceCount, diceSides, color: effectiveColor, fillAlpha: 0.7, showBorder: true
         });
         tileContainer.pivot.set(size / 2, size / 2);
+        tileContainer.x = localX;
+        tileContainer.y = localY;
+        tileContainer.rotation = (Math.random() - 0.5) * 0.3;
+        tileContainer.alpha    = 0.9 + Math.random() * 0.1;
 
-        const baseSpeed = (0.4 + Math.random() * 0.4) * s / sc;
-        const vx = team === 0 ? baseSpeed : -baseSpeed;
-        const vy = (Math.random() - 0.5) * 0.06 * s / sc;
-
-        const dice = {
-            graphics: tileContainer,
-            x: localX, y: localY,
-            vx, vy,
-            baseVx: vx,
-            rotation: (Math.random() - 0.5) * 0.3,
-            rotationSpeed: (Math.random() - 0.5) * 0.004,
-            baseAlpha: 0.8 + Math.random() * 0.2,
-            alphaPhase: Math.random() * Math.PI * 2,
-            startX: localX,
-            travelDist: -1,  // player-spawned: full scale, no comet grow
-            team,
-        };
-
-        tileContainer.x = dice.x;
-        tileContainer.y = dice.y;
-        tileContainer.rotation = dice.rotation;
-        tileContainer.alpha = dice.baseAlpha;
-
-        // At cap: recycle oldest extra die
-        if (this.floatingDice.length >= this.baseCount + this.maxExtra) {
-            const oldest = this.floatingDice.splice(this.baseCount, 1)[0];
+        // Per-player cap: remove this player's oldest die only
+        const armyKey    = `player_${color ?? 'anon'}`;
+        const maxPerHuman = this.quality === 'high' ? 60 : 30;
+        const playerDice  = this.floatingDice.filter(d => d.armyKey === armyKey);
+        if (playerDice.length >= maxPerHuman) {
+            const oldest = playerDice[0];
             oldest.graphics.destroy();
+            this.floatingDice.splice(this.floatingDice.indexOf(oldest), 1);
         }
 
-        this.floatingDice.push(dice);
+        this.floatingDice.push({
+            graphics: tileContainer,
+            x: localX, y: localY, vx, vy,
+            rotation: tileContainer.rotation,
+            rotationSpeed: (Math.random() - 0.5) * 0.004,
+            baseAlpha: tileContainer.alpha,
+            alphaPhase: Math.random() * Math.PI * 2,
+            playerSpawned: true,
+            armyKey,
+        });
         this.diceContainer.addChild(tileContainer);
     }
 
     clearFloatingDice() {
-        for (const d of this.floatingDice) {
-            d.graphics.destroy();
-        }
+        for (const d of this.floatingDice) d.graphics.destroy();
         this.floatingDice = [];
         this.diceContainer.removeChildren();
         this.diceContainer.position.set(0, 0);
@@ -491,42 +542,35 @@ export class BackgroundRenderer {
     }
 
     updateFloatingDice(dt) {
-        const sc = this.diceContainer.scale.x;
-        const ox = this.diceContainer.x;
-        const oy = this.diceContainer.y;
-        const cullMargin = 300;
+        const sc  = this.diceContainer.scale.x;
+        const ox  = this.diceContainer.x;
+        const oy  = this.diceContainer.y;
+        const cx  = this.width  / 2;
+        const cy  = this.height / 2;
+        const maxDist    = Math.sqrt(this.width * this.width + this.height * this.height) * 0.5;
+        const cullMargin = 200;
 
-        // Alternate team spawning
+        // Round-robin spawn across bot armies
         this.matrixSpawnTimer = (this.matrixSpawnTimer || 0) + dt;
         if (this.matrixSpawnTimer >= (this.matrixSpawnInterval || 10)) {
             this.matrixSpawnTimer = 0;
             if (this.floatingDice.length < this.baseCount + this.maxExtra) {
-                this._nextTeam = (this._nextTeam ?? 0) === 0 ? 1 : 0;
-                this._spawnArmyDie(this._nextTeam, false);
+                const botIndices = (this.armies ?? [])
+                    .map((a, i) => a.human ? -1 : i).filter(i => i >= 0);
+                if (botIndices.length > 0) {
+                    this._nextBotIdx = ((this._nextBotIdx ?? 0)) % botIndices.length;
+                    this._spawnArmyDie(botIndices[this._nextBotIdx], false);
+                    this._nextBotIdx++;
+                }
             }
         }
 
         for (let i = this.floatingDice.length - 1; i >= 0; i--) {
             const d = this.floatingDice[i];
 
-            // Progress: 0 = just spawned off-screen edge, 1 = fully crossed
-            // team 0 moves right (x increases), team 1 moves left (x decreases)
-            // travelDist < 0 = player-spawned: full scale, constant speed
-            const progress = d.travelDist > 0
-                ? (d.team === 0
-                    ? Math.max(0, Math.min(1, (d.x - d.startX) / d.travelDist))
-                    : Math.max(0, Math.min(1, (d.startX - d.x) / d.travelDist)))
-                : 1;
-
-            // Comet: starts tiny, grows to full scale as it crosses
-            const perspScale = d.travelDist < 0 ? 1.0 : 0.04 + 0.96 * Math.pow(progress, 0.65);
-
-            // Accelerate toward the camera (perspective feel)
-            const speedMult = d.travelDist < 0 ? 1.0 : 0.3 + 0.7 * progress;
-
-            d.x += d.baseVx * dt * speedMult;
-            d.y += d.vy    * dt;
-            d.rotation += d.rotationSpeed * dt * (0.5 + 0.5 * progress);
+            d.x += d.vx * dt;
+            d.y += d.vy * dt;
+            d.rotation += d.rotationSpeed * dt;
 
             const screenX = ox + d.x * sc;
             const screenY = oy + d.y * sc;
@@ -538,6 +582,11 @@ export class BackgroundRenderer {
                 if (i < this.baseCount) this.baseCount = Math.max(0, this.baseCount - 1);
                 continue;
             }
+
+            // Perspective: large at screen center, visible at edges (quadratic falloff)
+            const ddx = screenX - cx, ddy = screenY - cy;
+            const distNorm  = Math.min(1, Math.sqrt(ddx * ddx + ddy * ddy) / maxDist);
+            const perspScale = d.playerSpawned ? 1.0 : 0.25 + 0.75 * (1 - distNorm * distNorm);
 
             d.alphaPhase += 0.015 * dt;
             const alphaMod = Math.sin(d.alphaPhase) * 0.2 + 0.8;
