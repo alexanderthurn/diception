@@ -23,7 +23,8 @@ export class EffectsManager {
         stage.addChild(this.container);
 
         // Initialize subsystems
-        this.background = new BackgroundRenderer(stage);
+        const app = options.renderer?.app ?? null;
+        this.background = new BackgroundRenderer(stage, { app });
         this.particles = new ParticleSystem(this.container, { zIndex: 10 });
 
         // Tile size for position calculations (matches grid-renderer)
@@ -241,6 +242,24 @@ export class EffectsManager {
      */
     onAttack(result) {
         if (this.quality === 'off') return;
+
+        // Scale territory glow by attack outcome (high quality, human attacker only)
+        if (this.quality === 'high' && this.renderer?.grid?.tileGlow) {
+            const attacker = this.game.players.find(p => p.id === result.attackerId);
+            if (attacker && !attacker.isBot) {
+                const maxDice = this.game.maxDice || 9;
+                const tileGlow = this.renderer.grid.tileGlow;
+                if (result.won) {
+                    // Win: intensity = fraction of max dice the defender had
+                    const defDice = result.defenderRolls?.length ?? 1;
+                    tileGlow.flash(defDice / maxDice);
+                } else {
+                    // Loss: reduce current intensity by the attacker's dice fraction
+                    const atkDice = result.attackerRolls?.length ?? 1;
+                    tileGlow.dampen(atkDice / maxDice);
+                }
+            }
+        }
 
         const from = this.tileToWorld(result.from.x, result.from.y);
         const to = this.tileToWorld(result.to.x, result.to.y);

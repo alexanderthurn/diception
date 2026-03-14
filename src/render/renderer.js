@@ -1,4 +1,5 @@
-import { Application, Container } from 'pixi.js';
+import { Application, Container, Ticker } from 'pixi.js';
+import { ScanlineFilter } from './effects/scanline-filter.js';
 import { GridRenderer } from './grid-renderer.js';
 import { AnimationManager } from './animation-manager.js';
 import { TileRenderer } from './tile-renderer.js';
@@ -198,6 +199,32 @@ export class Renderer {
     setEffectsQuality(quality) {
         if (this.grid) {
             this.grid.setEffectsQuality(quality);
+        }
+        this._applyScanline(quality);
+    }
+
+    _applyScanline(quality) {
+        if (quality === 'high') {
+            if (!this._scanlineFilter) {
+                this._scanlineFilter = new ScanlineFilter();
+                this._scanlineFilter.intensity = 0.55;
+                const w = this.app.screen.width;
+                const h = this.app.screen.height;
+                this._scanlineFilter.setResolution(w, h);
+                // Animate time uniform
+                this._scanlineTick = (ticker) => {
+                    this._scanlineFilter.time += ticker.deltaTime / 60;
+                };
+                Ticker.shared.add(this._scanlineTick);
+            }
+            this.app.stage.filters = [this._scanlineFilter];
+        } else {
+            if (this._scanlineFilter) {
+                Ticker.shared.remove(this._scanlineTick);
+                this._scanlineFilter = null;
+                this._scanlineTick = null;
+            }
+            this.app.stage.filters = null;
         }
     }
 

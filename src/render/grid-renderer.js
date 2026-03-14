@@ -1,6 +1,7 @@
 import { Graphics, Container, Text, TextStyle, Sprite, Texture } from 'pixi.js';
 import { TileRenderer } from './tile-renderer.js';
 import { RENDER } from '../core/constants.js';
+import { TileGlow } from './effects/tile-glow.js';
 import { getWinProbability, getProbabilityHexColor } from '../core/probability.js';
 import { shouldShowInputHints, getInputHint, ACTION_MOVE_UP, ACTION_MOVE_DOWN, ACTION_MOVE_LEFT, ACTION_MOVE_RIGHT, ACTION_ATTACK } from '../ui/input-hints.js';
 
@@ -12,6 +13,9 @@ export class GridRenderer {
         this.inputManager = inputManager;
         this.container = new Container();
         this.stage.addChild(this.container);
+
+        // Blurred territory glow layer (below tiles)
+        this.tileGlow = new TileGlow(stage);
 
         // Container for overlays (selection, hover)
         this.overlayContainer = new Container();
@@ -195,6 +199,7 @@ export class GridRenderer {
 
     setEffectsQuality(quality) {
         this.effectsQuality = quality;
+        this.tileGlow.setQuality(quality);
     }
 
     setSelection(x, y) {
@@ -283,6 +288,9 @@ export class GridRenderer {
         this.currentPlayerRegionEdges = [];
         this.currentPlayerSecondaryRegionEdges = [];
 
+        // Collect glow data for all owned tiles
+        const glowTiles = [];
+
         for (let y = 0; y < map.height; y++) {
             for (let x = 0; x < map.width; x++) {
                 const tileIdx = map.getTileIndex(x, y);
@@ -332,6 +340,18 @@ export class GridRenderer {
                     this.saveTileState(tileIdx, tileRaw, isCurrentPlayer, isRegionTile);
                 }
 
+                // Collect tile for glow layer (all owned, non-blocked tiles)
+                if (!tileRaw.blocked && this.effectsQuality !== 'off') {
+                    const owner = this.game.players.find(p => p.id === tileRaw.owner);
+                    if (owner) {
+                        glowTiles.push({
+                            worldX: x * (this.tileSize + this.gap),
+                            worldY: y * (this.tileSize + this.gap),
+                            color: owner.color,
+                        });
+                    }
+                }
+
                 // Always collect shimmer edges for current human player
                 if (!tileRaw.blocked && isCurrentPlayer && !this.paintMode && !currentPlayer.isBot) {
                     if (isInLargestRegion) {
@@ -341,6 +361,11 @@ export class GridRenderer {
                     }
                 }
             }
+        }
+
+        // Update territory glow layer
+        if (this.effectsQuality !== 'off') {
+            this.tileGlow.redraw(glowTiles, this.tileSize, this.gap);
         }
 
         this.drawOverlay();

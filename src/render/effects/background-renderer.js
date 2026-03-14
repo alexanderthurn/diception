@@ -1,5 +1,6 @@
 import { Container, Graphics, Ticker } from 'pixi.js';
 import { TileRenderer } from '../tile-renderer.js';
+import { BackgroundShader } from './background-shader.js';
 
 /**
  * Background Renderer - Animated Tron-style background
@@ -58,6 +59,13 @@ export class BackgroundRenderer {
         // Create effects
         this.createAmbientParticles();
 
+        // Space/Tron background shader (sits at zIndex -1 inside this.container)
+        this.bgShader = options.app
+            ? new BackgroundShader(this.container, options.app)
+            : null;
+        // Default to high so shader is visible before setQuality() is called
+        this.bgShader?.setQuality('high');
+
         // Animation state
         this.time = 0;
         this.tickerCallback = this.update.bind(this);
@@ -77,6 +85,8 @@ export class BackgroundRenderer {
         this.quality = quality;
         this.enabled = quality !== 'off';
         this.container.visible = this.enabled;
+
+        this.bgShader?.setQuality(quality);
 
         if (quality === 'off') {
             this.clearAmbientParticles();
