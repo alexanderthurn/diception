@@ -62,20 +62,34 @@ vec3 starfield(vec2 uv) {
 }
 
 // ── Tron grid ────────────────────────────────────────────────────────────────
-// Grid lines at fixed pixel spacing; animated pulse.
+// Scrolling grid with expanding sonar-ring pulses from center.
 float tronGrid(vec2 uv) {
-    float spacing = 64.0;                          // pixels per cell
-    vec2  g       = uv * uResolution / spacing;
-    vec2  lines   = abs(fract(g) - 0.5) * 2.0;   // 0 = cell-center, 1 = cell-edge
-    float lineW   = 0.10;                          // wider lines = more visible
-    float lx      = smoothstep(1.0 - lineW, 1.0, lines.x);
-    float ly      = smoothstep(1.0 - lineW, 1.0, lines.y);
-    float line    = max(lx, ly);
-    // Slow global pulse — high base so lines stay visible most of the time
-    float pulse   = 0.75 + 0.25 * sin(uTime * 0.15);
-    // Gentle diagonal energy sweep
-    float scan    = 0.80 + 0.20 * sin((uv.x + uv.y) * 2.5 - uTime * 0.25);
-    return line * pulse * scan;
+    float spacing = 64.0;
+
+    // Slow diagonal scroll — grid drifts gently across screen
+    vec2 drift = vec2(uTime * 0.007, uTime * 0.003);
+    vec2 g     = (uv + drift) * uResolution / spacing;
+
+    vec2  lines = abs(fract(g) - 0.5) * 2.0;
+    float lineW = 0.10;
+    float lx    = smoothstep(1.0 - lineW, 1.0, lines.x);
+    float ly    = smoothstep(1.0 - lineW, 1.0, lines.y);
+    float line  = max(lx, ly);
+
+    // Slow global pulse — keeps lines visible between rings
+    float pulse = 0.75 + 0.25 * sin(uTime * 0.15);
+
+    // Expanding sonar rings from screen center
+    // Three rings 120° apart so there's always one crossing the grid
+    float aspect = uResolution.x / uResolution.y;
+    float dist   = length((uv - vec2(0.5)) * vec2(aspect, 1.0));
+    float r1     = max(0.0, sin(dist * 7.0 - uTime * 1.0));
+    float r2     = max(0.0, sin(dist * 7.0 - uTime * 1.0 + 2.094));  // +120°
+    float r3     = max(0.0, sin(dist * 7.0 - uTime * 1.0 + 4.189));  // +240°
+    float rings  = pow(max(r1, max(r2, r3)), 4.0);   // sharp thin rings
+    float ringMod = 0.65 + 0.35 * rings;              // 0.65 base so grid never vanishes
+
+    return line * pulse * ringMod;
 }
 
 // ── Nebula wisps ─────────────────────────────────────────────────────────────
