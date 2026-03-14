@@ -239,8 +239,8 @@
                 </div>
             </div>
 
-            <div class="control-row start-row" style="margin-top: 20px; gap: 10px; flex-direction: column;">
-                <div class="control-group" style="margin:0">
+            <div class="setup-start-row">
+                <div class="control-group">
                     <label>Game Speed</label>
                     <div class="segmented-btn game-speed-segmented">
                         <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
@@ -248,7 +248,7 @@
                         <button type="button" class="segmented-option" data-value="expert">Expert</button>
                     </div>
                 </div>
-                <button id="start-game-btn" class="tron-btn large" style="width: 100%;">START</button>
+                <button id="start-game-btn" class="tron-btn large">START</button>
             </div>
         </div>
 
@@ -258,18 +258,18 @@
         <div id="main-menu" class="modal hidden">
             <h1 class="tron-title">DICEPTION</h1>
             <div class="credits" id="main-menu-credits">by Alexander Thurn</div>
-            <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;width:100%;min-width:220px;">
+            <div class="main-nav">
                 <button id="main-custom-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span> Play Game</button>
                 <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span> Campaign</button>
-                <div style="display:flex;gap:10px;">
-                    <button id="main-settings-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-settings"></span> Settings</button>
-                    <button id="main-achievements-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-achievements"></span> <span id="ach-btn-progress"></span></button>
+                <div class="main-nav-row">
+                    <button id="main-settings-btn" class="tron-btn large"><span class="sprite-icon icon-settings"></span> Settings</button>
+                    <button id="main-achievements-btn" class="tron-btn large"><span class="sprite-icon icon-achievements"></span> <span id="ach-btn-progress"></span></button>
                 </div>
-                <div style="display:flex;gap:10px;">
-                    <button id="main-howto-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-help"></span> How To</button>
-                    <button id="main-about-btn" class="tron-btn large" style="flex:1"><span class="sprite-icon icon-scenario"></span> About</button>
+                <div class="main-nav-row">
+                    <button id="main-howto-btn" class="tron-btn large"><span class="sprite-icon icon-help"></span> How To</button>
+                    <button id="main-about-btn" class="tron-btn large"><span class="sprite-icon icon-scenario"></span> About</button>
                 </div>
-                <button id="main-quit-btn" class="tron-btn large hidden" style="margin-top:auto;"><span class="sprite-icon icon-close"></span> Quit</button>
+                <button id="main-quit-btn" class="tron-btn large hidden"><span class="sprite-icon icon-close"></span> Quit</button>
             </div>
         </div>
 
@@ -280,39 +280,39 @@
                 <h2 class="tron-title small">PAUSED</h2>
             </div>
             <div class="pause-content">
-                <!-- Inline settings -->
-                <div class="control-group">
-                    <label>Game Speed</label>
+
+                <div class="pause-module">
+                    <span class="pause-module-label">Speed</span>
                     <div class="segmented-btn game-speed-segmented">
-                        <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
+                        <button type="button" class="segmented-option" data-value="beginner">Slow</button>
                         <button type="button" class="segmented-option" data-value="normal">Normal</button>
-                        <button type="button" class="segmented-option" data-value="expert">Expert</button>
+                        <button type="button" class="segmented-option" data-value="expert">Fast</button>
                     </div>
                 </div>
-                <div class="control-row pause-control-row">
-                    <div class="control-group half">
-                        <label>Music</label>
-                        <div class="range-row">
+
+                <div class="pause-module">
+                    <span class="pause-module-label">Audio</span>
+                    <div class="pause-audio-row">
+                        <div class="pause-audio-track">
                             <button id="pause-music-toggle" class="tron-btn small" title="Music"><span class="sprite-icon icon-music-on"></span></button>
                             <input type="range" id="pause-music-volume" min="0" max="100" value="30" title="Music Volume">
                         </div>
-                    </div>
-                    <div class="control-group half">
-                        <label>Sound Effects</label>
-                        <div class="range-row">
+                        <div class="pause-audio-track">
                             <button id="pause-sfx-toggle" class="tron-btn small active" title="Sound Effects"><span class="sprite-icon icon-sfx-on"></span></button>
                             <input type="range" id="pause-sfx-volume" min="0" max="100" value="30" title="SFX Volume">
                         </div>
                     </div>
                 </div>
-                <hr>
-                <!-- Navigation -->
-                <button id="pause-resume-btn" class="tron-btn large">Resume</button>
+
+                <button id="pause-resume-btn" class="tron-btn large pause-resume-btn">Resume</button>
+
                 <div class="pause-btn-row">
                     <button id="pause-save-btn" class="tron-btn large">Save</button>
                     <button id="pause-retry-btn" class="tron-btn large">Restart</button>
                 </div>
-                <button id="pause-mainmenu-btn" class="tron-btn large">Exit</button>
+
+                <button id="pause-mainmenu-btn" class="tron-btn large pause-exit-btn">Exit to Menu</button>
+
             </div>
         </div>
 

@@ -120,6 +120,8 @@ body {
     width: calc(100% / var(--ui-scale));
     height: calc(100dvh / var(--ui-scale));
     container-type: inline-size;
+    /* Logical body height in scaled coordinate space — use this instead of vh in modal rules */
+    --body-h: calc(100dvh / var(--ui-scale));
 }
 
 /* Scanline Effect for High Quality */
@@ -307,7 +309,7 @@ select {
     transform: translateY(-50%);
     left: 20px;
     width: 280px;
-    max-height: 80vh;
+    max-height: calc(var(--body-h) - 40px);
     overflow-y: auto;
     z-index: 10;
     transition: all 0.3s ease;
@@ -918,7 +920,7 @@ body.fx-off .player-tile.rumble-lose {
 
 #campaign-select-view .howto-content,
 #campaign-detail-view .howto-content {
-    max-height: 75vh;
+    max-height: calc(var(--body-h) - 160px);
 }
 
 #main-menu .tron-btn.large .sprite-icon {
@@ -938,7 +940,7 @@ body.fx-off .player-tile.rumble-lose {
     pointer-events: auto;
     min-width: 300px;
     max-width: calc(100% - 40px);
-    max-height: 90vh;
+    max-height: calc(var(--body-h) - 40px);
     overflow: visible;
     scrollbar-width: none;
     /* Firefox */
@@ -1581,7 +1583,7 @@ select {
         left: 10px;
         right: 60px;
         width: auto;
-        max-height: 70vh;
+        max-height: calc(var(--body-h) - 40px);
         border-radius: 0;
     }
 
@@ -1596,7 +1598,7 @@ select {
     }
 
     #dash-content {
-        max-height: 50vh;
+        max-height: calc(var(--body-h) * 0.5);
         overflow-y: auto;
     }
 
@@ -2463,7 +2465,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 }
 
 .howto-content {
-    max-height: 60vh;
+    max-height: calc(var(--body-h) - 200px);
     overflow-y: auto;
     padding-right: 10px;
 }
@@ -5401,7 +5403,7 @@ canvas {
     transform: translate(-50%, -50%);
     width: 1000px;
     max-width: 95vw;
-    max-height: 85vh;
+    max-height: calc(var(--body-h) - 40px);
     overflow: hidden;
     /* Changed to hidden, children scroll */
     text-align: left;
@@ -5794,7 +5796,7 @@ canvas {
 
 /* All large-modal scrollable content uses the same max-height */
 .large-modal .howto-content {
-    max-height: calc(90vh - 120px);
+    max-height: calc(var(--body-h) - 160px);
     overflow-y: auto;
 }
 
@@ -5974,29 +5976,180 @@ canvas {
     text-transform: uppercase;
 }
 
-/* ── Pause Modal ── */
+/* ═══════════════════════════════════════════════════════════════════
+   REDESIGN — Tactical Command Terminal UI system
+   All modals share this vocabulary. One block, no duplication.
+   Modal shells (.modal, .modal-header, .tron-btn) are NOT touched.
+   ═══════════════════════════════════════════════════════════════════ */
 
-.pause-content {
+/* ── Shared: Module (labelled section with left accent bar) ── */
+.m-module {
+    padding: 10px 12px 12px;
+    border-left: 2px solid rgba(0, 255, 255, 0.2);
+    background: rgba(0, 255, 255, 0.025);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
+}
+
+.m-label {
+    font-family: Rajdhani, sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(0, 255, 255, 0.4);
+}
+
+.m-divider {
+    border: none;
+    border-top: 1px solid rgba(0, 255, 255, 0.1);
+    margin: 2px 0;
+}
+
+/* ── Shared: Primary action button (cyan glow) ── */
+.tron-btn.m-primary-btn {
+    background: rgba(0, 255, 255, 0.1);
+    border-color: var(--border-color);
+    color: var(--border-color);
+    font-weight: 700;
+    letter-spacing: 3px;
+    box-shadow: 0 0 14px rgba(0, 255, 255, 0.15), inset 0 0 10px rgba(0, 255, 255, 0.04);
+}
+
+.tron-btn.m-primary-btn:hover {
+    background: rgba(0, 255, 255, 0.2);
+    box-shadow: 0 0 22px rgba(0, 255, 255, 0.3), inset 0 0 14px rgba(0, 255, 255, 0.06);
+    color: #fff;
+    border-color: #fff;
+}
+
+/* ── Shared: Danger button (red tint, visually demoted) ── */
+.tron-btn.m-danger-btn {
+    border-color: rgba(255, 60, 60, 0.35);
+    color: rgba(255, 110, 110, 0.65);
+    background: rgba(255, 20, 20, 0.03);
+    box-shadow: none;
+    font-size: 0.9em;
+    letter-spacing: 2px;
+}
+
+.tron-btn.m-danger-btn:hover {
+    border-color: rgba(255, 80, 80, 0.75);
+    color: #fff;
+    background: rgba(255, 20, 20, 0.1);
+    box-shadow: 0 0 12px rgba(255, 60, 60, 0.2);
+}
+
+/* ── Main Menu ── */
+.main-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
     width: 100%;
     min-width: 220px;
 }
 
-.pause-content .control-group {
+.main-nav-row {
+    display: flex;
+    gap: 10px;
+}
+
+.main-nav-row .tron-btn {
+    flex: 1;
+}
+
+#main-quit-btn {
+    margin-top: auto;
+}
+
+/* ── Setup Modal ── */
+.setup-modules {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.setup-modules .m-module .control-group {
     margin: 0;
 }
 
-.pause-content hr {
-    border: none;
-    border-top: 1px solid rgba(0, 255, 255, 0.2);
+.setup-modules .m-module .control-row {
     margin: 0;
+    gap: 8px;
+}
+
+.setup-start-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.setup-start-row .control-group {
+    margin: 0;
+}
+
+#start-game-btn {
+    width: 100%;
+    letter-spacing: 4px;
+}
+
+/* ── Pause Modal ── */
+.pause-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    min-width: 240px;
+    position: relative;
+}
+
+/* Corner brackets — purely decorative */
+.pause-content::before,
+.pause-content::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.pause-content::before {
+    top: -6px;
+    left: -6px;
+    border-top: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+}
+
+.pause-content::after {
+    bottom: -6px;
+    right: -6px;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+}
+
+.pause-audio-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pause-audio-track {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pause-audio-track input[type="range"] {
+    flex: 1;
 }
 
 .pause-btn-row {
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 
 .pause-btn-row .tron-btn {
@@ -6006,6 +6159,92 @@ canvas {
 .pause-control-row {
     margin: 0;
     gap: 10px;
+}
+
+/* ── Settings Modal ── */
+.settings-group {
+    border-left: 2px solid rgba(0, 255, 255, 0.15);
+    margin-bottom: 4px;
+}
+
+.settings-group-header {
+    font-family: Rajdhani, sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: rgba(0, 255, 255, 0.45);
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    background: rgba(0, 255, 255, 0.02);
+}
+
+details.settings-group > summary.settings-group-header::after {
+    content: ' ▸';
+    opacity: 0.5;
+}
+
+details.settings-group[open] > summary.settings-group-header::after {
+    content: ' ▾';
+}
+
+.settings-group-flat > .settings-group-header {
+    cursor: default;
+}
+
+.settings-group-body {
+    padding: 10px 12px 12px;
+}
+
+.settings-group-body .control-group {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.settings-group-body .control-group:last-child {
+    margin-bottom: 0;
+}
+
+/* ── Tournament Results Modal ── */
+.tournament-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.tournament-actions .tron-btn {
+    flex: 1;
+}
+
+#tournament-results {
+    max-height: calc(var(--body-h) - 180px);
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+/* ── Mobile: stack rows in setup + pause on small screens ── */
+@container (max-width: 480px) {
+    .pause-control-row,
+    .main-nav-row {
+        flex-direction: column;
+    }
+
+    .main-nav-row .tron-btn {
+        flex: none;
+    }
+
+    .setup-modules .control-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .setup-modules .control-group.quarter,
+    .setup-modules .control-group.half,
+    .setup-modules .control-group.third {
+        flex: unset;
+        width: 100%;
+    }
 }
 
 /* ── 3. Segmented Buttons Polish ── */
