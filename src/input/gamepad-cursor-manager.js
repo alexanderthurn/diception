@@ -777,42 +777,85 @@ export class GamepadCursorManager {
 
     /**
      * Move focus within the current modal using D-pad directions.
-     * Left/Right navigate same-level siblings; Up/Down navigate all focusable elements.
+     * Uses spatial layout: elements are grouped into visual rows by Y position.
+     * Left/Right navigate within a row; Up/Down move between rows (picking nearest by X).
      */
     navigateModal(button, cursor) {
         const b = this._gb();
         const modal = this.getOpenModal();
         if (!modal) return;
 
-        const isHorizontal = button === b.moveLeft || button === b.moveRight;
-        const forward = button === b.moveRight || button === b.moveDown;
+        const isLeft  = button === b.moveLeft;
+        const isRight = button === b.moveRight;
+        const isUp    = button === b.moveUp;
+        const isDown  = button === b.moveDown;
         const current = document.activeElement;
 
-        let candidates;
-        if (isHorizontal && current && modal.contains(current)) {
-            // Same-level siblings first
-            const siblings = [...current.parentElement.querySelectorAll(GamepadCursorManager.FOCUSABLE)]
-                .filter(el => el.offsetParent !== null);
-            candidates = siblings.length > 1 ? siblings : null;
+        // Collect all visible focusable elements with their visual centre positions
+        const items = [...modal.querySelectorAll(GamepadCursorManager.FOCUSABLE)]
+            .filter(el => el.offsetParent !== null)
+            .map(el => {
+                const r = el.getBoundingClientRect();
+                return { el, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+            })
+            .sort((a, b) => a.cy - b.cy || a.cx - b.cx);
+
+        if (!items.length) return;
+
+        // Group into rows: elements whose vertical centres are within 20px of each other
+        const rows = [];
+        for (const item of items) {
+            const last = rows[rows.length - 1];
+            if (last && Math.abs(item.cy - last[0].cy) < 20) {
+                last.push(item);
+            } else {
+                rows.push([item]);
+            }
         }
-        if (!candidates) {
-            candidates = [...modal.querySelectorAll(GamepadCursorManager.FOCUSABLE)]
-                .filter(el => el.offsetParent !== null);
+        for (const row of rows) row.sort((a, b) => a.cx - b.cx);
+
+        // Find where the current element sits
+        let rowIdx = -1, colIdx = -1;
+        for (let r = 0; r < rows.length; r++) {
+            const c = rows[r].findIndex(item => item.el === current);
+            if (c !== -1) { rowIdx = r; colIdx = c; break; }
         }
-        if (!candidates.length) return;
 
-        const currentIdx = candidates.indexOf(current);
-        const nextIdx = currentIdx === -1
-            ? (forward ? 0 : candidates.length - 1)
-            : (currentIdx + (forward ? 1 : -1) + candidates.length) % candidates.length;
+        // Nothing focused yet — jump to first element
+        if (rowIdx === -1) {
+            const t = rows[0][0].el;
+            if (current) current.classList.remove('gamepad-focused');
+            t.focus({ preventScroll: false });
+            t.classList.add('gamepad-focused');
+            this.moveCursorToElement(cursor, t);
+            return;
+        }
 
-        const target = candidates[nextIdx];
-        target.focus({ preventScroll: false });
-        this.moveCursorToElement(cursor, target);
+        let target = null;
 
-        // Explicitly add highlight class (browsers may not show :focus for programmatic focus)
+        if (isLeft || isRight) {
+            // Navigate within the current row; stop at edges (no row-wrap)
+            const nextCol = colIdx + (isRight ? 1 : -1);
+            if (nextCol >= 0 && nextCol < rows[rowIdx].length) {
+                target = rows[rowIdx][nextCol].el;
+            }
+        } else {
+            // Navigate between rows; pick the element in the next row closest by X
+            const nextRowIdx = rowIdx + (isDown ? 1 : -1);
+            if (nextRowIdx >= 0 && nextRowIdx < rows.length) {
+                const currentCx = rows[rowIdx][colIdx].cx;
+                target = rows[nextRowIdx].reduce((best, item) =>
+                    Math.abs(item.cx - currentCx) < Math.abs(best.cx - currentCx) ? item : best
+                ).el;
+            }
+        }
+
+        if (!target) return;
+
         if (current) current.classList.remove('gamepad-focused');
+        target.focus({ preventScroll: false });
         target.classList.add('gamepad-focused');
+        this.moveCursorToElement(cursor, target);
     }
 
     /**
