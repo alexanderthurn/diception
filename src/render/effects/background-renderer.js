@@ -287,10 +287,16 @@ export class BackgroundRenderer {
 
     // ── Intro mode ────────────────────────────────────────────────────────────
 
+    /** Override the two army colours (e.g. to match connected player colours). */
+    setArmyColors(colors) {
+        this.armyColors = colors;
+    }
+
     setIntroMode(enabled) {
         this.introMode = enabled;
 
         if (enabled) {
+            this.armyColors = this.armyColors || [0xAA00FF, 0x0088FF];
             for (const p of this.ambientParticles) {
                 p.vx *= 2;
                 p.vy *= 2;
@@ -307,26 +313,27 @@ export class BackgroundRenderer {
         }
     }
 
-    // ── Floating dice ─────────────────────────────────────────────────────────
+    // ── Floating dice — two armies clashing ───────────────────────────────────
 
     createFloatingDice() {
         this.clearFloatingDice();
 
         if (!this.enabled) return;
 
-        const count = this.quality === 'high' ? 60 : 20;
+        const count = this.quality === 'high' ? 40 : 14;
         this.baseCount = count;
-        this.maxExtra = this.quality === 'high' ? 200 : 60;
-        this.matrixSpawnTimer = 0;
-        this.matrixSpawnInterval = this.quality === 'high' ? 6 : 15;
+        this.maxExtra  = this.quality === 'high' ? 60 : 20;
+        this.matrixSpawnTimer    = 0;
+        this.matrixSpawnInterval = this.quality === 'high' ? 5 : 12;
+        this._nextTeam = 0;
 
-        // Stagger initial dice across y range so screen fills immediately
+        // Fill screen immediately: stagger team 0 and 1 across full x range
         for (let i = 0; i < count; i++) {
-            this._spawnFallingDie(true);
+            this._spawnArmyDie(i % 2, true);
         }
     }
 
-    _spawnFallingDie(scattered = false) {
+    _spawnArmyDie(team, scattered = false) {
         if (!this.enabled) return;
 
         const s = this._scale();
@@ -336,54 +343,49 @@ export class BackgroundRenderer {
         const oy = this.diceContainer.y;
 
         // Visible bounds in local space
-        const localLeft  = -ox / sc;
-        const localRight = (this.width - ox) / sc;
-        const localTop   = -oy / sc;
-        const localWidth = localRight - localLeft;
+        const localLeft   = -ox / sc;
+        const localRight  = (this.width  - ox) / sc;
+        const localTop    = -oy / sc;
+        const localBottom = (this.height - oy) / sc;
+        const localWidth  = localRight - localLeft;
+        const localHeight = localBottom - localTop;
 
-        // Scale size and speed inversely so they appear consistent on screen
         const size      = (0.03 + Math.random() * 0.04) * minDim / sc;
-        const fallSpeed = -(0.4 + Math.random() * 0.8) * s / sc;  // negative = rise upward
-        const drift     = (Math.random() - 0.5) * 0.15 * s / sc;
+        const baseSpeed = (0.3  + Math.random() * 0.6)  * s / sc;
+        const drift     = (Math.random() - 0.5) * 0.06  * s / sc;  // subtle vertical drift
 
-        const colors = [0x00ffff, 0xAA00FF, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
+        const color = this.armyColors?.[team] ?? (team === 0 ? 0xAA00FF : 0x0088FF);
         const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20];
         const diceCount = 1 + Math.floor(Math.random() * 6);
         const diceSides = diceSidesOptions[Math.floor(Math.random() * diceSidesOptions.length)];
-        const color = colors[Math.floor(Math.random() * colors.length)];
 
         const tileContainer = TileRenderer.createTile({
-            size, diceCount, diceSides, color,
-            fillAlpha: 0.7, showBorder: true
+            size, diceCount, diceSides, color, fillAlpha: 0.7, showBorder: true
         });
         tileContainer.pivot.set(size / 2, size / 2);
 
-        // Spawn across the visible width, below the visible bottom
-        const localBottom = (this.height - oy) / sc;
-        const startY = scattered
-            ? localBottom + size + Math.random() * (this.height / sc)
-            : localBottom + size + Math.random() * (100 / sc);
-
-        // Travel distance: from startY to well above the screen top
-        const travelDist = startY - (localTop - size * 2);
+        // Team 0: left → right.  Team 1: right → left.
+        const margin     = size + 60 / sc;
+        const travelDist = localWidth + margin * 2;
+        const vx         = team === 0 ? baseSpeed : -baseSpeed;
+        const startX     = team === 0
+            ? (scattered ? localLeft  - margin - Math.random() * localWidth : localLeft  - margin)
+            : (scattered ? localRight + margin + Math.random() * localWidth : localRight + margin);
+        const startY = localTop + Math.random() * localHeight;
 
         const dice = {
             graphics: tileContainer,
-            x: localLeft + Math.random() * localWidth,
-            y: startY,
-            vx: drift,
-            vy: fallSpeed,          // base speed; will be scaled by progress
-            baseVy: fallSpeed,      // stored so we can accelerate proportionally
+            x: startX, y: startY,
+            vx, vy: drift,
+            baseVx: vx,
             rotation: (Math.random() - 0.5) * 0.5,
             rotationSpeed: (Math.random() - 0.5) * 0.003,
             baseAlpha: 0.5 + Math.random() * 0.4,
             alphaPhase: Math.random() * Math.PI * 2,
-            startY,
-            travelDist,
+            startX, travelDist, team,
         };
 
-        // Start tiny — will grow to full scale as it rises (comet / perspective zoom)
-        tileContainer.scale.set(0.04);
+        tileContainer.scale.set(0.04); // starts tiny — grows as it crosses (comet feel)
         tileContainer.x = dice.x;
         tileContainer.y = dice.y;
         tileContainer.rotation = dice.rotation;
@@ -414,48 +416,53 @@ export class BackgroundRenderer {
         this.diceContainer.y = y - worldY * newScale;
     }
 
-    spawnDiceAt(screenX, screenY) {
+    /**
+     * Spawn a player-thrown die at a screen position.
+     * It joins the army on that side of the screen (left half → rightward, right half → leftward).
+     * @param {number} screenX
+     * @param {number} screenY
+     * @param {number|null} color  hex colour; null → use army colour for that side
+     */
+    spawnDiceAt(screenX, screenY, color = null) {
         if (!this.enabled || !this.introMode) return;
 
-        // Convert screen coords to diceContainer local space
         const sc = this.diceContainer.scale.x;
         const localX = (screenX - this.diceContainer.x) / sc;
         const localY = (screenY - this.diceContainer.y) / sc;
 
         const s = this._scale();
         const minDim = Math.min(this.width, this.height);
-        // Scale size and speed inversely so they appear consistent on screen
         const size = (0.04 + Math.random() * 0.02) * minDim / sc;
 
-        const colors = [0x00ffff, 0xAA00FF, 0xffffff, 0x00ff88, 0xffff00, 0x00ff00];
+        // Join the army on the side of the click
+        const team = screenX < this.width / 2 ? 0 : 1;
+        const effectiveColor = color ?? this.armyColors?.[team] ?? (team === 0 ? 0xAA00FF : 0x0088FF);
+
         const diceSidesOptions = [6, 6, 6, 8, 10, 12, 20];
         const diceCount = 1 + Math.floor(Math.random() * 6);
         const diceSides = diceSidesOptions[Math.floor(Math.random() * diceSidesOptions.length)];
-        const color = colors[Math.floor(Math.random() * colors.length)];
 
         const tileContainer = TileRenderer.createTile({
-            size, diceCount, diceSides, color,
-            fillAlpha: 0.7, showBorder: true
+            size, diceCount, diceSides, color: effectiveColor, fillAlpha: 0.7, showBorder: true
         });
         tileContainer.pivot.set(size / 2, size / 2);
 
-        const angle = Math.random() * Math.PI * 2;
-        const speed = (0.3 + Math.random() * 0.3) * s / sc;
+        const baseSpeed = (0.4 + Math.random() * 0.4) * s / sc;
+        const vx = team === 0 ? baseSpeed : -baseSpeed;
+        const vy = (Math.random() - 0.5) * 0.06 * s / sc;
 
-        const vy = Math.sin(angle) * speed;
         const dice = {
             graphics: tileContainer,
-            x: localX,
-            y: localY,
-            vx: Math.cos(angle) * speed,
-            vy,
-            baseVy: vy,
+            x: localX, y: localY,
+            vx, vy,
+            baseVx: vx,
             rotation: (Math.random() - 0.5) * 0.3,
             rotationSpeed: (Math.random() - 0.5) * 0.004,
-            baseAlpha: 0.65 + Math.random() * 0.25,
+            baseAlpha: 0.8 + Math.random() * 0.2,
             alphaPhase: Math.random() * Math.PI * 2,
-            startY: localY,
-            travelDist: -1,  // sentinel: skip perspective scaling, stay at full scale
+            startX: localX,
+            travelDist: -1,  // player-spawned: full scale, no comet grow
+            team,
         };
 
         tileContainer.x = dice.x;
@@ -463,7 +470,7 @@ export class BackgroundRenderer {
         tileContainer.rotation = dice.rotation;
         tileContainer.alpha = dice.baseAlpha;
 
-        // At cap: recycle the oldest extra die (index baseCount) instead of allocating
+        // At cap: recycle oldest extra die
         if (this.floatingDice.length >= this.baseCount + this.maxExtra) {
             const oldest = this.floatingDice.splice(this.baseCount, 1)[0];
             oldest.graphics.destroy();
@@ -487,43 +494,45 @@ export class BackgroundRenderer {
         const sc = this.diceContainer.scale.x;
         const ox = this.diceContainer.x;
         const oy = this.diceContainer.y;
-        const sideCullMargin = 400;
-        const bottomCullMargin = 80;
+        const cullMargin = 300;
 
-        // Continuously spawn new dice below screen to float upward
+        // Alternate team spawning
         this.matrixSpawnTimer = (this.matrixSpawnTimer || 0) + dt;
         if (this.matrixSpawnTimer >= (this.matrixSpawnInterval || 10)) {
             this.matrixSpawnTimer = 0;
             if (this.floatingDice.length < this.baseCount + this.maxExtra) {
-                this._spawnFallingDie(false);
+                this._nextTeam = (this._nextTeam ?? 0) === 0 ? 1 : 0;
+                this._spawnArmyDie(this._nextTeam, false);
             }
         }
 
         for (let i = this.floatingDice.length - 1; i >= 0; i--) {
             const d = this.floatingDice[i];
 
-            // Comet progress: 0 = just spawned (far away), 1 = at top (close to camera)
-            // travelDist < 0 = click-spawned: skip perspective, use full scale/speed
+            // Progress: 0 = just spawned off-screen edge, 1 = fully crossed
+            // team 0 moves right (x increases), team 1 moves left (x decreases)
+            // travelDist < 0 = player-spawned: full scale, constant speed
             const progress = d.travelDist > 0
-                ? Math.max(0, Math.min(1, (d.startY - d.y) / d.travelDist))
+                ? (d.team === 0
+                    ? Math.max(0, Math.min(1, (d.x - d.startX) / d.travelDist))
+                    : Math.max(0, Math.min(1, (d.startX - d.x) / d.travelDist)))
                 : 1;
 
-            // Perspective scale: starts tiny, grows quickly as it approaches
+            // Comet: starts tiny, grows to full scale as it crosses
             const perspScale = d.travelDist < 0 ? 1.0 : 0.04 + 0.96 * Math.pow(progress, 0.65);
 
-            // Accelerate as it gets closer (objects zoom faster when near)
-            const speedMult = d.travelDist < 0 ? 1.0 : 0.35 + 0.65 * progress;
-            d.x += d.vx * dt * speedMult;
-            d.y += d.baseVy * dt * speedMult;
+            // Accelerate toward the camera (perspective feel)
+            const speedMult = d.travelDist < 0 ? 1.0 : 0.3 + 0.7 * progress;
+
+            d.x += d.baseVx * dt * speedMult;
+            d.y += d.vy    * dt;
             d.rotation += d.rotationSpeed * dt * (0.5 + 0.5 * progress);
 
             const screenX = ox + d.x * sc;
             const screenY = oy + d.y * sc;
 
-            // Cull: off the top/bottom/sides
-            if (screenY > this.height + bottomCullMargin ||
-                screenY < -sideCullMargin ||
-                screenX < -sideCullMargin || screenX > this.width + sideCullMargin) {
+            if (screenX < -cullMargin || screenX > this.width  + cullMargin ||
+                screenY < -cullMargin || screenY > this.height + cullMargin) {
                 d.graphics.destroy();
                 this.floatingDice.splice(i, 1);
                 if (i < this.baseCount) this.baseCount = Math.max(0, this.baseCount - 1);

@@ -190,6 +190,17 @@ export class EffectsManager {
     }
 
     /**
+     * Spawn a player-coloured die from a screen position (gamepad / mouse interaction).
+     * playerIndex maps to HUMAN_COLORS; pass -1 for a neutral click (uses army colour for that side).
+     */
+    spawnPlayerDie(playerIndex, screenX, screenY) {
+        if (!this.introModeActive || this.quality === 'off') return;
+        const HUMAN_COLORS = [0xAA00FF, 0x0088FF, 0xFFCC00, 0x00AA44];
+        const color = playerIndex >= 0 ? HUMAN_COLORS[playerIndex % HUMAN_COLORS.length] : null;
+        this.background.spawnDiceAt(screenX, screenY, color);
+    }
+
+    /**
      * Stop intro mode (when game starts)
      */
     stopIntroMode() {

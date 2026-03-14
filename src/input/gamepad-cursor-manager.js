@@ -16,6 +16,7 @@ export class GamepadCursorManager {
         this.inputManager = inputManager;
         this.cursors = new Map(); // gamepadIndex -> { x, y, element, player }
         this.activatedGamepads = new Set(); // indices that have pressed at least one button
+        this.onIntroSpawn = null; // optional callback: (playerIndex, screenX, screenY) => void
         const isDesktop = isDesktopContext();
         this.cursorSpeed = isDesktop ? 12 : 20;
 
@@ -104,6 +105,11 @@ export class GamepadCursorManager {
 
             // Ensure cursor is visible on button press
             cursor.element.style.opacity = '1.0';
+
+            // Notify intro mode so a player-coloured die is spawned at the cursor
+            if (this.onIntroSpawn) {
+                this.onIntroSpawn(index, cursor.x, cursor.y);
+            }
 
             // Read current bindings so labels and actions follow remapping
             const b = this._gb();

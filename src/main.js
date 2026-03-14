@@ -279,6 +279,7 @@ async function init() {
 
     // Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);
+    gamepadCursors.onIntroSpawn = (playerIndex, x, y) => effectsManager.spawnPlayerDie(playerIndex, x, y);
 
     // FPS Counter
     setupFPSCounter(renderer);
