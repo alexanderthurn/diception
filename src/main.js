@@ -266,7 +266,7 @@ async function init() {
         renderer: renderer
     });
     effectsManager.setWorldTransform(renderer.rootContainer);
-    effectsManager.startIntroMode();
+    // startIntroMode() called only after loading screen is dismissed (see onLoadingDismiss)
 
     const input = new InputController(game, renderer, inputManager);
 

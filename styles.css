@@ -1710,7 +1710,6 @@ select {
     width: 100%;
     height: 100%;
     background-color: #000;
-    animation: breathing-bg 4s infinite ease-in-out;
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -1722,30 +1721,26 @@ select {
         opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
         transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
         background-color 1.2s ease,
-        filter 0.8s ease,
-        border-color 2s ease;
+        filter 0.8s ease;
     box-sizing: border-box;
     transform: scale(1);
     filter: blur(0);
-    border: 2px solid transparent;
 }
 
-/* Gradient overlay — fades in as logo disappears */
+/* Dark overlay — fades in for text readability over the PixiJS background */
 #loading-screen::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle, #aa00ff22 0%, transparent 100%);
+    background: rgba(0, 0, 0, 0.35);
     opacity: 0;
-    transition: opacity 1.4s ease 0.3s;
+    transition: opacity 1.2s ease 0.4s;
     pointer-events: none;
     z-index: 0;
 }
 
 #loading-screen.completed {
-    background-color: #080820;
-    border: 2px solid rgba(0, 255, 255, 0.25);
-    box-shadow: inset 0 0 40px rgba(0, 255, 255, 0.1);
+    background-color: transparent;
 }
 
 #loading-screen.completed::before {
@@ -1773,12 +1768,13 @@ select {
 }
 
 /* ── Feuerware logo shown during loading ─────────────────────────────────── */
+/* Logo sits where "press any key" appears — lower center of screen */
 .loading-fw-logo {
     position: absolute;
-    top: 50%;
+    top: 58%;
     left: 50%;
-    transform: translate(-50%, -50%) scale(1);
-    width: min(320px, 55vw);
+    transform: translate(-50%, -50%);
+    width: min(260px, 45vw);
     pointer-events: none;
     animation: fw-logo-breathe 2.4s ease-in-out infinite;
     z-index: 1;
@@ -1791,60 +1787,73 @@ select {
 
 /* Logo exit is handled in JS (loading-screen.js onComplete) to avoid flash */
 
-/* While loading: hide everything except the logo */
-#loading-screen:not(.completed) .tron-title,
-#loading-screen:not(.completed) .credits,
+/* While loading: hide everything except the logo, title, and credits */
 #loading-screen:not(.completed) .loading-content,
-#loading-screen:not(.completed) .loading-icons,
-#loading-screen:not(.completed) #loading-version,
-#loading-screen:not(.completed) .loading-dice,
-#loading-screen:not(.completed) .loading-footer,
-#loading-screen:not(.completed) .loading-border-lights {
+#loading-screen:not(.completed) .loading-icons {
     opacity: 0 !important;
     animation: none !important;
     pointer-events: none;
 }
 
-/* Once loaded: staggered reveal AFTER logo finishes disappearing (0.75s) */
-#loading-screen.completed .tron-title {
-    animation: loading-reveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) both 0.8s;
+/* feuerware.com stays in bottom-left always (position: absolute, unaffected by flex) */
+#loading-screen:not(.completed) .loading-footer {
+    opacity: 0.4;
+    animation: loading-reveal 1.0s cubic-bezier(0.4, 0, 0.2, 1) both 0.2s;
+}
+
+/* Title + credits fade in at top during loading */
+#loading-screen:not(.completed) .tron-title {
+    animation: loading-reveal 1.0s cubic-bezier(0.4, 0, 0.2, 1) both 0.3s;
+}
+
+#loading-screen:not(.completed) .credits {
+    animation: loading-reveal 1.0s cubic-bezier(0.4, 0, 0.2, 1) both 0.5s;
+}
+
+/* Once loaded: title/credits stay, rest reveals after logo fully gone (~1s) */
+#loading-screen.completed .tron-title,
+#loading-screen.completed .credits {
+    animation: none; /* already visible */
 }
 
 #loading-screen.completed .credits {
     margin-top: -25px;
-    animation: loading-reveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) both 0.9s;
 }
 
 #loading-screen.completed .loading-content {
-    animation: loading-reveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) both 1.0s;
+    animation: loading-reveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) both 0.35s;
 }
 
 #loading-screen.completed .loading-icons {
     animation:
-        loading-reveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) both 1.15s,
-        pulse-opacity 2s infinite ease-in-out 2.35s;
+        loading-reveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) both 0.4s,
+        pulse-opacity 2s infinite ease-in-out 1.0s;
+}
+
+#loading-screen:not(.completed) #loading-version {
+    --reveal-opacity: 0.6;
+    animation: loading-reveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) both 0.2s;
 }
 
 #loading-screen.completed #loading-version {
-    --reveal-opacity: 0.6;
-    animation: loading-reveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) both 1.25s;
+    opacity: 0 !important;
+    pointer-events: none;
 }
 
 #loading-screen.completed .loading-footer {
     --reveal-opacity: 0.5;
-    animation: loading-reveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) both 1.35s;
+    animation: loading-reveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) both 0.45s;
 }
 
-#loading-screen.completed .loading-dice {
-    animation: loading-reveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) both 1.45s;
-}
-
-#loading-screen.completed .loading-border-lights {
-    animation: loading-reveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) both 1.55s;
-}
 
 #loading-screen .credits {
     margin-top: -25px;
+}
+
+/* Text shadow for readability over backgrounds — only on flex items, not absolute ones */
+#loading-screen .tron-title,
+#loading-screen .credits {
+    text-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 40px rgba(0, 0, 0, 1), 0 2px 8px rgba(0, 0, 0, 1);
 }
 
 @keyframes breathing-bg {
