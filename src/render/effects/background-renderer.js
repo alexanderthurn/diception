@@ -364,18 +364,26 @@ export class BackgroundRenderer {
             ? localBottom + size + Math.random() * (this.height / sc)
             : localBottom + size + Math.random() * (100 / sc);
 
+        // Travel distance: from startY to well above the screen top
+        const travelDist = startY - (localTop - size * 2);
+
         const dice = {
             graphics: tileContainer,
             x: localLeft + Math.random() * localWidth,
             y: startY,
             vx: drift,
-            vy: fallSpeed,
+            vy: fallSpeed,          // base speed; will be scaled by progress
+            baseVy: fallSpeed,      // stored so we can accelerate proportionally
             rotation: (Math.random() - 0.5) * 0.5,
             rotationSpeed: (Math.random() - 0.5) * 0.003,
             baseAlpha: 0.5 + Math.random() * 0.4,
-            alphaPhase: Math.random() * Math.PI * 2
+            alphaPhase: Math.random() * Math.PI * 2,
+            startY,
+            travelDist,
         };
 
+        // Start tiny — will grow to full scale as it rises (comet / perspective zoom)
+        tileContainer.scale.set(0.04);
         tileContainer.x = dice.x;
         tileContainer.y = dice.y;
         tileContainer.rotation = dice.rotation;
@@ -434,16 +442,20 @@ export class BackgroundRenderer {
         const angle = Math.random() * Math.PI * 2;
         const speed = (0.3 + Math.random() * 0.3) * s / sc;
 
+        const vy = Math.sin(angle) * speed;
         const dice = {
             graphics: tileContainer,
             x: localX,
             y: localY,
             vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
+            vy,
+            baseVy: vy,
             rotation: (Math.random() - 0.5) * 0.3,
             rotationSpeed: (Math.random() - 0.5) * 0.004,
             baseAlpha: 0.65 + Math.random() * 0.25,
-            alphaPhase: Math.random() * Math.PI * 2
+            alphaPhase: Math.random() * Math.PI * 2,
+            startY: localY,
+            travelDist: -1,  // sentinel: skip perspective scaling, stay at full scale
         };
 
         tileContainer.x = dice.x;
@@ -489,14 +501,26 @@ export class BackgroundRenderer {
 
         for (let i = this.floatingDice.length - 1; i >= 0; i--) {
             const d = this.floatingDice[i];
-            d.x += d.vx * dt;
-            d.y += d.vy * dt;
-            d.rotation += d.rotationSpeed * dt;
+
+            // Comet progress: 0 = just spawned (far away), 1 = at top (close to camera)
+            // travelDist < 0 = click-spawned: skip perspective, use full scale/speed
+            const progress = d.travelDist > 0
+                ? Math.max(0, Math.min(1, (d.startY - d.y) / d.travelDist))
+                : 1;
+
+            // Perspective scale: starts tiny, grows quickly as it approaches
+            const perspScale = d.travelDist < 0 ? 1.0 : 0.04 + 0.96 * Math.pow(progress, 0.65);
+
+            // Accelerate as it gets closer (objects zoom faster when near)
+            const speedMult = d.travelDist < 0 ? 1.0 : 0.35 + 0.65 * progress;
+            d.x += d.vx * dt * speedMult;
+            d.y += d.baseVy * dt * speedMult;
+            d.rotation += d.rotationSpeed * dt * (0.5 + 0.5 * progress);
 
             const screenX = ox + d.x * sc;
             const screenY = oy + d.y * sc;
 
-            // Cull: off the bottom/sides, or far above (for click-spawned dice flying up)
+            // Cull: off the top/bottom/sides
             if (screenY > this.height + bottomCullMargin ||
                 screenY < -sideCullMargin ||
                 screenX < -sideCullMargin || screenX > this.width + sideCullMargin) {
@@ -512,6 +536,7 @@ export class BackgroundRenderer {
             d.graphics.x = d.x;
             d.graphics.y = d.y;
             d.graphics.rotation = d.rotation;
+            d.graphics.scale.set(perspScale);
             d.graphics.alpha = d.baseAlpha * alphaMod;
         }
     }
