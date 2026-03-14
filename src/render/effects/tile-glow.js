@@ -19,15 +19,15 @@ export class TileGlow {
         this.gfx = new Graphics();
         this.container.addChild(this.gfx);
 
-        this._blur = new BlurFilter({ strength: 22, quality: 3 });
+        this._blur = new BlurFilter({ strength: 28, quality: 3 });
         this.gfx.filters = [this._blur];
 
         stage.addChildAt(this.container, 0); // insert below tile container
 
         this._quality    = 'high';
         this._intensity  = 0;       // 0 = off, 1 = full glow
-        this._peakAlpha  = 0.55;    // alpha when intensity = 1
-        this._decay      = 0.975;   // multiplier per frame (~1.5 s to reach ~5%)
+        this._peakAlpha  = 0.40;    // alpha when intensity = 1
+        this._decay      = 0.990;   // multiplier per frame (~4 s to reach ~5%)
         this._tileSize   = 80;
         this._gap        = 4;
         this._lastTiles  = [];
