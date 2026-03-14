@@ -54,6 +54,7 @@ export class BackgroundRenderer {
         this.baseCount = 0;  // initial dice count (protected from recycling)
         this.maxExtra = 0;   // max additional spawnable dice
         this.diceContainer = new Container();
+        this.diceContainer.sortableChildren = true;
         this.container.addChild(this.diceContainer);
 
         // Create effects
@@ -340,7 +341,7 @@ export class BackgroundRenderer {
         this.baseCount = count;
         this.maxExtra  = this.quality === 'high' ? 80 : 30;
         this.matrixSpawnTimer    = 0;
-        this.matrixSpawnInterval = 4.5; // high only; medium skips spawning entirely
+        this.matrixSpawnInterval = 9; // high only; medium skips spawning entirely
         this._nextBotIdx = 0;
 
         if (this.quality !== 'high') return; // medium/low: no dice at all
@@ -549,9 +550,9 @@ export class BackgroundRenderer {
         const maxDist    = Math.sqrt(this.width * this.width + this.height * this.height) * 0.5;
         const cullMargin = 200;
 
-        // Round-robin spawn across bot armies — per-army caps handle density limits
+        // Round-robin spawn across bot armies — high quality only
         this.matrixSpawnTimer = (this.matrixSpawnTimer || 0) + dt;
-        if (this.matrixSpawnTimer >= (this.matrixSpawnInterval || 10)) {
+        if (this.quality === 'high' && this.matrixSpawnTimer >= (this.matrixSpawnInterval || 10)) {
             this.matrixSpawnTimer = 0;
             const botIndices = (this.armies ?? [])
                 .map((a, i) => a.human ? -1 : i).filter(i => i >= 0);
@@ -589,7 +590,11 @@ export class BackgroundRenderer {
             d.graphics.y = d.y;
             d.graphics.rotation = d.rotation;
             d.graphics.scale.set(perspScale);
+            d.graphics.zIndex = perspScale;
             d.graphics.alpha = 1.0;
         }
+
+        // Force z-sort every frame so larger (closer) dice always render in front
+        this.diceContainer.sortChildren();
     }
 }
