@@ -6,6 +6,14 @@ import { Container, Graphics, Sprite, Texture } from 'pixi.js';
  * This is the SINGLE SOURCE OF TRUTH for tile rendering.
  * Uses cached textures generated from the spritesheet frames.
  */
+/** Multiply each RGB channel by alpha to get the same look as color@alpha on a black background, but fully opaque. */
+function premultiplyColor(hex, alpha) {
+    const r = Math.round(((hex >> 16) & 0xFF) * alpha);
+    const g = Math.round(((hex >>  8) & 0xFF) * alpha);
+    const b = Math.round(( hex        & 0xFF) * alpha);
+    return (r << 16) | (g << 8) | b;
+}
+
 export class TileRenderer {
     // Texture cache
     static textureCache = new Map();
@@ -140,8 +148,8 @@ export class TileRenderer {
 
         if (bgTexture) {
             const bgSprite = new Sprite(bgTexture);
-            bgSprite.tint = color;
-            bgSprite.alpha = fillAlpha;
+            bgSprite.tint = premultiplyColor(color, fillAlpha);
+            bgSprite.alpha = 1.0;
 
             // Scale to desired size
             const scale = size / TileRenderer.tileSize;
@@ -189,10 +197,10 @@ export class TileRenderer {
 
         const container = new Container();
 
-        // Background
+        // Background — solid, no transparency (pre-multiply color with alpha against black)
         const bg = new Graphics();
         bg.rect(0, 0, size, size);
-        bg.fill({ color: color, alpha: fillAlpha });
+        bg.fill({ color: premultiplyColor(color, fillAlpha), alpha: 1.0 });
         container.addChild(bg);
 
         // Add dice sprites

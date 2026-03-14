@@ -340,8 +340,10 @@ export class BackgroundRenderer {
         this.baseCount = count;
         this.maxExtra  = this.quality === 'high' ? 80 : 30;
         this.matrixSpawnTimer    = 0;
-        this.matrixSpawnInterval = this.quality === 'high' ? 3 : 8;
+        this.matrixSpawnInterval = 4.5; // high only; medium skips spawning entirely
         this._nextBotIdx = 0;
+
+        if (this.quality !== 'high') return; // medium/low: no dice at all
 
         // Stagger initial dice across each army's path so the screen fills instantly
         const botIndices = armies.map((a, i) => a.human ? -1 : i).filter(i => i >= 0);
@@ -429,7 +431,8 @@ export class BackgroundRenderer {
 
         // Per-army cap: remove this army's oldest die before adding a new one
         const armyKey  = `bot_${armyIndex}`;
-        const maxPerArmy = this.quality === 'high' ? 40 : 20;
+        if (this.quality !== 'high') return;
+        const maxPerArmy = 30;
         const armyDice = this.floatingDice.filter(d => d.armyKey === armyKey);
         if (armyDice.length >= maxPerArmy) {
             const oldest = armyDice[0];
@@ -443,8 +446,6 @@ export class BackgroundRenderer {
             x: startX, y: startY, vx, vy,
             rotation: tileContainer.rotation,
             rotationSpeed: (Math.random() - 0.5) * 0.003,
-            baseAlpha: tileContainer.alpha,
-            alphaPhase: Math.random() * Math.PI * 2,
             armyKey,
         });
     }
@@ -525,8 +526,6 @@ export class BackgroundRenderer {
             x: localX, y: localY, vx, vy,
             rotation: tileContainer.rotation,
             rotationSpeed: (Math.random() - 0.5) * 0.004,
-            baseAlpha: tileContainer.alpha,
-            alphaPhase: Math.random() * Math.PI * 2,
             playerSpawned: true,
             armyKey,
         });
@@ -550,18 +549,16 @@ export class BackgroundRenderer {
         const maxDist    = Math.sqrt(this.width * this.width + this.height * this.height) * 0.5;
         const cullMargin = 200;
 
-        // Round-robin spawn across bot armies
+        // Round-robin spawn across bot armies — per-army caps handle density limits
         this.matrixSpawnTimer = (this.matrixSpawnTimer || 0) + dt;
         if (this.matrixSpawnTimer >= (this.matrixSpawnInterval || 10)) {
             this.matrixSpawnTimer = 0;
-            if (this.floatingDice.length < this.baseCount + this.maxExtra) {
-                const botIndices = (this.armies ?? [])
-                    .map((a, i) => a.human ? -1 : i).filter(i => i >= 0);
-                if (botIndices.length > 0) {
-                    this._nextBotIdx = ((this._nextBotIdx ?? 0)) % botIndices.length;
-                    this._spawnArmyDie(botIndices[this._nextBotIdx], false);
-                    this._nextBotIdx++;
-                }
+            const botIndices = (this.armies ?? [])
+                .map((a, i) => a.human ? -1 : i).filter(i => i >= 0);
+            if (botIndices.length > 0) {
+                this._nextBotIdx = ((this._nextBotIdx ?? 0)) % botIndices.length;
+                this._spawnArmyDie(botIndices[this._nextBotIdx], false);
+                this._nextBotIdx++;
             }
         }
 
@@ -588,14 +585,11 @@ export class BackgroundRenderer {
             const distNorm  = Math.min(1, Math.sqrt(ddx * ddx + ddy * ddy) / maxDist);
             const perspScale = d.playerSpawned ? 1.0 : 0.25 + 0.75 * (1 - distNorm * distNorm);
 
-            d.alphaPhase += 0.015 * dt;
-            const alphaMod = Math.sin(d.alphaPhase) * 0.2 + 0.8;
-
             d.graphics.x = d.x;
             d.graphics.y = d.y;
             d.graphics.rotation = d.rotation;
             d.graphics.scale.set(perspScale);
-            d.graphics.alpha = d.baseAlpha * alphaMod;
+            d.graphics.alpha = 1.0;
         }
     }
 }

@@ -1,4 +1,11 @@
 import { Graphics, Container, Text, TextStyle, Sprite, Texture } from 'pixi.js';
+
+function premultiplyColor(hex, alpha) {
+    const r = Math.round(((hex >> 16) & 0xFF) * alpha);
+    const g = Math.round(((hex >>  8) & 0xFF) * alpha);
+    const b = Math.round(( hex        & 0xFF) * alpha);
+    return (r << 16) | (g << 8) | b;
+}
 import { TileRenderer } from './tile-renderer.js';
 import { RENDER } from '../core/constants.js';
 import { TileGlow } from './effects/tile-glow.js';
@@ -399,11 +406,11 @@ export class GridRenderer {
 
         if (this.paintMode) {
             // Paint mode: Neutral gray, no numbers, simple border
-            tileGfx.fill({ color: 0x444444, alpha: 0.8 });
+            tileGfx.fill({ color: premultiplyColor(0x444444, 0.8), alpha: 1.0 });
             tileGfx.stroke({ width: 1, color: 0x666666, alpha: 0.8, join: 'miter', cap: 'square' });
         } else {
-            // Normal game mode
-            tileGfx.fill({ color: color, alpha: fillAlpha });
+            // Normal game mode — solid fill (color pre-multiplied against black, no transparency)
+            tileGfx.fill({ color: premultiplyColor(color, fillAlpha), alpha: 1.0 });
 
             const actualTileSize = this.tileSize * this.stage.scale.x;
             const hideSmallBorders = actualTileSize < RENDER.MIN_TILE_SIZE_FOR_BORDERS;
