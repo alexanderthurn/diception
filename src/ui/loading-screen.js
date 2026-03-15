@@ -144,11 +144,6 @@ export class LoadingScreen {
             this.isDismissed = true;
             this.el.classList.add('fade-out');
 
-            if (this.prompt) {
-                this.prompt.textContent = 'TOUCH AGAIN';
-                this.prompt.classList.add('pulse-fast');
-            }
-
             this.fadeStartTime = Date.now();
             document.body.classList.add('interaction-shield');
 
@@ -163,7 +158,10 @@ export class LoadingScreen {
 
         if (this.el.style.display !== 'none') {
             this.el.classList.add('fade-out');
-            document.body.classList.remove('interaction-shield');
+
+            // Keep interaction-shield active for the full animation duration so the
+            // dismiss gesture cannot reach menu elements that appear at the end of the fade.
+            document.body.classList.add('interaction-shield');
 
             if (this.inputController) {
                 this.inputController.waitTillNoTouch = false;
@@ -180,11 +178,18 @@ export class LoadingScreen {
             // Fire immediately so background effects can start fading in during the CSS fade-out
             if (this.onDismissStart) this.onDismissStart();
 
-            // Wait for CSS fade-out to finish, then show game
+            // Start revealing the game/menu 0.5s before the loading screen fully disappears —
+            // the loading screen is still fading and sits on top (z-index 9999), so it
+            // continues to block accidental clicks while the content fades in beneath it.
             setTimeout(() => {
-                this.el.style.display = 'none';
+                document.body.classList.remove('interaction-shield');
                 document.body.classList.remove('loading-active');
                 if (this.onDismiss) this.onDismiss();
+            }, 350);
+
+            // Hide the loading screen element only after its CSS transition finishes.
+            setTimeout(() => {
+                this.el.style.display = 'none';
             }, 850);
         }
     }
