@@ -207,13 +207,19 @@ export class Renderer {
         if (quality === 'high') {
             if (!this._scanlineFilter) {
                 this._scanlineFilter = new ScanlineFilter();
-                this._scanlineFilter.intensity = 0.55;
+                this._scanlineFilter.intensity = 0;
                 const w = this.app.screen.width;
                 const h = this.app.screen.height;
                 this._scanlineFilter.setResolution(w, h);
-                // Animate time uniform
+                this._scanlineBaseIntensity = 0;
+                this._scanlinePulse = 0; // extra intensity, decays each frame
+                // Animate time uniform + decay pulse
                 this._scanlineTick = (ticker) => {
                     this._scanlineFilter.time += ticker.deltaTime / 60;
+                    if (this._scanlinePulse > 0) {
+                        this._scanlinePulse = Math.max(0, this._scanlinePulse - ticker.deltaTime * 0.04);
+                        this._scanlineFilter.intensity = this._scanlineBaseIntensity + this._scanlinePulse;
+                    }
                 };
                 Ticker.shared.add(this._scanlineTick);
             }
@@ -226,6 +232,11 @@ export class Renderer {
             }
             this.app.stage.filters = null;
         }
+    }
+
+    pulseScanline(amount = 1.0) {
+        if (!this._scanlineFilter) return;
+        this._scanlinePulse = Math.min(this._scanlinePulse + amount, 1.5);
     }
 
     pan(dx, dy) {

@@ -330,6 +330,8 @@ export class EffectsManager {
                 // Background pulse increases with streak
                 const intensity = 0.2 + Math.min(this.winStreak, 10) * 0.05;
                 this.background.pulse(0x00ff00, intensity);
+                // Scanline spike — increases with streak, decays automatically
+                this.renderer.pulseScanline(0.8 + Math.min(this.winStreak, 8) * 0.25);
             } else {
                 // Defeat - intensified effects for losses
                 this.particles.emit(to.x, to.y, 'defeatExplosion');
