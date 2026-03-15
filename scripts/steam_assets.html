@@ -279,6 +279,173 @@
         spriteSheet.src = '../public/assets/gfx/diception.png';
         const pendingRenders = [];
 
+        // ── WebGL2 shader background (exact game shader from background-shader.js) ──
+        const _glCanvas = document.createElement('canvas');
+        const _gl = _glCanvas.getContext('webgl2', { preserveDrawingBuffer: true });
+        let _glProgram = null;
+        let _glReady = false;
+
+        (function initShader() {
+            const gl = _gl;
+            if (!gl) { console.warn('WebGL2 not available — using fallback background'); return; }
+
+            const VERT = `#version 300 es
+in vec2 aPosition;
+out vec2 vTextureCoord;
+void main() {
+    gl_Position = vec4(aPosition, 0.0, 1.0);
+    // UV: map clip-space (-1..1) to texture coords (0..1), flip Y to match PixiJS convention
+    vTextureCoord = vec2(aPosition.x * 0.5 + 0.5, 0.5 - aPosition.y * 0.5);
+}`;
+
+            // Fragment shader copied verbatim from background-shader.js
+            const FRAG = `#version 300 es
+precision highp float;
+in vec2 vTextureCoord;
+out vec4 finalColor;
+
+uniform highp float uTime;
+uniform vec2  uResolution;
+uniform float uQuality;
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float starLayer(vec2 uv, float scale, float density) {
+    vec2 cell = floor(uv * scale);
+    vec2 f    = fract(uv * scale) - 0.5;
+    float h   = hash(cell);
+    float inStar = step(density, h);
+    float size    = (0.04 + 0.04 * hash(cell + 1.3)) * inStar;
+    float bri     = hash(cell + 2.7) * inStar;
+    float twinkle = 0.55 + 0.45 * sin(uTime * (1.2 + h * 3.5) + h * 6.28318);
+    float dist    = length(f);
+    return bri * twinkle * (1.0 - smoothstep(0.0, size, dist));
+}
+
+vec3 starfield(vec2 uv) {
+    float s1 = starLayer(uv, 80.0, 0.975);
+    float s2 = starLayer(uv, 35.0, 0.960);
+    vec3 col  = s1 * vec3(0.75, 0.85, 1.00);
+    col      += s2 * mix(vec3(1.0, 0.95, 0.85), vec3(0.85, 0.9, 1.0), hash(floor(uv * 35.0) + 5.1));
+    return col;
+}
+
+float tronGrid(vec2 uv) {
+    float spacing = 64.0;
+    vec2 drift = vec2(uTime * 0.007, uTime * 0.003);
+    vec2 g     = (uv + drift) * uResolution / spacing;
+    vec2  lines = abs(fract(g) - 0.5) * 2.0;
+    float lineW = 0.10;
+    float lx    = smoothstep(1.0 - lineW, 1.0, lines.x);
+    float ly    = smoothstep(1.0 - lineW, 1.0, lines.y);
+    float line  = max(lx, ly);
+    float pulse = 0.75 + 0.25 * sin(uTime * 0.15);
+    float aspect = uResolution.x / uResolution.y;
+    float dist   = length((uv - vec2(0.5)) * vec2(aspect, 1.0));
+    float r1     = max(0.0, sin(dist * 7.0 - uTime * 1.0));
+    float r2     = max(0.0, sin(dist * 7.0 - uTime * 1.0 + 2.094));
+    float r3     = max(0.0, sin(dist * 7.0 - uTime * 1.0 + 4.189));
+    float rings  = pow(max(r1, max(r2, r3)), 4.0);
+    float ringMod = 0.65 + 0.35 * rings;
+    return line * pulse * ringMod;
+}
+
+vec3 nebula(vec2 uv) {
+    float t  = uTime * 0.04;
+    float n1 = sin(uv.x * 2.1 + t * 1.1) * cos(uv.y * 1.6 - t * 0.8);
+    float n2 = sin(uv.x * 3.3 - t * 0.9 + uv.y * 2.2);
+    vec3 c1 = vec3(0.0, 0.06, 0.16) * max(0.0, n1);
+    vec3 c2 = vec3(0.06, 0.0, 0.14) * max(0.0, n2);
+    return (c1 + c2) * 0.45;
+}
+
+float vignette(vec2 uv) {
+    vec2 p = uv * 2.0 - 1.0;
+    return 1.0 - smoothstep(0.45, 1.4, length(p * vec2(0.9, 1.0)));
+}
+
+void main(void) {
+    vec2 uv = vTextureCoord;
+    vec3 col = vec3(0.008, 0.010, 0.040);
+    col += starfield(uv);
+    if (uQuality >= 1.0) {
+        float g = tronGrid(uv);
+        col += vec3(0.0, g * 0.22, g * 0.38);
+    }
+    if (uQuality >= 2.0) {
+        col += nebula(uv);
+    }
+    col *= 0.35 + 0.65 * vignette(uv);
+    finalColor = vec4(col, 1.0);
+}`;
+
+            function compile(type, src) {
+                const s = gl.createShader(type);
+                gl.shaderSource(s, src);
+                gl.compileShader(s);
+                if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+                    console.error('Shader compile error:', gl.getShaderInfoLog(s));
+                return s;
+            }
+
+            const prog = gl.createProgram();
+            gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+            gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+            gl.linkProgram(prog);
+            if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
+                console.error('Shader link error:', gl.getProgramInfoLog(prog));
+
+            // Fullscreen quad
+            const buf = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                -1, -1,  1, -1,  -1, 1,
+                -1,  1,  1, -1,   1, 1,
+            ]), gl.STATIC_DRAW);
+
+            const loc = gl.getAttribLocation(prog, 'aPosition');
+            gl.enableVertexAttribArray(loc);
+            gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+            _glProgram = {
+                prog,
+                uTime:       gl.getUniformLocation(prog, 'uTime'),
+                uResolution: gl.getUniformLocation(prog, 'uResolution'),
+                uQuality:    gl.getUniformLocation(prog, 'uQuality'),
+                posLoc: loc,
+            };
+            _glReady = true;
+        })();
+
+        /**
+         * Render the game background shader onto a 2D canvas context.
+         * Call this first before any 2D drawing.
+         * @param {CanvasRenderingContext2D} ctx
+         * @param {number} w
+         * @param {number} h
+         * @param {number} time  - uTime value (pick a visually interesting moment)
+         */
+        function drawShaderBackground(ctx, w, h, time = 8.0) {
+            if (!_glReady) {
+                // Fallback: plain dark fill
+                ctx.fillStyle = '#080820';
+                ctx.fillRect(0, 0, w, h);
+                return;
+            }
+            const gl = _gl;
+            _glCanvas.width  = w;
+            _glCanvas.height = h;
+            gl.viewport(0, 0, w, h);
+            gl.useProgram(_glProgram.prog);
+            gl.uniform1f(_glProgram.uTime, time);
+            gl.uniform2f(_glProgram.uResolution, w, h);
+            gl.uniform1f(_glProgram.uQuality, 0.0); // grid disabled for assets (stars only)
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            ctx.drawImage(_glCanvas, 0, 0, w, h);
+        }
+
         // ── Seeded random for deterministic rendering ──
         function mulberry32(seed) {
             return function () {
@@ -432,23 +599,10 @@
                 return;
             }
 
-            // ── Base gradient background ──
-            ctx.fillStyle = '#080820';
-            ctx.fillRect(0, 0, w, h);
-
-            // Multiple radial glows for depth
-            const glows = [
-                { x: w * 0.35, y: h * 0.4, r: Math.max(w, h) * 0.6, color: 'rgba(170, 0, 255, 0.10)' },
-                { x: w * 0.65, y: h * 0.6, r: Math.max(w, h) * 0.5, color: 'rgba(0, 255, 255, 0.06)' },
-                { x: w * 0.5, y: h * 0.3, r: Math.max(w, h) * 0.4, color: 'rgba(0, 136, 255, 0.05)' },
-            ];
-            for (const g of glows) {
-                const grad = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.r);
-                grad.addColorStop(0, g.color);
-                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, w, h);
-            }
+            // ── Game background shader (exact match to in-game look) ──
+            // Use a unique time per asset so they each show a different grid/ring moment
+            const shaderTime = (asset.w * 0.003 + asset.h * 0.007) % 20;
+            drawShaderBackground(ctx, w, h, shaderTime);
 
             // ── Territory grid clusters (behind everything) ──
             const clusterCount = Math.floor(3 + scale * 2);
@@ -475,13 +629,6 @@
             // ── Ambient particles ──
             const particleCount = Math.floor(60 + scale * 40);
             drawParticles(ctx, w, h, particleCount, rng);
-
-            // ── Vignette ──
-            const vignette = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.max(w, h) * 0.7);
-            vignette.addColorStop(0, 'rgba(0,0,0,0)');
-            vignette.addColorStop(1, 'rgba(0,0,0,0.45)');
-            ctx.fillStyle = vignette;
-            ctx.fillRect(0, 0, w, h);
 
             // Background-only: no text
             if (asset.type === 'bg_only') return;
@@ -659,36 +806,9 @@
             const isWide = w > h * 1.5;
             const isTall = h > w * 1.2;
 
-            // ── Dark base ──
-            ctx.fillStyle = '#050510';
-            ctx.fillRect(0, 0, w, h);
-
-            // ── Radial glows ──
-            const glows = [
-                { x: w * 0.5,  y: h * 0.45, r: Math.max(w, h) * 0.65, color: 'rgba(0, 180, 255, 0.10)' },
-                { x: w * 0.25, y: h * 0.6,  r: Math.max(w, h) * 0.45, color: 'rgba(170, 0, 255, 0.09)' },
-                { x: w * 0.75, y: h * 0.35, r: Math.max(w, h) * 0.40, color: 'rgba(0, 255, 200, 0.06)' },
-            ];
-            for (const g of glows) {
-                const grad = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.r);
-                grad.addColorStop(0, g.color);
-                grad.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, w, h);
-            }
-
-            // ── Tron grid lines ──
-            const gridSpacing = 48 * scale;
-            ctx.save();
-            ctx.strokeStyle = 'rgba(0, 255, 255, 0.06)';
-            ctx.lineWidth = 1;
-            for (let x = 0; x < w; x += gridSpacing) {
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-            }
-            for (let y = 0; y < h; y += gridSpacing) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-            }
-            ctx.restore();
+            // ── Game background shader ──
+            const shaderTime = (asset.w * 0.005 + asset.h * 0.009) % 20;
+            drawShaderBackground(ctx, w, h, shaderTime);
 
             // ── Waveform bars ──
             // Position: lower third on square/tall, vertically centered on wide
@@ -745,13 +865,6 @@
 
             // ── Particles ──
             drawParticles(ctx, w, h, Math.floor(40 + scale * 30), rng);
-
-            // ── Vignette ──
-            const vig = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.3, w/2, h/2, Math.max(w,h)*0.75);
-            vig.addColorStop(0, 'rgba(0,0,0,0)');
-            vig.addColorStop(1, 'rgba(0,0,0,0.55)');
-            ctx.fillStyle = vig;
-            ctx.fillRect(0, 0, w, h);
 
             // ── Title area backdrop ──
             const titleCenterY = isWide ? h * 0.5 : isTall ? h * 0.32 : h * 0.38;
