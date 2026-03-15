@@ -64,8 +64,16 @@
             margin-bottom: 30px;
         }
 
+        .section-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
         .asset-section {
-            margin-bottom: 30px;
+            flex: 0 0 auto;
+            margin-bottom: 0;
         }
 
         .asset-header {
@@ -152,9 +160,9 @@
             background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
         }
 
-        /* Scale previews down — max 500px wide */
+        /* Scale previews down — max 480px wide */
         canvas {
-            max-width: 500px;
+            max-width: 480px;
             height: auto;
             display: block;
         }
@@ -196,6 +204,13 @@
             { id: 'store_front_map', name: 'Store Front Map', w: 1024, h: 1024, type: 'game_map' },
         ];
 
+        const SOUNDTRACK_ASSETS = [
+            { id: 'ost_cover',    name: 'Cover Image (Square)',   w: 1000, h: 1000, type: 'ost' },
+            { id: 'ost_small',    name: 'Small Capsule',          w: 460,  h: 215,  type: 'ost' },
+            { id: 'ost_vertical', name: 'Vertical Capsule',       w: 600,  h: 900,  type: 'ost' },
+            { id: 'ost_header',   name: 'Header / Banner',        w: 2108, h: 438,  type: 'ost' },
+        ];
+
         // ── Colors ──
         const TITLE_COLOR = '#00FFFF';
         const HUMAN1_COLOR = '#AA00FF';
@@ -214,17 +229,23 @@
                 h2.textContent = title;
                 container.appendChild(h2);
 
+                const grid = document.createElement('div');
+                grid.className = 'section-grid';
+                container.appendChild(grid);
+
                 assets.forEach(asset => {
                     const section = document.createElement('div');
                     section.className = 'asset-section';
 
                     const header = document.createElement('div');
                     header.className = 'asset-header';
+                    const isOst = asset.type === 'ost';
+                    const dlExt = isOst ? 'jpg' : 'png';
                     header.innerHTML = `
                         <span class="asset-name">${asset.name}</span>
                         <span class="asset-size">${asset.w}×${asset.h}</span>
                         ${asset.note ? `<span class="asset-note">${asset.note}</span>` : ''}
-                        <button class="download-btn" onclick="downloadCanvas('${asset.id}', '${asset.id}_${asset.w}x${asset.h}.png')">⬇ PNG</button>
+                        <button class="download-btn" onclick="downloadCanvas('${asset.id}', '${asset.id}_${asset.w}x${asset.h}.${dlExt}', ${isOst})">⬇ ${dlExt.toUpperCase()}</button>
                     `;
                     section.appendChild(header);
 
@@ -237,7 +258,7 @@
                     wrapper.appendChild(canvas);
                     section.appendChild(wrapper);
 
-                    container.appendChild(section);
+                    grid.appendChild(section);
                     pendingRenders.push({ canvas, asset });
                 });
             }
@@ -246,6 +267,7 @@
             addSection('Library Assets', LIBRARY_ASSETS);
             addSection('Windows Assets (Preview Only)', WINDOWS_ASSETS);
             addSection('Custom Assets', CUSTOM_ASSETS);
+            addSection('Soundtrack Assets', SOUNDTRACK_ASSETS);
 
             // Load spritesheet then render all assets
             spriteSheet.onload = () => pendingRenders.forEach(r => renderAsset(r.canvas, r.asset));
@@ -274,10 +296,10 @@
         ];
         const PARTICLE_COLORS = ['#00FFFF', '#AA00FF', '#00ff88', '#0088ff'];
 
-        // ── D6 sprite in spritesheet ──
-        const DICE_SPRITE = { x: 1, y: 259, w: 204, h: 202 };
+        // ── D6 sprite in spritesheet (coordinates from diception.json) ──
+        const DICE_SPRITE = { x: 1, y: 775, w: 204, h: 202 };
 
-        // ── Dice face layouts (matching game TileRenderer) ──
+        // ── Dice face layouts (matching game TileRenderer classicPatterns exactly) ──
         const SPRITE_PATTERNS = {
             1: [[0, 0]],
             2: [[-0.8, -0.8], [0.8, 0.8]],
@@ -287,6 +309,7 @@
             6: [[-0.8, -1], [0.8, -1], [-0.8, 0], [0.8, 0], [-0.8, 1], [0.8, 1]],
             7: [[-0.8, -1], [0.8, -1], [-0.8, 0], [0.8, 0], [-0.8, 1], [0.8, 1], [0, 0]],
             8: [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]],
+            9: [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1], [1, 1]],
         };
 
         // ── Draw a single dice tile with real sprites ──
@@ -312,10 +335,11 @@
 
             ctx.shadowBlur = 0;
 
-            // Draw real dice sprites
-            const positions = SPRITE_PATTERNS[Math.min(diceCount, 8)] || SPRITE_PATTERNS[8];
-            const spacing = size * 0.22;
-            const spriteSize = size * 0.2;
+            // Draw real dice sprites (matching game TileRenderer: spacing=13/60, scale=0.06)
+            const scaleFactor = size / 60;
+            const positions = SPRITE_PATTERNS[Math.min(diceCount, 9)] || SPRITE_PATTERNS[9];
+            const spacing = 13 * scaleFactor;
+            const spriteSize = 0.06 * scaleFactor * DICE_SPRITE.w; // sprite drawn at 0.06x scale
             ctx.globalAlpha = alpha;
             for (const [px, py] of positions) {
                 const dx = px * spacing - spriteSize / 2;
@@ -390,6 +414,11 @@
             const h = asset.h;
             const rng = mulberry32(asset.w * 1000 + asset.h); // deterministic per resolution
             const scale = Math.max(w, h) / 1080;
+
+            if (asset.type === 'ost') {
+                drawOSTAsset(canvas, asset);
+                return;
+            }
 
             if (asset.type === 'logo_transparent') {
                 ctx.clearRect(0, 0, w, h);
@@ -534,10 +563,11 @@
                         ctx.stroke();
                     }
 
-                    // Draw dice sprites
-                    const positions = SPRITE_PATTERNS[Math.min(diceCount, 8)] || SPRITE_PATTERNS[8];
-                    const spacing = tileSize * 0.22;
-                    const spriteSize = tileSize * 0.2;
+                    // Draw dice sprites (matching game TileRenderer spacing/scale)
+                    const positions = SPRITE_PATTERNS[Math.min(diceCount, 9)] || SPRITE_PATTERNS[9];
+                    const scaleFactor = tileSize / 60;
+                    const spacing = 13 * scaleFactor;
+                    const spriteSize = 0.06 * scaleFactor * DICE_SPRITE.w;
                     const cx = tx + tileSize / 2;
                     const cy = ty + tileSize / 2;
 
@@ -559,39 +589,19 @@
         }
 
         function drawTitleBlock(ctx, w, h, asset) {
-            // Compute title font size: fill ~75% of width
-            const targetTitleWidth = w * 0.75;
+            // Target width fraction per asset — windows_bg_4k and library_logo stay large
+            const targetFraction =
+                asset.id === 'windows_bg_4k'   ? 0.40 :
+                asset.id === 'library_logo'     ? 0.75 :
+                asset.id === 'small_capsule'    ? 0.60 :
+                asset.id === 'header_image'     ? 0.25 :
+                                                  0.50;
+
             let titleFontSize = h * 0.35;
             ctx.font = `700 ${titleFontSize}px Rajdhani`;
-            let measured = ctx.measureText(TITLE_TEXT).width;
-
-            titleFontSize = titleFontSize * (targetTitleWidth / measured);
+            const measured = ctx.measureText(TITLE_TEXT).width;
+            titleFontSize = titleFontSize * ((w * targetFraction) / measured);
             titleFontSize = Math.min(titleFontSize, h * 0.55);
-
-            // Small capsule: fill more width
-            if (asset.id === 'small_capsule') {
-                const targetSmall = w * 0.85;
-                ctx.font = `700 ${titleFontSize}px Rajdhani`;
-                measured = ctx.measureText(TITLE_TEXT).width;
-                titleFontSize = titleFontSize * (targetSmall / measured);
-                titleFontSize = Math.min(titleFontSize, h * 0.6);
-            }
-
-            // Header image: smaller, subtler title
-            if (asset.id === 'header_image') {
-                const targetSmall = w * 0.35;
-                ctx.font = `700 ${titleFontSize}px Rajdhani`;
-                measured = ctx.measureText(TITLE_TEXT).width;
-                titleFontSize = titleFontSize * (targetSmall / measured);
-            }
-
-            // 4K wallpaper: smaller, subtler title
-            if (asset.id === 'windows_bg_4k') {
-                const targetSmall = w * 0.4;
-                ctx.font = `700 ${titleFontSize}px Rajdhani`;
-                measured = ctx.measureText(TITLE_TEXT).width;
-                titleFontSize = titleFontSize * (targetSmall / measured);
-            }
 
             const subtitleFontSize = Math.max(titleFontSize * 0.25, 12);
             const letterSpacing = Math.round(titleFontSize * 0.08);
@@ -639,12 +649,177 @@
             }
         }
 
+        // ── OST asset renderer ──
+        function drawOSTAsset(canvas, asset) {
+            const ctx = canvas.getContext('2d');
+            const w = asset.w;
+            const h = asset.h;
+            const rng = mulberry32(asset.w * 7 + asset.h * 13);
+            const scale = Math.max(w, h) / 1000;
+            const isWide = w > h * 1.5;
+            const isTall = h > w * 1.2;
+
+            // ── Dark base ──
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, w, h);
+
+            // ── Radial glows ──
+            const glows = [
+                { x: w * 0.5,  y: h * 0.45, r: Math.max(w, h) * 0.65, color: 'rgba(0, 180, 255, 0.10)' },
+                { x: w * 0.25, y: h * 0.6,  r: Math.max(w, h) * 0.45, color: 'rgba(170, 0, 255, 0.09)' },
+                { x: w * 0.75, y: h * 0.35, r: Math.max(w, h) * 0.40, color: 'rgba(0, 255, 200, 0.06)' },
+            ];
+            for (const g of glows) {
+                const grad = ctx.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.r);
+                grad.addColorStop(0, g.color);
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+            }
+
+            // ── Tron grid lines ──
+            const gridSpacing = 48 * scale;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.06)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < w; x += gridSpacing) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+            }
+            for (let y = 0; y < h; y += gridSpacing) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+            }
+            ctx.restore();
+
+            // ── Waveform bars ──
+            // Position: lower third on square/tall, vertically centered on wide
+            const barCount = Math.floor(isWide ? 80 : isTall ? 60 : 64);
+            const barAreaW = w * (isWide ? 0.9 : 0.85);
+            const barAreaH = h * (isWide ? 0.55 : isTall ? 0.28 : 0.38);
+            const barAreaX = (w - barAreaW) / 2;
+            const barAreaY = isWide
+                ? (h - barAreaH) / 2
+                : isTall
+                    ? h * 0.58
+                    : h * 0.54;
+            const barW = barAreaW / barCount * 0.55;
+            const gap   = barAreaW / barCount * 0.45;
+
+            ctx.save();
+            for (let i = 0; i < barCount; i++) {
+                // Musical waveform shape: peaks in the middle, quieter at edges
+                const norm = i / (barCount - 1);
+                const envelope = Math.sin(norm * Math.PI); // 0→1→0
+                // Layered frequencies
+                const freq1 = Math.abs(Math.sin(norm * Math.PI * 6 + 0.4));
+                const freq2 = Math.abs(Math.sin(norm * Math.PI * 11 + 1.2)) * 0.5;
+                const freq3 = Math.abs(Math.sin(norm * Math.PI * 3  + 0.8)) * 0.7;
+                const barHeight = barAreaH * envelope * Math.max(0.08, freq1 * 0.6 + freq2 * 0.25 + freq3 * 0.25);
+
+                const bx = barAreaX + i * (barW + gap);
+                const by = barAreaY + barAreaH - barHeight;
+
+                // Color: cyan in center, purple at edges
+                const t = Math.abs(norm - 0.5) * 2; // 0 at center, 1 at edges
+                const r = Math.round(t * 170);
+                const g2 = Math.round((1 - t) * 220);
+                const b = 255;
+                const barColor = `rgb(${r},${g2},${b})`;
+
+                ctx.shadowColor = barColor;
+                ctx.shadowBlur = 10 * scale;
+                ctx.fillStyle = barColor;
+                ctx.globalAlpha = 0.75 + envelope * 0.25;
+                ctx.fillRect(bx, by, barW, barHeight);
+
+                // Reflection below
+                ctx.globalAlpha = 0.15 * envelope;
+                const reflGrad = ctx.createLinearGradient(bx, barAreaY + barAreaH, bx, barAreaY + barAreaH + barHeight * 0.4);
+                reflGrad.addColorStop(0, barColor);
+                reflGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = reflGrad;
+                ctx.fillRect(bx, barAreaY + barAreaH, barW, barHeight * 0.4);
+            }
+            ctx.restore();
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+
+            // ── Particles ──
+            drawParticles(ctx, w, h, Math.floor(40 + scale * 30), rng);
+
+            // ── Vignette ──
+            const vig = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.3, w/2, h/2, Math.max(w,h)*0.75);
+            vig.addColorStop(0, 'rgba(0,0,0,0)');
+            vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+            ctx.fillStyle = vig;
+            ctx.fillRect(0, 0, w, h);
+
+            // ── Title area backdrop ──
+            const titleCenterY = isWide ? h * 0.5 : isTall ? h * 0.32 : h * 0.38;
+            const backdropH = h * (isWide ? 0.7 : 0.3);
+            const backdrop = ctx.createRadialGradient(w/2, titleCenterY, 0, w/2, titleCenterY, Math.max(w, backdropH) * 0.6);
+            backdrop.addColorStop(0, 'rgba(5,5,16,0.7)');
+            backdrop.addColorStop(1, 'rgba(5,5,16,0)');
+            ctx.fillStyle = backdrop;
+            ctx.fillRect(0, 0, w, h);
+
+            // ── "DICEPTION" title ──
+            const maxTitleW = w * (isWide ? 0.55 : 0.82);
+            let titleSize = h * (isWide ? 0.38 : isTall ? 0.22 : 0.28);
+            ctx.font = `700 ${titleSize}px Rajdhani`;
+            const measuredTitle = ctx.measureText('DICEPTION').width;
+            titleSize = Math.min(titleSize, titleSize * (maxTitleW / measuredTitle));
+
+            const titleX = w / 2;
+            const titleY2 = titleCenterY;
+
+            const charColors = 'DICEPTION'.split('').map((_, i) => i < 4 ? '#AA00FF' : '#00FFFF');
+            ctx.shadowColor = '#AA00FF';
+            ctx.shadowBlur = titleSize * 0.18;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic';
+            const titleSpacing = Math.round(titleSize * 0.06);
+            drawTextWithSpacing(ctx, 'DICEPTION', titleX, titleY2, titleSize, 700, titleSpacing, charColors);
+            ctx.shadowBlur = 0;
+
+            // ── "ORIGINAL SOUNDTRACK" label ──
+            const ostSize = Math.max(titleSize * 0.22, 10);
+            const ostSpacing = Math.round(ostSize * 0.25);
+            const ostY = titleY2 + ostSize * 1.4;
+            ctx.shadowColor = '#00FFFF';
+            ctx.shadowBlur = ostSize * 0.5;
+            ctx.fillStyle = '#00FFFF';
+            ctx.globalAlpha = 0.65;
+            drawTextWithSpacing(ctx, 'ORIGINAL SOUNDTRACK', titleX, ostY, ostSize, 600, ostSpacing);
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+
+            // ── Decorative horizontal line under OST label ──
+            const lineW = isWide ? w * 0.35 : w * 0.55;
+            const lineY = ostY + ostSize * 0.5;
+            const lineX = titleX - lineW / 2;
+            ctx.save();
+            const lineGrad = ctx.createLinearGradient(lineX, lineY, lineX + lineW, lineY);
+            lineGrad.addColorStop(0,   'rgba(0,255,255,0)');
+            lineGrad.addColorStop(0.3, 'rgba(0,255,255,0.6)');
+            lineGrad.addColorStop(0.7, 'rgba(170,0,255,0.6)');
+            lineGrad.addColorStop(1,   'rgba(170,0,255,0)');
+            ctx.strokeStyle = lineGrad;
+            ctx.lineWidth = Math.max(1, scale * 1.5);
+            ctx.shadowColor = '#00FFFF';
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.moveTo(lineX, lineY);
+            ctx.lineTo(lineX + lineW, lineY);
+            ctx.stroke();
+            ctx.restore();
+        }
+
         // ── Downloads ──
-        function downloadCanvas(canvasId, filename) {
+        function downloadCanvas(canvasId, filename, asJpg) {
             const canvas = document.getElementById(canvasId);
             const link = document.createElement('a');
             link.download = filename;
-            link.href = canvas.toDataURL('image/png');
+            link.href = canvas.toDataURL(asJpg ? 'image/jpeg' : 'image/png', 0.95);
             link.click();
         }
 
@@ -652,8 +827,13 @@
             const all = [...STORE_ASSETS, ...LIBRARY_ASSETS, ...WINDOWS_ASSETS, ...CUSTOM_ASSETS];
             all.forEach((asset, i) => {
                 setTimeout(() => {
-                    downloadCanvas(asset.id, `${asset.id}_${asset.w}x${asset.h}.png`);
+                    downloadCanvas(asset.id, `${asset.id}_${asset.w}x${asset.h}.png`, false);
                 }, i * 300);
+            });
+            SOUNDTRACK_ASSETS.forEach((asset, i) => {
+                setTimeout(() => {
+                    downloadCanvas(asset.id, `${asset.id}_${asset.w}x${asset.h}.jpg`, true);
+                }, (all.length + i) * 300);
             });
         }
     </script>
