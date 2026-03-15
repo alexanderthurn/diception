@@ -842,8 +842,9 @@ void main(void) {
             // 9 tiles = 9 chars of "DICEPTION", left 4 teal (DICE), right 5 purple (PTION)
             const cols = 9, rows = 1;
             const mapGap = 0;
-            // tileSize so that cols*tileSize = titleWidth
-            const tileSize = Math.max(8, Math.floor((titleWidth || w * 0.5) / cols));
+            // Trim trailing glyph bearing so map doesn't exceed visual title width
+            const effectiveWidth = (titleWidth || w * 0.5) * 0.985;
+            const tileSize = Math.max(8, Math.floor(effectiveWidth / cols));
             const mapW = cols * (tileSize + mapGap) - mapGap;
 
             const topY = anchorY !== undefined ? Math.floor(anchorY) : h - tileSize * 2;
