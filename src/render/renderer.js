@@ -118,15 +118,15 @@ export class Renderer {
             screenHeight = this.app.screen.height - 160;
             padding = 0;
         } else {
-            padding = 120;
-            screenWidth = this.app.screen.width - padding;
-            screenHeight = this.app.screen.height - padding;
+            padding = 40;
+            screenWidth = (this.app.screen.width - padding) * 0.80;
+            screenHeight = (this.app.screen.height - padding) * 0.80;
         }
 
         // Calculate scale to fit
         const scaleX = screenWidth / mapPixelWidth;
         const scaleY = screenHeight / mapPixelHeight;
-        const scale = Math.min(scaleX, scaleY, 1.5) * fitRatio; // Apply fitRatio
+        const scale = Math.min(scaleX, scaleY, 4.0) * fitRatio; // Apply fitRatio
 
         const safeScale = Math.max(0.2, scale);
         this.rootContainer.scale.set(safeScale, safeScale);
