@@ -411,11 +411,13 @@ async function init() {
     sfxManager.preloadAll().catch(e => console.warn('Sound preload failed:', e));
 
     // Play feuerware logo sting immediately on startup (native Audio avoids pixi/sound race)
-    try {
-        const fwSting = new Audio('./assets/sfx/feuerware.ogg');
-        fwSting.volume = 0.5;
-        fwSting.play().catch(() => {}); // silently ignored if browser blocks autoplay
-    } catch (e) {}
+    if (localStorage.getItem('dicy_musicEnabled') !== 'false' && localStorage.getItem('dicy_sfxEnabled') !== 'false') {
+        try {
+            const fwSting = new Audio('./assets/sfx/feuerware.ogg');
+            fwSting.volume = parseFloat(localStorage.getItem('dicy_sfxVolume') ?? '0.3');
+            fwSting.play().catch(() => {}); // silently ignored if browser blocks autoplay
+        } catch (e) {}
+    }
     const audioController = new AudioController(sfxManager);
     audioController.init();
 
