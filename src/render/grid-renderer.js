@@ -155,27 +155,38 @@ export class GridRenderer {
         this.largestRegionsCache.clear();
     }
 
-    isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isInRegion) {
+    isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isInRegion, map, x, y) {
         const lastState = this.lastTileStates.get(tileIdx);
         if (!lastState) return true;
 
         const actualTileSize = this.tileSize * this.stage.scale.x;
         const hideSmallBorders = actualTileSize < RENDER.MIN_TILE_SIZE_FOR_BORDERS;
 
-        return lastState.owner !== tileRaw.owner ||
+        if (lastState.owner !== tileRaw.owner ||
             lastState.dice !== tileRaw.dice ||
             lastState.blocked !== tileRaw.blocked ||
             lastState.isCurrentPlayer !== isCurrentPlayer ||
             lastState.isInRegion !== isInRegion ||
-            lastState.hideSmallBorders !== hideSmallBorders;
+            lastState.hideSmallBorders !== hideSmallBorders) return true;
+
+        // Borders depend on neighbor ownership — redraw if any orthogonal neighbor changed owner
+        const dirs = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }];
+        for (let i = 0; i < 4; i++) {
+            const n = map.getTileRaw(x + dirs[i].dx, y + dirs[i].dy);
+            if ((n?.owner ?? null) !== lastState.neighborOwners[i]) return true;
+        }
+        return false;
     }
 
     /**
      * Store the current state of a tile for future dirty checking
      */
-    saveTileState(tileIdx, tileRaw, isCurrentPlayer, isInRegion) {
+    saveTileState(tileIdx, tileRaw, isCurrentPlayer, isInRegion, map, x, y) {
         const actualTileSize = this.tileSize * this.stage.scale.x;
         const hideSmallBorders = actualTileSize < RENDER.MIN_TILE_SIZE_FOR_BORDERS;
+
+        const dirs = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }];
+        const neighborOwners = dirs.map(d => map.getTileRaw(x + d.dx, y + d.dy)?.owner ?? null);
 
         this.lastTileStates.set(tileIdx, {
             owner: tileRaw.owner,
@@ -183,7 +194,8 @@ export class GridRenderer {
             blocked: tileRaw.blocked,
             isCurrentPlayer,
             isInRegion,
-            hideSmallBorders
+            hideSmallBorders,
+            neighborOwners,
         });
     }
 
@@ -329,7 +341,7 @@ export class GridRenderer {
                 // Check if this tile needs redrawing
                 const isDirty = needsFullRedraw ||
                     playerChanged ||
-                    this.isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isRegionTile);
+                    this.isTileDirty(tileIdx, tileRaw, isCurrentPlayer, isRegionTile, map, x, y);
 
                 if (isDirty) {
                     // Remove old cached tile if it exists
@@ -345,7 +357,7 @@ export class GridRenderer {
                     this.tileCache.set(tileIdx, tileContainer);
 
                     // Save state for future dirty checking
-                    this.saveTileState(tileIdx, tileRaw, isCurrentPlayer, isRegionTile);
+                    this.saveTileState(tileIdx, tileRaw, isCurrentPlayer, isRegionTile, map, x, y);
                 }
 
                 // Collect tile for glow layer (all owned, non-blocked tiles)
