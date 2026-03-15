@@ -585,16 +585,38 @@ void main(void) {
         // ── Floating single dice (non-title colors only) ──
         const FLOATING_DICE_COLORS = ['#0088FF', '#FFCC00', '#00AA44', '#FF0055', '#55FF00', '#FF00AA', '#FF8800'];
 
-        function drawFloatingDice(ctx, w, h, rng) {
+        // Distance from point (px,py) to axis-aligned rect (rx,ry,rw,rh), 0 if inside
+        function distToRect(px, py, rx, ry, rw, rh) {
+            const dx = Math.max(rx - px, 0, px - (rx + rw));
+            const dy = Math.max(ry - py, 0, py - (ry + rh));
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function drawFloatingDice(ctx, w, h, rng, countMult = 1, titleBox = null) {
             const scale = Math.max(w, h) / 1080;
-            const count = Math.floor(18 + scale * 10);
+            const count = Math.floor((18 + scale * 10) * countMult);
+            // Max distance = farthest corner from the title box, so edges always reach t=1
+            const maxDist = titleBox ? Math.max(
+                distToRect(0, 0, titleBox.x, titleBox.y, titleBox.w, titleBox.h),
+                distToRect(w, 0, titleBox.x, titleBox.y, titleBox.w, titleBox.h),
+                distToRect(0, h, titleBox.x, titleBox.y, titleBox.w, titleBox.h),
+                distToRect(w, h, titleBox.x, titleBox.y, titleBox.w, titleBox.h),
+            ) : Math.hypot(w, h);
             for (let i = 0; i < count; i++) {
                 const x = rng() * w;
                 const y = rng() * h;
-                const size = (20 + rng() * 40) * scale;
+                // Proximity to title bounding box drives size (0=touching, 1=farthest corner)
+                let t = 1;
+                if (titleBox) {
+                    const d = distToRect(x, y, titleBox.x, titleBox.y, titleBox.w, titleBox.h);
+                    t = Math.min(1, d / maxDist);
+                }
+                const minSize = 8 * scale;
+                const maxSize = 90 * scale;
+                const size = (minSize + (maxSize - minSize) * t) * (0.7 + rng() * 0.6);
                 const dice = 1 + Math.floor(rng() * 6);
                 const color = FLOATING_DICE_COLORS[Math.floor(rng() * FLOATING_DICE_COLORS.length)];
-                const alpha = 0.08 + rng() * 0.18;
+                const alpha = 0.25 + rng() * 0.45;
                 const rotation = rng() * Math.PI * 2;
                 drawDiceTile(ctx, x, y, size, dice, color, alpha, rotation);
             }
@@ -633,7 +655,18 @@ void main(void) {
             drawShaderBackground(ctx, w, h, shaderTime);
 
             // ── Floating single dice scattered across the background ──
-            drawFloatingDice(ctx, w, h, rng);
+            const isTallAsset = h > w * 1.2;
+            // Compute title bounding box (title + map area) so nearby dice stay small
+            const _tm = getTitleMetrics(ctx, w, h, asset);
+            const _tileSize = Math.max(8, Math.floor(_tm.titleWidth / 9));
+            const _padding = _tm.titleFontSize * 0.3;
+            const _titleBox = {
+                x: w / 2 - _tm.titleWidth / 2 - _padding,
+                y: _tm.titleY - _tm.titleFontSize - _padding,
+                w: _tm.titleWidth + _padding * 2,
+                h: (_tm.mapAnchorY + _tileSize) - (_tm.titleY - _tm.titleFontSize) + _padding * 2,
+            };
+            drawFloatingDice(ctx, w, h, rng, isTallAsset ? 2.5 : 1, _titleBox);
 
             // ── Ambient particles ──
             const particleCount = Math.floor(40 + scale * 20);
@@ -906,12 +939,14 @@ void main(void) {
         }
 
         function getTitleMetrics(ctx, w, h, asset) {
+            const isTall = h > w * 1.2;
             const targetFraction =
                 asset.id === 'windows_bg_4k' ? 0.40 :
                     asset.id === 'library_logo' ? 0.75 :
                         asset.id === 'small_capsule' ? 0.60 :
                             asset.id === 'header_image' ? 0.25 :
-                                0.50;
+                                isTall ? 0.80 :
+                                    0.50;
             let titleFontSize = h * 0.35;
             ctx.font = `700 ${titleFontSize}px Rajdhani`;
             const measured = ctx.measureText(TITLE_TEXT).width;
