@@ -127,9 +127,17 @@ body {
 
 /* Pulse animation for High Quality */
 @keyframes tron-pulse {
-    0%   { box-shadow: var(--button-glow); }
-    50%  { box-shadow: var(--button-hover-glow); }
-    100% { box-shadow: var(--button-glow); }
+    0% {
+        box-shadow: var(--button-glow);
+    }
+
+    50% {
+        box-shadow: var(--button-hover-glow);
+    }
+
+    100% {
+        box-shadow: var(--button-glow);
+    }
 }
 
 body.fx-high .tron-btn {
@@ -1760,8 +1768,17 @@ select {
 }
 
 @keyframes fw-logo-breathe {
-    0%, 100% { opacity: 0.65; filter: drop-shadow(0 0 18px rgba(255, 140, 0, 0.5)); }
-    50%       { opacity: 1.00; filter: drop-shadow(0 0 40px rgba(255, 140, 0, 0.9)); }
+
+    0%,
+    100% {
+        opacity: 0.65;
+        filter: drop-shadow(0 0 18px rgba(255, 140, 0, 0.5));
+    }
+
+    50% {
+        opacity: 1.00;
+        filter: drop-shadow(0 0 40px rgba(255, 140, 0, 0.9));
+    }
 }
 
 /* Logo exit is handled in JS (loading-screen.js onComplete) to avoid flash */
@@ -1791,18 +1808,26 @@ select {
 
 #loading-screen:not(.completed) .loading-fw-logo {
     animation: loading-fade 0.6s cubic-bezier(0.4, 0, 0.2, 1) both 0s,
-               fw-logo-breathe 2.4s ease-in-out infinite 0.6s;
+        fw-logo-breathe 2.4s ease-in-out infinite 0.6s;
 }
 
 @keyframes loading-fade {
-    from { opacity: 0; filter: blur(5px); }
-    to   { opacity: 1; filter: blur(0); }
+    from {
+        opacity: 0;
+        filter: blur(5px);
+    }
+
+    to {
+        opacity: 1;
+        filter: blur(0);
+    }
 }
 
 /* Once loaded: title/credits stay, rest reveals after logo fully gone (~1s) */
 #loading-screen.completed .tron-title,
 #loading-screen.completed .credits {
-    animation: none; /* already visible */
+    animation: none;
+    /* already visible */
 }
 
 #loading-screen.completed .credits {
@@ -6237,16 +6262,16 @@ canvas {
     background: rgba(0, 255, 255, 0.02);
 }
 
-details.settings-group > summary.settings-group-header::after {
+details.settings-group>summary.settings-group-header::after {
     content: ' ▸';
     opacity: 0.5;
 }
 
-details.settings-group[open] > summary.settings-group-header::after {
+details.settings-group[open]>summary.settings-group-header::after {
     content: ' ▾';
 }
 
-.settings-group-flat > .settings-group-header {
+.settings-group-flat>.settings-group-header {
     cursor: default;
 }
 
@@ -6281,7 +6306,8 @@ details.settings-group[open] > summary.settings-group-header::after {
 }
 
 /* ── Mobile: stack rows in setup + pause on small screens ── */
-@container (max-width: 480px) {
+@container (max-width: 319px) {
+
     .pause-control-row,
     .main-nav-row {
         flex-direction: column;
@@ -6398,7 +6424,7 @@ details.settings-group[open] > summary.settings-group-header::after {
 
 /* ── 7. Desktop typography scaling ── */
 
-@container (min-width: 900px) {
+@container (min-width: 320px) {
     #main-menu .tron-title {
         font-size: 3.2rem;
         margin-bottom: 6px;
