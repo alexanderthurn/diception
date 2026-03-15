@@ -621,7 +621,7 @@ void main(void) {
             return Math.sqrt(dx * dx + dy * dy);
         }
 
-        function drawFloatingDice(ctx, w, h, rng, countMult = 1, titleBox = null, bgMaxSize = 35, titleMaxSize = 90) {
+        function drawFloatingDice(ctx, w, h, rng, countMult = 1, titleBox = null, bgMaxSize = 35, titleMaxSize = 90, alphaMult = 1) {
             const scale = Math.max(w, h) / 1080;
             const count = Math.floor((18 + scale * 10) * countMult);
             // Max distance = farthest corner from the title box, so edges always reach t=1
@@ -645,7 +645,7 @@ void main(void) {
                 const size = (minSize + (maxSize - minSize) * (titleBox ? t : rng())) * (0.5 + rng() * 0.9);
                 const dice = 1 + Math.floor(rng() * 6);
                 const color = FLOATING_DICE_COLORS[Math.floor(rng() * FLOATING_DICE_COLORS.length)];
-                const alpha = 0.25 + rng() * 0.45;
+                const alpha = (0.25 + rng() * 0.45) * alphaMult;
                 const rotation = rng() * Math.PI * 2;
                 drawDiceTile(ctx, x, y, size, dice, color, alpha, rotation);
             }
@@ -704,7 +704,8 @@ void main(void) {
             const diceCount = isTallAsset ? 3.5 : isPageBg ? 3.5 : isLibHero ? 2.0 : isMainCapsule ? 2.5 : isSmallCapsule ? 2.0 : 1;
             const bgMax = isPageBg ? 55 : isLibHero ? 40 : 35;
             const titleMax = isTallAsset ? 140 : 90;
-            drawFloatingDice(ctx, w, h, rng, diceCount, _titleBox, bgMax, titleMax);
+            const alphaMult = (isLibHero || isPageBg) ? 0.35 : 1;
+            drawFloatingDice(ctx, w, h, rng, diceCount, _titleBox, bgMax, titleMax, alphaMult);
 
             // ── Ambient particles ──
             const particleCount = Math.floor(40 + scale * 20);
