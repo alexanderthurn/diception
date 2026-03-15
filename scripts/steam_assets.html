@@ -205,10 +205,10 @@
         ];
 
         const SOUNDTRACK_ASSETS = [
-            { id: 'ost_cover',    name: 'Cover Image (Square)',   w: 1000, h: 1000, type: 'ost' },
-            { id: 'ost_small',    name: 'Small Capsule',          w: 460,  h: 215,  type: 'ost' },
-            { id: 'ost_vertical', name: 'Vertical Capsule',       w: 600,  h: 900,  type: 'ost' },
-            { id: 'ost_header',   name: 'Header / Banner',        w: 2108, h: 438,  type: 'ost' },
+            { id: 'ost_cover', name: 'Cover Image (Square)', w: 1000, h: 1000, type: 'ost' },
+            { id: 'ost_small', name: 'Small Capsule', w: 460, h: 215, type: 'ost' },
+            { id: 'ost_vertical', name: 'Vertical Capsule', w: 600, h: 900, type: 'ost' },
+            { id: 'ost_header', name: 'Header / Banner', w: 2108, h: 438, type: 'ost' },
         ];
 
         // ── Colors ──
@@ -401,8 +401,8 @@ void main(void) {
             const buf = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, buf);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                -1, -1,  1, -1,  -1, 1,
-                -1,  1,  1, -1,   1, 1,
+                -1, -1, 1, -1, -1, 1,
+                -1, 1, 1, -1, 1, 1,
             ]), gl.STATIC_DRAW);
 
             const loc = gl.getAttribLocation(prog, 'aPosition');
@@ -411,9 +411,9 @@ void main(void) {
 
             _glProgram = {
                 prog,
-                uTime:       gl.getUniformLocation(prog, 'uTime'),
+                uTime: gl.getUniformLocation(prog, 'uTime'),
                 uResolution: gl.getUniformLocation(prog, 'uResolution'),
-                uQuality:    gl.getUniformLocation(prog, 'uQuality'),
+                uQuality: gl.getUniformLocation(prog, 'uQuality'),
                 posLoc: loc,
             };
             _glReady = true;
@@ -435,7 +435,7 @@ void main(void) {
                 return;
             }
             const gl = _gl;
-            _glCanvas.width  = w;
+            _glCanvas.width = w;
             _glCanvas.height = h;
             gl.viewport(0, 0, w, h);
             gl.useProgram(_glProgram.prog);
@@ -589,6 +589,8 @@ void main(void) {
 
             if (asset.type === 'logo_transparent') {
                 ctx.clearRect(0, 0, w, h);
+                const { titleWidth: ltw, mapAnchorY: lma } = getTitleMetrics(ctx, w, h, asset);
+                drawBattleScene(ctx, w, h, asset, lma, ltw);
                 drawTitleBlock(ctx, w, h, asset);
                 return;
             }
@@ -604,30 +606,12 @@ void main(void) {
             const shaderTime = (asset.w * 0.003 + asset.h * 0.007) % 20;
             drawShaderBackground(ctx, w, h, shaderTime);
 
-            // ── Territory grid clusters (behind everything) ──
-            const clusterCount = Math.floor(3 + scale * 2);
-            const clusterTileSize = 18 * scale;
-            for (let i = 0; i < clusterCount; i++) {
-                const cx = rng() * w;
-                const cy = rng() * h;
-                drawTerritoryCluster(ctx, cx, cy, clusterTileSize, rng, scale);
-            }
-
-            // ── Scattered floating dice tiles ──
-            const diceCount = Math.floor(12 + scale * 8);
-            for (let i = 0; i < diceCount; i++) {
-                const x = rng() * w;
-                const y = rng() * h;
-                const size = (20 + rng() * 40) * scale;
-                const dice = 1 + Math.floor(rng() * 6);
-                const color = PLAYER_COLORS[Math.floor(rng() * PLAYER_COLORS.length)];
-                const alpha = 0.12 + rng() * 0.25;
-                const rot = (rng() - 0.5) * 0.6;
-                drawDiceTile(ctx, x, y, size, dice, color, alpha, rot);
-            }
+            // ── Battle scene: sits directly under the title like an underline ──
+            const { titleWidth, mapAnchorY } = getTitleMetrics(ctx, w, h, asset);
+            drawBattleScene(ctx, w, h, asset, mapAnchorY, titleWidth);
 
             // ── Ambient particles ──
-            const particleCount = Math.floor(60 + scale * 40);
+            const particleCount = Math.floor(40 + scale * 20);
             drawParticles(ctx, w, h, particleCount, rng);
 
             // Background-only: no text
@@ -643,6 +627,155 @@ void main(void) {
 
             // Draw title + subtitle
             drawTitleBlock(ctx, w, h, asset);
+        }
+
+        // ── Battle scene: scattered mini maps of sizes 2×2 … 7×7 ──
+        // Color pairs for each map (player A, player B)
+        const MAP_COLOR_PAIRS = [
+            ['#AA00FF', '#0088FF'], // purple vs blue
+            ['#FF0055', '#00AA44'], // red vs green
+            ['#FFCC00', '#FF8800'], // yellow vs orange
+            ['#55FF00', '#FF00AA'], // lime vs pink
+            ['#0088FF', '#FF0055'], // blue vs red
+            ['#00AA44', '#AA00FF'], // green vs purple
+        ];
+
+        // Generate a procedural battle map for an array of colors using seeded rng.
+        // 2 colors: jagged front line. 3+ colors: Voronoi seeds with jitter.
+        function generateBattleMap(cols, rows, colors, rng) {
+            const map = [];
+
+            if (colors.length === 2) {
+                if (rows === 1) {
+                    // Single row: vertical (column-based) split
+                    const splitCol = Math.floor(cols / 2);
+                    map.push([]);
+                    for (let col = 0; col < cols; col++) {
+                        const isA = col < splitCol;
+                        const onFront = col === splitCol - 1 || col === splitCol;
+                        const dice = onFront ? 3 + Math.floor(rng() * 4) : 1 + Math.floor(rng() * 4);
+                        map[0].push({ color: colors[isA ? 0 : 1], dice });
+                    }
+                } else {
+                    // Jagged front line (horizontal split)
+                    const front = [];
+                    let f = Math.floor(rows / 2);
+                    for (let c = 0; c < cols; c++) {
+                        f = Math.max(1, Math.min(rows - 1, f + Math.floor(rng() * 3) - 1));
+                        front.push(f);
+                    }
+                    for (let row = 0; row < rows; row++) {
+                        map.push([]);
+                        for (let col = 0; col < cols; col++) {
+                            const isA = row < front[col];
+                            const onFront = (isA && row === front[col] - 1) || (!isA && row === front[col]);
+                            const dice = onFront ? 3 + Math.floor(rng() * 4) : 1 + Math.floor(rng() * 4);
+                            map[row].push({ color: colors[isA ? 0 : 1], dice });
+                        }
+                    }
+                }
+            } else {
+                // Voronoi: place one seed per player spread across the grid
+                const seeds = colors.map((_, i) => {
+                    const angle = (i / colors.length) * Math.PI * 2;
+                    const r = 0.3 + rng() * 0.1;
+                    return {
+                        x: (cols - 1) * (0.5 + r * Math.cos(angle)),
+                        y: (rows - 1) * (0.5 + r * Math.sin(angle)),
+                        color: colors[i],
+                    };
+                });
+
+                for (let row = 0; row < rows; row++) {
+                    map.push([]);
+                    for (let col = 0; col < cols; col++) {
+                        let best = 0, bestDist = Infinity;
+                        for (let s = 0; s < seeds.length; s++) {
+                            const jx = rng() * 0.6 - 0.3;
+                            const jy = rng() * 0.6 - 0.3;
+                            const d = (col - seeds[s].x + jx) ** 2 + (row - seeds[s].y + jy) ** 2;
+                            if (d < bestDist) { bestDist = d; best = s; }
+                        }
+                        const dice = 1 + Math.floor(rng() * 6);
+                        map[row].push({ color: seeds[best].color, dice });
+                    }
+                }
+            }
+            return map;
+        }
+
+        function drawMiniMap(ctx, map, offX, offY, tileSize, gap) {
+            const rows = map.length, cols = map[0].length;
+            ctx.save();
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const cell = map[row][col];
+                    const tx = offX + col * (tileSize + gap);
+                    const ty = offY + row * (tileSize + gap);
+
+                    ctx.shadowColor = cell.color;
+                    ctx.shadowBlur = tileSize * 0.45;
+                    ctx.fillStyle = cell.color;
+                    ctx.globalAlpha = 0.42;
+                    ctx.fillRect(tx, ty, tileSize, tileSize);
+                    ctx.shadowBlur = 0;
+
+                    ctx.strokeStyle = cell.color;
+                    for (const [dx, dy, bx, by, bw, bh] of [
+                        [0, -1, tx, ty, tileSize, 0],
+                        [0, 1, tx, ty + tileSize, tileSize, 0],
+                        [-1, 0, tx, ty, 0, tileSize],
+                        [1, 0, tx + tileSize, ty, 0, tileSize],
+                    ]) {
+                        const nr = row + dy, nc = col + dx;
+                        const nb = (nr >= 0 && nr < rows && nc >= 0 && nc < cols) ? map[nr][nc] : null;
+                        const isFront = nb && nb.color !== cell.color;
+                        ctx.lineWidth = isFront ? Math.max(2, tileSize * 0.07) : Math.max(1, tileSize * 0.02);
+                        ctx.globalAlpha = isFront ? 1.0 : 0.5;
+                        ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + bw, by + bh); ctx.stroke();
+                    }
+
+                    ctx.globalAlpha = 0.88;
+                    const sf = tileSize / 60;
+                    const positions = SPRITE_PATTERNS[Math.min(cell.dice, 9)] || SPRITE_PATTERNS[9];
+                    const spacing = 13 * sf;
+                    const spriteSize = 0.06 * sf * DICE_SPRITE.w;
+                    const cx = tx + tileSize / 2, cy = ty + tileSize / 2;
+                    for (const [px, py] of positions) {
+                        ctx.drawImage(spriteSheet,
+                            DICE_SPRITE.x, DICE_SPRITE.y, DICE_SPRITE.w, DICE_SPRITE.h,
+                            cx + px * spacing - spriteSize / 2,
+                            cy + py * spacing - spriteSize / 2,
+                            spriteSize, spriteSize);
+                    }
+                }
+            }
+            ctx.restore();
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+        }
+
+        function drawBattleScene(ctx, w, h, asset, anchorY, titleWidth) {
+            const rng = mulberry32(w * 53 + h * 29);
+
+            // 9 tiles = 9 chars of "DICEPTION", left 4 teal (DICE), right 5 purple (PTION)
+            const cols = 9, rows = 1;
+            const mapGap = 0;
+            // tileSize so that cols*tileSize = titleWidth
+            const tileSize = Math.max(8, Math.floor((titleWidth || w * 0.5) / cols));
+            const mapW = cols * (tileSize + mapGap) - mapGap;
+
+            const topY = anchorY !== undefined ? Math.floor(anchorY) : h - tileSize * 2;
+            const offX = Math.floor((w - mapW) / 2);
+
+            // Build map manually: col 0-3 = teal, col 4-8 = purple, with dice counts
+            const DICE_COUNTS = [9, 3, 2, 1, 1, 2, 3, 5, 6]; // teal: 9→1 falling, purple: 1→6 rising
+            const map = [[...Array(cols)].map((_, col) => ({
+                color: col < 4 ? '#00FFFF' : '#AA00FF',
+                dice: DICE_COUNTS[col],
+            }))];
+
+            drawMiniMap(ctx, map, offX, topY, tileSize, mapGap);
         }
 
         // ── Draw a full game map on transparent background ──
@@ -735,28 +868,40 @@ void main(void) {
             ctx.shadowBlur = 0;
         }
 
-        function drawTitleBlock(ctx, w, h, asset) {
-            // Target width fraction per asset — windows_bg_4k and library_logo stay large
+        function getTitleMetrics(ctx, w, h, asset) {
             const targetFraction =
-                asset.id === 'windows_bg_4k'   ? 0.40 :
-                asset.id === 'library_logo'     ? 0.75 :
-                asset.id === 'small_capsule'    ? 0.60 :
-                asset.id === 'header_image'     ? 0.25 :
-                                                  0.50;
-
+                asset.id === 'windows_bg_4k' ? 0.40 :
+                    asset.id === 'library_logo' ? 0.75 :
+                        asset.id === 'small_capsule' ? 0.60 :
+                            asset.id === 'header_image' ? 0.25 :
+                                0.50;
             let titleFontSize = h * 0.35;
             ctx.font = `700 ${titleFontSize}px Rajdhani`;
             const measured = ctx.measureText(TITLE_TEXT).width;
             titleFontSize = titleFontSize * ((w * targetFraction) / measured);
             titleFontSize = Math.min(titleFontSize, h * 0.55);
-
             const subtitleFontSize = Math.max(titleFontSize * 0.25, 12);
-            const letterSpacing = Math.round(titleFontSize * 0.08);
-
             const gap = titleFontSize * 0.05;
-            const totalBlockHeight = titleFontSize + gap + subtitleFontSize;
-            const titleY = (h - totalBlockHeight) / 2 + titleFontSize * 0.98;
+            // Title bottom at 48%, map top at 52% — independent
+            const titleY = h * 0.48;
             const subtitleY = titleY + gap + subtitleFontSize;
+            const mapAnchorY = h * 0.52;
+
+            // Compute actual rendered title width (with letter spacing)
+            const letterSpacing = Math.round(titleFontSize * 0.08);
+            ctx.font = `700 ${titleFontSize}px Rajdhani`;
+            let titleWidth = 0;
+            for (let i = 0; i < TITLE_TEXT.length; i++) {
+                titleWidth += ctx.measureText(TITLE_TEXT[i]).width;
+                if (i < TITLE_TEXT.length - 1) titleWidth += letterSpacing;
+            }
+
+            return { titleFontSize, subtitleFontSize, titleY, subtitleY, gap, titleWidth, mapAnchorY };
+        }
+
+        function drawTitleBlock(ctx, w, h, asset) {
+            const { titleFontSize, subtitleFontSize, titleY, subtitleY, gap } = getTitleMetrics(ctx, w, h, asset);
+            const letterSpacing = Math.round(titleFontSize * 0.08);
 
             // Title glow effect
             ctx.shadowColor = '#AA00FF';
@@ -822,7 +967,7 @@ void main(void) {
                     ? h * 0.58
                     : h * 0.54;
             const barW = barAreaW / barCount * 0.55;
-            const gap   = barAreaW / barCount * 0.45;
+            const gap = barAreaW / barCount * 0.45;
 
             ctx.save();
             for (let i = 0; i < barCount; i++) {
@@ -832,7 +977,7 @@ void main(void) {
                 // Layered frequencies
                 const freq1 = Math.abs(Math.sin(norm * Math.PI * 6 + 0.4));
                 const freq2 = Math.abs(Math.sin(norm * Math.PI * 11 + 1.2)) * 0.5;
-                const freq3 = Math.abs(Math.sin(norm * Math.PI * 3  + 0.8)) * 0.7;
+                const freq3 = Math.abs(Math.sin(norm * Math.PI * 3 + 0.8)) * 0.7;
                 const barHeight = barAreaH * envelope * Math.max(0.08, freq1 * 0.6 + freq2 * 0.25 + freq3 * 0.25);
 
                 const bx = barAreaX + i * (barW + gap);
@@ -869,7 +1014,7 @@ void main(void) {
             // ── Title area backdrop ──
             const titleCenterY = isWide ? h * 0.5 : isTall ? h * 0.32 : h * 0.38;
             const backdropH = h * (isWide ? 0.7 : 0.3);
-            const backdrop = ctx.createRadialGradient(w/2, titleCenterY, 0, w/2, titleCenterY, Math.max(w, backdropH) * 0.6);
+            const backdrop = ctx.createRadialGradient(w / 2, titleCenterY, 0, w / 2, titleCenterY, Math.max(w, backdropH) * 0.6);
             backdrop.addColorStop(0, 'rgba(5,5,16,0.7)');
             backdrop.addColorStop(1, 'rgba(5,5,16,0)');
             ctx.fillStyle = backdrop;
@@ -912,10 +1057,10 @@ void main(void) {
             const lineX = titleX - lineW / 2;
             ctx.save();
             const lineGrad = ctx.createLinearGradient(lineX, lineY, lineX + lineW, lineY);
-            lineGrad.addColorStop(0,   'rgba(0,255,255,0)');
+            lineGrad.addColorStop(0, 'rgba(0,255,255,0)');
             lineGrad.addColorStop(0.3, 'rgba(0,255,255,0.6)');
             lineGrad.addColorStop(0.7, 'rgba(170,0,255,0.6)');
-            lineGrad.addColorStop(1,   'rgba(170,0,255,0)');
+            lineGrad.addColorStop(1, 'rgba(170,0,255,0)');
             ctx.strokeStyle = lineGrad;
             ctx.lineWidth = Math.max(1, scale * 1.5);
             ctx.shadowColor = '#00FFFF';
