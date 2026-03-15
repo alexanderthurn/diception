@@ -294,6 +294,7 @@ export class GridRenderer {
         // Clear and recollect edges for current player's shimmer effect
         this.currentPlayerRegionEdges = [];
         this.currentPlayerSecondaryRegionEdges = [];
+        this.currentPlayerCornerEdges = [];
 
         // Collect glow data for all owned tiles
         const glowTiles = [];
@@ -362,9 +363,9 @@ export class GridRenderer {
                 // Always collect shimmer edges for current human player
                 if (!tileRaw.blocked && isCurrentPlayer && !this.paintMode && !currentPlayer.isBot) {
                     if (isInLargestRegion) {
-                        this.collectShimmerEdges(x, y, tileRaw, map, this.currentPlayerRegionEdges);
+                        this.collectShimmerEdges(x, y, tileRaw, map, this.currentPlayerRegionEdges, this.currentPlayerCornerEdges);
                     } else if (isInSecondaryRegion) {
-                        this.collectShimmerEdges(x, y, tileRaw, map, this.currentPlayerSecondaryRegionEdges);
+                        this.collectShimmerEdges(x, y, tileRaw, map, this.currentPlayerSecondaryRegionEdges, this.currentPlayerCornerEdges);
                     }
                 }
             }
@@ -575,7 +576,7 @@ export class GridRenderer {
     /**
      * Collect shimmer effect edges for a tile
      */
-    collectShimmerEdges(x, y, tileRaw, map, targetArray) {
+    collectShimmerEdges(x, y, tileRaw, map, targetArray, cornerArray = null) {
         const edgeDefs = [
             { dx: 0, dy: -1, x1: 0, y1: 0, x2: this.tileSize, y2: 0 },
             { dx: 0, dy: 1, x1: 0, y1: this.tileSize, x2: this.tileSize, y2: this.tileSize },
@@ -607,6 +608,35 @@ export class GridRenderer {
                     x2: ex2, y2: ey2
                 });
             }
+        }
+
+        // Inside corners: diagonal is enemy but both orthogonal neighbors are friendly,
+        // leaving a missing corner pixel. Push to cornerArray (static, no comet animation).
+        if (!cornerArray) return;
+        const diagonalDefs = [
+            { ddx:  1, ddy:  1 },
+            { ddx:  1, ddy: -1 },
+            { ddx: -1, ddy:  1 },
+            { ddx: -1, ddy: -1 },
+        ];
+        for (const { ddx, ddy } of diagonalDefs) {
+            const diag = map.getTileRaw(x + ddx, y + ddy);
+            const isEnemyDiag = !diag || diag.blocked || diag.owner !== tileRaw.owner;
+            if (!isEnemyDiag) continue;
+
+            const hNeighbor = map.getTileRaw(x + ddx, y);
+            const vNeighbor = map.getTileRaw(x, y + ddy);
+            const hFriendly = hNeighbor && !hNeighbor.blocked && hNeighbor.owner === tileRaw.owner;
+            const vFriendly = vNeighbor && !vNeighbor.blocked && vNeighbor.owner === tileRaw.owner;
+            if (!hFriendly || !vFriendly) continue;
+
+            const pixelX = x * (this.tileSize + this.gap);
+            const pixelY = y * (this.tileSize + this.gap);
+            const cornerX = pixelX + (ddx > 0 ? this.tileSize : 0);
+            const cornerY = pixelY + (ddy > 0 ? this.tileSize : 0);
+
+            // Store corner point + inward direction — rendered as a static dot, no comet animation
+            cornerArray.push({ x: cornerX, y: cornerY, ddx, ddy });
         }
     }
 
@@ -795,6 +825,20 @@ export class GridRenderer {
 
         // 2. Secondary Regions - Smaller, slower (50% of previous speed = 2x duration)
         // drawComets(this.currentPlayerSecondaryRegionEdges, 3.6, 0.6, 1);
+
+        // 3. Inside corner notches — static bright square matching border thickness, no comet animation
+        if (this.currentPlayerCornerEdges) {
+            const actualTileSize = this.tileSize * this.stage.scale.x;
+            const strokeWidth = actualTileSize < RENDER.MIN_TILE_SIZE_FOR_BORDERS ? 3 : 2;
+            for (const pt of this.currentPlayerCornerEdges) {
+                // Compute top-left of the corner square: offset inward from the tile corner
+                // so it sits exactly where the two inner-aligned border lines would meet
+                const tlx = pt.ddx > 0 ? pt.x - strokeWidth : pt.x;
+                const tly = pt.ddy > 0 ? pt.y - strokeWidth : pt.y;
+                this.shimmerGraphics.rect(tlx, tly, strokeWidth, strokeWidth);
+                this.shimmerGraphics.fill({ color: 0xffffff, alpha: 1.0 });
+            }
+        }
     }
 
     drawOverlay() {
