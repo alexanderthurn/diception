@@ -205,6 +205,11 @@
             { id: 'store_front_map', name: 'Store Front Map', w: 1024, h: 1024, type: 'game_map' },
         ];
 
+        const BROADCAST_ASSETS = [
+            { id: 'broadcast_left',  name: 'Broadcast Left Panel',  w: 199, h: 433, type: 'broadcast', side: 'left'  },
+            { id: 'broadcast_right', name: 'Broadcast Right Panel', w: 199, h: 433, type: 'broadcast', side: 'right' },
+        ];
+
         const SOUNDTRACK_ASSETS = [
             { id: 'ost_cover', name: 'Cover Image (Square)', w: 1000, h: 1000, type: 'ost' },
             { id: 'ost_small', name: 'Small Capsule', w: 460, h: 215, type: 'ost' },
@@ -268,6 +273,7 @@
             addSection('Library Assets', LIBRARY_ASSETS);
             addSection('Windows Assets (Preview Only)', WINDOWS_ASSETS);
             addSection('Custom Assets', CUSTOM_ASSETS);
+            addSection('Broadcast Assets', BROADCAST_ASSETS);
             addSection('Soundtrack Assets', SOUNDTRACK_ASSETS);
 
             // Load spritesheet then render all assets
@@ -664,6 +670,11 @@ void main(void) {
                 return;
             }
 
+            if (asset.type === 'broadcast') {
+                drawBroadcastPanel(canvas, asset);
+                return;
+            }
+
             if (asset.type === 'logo_transparent') {
                 ctx.clearRect(0, 0, w, h);
                 const { titleWidth: ltw, mapAnchorY: lma } = getTitleMetrics(ctx, w, h, asset);
@@ -685,12 +696,12 @@ void main(void) {
                 const _tm = getTitleMetrics(ctx, w, h, asset);
                 const _tileSize = Math.max(8, Math.floor(_tm.titleWidth / 9));
                 const _padding = _tm.titleFontSize * 0.3;
-                _titleBox = {
-                    x: w / 2 - _tm.titleWidth / 2 - _padding,
-                    y: _tm.titleY - _tm.titleFontSize - _padding,
-                    w: _tm.titleWidth + _padding * 2,
-                    h: (_tm.mapAnchorY + _tileSize) - (_tm.titleY - _tm.titleFontSize) + _padding * 2,
-                };
+                const _capHeight = _tm.titleFontSize * 0.72; // visual cap height, not full em
+                const _boxX = Math.max(0, w / 2 - _tm.titleWidth / 2 - _padding);
+                const _boxY = Math.max(0, _tm.titleY - _capHeight - _padding * 0.5);
+                const _boxR = Math.min(w, w / 2 + _tm.titleWidth / 2 + _padding);
+                const _boxB = Math.min(h, _tm.mapAnchorY + _tileSize + _padding);
+                _titleBox = { x: _boxX, y: _boxY, w: _boxR - _boxX, h: _boxB - _boxY };
             }
 
             // ── Game background shader (exact match to in-game look) ──
@@ -701,9 +712,10 @@ void main(void) {
             const isLibHero = asset.id === 'library_hero';
             const isMainCapsule = asset.id === 'main_capsule';
             const isSmallCapsule = asset.id === 'small_capsule';
-            const diceCount = isTallAsset ? 3.5 : isPageBg ? 3.5 : isLibHero ? 2.0 : isMainCapsule ? 2.5 : isSmallCapsule ? 2.0 : 1;
+            const isHeaderCapsule = asset.id === 'header_capsule';
+            const diceCount = isTallAsset ? 3.5 : isPageBg ? 3.5 : isLibHero ? 2.0 : isMainCapsule ? 2.5 : isSmallCapsule ? 2.0 : isHeaderCapsule ? 3.5 : 1;
             const bgMax = isPageBg ? 55 : isLibHero ? 40 : 35;
-            const titleMax = isTallAsset ? 140 : 90;
+            const titleMax = isTallAsset ? 140 : isHeaderCapsule ? 160 : 90;
             const alphaMult = (isLibHero || isPageBg) ? 0.35 : 1;
             drawFloatingDice(ctx, w, h, rng, diceCount, _titleBox, bgMax, titleMax, alphaMult);
 
@@ -985,6 +997,7 @@ void main(void) {
                 asset.id === 'library_logo'   ? 0.75 :
                 asset.id === 'small_capsule'  ? 0.60 :
                 asset.id === 'header_image'   ? 0.40 :
+                asset.id === 'header_capsule'    ? 0.70 :
                 asset.id === 'cover_image'       ? 0.70 :
                 asset.id === 'main_capsule'      ? 0.70 :
                 asset.id === 'vertical_capsule'  ? 0.72 :
@@ -1051,6 +1064,41 @@ void main(void) {
                 ctx.fillText(text[i], x + charWidth / 2, y);
                 x += charWidth + spacing;
             }
+        }
+
+        // ── Broadcast panel renderer ──
+        function drawBroadcastPanel(canvas, asset) {
+            const ctx = canvas.getContext('2d');
+            const w = asset.w, h = asset.h;
+            const isLeft = asset.side === 'left';
+            const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED + (isLeft ? 0 : 999));
+
+            // Stars background
+            drawShaderBackground(ctx, w, h, isLeft ? 6.0 : 9.5, null, 0.0);
+
+            // Floating dice — full panel, many, varied sizes
+            const count = 28;
+            const colors = isLeft
+                ? ['#00FFFF', '#0088FF', '#00AA44']   // teal/blue/green for left
+                : ['#AA00FF', '#FF0055', '#FF8800'];   // purple/red/orange for right
+            for (let i = 0; i < count; i++) {
+                const x = rng() * w;
+                const y = rng() * h;
+                const size = (6 + rng() * 44) * (0.6 + rng() * 0.8);
+                const dice = 1 + Math.floor(rng() * 6);
+                const color = colors[Math.floor(rng() * colors.length)];
+                const alpha = 0.15 + rng() * 0.55;
+                const rotation = rng() * Math.PI * 2;
+                drawDiceTile(ctx, x, y, size, dice, color, alpha, rotation);
+            }
+
+            // Gradient vignette toward the video side (right for left panel, left for right panel)
+            const grad = ctx.createLinearGradient(isLeft ? w : 0, 0, isLeft ? 0 : w, 0);
+            grad.addColorStop(0, 'rgba(5,5,16,0)');
+            grad.addColorStop(1, 'rgba(5,5,16,0.85)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
         }
 
         // ── OST asset renderer ──
@@ -1202,7 +1250,7 @@ void main(void) {
             const game = zip.folder('diception');
             const ost = zip.folder('soundtrack');
 
-            const gameAssets = [...STORE_ASSETS, ...LIBRARY_ASSETS, ...WINDOWS_ASSETS, ...CUSTOM_ASSETS];
+            const gameAssets = [...STORE_ASSETS, ...LIBRARY_ASSETS, ...WINDOWS_ASSETS, ...CUSTOM_ASSETS, ...BROADCAST_ASSETS];
             for (const asset of gameAssets) {
                 const canvas = document.getElementById(asset.id);
                 const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
