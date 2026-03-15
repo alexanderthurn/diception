@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DICEPTION — Steam Assets</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         @font-face {
             font-family: 'Rajdhani';
@@ -307,6 +308,12 @@ out vec4 finalColor;
 uniform highp float uTime;
 uniform vec2  uResolution;
 uniform float uQuality;
+uniform vec4  uTitleBox; // UV-space (x, y, w, h); w=0 means no title box (use radial fallback)
+
+float distToBox(vec2 p, vec2 bMin, vec2 bMax) {
+    vec2 q = max(bMin - p, max(p - bMax, vec2(0.0)));
+    return length(q);
+}
 
 float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -372,7 +379,18 @@ void main(void) {
     col += starfield(uv);
     if (uQuality >= 1.0) {
         float g = tronGrid(uv);
-        col += vec3(0.0, g * 0.22, g * 0.38);
+        float gridFade;
+        if (uTitleBox.z > 0.0) {
+            // Fade from 0 at title/map box edge, ramp up toward canvas borders
+            float d = distToBox(uv, uTitleBox.xy, uTitleBox.xy + uTitleBox.zw);
+            gridFade = pow(smoothstep(0.0, 0.35, d), 1.5);
+        } else {
+            // No title box: simple radial from center
+            float aspect2 = uResolution.x / uResolution.y;
+            float distCenter = length((uv - vec2(0.5)) * vec2(aspect2, 1.0));
+            gridFade = pow(smoothstep(0.1, 0.7, distCenter), 2.0);
+        }
+        col += vec3(0.0, g * 0.5 * gridFade, g * 0.9 * gridFade);
     }
     if (uQuality >= 2.0) {
         col += nebula(uv);
@@ -414,6 +432,7 @@ void main(void) {
                 uTime: gl.getUniformLocation(prog, 'uTime'),
                 uResolution: gl.getUniformLocation(prog, 'uResolution'),
                 uQuality: gl.getUniformLocation(prog, 'uQuality'),
+                uTitleBox: gl.getUniformLocation(prog, 'uTitleBox'),
                 posLoc: loc,
             };
             _glReady = true;
@@ -427,7 +446,7 @@ void main(void) {
          * @param {number} h
          * @param {number} time  - uTime value (pick a visually interesting moment)
          */
-        function drawShaderBackground(ctx, w, h, time = 8.0) {
+        function drawShaderBackground(ctx, w, h, time = 8.0, titleBox = null, quality = 0.0) {
             if (!_glReady) {
                 // Fallback: plain dark fill
                 ctx.fillStyle = '#080820';
@@ -441,7 +460,14 @@ void main(void) {
             gl.useProgram(_glProgram.prog);
             gl.uniform1f(_glProgram.uTime, time);
             gl.uniform2f(_glProgram.uResolution, w, h);
-            gl.uniform1f(_glProgram.uQuality, 0.0); // grid disabled for assets (stars only)
+            gl.uniform1f(_glProgram.uQuality, quality);
+            if (titleBox) {
+                gl.uniform4f(_glProgram.uTitleBox,
+                    titleBox.x / w, titleBox.y / h,
+                    titleBox.w / w, titleBox.h / h);
+            } else {
+                gl.uniform4f(_glProgram.uTitleBox, 0, 0, 0, 0); // w=0 → radial fallback
+            }
             gl.drawArrays(gl.TRIANGLES, 0, 6);
             ctx.drawImage(_glCanvas, 0, 0, w, h);
         }
@@ -652,14 +678,8 @@ void main(void) {
                 return;
             }
 
-            // ── Game background shader (exact match to in-game look) ──
-            // Use a unique time per asset so they each show a different grid/ring moment
-            const shaderTime = (asset.w * 0.003 + asset.h * 0.007) % 20;
-            drawShaderBackground(ctx, w, h, shaderTime);
-
-            // ── Floating single dice scattered across the background ──
+            // ── Compute title box early (needed by shader + dice) ──
             const isTallAsset = h > w * 1.2;
-            // bg_only: no title, dice roam freely. Otherwise constrain size near title area.
             let _titleBox = null;
             if (asset.type !== 'bg_only') {
                 const _tm = getTitleMetrics(ctx, w, h, asset);
@@ -672,6 +692,11 @@ void main(void) {
                     h: (_tm.mapAnchorY + _tileSize) - (_tm.titleY - _tm.titleFontSize) + _padding * 2,
                 };
             }
+
+            // ── Game background shader (exact match to in-game look) ──
+            const shaderTime = (asset.w * 0.003 + asset.h * 0.007) % 20;
+            const shaderQuality = isTallAsset ? 1.0 : 0.0;
+            drawShaderBackground(ctx, w, h, shaderTime, _titleBox, shaderQuality);
             const isPageBg = asset.id === 'page_background';
             const isLibHero = asset.id === 'library_hero';
             const diceCount = isTallAsset ? 3.5 : isPageBg ? 3.5 : isLibHero ? 2.0 : 1;
@@ -1161,18 +1186,36 @@ void main(void) {
             link.click();
         }
 
-        function downloadAll() {
-            const all = [...STORE_ASSETS, ...LIBRARY_ASSETS, ...WINDOWS_ASSETS, ...CUSTOM_ASSETS];
-            all.forEach((asset, i) => {
-                setTimeout(() => {
-                    downloadCanvas(asset.id, `${asset.id}_${asset.w}x${asset.h}.png`, false);
-                }, i * 300);
-            });
-            SOUNDTRACK_ASSETS.forEach((asset, i) => {
-                setTimeout(() => {
-                    downloadCanvas(asset.id, `${asset.id}_${asset.w}x${asset.h}.jpg`, true);
-                }, (all.length + i) * 300);
-            });
+        async function downloadAll() {
+            const btn = document.querySelector('.download-all-btn');
+            btn.textContent = '⏳ Zipping...';
+            btn.disabled = true;
+
+            const zip = new JSZip();
+            const game = zip.folder('diception');
+            const ost = zip.folder('soundtrack');
+
+            const gameAssets = [...STORE_ASSETS, ...LIBRARY_ASSETS, ...WINDOWS_ASSETS, ...CUSTOM_ASSETS];
+            for (const asset of gameAssets) {
+                const canvas = document.getElementById(asset.id);
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+                game.file(`${asset.id}_${asset.w}x${asset.h}.png`, blob);
+            }
+            for (const asset of SOUNDTRACK_ASSETS) {
+                const canvas = document.getElementById(asset.id);
+                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
+                ost.file(`${asset.id}_${asset.w}x${asset.h}.jpg`, blob);
+            }
+
+            const content = await zip.generateAsync({ type: 'blob' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = 'diception_steam_assets.zip';
+            link.click();
+            URL.revokeObjectURL(link.href);
+
+            btn.textContent = '⬇ Download All';
+            btn.disabled = false;
         }
     </script>
 </body>
