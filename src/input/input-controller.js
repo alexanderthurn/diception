@@ -419,6 +419,12 @@ export class InputController {
         if (this.game.gameOver) return;
         if (this.game.currentPlayer.isBot) return;
 
+        // Gamepad assignment guard: only the assigned player's gamepad may act
+        if (sourceId.startsWith('gamepad-')) {
+            const gpIdx = parseInt(sourceId.slice('gamepad-'.length));
+            if (!this.inputManager.canGamepadControlPlayer(gpIdx, this.game.currentPlayer.id)) return;
+        }
+
         const selTile = this.selectedTiles.get(sourceId);
         const owner = tile ? this.game.players.find(p => p.id === tile.owner) : null;
         const isEnemy = owner && owner.id !== this.game.currentPlayer.id;

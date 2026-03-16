@@ -98,6 +98,7 @@ export class GamepadCursorManager {
                 this.activatedGamepads.add(index);
                 const gp = this.inputManager.getGamepads().find(g => g && g.index === index);
                 this.createCursor(index, gp || null);
+                this.inputManager.emit('gamepadActivated', { index });
             }
 
             const cursor = this.cursors.get(index);
@@ -108,7 +109,9 @@ export class GamepadCursorManager {
 
             // Notify intro mode so a player-coloured die is spawned at the cursor
             if (this.onIntroSpawn) {
-                this.onIntroSpawn(index, cursor.x, cursor.y);
+                const assignment = this.inputManager.getGamepadAssignment(index);
+                const playerIndex = typeof assignment === 'number' ? assignment : 0;
+                this.onIntroSpawn(playerIndex, cursor.x, cursor.y);
             }
 
             // Read current bindings so labels and actions follow remapping
@@ -312,10 +315,8 @@ export class GamepadCursorManager {
                 const dragHeld = gp.buttons[b.drag]?.pressed ?? false;
 
                 if (dragHeld) {
-                    // Hold drag button + left stick = pan map (same as right stick)
                     this.inputManager.emit('panAnalog', { x: -dx, y: -dy });
                 } else {
-                    // Normal: move cursor with left stick — switch to analog visual mode
                     this._setCursorMode(cursor, 'analog');
                     let speedMultiplier = cursor.speedMultiplier || 1.0;
 
@@ -507,6 +508,14 @@ export class GamepadCursorManager {
             cursor.element.remove();
             this.cursors.delete(index);
         }
+    }
+
+    /** Fully remove a gamepad from the session. They must press a button to rejoin. */
+    kickGamepad(index) {
+        this.activatedGamepads.delete(index);
+        this.removeCursor(index);
+        GamepadCursorManager.savedPositions.delete(index);
+        this.inputManager.emit('gamepadAssignmentChange');
     }
 
     updateCursorColor(cursor, index) {

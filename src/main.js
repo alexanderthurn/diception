@@ -359,67 +359,162 @@ async function init() {
     // Initial update in case gamepads are already connected
     configManager.updateGamepadStatus(Array.from(inputManager.connectedGamepadIndices || []));
 
-    // ── Gamepad assignment UI in setup modal ──────────────────────────────────
-    const gamepadAssignSection = document.getElementById('gamepad-assignment-section');
-    const gamepadAssignRows = document.getElementById('gamepad-assignment-rows');
+    // ── Gamepad side panel ────────────────────────────────────────────────────
+    const gamepadSidePanel = document.getElementById('gamepad-side-panel');
 
     function renderGamepadAssignments() {
-        const gamepads = Array.from(inputManager.connectedGamepadIndices || []).sort();
-        if (gamepads.length === 0) {
-            gamepadAssignSection?.classList.add('hidden');
-            return;
-        }
-        gamepadAssignSection?.classList.remove('hidden');
+        if (!gamepadSidePanel) return;
+        // Only show gamepads activated this session (cursor exists) — avoids stale saved assignments
+        const gcm = inputManager.gamepadCursorManager;
+        const gamepads = Array.from(inputManager.connectedGamepadIndices || [])
+            .filter(idx => gcm?.cursors?.has(idx))
+            .sort();
+        const setupHidden = document.getElementById('setup-modal')?.classList.contains('hidden');
 
         const humanCount = parseInt(document.getElementById('human-count')?.value ?? '1');
-        gamepadAssignRows.innerHTML = '';
 
-        const row = document.createElement('div');
-        row.className = 'gamepad-assign-row';
+        if (gamepads.length === 0 || setupHidden || humanCount <= 1) {
+            gamepadSidePanel.classList.remove('gp-panel-active');
+            return;
+        }
+        gamepadSidePanel.innerHTML = '';
 
-        const label = document.createElement('span');
-        label.className = 'gamepad-assign-label';
-        label.textContent = 'GAMEPAD';
-        row.appendChild(label);
+        // Title
+        const title = document.createElement('div');
+        title.className = 'gp-panel-title';
+        title.textContent = 'CONTROLLERS';
+        gamepadSidePanel.appendChild(title);
 
-        const btns = document.createElement('div');
-        btns.className = 'gamepad-assign-btns';
-
-        // One button per human player — clicking assigns the clicking gamepad
+        // One row per human player
         for (let i = 0; i < humanCount; i++) {
             const pColor = '#' + GAME.HUMAN_COLORS[i % GAME.HUMAN_COLORS.length].toString(16).padStart(6, '0');
-            const btn = document.createElement('button');
-            btn.className = 'tron-btn gamepad-assign-btn';
-            btn.style.borderColor = pColor;
-            btn.style.color = pColor;
-            btn.title = `Assign to Player ${i + 1}`;
-            btn.textContent = i + 1;
-            btn.addEventListener('click', () => {
+            const assignedGPs = gamepads.filter(g => inputManager.getGamepadAssignment(g) === i);
+
+            const row = document.createElement('div');
+            row.className = 'gp-player-row';
+
+            const playerBtn = document.createElement('button');
+            playerBtn.className = 'tron-btn gp-player-btn';
+            playerBtn.style.setProperty('--gp-color', pColor);
+            playerBtn.title = `Click with gamepad to join as Player ${i + 1}`;
+            playerBtn.textContent = `P${i + 1}`;
+            playerBtn.addEventListener('click', () => {
                 const gpIdx = inputManager.lastClickingGamepad;
                 if (gpIdx != null) inputManager.setGamepadAssignment(gpIdx, i);
             });
-            btns.appendChild(btn);
+            row.appendChild(playerBtn);
+
+            for (const gpIdx of assignedGPs) {
+                const chip = document.createElement('button');
+                chip.className = 'tron-btn gp-chip';
+                chip.style.setProperty('--gp-color', pColor);
+                chip.title = `Remove GP${gpIdx}`;
+                chip.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    inputManager.gamepadCursorManager?.kickGamepad(gpIdx);
+                });
+                row.appendChild(chip);
+            }
+
+            gamepadSidePanel.appendChild(row);
         }
 
-        // Master button
+        // Master row — unrestricted gamepads that can control any player's turn
+        const masterGPs = gamepads.filter(g => {
+            const a = inputManager.getGamepadAssignment(g);
+            return a === 'master' || (typeof a === 'number' && a >= humanCount);
+        });
+        const masterRow = document.createElement('div');
+        masterRow.className = 'gp-player-row';
         const masterBtn = document.createElement('button');
-        masterBtn.className = 'tron-btn gamepad-assign-btn master-btn';
-        masterBtn.style.borderColor = '#AAAAAA';
-        masterBtn.style.color = '#AAAAAA';
-        masterBtn.title = 'Assign to Master (control any player)';
-        masterBtn.textContent = 'M';
+        masterBtn.className = 'tron-btn gp-player-btn';
+        masterBtn.style.setProperty('--gp-color', '#666');
+        masterBtn.title = 'Click with gamepad to become unrestricted (any player)';
+        masterBtn.textContent = '—';
         masterBtn.addEventListener('click', () => {
             const gpIdx = inputManager.lastClickingGamepad;
             if (gpIdx != null) inputManager.setGamepadAssignment(gpIdx, 'master');
         });
-        btns.appendChild(masterBtn);
+        masterRow.appendChild(masterBtn);
+        for (const gpIdx of masterGPs) {
+            const chip = document.createElement('button');
+            chip.className = 'tron-btn gp-chip';
+            chip.style.setProperty('--gp-color', '#666');
+            chip.title = `Remove GP${gpIdx}`;
+            chip.addEventListener('click', (e) => {
+                e.stopPropagation();
+                inputManager.gamepadCursorManager?.kickGamepad(gpIdx);
+            });
+            masterRow.appendChild(chip);
+        }
+        gamepadSidePanel.appendChild(masterRow);
 
-        row.appendChild(btns);
-        gamepadAssignRows.appendChild(row);
+        gamepadSidePanel.classList.add('gp-panel-active');
     }
 
-    // Re-render when human count changes or gamepads connect/disconnect
-    document.getElementById('human-count')?.addEventListener('change', renderGamepadAssignments);
+    function redistributeGamepads() {
+        const gcm = inputManager.gamepadCursorManager;
+        if (!gcm) return;
+        const humanCount = Math.max(1, parseInt(document.getElementById('human-count')?.value ?? '1'));
+        const activatedIndices = [...gcm.activatedGamepads].sort((a, b) => a - b);
+        activatedIndices.forEach((idx, i) => {
+            inputManager.setGamepadAssignment(idx, humanCount <= 1 ? 0 : i % humanCount);
+        });
+    }
+
+    // When human count changes: redistribute all gamepads, then re-render
+    document.getElementById('human-count')?.addEventListener('change', () => {
+        redistributeGamepads();
+        renderGamepadAssignments();
+    });
+
+    // When a new gamepad joins: respect saved assignment if valid, otherwise auto-assign
+    inputManager.on('gamepadActivated', ({ index }) => {
+        const gcm = inputManager.gamepadCursorManager;
+        const humanCount = Math.max(1, parseInt(document.getElementById('human-count')?.value ?? '1'));
+
+        // Keep saved assignment if it's still valid for the current human count
+        if (inputManager.gamepadAssignments.has(index)) {
+            const saved = inputManager.gamepadAssignments.get(index);
+            const valid = saved === 'master' || (typeof saved === 'number' && (humanCount <= 1 ? saved === 0 : saved < humanCount));
+            if (valid) {
+                renderGamepadAssignments();
+                return;
+            }
+        }
+
+        // No valid saved assignment — find first empty slot
+        if (humanCount <= 1) {
+            inputManager.setGamepadAssignment(index, 0);
+        } else {
+            const occupied = new Set();
+            for (const idx of gcm.activatedGamepads) {
+                if (idx === index) continue;
+                const a = inputManager.getGamepadAssignment(idx);
+                if (typeof a === 'number' && a < humanCount) occupied.add(a);
+            }
+            let assignTo = -1;
+            for (let i = 0; i < humanCount; i++) {
+                if (!occupied.has(i)) { assignTo = i; break; }
+            }
+            if (assignTo === -1) {
+                const pos = [...gcm.activatedGamepads].sort((a, b) => a - b).indexOf(index);
+                assignTo = pos % humanCount;
+            }
+            inputManager.setGamepadAssignment(index, assignTo);
+        }
+        renderGamepadAssignments();
+    });
+
+    // Re-render on any assignment change (e.g. manual chip reassignment)
+    inputManager.on('gamepadAssignmentChange', renderGamepadAssignments);
+
+    // Sync visibility when setup modal is shown/hidden
+    new MutationObserver(renderGamepadAssignments).observe(
+        document.getElementById('setup-modal'),
+        { attributes: true, attributeFilter: ['class'] }
+    );
+
     renderGamepadAssignments();
 
     const sessionManager = new SessionManager(game, renderer, effectsManager, turnHistory, mapEditor);
@@ -1033,7 +1128,9 @@ function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboar
     });
 
     // End Turn Button
-    endTurnBtn.addEventListener('click', () => {
+    endTurnBtn.addEventListener('click', (e) => {
+        if (e.isGamepadSimulated && e.gamepadIndex !== undefined &&
+            !inputManager.canGamepadControlPlayer(e.gamepadIndex, game.currentPlayer?.id)) return;
         const humanPlayers = game.players.filter(p => !p.isBot);
         if (humanPlayers.length > 1) {
             input.deselect();
@@ -1056,7 +1153,9 @@ function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboar
     }
 
     // Auto-Win Button
-    autoWinBtn.addEventListener('click', () => {
+    autoWinBtn.addEventListener('click', (e) => {
+        if (e.isGamepadSimulated && e.gamepadIndex !== undefined &&
+            !inputManager.canGamepadControlPlayer(e.gamepadIndex, game.currentPlayer?.id)) return;
         const autoplayPlayers = gameStarter.getAutoplayPlayers();
         if (autoplayPlayers.size > 0) {
             autoplayPlayers.clear();

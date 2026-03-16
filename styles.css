@@ -6573,3 +6573,95 @@ details.settings-group[open]>summary.settings-group-header::after {
     from { transform: translateX(-50%) scale(1);    opacity: 1; }
     to   { transform: translateX(-50%) scale(1.28); opacity: 0.75; }
 }
+/* ── Gamepad Side Panel ── */
+
+#gamepad-side-panel {
+    position: absolute;
+    top: 50%;
+    left: calc(50% + 232px);
+    transform: translateY(-50%);
+    width: 160px;
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(0, 0, 5, 0.92);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--panel-glow);
+    padding: 12px 10px;
+    z-index: 100;
+    pointer-events: auto;
+    max-height: calc(var(--body-h) - 60px);
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+#gamepad-side-panel::-webkit-scrollbar { display: none; }
+
+@media (min-width: 830px) {
+    #gamepad-side-panel.gp-panel-active {
+        display: flex;
+    }
+}
+
+.gp-panel-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: rgba(0,255,255,0.5);
+    text-transform: uppercase;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(0,255,255,0.15);
+    margin-bottom: 2px;
+}
+
+.gp-player-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.gp-player-btn {
+    flex: 1;
+    min-height: 34px;
+    padding: 0 10px;
+    border-color: var(--gp-color, #aaa);
+    background: var(--gp-color, #aaa);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-align: left;
+}
+
+.gp-chip {
+    min-height: 34px;
+    min-width: 34px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-color: var(--gp-color, #aaa);
+    opacity: 0.6;
+    transition: opacity 0.15s, background 0.15s;
+}
+
+.gp-chip::before {
+    content: '';
+    display: block;
+    width: 18px;
+    height: 16px;
+    -webkit-mask-image: url('/assets/gfx/diception.png');
+    mask-image: url('/assets/gfx/diception.png');
+    -webkit-mask-size: 183px 102px;
+    mask-size: 183px 102px;
+    -webkit-mask-position: -88px -18px;
+    mask-position: -88px -18px;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    background: var(--gp-color, #aaa);
+}
+
+.gp-chip:hover {
+    opacity: 1;
+    background: rgba(0,0,0,0.3);
+}

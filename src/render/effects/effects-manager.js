@@ -2,6 +2,7 @@ import { Container } from 'pixi.js';
 import { ParticleSystem, EffectPresets } from './particle-system.js';
 import { BackgroundRenderer } from './background-renderer.js';
 import { BoardEffects } from './board-effects.js';
+import { GAME } from '../../core/constants.js';
 
 /**
  * Effects Manager - Central coordinator for all visual effects
@@ -182,10 +183,13 @@ export class EffectsManager {
         if (canvas) {
             this._boundPointerDown = (e) => {
                 if (this.quality === 'off') return;
+                if (e.pointerId >= 100) return; // gamepad — handled by onIntroSpawn
                 const rect = canvas.getBoundingClientRect();
                 this._spawnX = e.clientX - rect.left;
                 this._spawnY = e.clientY - rect.top;
-                this.spawnPlayerDie(0, this._spawnX, this._spawnY); // mouse = human 1
+                const humanCount = Math.max(1, parseInt(document.getElementById('human-count')?.value ?? '1'));
+                const playerIndex = Math.floor(Math.random() * humanCount);
+                this.spawnPlayerDie(playerIndex, this._spawnX, this._spawnY);
             };
             this._boundPointerUp = () => {};
 
@@ -201,8 +205,7 @@ export class EffectsManager {
      */
     spawnPlayerDie(playerIndex, screenX, screenY) {
         if (!this.introModeActive || this.quality === 'off') return;
-        const HUMAN_COLORS = [0xAA00FF, 0x0088FF, 0xFFCC00, 0x00AA44];
-        const color = playerIndex >= 0 ? HUMAN_COLORS[playerIndex % HUMAN_COLORS.length] : null;
+        const color = playerIndex >= 0 ? GAME.HUMAN_COLORS[playerIndex % GAME.HUMAN_COLORS.length] : null;
         this.background.spawnDiceAt(screenX, screenY, color);
     }
 
