@@ -17,7 +17,11 @@ export const GAME = {
         0xAA00FF, // Purple (Human 1)
         0x0088FF, // Azure Blue (Human 2)
         0xFFCC00, // Gold/Dark Yellow (Human 3)
-        0x00AA44  // Dark Green (Human 4)
+        0x00AA44, // Dark Green (Human 4)
+        0x00CCCC, // Cyan (Human 5)
+        0xCC0000, // Red (Human 6)
+        0x3300CC, // Indigo (Human 7)
+        0xCC6600  // Bronze (Human 8)
     ],
     BOT_COLORS: [
         0xFF0055, // Red/Pink

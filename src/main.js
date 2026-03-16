@@ -368,12 +368,10 @@ async function init() {
     function updateControlsPanel() {
         if (!gamepadControlsPanel) return;
         const gcm = inputManager.gamepadCursorManager;
-        const hasGamepad = gcm?.cursors?.size >= 2;
-        const mainMenuEl = document.getElementById('main-menu');
-        const mainMenuVisible = !mainMenuEl?.classList.contains('hidden');
-        const active = hasGamepad && mainMenuVisible;
-        gamepadControlsPanel.classList.toggle('gcp-active', active);
-        mainMenuEl?.classList.toggle('gp-mm-shifted', active);
+        const hasGamepad = gcm?.cursors?.size >= 1;
+        const howtoEl = document.getElementById('howto-modal');
+        const howtoVisible = !howtoEl?.classList.contains('hidden');
+        gamepadControlsPanel.classList.toggle('gcp-active', hasGamepad && howtoVisible);
     }
 
     function renderGamepadAssignments() {
@@ -385,7 +383,6 @@ async function init() {
             .sort();
         const setupVisible = !document.getElementById('setup-modal')?.classList.contains('hidden');
         const pauseVisible = !document.getElementById('pause-modal')?.classList.contains('hidden');
-
         const humanCount = parseInt(document.getElementById('human-count')?.value ?? '1');
 
         if (gamepads.length < 2 || (!setupVisible && !pauseVisible) || humanCount <= 1) {
@@ -395,7 +392,7 @@ async function init() {
         }
         gamepadSidePanel.innerHTML = '';
 
-        // Title
+        // Controllers title
         const title = document.createElement('div');
         title.className = 'gp-panel-title';
         title.textContent = 'CONTROLLERS';
@@ -440,7 +437,7 @@ async function init() {
             gamepadSidePanel.appendChild(row);
         }
 
-        // Master row — unrestricted gamepads that can control any player's turn
+        // Master row
         const masterGPs = gamepads.filter(g => {
             const a = inputManager.getGamepadAssignment(g);
             return a === 'master' || (typeof a === 'number' && a >= humanCount);
@@ -451,7 +448,6 @@ async function init() {
         masterLabel.className = 'gp-player-label gp-player-label-master';
         masterLabel.textContent = '—';
         masterRow.appendChild(masterLabel);
-
         const masterJoinBtn = document.createElement('button');
         masterJoinBtn.className = 'tron-btn gp-join-btn gp-join-btn-master';
         masterJoinBtn.title = 'Click with gamepad to become unrestricted (any player)';
@@ -473,6 +469,40 @@ async function init() {
             masterRow.appendChild(chip);
         }
         gamepadSidePanel.appendChild(masterRow);
+
+        // Mini controls — same condition as controllers above
+        const miniDiv = document.createElement('div');
+        miniDiv.className = 'gcp-mini-wrap';
+        miniDiv.innerHTML = `
+            <div class="gp-panel-title">CONTROLS</div>
+            <svg class="gcp-svg" viewBox="40 2 155 162" xmlns="http://www.w3.org/2000/svg">
+                <rect class="gcp-body" x="58" y="55" width="124" height="68" rx="8"/>
+                <rect class="gcp-el" x="77" y="73" width="6" height="18" rx="1"/>
+                <rect class="gcp-el" x="71" y="79" width="18" height="6" rx="1"/>
+                <circle class="gcp-el" cx="162" cy="77" r="4"/>
+                <circle class="gcp-el" cx="162" cy="97" r="4"/>
+                <circle class="gcp-el" cx="152" cy="87" r="4"/>
+                <circle class="gcp-el gcp-dim" cx="172" cy="87" r="4"/>
+                <circle class="gcp-stick gcp-dim" cx="90" cy="112" r="7"/>
+                <circle class="gcp-stick gcp-dim" cx="150" cy="112" r="7"/>
+                <!-- D-pad callout → up → Move/Attack -->
+                <circle class="gcp-dot" cx="80" cy="73" r="1.5"/>
+                <line class="gcp-line" x1="80" y1="73" x2="80" y2="36"/>
+                <text class="gcp-lbl" text-anchor="middle" x="80" y="20">Move /<tspan x="80" dy="13">Attack</tspan></text>
+                <!-- Y callout → up → End Turn -->
+                <circle class="gcp-dot" cx="162" cy="73" r="1.5"/>
+                <line class="gcp-line" x1="162" y1="73" x2="162" y2="36"/>
+                <text class="gcp-lbl" text-anchor="middle" x="162" y="20">End Turn</text>
+                <!-- A callout → down → Select -->
+                <circle class="gcp-dot" cx="162" cy="101" r="1.5"/>
+                <line class="gcp-line" x1="162" y1="101" x2="162" y2="142"/>
+                <text class="gcp-lbl" text-anchor="middle" x="162" y="154">Select</text>
+                <!-- X callout → bottom-left → Deselect -->
+                <circle class="gcp-dot" cx="148" cy="90" r="1.5"/>
+                <line class="gcp-line" x1="148" y1="90" x2="92" y2="142"/>
+                <text class="gcp-lbl" text-anchor="middle" x="92" y="154">Deselect</text>
+            </svg>`;
+        gamepadSidePanel.appendChild(miniDiv);
 
         gamepadSidePanel.classList.add('gp-panel-active');
         updateControlsPanel();
@@ -550,8 +580,8 @@ async function init() {
     const _gpPanelObs = { attributes: true, attributeFilter: ['class'] };
     new MutationObserver(renderGamepadAssignments).observe(document.getElementById('setup-modal'), _gpPanelObs);
     new MutationObserver(renderGamepadAssignments).observe(document.getElementById('pause-modal'), _gpPanelObs);
-    // Controls panel syncs with main menu visibility
-    new MutationObserver(updateControlsPanel).observe(document.getElementById('main-menu'), _gpPanelObs);
+    // Controls panel syncs with howto modal visibility
+    new MutationObserver(updateControlsPanel).observe(document.getElementById('howto-modal'), _gpPanelObs);
 
     renderGamepadAssignments();
 

@@ -6135,7 +6135,6 @@ canvas {
     gap: 10px;
     width: 100%;
     min-width: 220px;
-    position: relative;
 }
 
 .main-nav-row {
@@ -6576,33 +6575,21 @@ details.settings-group[open]>summary.settings-group-header::after {
 /* ── Gamepad Controls Reference Panel ── */
 
 #gamepad-controls-panel {
-    position: absolute;
-    left: calc(100% + 20px);
-    top: 50%;
-    transform: translateY(-50%);
-    width: 375px;
+    width: 100%;
+    max-width: 520px;
     display: none;
     flex-direction: column;
     gap: 8px;
-    background: rgba(0, 0, 5, 0.92);
-    border: 1px solid var(--border-color);
+    background: rgba(0, 0, 5, 0.6);
+    border: 1px solid rgba(0,255,255,0.25);
     box-shadow: var(--panel-glow);
-    padding: 14px 12px;
-    z-index: 100;
-    pointer-events: none;
+    padding: 14px 16px;
     box-sizing: border-box;
+    margin: 0 auto 24px;
+    pointer-events: none;
 }
 
-@media (min-width: 960px) {
-    #gamepad-controls-panel.gcp-active { display: flex; }
-}
-
-/* Shift main menu left when controls panel is shown — only when panel is actually visible */
-@media (min-width: 960px) {
-    #main-menu.gp-mm-shifted {
-        transform: translate(calc(-50% - 145px), -50%);
-    }
-}
+#gamepad-controls-panel.gcp-active { display: flex; }
 
 .gcp-svg { width: 100%; height: auto; }
 
@@ -6631,6 +6618,18 @@ details.settings-group[open]>summary.settings-group-header::after {
     dominant-baseline: middle;
 }
 
+.gcp-dim { opacity: 0.18; }
+
+.gcp-mini-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(0,255,255,0.12);
+    margin-top: 4px;
+}
+.gcp-mini-wrap .gp-panel-title { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+
 /* ── Gamepad Side Panel ── */
 
 #gamepad-side-panel {
@@ -6638,7 +6637,7 @@ details.settings-group[open]>summary.settings-group-header::after {
     top: 50%;
     left: calc(50% + 232px);
     transform: translateY(-50%);
-    width: 160px;
+    width: 200px;
     display: none;
     flex-direction: column;
     gap: 6px;
