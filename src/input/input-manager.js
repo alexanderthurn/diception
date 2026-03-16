@@ -18,6 +18,7 @@ export class InputManager {
         this.gamepadStates = new Map();
         this.connectedGamepadIndices = new Set();
         this.gamepadToHumanMap = new Map(); // raw gamepad index -> human player index (0, 1, 2, ...)
+        this.gamepadAssignments = this._loadGamepadAssignments(); // raw index -> 'master' | playerIndex
         this.deadZone = 0.4;
 
         // Desktop version (Steam/Tauri) often has higher polling rates or different timing
@@ -208,6 +209,56 @@ export class InputManager {
     getHumanIndex(rawGamepadIndex) {
         const mapped = this.gamepadToHumanMap.get(rawGamepadIndex);
         return mapped !== undefined ? mapped : rawGamepadIndex;
+    }
+
+    // ── Gamepad assignment (which human player a gamepad controls) ────────────
+
+    _loadGamepadAssignments() {
+        try {
+            const data = localStorage.getItem('dicy_gamepadAssignments');
+            if (!data) return new Map();
+            const obj = JSON.parse(data);
+            const map = new Map();
+            for (const [k, v] of Object.entries(obj)) {
+                map.set(parseInt(k), v === 'master' ? 'master' : parseInt(v));
+            }
+            return map;
+        } catch { return new Map(); }
+    }
+
+    _saveGamepadAssignments() {
+        const obj = {};
+        for (const [k, v] of this.gamepadAssignments.entries()) {
+            obj[k] = v;
+        }
+        localStorage.setItem('dicy_gamepadAssignments', JSON.stringify(obj));
+    }
+
+    /**
+     * Get assignment for a gamepad: 'master' or a human player index.
+     * Defaults to sequential auto-map (existing behavior) if not explicitly set.
+     */
+    getGamepadAssignment(rawIndex) {
+        if (this.gamepadAssignments.has(rawIndex)) {
+            return this.gamepadAssignments.get(rawIndex);
+        }
+        return this.getHumanIndex(rawIndex);
+    }
+
+    setGamepadAssignment(rawIndex, assignment) {
+        this.gamepadAssignments.set(rawIndex, assignment);
+        this._saveGamepadAssignments();
+        this.emit('gamepadAssignmentChange', { index: rawIndex, assignment });
+    }
+
+    /**
+     * Returns true if this gamepad may control the given player.
+     * Master gamepads (and keyboard/mouse, index = -1) can control any player.
+     */
+    canGamepadControlPlayer(rawIndex, playerId) {
+        if (rawIndex < 0) return true; // keyboard/mouse = always master
+        const assignment = this.getGamepadAssignment(rawIndex);
+        return assignment === 'master' || assignment === playerId;
     }
 
     setupKeyboard() {

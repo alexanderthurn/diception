@@ -353,9 +353,73 @@ async function init() {
     inputManager.on('gamepadChange', (indices) => {
         configManager.updateGamepadStatus(indices);
         mapEditor.updateEditorInputHints?.();
+        renderGamepadAssignments();
     });
     // Initial update in case gamepads are already connected
     configManager.updateGamepadStatus(Array.from(inputManager.connectedGamepadIndices || []));
+
+    // ── Gamepad assignment UI in setup modal ──────────────────────────────────
+    const gamepadAssignSection = document.getElementById('gamepad-assignment-section');
+    const gamepadAssignRows = document.getElementById('gamepad-assignment-rows');
+
+    function renderGamepadAssignments() {
+        const gamepads = Array.from(inputManager.connectedGamepadIndices || []).sort();
+        if (gamepads.length === 0) {
+            gamepadAssignSection?.classList.add('hidden');
+            return;
+        }
+        gamepadAssignSection?.classList.remove('hidden');
+
+        const humanCount = parseInt(document.getElementById('human-count')?.value ?? '1');
+        gamepadAssignRows.innerHTML = '';
+
+        const row = document.createElement('div');
+        row.className = 'gamepad-assign-row';
+
+        const label = document.createElement('span');
+        label.className = 'gamepad-assign-label';
+        label.textContent = 'GAMEPAD';
+        row.appendChild(label);
+
+        const btns = document.createElement('div');
+        btns.className = 'gamepad-assign-btns';
+
+        // One button per human player — clicking assigns the clicking gamepad
+        for (let i = 0; i < humanCount; i++) {
+            const pColor = '#' + GAME.HUMAN_COLORS[i % GAME.HUMAN_COLORS.length].toString(16).padStart(6, '0');
+            const btn = document.createElement('button');
+            btn.className = 'tron-btn gamepad-assign-btn';
+            btn.style.borderColor = pColor;
+            btn.style.color = pColor;
+            btn.title = `Assign to Player ${i + 1}`;
+            btn.textContent = i + 1;
+            btn.addEventListener('click', () => {
+                const gpIdx = inputManager.lastClickingGamepad;
+                if (gpIdx != null) inputManager.setGamepadAssignment(gpIdx, i);
+            });
+            btns.appendChild(btn);
+        }
+
+        // Master button
+        const masterBtn = document.createElement('button');
+        masterBtn.className = 'tron-btn gamepad-assign-btn master-btn';
+        masterBtn.style.borderColor = '#AAAAAA';
+        masterBtn.style.color = '#AAAAAA';
+        masterBtn.title = 'Assign to Master (control any player)';
+        masterBtn.textContent = 'M';
+        masterBtn.addEventListener('click', () => {
+            const gpIdx = inputManager.lastClickingGamepad;
+            if (gpIdx != null) inputManager.setGamepadAssignment(gpIdx, 'master');
+        });
+        btns.appendChild(masterBtn);
+
+        row.appendChild(btns);
+        gamepadAssignRows.appendChild(row);
+    }
+
+    // Re-render when human count changes or gamepads connect/disconnect
+    document.getElementById('human-count')?.addEventListener('change', renderGamepadAssignments);
+    renderGamepadAssignments();
 
     const sessionManager = new SessionManager(game, renderer, effectsManager, turnHistory, mapEditor);
     const scenarioBrowser = new ScenarioBrowser(configManager, mapEditor);
@@ -1014,9 +1078,7 @@ function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboar
         if (endTurnBtn.disabled) return;
 
         if (data && data.index !== undefined) {
-            const humanIndex = inputManager.getHumanIndex(data.index);
-            if (game.currentPlayer.id !== humanIndex) {
-                console.log(`Gamepad ${data.index} tried to end turn, but it's player ${game.currentPlayer.id}'s turn.`);
+            if (!inputManager.canGamepadControlPlayer(data.index, game.currentPlayer.id)) {
                 return;
             }
         }

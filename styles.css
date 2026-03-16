@@ -89,6 +89,11 @@ body.fx-high {
     --title-glow: 0 0 40px rgba(0, 255, 255, 0.6), 0 0 80px rgba(0, 255, 255, 0.2);
 }
 
+/* Custom crosshair cursor — matches the gamepad cursor aesthetic */
+canvas {
+    cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 64 64'><path d='M 8 24 L 8 8 L 24 8' fill='none' stroke='black' stroke-width='5' stroke-linecap='square'/><path d='M 40 8 L 56 8 L 56 24' fill='none' stroke='black' stroke-width='5' stroke-linecap='square'/><path d='M 8 40 L 8 56 L 24 56' fill='none' stroke='black' stroke-width='5' stroke-linecap='square'/><path d='M 40 56 L 56 56 L 56 40' fill='none' stroke='black' stroke-width='5' stroke-linecap='square'/><rect x='27' y='27' width='10' height='10' fill='black'/><path d='M 8 24 L 8 8 L 24 8' fill='none' stroke='%2300FFFF' stroke-width='3' stroke-linecap='square'/><path d='M 40 8 L 56 8 L 56 24' fill='none' stroke='%2300FFFF' stroke-width='3' stroke-linecap='square'/><path d='M 8 40 L 8 56 L 24 56' fill='none' stroke='%2300FFFF' stroke-width='3' stroke-linecap='square'/><path d='M 40 56 L 56 56 L 56 40' fill='none' stroke='%2300FFFF' stroke-width='3' stroke-linecap='square'/><rect x='29' y='29' width='6' height='6' fill='%2300FFFF'/></svg>") 18 18, crosshair;
+}
+
 html,
 body {
     height: 100%;
@@ -6481,6 +6486,62 @@ details.settings-group[open]>summary.settings-group-header::after {
         flex: unset;
         width: 100%;
     }
+}
+
+/* ── Gamepad Assignment ── */
+
+#gamepad-assignment-section {
+    width: 100%;
+}
+
+.gamepad-assign-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    flex-wrap: wrap;
+}
+
+.gamepad-assign-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 1px;
+    min-width: 72px;
+    flex-shrink: 0;
+}
+
+.gamepad-assign-btns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.gamepad-assign-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-width: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    min-height: unset;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.45;
+    transition: opacity 0.15s, box-shadow 0.15s;
+}
+
+.gamepad-assign-btn.active {
+    opacity: 1;
+    box-shadow: 0 0 8px currentColor;
+}
+
+.gamepad-assign-btn.master-btn {
+    width: auto;
+    padding: 0 8px;
+    font-size: 10px;
+    letter-spacing: 1px;
 }
 
 /* ── Turn Timer ── */

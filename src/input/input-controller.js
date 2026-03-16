@@ -76,6 +76,7 @@ export class InputController {
         if (!this.game.players || this.game.players.length === 0) return;
         if (this.game.gameOver) return;
         if (this.game.currentPlayer.isBot) return;
+        if (index >= 0 && !this.inputManager.canGamepadControlPlayer(index, this.game.currentPlayer.id)) return;
 
         // Hide mouse hover, show keyboard cursor (leave gamepad hovers visible)
         this.cursorVisible = true;
@@ -162,6 +163,8 @@ export class InputController {
         if (!this.game.players || this.game.players.length === 0) return;
         if (this.game.gameOver) return;
         if (this.game.currentPlayer.isBot) return;
+        if (data?.source === 'gamepad' && data?.index !== undefined &&
+            !this.inputManager.canGamepadControlPlayer(data.index, this.game.currentPlayer.id)) return;
 
         // Virtual cursor mode: cursorX/cursorY are null - GamepadCursorManager handles
         // selection via simulated click. Do NOT init grid cursor (would show teal at wrong tile).
@@ -434,9 +437,10 @@ export class InputController {
         const owner = tile ? this.game.players.find(p => p.id === tile.owner) : null;
         const isEnemy = owner && owner.id !== this.game.currentPlayer.id;
 
-        // 1. Direct attack shortcut (Expert Mode Only)
+        // 1. Direct attack shortcut (Expert Mode Only, disabled when gamepads connected)
         // This overrides normal selection behavior if we can attack the clicked enemy tile
-        if (isEnemy && this.renderer.gameSpeed === 'expert' && tile && !tile.blocked) {
+        const gamepadsConnected = this.inputManager?.connectedGamepadIndices?.size > 0;
+        if (isEnemy && this.renderer.gameSpeed === 'expert' && tile && !tile.blocked && !gamepadsConnected) {
             let attacker = null;
 
             // Priority: If current selection is one of the possible attackers, use it

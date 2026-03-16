@@ -186,20 +186,25 @@ export class GamepadCursorManager {
                 }
             }
 
+            // In-game action guard: non-master gamepads can only act on their assigned player's turn
+            const inGame = !isMenuOpen && this.game.players.length > 0 && !this.game.gameOver;
+            const currentPlayer = this.game.currentPlayer;
+            const isAssignedTurn = !inGame || !currentPlayer || currentPlayer.isBot ||
+                this.inputManager.canGamepadControlPlayer(index, currentPlayer.id);
+
             if (button === b.confirm) {
-                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
+                if (isAssignedTurn) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
             } else if (button === b.cancel) {
-                this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
+                if (isAssignedTurn) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
             } else if (button === b.endTurn) {
                 if (isEditorOpen) {
                     // In editor: end_turn button = Paint mode
                     const paintTab = document.querySelector('.editor-tab[data-mode="paint"]');
                     if (paintTab) paintTab.click();
                 } else {
-                    // In game: End Turn
-                    const currentPlayer = this.game.currentPlayer;
-                    const humanIndex = this.inputManager.getHumanIndex(index);
-                    if (currentPlayer && !currentPlayer.isBot && currentPlayer.id === humanIndex) {
+                    // In game: End Turn — use assignment-aware check
+                    if (currentPlayer && !currentPlayer.isBot &&
+                        this.inputManager.canGamepadControlPlayer(index, currentPlayer.id)) {
                         const endTurnBtn = document.getElementById('end-turn-btn');
                         if (endTurnBtn && !endTurnBtn.classList.contains('hidden')) {
                             endTurnBtn.click();
@@ -230,12 +235,23 @@ export class GamepadCursorManager {
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
             if (isMenuOpen && button !== b.confirm && button !== b.cancel) return;
 
+            const inGameUp = !isMenuOpen && this.game.players.length > 0 && !this.game.gameOver;
+            const currentPlayerUp = this.game.currentPlayer;
+            const isAssignedTurnUp = !inGameUp || !currentPlayerUp || currentPlayerUp.isBot ||
+                this.inputManager.canGamepadControlPlayer(index, currentPlayerUp.id);
+
             if (button === b.confirm) {
-                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
-                this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
+                if (isAssignedTurnUp) {
+                    this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
+                    this.inputManager.lastClickingGamepad = index;
+                    this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
+                    this.inputManager.lastClickingGamepad = null;
+                }
             } else if (button === b.cancel) {
-                this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
-                this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
+                if (isAssignedTurnUp) {
+                    this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
+                    this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
+                }
             } else if (button === b.drag) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 1, index);
             }
@@ -494,10 +510,23 @@ export class GamepadCursorManager {
     }
 
     updateCursorColor(cursor, index) {
-        // Use mapped human index so cursor color matches player color (Human 0 = Purple, etc.)
-        const humanIndex = this.inputManager.getHumanIndex(index);
-        const color = GAME.HUMAN_COLORS[humanIndex % GAME.HUMAN_COLORS.length];
-        const colorHex = '#' + color.toString(16).padStart(6, '0');
+        const isMainMenu = !document.getElementById('main-menu')?.classList.contains('hidden');
+        let colorHex;
+
+        if (isMainMenu) {
+            // Main menu: use auto-sequential color (existing behavior)
+            const humanIndex = this.inputManager.getHumanIndex(index);
+            const color = GAME.HUMAN_COLORS[humanIndex % GAME.HUMAN_COLORS.length];
+            colorHex = '#' + color.toString(16).padStart(6, '0');
+        } else {
+            const assignment = this.inputManager.getGamepadAssignment(index);
+            if (assignment === 'master') {
+                colorHex = '#AAAAAA'; // grey for master
+            } else {
+                const color = GAME.HUMAN_COLORS[assignment % GAME.HUMAN_COLORS.length];
+                colorHex = '#' + color.toString(16).padStart(6, '0');
+            }
+        }
 
         if (cursor.lastColor !== colorHex) {
             cursor.element.style.color = colorHex;
