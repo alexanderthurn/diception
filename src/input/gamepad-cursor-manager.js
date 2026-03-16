@@ -107,17 +107,21 @@ export class GamepadCursorManager {
             // Ensure cursor is visible on button press
             cursor.element.style.opacity = '1.0';
 
-            // Notify intro mode so a player-coloured die is spawned at the cursor
-            if (this.onIntroSpawn) {
-                const assignment = this.inputManager.getGamepadAssignment(index);
-                const playerIndex = typeof assignment === 'number' ? assignment : 0;
-                this.onIntroSpawn(playerIndex, cursor.x, cursor.y);
-            }
-
             // Read current bindings so labels and actions follow remapping
             const b = this._gb();
             const isEditorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
+
+            // Intro mode interactions (button-specific)
+            if (button === b.confirm && this.onIntroSpawn) {
+                const assignment = this.inputManager.getGamepadAssignment(index);
+                const playerIndex = typeof assignment === 'number' ? assignment : 0;
+                this.onIntroSpawn(playerIndex, cursor.x, cursor.y);
+            } else if (button === b.cancel && this.onIntroRemove) {
+                this.onIntroRemove(cursor.x, cursor.y);
+            } else if (button === b.endTurn && this.onIntroMutate) {
+                this.onIntroMutate(cursor.x, cursor.y);
+            }
 
             const gameLabels = {
                 [b.confirm]: 'Select',
@@ -155,7 +159,7 @@ export class GamepadCursorManager {
             if (label) {
                 const gameSpeed = localStorage.getItem('dicy_gameSpeed') || 'beginner';
                 const isBeginner = gameSpeed === 'beginner';
-                const isMainMenu = !!document.querySelector('#setup-modal:not(.hidden)');
+                const isMainMenu = !!document.querySelector('#main-menu:not(.hidden), #setup-modal:not(.hidden)');
 
                 // Beginner: show hints everywhere. Normal/Expert: only in the main menu.
                 if (isBeginner || isMainMenu) {

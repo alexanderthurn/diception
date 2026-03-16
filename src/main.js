@@ -309,7 +309,9 @@ async function init() {
 
     // Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);
-    gamepadCursors.onIntroSpawn = (playerIndex, x, y) => effectsManager.spawnPlayerDie(playerIndex, x, y);
+    gamepadCursors.onIntroSpawn  = (playerIndex, x, y) => effectsManager.spawnPlayerDie(playerIndex, x, y);
+    gamepadCursors.onIntroRemove = (x, y) => effectsManager.removePlayerDie(x, y);
+    gamepadCursors.onIntroMutate = (x, y) => effectsManager.mutatePlayerDie(x, y);
     inputManager.gamepadCursorManager = gamepadCursors;
 
     // FPS Counter
@@ -386,7 +388,7 @@ async function init() {
 
         const humanCount = parseInt(document.getElementById('human-count')?.value ?? '1');
 
-        if (gamepads.length === 0 || (!setupVisible && !pauseVisible) || humanCount <= 1) {
+        if (gamepads.length < 2 || (!setupVisible && !pauseVisible) || humanCount <= 1) {
             gamepadSidePanel.classList.remove('gp-panel-active');
             updateControlsPanel();
             return;
@@ -482,7 +484,11 @@ async function init() {
         const humanCount = Math.max(1, parseInt(document.getElementById('human-count')?.value ?? '1'));
         const activatedIndices = [...gcm.activatedGamepads].sort((a, b) => a - b);
         activatedIndices.forEach((idx, i) => {
-            inputManager.setGamepadAssignment(idx, humanCount <= 1 ? 0 : i % humanCount);
+            if (activatedIndices.length === 1) {
+                inputManager.setGamepadAssignment(idx, 'master');
+            } else {
+                inputManager.setGamepadAssignment(idx, humanCount <= 1 ? 0 : i % humanCount);
+            }
         });
     }
 
@@ -505,6 +511,13 @@ async function init() {
                 renderGamepadAssignments();
                 return;
             }
+        }
+
+        // Single gamepad → always master
+        if (gcm.activatedGamepads.size === 1) {
+            inputManager.setGamepadAssignment(index, 'master');
+            renderGamepadAssignments();
+            return;
         }
 
         // No valid saved assignment — find first empty slot

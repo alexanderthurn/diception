@@ -533,6 +533,48 @@ export class BackgroundRenderer {
         this.diceContainer.addChild(tileContainer);
     }
 
+    removeNearestDie(screenX, screenY) {
+        if (!this.enabled || !this.introMode || this.floatingDice.length === 0) return;
+        const sc = this.diceContainer.scale.x;
+        const ox = this.diceContainer.x;
+        const oy = this.diceContainer.y;
+        const localX = (screenX - ox) / sc;
+        const localY = (screenY - oy) / sc;
+        let minDist = Infinity, closest = null, closestIdx = -1;
+        for (let i = 0; i < this.floatingDice.length; i++) {
+            const d = this.floatingDice[i];
+            const dx = d.x - localX, dy = d.y - localY;
+            const dist = dx * dx + dy * dy;
+            if (dist < minDist) { minDist = dist; closest = d; closestIdx = i; }
+        }
+        if (closest) {
+            closest.graphics.destroy();
+            this.floatingDice.splice(closestIdx, 1);
+        }
+    }
+
+    mutateDie(screenX, screenY) {
+        if (!this.enabled || !this.introMode || this.floatingDice.length === 0) return;
+        const sc = this.diceContainer.scale.x;
+        const ox = this.diceContainer.x;
+        const oy = this.diceContainer.y;
+        const localX = (screenX - ox) / sc;
+        const localY = (screenY - oy) / sc;
+        let minDist = Infinity, closest = null;
+        for (const d of this.floatingDice) {
+            const dx = d.x - localX, dy = d.y - localY;
+            const dist = dx * dx + dy * dy;
+            if (dist < minDist) { minDist = dist; closest = d; }
+        }
+        if (closest) {
+            closest.graphics.scale.set(closest.graphics.scale.x * 1.6, closest.graphics.scale.y * 1.6);
+            closest.rotationSpeed = (Math.random() - 0.5) * 0.02;
+            closest.graphics.alpha = 1;
+            closest.vx *= -1.2;
+            closest.vy *= -1.2;
+        }
+    }
+
     clearFloatingDice() {
         for (const d of this.floatingDice) d.graphics.destroy();
         this.floatingDice = [];

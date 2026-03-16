@@ -183,10 +183,14 @@ export class EffectsManager {
         if (canvas) {
             this._boundPointerDown = (e) => {
                 if (this.quality === 'off') return;
-                if (e.pointerId >= 100) return; // gamepad — handled by onIntroSpawn
+                if (e.pointerId >= 100) return; // gamepad — handled by onIntroSpawn/onIntroRemove/onIntroMutate
                 const rect = canvas.getBoundingClientRect();
                 this._spawnX = e.clientX - rect.left;
                 this._spawnY = e.clientY - rect.top;
+                if (e.button === 2) {
+                    this.removePlayerDie(this._spawnX, this._spawnY);
+                    return;
+                }
                 const humanCount = Math.max(1, parseInt(document.getElementById('human-count')?.value ?? '1'));
                 const playerIndex = Math.floor(Math.random() * humanCount);
                 this.spawnPlayerDie(playerIndex, this._spawnX, this._spawnY);
@@ -207,6 +211,16 @@ export class EffectsManager {
         if (!this.introModeActive || this.quality === 'off') return;
         const color = playerIndex >= 0 ? GAME.HUMAN_COLORS[playerIndex % GAME.HUMAN_COLORS.length] : null;
         this.background.spawnDiceAt(screenX, screenY, color);
+    }
+
+    removePlayerDie(screenX, screenY) {
+        if (!this.introModeActive || this.quality === 'off') return;
+        this.background.removeNearestDie(screenX, screenY);
+    }
+
+    mutatePlayerDie(screenX, screenY) {
+        if (!this.introModeActive || this.quality === 'off') return;
+        this.background.mutateDie(screenX, screenY);
     }
 
     /**
