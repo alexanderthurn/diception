@@ -1,6 +1,6 @@
 {
   "name": "dicy",
-  "version": "1.5.16",
+  "version": "1.5.17",
   "description": "A fast-paced, neon-styled dice strategy game. Inspired by the tactical depth of DiceWars and Kdice, Diception delivers quick turns and intense territory conquest.",
   "type": "module",
   "scripts": {
