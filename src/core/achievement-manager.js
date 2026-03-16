@@ -140,6 +140,25 @@ export function setStatValue(stat, value) {
     }
 }
 
+/**
+ * Reset all achievements and stats to zero — both localStorage and Steam.
+ * Used by "Clear Storage" so testing always starts from a clean slate.
+ */
+export async function resetAllAchievementsAndStats() {
+    // Clear localStorage
+    localStorage.removeItem(STATS_KEY);
+    localStorage.removeItem(UNLOCKED_KEY);
+
+    // Reset Steam achievements and stats if on Steam desktop
+    if (window.steam) {
+        const achPromises = ACHIEVEMENTS.map(a => window.steam.clearAchievement(a.id).catch(() => {}));
+        const statPromises = Object.values(STEAM_STAT_NAMES).map(name =>
+            window.steam.setStat(name, 0).catch(() => {})
+        );
+        await Promise.all([...achPromises, ...statPromises]);
+    }
+}
+
 export function checkCampaignAchievement(campaignOwner, totalLevels) {
     const solved = getSolvedLevels(campaignOwner);
     if (solved.length < totalLevels) return;

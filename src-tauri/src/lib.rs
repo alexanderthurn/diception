@@ -139,6 +139,18 @@ fn steam_set_stat(state: tauri::State<SteamState>, stat_name: String, value: i32
         .ok_or_else(|| "Steam not initialized".to_string())
 }
 
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
+fn steam_clear_achievement(state: tauri::State<SteamState>, achievement_id: String) -> Result<(), String> {
+    let guard = state.lock().map_err(|e| e.to_string())?;
+    guard.as_ref()
+        .map(|s| {
+            s.client.user_stats().achievement(&achievement_id).clear().ok();
+            s.client.user_stats().store_stats().ok();
+        })
+        .ok_or_else(|| "Steam not initialized".to_string())
+}
+
 // ─── Gilrs commands (desktop only) ────────────────────────────────────────────
 
 /// Map a gilrs Button to W3C Standard Gamepad button index (0-15).
@@ -313,6 +325,7 @@ const STEAM_INIT_SCRIPT: &str = r#"
         getUnlockedAchievements: function(ids)    { return ipc.invoke('steam_get_unlocked_achievements', { ids: ids }); },
         getStatI32:              function(name)   { return ipc.invoke('steam_get_stat_i32', { statName: name }); },
         setStat:                 function(name, val){ return ipc.invoke('steam_set_stat', { statName: name, value: val }); },
+        clearAchievement:        function(id)        { return ipc.invoke('steam_clear_achievement', { achievementId: id }); },
     };
     // Shift+Tab: prevent browser focus cycling and open overlay manually.
     // On macOS, Steam cannot inject into WKWebView's Metal surface, so we
@@ -409,6 +422,7 @@ pub fn run() {
                 steam_get_unlocked_achievements,
                 steam_get_stat_i32,
                 steam_set_stat,
+                steam_clear_achievement,
                 gilrs_poll,
                 storage_read_all,
                 storage_write_all,

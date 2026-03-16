@@ -33,7 +33,7 @@ import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode, registerCheatContext } from './cheat.js';
 import { markLevelSolved, unmarkLevelSolved } from './scenarios/campaign-progress.js';
-import { unlockAchievement, removeAchievement, setUnlockCallback } from './core/achievement-manager.js';
+import { unlockAchievement, removeAchievement, setUnlockCallback, resetAllAchievementsAndStats } from './core/achievement-manager.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
 import { initStorage, flushStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
@@ -392,9 +392,11 @@ async function init() {
     showStartupDialogs();
 
     onLoadingDismiss = async () => {
-        // Reveal global back button (was hidden during loading)
-        document.getElementById('global-back-btn')?.classList.remove('hidden');
-        if (game.players.length > 0) return; // game already running (auto-resume)
+        if (game.players.length > 0) {
+            // Auto-resume: no modal change fires, so reveal back button manually
+            document.getElementById('global-back-btn')?.classList.remove('hidden');
+            return;
+        }
         // startIntroMode() already called in onDismissStart for the fade-in effect
         if (localStorage.getItem('dicy_campaignMode')) {
             await scenarioBrowser.showCampaignView();
@@ -1460,8 +1462,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const showBranding = !isAndroid();
     if (steamMenuBtn) steamMenuBtn.classList.toggle('hidden', isSteamBuild);
     function updateGlobalBackVisibility() {
-        const loadingScreen = document.getElementById('loading-screen');
-        const loading = loadingScreen && loadingScreen.style.display !== 'none';
+        const loading = document.body.classList.contains('loading-active');
 
         const onMainMenu = mainMenu && !mainMenu.classList.contains('hidden');
         const pauseOpen = pauseModal && !pauseModal.classList.contains('hidden');
@@ -1650,6 +1651,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         const ok = await Dialog.confirm(msg, 'CLEAR STORAGE?');
         if (ok) {
             clearAllStorage();
+            await resetAllAchievementsAndStats();
             Dialog.alert('Storage cleared. The page will reload.');
             window.location.reload();
         }
