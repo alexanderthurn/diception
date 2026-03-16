@@ -6620,6 +6620,16 @@ details.settings-group[open]>summary.settings-group-header::after {
 
 .gcp-dim { opacity: 0.18; }
 
+.gp-master-hint {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: rgba(0,255,255,0.35);
+    padding: 2px 0 4px;
+    line-height: 1.3;
+}
+
 .gcp-mini-wrap {
     display: flex;
     flex-direction: column;

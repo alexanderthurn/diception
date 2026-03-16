@@ -95,10 +95,14 @@
                     class="btn-text">Menu</span><span class="btn-icon"><span
                         class="sprite-icon icon-settings"></span></span><span id="new-game-hint"
                     class="input-hint hidden"></span></button>
-            <button id="toolbar-music-toggle" class="tron-btn small main-menu-control hidden" title="Music"><span class="sprite-icon icon-music-on"></span></button>
-            <input type="range" id="toolbar-music-volume" class="main-menu-control hidden" min="0" max="100" value="30" title="Music Volume">
-            <button id="toolbar-sfx-toggle" class="tron-btn small main-menu-control hidden" title="Sound Effects"><span class="sprite-icon icon-sfx-on"></span></button>
-            <input type="range" id="toolbar-sfx-volume" class="main-menu-control hidden" min="0" max="100" value="30" title="SFX Volume">
+            <button id="toolbar-music-toggle" class="tron-btn small main-menu-control hidden" title="Music"><span
+                    class="sprite-icon icon-music-on"></span></button>
+            <input type="range" id="toolbar-music-volume" class="main-menu-control hidden" min="0" max="100" value="30"
+                title="Music Volume">
+            <button id="toolbar-sfx-toggle" class="tron-btn small main-menu-control hidden" title="Sound Effects"><span
+                    class="sprite-icon icon-sfx-on"></span></button>
+            <input type="range" id="toolbar-sfx-volume" class="main-menu-control hidden" min="0" max="100" value="30"
+                title="SFX Volume">
             <button id="zoom-out-btn" class="tron-btn small zoom-control hidden" title="Zoom Out"><span
                     class="sprite-icon icon-zoom-out"></span></button>
             <button id="zoom-in-btn" class="tron-btn small zoom-control hidden" title="Zoom In"><span
@@ -112,7 +116,8 @@
         <div id="setup-modal" class="modal hidden">
             <div class="modal-header">
                 <h2 class="tron-title small">CUSTOM GAME</h2>
-                <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
+                <button class="close-btn modal-close-btn" aria-label="Back"
+                    onclick="document.getElementById('global-back-btn').click()">×</button>
             </div>
             <div class="control-group">
                 <label>Map Size</label>
@@ -251,17 +256,24 @@
             <h1 class="tron-title">DICEPTION</h1>
             <div class="credits" id="main-menu-credits">by Alexander Thurn</div>
             <div class="main-nav">
-                <button id="main-custom-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span> Play Game</button>
-                <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span> Campaign</button>
+                <button id="main-custom-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span> Play
+                    Game</button>
+                <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span>
+                    Campaign</button>
                 <div class="main-nav-row">
-                    <button id="main-settings-btn" class="tron-btn large"><span class="sprite-icon icon-settings"></span> Settings</button>
-                    <button id="main-achievements-btn" class="tron-btn large"><span class="sprite-icon icon-achievements"></span> <span id="ach-btn-progress"></span></button>
+                    <button id="main-settings-btn" class="tron-btn large"><span
+                            class="sprite-icon icon-settings"></span> Settings</button>
+                    <button id="main-achievements-btn" class="tron-btn large"><span
+                            class="sprite-icon icon-achievements"></span> <span id="ach-btn-progress"></span></button>
                 </div>
                 <div class="main-nav-row">
-                    <button id="main-howto-btn" class="tron-btn large"><span class="sprite-icon icon-help"></span> How To</button>
-                    <button id="main-about-btn" class="tron-btn large"><span class="sprite-icon icon-scenario"></span> About</button>
+                    <button id="main-howto-btn" class="tron-btn large"><span class="sprite-icon icon-help"></span> How
+                        To</button>
+                    <button id="main-about-btn" class="tron-btn large"><span class="sprite-icon icon-scenario"></span>
+                        About</button>
                 </div>
-                <button id="main-quit-btn" class="tron-btn large hidden"><span class="sprite-icon icon-close"></span> Quit</button>
+                <button id="main-quit-btn" class="tron-btn large hidden"><span class="sprite-icon icon-close"></span>
+                    Quit</button>
 
             </div>
         </div>
@@ -269,7 +281,8 @@
         <!-- Pause Menu (in-game) -->
         <div id="pause-modal" class="modal hidden">
             <div class="modal-header">
-                <button class="close-btn modal-close-btn" aria-label="Resume" onclick="document.getElementById('global-back-btn').click()">×</button>
+                <button class="close-btn modal-close-btn" aria-label="Resume"
+                    onclick="document.getElementById('global-back-btn').click()">×</button>
                 <h2 class="tron-title small">PAUSED</h2>
             </div>
             <div class="pause-content">
@@ -287,11 +300,14 @@
                     <span class="pause-module-label">Audio</span>
                     <div class="pause-audio-row">
                         <div class="pause-audio-track">
-                            <button id="pause-music-toggle" class="tron-btn small" title="Music"><span class="sprite-icon icon-music-on"></span></button>
-                            <input type="range" id="pause-music-volume" min="0" max="100" value="30" title="Music Volume">
+                            <button id="pause-music-toggle" class="tron-btn small" title="Music"><span
+                                    class="sprite-icon icon-music-on"></span></button>
+                            <input type="range" id="pause-music-volume" min="0" max="100" value="30"
+                                title="Music Volume">
                         </div>
                         <div class="pause-audio-track">
-                            <button id="pause-sfx-toggle" class="tron-btn small active" title="Sound Effects"><span class="sprite-icon icon-sfx-on"></span></button>
+                            <button id="pause-sfx-toggle" class="tron-btn small active" title="Sound Effects"><span
+                                    class="sprite-icon icon-sfx-on"></span></button>
                             <input type="range" id="pause-sfx-volume" min="0" max="100" value="30" title="SFX Volume">
                         </div>
                     </div>
@@ -311,84 +327,77 @@
 
         <div id="howto-modal" class="modal hidden large-modal">
             <div class="modal-header">
-                <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
+                <button class="close-btn modal-close-btn" aria-label="Back"
+                    onclick="document.getElementById('global-back-btn').click()">×</button>
                 <h2 class="tron-title small">HOW TO</h2>
             </div>
             <div class="howto-content">
-                <div id="gamepad-controls-panel" class="hidden">
+                <div id="gamepad-controls-panel">
                     <div class="gp-panel-title">GAMEPAD CONTROLS</div>
                     <svg class="gcp-svg" viewBox="-55 0 350 175" xmlns="http://www.w3.org/2000/svg">
                         <!-- Main body -->
-                        <rect class="gcp-body" x="58" y="55" width="124" height="68" rx="8"/>
+                        <rect class="gcp-body" x="58" y="55" width="124" height="68" rx="8" />
                         <!-- Triggers -->
-                        <rect class="gcp-el" x="60" y="38" width="35" height="14" rx="3"/>
-                        <rect class="gcp-el" x="145" y="38" width="35" height="14" rx="3"/>
+                        <rect class="gcp-el" x="60" y="38" width="35" height="14" rx="3" />
+                        <rect class="gcp-el" x="145" y="38" width="35" height="14" rx="3" />
                         <!-- Bumpers -->
-                        <rect class="gcp-el" x="63" y="51" width="31" height="12" rx="3"/>
-                        <rect class="gcp-el" x="146" y="51" width="31" height="12" rx="3"/>
+                        <rect class="gcp-el" x="63" y="51" width="31" height="12" rx="3" />
+                        <rect class="gcp-el" x="146" y="51" width="31" height="12" rx="3" />
                         <!-- D-pad -->
-                        <rect class="gcp-el" x="77" y="73" width="6" height="18" rx="1"/>
-                        <rect class="gcp-el" x="71" y="79" width="18" height="6" rx="1"/>
+                        <rect class="gcp-el" x="77" y="73" width="6" height="18" rx="1" />
+                        <rect class="gcp-el" x="71" y="79" width="18" height="6" rx="1" />
                         <!-- Face buttons -->
-                        <circle class="gcp-el" cx="162" cy="77" r="4"/>
-                        <circle class="gcp-el" cx="162" cy="97" r="4"/>
-                        <circle class="gcp-el" cx="152" cy="87" r="4"/>
-                        <circle class="gcp-el" cx="172" cy="87" r="4"/>
+                        <circle class="gcp-el" cx="162" cy="77" r="4" />
+                        <circle class="gcp-el" cx="162" cy="97" r="4" />
+                        <circle class="gcp-el" cx="152" cy="87" r="4" />
+                        <circle class="gcp-el" cx="172" cy="87" r="4" />
                         <!-- Menu buttons -->
-                        <rect class="gcp-el" x="103" y="77" width="9" height="6" rx="2"/>
-                        <rect class="gcp-el" x="128" y="77" width="9" height="6" rx="2"/>
+                        <rect class="gcp-el" x="103" y="77" width="9" height="6" rx="2" />
+                        <rect class="gcp-el" x="128" y="77" width="9" height="6" rx="2" />
                         <!-- Sticks -->
-                        <circle class="gcp-stick" cx="90" cy="112" r="7"/>
-                        <circle class="gcp-stick" cx="150" cy="112" r="7"/>
-                        <!-- Button micro-labels -->
-                        <text class="gcp-btn-lbl" x="162" y="77">Y</text>
-                        <text class="gcp-btn-lbl" x="162" y="97">A</text>
-                        <text class="gcp-btn-lbl" x="152" y="87">X</text>
-                        <text class="gcp-btn-lbl" x="172" y="87">B</text>
-                        <text class="gcp-btn-lbl" x="132" y="81">+</text>
-                        <text class="gcp-btn-lbl" x="79" y="58">LB</text>
-                        <text class="gcp-btn-lbl" x="161" y="58">RB</text>
-                        <text class="gcp-btn-lbl" x="77" y="45">LT</text>
-                        <text class="gcp-btn-lbl" x="163" y="45">RT</text>
+                        <circle class="gcp-stick" cx="90" cy="112" r="7" />
+                        <circle class="gcp-stick" cx="150" cy="112" r="7" />
                         <!-- Callout lines — left -->
-                        <circle class="gcp-dot" cx="60" cy="45" r="1.5"/>
-                        <line class="gcp-line" x1="60" y1="45" x2="32" y2="14"/>
-                        <circle class="gcp-dot" cx="63" cy="57" r="1.5"/>
-                        <line class="gcp-line" x1="63" y1="57" x2="32" y2="40"/>
-                        <circle class="gcp-dot" cx="71" cy="82" r="1.5"/>
-                        <line class="gcp-line" x1="71" y1="82" x2="32" y2="74"/>
-                        <circle class="gcp-dot" cx="148" cy="87" r="1.5"/>
-                        <line class="gcp-line" x1="148" y1="87" x2="32" y2="112"/>
+                        <circle class="gcp-dot" cx="60" cy="45" r="1.5" />
+                        <line class="gcp-line" x1="60" y1="45" x2="32" y2="14" />
+                        <circle class="gcp-dot" cx="63" cy="57" r="1.5" />
+                        <line class="gcp-line" x1="63" y1="57" x2="32" y2="40" />
+                        <circle class="gcp-dot" cx="71" cy="82" r="1.5" />
+                        <line class="gcp-line" x1="71" y1="82" x2="32" y2="74" />
+                        <circle class="gcp-dot" cx="148" cy="87" r="1.5" />
+                        <line class="gcp-line" x1="148" y1="87" x2="32" y2="112" />
                         <!-- Callout lines — right -->
-                        <circle class="gcp-dot" cx="180" cy="45" r="1.5"/>
-                        <line class="gcp-line" x1="180" y1="45" x2="208" y2="14"/>
-                        <circle class="gcp-dot" cx="177" cy="57" r="1.5"/>
-                        <line class="gcp-line" x1="177" y1="57" x2="208" y2="40"/>
-                        <circle class="gcp-dot" cx="162" cy="73" r="1.5"/>
-                        <line class="gcp-line" x1="162" y1="73" x2="208" y2="64"/>
-                        <circle class="gcp-dot" cx="176" cy="87" r="1.5"/>
-                        <line class="gcp-line" x1="176" y1="87" x2="208" y2="90"/>
-                        <circle class="gcp-dot" cx="162" cy="101" r="1.5"/>
-                        <line class="gcp-line" x1="162" y1="101" x2="208" y2="116"/>
+                        <circle class="gcp-dot" cx="180" cy="45" r="1.5" />
+                        <line class="gcp-line" x1="180" y1="45" x2="208" y2="14" />
+                        <circle class="gcp-dot" cx="177" cy="57" r="1.5" />
+                        <line class="gcp-line" x1="177" y1="57" x2="208" y2="40" />
+                        <circle class="gcp-dot" cx="162" cy="73" r="1.5" />
+                        <line class="gcp-line" x1="162" y1="73" x2="208" y2="64" />
+                        <circle class="gcp-dot" cx="176" cy="87" r="1.5" />
+                        <line class="gcp-line" x1="176" y1="87" x2="208" y2="90" />
+                        <circle class="gcp-dot" cx="162" cy="101" r="1.5" />
+                        <line class="gcp-line" x1="162" y1="101" x2="208" y2="116" />
                         <!-- Callout line — center (MENU) -->
-                        <circle class="gcp-dot" cx="132" cy="80" r="1.5"/>
-                        <line class="gcp-line" x1="132" y1="80" x2="120" y2="130"/>
+                        <circle class="gcp-dot" cx="132" cy="80" r="1.5" />
+                        <line class="gcp-line" x1="132" y1="80" x2="120" y2="130" />
                         <!-- Callout lines — sticks -->
-                        <circle class="gcp-dot" cx="83" cy="118" r="1.5"/>
-                        <line class="gcp-line" x1="83" y1="118" x2="32" y2="154"/>
-                        <circle class="gcp-dot" cx="157" cy="118" r="1.5"/>
-                        <line class="gcp-line" x1="157" y1="118" x2="208" y2="154"/>
+                        <circle class="gcp-dot" cx="83" cy="118" r="1.5" />
+                        <line class="gcp-line" x1="83" y1="118" x2="32" y2="154" />
+                        <circle class="gcp-dot" cx="157" cy="118" r="1.5" />
+                        <line class="gcp-line" x1="157" y1="118" x2="208" y2="154" />
                         <!-- Labels — left -->
                         <text class="gcp-lbl gcp-lbl-l" x="30" y="16">Zoom Out</text>
                         <text class="gcp-lbl gcp-lbl-l" x="30" y="34">Cursor<tspan x="30" dy="13">Speed -</tspan></text>
-                        <text class="gcp-lbl gcp-lbl-l" x="30" y="76">Attack</text>
+                        <text class="gcp-lbl gcp-lbl-l" x="30" y="70">Move /<tspan x="30" dy="13">Attack</tspan></text>
                         <text class="gcp-lbl gcp-lbl-l" x="30" y="114">Deselect</text>
-                        <text class="gcp-lbl gcp-lbl-l" x="30" y="148">Navigate<tspan x="30" dy="13">Cursor</tspan></text>
+                        <text class="gcp-lbl gcp-lbl-l" x="30" y="148">Move<tspan x="30" dy="13">Cursor</tspan></text>
                         <!-- Labels — right -->
                         <text class="gcp-lbl gcp-lbl-r" x="210" y="16">Zoom In</text>
-                        <text class="gcp-lbl gcp-lbl-r" x="210" y="34">Cursor<tspan x="210" dy="13">Speed +</tspan></text>
+                        <text class="gcp-lbl gcp-lbl-r" x="210" y="34">Cursor<tspan x="210" dy="13">Speed +</tspan>
+                            </text>
                         <text class="gcp-lbl gcp-lbl-r" x="210" y="66">End Turn</text>
-                        <text class="gcp-lbl gcp-lbl-r" x="210" y="84">Hold to<tspan x="210" dy="13">Pan Map</tspan></text>
+                        <text class="gcp-lbl gcp-lbl-r" x="210" y="84">Hold to<tspan x="210" dy="13">Pan Map</tspan>
+                            </text>
                         <text class="gcp-lbl gcp-lbl-r" x="210" y="118">Select/Attack</text>
                         <text class="gcp-lbl gcp-lbl-r" x="210" y="156">Pan Map</text>
                         <!-- Label — center -->
@@ -400,60 +409,78 @@
                     <p><strong>OBJECTIVE:</strong> Conquer all tiles of the grid.</p>
                     <ul class="howto-list">
                         <li>
-                            <strong>COMBAT:</strong> Dice attack dice. Your attack power is the sum of all your dice values. Highest sum wins.
+                            <strong>COMBAT:</strong> Dice attack dice. Your attack power is the sum of all your dice
+                            values. Highest sum wins.
                             <div class="howto-example">
                                 <div class="dice-group">
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#aa00ff"></span>
                                     <span class="dice-plus">+</span>
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#aa00ff"></span>
                                     <span class="dice-plus">+</span>
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#aa00ff"></span>
                                     <span class="dice-sum" style="color:#aa00ff">10</span>
                                 </div>
                             </div>
                         </li>
                         <li>
-                            <strong>WINNING:</strong> If you have a higher total than the defender, you win. You take over the territory and move your dice there (leaving 1 behind).
+                            <strong>WINNING:</strong> If you have a higher total than the defender, you win. You take
+                            over the territory and move your dice there (leaving 1 behind).
                             <div class="howto-example">
                                 <div class="dice-group">
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#aa00ff"></span>
                                     <span class="dice-plus">+</span>
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#aa00ff"></span>
                                     <span class="dice-plus">+</span>
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#aa00ff"></span>
                                     <span class="dice-sum" style="color:#aa00ff">13</span>
                                 </div>
                                 <span class="vs-indicator win">&gt;</span>
                                 <div class="dice-group">
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#ff4444"></span>
                                     <span class="dice-plus">+</span>
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#ff4444"></span>
                                     <span class="dice-sum" style="color:#ff4444">7</span>
                                 </div>
                             </div>
                         </li>
                         <li>
-                            <strong>LOSING:</strong> If you have equal or fewer points, you lose. Your dice count drops to 1 and your turn ends immediately.
+                            <strong>LOSING:</strong> If you have equal or fewer points, you lose. Your dice count drops
+                            to 1 and your turn ends immediately.
                             <div class="howto-example">
                                 <div class="dice-group">
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#aa00ff"></span>
                                     <span class="dice-plus">+</span>
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#aa00ff"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#aa00ff"></span>
                                     <span class="dice-sum" style="color:#aa00ff">4</span>
                                 </div>
                                 <span class="vs-indicator loss">&#8804;</span>
                                 <div class="dice-group">
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#ff4444"></span>
                                     <span class="dice-plus">+</span>
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#ff4444"></span>
                                     <span class="dice-plus">+</span>
-                                    <span class="dice-icon-sprite howto-dice-sprite" style="background-color:#ff4444"></span>
+                                    <span class="dice-icon-sprite howto-dice-sprite"
+                                        style="background-color:#ff4444"></span>
                                     <span class="dice-sum" style="color:#ff4444">9</span>
                                 </div>
                             </div>
                         </li>
                         <li>
-                            <strong>REINFORCE:</strong> At the end of your turn, you get new dice. You get dice based on your biggest connected territories amount. Like if you have 4 territories, but only 3 are adjacent, you get 3 dice.
+                            <strong>REINFORCE:</strong> At the end of your turn, you get new dice. You get dice based on
+                            your biggest connected territories amount. Like if you have 4 territories, but only 3 are
+                            adjacent, you get 3 dice.
                             <div class="howto-example">
                                 <div class="howto-reinforce">
                                     <div class="howto-tile-row">
@@ -463,8 +490,10 @@
                                         <div class="howto-tile barrier"></div>
                                         <div class="howto-tile connected" title="Isolated"></div>
                                     </div>
-                                    <span style="color:#aa00ff; font-size:24px; font-weight:bold; display:flex; align-items:center; gap:6px; margin-top:6px;">
-                                        +3 <span class="dice-icon-sprite howto-dice-sprite" style="width:24px; height:24px; background-color:#aa00ff;"></span>
+                                    <span
+                                        style="color:#aa00ff; font-size:24px; font-weight:bold; display:flex; align-items:center; gap:6px; margin-top:6px;">
+                                        +3 <span class="dice-icon-sprite howto-dice-sprite"
+                                            style="width:24px; height:24px; background-color:#aa00ff;"></span>
                                     </span>
                                 </div>
                             </div>
@@ -530,7 +559,8 @@
         <div id="settings-modal" class="modal hidden large-modal">
             <div class="modal-header">
                 <h2 class="tron-title small">SETTINGS</h2>
-                <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
+                <button class="close-btn modal-close-btn" aria-label="Back"
+                    onclick="document.getElementById('global-back-btn').click()">×</button>
             </div>
             <div class="howto-content">
                 <div class="settings-group settings-group-flat">
@@ -560,7 +590,8 @@
                                 <div class="range-row">
                                     <button id="music-toggle" class="tron-btn small" title="Music"><span
                                             class="sprite-icon icon-music-on"></span></button>
-                                    <input type="range" id="music-volume" min="0" max="100" value="30" title="Music Volume">
+                                    <input type="range" id="music-volume" min="0" max="100" value="30"
+                                        title="Music Volume">
                                 </div>
                             </div>
                             <div class="control-group half">
@@ -591,7 +622,9 @@
                             <tbody id="controls-table-body">
                             </tbody>
                         </table>
-                        <h3 style="color:var(--border-color);border-bottom:1px solid rgba(0,255,255,0.3);padding-bottom:5px;margin-top:20px;">MAP EDITOR</h3>
+                        <h3
+                            style="color:var(--border-color);border-bottom:1px solid rgba(0,255,255,0.3);padding-bottom:5px;margin-top:20px;">
+                            MAP EDITOR</h3>
                         <p style="margin-top:0">When editing maps or scenarios, controls change:</p>
                         <table class="control-table">
                             <tr>
@@ -651,7 +684,8 @@
                 <details class="settings-group" id="howto-display-section">
                     <summary class="settings-group-header">GRAPHICS</summary>
                     <div class="settings-group-body">
-                        <p style="margin-top:0">Configure rendering options. Some changes may require a restart to apply.</p>
+                        <p style="margin-top:0">Configure rendering options. Some changes may require a restart to
+                            apply.</p>
                         <div id="desktop-display-controls" class="control-row hidden" style="margin-bottom: 10px;">
                             <div class="control-group third">
                                 <label>Display Mode</label>
@@ -717,7 +751,8 @@
                 <details class="settings-group" id="howto-data-section">
                     <summary class="settings-group-header">STORAGE</summary>
                     <div class="settings-group-body">
-                        <p style="margin-top:0">This game stores settings, progress, and campaigns in your browser's local storage.</p>
+                        <p style="margin-top:0">This game stores settings, progress, and campaigns in your browser's
+                            local storage.</p>
                         <div id="howto-clear-area" class="howto-clear-area">
                             <div id="howto-keep-campaigns-row" class="howto-keep-campaigns hidden">
                                 <label class="howto-checkbox-label">
@@ -773,7 +808,8 @@
         <div id="about-modal" class="modal hidden large-modal">
             <div class="modal-header">
                 <h2 class="tron-title small">ABOUT</h2>
-                <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
+                <button class="close-btn modal-close-btn" aria-label="Back"
+                    onclick="document.getElementById('global-back-btn').click()">×</button>
             </div>
             <div class="howto-content">
                 <section>
@@ -822,7 +858,8 @@
                             Phone: +49 (0) 176 23570002</p>
                         <hr>
                         <p><em>Information according to § 5 DDG:</em><br>
-                            Responsible for content according to § 18 Abs. 2 MStV: Alexander Thurn (address as stated above).</p>
+                            Responsible for content according to § 18 Abs. 2 MStV: Alexander Thurn (address as stated
+                            above).</p>
                     </div>
                 </section>
             </div>
@@ -868,7 +905,8 @@
             <!-- View 1: Campaign Selection -->
             <div id="campaign-select-view" class="modal large-modal">
                 <div class="modal-header">
-                    <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
+                    <button class="close-btn modal-close-btn" aria-label="Back"
+                        onclick="document.getElementById('global-back-btn').click()">×</button>
                     <h2 class="tron-title small">CAMPAIGNS</h2>
                 </div>
                 <div id="campaign-button-list" class="campaign-button-list howto-content">
@@ -879,7 +917,8 @@
             <!-- View 2: Campaign Detail (level grid) -->
             <div id="campaign-detail-view" class="modal large-modal hidden">
                 <div class="modal-header">
-                    <button class="close-btn modal-close-btn" aria-label="Back" onclick="document.getElementById('global-back-btn').click()">×</button>
+                    <button class="close-btn modal-close-btn" aria-label="Back"
+                        onclick="document.getElementById('global-back-btn').click()">×</button>
                     <h2 id="campaign-detail-title" class="tron-title small"></h2>
                 </div>
                 <div class="howto-content">
@@ -1122,7 +1161,8 @@
 
     <div id="game-version" class="game-version-display"></div>
     <div id="main-menu-branding" class="main-menu-branding hidden">
-        <a id="main-menu-steam-btn" href="https://store.steampowered.com/app/4429000/DICEPTION/" target="_blank" rel="noopener">
+        <a id="main-menu-steam-btn" href="https://store.steampowered.com/app/4429000/DICEPTION/" target="_blank"
+            rel="noopener">
             <img src="assets/icons/steam-logo.png" alt="Steam" class="platform-icon">
         </a>
     </div>

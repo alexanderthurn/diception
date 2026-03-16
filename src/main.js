@@ -367,8 +367,7 @@ async function init() {
 
     function updateControlsPanel() {
         if (!gamepadControlsPanel) return;
-        const gcm = inputManager.gamepadCursorManager;
-        const hasGamepad = gcm?.cursors?.size >= 1;
+        const hasGamepad = (inputManager.connectedGamepadIndices?.size ?? 0) >= 1;
         const howtoEl = document.getElementById('howto-modal');
         const howtoVisible = !howtoEl?.classList.contains('hidden');
         gamepadControlsPanel.classList.toggle('gcp-active', hasGamepad && howtoVisible);
@@ -395,8 +394,13 @@ async function init() {
         // Controllers title
         const title = document.createElement('div');
         title.className = 'gp-panel-title';
-        title.textContent = 'CONTROLLERS';
+        title.textContent = 'GAMEPADS MAPPING';
         gamepadSidePanel.appendChild(title);
+
+        const ctrlHint = document.createElement('div');
+        ctrlHint.className = 'gp-master-hint';
+        ctrlHint.textContent = 'Press a button to assign yourself to a player slot. (Gamepads only)';
+        gamepadSidePanel.appendChild(ctrlHint);
 
         // One row per human player
         for (let i = 0; i < humanCount; i++) {
@@ -451,7 +455,7 @@ async function init() {
         const masterJoinBtn = document.createElement('button');
         masterJoinBtn.className = 'tron-btn gp-join-btn gp-join-btn-master';
         masterJoinBtn.title = 'Click with gamepad to become unrestricted (any player)';
-        masterJoinBtn.textContent = 'JOIN';
+        masterJoinBtn.textContent = 'Join Master';
         masterJoinBtn.addEventListener('click', () => {
             const gpIdx = inputManager.lastClickingGamepad;
             if (gpIdx != null) inputManager.setGamepadAssignment(gpIdx, 'master');
@@ -469,6 +473,11 @@ async function init() {
             masterRow.appendChild(chip);
         }
         gamepadSidePanel.appendChild(masterRow);
+
+        const masterHint = document.createElement('div');
+        masterHint.className = 'gp-master-hint';
+        masterHint.textContent = 'Masters control any player';
+        gamepadSidePanel.appendChild(masterHint);
 
         // Mini controls — same condition as controllers above
         const miniDiv = document.createElement('div');
