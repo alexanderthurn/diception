@@ -369,11 +369,12 @@ async function init() {
         const gamepads = Array.from(inputManager.connectedGamepadIndices || [])
             .filter(idx => gcm?.cursors?.has(idx))
             .sort();
-        const setupHidden = document.getElementById('setup-modal')?.classList.contains('hidden');
+        const setupVisible = !document.getElementById('setup-modal')?.classList.contains('hidden');
+        const pauseVisible = !document.getElementById('pause-modal')?.classList.contains('hidden');
 
         const humanCount = parseInt(document.getElementById('human-count')?.value ?? '1');
 
-        if (gamepads.length === 0 || setupHidden || humanCount <= 1) {
+        if (gamepads.length === 0 || (!setupVisible && !pauseVisible) || humanCount <= 1) {
             gamepadSidePanel.classList.remove('gp-panel-active');
             return;
         }
@@ -509,11 +510,10 @@ async function init() {
     // Re-render on any assignment change (e.g. manual chip reassignment)
     inputManager.on('gamepadAssignmentChange', renderGamepadAssignments);
 
-    // Sync visibility when setup modal is shown/hidden
-    new MutationObserver(renderGamepadAssignments).observe(
-        document.getElementById('setup-modal'),
-        { attributes: true, attributeFilter: ['class'] }
-    );
+    // Sync visibility when setup or pause modal is shown/hidden
+    const _gpPanelObs = { attributes: true, attributeFilter: ['class'] };
+    new MutationObserver(renderGamepadAssignments).observe(document.getElementById('setup-modal'), _gpPanelObs);
+    new MutationObserver(renderGamepadAssignments).observe(document.getElementById('pause-modal'), _gpPanelObs);
 
     renderGamepadAssignments();
 
