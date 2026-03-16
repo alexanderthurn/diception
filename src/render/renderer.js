@@ -166,8 +166,8 @@ export class Renderer {
         if (fitCamera) this.autoFitCamera();
     }
 
-    setSelection(x, y) {
-        this.grid.setSelection(x, y);
+    setSelection(x, y, sourceId = 'mouse') {
+        this.grid.setSelection(x, y, sourceId);
         this.draw(); // Trigger redraw to show highlight
     }
 
@@ -175,8 +175,8 @@ export class Renderer {
         this.grid.setHover(x, y, cursorId);
     }
 
-    setCursor(x, y) {
-        this.grid.setCursor(x, y);
+    setCursor(x, y, sourceId = 'mouse') {
+        this.grid.setCursor(x, y, sourceId);
     }
 
     setGameSpeed(speed) {

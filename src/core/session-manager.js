@@ -112,10 +112,10 @@ export class SessionManager {
 
         this.resetUI();
 
-        // Clear lingering selection/hover highlights
+        // Clear lingering selection/hover highlights (null sourceId = clear all sources)
         if (this.renderer) {
-            this.renderer.setSelection(null, null);
-            this.renderer.setCursor(null, null);
+            this.renderer.setSelection(null, null, null);
+            this.renderer.setCursor(null, null, null);
             if (this.renderer.grid && this.renderer.grid.hoverTiles) {
                 this.renderer.grid.hoverTiles.clear();
                 this.renderer.grid._lastHoverCursorId = null;

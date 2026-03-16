@@ -48,10 +48,10 @@ export class GridRenderer {
             dropShadowDistance: 2,
         });
 
-        this.selectedTile = null; // {x, y}
+        this.selectedTiles = new Map(); // sourceId -> {x, y} — one selection per input source
         this.hoverTiles = new Map(); // cursorId -> {x, y} — one hover per input cursor
         this._lastHoverCursorId = null; // Which cursor was moved most recently (for primary targeting)
-        this.cursorTile = null; // {x, y} - keyboard/gamepad cursor
+        this.cursorTiles = new Map(); // sourceId -> {x, y} — D-pad/keyboard cursor per source
         this.cursorPulse = 0; // For animation
         this.gameSpeed = 'beginner'; // Speed level: beginner, normal, fast
         this.diceSides = 6; // Default 6-sided dice
@@ -102,31 +102,40 @@ export class GridRenderer {
         this.largestRegionsCache = new Map();
         this.regionsValid = false;
 
-        // Persistent overlay elements
-        this.selectionGfx = new Graphics();
+        // Persistent overlay elements (per-source pools)
+        this._selectionGfxPool = new Map(); // sourceId -> Graphics
         this._hoverGfxPool = new Map(); // cursorId -> Graphics (lazy-created)
-        this.cursorGfx = new Graphics();
+        this._cursorGfxPool = new Map(); // sourceId -> Graphics
         this.neighborHighlighters = []; // Pool of Graphics
         this.probabilityBadges = []; // Pool of Containers
-
-        this.overlayContainer.addChild(this.selectionGfx);
-        this.overlayContainer.addChild(this.cursorGfx);
     }
 
     /** Returns or creates a hover Graphics object for the given cursor ID */
     _getHoverGfx(cursorId) {
         if (!this._hoverGfxPool.has(cursorId)) {
             const gfx = new Graphics();
-            // Insert before cursorGfx so cursor renders on top
-            const cursorIdx = this.overlayContainer.children.indexOf(this.cursorGfx);
-            if (cursorIdx >= 0) {
-                this.overlayContainer.addChildAt(gfx, cursorIdx);
-            } else {
-                this.overlayContainer.addChild(gfx);
-            }
+            this.overlayContainer.addChild(gfx);
             this._hoverGfxPool.set(cursorId, gfx);
         }
         return this._hoverGfxPool.get(cursorId);
+    }
+
+    _getSelectionGfx(sourceId) {
+        if (!this._selectionGfxPool.has(sourceId)) {
+            const gfx = new Graphics();
+            this.overlayContainer.addChild(gfx);
+            this._selectionGfxPool.set(sourceId, gfx);
+        }
+        return this._selectionGfxPool.get(sourceId);
+    }
+
+    _getCursorGfx(sourceId) {
+        if (!this._cursorGfxPool.has(sourceId)) {
+            const gfx = new Graphics();
+            this.overlayContainer.addChild(gfx);
+            this._cursorGfxPool.set(sourceId, gfx);
+        }
+        return this._cursorGfxPool.get(sourceId);
     }
 
     /** Primary hover tile — used for selection/attack targeting. Most-recently-moved cursor wins. */
@@ -221,10 +230,17 @@ export class GridRenderer {
         this.tileGlow.setQuality(quality);
     }
 
-    setSelection(x, y) {
-        if (x === null) this.selectedTile = null;
-        else this.selectedTile = { x, y };
-        this.drawOverlay(); // Redraw highlighting
+    setSelection(x, y, sourceId = 'mouse') {
+        if (x === null) {
+            if (sourceId === null) {
+                this.selectedTiles.clear(); // clear all sources
+            } else {
+                this.selectedTiles.delete(sourceId);
+            }
+        } else {
+            this.selectedTiles.set(sourceId, { x, y });
+        }
+        this.drawOverlay();
     }
 
     setHover(x, y, cursorId = 'mouse') {
@@ -238,9 +254,16 @@ export class GridRenderer {
         this.drawOverlay();
     }
 
-    setCursor(x, y) {
-        if (x === null) this.cursorTile = null;
-        else this.cursorTile = { x, y };
+    setCursor(x, y, sourceId = 'mouse') {
+        if (x === null) {
+            if (sourceId === null) {
+                this.cursorTiles.clear(); // clear all sources
+            } else {
+                this.cursorTiles.delete(sourceId);
+            }
+        } else {
+            this.cursorTiles.set(sourceId, { x, y });
+        }
         this.drawOverlay();
     }
 
@@ -856,16 +879,16 @@ export class GridRenderer {
     drawOverlay() {
         // Hide all human-centric overlay elements during bot turns (but allow in paint mode for editor)
         if (!this.paintMode && this.game.currentPlayer?.isBot) {
-            this.selectionGfx.visible = false;
-            this.cursorGfx.visible = false;
+            for (const gfx of this._selectionGfxPool.values()) gfx.visible = false;
+            for (const gfx of this._cursorGfxPool.values()) gfx.visible = false;
             this.hidePools();
             return;
         }
 
         // In paint mode (editor), just show simple hover highlight (mouse cursor only)
         if (this.paintMode) {
-            this.selectionGfx.visible = false;
-            this.cursorGfx.visible = false;
+            for (const gfx of this._selectionGfxPool.values()) gfx.visible = false;
+            for (const gfx of this._cursorGfxPool.values()) gfx.visible = false;
             this.hidePools();
 
             const mouseHover = this.hoverTiles.get('mouse');
@@ -888,142 +911,99 @@ export class GridRenderer {
             return;
         }
 
-        // Draw keyboard/gamepad cursor (distinct from hover)
-        // Skip when cursor is on the same tile as selection - avoid duplicate "second selection"
-        const cursorSameAsSelection = this.selectedTile && this.cursorTile &&
-            this.cursorTile.x === this.selectedTile.x && this.cursorTile.y === this.selectedTile.y;
-        if (this.cursorTile && !cursorSameAsSelection) {
-            this.cursorGfx.clear();
-            const inset = 3; // Draw cursor slightly inside tile
-
-            // Draw diamond/crosshair cursor
-            this.cursorGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
-            this.cursorGfx.stroke({ width: 3, color: 0x00ffff, alpha: 0.8, join: 'miter', cap: 'square' }); // Cyan cursor
-
-            // Corner brackets for extra visibility
-            const bracketSize = 10;
-            this.cursorGfx.moveTo(0, bracketSize);
-            this.cursorGfx.lineTo(0, 0);
-            this.cursorGfx.lineTo(bracketSize, 0);
-            // Top-right
-            this.cursorGfx.moveTo(this.tileSize - bracketSize, 0);
-            this.cursorGfx.lineTo(this.tileSize, 0);
-            this.cursorGfx.lineTo(this.tileSize, bracketSize);
-            // Bottom-right
-            this.cursorGfx.moveTo(this.tileSize, this.tileSize - bracketSize);
-            this.cursorGfx.lineTo(this.tileSize, this.tileSize);
-            this.cursorGfx.lineTo(this.tileSize - bracketSize, this.tileSize);
-            // Bottom-left
-            this.cursorGfx.moveTo(bracketSize, this.tileSize);
-            this.cursorGfx.lineTo(0, this.tileSize);
-            this.cursorGfx.lineTo(0, this.tileSize - bracketSize);
-            this.cursorGfx.stroke({
-                width: 2,
-                color: 0x00ffff,
-                alpha: 1.0,
-                join: 'miter',
-                cap: 'square',
-                alignment: 0 // Inner
-            });
-
-            this.cursorGfx.x = this.cursorTile.x * (this.tileSize + this.gap);
-            this.cursorGfx.y = this.cursorTile.y * (this.tileSize + this.gap);
-            this.cursorGfx.visible = true;
-        } else {
-            this.cursorGfx.visible = false;
-        }
-
         this.hidePools();
         let neighborIdx = 0;
         let badgeIdx = 0;
 
-        // Draw Selection
-        if (this.selectedTile) {
-            this.selectionGfx.clear();
-            // 1. Draw and fill the background rectangle
-            this.selectionGfx.rect(0, 0, this.tileSize, this.tileSize);
-            this.selectionGfx.fill({ color: 0xffffff, alpha: 0.4 });
+        // Draw per-source D-pad/keyboard cursors
+        for (const [sourceId, cursorTile] of this.cursorTiles) {
+            const selTile = this.selectedTiles.get(sourceId);
+            const sameAsSelection = selTile && selTile.x === cursorTile.x && selTile.y === cursorTile.y;
+            if (!sameAsSelection) {
+                const cursorGfx = this._getCursorGfx(sourceId);
+                cursorGfx.clear();
+                const inset = 3;
+                cursorGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
+                cursorGfx.stroke({ width: 3, color: 0x00ffff, alpha: 0.8, join: 'miter', cap: 'square' });
+                const bracketSize = 10;
+                cursorGfx.moveTo(0, bracketSize); cursorGfx.lineTo(0, 0); cursorGfx.lineTo(bracketSize, 0);
+                cursorGfx.moveTo(this.tileSize - bracketSize, 0); cursorGfx.lineTo(this.tileSize, 0); cursorGfx.lineTo(this.tileSize, bracketSize);
+                cursorGfx.moveTo(this.tileSize, this.tileSize - bracketSize); cursorGfx.lineTo(this.tileSize, this.tileSize); cursorGfx.lineTo(this.tileSize - bracketSize, this.tileSize);
+                cursorGfx.moveTo(bracketSize, this.tileSize); cursorGfx.lineTo(0, this.tileSize); cursorGfx.lineTo(0, this.tileSize - bracketSize);
+                cursorGfx.stroke({ width: 2, color: 0x00ffff, alpha: 1.0, join: 'miter', cap: 'square', alignment: 0 });
+                cursorGfx.x = cursorTile.x * (this.tileSize + this.gap);
+                cursorGfx.y = cursorTile.y * (this.tileSize + this.gap);
+                cursorGfx.visible = true;
+            } else {
+                if (this._cursorGfxPool.has(sourceId)) this._cursorGfxPool.get(sourceId).visible = false;
+            }
+        }
+        // Hide cursor graphics for sources no longer active
+        for (const [sourceId, gfx] of this._cursorGfxPool) {
+            if (!this.cursorTiles.has(sourceId)) gfx.visible = false;
+        }
 
-            // 2. Draw directional line segments for the border (alignment: 0)
-            this.selectionGfx.moveTo(0, 0); this.selectionGfx.lineTo(this.tileSize, 0);
-            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
+        // Track which sourceIds have selections (so hover-only sources are handled separately)
+        const sourcesWithSelection = new Set(this.selectedTiles.keys());
 
-            this.selectionGfx.moveTo(this.tileSize, 0); this.selectionGfx.lineTo(this.tileSize, this.tileSize);
-            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
+        // Draw per-source selections + neighbor highlights + attack target indicators
+        for (const [sourceId, selTile] of this.selectedTiles) {
+            const selGfx = this._getSelectionGfx(sourceId);
+            selGfx.clear();
+            selGfx.rect(0, 0, this.tileSize, this.tileSize);
+            selGfx.fill({ color: 0xffffff, alpha: 0.4 });
+            selGfx.moveTo(0, 0); selGfx.lineTo(this.tileSize, 0);
+            selGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
+            selGfx.moveTo(this.tileSize, 0); selGfx.lineTo(this.tileSize, this.tileSize);
+            selGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
+            selGfx.moveTo(this.tileSize, this.tileSize); selGfx.lineTo(0, this.tileSize);
+            selGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
+            selGfx.moveTo(0, this.tileSize); selGfx.lineTo(0, 0);
+            selGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
+            selGfx.x = selTile.x * (this.tileSize + this.gap);
+            selGfx.y = selTile.y * (this.tileSize + this.gap);
+            selGfx.visible = true;
 
-            this.selectionGfx.moveTo(this.tileSize, this.tileSize); this.selectionGfx.lineTo(0, this.tileSize);
-            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
-
-            this.selectionGfx.moveTo(0, this.tileSize); this.selectionGfx.lineTo(0, 0);
-            this.selectionGfx.stroke({ width: 4, color: 0xffffff, alpha: 0.9, alignment: 0, cap: 'butt' });
-
-            this.selectionGfx.x = this.selectedTile.x * (this.tileSize + this.gap);
-            this.selectionGfx.y = this.selectedTile.y * (this.tileSize + this.gap);
-            this.selectionGfx.visible = true;
-
-            // Get selected tile info for probability calculation
-            const selectedTileData = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
+            const selectedTileData = this.game.map.getTile(selTile.x, selTile.y);
             const attackerDice = selectedTileData ? selectedTileData.dice : 0;
 
-            // Draw attackable neighbor indicators - always visible while selected (all modes)
-            // Beginner: red highlight + percentage. Normal: percentage. Expert: white badge only.
             if (attackerDice > 1) {
                 const neighbors = [
-                    { x: this.selectedTile.x, y: this.selectedTile.y - 1, edge: 'top' },
-                    { x: this.selectedTile.x, y: this.selectedTile.y + 1, edge: 'bottom' },
-                    { x: this.selectedTile.x - 1, y: this.selectedTile.y, edge: 'left' },
-                    { x: this.selectedTile.x + 1, y: this.selectedTile.y, edge: 'right' }
+                    { x: selTile.x, y: selTile.y - 1, edge: 'top' },
+                    { x: selTile.x, y: selTile.y + 1, edge: 'bottom' },
+                    { x: selTile.x - 1, y: selTile.y, edge: 'left' },
+                    { x: selTile.x + 1, y: selTile.y, edge: 'right' }
                 ];
-
-                const selectedPixelX = this.selectedTile.x * (this.tileSize + this.gap);
-                const selectedPixelY = this.selectedTile.y * (this.tileSize + this.gap);
+                const selectedPixelX = selTile.x * (this.tileSize + this.gap);
+                const selectedPixelY = selTile.y * (this.tileSize + this.gap);
                 const hasHint = this.gameSpeed === 'beginner' && shouldShowInputHints(this.inputManager);
 
                 for (const neighbor of neighbors) {
                     const neighborTile = this.game.map.getTile(neighbor.x, neighbor.y);
-
-                    // Only show for enemy tiles that exist
                     if (!neighborTile || neighborTile.owner === this.game.currentPlayer?.id) continue;
 
                     const neighborPixelX = neighbor.x * (this.tileSize + this.gap);
                     const neighborPixelY = neighbor.y * (this.tileSize + this.gap);
 
-                    // Beginner mode: show simple static red highlight on attackable neighbors
                     if (this.gameSpeed === 'beginner') {
                         const hGfx = this.getNeighborHighlighter(neighborIdx++);
                         const inset = 4;
-
                         hGfx.clear();
                         hGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
                         hGfx.stroke({ width: 2, color: 0xff0000, alpha: 0.8, join: 'miter', cap: 'square' });
-
                         hGfx.x = neighborPixelX;
                         hGfx.y = neighborPixelY;
                         hGfx.visible = true;
                     }
 
-                    // Badge position at edge between attacker and defender
                     let badgeX, badgeY;
                     switch (neighbor.edge) {
-                        case 'top':
-                            badgeX = selectedPixelX + this.tileSize / 2;
-                            badgeY = selectedPixelY + (hasHint ? 8 : 2) - this.gap / 2;
-                            break;
-                        case 'bottom':
-                            badgeX = selectedPixelX + this.tileSize / 2;
-                            badgeY = selectedPixelY + this.tileSize + this.gap / 2;
-                            break;
-                        case 'left':
-                            badgeX = selectedPixelX - this.gap / 2;
-                            badgeY = selectedPixelY + this.tileSize / 2;
-                            break;
-                        case 'right':
-                            badgeX = selectedPixelX + this.tileSize + this.gap / 2;
-                            badgeY = selectedPixelY + this.tileSize / 2;
-                            break;
+                        case 'top':    badgeX = selectedPixelX + this.tileSize / 2; badgeY = selectedPixelY + (hasHint ? 8 : 2) - this.gap / 2; break;
+                        case 'bottom': badgeX = selectedPixelX + this.tileSize / 2; badgeY = selectedPixelY + this.tileSize + this.gap / 2; break;
+                        case 'left':   badgeX = selectedPixelX - this.gap / 2; badgeY = selectedPixelY + this.tileSize / 2; break;
+                        case 'right':  badgeX = selectedPixelX + this.tileSize + this.gap / 2; badgeY = selectedPixelY + this.tileSize / 2; break;
                     }
 
-                    // Expert: white badge. Normal/Beginner: percentage badge
                     if (this.gameSpeed === 'expert') {
                         this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, '', 0xffffff, neighbor.edge);
                     } else {
@@ -1044,24 +1024,21 @@ export class GridRenderer {
                 }
             }
 
-            // Draw Target Hover or Cursor target
-            // Primary hover (last-moved cursor) determines the attack target indicator.
-            const isCursorOnDifferentTile = this.cursorTile && (this.cursorTile.x !== this.selectedTile.x || this.cursorTile.y !== this.selectedTile.y);
-            const primaryHover = this.hoverTile; // getter — most-recently-moved cursor
-            const targetTile = primaryHover || (isCursorOnDifferentTile ? this.cursorTile : null);
+            // Attack target indicator: use this source's own hover/cursor
+            const hoverForSource = this.hoverTiles.get(sourceId);
+            const cursorForSource = this.cursorTiles.get(sourceId);
+            const isCursorOnDifferentTile = cursorForSource &&
+                (cursorForSource.x !== selTile.x || cursorForSource.y !== selTile.y);
+            const targetTile = hoverForSource || (isCursorOnDifferentTile ? cursorForSource : null);
 
             if (targetTile) {
-                // If adjacent to selection, show attack indicator
-                const isAdjacent = Math.abs(this.selectedTile.x - targetTile.x) + Math.abs(this.selectedTile.y - targetTile.y) === 1;
-
+                const isAdjacent = Math.abs(selTile.x - targetTile.x) + Math.abs(selTile.y - targetTile.y) === 1;
                 if (isAdjacent) {
                     const hGfx = this.getNeighborHighlighter(neighborIdx++);
                     hGfx.clear();
                     const tileContent = this.game.map.getTile(targetTile.x, targetTile.y);
                     const isEnemy = tileContent && tileContent.owner !== this.game.currentPlayer.id;
                     const color = isEnemy ? 0xff0000 : 0xffffff;
-
-                    // Individual CW segments with individual strokes
                     hGfx.moveTo(0, 0); hGfx.lineTo(this.tileSize, 0);
                     hGfx.stroke({ width: 3, color, alpha: 0.8, alignment: 0, cap: 'butt' });
                     hGfx.moveTo(this.tileSize, 0); hGfx.lineTo(this.tileSize, this.tileSize);
@@ -1070,38 +1047,30 @@ export class GridRenderer {
                     hGfx.stroke({ width: 3, color, alpha: 0.8, alignment: 0, cap: 'butt' });
                     hGfx.moveTo(0, this.tileSize); hGfx.lineTo(0, 0);
                     hGfx.stroke({ width: 3, color, alpha: 0.8, alignment: 0, cap: 'butt' });
-
                     hGfx.x = targetTile.x * (this.tileSize + this.gap);
                     hGfx.y = targetTile.y * (this.tileSize + this.gap);
                     hGfx.visible = true;
-                    // Hide the primary cursor's hover gfx (attack indicator replaces it)
-                    if (this._lastHoverCursorId) this._getHoverGfx(this._lastHoverCursorId).visible = false;
+                    // Hide this source's hover gfx (attack indicator replaces it)
+                    if (this._hoverGfxPool.has(sourceId)) this._hoverGfxPool.get(sourceId).visible = false;
                 } else {
-                    // Non-adjacent hover: show normal smart highlight for primary cursor
-                    const primaryCursorId = this._lastHoverCursorId || 'mouse';
-                    const { nextBadgeIdx } = this._renderSmartHover(targetTile.x, targetTile.y, badgeIdx, primaryCursorId);
+                    const { nextBadgeIdx } = this._renderSmartHover(targetTile.x, targetTile.y, badgeIdx, sourceId);
                     badgeIdx = nextBadgeIdx;
                 }
             }
+        }
 
-            // Render all non-primary cursors' hovers independently (alongside the primary above)
+        // Hide selection graphics for sources that no longer have a selection
+        for (const [sourceId, gfx] of this._selectionGfxPool) {
+            if (!this.selectedTiles.has(sourceId)) gfx.visible = false;
+        }
+
+        // Hover for sources WITHOUT a selection
+        if (!this.game.currentPlayer?.isBot) {
             for (const [cursorId, tile] of this.hoverTiles) {
-                if (cursorId === this._lastHoverCursorId) continue; // Already handled as primary
+                if (sourcesWithSelection.has(cursorId)) continue; // already handled above
                 const { nextBadgeIdx } = this._renderSmartHover(tile.x, tile.y, badgeIdx, cursorId);
                 badgeIdx = nextBadgeIdx;
             }
-
-        } else if (this.hoverTiles.size > 0) {
-            this.selectionGfx.visible = false;
-            // Hovering without selection - show smart highlight for every cursor
-            if (!this.game.currentPlayer?.isBot) {
-                for (const [cursorId, tile] of this.hoverTiles) {
-                    const { nextBadgeIdx } = this._renderSmartHover(tile.x, tile.y, badgeIdx, cursorId);
-                    badgeIdx = nextBadgeIdx;
-                }
-            }
-        } else {
-            this.selectionGfx.visible = false;
         }
     }
 
@@ -1128,7 +1097,7 @@ export class GridRenderer {
             const neighbors = this.game.map.getAdjacentTiles(x, y);
             const attackers = neighbors.filter(n => n.owner === this.game.currentPlayer.id && n.dice > 1)
                 .map(n => ({ x: n.x, y: n.y }));
-            uniqueAttacker = this.pickBestAttackerForExpert(attackers, this.selectedTile);
+            uniqueAttacker = this.pickBestAttackerForExpert(attackers, this.selectedTiles.get(cursorId));
             isUniquelyAttackable = !!uniqueAttacker;
         }
 

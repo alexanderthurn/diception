@@ -2,19 +2,19 @@ import { isMobile } from '../scenarios/user-identity.js';
 
 /**
  * InputController - Handles game input and tile interactions
- * Now uses InputManager for unified keyboard/gamepad support
+ * Per-source selection: each gamepad and mouse/keyboard has independent state.
+ * sourceId: 'mouse' for keyboard/mouse, 'gamepad-N' for gamepad index N.
  */
 export class InputController {
     constructor(game, renderer, inputManager) {
         this.game = game;
         this.renderer = renderer;
         this.inputManager = inputManager;
-        this.selectedTile = null;
 
-        // Cursor state for keyboard/gamepad navigation
-        this.cursorX = null;
-        this.cursorY = null;
-        this.cursorVisible = false;
+        // Per-source state: Map<sourceId, {x, y, visible}>
+        this.cursorStates = new Map();
+        // Per-source selection: Map<sourceId, {x, y}>
+        this.selectedTiles = new Map();
 
         // Bind interaction events (mouse/touch)
         this.renderer.app.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -33,7 +33,6 @@ export class InputController {
         // Zoom listener (Wheel) - also detect trackpad vs mouse for editor pan behavior
         this.renderer.app.canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
-            // Trackpad: small pixel deltas. Mouse: larger discrete steps. Pinch: ctrlKey/metaKey.
             const looksLikeMouseStep = e.deltaMode === 0 && Math.abs(e.deltaY) > 4 && Math.abs(e.deltaX) === 0;
             const isPinch = e.ctrlKey || e.metaKey;
             if (!isPinch) {
@@ -56,7 +55,18 @@ export class InputController {
         this.game.on('turnStart', () => this.onTurnStart());
     }
 
+    /** Get or create cursor state for a source */
+    _getCursorState(sourceId) {
+        if (!this.cursorStates.has(sourceId)) {
+            this.cursorStates.set(sourceId, { x: null, y: null, visible: false });
+        }
+        return this.cursorStates.get(sourceId);
+    }
 
+    /** Derive sourceId from gamepad index (-1 = keyboard/mouse) */
+    _sourceId(gamepadIndex) {
+        return gamepadIndex >= 0 ? 'gamepad-' + gamepadIndex : 'mouse';
+    }
 
     setupInputManager() {
         if (!this.inputManager) return;
@@ -78,32 +88,32 @@ export class InputController {
         if (this.game.currentPlayer.isBot) return;
         if (index >= 0 && !this.inputManager.canGamepadControlPlayer(index, this.game.currentPlayer.id)) return;
 
-        // Hide mouse hover, show keyboard cursor (leave gamepad hovers visible)
-        this.cursorVisible = true;
-        this.renderer.setHover(null, null, 'mouse');
+        const sourceId = this._sourceId(index);
+        const cursorState = this._getCursorState(sourceId);
 
-        // If tile is selected, try to attack/interact in direction
-        if (this.selectedTile) {
-            this.handleKeyboardAttack(dx, dy, index);
+        // Show D-pad cursor, hide same-source hover
+        cursorState.visible = true;
+        this.renderer.setHover(null, null, sourceId);
+
+        // If tile is selected for this source, try to attack in direction
+        if (this.selectedTiles.has(sourceId)) {
+            this.handleKeyboardAttack(dx, dy, index, sourceId);
             return;
         }
 
         // No tile selected - move cursor
-        if (this.cursorX === null || this.cursorY === null) {
-            // Initialize cursor at nearest owned tile
-            this.initCursorAtNearestTile(index);
+        if (cursorState.x === null || cursorState.y === null) {
+            this.initCursorAtNearestTile(index, sourceId);
             return;
         }
 
-        // Move cursor to next valid tile in direction
-        this.moveCursor(dx, dy, index);
+        this.moveCursor(dx, dy, index, sourceId);
     }
 
-    initCursorAtNearestTile(gamepadIndex = -1) {
+    initCursorAtNearestTile(gamepadIndex = -1, sourceId = 'mouse') {
         const playerId = this.game.currentPlayer.id;
         const ownedTiles = [];
 
-        // Find all owned tiles
         for (let y = 0; y < this.game.map.height; y++) {
             for (let x = 0; x < this.game.map.width; x++) {
                 const tile = this.game.map.getTile(x, y);
@@ -115,47 +125,42 @@ export class InputController {
 
         if (ownedTiles.length === 0) return;
 
-        // Prefer tiles with dice > 1 (can attack)
         const attackableTiles = ownedTiles.filter(t => t.dice > 1);
         const candidates = attackableTiles.length > 0 ? attackableTiles : ownedTiles;
 
-        // Find tile closest to center of map
         const centerX = this.game.map.width / 2;
         const centerY = this.game.map.height / 2;
 
         let closest = candidates[0];
         let minDist = Infinity;
-
         for (const t of candidates) {
             const dist = Math.abs(t.x - centerX) + Math.abs(t.y - centerY);
-            if (dist < minDist) {
-                minDist = dist;
-                closest = t;
-            }
+            if (dist < minDist) { minDist = dist; closest = t; }
         }
 
-        this.cursorX = closest.x;
-        this.cursorY = closest.y;
-        this.renderer.setCursor(this.cursorX, this.cursorY);
+        const cursorState = this._getCursorState(sourceId);
+        cursorState.x = closest.x;
+        cursorState.y = closest.y;
+        this.renderer.setCursor(cursorState.x, cursorState.y, sourceId);
 
         if (gamepadIndex !== -1) {
-            this.syncGamepadCursor(gamepadIndex);
+            this.syncGamepadCursor(gamepadIndex, sourceId);
         }
     }
 
-    moveCursor(dx, dy, gamepadIndex = -1) {
-        // Allow moving to any position within map bounds, even if blocked
-        const newX = Math.max(0, Math.min(this.game.map.width - 1, this.cursorX + dx));
-        const newY = Math.max(0, Math.min(this.game.map.height - 1, this.cursorY + dy));
+    moveCursor(dx, dy, gamepadIndex = -1, sourceId = 'mouse') {
+        const cursorState = this._getCursorState(sourceId);
+        const newX = Math.max(0, Math.min(this.game.map.width - 1, cursorState.x + dx));
+        const newY = Math.max(0, Math.min(this.game.map.height - 1, cursorState.y + dy));
 
-        if (newX !== this.cursorX || newY !== this.cursorY) {
-            this.cursorX = newX;
-            this.cursorY = newY;
-            this.renderer.setCursor(this.cursorX, this.cursorY);
+        if (newX !== cursorState.x || newY !== cursorState.y) {
+            cursorState.x = newX;
+            cursorState.y = newY;
+            this.renderer.setCursor(cursorState.x, cursorState.y, sourceId);
         }
 
         if (gamepadIndex !== -1) {
-            this.syncGamepadCursor(gamepadIndex);
+            this.syncGamepadCursor(gamepadIndex, sourceId);
         }
     }
 
@@ -166,53 +171,54 @@ export class InputController {
         if (data?.source === 'gamepad' && data?.index !== undefined &&
             !this.inputManager.canGamepadControlPlayer(data.index, this.game.currentPlayer.id)) return;
 
-        // Virtual cursor mode: cursorX/cursorY are null - GamepadCursorManager handles
-        // selection via simulated click. Do NOT init grid cursor (would show teal at wrong tile).
-        // Keyboard confirm (E) is allowed through so it can initialize the cursor.
         const source = data?.source ?? 'keyboard';
-        if (!this.cursorVisible && this.cursorX === null && source === 'gamepad') {
-            return;
+        const index = source === 'gamepad' ? (data?.index ?? -1) : -1;
+        const sourceId = this._sourceId(index);
+        const cursorState = this._getCursorState(sourceId);
+
+        // Analog cursor mode: GamepadCursorManager fires pointer events for this button — skip D-pad handling.
+        if (source === 'gamepad') {
+            const gcm = this.inputManager.gamepadCursorManager;
+            if (gcm?.cursors?.get(index)?.mode === 'analog') return;
         }
 
-        // If cursor not visible, show it. Only initialize if it was never set.
-        if (!this.cursorVisible) {
-            this.cursorVisible = true;
-            if (this.cursorX === null || this.cursorY === null) {
-                this.initCursorAtNearestTile();
+        if (!cursorState.visible) {
+            cursorState.visible = true;
+            if (cursorState.x === null || cursorState.y === null) {
+                this.initCursorAtNearestTile(index, sourceId);
             } else {
-                this.renderer.setCursor(this.cursorX, this.cursorY);
+                this.renderer.setCursor(cursorState.x, cursorState.y, sourceId);
             }
             return;
         }
 
-        const tile = this.game.map.getTile(this.cursorX, this.cursorY);
+        const tile = this.game.map.getTile(cursorState.x, cursorState.y);
         if (!tile) return;
 
-        // If nothing selected, try to select tile at cursor
-        if (!this.selectedTile) {
+        if (!this.selectedTiles.has(sourceId)) {
             if (tile.owner === this.game.currentPlayer.id && tile.dice > 1) {
-                this.select(this.cursorX, this.cursorY);
+                this.select(cursorState.x, cursorState.y, sourceId);
             }
             return;
         }
 
-        // If something selected, handle like a click on cursor position
-        this.handleTileClick(tile, this.cursorX, this.cursorY);
+        this.handleTileClick(tile, cursorState.x, cursorState.y, sourceId);
     }
 
     onCancel(data) {
-        if (this.selectedTile) {
-            this.deselect();
-        } else if (this.cursorVisible) {
-            // Hide cursor
-            this.cursorVisible = false;
-            this.renderer.setCursor(null, null);
+        const index = data?.source === 'gamepad' ? (data?.index ?? -1) : -1;
+        const sourceId = this._sourceId(index);
+        const cursorState = this._getCursorState(sourceId);
+
+        if (this.selectedTiles.has(sourceId)) {
+            this.deselect(sourceId);
+        } else if (cursorState.visible) {
+            cursorState.visible = false;
+            this.renderer.setCursor(null, null, sourceId);
         }
     }
 
     onEndTurn(data) {
-        // Emit end turn event (main.js will handle the actual end turn)
-        // We need to use a callback or event for this
         if (this.onEndTurnCallback) {
             this.onEndTurnCallback(data);
         }
@@ -223,22 +229,18 @@ export class InputController {
     }
 
     onPan(dir) {
-        // Keyboard panning (IJKL) - emitted every frame while keys are held
         const panSpeed = 4;
         this.renderer.pan(dir.x * panSpeed, dir.y * panSpeed);
     }
 
     onZoom(data) {
-        // Keyboard zoom: direction -1 = in, +1 = out (same convention as mouse wheel)
         this.renderer.zoom(data.direction, window.innerWidth / 2, window.innerHeight / 2);
     }
 
     onPanAnalog(dir) {
-        // Gamepad right stick panning - dir is { x: -1 to 1, y: -1 to 1 }
         const panSpeed = 15;
         this.renderer.pan(dir.x * panSpeed, dir.y * panSpeed);
 
-        // Handle analog zoom (from R1/R2 buttons)
         if (dir.zoom) {
             this.renderer.zoom(dir.zoom * 20, window.innerWidth / 2, window.innerHeight / 2);
         }
@@ -247,56 +249,48 @@ export class InputController {
     onPointerDown(e) {
         if (this.waitTillNoTouch) return;
 
-        // Only track real (non-gamepad) pointers — gamepad cursors are independent
-        // and should not affect pinch/multi-touch logic
-        const isSimulatedDown = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
-            (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
-            e.isGamepadSimulated;
+        // Gamepads use pointerId = 100+index; real mouse/touch use lower IDs
+        const isSimulatedDown = e.pointerId >= 100;
         if (!isSimulatedDown) {
             this.activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
         }
 
-        // Mouse/pointer interaction hides keyboard cursor - keep coordinates to prevent jumping
-        this.cursorVisible = false;
-        this.renderer.setCursor(null, null);
+        // Real mouse pointer: hide 'mouse' D-pad bracket cursor
+        if (!isSimulatedDown) {
+            const mouseState = this._getCursorState('mouse');
+            mouseState.visible = false;
+            this.renderer.setCursor(null, null, 'mouse');
+        }
 
-        // Check input types
         const isRightClick = e.button === 2;
         const isMiddleClick = e.button === 1;
         const isShiftHeld = e.shiftKey || (e.originalEvent && e.originalEvent.shiftKey);
 
         if (isRightClick) {
-            this.deselect();
+            const sourceId = isSimulatedDown ? 'gamepad-' + this._getEventGamepadIndex(e) : 'mouse';
+            this.deselect(sourceId);
             return;
         }
 
-        // When editor is open and using mouse: left click must NOT pan (editor handles it).
-        // Exception: trackpad (no middle button) - use left-drag for pan, tap for draw.
         const isEditorMouse = this.renderer.editorActive && e.pointerType === 'mouse' && e.button === 0 && !this.renderer.likelyTrackpad;
         if (isEditorMouse) {
             // Don't start drag - editor will handle left click for tile editing
-        } else
-            // Handle initial pinch state
-            if (this.activePointers.size === 2 && !isMobile()) {
-                this.lastPinchDistance = this.calculatePinchDistance();
-                this.isDragging = false; // Stop dragging when pinch starts
-                this.panPointerId = null;
-            } else if (this.activePointers.size === 1) {
-                // Drag Logic:
-                // - Allow Middle Click
-                // - Allow Left Click (if NOT holding Shift AND NOT a simulated gamepad event)
-                // - Skip Left Click when editor is open + mouse (editor handles it)
-                const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
-                    (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
-                    e.isGamepadSimulated;
-                const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0 && !isSimulated && !isEditorMouse);
+        } else if (this.activePointers.size === 2 && !isMobile()) {
+            this.lastPinchDistance = this.calculatePinchDistance();
+            this.isDragging = false;
+            this.panPointerId = null;
+        } else if (this.activePointers.size === 1) {
+            const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
+                (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
+                e.isGamepadSimulated;
+            const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0 && !isSimulated && !isEditorMouse);
 
-                if (canDrag) {
-                    this.isDragging = true;
-                    this.lastPos = { x: e.global.x, y: e.global.y };
-                    this.panPointerId = e.pointerId;
-                }
+            if (canDrag) {
+                this.isDragging = true;
+                this.lastPos = { x: e.global.x, y: e.global.y };
+                this.panPointerId = e.pointerId;
             }
+        }
 
         const globalPos = e.global;
         const localPos = this.renderer.grid.container.toLocal(globalPos);
@@ -309,33 +303,23 @@ export class InputController {
     }
 
     onPointerMove(e) {
-        // Update pointer position
         if (this.activePointers.has(e.pointerId)) {
             this.activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
         }
 
         if (this.activePointers.size === 2 && !isMobile()) {
-            // Handle Pinch-to-Zoom
             const currentDistance = this.calculatePinchDistance();
             if (this.lastPinchDistance !== null && currentDistance > 0) {
-                // Pinched distance changed?
                 const diff = Math.abs(currentDistance - this.lastPinchDistance);
-
-                // Only zoom if the movement is significant (at least 2 pixels)
                 if (diff > 2) {
                     const ratio = this.lastPinchDistance / currentDistance;
-
-                    // Use the center of the fingers as the zoom anchor
                     const pointers = Array.from(this.activePointers.values());
                     const centerX = (pointers[0].x + pointers[1].x) / 2;
                     const centerY = (pointers[0].y + pointers[1].y) / 2;
-
-                    // Zoom factor is inverted because deltaY > 0 means zoom out in renderer.zoom
-                    // Reduced sensitivity: only trigger zoom if ratio is far enough from 1
-                    if (ratio > 1.02) { // Fingers moved closer - Zoom Out
+                    if (ratio > 1.02) {
                         this.renderer.zoom(1, centerX, centerY);
                         this.lastPinchDistance = currentDistance;
-                    } else if (ratio < 0.98) { // Fingers moved apart - Zoom In
+                    } else if (ratio < 0.98) {
                         this.renderer.zoom(-1, centerX, centerY);
                         this.lastPinchDistance = currentDistance;
                     }
@@ -344,32 +328,28 @@ export class InputController {
                 this.lastPinchDistance = currentDistance;
             }
         } else if (this.isDragging && e.pointerId === this.panPointerId) {
-            // Stable Panning: only follow the first finger
             const dx = e.global.x - this.lastPos.x;
             const dy = e.global.y - this.lastPos.y;
-
             this.renderer.pan(dx, dy);
             this.lastPos = { x: e.global.x, y: e.global.y };
         } else if (this.activePointers.size <= 1) {
-            // Hover Logic - pointer movement always updates hover (mouse/virtual cursor)
-            const isSimulated = e.isGamepadSimulated || (e.nativeEvent && e.nativeEvent.isGamepadSimulated) || (e.originalEvent && e.originalEvent.isGamepadSimulated);
+            // Gamepads use pointerId = 100+index
+            const isSimulated = e.pointerId >= 100;
 
-            // Switch to pointer mode when user moves pointer so hover and target highlights work
-            // but NOT when the move is simulated by the gamepad itself
-            if (this.cursorVisible && !isSimulated) {
-                this.cursorVisible = false;
-                this.renderer.setCursor(null, null);
+            // Real mouse move: hide 'mouse' D-pad bracket cursor
+            if (!isSimulated) {
+                const mouseState = this._getCursorState('mouse');
+                if (mouseState.visible) {
+                    mouseState.visible = false;
+                    this.renderer.setCursor(null, null, 'mouse');
+                }
             }
 
             // Derive cursor ID: gamepads use pointerId 100+index (see gamepad-cursor-manager.js)
-            let cursorId = 'mouse';
-            if (isSimulated && e.pointerId >= 100) {
-                cursorId = 'gamepad-' + (e.pointerId - 100);
-            }
+            const cursorId = isSimulated ? 'gamepad-' + (e.pointerId - 100) : 'mouse';
 
             const globalPos = e.global;
             const localPos = this.renderer.grid.container.toLocal(globalPos);
-
             const tileX = Math.floor(localPos.x / (this.renderer.grid.tileSize + this.renderer.grid.gap));
             const tileY = Math.floor(localPos.y / (this.renderer.grid.tileSize + this.renderer.grid.gap));
 
@@ -398,63 +378,66 @@ export class InputController {
             this.panPointerId = null;
         }
 
-        // Guard against missing startDragPos
         if (!this.startDragPos) {
             this.clickTarget = null;
             return;
         }
 
-        // Check if it was a click (little movement)
         const dist = Math.abs(e.global.x - this.startDragPos.x) + Math.abs(e.global.y - this.startDragPos.y);
-
-        // Only handle clicks for LEFT mouse button (0)
-        // Middle button (1) is for pan only
-        // When editor is open + mouse: editor handles clicks, not the game
         const isEditorMouseClick = this.renderer.editorActive && e.pointerType === 'mouse' && e.button === 0;
-        const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
-            (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
-            e.isGamepadSimulated;
+        // Gamepads use pointerId = 100+index
+        const isSimulated = e.pointerId >= 100;
+
         if (!isEditorMouseClick && (dist < 10 || isSimulated) && e.button === 0) {
-            // It's a click (and not editor mode)
-            const gamepadIndex = (e.nativeEvent && e.nativeEvent.gamepadIndex !== undefined) ? e.nativeEvent.gamepadIndex :
-                (e.originalEvent && e.originalEvent.gamepadIndex !== undefined) ? e.originalEvent.gamepadIndex :
-                    e.gamepadIndex;
+            const sourceId = isSimulated ? 'gamepad-' + this._getEventGamepadIndex(e) : 'mouse';
+
+            // D-pad mode: onConfirm handles selection — skip pointer event click handling to avoid double-processing
+            const gcm = this.inputManager?.gamepadCursorManager;
+            const cursorMode = isSimulated ? gcm?.cursors?.get(e.pointerId - 100)?.mode : null;
+            if (cursorMode === 'dpad') {
+                this.clickTarget = null;
+                return;
+            }
 
             if (this.clickTarget) {
-                this.handleTileClick(this.clickTarget.tile, this.clickTarget.x, this.clickTarget.y);
+                this.handleTileClick(this.clickTarget.tile, this.clickTarget.x, this.clickTarget.y, sourceId);
             } else {
-                this.deselect();
+                this.deselect(sourceId);
             }
         }
 
         this.clickTarget = null;
     }
 
-    handleTileClick(tile, x, y) {
+    /** Extract gamepad index from a Pixi pointer event. Gamepads use pointerId = 100 + rawIndex. */
+    _getEventGamepadIndex(e) {
+        if (e.pointerId >= 100) return e.pointerId - 100;
+        return -1;
+    }
+
+    handleTileClick(tile, x, y, sourceId = 'mouse') {
         if (this.game.gameOver) return;
         if (this.game.currentPlayer.isBot) return;
 
+        const selTile = this.selectedTiles.get(sourceId);
         const owner = tile ? this.game.players.find(p => p.id === tile.owner) : null;
         const isEnemy = owner && owner.id !== this.game.currentPlayer.id;
 
         // 1. Direct attack shortcut (Expert Mode Only, disabled when gamepads connected)
-        // This overrides normal selection behavior if we can attack the clicked enemy tile
         const gamepadsConnected = this.inputManager?.connectedGamepadIndices?.size > 0;
         if (isEnemy && this.renderer.gameSpeed === 'expert' && tile && !tile.blocked && !gamepadsConnected) {
             let attacker = null;
-
-            // Priority: If current selection is one of the possible attackers, use it
             let selectedWasAttacker = false;
-            if (this.selectedTile) {
-                const isAdjacent = Math.abs(this.selectedTile.x - x) + Math.abs(this.selectedTile.y - y) === 1;
-                const fromTile = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
+
+            if (selTile) {
+                const isAdjacent = Math.abs(selTile.x - x) + Math.abs(selTile.y - y) === 1;
+                const fromTile = this.game.map.getTile(selTile.x, selTile.y);
                 if (isAdjacent && fromTile && fromTile.owner === this.game.currentPlayer.id && fromTile.dice > 1) {
-                    attacker = { x: this.selectedTile.x, y: this.selectedTile.y };
+                    attacker = { x: selTile.x, y: selTile.y };
                     selectedWasAttacker = true;
                 }
             }
 
-            // If no valid attacker from selection, pick best from all possible attackers
             if (!attacker) {
                 const attackers = [];
                 const neighbors = [
@@ -467,105 +450,99 @@ export class InputController {
                         attackers.push({ x: n.x, y: n.y });
                     }
                 }
-                attacker = this.renderer.grid.pickBestAttackerForExpert(attackers, this.selectedTile);
+                attacker = this.renderer.grid.pickBestAttackerForExpert(attackers, selTile);
             }
 
             if (attacker) {
                 const result = this.game.attack(attacker.x, attacker.y, x, y);
                 if (result && !result.error && result.won) {
                     if (selectedWasAttacker) {
-                        this.select(x, y);
+                        this.select(x, y, sourceId);
                     } else {
-                        this.deselect();
+                        this.deselect(sourceId);
                     }
                 } else if (result && !result.error) {
-                    // Attack happened but lost or stopped
-                    this.deselect();
+                    this.deselect(sourceId);
                 }
                 return;
             }
         }
 
         // 2. Standard Interaction Logic
-        if (!this.selectedTile) {
-            // Nothing selected: Standard selection
+        if (!selTile) {
             if (owner && !owner.isBot && owner.id === this.game.currentPlayer.id) {
-                this.select(x, y);
+                this.select(x, y, sourceId);
             }
             return;
         }
 
-        // Something is selected: Handle target
-        if (!tile || (this.selectedTile.x === x && this.selectedTile.y === y)) {
-            this.deselect();
+        if (!tile || (selTile.x === x && selTile.y === y)) {
+            this.deselect(sourceId);
             return;
         }
 
-        const fromTile = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
+        const fromTile = this.game.map.getTile(selTile.x, selTile.y);
         if (!fromTile) {
-            this.deselect();
+            this.deselect(sourceId);
             return;
         }
 
         // A. Clicked another tile owned by current player -> Change selection
         if (tile.owner === this.game.currentPlayer.id) {
-            this.select(x, y);
+            this.select(x, y, sourceId);
             return;
         }
 
-        // B. Standard Attack (in case expert shortcut didn't trigger or for Beginner/Normal)
-        const isAdjacent = Math.abs(this.selectedTile.x - x) + Math.abs(this.selectedTile.y - y) === 1;
+        // B. Standard Attack
+        const isAdjacent = Math.abs(selTile.x - x) + Math.abs(selTile.y - y) === 1;
         if (isAdjacent && tile.owner !== fromTile.owner && fromTile.dice > 1 && fromTile.owner === this.game.currentPlayer.id) {
-            const result = this.game.attack(this.selectedTile.x, this.selectedTile.y, x, y);
+            const result = this.game.attack(selTile.x, selTile.y, x, y);
             if (result && !result.error) {
                 if (result.won) {
-                    this.select(x, y);
+                    this.select(x, y, sourceId);
                 } else {
-                    this.deselect();
+                    this.deselect(sourceId);
                 }
             }
             return;
         }
 
-        // C. Default: deselect
-        this.deselect();
+        this.deselect(sourceId);
     }
 
-    handleKeyboardAttack(dx, dy, gamepadIndex = -1) {
-        if (this.game.gameOver || !this.selectedTile || this.game.currentPlayer.isBot) return;
+    handleKeyboardAttack(dx, dy, gamepadIndex = -1, sourceId = 'mouse') {
+        if (this.game.gameOver || !this.selectedTiles.has(sourceId) || this.game.currentPlayer.isBot) return;
 
-        const targetX = this.selectedTile.x + dx;
-        const targetY = this.selectedTile.y + dy;
+        const selTile = this.selectedTiles.get(sourceId);
+        const targetX = selTile.x + dx;
+        const targetY = selTile.y + dy;
 
         const targetTile = this.game.map.getTile(targetX, targetY);
         if (!targetTile) return;
 
-        this.handleTileClick(targetTile, targetX, targetY);
+        this.handleTileClick(targetTile, targetX, targetY, sourceId);
 
-        // Update cursor position to the target of the attack/click
         if (gamepadIndex !== -1) {
-            // After an attack, the "highlight" usually moves to the won tile anyway in select()
-            // but we ensure it here too for consistency
-            this.syncGamepadCursor(gamepadIndex);
+            this.syncGamepadCursor(gamepadIndex, sourceId);
         }
     }
 
-    select(x, y) {
-        this.selectedTile = { x, y };
-        this.cursorX = x;
-        this.cursorY = y;
-        this.renderer.setSelection(x, y);
-        if (this.cursorVisible) {
-            this.renderer.setCursor(x, y);
+    select(x, y, sourceId = 'mouse') {
+        this.selectedTiles.set(sourceId, { x, y });
+        const cursorState = this._getCursorState(sourceId);
+        cursorState.x = x;
+        cursorState.y = y;
+        this.renderer.setSelection(x, y, sourceId);
+        if (cursorState.visible) {
+            this.renderer.setCursor(x, y, sourceId);
         }
-        // Note: we don't sync gamepad cursor here blindly because select() is called
-        // by multiple things (mouse clicks too). onMove handles the gamepad syncing.
     }
 
-    syncGamepadCursor(index) {
-        if (this.cursorX === null || this.cursorY === null) return;
+    syncGamepadCursor(index, sourceId = 'mouse') {
+        const cursorState = this._getCursorState(sourceId);
+        if (cursorState.x === null || cursorState.y === null) return;
 
-        const screenPos = this.renderer.getTileScreenPosition(this.cursorX, this.cursorY);
+        const screenPos = this.renderer.getTileScreenPosition(cursorState.x, cursorState.y);
         if (screenPos) {
             this.inputManager.emit('gamepadCursorMoveRequest', {
                 index: index,
@@ -583,39 +560,39 @@ export class InputController {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    deselect() {
-        this.selectedTile = null;
-        this.renderer.setSelection(null, null);
-        // Hide cursor visually but keep coordinates to prevent jumping back to center
-        this.cursorVisible = false;
-        this.renderer.setCursor(null, null);
+    deselect(sourceId = 'mouse') {
+        this.selectedTiles.delete(sourceId);
+        const cursorState = this._getCursorState(sourceId);
+        cursorState.visible = false;
+        this.renderer.setSelection(null, null, sourceId);
+        this.renderer.setCursor(null, null, sourceId);
     }
 
     onTurnStart() {
-        if (this.selectedTile) {
-            const tile = this.game.map.getTile(this.selectedTile.x, this.selectedTile.y);
+        if (this.game.currentPlayer.isBot) {
+            // drawOverlay hides all selections during bot turns automatically
+            return;
+        }
 
-            // If the current player is a bot, just hide the selection visually (keep it internally)
-            if (this.game.currentPlayer.isBot) {
-                this.renderer.setSelection(null, null);
-                return;
-            }
-
-            // Deselect if tile doesn't exist or is not owned by the CURRENT player
+        // Validate each source's selection for the new current player
+        for (const [sourceId, selTile] of [...this.selectedTiles]) {
+            const tile = this.game.map.getTile(selTile.x, selTile.y);
             if (!tile || tile.owner !== this.game.currentPlayer.id) {
-                this.deselect();
+                this.deselect(sourceId);
             } else {
-                // Restore the visual selection for the human player
-                this.renderer.setSelection(this.selectedTile.x, this.selectedTile.y);
+                this.renderer.setSelection(selTile.x, selTile.y, sourceId);
             }
         }
 
-        if (this.cursorX !== null && this.cursorY !== null) {
-            const tile = this.game.map.getTile(this.cursorX, this.cursorY);
-            if (!tile) {
-                this.cursorX = null;
-                this.cursorY = null;
-                this.renderer.setCursor(null, null);
+        // Validate cursor positions
+        for (const [sourceId, cursor] of this.cursorStates) {
+            if (cursor.x !== null && cursor.y !== null) {
+                const tile = this.game.map.getTile(cursor.x, cursor.y);
+                if (!tile) {
+                    cursor.x = null;
+                    cursor.y = null;
+                    this.renderer.setCursor(null, null, sourceId);
+                }
             }
         }
     }

@@ -310,6 +310,7 @@ async function init() {
     // Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);
     gamepadCursors.onIntroSpawn = (playerIndex, x, y) => effectsManager.spawnPlayerDie(playerIndex, x, y);
+    inputManager.gamepadCursorManager = gamepadCursors;
 
     // FPS Counter
     setupFPSCounter(renderer);
@@ -333,8 +334,8 @@ async function init() {
 
     // Wire tile selection to effects
     const originalSelect = input.select.bind(input);
-    input.select = (x, y) => {
-        originalSelect(x, y);
+    input.select = (x, y, sourceId) => {
+        originalSelect(x, y, sourceId);
         effectsManager.onTileClick(x, y);
     };
 
