@@ -78,7 +78,7 @@ export class EffectsManager {
         });
 
         // Turn change pulse
-        this.game.on('turnStart', (player) => {
+        this.game.on('turnStart', ({ player }) => {
             this.onTurnStart(player);
         });
 
@@ -493,6 +493,7 @@ export class EffectsManager {
 
         const color = player?.color || 0x00ffff;
         this.background.pulse(color, 0.1);
+        this.background.bgShader?.setGridColor(color);
     }
 
     /**

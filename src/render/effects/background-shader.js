@@ -32,6 +32,9 @@ out vec4 finalColor;
 uniform highp float uTime;
 uniform vec2  uResolution;
 uniform float uQuality;
+uniform float uGridR;
+uniform float uGridG;
+uniform float uGridB;
 
 // ── Pseudo-random hash ───────────────────────────────────────────────────────
 float hash(vec2 p) {
@@ -63,25 +66,26 @@ vec3 starfield(vec2 uv) {
 
 // ── Tron grid ────────────────────────────────────────────────────────────────
 // Scrolling grid with expanding sonar-ring pulses from center.
+// Grid density is resolution-independent (16 rows, square cells at any aspect).
 float tronGrid(vec2 uv) {
-    float spacing = 64.0;
+    float rows   = 8.0;
+    float aspect = uResolution.x / uResolution.y;
 
-    // Slow diagonal scroll — grid drifts gently across screen
-    vec2 drift = vec2(uTime * 0.007, uTime * 0.003);
-    vec2 g     = (uv + drift) * uResolution / spacing;
+    // Grid in screen-proportional space → square cells at any resolution/aspect.
+    // Drift speed tuned to match original 1080p feel: ~0.21 cols/sec, ~0.05 rows/sec.
+    vec2 g = uv * vec2(rows * aspect, rows) + vec2(uTime * 0.21, uTime * 0.05);
 
     vec2  lines = abs(fract(g) - 0.5) * 2.0;
-    float lineW = 0.10;
+    float lineW = 0.06;
     float lx    = smoothstep(1.0 - lineW, 1.0, lines.x);
     float ly    = smoothstep(1.0 - lineW, 1.0, lines.y);
     float line  = max(lx, ly);
 
     // Slow global pulse — keeps lines visible between rings
-    float pulse = 0.75 + 0.25 * sin(uTime * 0.15);
+    float pulse = 0.45 + 0.20 * sin(uTime * 0.15);
 
-    // Expanding sonar rings from screen center
+    // Expanding sonar rings from screen center (aspect-corrected so they're circular)
     // Three rings 120° apart so there's always one crossing the grid
-    float aspect = uResolution.x / uResolution.y;
     float dist   = length((uv - vec2(0.5)) * vec2(aspect, 1.0));
     float r1     = max(0.0, sin(dist * 7.0 - uTime * 1.0));
     float r2     = max(0.0, sin(dist * 7.0 - uTime * 1.0 + 2.094));  // +120°
@@ -123,7 +127,7 @@ void main(void) {
     // Tron grid: medium + high
     if (uQuality >= 1.0) {
         float g = tronGrid(uv);
-        col += vec3(0.0, g * 0.22, g * 0.38);
+        col += vec3(uGridR, uGridG, uGridB) * g;
     }
 
     if (uQuality >= 2.0) {
@@ -143,15 +147,18 @@ class BackgroundShaderFilter extends Filter {
         const glProgram = GlProgram.from({
             vertex:   VERT,
             fragment: FRAG,
-            name:     'bg-space-shader',
+            name:     'bg-space-shader-v3',
         });
         super({
             glProgram,
             resources: {
                 bgUniforms: new UniformGroup({
-                    uTime:       { value: 0.0,                           type: 'f32'        },
-                    uResolution: { value: new Float32Array([1920, 1080]), type: 'vec2<f32>'  },
-                    uQuality:    { value: 2.0,                           type: 'f32'        },
+                    uTime:       { value: 0.0,                               type: 'f32'        },
+                    uResolution: { value: new Float32Array([1920, 1080]),     type: 'vec2<f32>'  },
+                    uQuality:    { value: 2.0,                               type: 'f32'        },
+                    uGridR: { value: 0.55, type: 'f32' },
+                    uGridG: { value: 0.25, type: 'f32' },
+                    uGridB: { value: 0.0,  type: 'f32' },
                 }),
             },
         });
@@ -167,6 +174,12 @@ class BackgroundShaderFilter extends Filter {
 
     setQuality(q) {
         this.resources.bgUniforms.uniforms.uQuality = q; // 1=medium, 2=high
+    }
+
+    setGridColor(r, g, b) {
+        this.resources.bgUniforms.uniforms.uGridR = r;
+        this.resources.bgUniforms.uniforms.uGridG = g;
+        this.resources.bgUniforms.uniforms.uGridB = b;
     }
 }
 
@@ -214,6 +227,14 @@ export class BackgroundShader {
         this._sprite.width  = w;
         this._sprite.height = h;
         this._filter.setResolution(w, h);
+    }
+
+    /** Set grid line color from a hex integer (e.g. 0xAA00FF). Scales to subtle intensity. */
+    setGridColor(hexColor) {
+        const r = ((hexColor >> 16) & 0xff) / 255;
+        const g = ((hexColor >>  8) & 0xff) / 255;
+        const b = ( hexColor        & 0xff) / 255;
+        this._filter.setGridColor(r * 0.35, g * 0.35, b * 0.35);
     }
 
     /** Call once per frame (from BackgroundRenderer's update loop). */
