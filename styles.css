@@ -6616,21 +6616,36 @@ details.settings-group[open]>summary.settings-group-header::after {
 
 .gp-player-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 5px;
 }
 
-.gp-player-btn {
+.gp-player-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--gp-color, #aaa);
+    padding: 0 4px 0 2px;
+    min-width: 28px;
+    line-height: 34px;
+}
+
+.gp-player-label-master {
+    color: #666;
+}
+
+.gp-join-btn {
     flex: 1;
     min-height: 34px;
-    padding: 0 10px;
-    border-color: var(--gp-color, #aaa);
-    background: var(--gp-color, #aaa);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 11px;
     letter-spacing: 2px;
-    text-align: left;
+}
+
+.gp-join-btn-master {
+    border-color: #666;
+    color: #666;
 }
 
 .gp-chip {

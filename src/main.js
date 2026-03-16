@@ -394,16 +394,21 @@ async function init() {
             const row = document.createElement('div');
             row.className = 'gp-player-row';
 
-            const playerBtn = document.createElement('button');
-            playerBtn.className = 'tron-btn gp-player-btn';
-            playerBtn.style.setProperty('--gp-color', pColor);
-            playerBtn.title = `Click with gamepad to join as Player ${i + 1}`;
-            playerBtn.textContent = `P${i + 1}`;
-            playerBtn.addEventListener('click', () => {
+            const playerLabel = document.createElement('div');
+            playerLabel.className = 'gp-player-label';
+            playerLabel.style.setProperty('--gp-color', pColor);
+            playerLabel.textContent = `P${i + 1}`;
+            row.appendChild(playerLabel);
+
+            const joinBtn = document.createElement('button');
+            joinBtn.className = 'tron-btn gp-join-btn';
+            joinBtn.title = `Click with gamepad to join as Player ${i + 1}`;
+            joinBtn.textContent = 'JOIN';
+            joinBtn.addEventListener('click', () => {
                 const gpIdx = inputManager.lastClickingGamepad;
                 if (gpIdx != null) inputManager.setGamepadAssignment(gpIdx, i);
             });
-            row.appendChild(playerBtn);
+            row.appendChild(joinBtn);
 
             for (const gpIdx of assignedGPs) {
                 const chip = document.createElement('button');
@@ -427,16 +432,20 @@ async function init() {
         });
         const masterRow = document.createElement('div');
         masterRow.className = 'gp-player-row';
-        const masterBtn = document.createElement('button');
-        masterBtn.className = 'tron-btn gp-player-btn';
-        masterBtn.style.setProperty('--gp-color', '#666');
-        masterBtn.title = 'Click with gamepad to become unrestricted (any player)';
-        masterBtn.textContent = '—';
-        masterBtn.addEventListener('click', () => {
+        const masterLabel = document.createElement('div');
+        masterLabel.className = 'gp-player-label gp-player-label-master';
+        masterLabel.textContent = '—';
+        masterRow.appendChild(masterLabel);
+
+        const masterJoinBtn = document.createElement('button');
+        masterJoinBtn.className = 'tron-btn gp-join-btn gp-join-btn-master';
+        masterJoinBtn.title = 'Click with gamepad to become unrestricted (any player)';
+        masterJoinBtn.textContent = 'JOIN';
+        masterJoinBtn.addEventListener('click', () => {
             const gpIdx = inputManager.lastClickingGamepad;
             if (gpIdx != null) inputManager.setGamepadAssignment(gpIdx, 'master');
         });
-        masterRow.appendChild(masterBtn);
+        masterRow.appendChild(masterJoinBtn);
         for (const gpIdx of masterGPs) {
             const chip = document.createElement('button');
             chip.className = 'tron-btn gp-chip';
