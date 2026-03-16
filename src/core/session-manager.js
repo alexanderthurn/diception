@@ -73,6 +73,10 @@ export class SessionManager {
         this.playerDashboard = playerDashboard;
     }
 
+    setGameEventManager(gameEventManager) {
+        this.gameEventManager = gameEventManager;
+    }
+
     /**
      * Reset UI components to initial state
      */
@@ -82,6 +86,7 @@ export class SessionManager {
 
         // Hide HUDs
         if (this.diceHUD) this.diceHUD.hide();
+        if (this.gameEventManager) this.gameEventManager.stopTurnTimer();
         if (this.turnIndicator) this.turnIndicator.classList.add('hidden');
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
         if (this.autoWinBtn) this.autoWinBtn.classList.add('hidden');

@@ -58,6 +58,7 @@ export class SetupSettings {
             effectsQuality: localStorage.getItem('effectsQuality') || 'high',
             botAI: localStorage.getItem('dicy_botAI') || 'easy',
             perPlayerAIConfig: JSON.parse(localStorage.getItem('dicy_perPlayerAIConfig') || '{}'),
+            turnTimeLimit: parseInt(localStorage.getItem('dicy_turnTimeLimit') || '0'),
         };
     }
 

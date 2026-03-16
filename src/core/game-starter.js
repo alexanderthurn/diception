@@ -23,6 +23,9 @@ export class GameStarter {
         // Game speed
         this.gameSpeed = 'beginner';
 
+        // Turn time limit (0 = unlimited)
+        this.turnTimeLimit = 0;
+
         // DOM elements
         this.setupModal = document.getElementById('setup-modal');
         this.startBtn = document.getElementById('start-game-btn');
@@ -71,6 +74,13 @@ export class GameStarter {
     }
 
     /**
+     * Get current turn time limit in seconds (0 = unlimited)
+     */
+    getTurnTimeLimit() {
+        return this.turnTimeLimit;
+    }
+
+    /**
      * Initialize start button listener
      */
     init() {
@@ -93,8 +103,9 @@ export class GameStarter {
         // Save settings
         this.configManager.saveCurrentSettings();
 
-        // Update game speed
+        // Update game speed and time limit
         this.gameSpeed = config.gameSpeed;
+        this.turnTimeLimit = config.turnTimeLimit ?? 0;
         this.renderer.setGameSpeed(this.gameSpeed);
 
         // Apply effects quality
@@ -128,6 +139,7 @@ export class GameStarter {
             if (pendingLevel?.type === 'config') {
                 // Procedural level - build gameConfig from level
                 const [w, h] = (pendingLevel.mapSize || '6x6').split('x').map(Number);
+                if (pendingLevel.turnTimeLimit != null) this.turnTimeLimit = pendingLevel.turnTimeLimit;
                 const gameConfig = {
                     humanCount: 1,
                     botCount: pendingLevel.bots ?? 1,
@@ -142,6 +154,7 @@ export class GameStarter {
                 this.initializePlayerAIs(pendingLevel.botAI || 'easy');
             } else if (pendingLevel && pendingLevel.type !== 'map') {
                 // Scenario type - apply fixed state
+                if (pendingLevel.turnTimeLimit != null) this.turnTimeLimit = pendingLevel.turnTimeLimit;
                 this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);
                 this.game.emit('gameStart', { players: this.game.players, map: this.game.map });
                 this.game.startTurn();
@@ -165,6 +178,7 @@ export class GameStarter {
                     if (pendingLevel.bots != null) gameConfig.botCount = pendingLevel.bots;
                     if (pendingLevel.maxDice != null) gameConfig.maxDice = pendingLevel.maxDice;
                     if (pendingLevel.diceSides != null) gameConfig.diceSides = pendingLevel.diceSides;
+                    if (pendingLevel.turnTimeLimit != null) this.turnTimeLimit = pendingLevel.turnTimeLimit;
                 }
                 this.game.startGame(gameConfig);
                 const botAI = (pendingLevel?.type === 'map' && pendingLevel?.botAI) || config.botAI;

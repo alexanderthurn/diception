@@ -44,6 +44,11 @@ export class GameEventManager {
         this.finalizeTurnLog = null;
 
         this.scenarioBrowser = null;
+
+        // Turn timer state
+        this._timerEl = document.getElementById('turn-timer');
+        this._timerInterval = null;
+        this._timerSecsLeft = 0;
     }
 
     setScenarioBrowser(scenarioBrowser) {
@@ -145,6 +150,9 @@ export class GameEventManager {
     }
 
     handleAutomatedTurn(player, playerAIs, gameSpeed, autoplayPlayers) {
+        // Stop turn timer during bot turns
+        this.stopTurnTimer();
+
         // Hide End Turn button during bot turns
         this.endTurnBtn.classList.add('hidden');
         this.endTurnBtn.disabled = true;
@@ -324,6 +332,9 @@ export class GameEventManager {
         // Update input hints on End Turn and Main Menu buttons
         this.updateEndTurnHint(gameSpeed);
         this.updateMenuHint(gameSpeed);
+
+        // Start turn timer (0 = unlimited)
+        this.startTurnTimer(this.gameStarter.getTurnTimeLimit());
     }
 
     /** 
@@ -365,6 +376,46 @@ export class GameEventManager {
             if (hint) { this._applyHint(this.newGameHint, hint); return; }
         }
         this.newGameHint.classList.add('hidden');
+    }
+
+    /** Start the per-turn countdown timer. seconds=0 means unlimited (hidden). */
+    startTurnTimer(seconds) {
+        this.stopTurnTimer();
+        if (!this._timerEl) return;
+        if (!seconds || seconds <= 0) {
+            this._timerEl.classList.add('hidden');
+            return;
+        }
+
+        this._timerSecsLeft = seconds;
+        this._timerEl.classList.remove('hidden');
+        this._timerEl.classList.remove('timer-urgent');
+        this._timerEl.textContent = seconds;
+
+        this._timerInterval = setInterval(() => {
+            this._timerSecsLeft--;
+            this._timerEl.textContent = this._timerSecsLeft;
+
+            if (this._timerSecsLeft <= 5) {
+                this._timerEl.classList.add('timer-urgent');
+                if (this.sfx) this.sfx.timeTick(this._timerSecsLeft);
+            }
+
+            if (this._timerSecsLeft <= 0) {
+                this.stopTurnTimer();
+                // Auto-end the human turn
+                if (!this.game.gameOver) this.game.endTurn();
+            }
+        }, 1000);
+    }
+
+    /** Stop and hide the turn timer. */
+    stopTurnTimer() {
+        if (this._timerInterval) {
+            clearInterval(this._timerInterval);
+            this._timerInterval = null;
+        }
+        if (this._timerEl) this._timerEl.classList.add('hidden');
     }
 
     _flushStreakAchievement() {
@@ -518,6 +569,9 @@ export class GameEventManager {
     }
 
     async handleGameOver(data) {
+        // Stop turn timer
+        this.stopTurnTimer();
+
         // Ensure headless fast-forward mode is deactivated
         this.game.muted = false;
 

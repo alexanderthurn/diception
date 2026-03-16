@@ -143,6 +143,6 @@ Created as a Dice Wars inspired strategy game.
 - Thank you [Kenney.nl](https://kenney.nl/assets/input-prompts)
 
 
-**MP3 to OGG Conversion**
+**SFX**
+- Thank you  [SFXR](https://pro.sfxr.me/)
 
-for f in *.mp3; do ffmpeg -i "$f" -c:a libopus -b:a 128k "${f%.mp3}.ogg"; done

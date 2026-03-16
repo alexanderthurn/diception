@@ -6482,3 +6482,33 @@ details.settings-group[open]>summary.settings-group-header::after {
         width: 100%;
     }
 }
+
+/* ── Turn Timer ── */
+
+#turn-timer {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--border-color);
+    text-align: center;
+    min-width: 56px;
+    letter-spacing: 3px;
+    text-shadow: var(--text-glow);
+    pointer-events: none;
+}
+
+#turn-timer.timer-urgent {
+    color: #FF4444;
+    text-shadow: 0 0 8px rgba(255, 68, 68, 0.8), 0 0 20px rgba(255, 68, 68, 0.5);
+    animation: timer-pulse 0.55s ease-in-out infinite alternate;
+}
+
+@keyframes timer-pulse {
+    from { transform: translateX(-50%) scale(1);    opacity: 1; }
+    to   { transform: translateX(-50%) scale(1.28); opacity: 0.75; }
+}

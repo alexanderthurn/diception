@@ -73,6 +73,7 @@
     <div id="fps-counter" class="hidden">FPS: 00</div>
 
     <div id="ui-overlay">
+        <div id="turn-timer" class="game-ui hidden"></div>
         <button id="end-turn-btn" class="tron-btn game-ui hidden">
             <span id="end-turn-reinforcement" class="reinforcement-count"></span>
             <span id="end-turn-text">End Turn</span>
@@ -215,8 +216,8 @@
                 </div>
             </div>
 
-            <div class="setup-start-row">
-                <div class="control-group">
+            <div class="control-row">
+                <div class="control-group half">
                     <label>Game Speed</label>
                     <div class="segmented-btn game-speed-segmented">
                         <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
@@ -224,6 +225,18 @@
                         <button type="button" class="segmented-option" data-value="expert">Expert</button>
                     </div>
                 </div>
+                <div class="control-group half">
+                    <label>Turn Time Limit</label>
+                    <select id="turn-time-limit">
+                        <option value="10">10 s</option>
+                        <option value="15">15 s</option>
+                        <option value="30">30 s</option>
+                        <option value="60">60 s</option>
+                        <option value="0" selected>∞ Unlimited</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setup-start-row">
                 <button id="start-game-btn" class="tron-btn large">START</button>
             </div>
         </div>
@@ -839,6 +852,16 @@
                             <option value="2of2">2 of 2</option>
                         </select>
                     </div>
+                    <div class="control-group">
+                        <label>Turn Time Limit</label>
+                        <select id="editor-turn-time-limit">
+                            <option value="10">10 s</option>
+                            <option value="15">15 s</option>
+                            <option value="30">30 s</option>
+                            <option value="60">60 s</option>
+                            <option value="0" selected>∞ Unlimited</option>
+                        </select>
+                    </div>
                     <button id="editor-randomize-btn" class="tron-btn primary editor-random-generate"><span
                             class="sprite-icon icon-dice"></span>
                         Generate</button>
@@ -958,6 +981,16 @@
                             <option value="fair">Fair Start</option>
                             <option value="madness">Full Madness</option>
                             <option value="2of2">2 of 2</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Turn Time Limit</label>
+                        <select id="editor-map-turn-time-limit">
+                            <option value="10">10 s</option>
+                            <option value="15">15 s</option>
+                            <option value="30">30 s</option>
+                            <option value="60">60 s</option>
+                            <option value="0" selected>∞ Unlimited</option>
                         </select>
                     </div>
                 </div>

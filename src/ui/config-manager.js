@@ -39,6 +39,7 @@ export class ConfigManager {
             botAISelect: document.getElementById('bot-ai-select'),
             tournamentGamesInput: document.getElementById('tournament-games'),
             tournamentConfig: document.getElementById('tournament-config'),
+            turnTimeLimitInput: document.getElementById('turn-time-limit'),
         };
 
         // Current selected bot AI
@@ -94,6 +95,7 @@ export class ConfigManager {
         const savedMapStyle = localStorage.getItem('dicy_mapStyle') || 'full';
         const savedGameMode = localStorage.getItem('dicy_gameMode') || 'classic';
         const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || '100';
+        const savedTurnTimeLimit = localStorage.getItem('dicy_turnTimeLimit') || '0';
 
         // Load effects quality
         let savedEffectsQuality = localStorage.getItem('effectsQuality') || 'medium';
@@ -112,6 +114,7 @@ export class ConfigManager {
         el.gameModeInput.value = savedGameMode;
         el.tournamentGamesInput.value = savedTournamentGames;
         el.effectsQualityInput.value = savedEffectsQuality;
+        if (el.turnTimeLimitInput) el.turnTimeLimitInput.value = savedTurnTimeLimit;
         this.updateEffectsQualityClass(savedEffectsQuality);
 
         // Load saved AI selection
@@ -193,6 +196,12 @@ export class ConfigManager {
             this.selectedBotAI = el.botAISelect.value;
             localStorage.setItem('dicy_botAI', this.selectedBotAI);
         });
+
+        if (el.turnTimeLimitInput) {
+            el.turnTimeLimitInput.addEventListener('change', () => {
+                localStorage.setItem('dicy_turnTimeLimit', el.turnTimeLimitInput.value);
+            });
+        }
 
         // Effects quality - apply immediately
         el.effectsQualityInput.addEventListener('change', () => {
@@ -331,7 +340,8 @@ export class ConfigManager {
             gameMode: el.gameModeInput.value,
             gameSpeed: el.gameSpeedInput.value,
             effectsQuality: el.effectsQualityInput.value,
-            botAI: this.selectedBotAI
+            botAI: this.selectedBotAI,
+            turnTimeLimit: parseInt(el.turnTimeLimitInput?.value ?? '0'),
         };
     }
 
@@ -349,6 +359,7 @@ export class ConfigManager {
         localStorage.setItem('dicy_mapStyle', config.mapStyle);
         localStorage.setItem('dicy_gameMode', config.gameMode);
         localStorage.setItem('effectsQuality', config.effectsQuality);
+        localStorage.setItem('dicy_turnTimeLimit', config.turnTimeLimit.toString());
     }
 
 

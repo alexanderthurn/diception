@@ -786,6 +786,7 @@ async function init() {
     gameEventManager.setCallbacks(getPlayerName, addLog, startTurnLog, finalizeTurnLog);
     gameEventManager.setScenarioBrowser(scenarioBrowser);
     gameEventManager.init();
+    sessionManager.setGameEventManager(gameEventManager);
 
     // Refresh UI hints whenever bindings are reloaded after configuration
     inputManager.on('bindingsReloaded', () => gameEventManager.refreshHints());
@@ -871,6 +872,7 @@ async function init() {
         // Initialize gameStarter's state so it's available during turn handlers
         // This matches what happens in gameStarter.startGame()
         gameStarter.gameSpeed = config.gameSpeed;
+        gameStarter.turnTimeLimit = config.turnTimeLimit ?? 0;
 
         sessionManager.checkResume(
             createAI,

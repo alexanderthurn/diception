@@ -280,6 +280,7 @@ export class MapEditor {
             maxDice: 9,
             diceSides: 6,
             gameMode: 'classic',
+            turnTimeLimit: 0,
             bots: 2,
             botAI: 'easy',
 
@@ -404,6 +405,8 @@ export class MapEditor {
             editorSharedBots: document.getElementById('editor-shared-bots'),
             editorSharedBotAI: document.getElementById('editor-shared-bot-ai'),
             editorMapGameMode: document.getElementById('editor-map-game-mode'),
+            editorMapTurnTimeLimit: document.getElementById('editor-map-turn-time-limit'),
+            editorTurnTimeLimit: document.getElementById('editor-turn-time-limit'),
 
             // Actions
             clearBtn: document.getElementById('editor-clear-btn'),
@@ -518,6 +521,16 @@ export class MapEditor {
         // Start mode (Map & Scenario)
         this.elements.editorMapGameMode?.addEventListener('change', () => {
             this.state.gameMode = this.elements.editorMapGameMode?.value || 'classic';
+            this.state.isDirty = true;
+        });
+
+        this.elements.editorMapTurnTimeLimit?.addEventListener('change', () => {
+            this.state.turnTimeLimit = parseInt(this.elements.editorMapTurnTimeLimit.value);
+            this.state.isDirty = true;
+        });
+
+        this.elements.editorTurnTimeLimit?.addEventListener('change', () => {
+            this.state.turnTimeLimit = parseInt(this.elements.editorTurnTimeLimit.value);
             this.state.isDirty = true;
         });
 
@@ -1319,6 +1332,9 @@ export class MapEditor {
         if (this.elements.maxDiceSelect) this.elements.maxDiceSelect.value = this.state.maxDice;
         if (this.elements.diceSidesSelect) this.elements.diceSidesSelect.value = this.state.diceSides;
         if (this.elements.editorMapGameMode) this.elements.editorMapGameMode.value = this.state.gameMode || 'classic';
+        const ttl = this.state.turnTimeLimit ?? 0;
+        if (this.elements.editorMapTurnTimeLimit) this.elements.editorMapTurnTimeLimit.value = ttl;
+        if (this.elements.editorTurnTimeLimit) this.elements.editorTurnTimeLimit.value = ttl;
     }
 
     /**
@@ -1862,6 +1878,7 @@ export class MapEditor {
             maxDice: this.state.maxDice ?? 9,
             diceSides: this.state.diceSides ?? 6,
             gameMode: this.state.gameMode ?? 'classic',
+            turnTimeLimit: this.state.turnTimeLimit ?? 0,
             tiles: Array.from(this.state.tiles.entries()).map(([key]) => {
                 const [x, y] = key.split(',').map(Number);
                 return { x: x - bounds.minX, y: y - bounds.minY };
@@ -1959,6 +1976,7 @@ export class MapEditor {
             maxDice: this.state.maxDice,
             diceSides: this.state.diceSides,
             gameMode: this.state.gameMode ?? 'classic',
+            turnTimeLimit: this.state.turnTimeLimit ?? 0,
             players: this.state.players.map(p => ({
                 id: p.id,
                 isBot: p.isBot,
@@ -2079,6 +2097,7 @@ export class MapEditor {
         this.state.maxDice = scenario.maxDice || 9;
         this.state.diceSides = scenario.diceSides || 6;
         this.state.gameMode = scenario.gameMode || (scenario.configData?.gameMode) || 'classic';
+        this.state.turnTimeLimit = scenario.turnTimeLimit ?? 0;
 
         if (scenario.players && scenario.players.length > 0) {
             this.state.players = scenario.players.map(p => ({
