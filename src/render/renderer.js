@@ -297,7 +297,7 @@ export class Renderer {
         const newScale = delta > 0 ? this.rootContainer.scale.x / scaleFactor : this.rootContainer.scale.x * scaleFactor;
 
         // Clamp scale
-        if (newScale < 0.2 || newScale > 5.0) return;
+        if (newScale < 0.4 || newScale > 10.0) return;
 
         // Zoom towards mouse point
         const worldPos = {
