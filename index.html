@@ -262,6 +262,96 @@
                     <button id="main-about-btn" class="tron-btn large"><span class="sprite-icon icon-scenario"></span> About</button>
                 </div>
                 <button id="main-quit-btn" class="tron-btn large hidden"><span class="sprite-icon icon-close"></span> Quit</button>
+
+                <!-- Gamepad controls reference panel — anchored to main-nav -->
+                <div id="gamepad-controls-panel">
+                    <div class="gp-panel-title">CONTROLS</div>
+                    <svg class="gcp-svg" viewBox="-55 0 350 175" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Main body (wider + taller) -->
+                        <rect class="gcp-body" x="58" y="55" width="124" height="68" rx="8"/>
+                        <!-- Triggers -->
+                        <rect class="gcp-el" x="60" y="38" width="35" height="14" rx="3"/>
+                        <rect class="gcp-el" x="145" y="38" width="35" height="14" rx="3"/>
+                        <!-- Bumpers -->
+                        <rect class="gcp-el" x="63" y="51" width="31" height="12" rx="3"/>
+                        <rect class="gcp-el" x="146" y="51" width="31" height="12" rx="3"/>
+                        <!-- D-pad (shifted left) -->
+                        <rect class="gcp-el" x="77" y="73" width="6" height="18" rx="1"/>
+                        <rect class="gcp-el" x="71" y="79" width="18" height="6" rx="1"/>
+                        <!-- Face buttons (shifted right + lower) -->
+                        <circle class="gcp-el" cx="162" cy="77" r="4"/>
+                        <circle class="gcp-el" cx="162" cy="97" r="4"/>
+                        <circle class="gcp-el" cx="152" cy="87" r="4"/>
+                        <circle class="gcp-el" cx="172" cy="87" r="4"/>
+                        <!-- Menu buttons (center) -->
+                        <rect class="gcp-el" x="103" y="77" width="9" height="6" rx="2"/>
+                        <rect class="gcp-el" x="128" y="77" width="9" height="6" rx="2"/>
+                        <!-- Both sticks (lower) -->
+                        <circle class="gcp-stick" cx="90" cy="112" r="7"/>
+                        <circle class="gcp-stick" cx="150" cy="112" r="7"/>
+
+                        <!-- Button micro-labels -->
+                        <text class="gcp-btn-lbl" x="162" y="77">Y</text>
+                        <text class="gcp-btn-lbl" x="162" y="97">A</text>
+                        <text class="gcp-btn-lbl" x="152" y="87">X</text>
+                        <text class="gcp-btn-lbl" x="172" y="87">B</text>
+                        <text class="gcp-btn-lbl" x="132" y="81">+</text>
+                        <text class="gcp-btn-lbl" x="79" y="58">LB</text>
+                        <text class="gcp-btn-lbl" x="161" y="58">RB</text>
+                        <text class="gcp-btn-lbl" x="77" y="45">LT</text>
+                        <text class="gcp-btn-lbl" x="163" y="45">RT</text>
+
+                        <!-- Callout lines — left -->
+                        <circle class="gcp-dot" cx="60" cy="45" r="1.5"/>
+                        <line class="gcp-line" x1="60" y1="45" x2="32" y2="14"/>
+                        <circle class="gcp-dot" cx="63" cy="57" r="1.5"/>
+                        <line class="gcp-line" x1="63" y1="57" x2="32" y2="40"/>
+                        <circle class="gcp-dot" cx="71" cy="82" r="1.5"/>
+                        <line class="gcp-line" x1="71" y1="82" x2="32" y2="74"/>
+                        <circle class="gcp-dot" cx="148" cy="87" r="1.5"/>
+                        <line class="gcp-line" x1="148" y1="87" x2="32" y2="112"/>
+
+                        <!-- Callout lines — right -->
+                        <circle class="gcp-dot" cx="180" cy="45" r="1.5"/>
+                        <line class="gcp-line" x1="180" y1="45" x2="208" y2="14"/>
+                        <circle class="gcp-dot" cx="177" cy="57" r="1.5"/>
+                        <line class="gcp-line" x1="177" y1="57" x2="208" y2="40"/>
+                        <circle class="gcp-dot" cx="162" cy="73" r="1.5"/>
+                        <line class="gcp-line" x1="162" y1="73" x2="208" y2="64"/>
+                        <circle class="gcp-dot" cx="176" cy="87" r="1.5"/>
+                        <line class="gcp-line" x1="176" y1="87" x2="208" y2="90"/>
+                        <circle class="gcp-dot" cx="162" cy="101" r="1.5"/>
+                        <line class="gcp-line" x1="162" y1="101" x2="208" y2="116"/>
+
+                        <!-- Callout line — center downward (MENU) -->
+                        <circle class="gcp-dot" cx="132" cy="80" r="1.5"/>
+                        <line class="gcp-line" x1="132" y1="80" x2="120" y2="130"/>
+
+                        <!-- Callout lines — sticks -->
+                        <circle class="gcp-dot" cx="83" cy="118" r="1.5"/>
+                        <line class="gcp-line" x1="83" y1="118" x2="32" y2="154"/>
+                        <circle class="gcp-dot" cx="157" cy="118" r="1.5"/>
+                        <line class="gcp-line" x1="157" y1="118" x2="208" y2="154"/>
+
+                        <!-- Labels — left -->
+                        <text class="gcp-lbl gcp-lbl-l" x="30" y="16">Zoom Out</text>
+                        <text class="gcp-lbl gcp-lbl-l" x="30" y="34">Cursor<tspan x="30" dy="13">Speed -</tspan></text>
+                        <text class="gcp-lbl gcp-lbl-l" x="30" y="76">Attack</text>
+                        <text class="gcp-lbl gcp-lbl-l" x="30" y="114">Deselect</text>
+                        <text class="gcp-lbl gcp-lbl-l" x="30" y="148">Navigate<tspan x="30" dy="13">Cursor</tspan></text>
+
+                        <!-- Labels — right -->
+                        <text class="gcp-lbl gcp-lbl-r" x="210" y="16">Zoom In</text>
+                        <text class="gcp-lbl gcp-lbl-r" x="210" y="34">Cursor<tspan x="210" dy="13">Speed +</tspan></text>
+                        <text class="gcp-lbl gcp-lbl-r" x="210" y="66">End Turn</text>
+                        <text class="gcp-lbl gcp-lbl-r" x="210" y="84">Hold to<tspan x="210" dy="13">Pan Map</tspan></text>
+                        <text class="gcp-lbl gcp-lbl-r" x="210" y="118">Select/Attack</text>
+                        <text class="gcp-lbl gcp-lbl-r" x="210" y="156">Pan Map</text>
+
+                        <!-- Label — center -->
+                        <text class="gcp-lbl" style="text-anchor:middle" x="120" y="134">Menu</text>
+                    </svg>
+                </div>
             </div>
         </div>
 

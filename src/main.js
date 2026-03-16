@@ -359,8 +359,20 @@ async function init() {
     // Initial update in case gamepads are already connected
     configManager.updateGamepadStatus(Array.from(inputManager.connectedGamepadIndices || []));
 
-    // ── Gamepad side panel ────────────────────────────────────────────────────
+    // ── Gamepad panels ────────────────────────────────────────────────────────
     const gamepadSidePanel = document.getElementById('gamepad-side-panel');
+    const gamepadControlsPanel = document.getElementById('gamepad-controls-panel');
+
+    function updateControlsPanel() {
+        if (!gamepadControlsPanel) return;
+        const gcm = inputManager.gamepadCursorManager;
+        const hasGamepad = gcm?.cursors?.size >= 2;
+        const mainMenuEl = document.getElementById('main-menu');
+        const mainMenuVisible = !mainMenuEl?.classList.contains('hidden');
+        const active = hasGamepad && mainMenuVisible;
+        gamepadControlsPanel.classList.toggle('gcp-active', active);
+        mainMenuEl?.classList.toggle('gp-mm-shifted', active);
+    }
 
     function renderGamepadAssignments() {
         if (!gamepadSidePanel) return;
@@ -376,6 +388,7 @@ async function init() {
 
         if (gamepads.length === 0 || (!setupVisible && !pauseVisible) || humanCount <= 1) {
             gamepadSidePanel.classList.remove('gp-panel-active');
+            updateControlsPanel();
             return;
         }
         gamepadSidePanel.innerHTML = '';
@@ -460,6 +473,7 @@ async function init() {
         gamepadSidePanel.appendChild(masterRow);
 
         gamepadSidePanel.classList.add('gp-panel-active');
+        updateControlsPanel();
     }
 
     function redistributeGamepads() {
@@ -523,6 +537,8 @@ async function init() {
     const _gpPanelObs = { attributes: true, attributeFilter: ['class'] };
     new MutationObserver(renderGamepadAssignments).observe(document.getElementById('setup-modal'), _gpPanelObs);
     new MutationObserver(renderGamepadAssignments).observe(document.getElementById('pause-modal'), _gpPanelObs);
+    // Controls panel syncs with main menu visibility
+    new MutationObserver(updateControlsPanel).observe(document.getElementById('main-menu'), _gpPanelObs);
 
     renderGamepadAssignments();
 
