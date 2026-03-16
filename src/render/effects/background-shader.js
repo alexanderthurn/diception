@@ -66,14 +66,17 @@ vec3 starfield(vec2 uv) {
 
 // ── Tron grid ────────────────────────────────────────────────────────────────
 // Scrolling grid with expanding sonar-ring pulses from center.
-// Grid density is resolution-independent (16 rows, square cells at any aspect).
+// Uses gl_FragCoord for pixel-perfect square cells at any resolution/aspect.
 float tronGrid(vec2 uv) {
     float rows   = 8.0;
     float aspect = uResolution.x / uResolution.y;
 
+    // Normalise actual pixel position → [0,1]×[0,1] in true screen space.
+    // vTextureCoord is padded-texture space (non-square at 4K+); gl_FragCoord is not.
+    vec2 sc = gl_FragCoord.xy / uResolution;
+
     // Grid in screen-proportional space → square cells at any resolution/aspect.
-    // Drift speed tuned to match original 1080p feel: ~0.21 cols/sec, ~0.05 rows/sec.
-    vec2 g = uv * vec2(rows * aspect, rows) + vec2(uTime * 0.21, uTime * 0.05);
+    vec2 g = sc * vec2(rows * aspect, rows) + vec2(uTime * 0.21, uTime * 0.05);
 
     vec2  lines = abs(fract(g) - 0.5) * 2.0;
     float lineW = 0.06;
@@ -86,7 +89,7 @@ float tronGrid(vec2 uv) {
 
     // Expanding sonar rings from screen center (aspect-corrected so they're circular)
     // Three rings 120° apart so there's always one crossing the grid
-    float dist   = length((uv - vec2(0.5)) * vec2(aspect, 1.0));
+    float dist   = length((sc - vec2(0.5)) * vec2(aspect, 1.0));
     float r1     = max(0.0, sin(dist * 7.0 - uTime * 1.0));
     float r2     = max(0.0, sin(dist * 7.0 - uTime * 1.0 + 2.094));  // +120°
     float r3     = max(0.0, sin(dist * 7.0 - uTime * 1.0 + 4.189));  // +240°
@@ -156,9 +159,9 @@ class BackgroundShaderFilter extends Filter {
                     uTime:       { value: 0.0,                               type: 'f32'        },
                     uResolution: { value: new Float32Array([1920, 1080]),     type: 'vec2<f32>'  },
                     uQuality:    { value: 2.0,                               type: 'f32'        },
-                    uGridR: { value: 0.55, type: 'f32' },
-                    uGridG: { value: 0.25, type: 'f32' },
-                    uGridB: { value: 0.0,  type: 'f32' },
+                    uGridR: { value: 0.0, type: 'f32' },
+                    uGridG: { value: 0.0, type: 'f32' },
+                    uGridB: { value: 0.0, type: 'f32' },
                 }),
             },
         });
@@ -194,6 +197,10 @@ export class BackgroundShader {
         this._app    = app;
         this._time   = 0;
         this._active = false;
+
+        // Grid color — fades in from black to teal over 2 seconds on startup.
+        this._gridTarget = [0, 0.35, 0.35]; // teal default (pre-scaled)
+        this._gridFadeIn = 0;               // 0→1 over 2 s; -1 = done
 
         // Fullscreen sprite — covers the whole canvas, sits below everything else.
         this._sprite = new Sprite(Texture.WHITE);
@@ -234,13 +241,24 @@ export class BackgroundShader {
         const r = ((hexColor >> 16) & 0xff) / 255;
         const g = ((hexColor >>  8) & 0xff) / 255;
         const b = ( hexColor        & 0xff) / 255;
-        this._filter.setGridColor(r * 0.35, g * 0.35, b * 0.35);
+        this._gridTarget = [r * 0.35, g * 0.35, b * 0.35];
+        this._gridFadeIn = -1; // skip fade — apply immediately
+        this._filter.setGridColor(...this._gridTarget);
     }
 
     /** Call once per frame (from BackgroundRenderer's update loop). */
     _update(ticker) {
         this._time += (ticker?.deltaTime ?? 1) / 60;
         this._filter.time = this._time;
+
+        // Fade grid color in from black → teal on startup (2 s)
+        if (this._gridFadeIn >= 0) {
+            this._gridFadeIn = Math.min(1, this._gridFadeIn + (ticker?.deltaTime ?? 1) / 120);
+            const t = this._gridFadeIn;
+            const [r, g, b] = this._gridTarget;
+            this._filter.setGridColor(r * t, g * t, b * t);
+            if (this._gridFadeIn >= 1) this._gridFadeIn = -1;
+        }
     }
 
     /** quality: 'off' | 'medium' | 'high' */
