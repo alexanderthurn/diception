@@ -89,14 +89,16 @@ export function openCustomSelect(selectEl) {
         });
     }
 
-    // Close on overlay click (outside dropdown)
-    overlay.addEventListener('mousedown', (e) => {
+    // Close on overlay click (outside dropdown) — mousedown for desktop, touchstart for mobile
+    const closeOnOutside = (e) => {
         if (e.target === overlay) {
             e.preventDefault();
             e.stopPropagation();
             closeCustomSelect();
         }
-    });
+    };
+    overlay.addEventListener('mousedown', closeOnOutside);
+    overlay.addEventListener('touchstart', closeOnOutside, { passive: false });
 
     // Close on Escape
     const escHandler = (e) => {
@@ -123,6 +125,7 @@ export function closeCustomSelect() {
         document.removeEventListener('keydown', escHandler, true);
     }
     overlay.classList.add('custom-select-fade-out');
+    overlay.style.pointerEvents = 'none'; // stop blocking touch immediately
     setTimeout(() => {
         if (overlay.parentNode) {
             overlay.parentNode.removeChild(overlay);
@@ -199,23 +202,39 @@ function positionDropdown(selectEl, dropdown) {
  * Call once during app startup. Uses event delegation — no per-element setup needed.
  */
 export function initCustomSelects() {
-    // Intercept mousedown on <select> elements to prevent native dropdown
-    document.addEventListener('mousedown', (e) => {
+    let lastTouchTarget = null;
+
+    document.addEventListener('touchstart', (e) => {
         const select = e.target.closest('select');
         if (!select) return;
-
-        // Prevent native dropdown from opening
         e.preventDefault();
         e.stopPropagation();
-
-        // If clicking the same select that's already open, just close it
+        lastTouchTarget = select;
         if (activeDropdown && activeDropdown.selectEl === select) {
             closeCustomSelect();
             return;
         }
-
         openCustomSelect(select);
-    }, true); // Use capture to intercept before the native behavior
+    }, { capture: true, passive: false });
+
+    // Intercept mousedown on <select> elements to prevent native dropdown
+    // Skip if this mousedown is synthesized from the touchstart we already handled
+    document.addEventListener('mousedown', (e) => {
+        const select = e.target.closest('select');
+        if (!select) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (lastTouchTarget === select) {
+            lastTouchTarget = null;
+            return; // already handled by touchstart
+        }
+        lastTouchTarget = null;
+        if (activeDropdown && activeDropdown.selectEl === select) {
+            closeCustomSelect();
+            return;
+        }
+        openCustomSelect(select);
+    }, true);
 
     // Also intercept click to prevent any lingering native behavior
     document.addEventListener('click', (e) => {

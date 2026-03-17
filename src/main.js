@@ -551,10 +551,10 @@ async function init() {
         const humanCount = Math.max(1, parseInt(document.getElementById('human-count')?.value ?? '1'));
         const activatedIndices = [...gcm.activatedGamepads].sort((a, b) => a - b);
         activatedIndices.forEach((idx, i) => {
-            if (activatedIndices.length === 1) {
+            if (activatedIndices.length === 1 || humanCount <= 1) {
                 inputManager.setGamepadAssignment(idx, 'master');
             } else {
-                inputManager.setGamepadAssignment(idx, humanCount <= 1 ? 0 : i % humanCount);
+                inputManager.setGamepadAssignment(idx, i % humanCount);
             }
         });
     }

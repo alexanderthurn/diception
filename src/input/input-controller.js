@@ -249,11 +249,19 @@ export class InputController {
         }
     }
 
+    /** Detect gamepad-simulated pointer events (distinct from real mouse/touch) */
+    _isGamepadSimulated(e) {
+        return e.isGamepadSimulated ||
+            (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
+            (e.originalEvent && e.originalEvent.isGamepadSimulated);
+    }
+
     onPointerDown(e) {
         if (this.waitTillNoTouch) return;
 
-        // Gamepads use pointerId = 100+index; real mouse/touch use lower IDs
-        const isSimulatedDown = e.pointerId >= 100;
+        // Gamepads inject simulated pointer events tagged with isGamepadSimulated.
+        // Do NOT use pointerId >= 100 here: iOS Safari touch pointerId can exceed 100.
+        const isSimulatedDown = this._isGamepadSimulated(e);
         if (!isSimulatedDown) {
             this.activePointers.set(e.pointerId, { x: e.global.x, y: e.global.y });
         }
@@ -283,10 +291,8 @@ export class InputController {
             this.isDragging = false;
             this.panPointerId = null;
         } else if (this.activePointers.size === 1) {
-            const isSimulated = (e.nativeEvent && e.nativeEvent.isGamepadSimulated) ||
-                (e.originalEvent && e.originalEvent.isGamepadSimulated) ||
-                e.isGamepadSimulated;
-            const canDrag = isMiddleClick || (!isShiftHeld && e.button === 0 && !isSimulated && !isEditorMouse);
+            const isTouch = e.pointerType === 'touch';
+            const canDrag = isMiddleClick || (!isShiftHeld && (e.button === 0 || isTouch) && !isSimulatedDown && !isEditorMouse);
 
             if (canDrag) {
                 this.isDragging = true;
@@ -336,8 +342,7 @@ export class InputController {
             this.renderer.pan(dx, dy);
             this.lastPos = { x: e.global.x, y: e.global.y };
         } else if (this.activePointers.size <= 1) {
-            // Gamepads use pointerId = 100+index
-            const isSimulated = e.pointerId >= 100;
+            const isSimulated = this._isGamepadSimulated(e);
 
             // Real mouse move: hide 'mouse' D-pad bracket cursor
             if (!isSimulated) {
@@ -388,10 +393,12 @@ export class InputController {
 
         const dist = Math.abs(e.global.x - this.startDragPos.x) + Math.abs(e.global.y - this.startDragPos.y);
         const isEditorMouseClick = this.renderer.editorActive && e.pointerType === 'mouse' && e.button === 0;
-        // Gamepads use pointerId = 100+index
-        const isSimulated = e.pointerId >= 100;
+        const isSimulated = this._isGamepadSimulated(e);
 
-        if (!isEditorMouseClick && (dist < 10 || isSimulated) && e.button === 0) {
+        const isTouch = e.pointerType === 'touch';
+        // Touch events may report button=-1 on iOS; treat touch like left-click for selection
+        const isPrimaryButton = e.button === 0 || isTouch;
+        if (!isEditorMouseClick && (dist < 10 || isSimulated) && isPrimaryButton) {
             const sourceId = isSimulated ? 'gamepad-' + this._getEventGamepadIndex(e) : 'mouse';
 
             // D-pad mode: onConfirm handles selection — skip pointer event click handling to avoid double-processing
