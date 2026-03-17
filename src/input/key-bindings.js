@@ -58,7 +58,7 @@ export const DEFAULT_BINDINGS = {
         pan_right:  ['keyl'],
     },
     gamepad: {
-        confirm:          [0],
+        confirm:          [0, 10],
         cancel:           [2],
         end_turn:         [3],
         menu:             [9],
