@@ -77,6 +77,7 @@ export class GamepadCursorManager {
             confirm: gb.confirm?.[0] ?? 0,
             confirmButtons: gb.confirm ?? [0, 10],
             cancel: gb.cancel?.[0] ?? 2,
+            cancelButtons: gb.cancel ?? [2, 11],
             endTurn: gb.end_turn?.[0] ?? 3,
             menu: gb.menu?.[0] ?? 9,
             moveUp: gb.move_up?.[0] ?? 12,
@@ -118,7 +119,7 @@ export class GamepadCursorManager {
                 const assignment = this.inputManager.getGamepadAssignment(index);
                 const playerIndex = typeof assignment === 'number' ? assignment : 0;
                 this.onIntroSpawn(playerIndex, cursor.x, cursor.y);
-            } else if (button === b.cancel && this.onIntroRemove) {
+            } else if (b.cancelButtons.includes(button) && this.onIntroRemove) {
                 this.onIntroRemove(cursor.x, cursor.y);
             } else if (button === b.endTurn && this.onIntroMutate) {
                 this.onIntroMutate(cursor.x, cursor.y);
@@ -176,8 +177,8 @@ export class GamepadCursorManager {
             // In menu mode, only allow cursor/zoom/confirm/cancel buttons
             if (isMenuOpen) {
                 const allowedInMenu = isEditorOpen
-                    ? [...b.confirmButtons, b.cancel, b.endTurn, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight]
-                    : [...b.confirmButtons, b.cancel, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight];
+                    ? [...b.confirmButtons, ...b.cancelButtons, b.endTurn, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight]
+                    : [...b.confirmButtons, ...b.cancelButtons, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight];
                 if (!allowedInMenu.includes(button)) return;
 
                 if (!isEditorOpen) {
@@ -202,7 +203,7 @@ export class GamepadCursorManager {
 
             if (b.confirmButtons.includes(button)) {
                 if (isAssignedTurn) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
-            } else if (button === b.cancel) {
+            } else if (b.cancelButtons.includes(button)) {
                 if (isAssignedTurn) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
             } else if (button === b.endTurn) {
                 if (isEditorOpen) {
@@ -241,7 +242,7 @@ export class GamepadCursorManager {
 
             const b = this._gb();
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
-            if (isMenuOpen && !b.confirmButtons.includes(button) && button !== b.cancel) return;
+            if (isMenuOpen && !b.confirmButtons.includes(button) && !b.cancelButtons.includes(button)) return;
 
             const inGameUp = !isMenuOpen && this.game.players.length > 0 && !this.game.gameOver;
             const currentPlayerUp = this.game.currentPlayer;
@@ -255,7 +256,7 @@ export class GamepadCursorManager {
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = null;
                 }
-            } else if (button === b.cancel) {
+            } else if (b.cancelButtons.includes(button)) {
                 if (isAssignedTurnUp) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);

@@ -59,7 +59,7 @@ export const DEFAULT_BINDINGS = {
     },
     gamepad: {
         confirm:          [0, 10],
-        cancel:           [2],
+        cancel:           [2, 11],
         end_turn:         [3],
         menu:             [9],
         move_up:          [12],
