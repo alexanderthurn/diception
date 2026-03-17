@@ -565,48 +565,9 @@ async function init() {
         renderGamepadAssignments();
     });
 
-    // When a new gamepad joins: respect saved assignment if valid, otherwise auto-assign
+    // When a gamepad connects or reconnects: always start as master
     inputManager.on('gamepadActivated', ({ index }) => {
-        const gcm = inputManager.gamepadCursorManager;
-        const humanCount = Math.max(1, parseInt(document.getElementById('human-count')?.value ?? '1'));
-
-        // Keep saved assignment if it's still valid for the current human count
-        if (inputManager.gamepadAssignments.has(index)) {
-            const saved = inputManager.gamepadAssignments.get(index);
-            const valid = saved === 'master' || (typeof saved === 'number' && (humanCount <= 1 ? saved === 0 : saved < humanCount));
-            if (valid) {
-                renderGamepadAssignments();
-                return;
-            }
-        }
-
-        // Single gamepad → always master
-        if (gcm.activatedGamepads.size === 1) {
-            inputManager.setGamepadAssignment(index, 'master');
-            renderGamepadAssignments();
-            return;
-        }
-
-        // No valid saved assignment — find first empty slot
-        if (humanCount <= 1) {
-            inputManager.setGamepadAssignment(index, 0);
-        } else {
-            const occupied = new Set();
-            for (const idx of gcm.activatedGamepads) {
-                if (idx === index) continue;
-                const a = inputManager.getGamepadAssignment(idx);
-                if (typeof a === 'number' && a < humanCount) occupied.add(a);
-            }
-            let assignTo = -1;
-            for (let i = 0; i < humanCount; i++) {
-                if (!occupied.has(i)) { assignTo = i; break; }
-            }
-            if (assignTo === -1) {
-                const pos = [...gcm.activatedGamepads].sort((a, b) => a - b).indexOf(index);
-                assignTo = pos % humanCount;
-            }
-            inputManager.setGamepadAssignment(index, assignTo);
-        }
+        inputManager.setGamepadAssignment(index, 'master');
         renderGamepadAssignments();
     });
 

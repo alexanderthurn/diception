@@ -18,7 +18,7 @@ export class InputManager {
         this.gamepadStates = new Map();
         this.connectedGamepadIndices = new Set();
         this.gamepadToHumanMap = new Map(); // raw gamepad index -> human player index (0, 1, 2, ...)
-        this.gamepadAssignments = this._loadGamepadAssignments(); // raw index -> 'master' | playerIndex
+        this.gamepadAssignments = new Map(); // raw index -> 'master' | playerIndex (session-only, not persisted)
         this.deadZone = 0.4;
 
         // Desktop version (Steam/Tauri) often has higher polling rates or different timing
@@ -213,27 +213,6 @@ export class InputManager {
 
     // ── Gamepad assignment (which human player a gamepad controls) ────────────
 
-    _loadGamepadAssignments() {
-        try {
-            const data = localStorage.getItem('dicy_gamepadAssignments');
-            if (!data) return new Map();
-            const obj = JSON.parse(data);
-            const map = new Map();
-            for (const [k, v] of Object.entries(obj)) {
-                map.set(parseInt(k), v === 'master' ? 'master' : parseInt(v));
-            }
-            return map;
-        } catch { return new Map(); }
-    }
-
-    _saveGamepadAssignments() {
-        const obj = {};
-        for (const [k, v] of this.gamepadAssignments.entries()) {
-            obj[k] = v;
-        }
-        localStorage.setItem('dicy_gamepadAssignments', JSON.stringify(obj));
-    }
-
     /**
      * Get assignment for a gamepad: 'master' or a human player index.
      * Defaults to sequential auto-map (existing behavior) if not explicitly set.
@@ -247,7 +226,6 @@ export class InputManager {
 
     setGamepadAssignment(rawIndex, assignment) {
         this.gamepadAssignments.set(rawIndex, assignment);
-        this._saveGamepadAssignments();
         this.emit('gamepadAssignmentChange', { index: rawIndex, assignment });
     }
 
