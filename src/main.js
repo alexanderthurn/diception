@@ -619,8 +619,9 @@ async function init() {
 
     onLoadingDismiss = async () => {
         if (game.players.length > 0) {
-            // Auto-resume: no modal change fires, so reveal back button manually
+            // Unified cleanup for auto-resume and tutorial first-start
             document.getElementById('global-back-btn')?.classList.remove('hidden');
+            document.getElementById('dice-result-hud')?.classList.add('hidden');
             return;
         }
         // startIntroMode() already called in onDismissStart for the fade-in effect
@@ -1751,14 +1752,16 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     }
 
     const obsOpts = { attributes: true, attributeFilter: ['class'] };
-    if (mainMenu) new MutationObserver(updateGlobalBackVisibility).observe(mainMenu, obsOpts);
-    if (pauseModal) new MutationObserver(updateGlobalBackVisibility).observe(pauseModal, obsOpts);
-    if (settingsModal) new MutationObserver(updateGlobalBackVisibility).observe(settingsModal, obsOpts);
-    if (howtoModal) new MutationObserver(updateGlobalBackVisibility).observe(howtoModal, obsOpts);
-    if (aboutModal) new MutationObserver(updateGlobalBackVisibility).observe(aboutModal, obsOpts);
-    if (setupModal) new MutationObserver(updateGlobalBackVisibility).observe(setupModal, obsOpts);
-    if (sbModal) new MutationObserver(updateGlobalBackVisibility).observe(sbModal, obsOpts);
-    if (editorOverlay) new MutationObserver(updateGlobalBackVisibility).observe(editorOverlay, obsOpts);
+    const backObs = new MutationObserver(updateGlobalBackVisibility);
+    if (mainMenu) backObs.observe(mainMenu, obsOpts);
+    if (pauseModal) backObs.observe(pauseModal, obsOpts);
+    if (settingsModal) backObs.observe(settingsModal, obsOpts);
+    if (howtoModal) backObs.observe(howtoModal, obsOpts);
+    if (aboutModal) backObs.observe(aboutModal, obsOpts);
+    if (setupModal) backObs.observe(setupModal, obsOpts);
+    if (sbModal) backObs.observe(sbModal, obsOpts);
+    if (editorOverlay) backObs.observe(editorOverlay, obsOpts);
+    if (playerDashboard) backObs.observe(playerDashboard, obsOpts);
 
     // Wire zoom visibility to all relevant state changes
     const zoomObs = new MutationObserver(updateZoomVisibility);
@@ -1767,6 +1770,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     if (playerDashboard) zoomObs.observe(playerDashboard, obsOpts);
     zoomDialogs.forEach(el => { if (el) zoomObs.observe(el, obsOpts); });
     updateZoomVisibility();
+    updateGlobalBackVisibility();
 
     // --- Pause menu wiring ---
 

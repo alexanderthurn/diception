@@ -100,7 +100,7 @@ export class ConfigManager {
         const savedTurnTimeLimit = localStorage.getItem('dicy_turnTimeLimit') || '0';
 
         // Load effects quality
-        let savedEffectsQuality = localStorage.getItem('effectsQuality') || 'medium';
+        let savedEffectsQuality = localStorage.getItem('effectsQuality') || 'high';
         if (savedEffectsQuality === 'low') savedEffectsQuality = 'medium';
 
         // Apply to UI
