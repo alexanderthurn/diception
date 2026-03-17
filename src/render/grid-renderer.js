@@ -1247,6 +1247,8 @@ export class GridRenderer {
         // Probability text — shifted right when sharing space with an inline icon
         container.probText.text = text;
         container.probText.x = inlineSprite ? 10 : 0;
+        // Match text raster resolution to current zoom so glyphs stay sharp when zoomed in
+        container.probText.resolution = this.stage.scale.x * (window.devicePixelRatio || 1);
 
         // Hint rendering
         container.hintContainer.removeChildren();
@@ -1283,6 +1285,7 @@ export class GridRenderer {
                 const hintText = new Text({ text: hint.label, style: this.hintTextStyle });
                 hintText.anchor.set(0.5, 0.5);
                 hintText.style.fontSize = hint.type === 'gamepad' ? 10 : 11;
+                hintText.resolution = this.stage.scale.x * (window.devicePixelRatio || 1);
                 container.hintContainer.addChild(hintText);
             }
         } else {
