@@ -1091,9 +1091,12 @@ export class GridRenderer {
         const canAttackFrom = isOwned && tileRaw.dice > 1;
 
         // Check for direct attack shortcut (expert: any attackable enemy, pick best attacker)
+        // Shortcut is only available in classic mode with no gamepads connected — mirror input-controller conditions
+        const _isParallelMode = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
+        const _gamepadsConnected = (this.inputManager?.connectedGamepadIndices?.size ?? 0) > 0;
         let isUniquelyAttackable = false;
         let uniqueAttacker = null;
-        if (!isOwned && this.gameSpeed === 'expert') {
+        if (!isOwned && this.gameSpeed === 'expert' && !_isParallelMode && !_gamepadsConnected) {
             const neighbors = this.game.map.getAdjacentTiles(x, y);
             const attackers = neighbors.filter(n => n.owner === this.game.currentPlayer.id && n.dice > 1)
                 .map(n => ({ x: n.x, y: n.y }));
