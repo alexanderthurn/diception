@@ -4849,6 +4849,24 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     display: block;
 }
 
+/* Player number label shown next to the cursor in menus */
+.gamepad-cursor-label {
+    position: absolute;
+    left: 46px;
+    top: 6px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    color: inherit;
+    background: rgba(0, 0, 5, 0.85);
+    border: 1px solid currentColor;
+    padding: 2px 5px;
+    white-space: nowrap;
+    display: none;
+    letter-spacing: 0.04em;
+}
+
 #main-menu-branding {
     position: fixed;
     bottom: 16px;
@@ -6734,29 +6752,17 @@ details.settings-group[open]>summary.settings-group-header::after {
 .gp-chip {
     min-height: 34px;
     min-width: 34px;
-    padding: 0;
+    padding: 0 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-color: var(--gp-color, #aaa);
-    opacity: 0.6;
+    color: var(--gp-color, #aaa);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    opacity: 0.75;
     transition: opacity 0.15s, background 0.15s;
-}
-
-.gp-chip::before {
-    content: '';
-    display: block;
-    width: 18px;
-    height: 16px;
-    -webkit-mask-image: url('/assets/gfx/diception.png');
-    mask-image: url('/assets/gfx/diception.png');
-    -webkit-mask-size: 183px 102px;
-    mask-size: 183px 102px;
-    -webkit-mask-position: -88px -18px;
-    mask-position: -88px -18px;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    background: var(--gp-color, #aaa);
 }
 
 .gp-chip:hover {

@@ -462,7 +462,8 @@ async function init() {
                 const chip = document.createElement('button');
                 chip.className = 'tron-btn gp-chip';
                 chip.style.setProperty('--gp-color', pColor);
-                chip.title = `Remove GP${gpIdx}`;
+                chip.title = `Remove controller ${gpIdx + 1}`;
+                chip.textContent = String(gpIdx + 1);
                 chip.addEventListener('click', (e) => {
                     e.stopPropagation();
                     inputManager.gamepadCursorManager?.kickGamepad(gpIdx);
@@ -497,7 +498,8 @@ async function init() {
             const chip = document.createElement('button');
             chip.className = 'tron-btn gp-chip';
             chip.style.setProperty('--gp-color', '#666');
-            chip.title = `Remove GP${gpIdx}`;
+            chip.title = `Remove controller ${gpIdx + 1}`;
+            chip.textContent = String(gpIdx + 1);
             chip.addEventListener('click', (e) => {
                 e.stopPropagation();
                 inputManager.gamepadCursorManager?.kickGamepad(gpIdx);

@@ -552,6 +552,8 @@ export class InputManager {
 
     processGamepadPan(gp) {
         if (this.suspended) return;
+        // Only activated (joined) gamepads may pan
+        if (!this.gamepadCursorManager?.activatedGamepads?.has(gp.index)) return;
 
         // Right stick: axes 2 (X), 3 (Y)
         let rx = gp.axes[2] ?? 0;

@@ -464,6 +464,7 @@ export class GamepadCursorManager {
                 <path d="M 40 56 L 56 56 L 56 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
                 <rect class="center-dot" x="29" y="29" width="6" height="6" fill="currentColor"/>
             </svg>
+            <div class="gamepad-cursor-label"></div>
         `;
 
         // Restore last known position, or place at player corner on first appearance.
@@ -487,9 +488,11 @@ export class GamepadCursorManager {
             x: initialX,
             y: initialY,
             element: el,
+            label: el.querySelector('.gamepad-cursor-label'),
             controllerType: gamepad ? detectControllerType(gamepad) : 'xbox',
             lastPlayerId: -1,
             lastColor: '',
+            lastLabelText: '',
             speedMultiplier: parseFloat(localStorage.getItem('dicy_gamepad_speed_' + index)) || 1.0,
             dragTarget: null,
             mode: 'dpad',
@@ -523,6 +526,9 @@ export class GamepadCursorManager {
     }
 
     updateCursorColor(cursor, index) {
+        const isMenuOpen = !!document.querySelector(
+            '#main-menu:not(.hidden), #setup-modal:not(.hidden), #pause-modal:not(.hidden)'
+        );
         const isMainMenu = !document.getElementById('main-menu')?.classList.contains('hidden');
         let colorHex;
 
@@ -544,6 +550,16 @@ export class GamepadCursorManager {
         if (cursor.lastColor !== colorHex) {
             cursor.element.style.color = colorHex;
             cursor.lastColor = colorHex;
+        }
+
+        // Show controller number next to cursor only in menus
+        if (cursor.label) {
+            const labelText = String(index + 1);
+            if (cursor.lastLabelText !== labelText) {
+                cursor.label.textContent = labelText;
+                cursor.lastLabelText = labelText;
+            }
+            cursor.label.style.display = isMenuOpen ? '' : 'none';
         }
     }
 
