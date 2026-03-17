@@ -1627,11 +1627,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     document.getElementById('global-back-btn')?.addEventListener('click', async () => {
         if (pauseModal && !pauseModal.classList.contains('hidden')) {
             pauseModal.classList.add('hidden');
-            if (localStorage.getItem('dicy_campaignMode')) {
-                await sessionManagerRef.quitToCampaignScreen();
-            } else {
-                sessionManagerRef.quitToCustomGame();
-            }
             return;
         }
         if (settingsModal && !settingsModal.classList.contains('hidden')) {
