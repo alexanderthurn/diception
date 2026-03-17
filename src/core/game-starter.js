@@ -142,6 +142,8 @@ export class GameStarter {
         this.setupModal.classList.add('hidden');
         document.getElementById('main-menu')?.classList.add('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
+        // Keep dice HUD hidden until first attack result — no content yet
+        document.getElementById('dice-result-hud')?.classList.add('hidden');
 
         const isCampaignMode = localStorage.getItem('dicy_campaignMode');
 
