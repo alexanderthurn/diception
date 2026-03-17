@@ -204,21 +204,25 @@ export class Renderer {
     }
 
     _applyScanline(quality) {
-        if (quality === 'high') {
+        const isMobile = this.app.screen.width <= 768 || this.app.screen.height <= 600;
+        if (quality === 'high' && !isMobile) {
             if (!this._scanlineFilter) {
                 this._scanlineFilter = new ScanlineFilter();
-                this._scanlineFilter.intensity = 0;
                 const w = this.app.screen.width;
                 const h = this.app.screen.height;
                 this._scanlineFilter.setResolution(w, h);
-                this._scanlineBaseIntensity = 0;
-                this._scanlinePulse = 0; // extra intensity, decays each frame
+                this._scanlineBaseIntensity = 0; // scanlines only during pulse (attacks)
+                this._scanlineBaseBeam      = 0.3;  // beam at rest — subtle
+                this._scanlinePulse = 0;
+                this._scanlineFilter.intensity     = this._scanlineBaseIntensity;
+                this._scanlineFilter.beamIntensity = this._scanlineBaseBeam;
                 // Animate time uniform + decay pulse
                 this._scanlineTick = (ticker) => {
                     this._scanlineFilter.time += ticker.deltaTime / 60;
                     if (this._scanlinePulse > 0) {
                         this._scanlinePulse = Math.max(0, this._scanlinePulse - ticker.deltaTime * 0.04);
-                        this._scanlineFilter.intensity = this._scanlineBaseIntensity + this._scanlinePulse;
+                        this._scanlineFilter.intensity     = this._scanlineBaseIntensity + this._scanlinePulse * 0.5;
+                        this._scanlineFilter.beamIntensity = this._scanlineBaseBeam      + this._scanlinePulse;
                     }
                 };
                 Ticker.shared.add(this._scanlineTick);
@@ -237,6 +241,10 @@ export class Renderer {
     pulseScanline(amount = 1.0) {
         if (!this._scanlineFilter) return;
         this._scanlinePulse = Math.min(this._scanlinePulse + amount, 1.5);
+    }
+
+    setScanlineBeamColor(hex) {
+        this._scanlineFilter?.setBeamColor(hex);
     }
 
     pan(dx, dy) {

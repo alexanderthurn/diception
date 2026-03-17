@@ -32,13 +32,14 @@ out vec4 finalColor;
 uniform sampler2D uTexture;
 uniform vec2  uResolution;
 uniform float uTime;
-uniform float uIntensity;   // 0..1 overall strength
+uniform float uIntensity;     // scanlines + chroma + vignette
+uniform float uBeamIntensity; // sweep beam only (independent)
+uniform vec3  uBeamColor;     // active player color for the beam
 
 void main(void) {
     vec2 uv = vTextureCoord;
 
     // ── Very subtle chromatic aberration ─────────────────────────────────────
-    // Offset R and B channels by a tiny pixel fraction, stronger at screen edges.
     vec2  center = vec2(0.5, 0.5);
     vec2  dir    = (uv - center) * 0.004 * uIntensity;
     float r = texture(uTexture, uv + dir).r;
@@ -47,23 +48,20 @@ void main(void) {
     vec3 col = vec3(r, g, b);
 
     // ── Scanlines ─────────────────────────────────────────────────────────────
-    // One dark line every 3 screen pixels; very low contrast so it's
-    // a texture hint rather than a harsh CRT effect.
-    float lineY  = floor(uv.y * uResolution.y);
+    float lineY   = floor(uv.y * uResolution.y);
     float scanline = 1.0 - 0.06 * mod(lineY, 3.0) * uIntensity;
     col *= scanline;
 
     // ── Moving horizontal data-pulse line ─────────────────────────────────────
-    // A faint bright band drifts slowly downward — like a tron scan beam.
-    float pulse = fract(uTime * 0.08);           // 0..1 scroll speed
+    float pulse = fract(uTime * 0.08);
     float band  = abs(uv.y - pulse);
-    float beam  = smoothstep(0.03, 0.0, band) * 0.12 * uIntensity;
-    col += beam * vec3(0.0, 0.6, 1.0);           // cyan tint
+    float beam  = smoothstep(0.03, 0.0, band) * 0.16 * uBeamIntensity;
+    col += beam * uBeamColor;
 
     // ── Corner vignette ───────────────────────────────────────────────────────
-    vec2  vUV   = uv * 2.0 - 1.0;
-    float vig   = 1.0 - smoothstep(0.55, 1.3, length(vUV * vec2(0.85, 1.0)));
-    col *= 0.88 + 0.12 * vig;                    // subtle, not full dark
+    vec2  vUV = uv * 2.0 - 1.0;
+    float vig = 1.0 - smoothstep(0.55, 1.3, length(vUV * vec2(0.85, 1.0)));
+    col *= 0.88 + 0.12 * vig * uIntensity;
 
     finalColor = vec4(col, 1.0);
 }`;
@@ -86,19 +84,32 @@ export class ScanlineFilter extends Filter {
             glProgram,
             resources: {
                 scanUniforms: new UniformGroup({
-                    uResolution: { value: new Float32Array([1920, 1080]), type: 'vec2<f32>' },
-                    uTime:       { value: 0.0,                           type: 'f32'       },
-                    uIntensity:  { value: 0.7,                           type: 'f32'       },
+                    uResolution:    { value: new Float32Array([1920, 1080]), type: 'vec2<f32>'  },
+                    uTime:          { value: 0.0,                           type: 'f32'        },
+                    uIntensity:     { value: 0.55,                          type: 'f32'        },
+                    uBeamIntensity: { value: 1.0,                           type: 'f32'        },
+                    uBeamColor:     { value: new Float32Array([0.0, 0.7, 1.0]), type: 'vec3<f32>' },
                 }),
             },
         });
     }
 
-    get time()        { return this.resources.scanUniforms.uniforms.uTime; }
-    set time(v)       { this.resources.scanUniforms.uniforms.uTime = v; }
+    get time()             { return this.resources.scanUniforms.uniforms.uTime; }
+    set time(v)            { this.resources.scanUniforms.uniforms.uTime = v; }
 
-    get intensity()   { return this.resources.scanUniforms.uniforms.uIntensity; }
-    set intensity(v)  { this.resources.scanUniforms.uniforms.uIntensity = v; }
+    get intensity()        { return this.resources.scanUniforms.uniforms.uIntensity; }
+    set intensity(v)       { this.resources.scanUniforms.uniforms.uIntensity = v; }
+
+    get beamIntensity()    { return this.resources.scanUniforms.uniforms.uBeamIntensity; }
+    set beamIntensity(v)   { this.resources.scanUniforms.uniforms.uBeamIntensity = v; }
+
+    /** Set beam color from a hex integer (e.g. 0xAA00FF). */
+    setBeamColor(hex) {
+        const c = this.resources.scanUniforms.uniforms.uBeamColor;
+        c[0] = ((hex >> 16) & 0xff) / 255;
+        c[1] = ((hex >>  8) & 0xff) / 255;
+        c[2] = ( hex        & 0xff) / 255;
+    }
 
     setResolution(w, h) {
         const r = this.resources.scanUniforms.uniforms.uResolution;

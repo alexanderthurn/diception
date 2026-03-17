@@ -6260,6 +6260,20 @@ canvas {
     flex: 1;
 }
 
+/* Main Menu button: hidden on small screens, visible on desktop */
+.pause-topmenu-btn {
+    display: none;
+}
+
+@media (min-width: 700px) and (min-height: 500px) {
+    #pause-modal {
+        width: 480px;
+    }
+    .pause-topmenu-btn {
+        display: block;
+    }
+}
+
 .pause-control-row {
     margin: 0;
     gap: 10px;

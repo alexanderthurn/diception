@@ -394,34 +394,36 @@ async function init() {
         gamepadSidePanel.innerHTML = '';
         if (gamepadLeftPanel) gamepadLeftPanel.innerHTML = '';
 
-        // ── Play Mode ────────────────────────────────────────────────────────
-        const pmTitle = document.createElement('div');
-        pmTitle.className = 'gp-panel-title';
-        pmTitle.textContent = 'PLAY MODE';
-        gamepadSidePanel.appendChild(pmTitle);
+        // ── Play Mode (setup only — cannot change mid-game) ──────────────────
+        if (setupVisible) {
+            const pmTitle = document.createElement('div');
+            pmTitle.className = 'gp-panel-title';
+            pmTitle.textContent = 'PLAY MODE';
+            gamepadSidePanel.appendChild(pmTitle);
 
-        const pmSelect = document.createElement('select');
-        pmSelect.id = 'play-mode';
-        pmSelect.className = 'gp-play-mode-select';
-        [
-            ['classic',    'Classic — turns one at a time'],
-            ['parallel',   'Parallel — everyone attacks anytime'],
-            ['parallel-s', 'Parallel S — active player is safe'],
-        ].forEach(([val, label]) => {
-            const opt = document.createElement('option');
-            opt.value = val;
-            opt.textContent = label;
-            pmSelect.appendChild(opt);
-        });
-        pmSelect.value = localStorage.getItem('dicy_playMode') ?? 'classic';
-        pmSelect.addEventListener('change', () => {
-            localStorage.setItem('dicy_playMode', pmSelect.value);
-        });
-        gamepadSidePanel.appendChild(pmSelect);
+            const pmSelect = document.createElement('select');
+            pmSelect.id = 'play-mode';
+            pmSelect.className = 'gp-play-mode-select';
+            [
+                ['classic',    'Classic — turns one at a time'],
+                ['parallel',   'Parallel — everyone attacks anytime'],
+                ['parallel-s', 'Parallel S — active player is safe'],
+            ].forEach(([val, label]) => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = label;
+                pmSelect.appendChild(opt);
+            });
+            pmSelect.value = localStorage.getItem('dicy_playMode') ?? 'classic';
+            pmSelect.addEventListener('change', () => {
+                localStorage.setItem('dicy_playMode', pmSelect.value);
+            });
+            gamepadSidePanel.appendChild(pmSelect);
 
-        const divider = document.createElement('div');
-        divider.className = 'gp-panel-divider';
-        gamepadSidePanel.appendChild(divider);
+            const divider = document.createElement('div');
+            divider.className = 'gp-panel-divider';
+            gamepadSidePanel.appendChild(divider);
+        }
 
         // Controllers title
         const title = document.createElement('div');
@@ -1678,6 +1680,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             pauseModal.classList.remove('hidden');
             initGameSpeedSegmented();
             syncPauseAudioBtns();
+            const exitBtn = document.getElementById('pause-mainmenu-btn');
+            if (exitBtn) exitBtn.textContent = 'Exit';
         }
     });
 
@@ -1872,6 +1876,11 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         } else {
             sessionManagerRef.quitToCustomGame();
         }
+    });
+
+    document.getElementById('pause-topmenu-btn')?.addEventListener('click', () => {
+        pauseModal.classList.add('hidden');
+        sessionManagerRef.quitToMainMenu();
     });
 
     clearStorageBtn?.addEventListener('click', async () => {

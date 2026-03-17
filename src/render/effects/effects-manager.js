@@ -500,6 +500,7 @@ export class EffectsManager {
         const color = player?.color || 0x00ffff;
         this.background.pulse(color, 0.1);
         this.background.bgShader?.setGridColor(color);
+        this.renderer?.setScanlineBeamColor?.(color);
     }
 
     /**
