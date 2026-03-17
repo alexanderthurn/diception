@@ -783,7 +783,7 @@ export class GamepadCursorManager {
     // -------------------------------------------------------------------------
 
     static get FOCUSABLE() {
-        return 'button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])';
+        return 'button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, a[href], [tabindex]:not([tabindex="-1"])';
     }
 
     /** Return the topmost open modal/dialog container. */
@@ -839,28 +839,34 @@ export class GamepadCursorManager {
         const isDown  = button === b.moveDown;
         const current = document.activeElement;
 
-        // Collect all visible focusable elements with their visual centre positions
-        const items = [...modal.querySelectorAll(GamepadCursorManager.FOCUSABLE)]
-            .filter(el => el.offsetParent !== null)
-            .map(el => {
-                const r = el.getBoundingClientRect();
-                return { el, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
-            })
-            .sort((a, b) => a.cy - b.cy || a.cx - b.cx);
+        const sidePanel = document.getElementById('gamepad-side-panel');
+        const sidePanelActive = sidePanel?.classList.contains('gp-panel-active');
 
-        if (!items.length) return;
-
-        // Group into rows: elements whose vertical centres are within 20px of each other
-        const rows = [];
-        for (const item of items) {
-            const last = rows[rows.length - 1];
-            if (last && Math.abs(item.cy - last[0].cy) < 20) {
-                last.push(item);
-            } else {
-                rows.push([item]);
+        // Helper: build item list + row grid from a container
+        const buildGrid = (container) => {
+            const its = [...container.querySelectorAll(GamepadCursorManager.FOCUSABLE)]
+                .filter(el => el.offsetParent !== null)
+                .map(el => {
+                    const r = el.getBoundingClientRect();
+                    return { el, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+                })
+                .sort((a, b) => a.cy - b.cy || a.cx - b.cx);
+            const rws = [];
+            for (const item of its) {
+                const last = rws[rws.length - 1];
+                if (last && Math.abs(item.cy - last[0].cy) < 20) last.push(item);
+                else rws.push([item]);
             }
-        }
-        for (const row of rows) row.sort((a, b) => a.cx - b.cx);
+            for (const row of rws) row.sort((a, b) => a.cx - b.cx);
+            return rws;
+        };
+
+        // Determine which container currently holds focus
+        const inSidePanel = sidePanelActive && sidePanel.contains(current);
+        const activeContainer = inSidePanel ? sidePanel : modal;
+
+        const rows = buildGrid(activeContainer);
+        if (!rows.length) return;
 
         // Find where the current element sits
         let rowIdx = -1, colIdx = -1;
@@ -882,10 +888,31 @@ export class GamepadCursorManager {
         let target = null;
 
         if (isLeft || isRight) {
-            // Navigate within the current row; stop at edges (no row-wrap)
             const nextCol = colIdx + (isRight ? 1 : -1);
             if (nextCol >= 0 && nextCol < rows[rowIdx].length) {
+                // Normal within-row move
                 target = rows[rowIdx][nextCol].el;
+            } else if (isRight && !inSidePanel && sidePanelActive) {
+                // At right edge of modal → cross into side panel
+                const spRows = buildGrid(sidePanel);
+                if (spRows.length) {
+                    const currentCy = rows[rowIdx][colIdx].cy;
+                    // Pick the side-panel row whose centre-Y is closest
+                    const closest = spRows.reduce((best, row) =>
+                        Math.abs(row[0].cy - currentCy) < Math.abs(best[0].cy - currentCy) ? row : best
+                    );
+                    target = closest[0].el;
+                }
+            } else if (isLeft && inSidePanel) {
+                // At left edge of side panel → cross back into modal
+                const mRows = buildGrid(modal);
+                if (mRows.length) {
+                    const currentCy = rows[rowIdx][colIdx].cy;
+                    const closest = mRows.reduce((best, row) =>
+                        Math.abs(row[0].cy - currentCy) < Math.abs(best[0].cy - currentCy) ? row : best
+                    );
+                    target = closest[closest.length - 1].el; // rightmost = closest to side panel
+                }
             }
         } else {
             // Navigate between rows; pick the element in the next row closest by X

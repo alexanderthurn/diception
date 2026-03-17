@@ -85,8 +85,7 @@ export class InputController {
         const { x: dx, y: dy, index } = data;
         if (!this.game.players || this.game.players.length === 0) return;
         if (this.game.gameOver) return;
-        if (this.game.currentPlayer.isBot) return;
-        if (index >= 0 && !this.inputManager.canGamepadControlPlayer(index, this.game.currentPlayer.id)) return;
+        if (!this._sourceCanAct(index)) return;
 
         const sourceId = this._sourceId(index);
         const cursorState = this._getCursorState(sourceId);
@@ -167,9 +166,8 @@ export class InputController {
     onConfirm(data) {
         if (!this.game.players || this.game.players.length === 0) return;
         if (this.game.gameOver) return;
-        if (this.game.currentPlayer.isBot) return;
-        if (data?.source === 'gamepad' && data?.index !== undefined &&
-            !this.inputManager.canGamepadControlPlayer(data.index, this.game.currentPlayer.id)) return;
+        const gpIndex = data?.source === 'gamepad' ? (data?.index ?? -1) : -1;
+        if (!this._sourceCanAct(gpIndex)) return;
 
         const source = data?.source ?? 'keyboard';
         const index = source === 'gamepad' ? (data?.index ?? -1) : -1;
@@ -196,7 +194,12 @@ export class InputController {
         if (!tile) return;
 
         if (!this.selectedTiles.has(sourceId)) {
-            if (tile.owner === this.game.currentPlayer.id && tile.dice > 1) {
+            const isParallelConfirm = ['parallel', 'parallel-s'].includes(this.game.playMode);
+            const owner = this.game.players.find(p => p.id === tile.owner);
+            const canSelect = isParallelConfirm
+                ? (owner && !owner.isBot && this._sourceCanControlPlayer(sourceId, tile.owner))
+                : (tile.owner === this.game.currentPlayer.id);
+            if (canSelect && tile.dice > 1) {
                 this.select(cursorState.x, cursorState.y, sourceId);
             }
             return;
@@ -417,21 +420,24 @@ export class InputController {
 
     handleTileClick(tile, x, y, sourceId = 'mouse') {
         if (this.game.gameOver) return;
-        if (this.game.currentPlayer.isBot) return;
 
-        // Gamepad assignment guard: only the assigned player's gamepad may act
-        if (sourceId.startsWith('gamepad-')) {
-            const gpIdx = parseInt(sourceId.slice('gamepad-'.length));
-            if (!this.inputManager.canGamepadControlPlayer(gpIdx, this.game.currentPlayer.id)) return;
+        const playMode = this.game.playMode || 'classic';
+        const isParallel = playMode === 'parallel' || playMode === 'parallel-s';
+        const gpIdx = sourceId.startsWith('gamepad-') ? parseInt(sourceId.slice('gamepad-'.length)) : -1;
+
+        if (!isParallel) {
+            // Classic: only act when it's a human's turn and this source controls that player
+            if (this.game.currentPlayer.isBot) return;
+            if (gpIdx >= 0 && !this.inputManager.canGamepadControlPlayer(gpIdx, this.game.currentPlayer.id)) return;
         }
 
         const selTile = this.selectedTiles.get(sourceId);
         const owner = tile ? this.game.players.find(p => p.id === tile.owner) : null;
-        const isEnemy = owner && owner.id !== this.game.currentPlayer.id;
 
-        // 1. Direct attack shortcut (Expert Mode Only, disabled when gamepads connected)
+        // Expert-mode direct-attack shortcut (classic only — parallel handles selection differently)
         const gamepadsConnected = this.inputManager?.connectedGamepadIndices?.size > 0;
-        if (isEnemy && this.renderer.gameSpeed === 'expert' && tile && !tile.blocked && !gamepadsConnected) {
+        if (!isParallel && owner && owner.id !== this.game.currentPlayer.id &&
+                this.renderer.gameSpeed === 'expert' && tile && !tile.blocked && !gamepadsConnected) {
             let attacker = null;
             let selectedWasAttacker = false;
 
@@ -445,28 +451,22 @@ export class InputController {
             }
 
             if (!attacker) {
-                const attackers = [];
                 const neighbors = [
                     { x: x, y: y - 1 }, { x: x, y: y + 1 },
                     { x: x - 1, y: y }, { x: x + 1, y: y }
                 ];
-                for (const n of neighbors) {
-                    const nTile = this.game.map.getTile(n.x, n.y);
-                    if (nTile && nTile.owner === this.game.currentPlayer.id && nTile.dice > 1) {
-                        attackers.push({ x: n.x, y: n.y });
-                    }
-                }
+                const attackers = neighbors
+                    .map(n => ({ ...n, t: this.game.map.getTile(n.x, n.y) }))
+                    .filter(n => n.t && n.t.owner === this.game.currentPlayer.id && n.t.dice > 1)
+                    .map(n => ({ x: n.x, y: n.y }));
                 attacker = this.renderer.grid.pickBestAttackerForExpert(attackers, selTile);
             }
 
             if (attacker) {
                 const result = this.game.attack(attacker.x, attacker.y, x, y);
                 if (result && !result.error && result.won) {
-                    if (selectedWasAttacker) {
-                        this.select(x, y, sourceId);
-                    } else {
-                        this.deselect(sourceId);
-                    }
+                    if (selectedWasAttacker) this.select(x, y, sourceId);
+                    else this.deselect(sourceId);
                 } else if (result && !result.error) {
                     this.deselect(sourceId);
                 }
@@ -474,10 +474,14 @@ export class InputController {
             }
         }
 
-        // 2. Standard Interaction Logic
+        // Standard Interaction Logic
         if (!selTile) {
-            if (owner && !owner.isBot && owner.id === this.game.currentPlayer.id) {
-                this.select(x, y, sourceId);
+            // Only allow selecting a human player's tile that this source can control
+            if (owner && !owner.isBot) {
+                const canControl = isParallel
+                    ? this._sourceCanControlPlayer(sourceId, owner.id)
+                    : owner.id === this.game.currentPlayer.id;
+                if (canControl) this.select(x, y, sourceId);
             }
             return;
         }
@@ -488,27 +492,38 @@ export class InputController {
         }
 
         const fromTile = this.game.map.getTile(selTile.x, selTile.y);
-        if (!fromTile) {
-            this.deselect(sourceId);
-            return;
-        }
+        if (!fromTile) { this.deselect(sourceId); return; }
 
-        // A. Clicked another tile owned by current player -> Change selection
-        if (tile.owner === this.game.currentPlayer.id) {
-            this.select(x, y, sourceId);
+        // Determine the acting player (owner of the selected from-tile)
+        const actingPlayerId = isParallel ? fromTile.owner : this.game.currentPlayer.id;
+
+        // A. Clicked another tile of the same acting player -> change selection
+        if (tile.owner === actingPlayerId) {
+            // In parallel, only allow if this source controls that player
+            if (!isParallel || this._sourceCanControlPlayer(sourceId, actingPlayerId)) {
+                this.select(x, y, sourceId);
+            }
             return;
         }
 
         // B. Standard Attack
         const isAdjacent = Math.abs(selTile.x - x) + Math.abs(selTile.y - y) === 1;
-        if (isAdjacent && tile.owner !== fromTile.owner && fromTile.dice > 1 && fromTile.owner === this.game.currentPlayer.id) {
-            const result = this.game.attack(selTile.x, selTile.y, x, y);
+
+        // In parallel: source must control the from-tile's owner, and that owner must be human
+        const fromOwner = isParallel ? this.game.players.find(p => p.id === fromTile.owner) : null;
+        const canActFrom = isParallel
+            ? (fromOwner && !fromOwner.isBot && this._sourceCanControlPlayer(sourceId, fromOwner.id))
+            : (fromTile.owner === this.game.currentPlayer.id);
+
+        // Parallel-S: cannot attack the currently-active player's tiles
+        const canAttackTarget = playMode !== 'parallel-s' || tile.owner !== this.game.currentPlayer.id;
+
+        if (isAdjacent && tile.owner !== fromTile.owner && fromTile.dice > 1 && canActFrom && canAttackTarget) {
+            const result = this.game.attack(selTile.x, selTile.y, x, y,
+                isParallel ? fromTile.owner : undefined);
             if (result && !result.error) {
-                if (result.won) {
-                    this.select(x, y, sourceId);
-                } else {
-                    this.deselect(sourceId);
-                }
+                if (result.won) this.select(x, y, sourceId);
+                else this.deselect(sourceId);
             }
             return;
         }
@@ -516,8 +531,36 @@ export class InputController {
         this.deselect(sourceId);
     }
 
+    /**
+     * Returns true if the given input source (gamepadIndex -1 = keyboard/mouse) is allowed to act.
+     * In classic mode: only when currentPlayer is human and the source controls them.
+     * In parallel mode: always for keyboard/mouse; for gamepads: only if assigned to a live human.
+     */
+    _sourceCanAct(gpIndex) {
+        const isParallel = ['parallel', 'parallel-s'].includes(this.game.playMode);
+        if (!isParallel) {
+            if (this.game.currentPlayer.isBot) return false;
+            if (gpIndex >= 0 && !this.inputManager.canGamepadControlPlayer(gpIndex, this.game.currentPlayer.id)) return false;
+            return true;
+        }
+        // Parallel: keyboard/mouse always ok; gamepad must map to a living human
+        if (gpIndex < 0) return true;
+        const assignment = this.inputManager.getGamepadAssignment(gpIndex);
+        if (assignment === 'master') return true;
+        const player = this.game.players.find(p => p.id === assignment);
+        return !!(player && !player.isBot && player.alive);
+    }
+
+    /** Returns true if this source can control the given player (by id). */
+    _sourceCanControlPlayer(sourceId, playerId) {
+        if (!sourceId.startsWith('gamepad-')) return true; // keyboard/mouse = master
+        const gpIdx = parseInt(sourceId.slice('gamepad-'.length));
+        return this.inputManager.canGamepadControlPlayer(gpIdx, playerId);
+    }
+
     handleKeyboardAttack(dx, dy, gamepadIndex = -1, sourceId = 'mouse') {
-        if (this.game.gameOver || !this.selectedTiles.has(sourceId) || this.game.currentPlayer.isBot) return;
+        if (this.game.gameOver || !this.selectedTiles.has(sourceId)) return;
+        if (!this._sourceCanAct(gamepadIndex)) return;
 
         const selTile = this.selectedTiles.get(sourceId);
         const targetX = selTile.x + dx;
@@ -575,8 +618,9 @@ export class InputController {
     }
 
     onTurnStart() {
-        if (this.game.currentPlayer.isBot) {
-            // drawOverlay hides all selections during bot turns automatically
+        // In parallel mode: selections are validated at the time of use, not on turn transitions
+        const isParallel = ['parallel', 'parallel-s'].includes(this.game.playMode);
+        if (isParallel || this.game.currentPlayer.isBot) {
             return;
         }
 

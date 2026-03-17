@@ -63,6 +63,29 @@ export class BaseAI {
     }
 
     /**
+     * Choose the single best attack, used by parallel-mode background timers.
+     * Prefers highest dice advantage. Returns null if no valid attack.
+     * @param {*|null} excludeTargetOwnerId - skip tiles owned by this player (Parallel-S)
+     */
+    chooseBestAttack(excludeTargetOwnerId = null) {
+        const attackers = this.getMyTiles().filter(t => t.dice > 1);
+        let best = null;
+        let bestScore = -Infinity;
+        for (const tile of attackers) {
+            for (const target of this.getAdjacentTiles(tile.x, tile.y)) {
+                if (target.owner === this.playerId) continue;
+                if (excludeTargetOwnerId !== null && target.owner === excludeTargetOwnerId) continue;
+                const score = tile.dice - target.dice;
+                if (score > 0 && score > bestScore) {
+                    bestScore = score;
+                    best = { from: tile, to: target };
+                }
+            }
+        }
+        return best;
+    }
+
+    /**
      * Execute the AI's turn - must be implemented by subclasses
      */
     async takeTurn(gameSpeed = 'normal') {

@@ -363,6 +363,7 @@ async function init() {
 
     // ── Gamepad panels ────────────────────────────────────────────────────────
     const gamepadSidePanel = document.getElementById('gamepad-side-panel');
+    const gamepadLeftPanel = document.getElementById('gamepad-left-panel');
     const gamepadControlsPanel = document.getElementById('gamepad-controls-panel');
 
     function updateControlsPanel() {
@@ -386,10 +387,41 @@ async function init() {
 
         if (gamepads.length < 2 || (!setupVisible && !pauseVisible) || humanCount <= 1) {
             gamepadSidePanel.classList.remove('gp-panel-active');
+            gamepadLeftPanel?.classList.remove('gp-panel-active');
             updateControlsPanel();
             return;
         }
         gamepadSidePanel.innerHTML = '';
+        if (gamepadLeftPanel) gamepadLeftPanel.innerHTML = '';
+
+        // ── Play Mode ────────────────────────────────────────────────────────
+        const pmTitle = document.createElement('div');
+        pmTitle.className = 'gp-panel-title';
+        pmTitle.textContent = 'PLAY MODE';
+        gamepadSidePanel.appendChild(pmTitle);
+
+        const pmSelect = document.createElement('select');
+        pmSelect.id = 'play-mode';
+        pmSelect.className = 'gp-play-mode-select';
+        [
+            ['classic',    'Classic — turns one at a time'],
+            ['parallel',   'Parallel — everyone attacks anytime'],
+            ['parallel-s', 'Parallel S — active player is safe'],
+        ].forEach(([val, label]) => {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = label;
+            pmSelect.appendChild(opt);
+        });
+        pmSelect.value = localStorage.getItem('dicy_playMode') ?? 'classic';
+        pmSelect.addEventListener('change', () => {
+            localStorage.setItem('dicy_playMode', pmSelect.value);
+        });
+        gamepadSidePanel.appendChild(pmSelect);
+
+        const divider = document.createElement('div');
+        divider.className = 'gp-panel-divider';
+        gamepadSidePanel.appendChild(divider);
 
         // Controllers title
         const title = document.createElement('div');
@@ -479,39 +511,35 @@ async function init() {
         masterHint.textContent = 'Masters control any player';
         gamepadSidePanel.appendChild(masterHint);
 
-        // Mini controls — same condition as controllers above
-        const miniDiv = document.createElement('div');
-        miniDiv.className = 'gcp-mini-wrap';
-        miniDiv.innerHTML = `
-            <div class="gp-panel-title">CONTROLS</div>
-            <svg class="gcp-svg" viewBox="40 2 155 162" xmlns="http://www.w3.org/2000/svg">
-                <rect class="gcp-body" x="58" y="55" width="124" height="68" rx="8"/>
-                <rect class="gcp-el" x="77" y="73" width="6" height="18" rx="1"/>
-                <rect class="gcp-el" x="71" y="79" width="18" height="6" rx="1"/>
-                <circle class="gcp-el" cx="162" cy="77" r="4"/>
-                <circle class="gcp-el" cx="162" cy="97" r="4"/>
-                <circle class="gcp-el" cx="152" cy="87" r="4"/>
-                <circle class="gcp-el gcp-dim" cx="172" cy="87" r="4"/>
-                <circle class="gcp-stick gcp-dim" cx="90" cy="112" r="7"/>
-                <circle class="gcp-stick gcp-dim" cx="150" cy="112" r="7"/>
-                <!-- D-pad callout → up → Move/Attack -->
-                <circle class="gcp-dot" cx="80" cy="73" r="1.5"/>
-                <line class="gcp-line" x1="80" y1="73" x2="80" y2="36"/>
-                <text class="gcp-lbl" text-anchor="middle" x="80" y="20">Move /<tspan x="80" dy="13">Attack</tspan></text>
-                <!-- Y callout → up → End Turn -->
-                <circle class="gcp-dot" cx="162" cy="73" r="1.5"/>
-                <line class="gcp-line" x1="162" y1="73" x2="162" y2="36"/>
-                <text class="gcp-lbl" text-anchor="middle" x="162" y="20">End Turn</text>
-                <!-- A callout → down → Select -->
-                <circle class="gcp-dot" cx="162" cy="101" r="1.5"/>
-                <line class="gcp-line" x1="162" y1="101" x2="162" y2="142"/>
-                <text class="gcp-lbl" text-anchor="middle" x="162" y="154">Select</text>
-                <!-- X callout → bottom-left → Deselect -->
-                <circle class="gcp-dot" cx="148" cy="90" r="1.5"/>
-                <line class="gcp-line" x1="148" y1="90" x2="92" y2="142"/>
-                <text class="gcp-lbl" text-anchor="middle" x="92" y="154">Deselect</text>
-            </svg>`;
-        gamepadSidePanel.appendChild(miniDiv);
+        // Controls SVG — rendered in the left panel
+        if (gamepadLeftPanel) {
+            gamepadLeftPanel.innerHTML = `
+                <div class="gp-panel-title">CONTROLS</div>
+                <svg class="gcp-svg" viewBox="40 2 155 162" xmlns="http://www.w3.org/2000/svg">
+                    <rect class="gcp-body" x="58" y="55" width="124" height="68" rx="8"/>
+                    <rect class="gcp-el" x="77" y="73" width="6" height="18" rx="1"/>
+                    <rect class="gcp-el" x="71" y="79" width="18" height="6" rx="1"/>
+                    <circle class="gcp-el" cx="162" cy="77" r="4"/>
+                    <circle class="gcp-el" cx="162" cy="97" r="4"/>
+                    <circle class="gcp-el" cx="152" cy="87" r="4"/>
+                    <circle class="gcp-el gcp-dim" cx="172" cy="87" r="4"/>
+                    <circle class="gcp-stick gcp-dim" cx="90" cy="112" r="7"/>
+                    <circle class="gcp-stick gcp-dim" cx="150" cy="112" r="7"/>
+                    <circle class="gcp-dot" cx="80" cy="73" r="1.5"/>
+                    <line class="gcp-line" x1="80" y1="73" x2="80" y2="36"/>
+                    <text class="gcp-lbl" text-anchor="middle" x="80" y="20">Move /<tspan x="80" dy="13">Attack</tspan></text>
+                    <circle class="gcp-dot" cx="162" cy="73" r="1.5"/>
+                    <line class="gcp-line" x1="162" y1="73" x2="162" y2="36"/>
+                    <text class="gcp-lbl" text-anchor="middle" x="162" y="20">End Turn</text>
+                    <circle class="gcp-dot" cx="162" cy="101" r="1.5"/>
+                    <line class="gcp-line" x1="162" y1="101" x2="162" y2="142"/>
+                    <text class="gcp-lbl" text-anchor="middle" x="162" y="154">Select</text>
+                    <circle class="gcp-dot" cx="148" cy="90" r="1.5"/>
+                    <line class="gcp-line" x1="148" y1="90" x2="92" y2="142"/>
+                    <text class="gcp-lbl" text-anchor="middle" x="92" y="154">Deselect</text>
+                </svg>`;
+            gamepadLeftPanel.classList.add('gp-panel-active');
+        }
 
         gamepadSidePanel.classList.add('gp-panel-active');
         updateControlsPanel();

@@ -177,14 +177,15 @@ export class Game {
         return this.players[this.currentPlayerIndex];
     }
 
-    attack(fromX, fromY, toX, toY) {
+    attack(fromX, fromY, toX, toY, attackingPlayerId = null) {
         if (this.gameOver || this.players.length === 0) return;
 
         try {
-            // Use the new decoupled interface
+            // attackingPlayerId is provided in parallel modes where the attacker
+            // may differ from currentPlayer.
             const result = this.combat.resolveAttack({
                 map: this.map,
-                currentPlayerId: this.currentPlayer.id,
+                currentPlayerId: attackingPlayerId ?? this.currentPlayer.id,
                 diceSides: this.diceSides
             }, fromX, fromY, toX, toY);
 

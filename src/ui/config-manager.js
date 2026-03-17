@@ -36,6 +36,7 @@ export class ConfigManager {
             effectsQualityInput: document.getElementById('effects-quality'),
             mapStyleInput: document.getElementById('map-style'),
             gameModeInput: document.getElementById('game-mode'),
+            playModeInput: null, // Managed dynamically in gamepad side panel
             botAISelect: document.getElementById('bot-ai-select'),
             tournamentGamesInput: document.getElementById('tournament-games'),
             tournamentConfig: document.getElementById('tournament-config'),
@@ -94,6 +95,7 @@ export class ConfigManager {
 
         const savedMapStyle = localStorage.getItem('dicy_mapStyle') || 'full';
         const savedGameMode = localStorage.getItem('dicy_gameMode') || 'classic';
+        const savedPlayMode = localStorage.getItem('dicy_playMode') || 'classic';
         const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || '100';
         const savedTurnTimeLimit = localStorage.getItem('dicy_turnTimeLimit') || '0';
 
@@ -112,6 +114,7 @@ export class ConfigManager {
         el.gameSpeedInput.value = savedGameSpeed;
         el.mapStyleInput.value = savedMapStyle;
         el.gameModeInput.value = savedGameMode;
+        if (el.playModeInput) el.playModeInput.value = savedPlayMode;
         el.tournamentGamesInput.value = savedTournamentGames;
         el.effectsQualityInput.value = savedEffectsQuality;
         if (el.turnTimeLimitInput) el.turnTimeLimitInput.value = savedTurnTimeLimit;
@@ -187,6 +190,7 @@ export class ConfigManager {
             localStorage.setItem('dicy_gameMode', el.gameModeInput.value);
             handleChange();
         });
+        // playMode is managed dynamically in the gamepad side panel
 
         el.tournamentGamesInput.addEventListener('input', () => {
             localStorage.setItem('dicy_tournamentGames', el.tournamentGamesInput.value);
@@ -338,6 +342,7 @@ export class ConfigManager {
             diceSides: parseInt(el.diceSidesInput.value),
             mapStyle: el.mapStyleInput.value,
             gameMode: el.gameModeInput.value,
+            playMode: localStorage.getItem('dicy_playMode') ?? 'classic',
             gameSpeed: el.gameSpeedInput.value,
             effectsQuality: el.effectsQualityInput.value,
             botAI: this.selectedBotAI,
@@ -358,6 +363,7 @@ export class ConfigManager {
         localStorage.setItem('dicy_gameSpeed', config.gameSpeed);
         localStorage.setItem('dicy_mapStyle', config.mapStyle);
         localStorage.setItem('dicy_gameMode', config.gameMode);
+        localStorage.setItem('dicy_playMode', config.playMode);
         localStorage.setItem('effectsQuality', config.effectsQuality);
         localStorage.setItem('dicy_turnTimeLimit', config.turnTimeLimit.toString());
     }

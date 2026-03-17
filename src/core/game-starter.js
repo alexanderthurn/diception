@@ -23,8 +23,14 @@ export class GameStarter {
         // Game speed
         this.gameSpeed = 'beginner';
 
+        // Play mode ('classic' | 'parallel' | 'parallel-s')
+        this.playMode = 'classic';
+
         // Turn time limit (0 = unlimited)
         this.turnTimeLimit = 0;
+
+        // Parallel-mode bot timers (setInterval IDs)
+        this._parallelBotTimers = [];
 
         // DOM elements
         this.setupModal = document.getElementById('setup-modal');
@@ -80,6 +86,10 @@ export class GameStarter {
         return this.turnTimeLimit;
     }
 
+    getPlayMode() {
+        return this.playMode;
+    }
+
     /**
      * Initialize start button listener
      */
@@ -103,10 +113,14 @@ export class GameStarter {
         // Save settings
         this.configManager.saveCurrentSettings();
 
-        // Update game speed and time limit
+        // Update game speed, time limit, and play mode
         this.gameSpeed = config.gameSpeed;
         this.turnTimeLimit = config.turnTimeLimit ?? 0;
+        this.playMode = config.playMode ?? 'classic';
         this.renderer.setGameSpeed(this.gameSpeed);
+
+        // Stop any timers from the previous game
+        this._stopParallelBotTimers();
 
         // Apply effects quality
         this.effectsManager.setQuality(config.effectsQuality);
@@ -206,10 +220,52 @@ export class GameStarter {
         // Force update of autosave to include the newly assigned AI IDs
         this.turnHistory.saveAutoSave(this.game);
 
+        // Store play mode on the game object so input-controller can read it
+        this.game.playMode = this.playMode;
+
+        // Start parallel-mode background bot timers (after AIs are initialized)
+        if (this.playMode === 'parallel' || this.playMode === 'parallel-s') {
+            this._startParallelBotTimers();
+        }
+
         // Ensure camera fits after game start
         setTimeout(() => {
             this.renderer.autoFitCamera();
         }, 50);
+    }
+
+    /** Background attack timers for bots in parallel mode. */
+    _startParallelBotTimers() {
+        this._stopParallelBotTimers();
+        // Interval per difficulty (ms): easy=10s, medium=5s, hard=2s
+        const intervals = { easy: 10000, medium: 5000, hard: 2000, autoplay: 3000 };
+
+        for (const player of this.game.players) {
+            if (!player.isBot) continue;
+            const ai = this.playerAIs.get(player.id);
+            if (!ai) continue;
+            const ms = intervals[ai.name?.toLowerCase()] ?? 5000;
+            const id = setInterval(() => this._doParallelBotAttack(player, ai), ms);
+            this._parallelBotTimers.push(id);
+        }
+
+    }
+
+    _stopParallelBotTimers() {
+        this._parallelBotTimers.forEach(id => clearInterval(id));
+        this._parallelBotTimers = [];
+    }
+
+    _doParallelBotAttack(player, ai) {
+        if (this.game.gameOver || !player.alive) return;
+        // Skip: this bot's normal turn handles attacks when it's the active player
+        if (this.game.currentPlayer?.id === player.id) return;
+
+        const excludeId = this.playMode === 'parallel-s' ? this.game.currentPlayer?.id : null;
+        const move = ai.chooseBestAttack(excludeId);
+        if (move) {
+            this.game.attack(move.from.x, move.from.y, move.to.x, move.to.y, player.id);
+        }
     }
 
 
