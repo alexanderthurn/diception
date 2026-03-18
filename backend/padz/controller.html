@@ -15,15 +15,13 @@
     <meta name="application-name" content="FW Remote" />
     <meta name="mobile-web-app-title" content="FW Remote" />
     <style>
-        * {
-            box-sizing: border-box;
+        body {
             margin: 0;
             padding: 0;
         }
 
-        body {
-            margin: 0;
-            padding: 0;
+        #settingsDialog, #settingsDialog * {
+            box-sizing: border-box;
         }
 
         canvas {
@@ -74,14 +72,9 @@
 
         /* ── Inner card ── */
         .dialog-card {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            max-height: 100%;
-            background: #000;
-            border: none;
-            border-radius: 0;
+            position: absolute;
+            inset: 0;
+            background: transparent;
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -89,14 +82,18 @@
 
         /* ── Scrollable body ── */
         .dialog-body {
-            flex: 1;
+            flex: 1 1 0;
+            min-height: 0;
             overflow-y: auto;
-            padding: 28px 24px 20px;
+            overflow-x: hidden;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 12px;
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+            -webkit-overflow-scrolling: touch;
+            background: rgba(0, 0, 0, 0.72);
         }
 
         /* ── Close button ── */
@@ -141,17 +138,25 @@
             margin-bottom: 8px;
         }
 
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-row button {
+            flex: 1;
+        }
+
         /* ── Connect section ── */
         .connect-section {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             text-align: center;
         }
 
         .connect-title {
             font-family: 'Courier New', monospace;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 700;
             letter-spacing: 0.08em;
             color: #fff;
@@ -170,7 +175,7 @@
         #inputServerId {
             width: 100%;
             max-width: none;
-            height: 48px;
+            height: 44px;
             background: rgba(255, 255, 255, 0.07);
             border: 1px solid rgba(255, 255, 255, 0.18);
             border-radius: 8px;
@@ -272,59 +277,16 @@
             padding: 6px 0;
         }
 
-        /* ── Accordion ── */
-        .accordion {
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .accordion-toggle {
-            width: 100%;
-            max-width: none;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.05);
-            border: none;
-            border-radius: 0;
-            color: rgba(255, 255, 255, 0.6);
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            margin: 0;
-            transition: background 0.15s, color 0.15s;
-        }
-
-        .accordion-toggle:hover {
-            background: rgba(255, 255, 255, 0.09);
-            color: #fff;
-        }
-
-        .accordion-toggle .chevron {
-            font-size: 10px;
-            transition: transform 0.25s;
-            opacity: 0.5;
-        }
-
-        .accordion.open .accordion-toggle .chevron {
-            transform: rotate(180deg);
-        }
-
-        .accordion-body {
-            display: none;
-            padding: 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .accordion.open .accordion-body {
+        /* ── Section headings ── */
+        h2 {
             display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.35);
+            margin: 4px 0 6px;
         }
 
         /* ── Layout chips ── */
@@ -335,8 +297,8 @@
         }
 
         #layouts .btn-small {
-            flex: 1;
-            min-width: 80px;
+            flex: 0 0 calc(50% - 4px);
+            min-width: 0;
             height: 36px;
             background: rgba(255, 255, 255, 0.07);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -405,7 +367,8 @@
 
         /* ── Footer ── */
         #dialog-footer {
-            padding: 10px 24px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.72);
             border-top: 1px solid rgba(255, 255, 255, 0.07);
             font-family: 'Courier New', monospace;
             font-size: 10px;
@@ -431,12 +394,7 @@
             font-family: inherit;
         }
 
-        h1,
-        h2 {
-            display: none;
-        }
-
-        /* headings replaced by section-label */
+        h1 { display: none; }
     </style>
     <script src="./peerjs.min.js"></script>
     <script src="./pixi.js"></script>
@@ -462,42 +420,26 @@
                     <div class="connect-title">F-MOTE</div>
                     <div class="connect-subtitle">Enter room code</div>
                     <input type="text" id="inputServerId" placeholder="0000" />
-                    <button id="btnAccept">Connect</button>
-                </div>
-
-                <div class="divider">or</div>
-
-                <!-- QR scan -->
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <button id="btnScan">Scan QR Code</button>
+                    <div class="btn-row">
+                        <button id="btnAccept">Connect</button>
+                        <button id="btnScan">Scan QR</button>
+                    </div>
                     <canvas id="canvasCamera" hidden></canvas>
                     <div id="loadingMessage" hidden>Unable to access camera — please allow webcam access.</div>
                 </div>
 
-                <!-- Layout accordion -->
-                <div class="accordion" id="accordionLayout">
-                    <button class="accordion-toggle" onclick="toggleAccordion('accordionLayout')">
-                        <span>Layout</span>
-                        <span class="chevron">v</span>
-                    </button>
-                    <div class="accordion-body">
-                        <div id="layouts">
-                            <button class="btn-small" data-layout="full">Full</button>
-                            <button class="btn-small" data-layout="simple">Simple</button>
-                            <button class="btn-small" data-layout="dpad">D-Pad</button>
-                            <button class="btn-small" data-layout="dpad-full">D-Pad Full</button>
-                        </div>
-                    </div>
+                <!-- Layout -->
+                <h2>Layout</h2>
+                <div id="layouts">
+                    <button class="btn-small" data-layout="full">Full</button>
+                    <button class="btn-small" data-layout="simple">Simple</button>
+                    <button class="btn-small" data-layout="dpad">D-Pad</button>
+                    <button class="btn-small" data-layout="dpad-full">D-Pad Full</button>
                 </div>
 
-                <!-- Color accordion -->
-                <div class="accordion" id="accordionColor">
-                    <button class="accordion-toggle" onclick="toggleAccordion('accordionColor')">
-                        <span>Color</span>
-                        <span class="chevron">v</span>
-                    </button>
-                    <div class="accordion-body">
-                        <div id="colors">
+                <!-- Color -->
+                <h2>Color</h2>
+                <div id="colors">
                             <button class="btn-small" data-color="ff0055" style="background:#ff0055"></button>
                             <button class="btn-small" data-color="ff3399" style="background:#ff3399"></button>
                             <button class="btn-small" data-color="cc00ff" style="background:#cc00ff"></button>
@@ -531,8 +473,6 @@
                             <button class="btn-small" data-color="cccccc" style="background:#cccccc"></button>
                             <button class="btn-small" data-color="999999" style="background:#999999"></button>
                             <button class="btn-small" data-color="333333" style="background:#333333"></button>
-                        </div>
-                    </div>
                 </div>
 
             </div><!-- /dialog-body -->
@@ -547,11 +487,6 @@
 
     <div id="1cm" style="width: 1cm; position: absolute; visibility: hidden;"></div>
 
-    <script>
-        function toggleAccordion(id) {
-            document.getElementById(id).classList.toggle('open');
-        }
-    </script>
 </body>
 
 </html>

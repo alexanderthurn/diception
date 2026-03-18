@@ -34,6 +34,7 @@ var initDialog = (app) => {
 
   app.settingsDialog.addEventListener("close", () => {
           console.log("Dialog wurde geschlossen")
+          if (touchControl) touchControl.setControlsVisible(true);
           if (app.qrCodeReader) {
               app.qrCodeReader.onClose()
           }
@@ -63,8 +64,7 @@ var initDialog = (app) => {
       canvasElement.width = 0;
       btnScan.hidden = false
       updateSettingsDialog(app)
-      //let dialogColor = new PIXI.Color([app.color.red*0.5, app.color.green*0.5, app.color.blue*0.5])
-      //app.settingsDialog.style.backgroundColor = app.color.toHex();
+      if (touchControl) touchControl.setControlsVisible(false);
       app.settingsDialog.showModal()
   }
 

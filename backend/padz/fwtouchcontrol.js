@@ -6,21 +6,21 @@ class FWTouchControl extends PIXI.Container {
             fontFamily: 'Xolonium',
             fontStyle: 'Bold',
             fontSize: 64,
-            fill: '#000'
+            fill: '#ffffff'
         });
 
         const textStyleSmall = new PIXI.TextStyle({
             fontFamily: 'Xolonium',
             fontStyle: 'Bold',
             fontSize: 48,
-            fill: '#000'
+            fill: '#ffffff'
         });
 
         const textStyleTitle = new PIXI.TextStyle({
             fontFamily: 'Xolonium',
             fontStyle: 'Bold',
             fontSize: 32,
-            fill: '#000'
+            fill: '#ffffff'
         });
         
         this.pointer = {pointerType: 'unknown', x: 0, y: 0, xCenter: undefined, yCenter: undefined, pressed: new Set(), events: {}};
@@ -30,6 +30,8 @@ class FWTouchControl extends PIXI.Container {
         this.dpadCenterContainer = new PIXI.Container();
         this.border = new PIXI.Graphics();
         this.addChild(this.border);
+        this.scanlines = new PIXI.Graphics();
+        this.addChild(this.scanlines);
 
         this.title = new PIXI.Text({text: 'F-Mote ' + version, style: textStyleTitle});
         this.title.anchor.set(1, 1);
@@ -43,13 +45,26 @@ class FWTouchControl extends PIXI.Container {
             buttonContainer.buttonBackground = new PIXI.Graphics();
             
             if (i === 12 || i === 13 || i === 14 || i === 15) {
-                buttonContainer.buttonBackground.rect(-radius, -radius, radius*2, radius*2).fill({alpha: 1.0, color: 0xFFFFFF}).stroke({alpha: 0.5, color: 0x000000, width: radius/10});
+                buttonContainer.buttonBackground
+                    .rect(-radius*1.08, -radius*1.08, radius*2.16, radius*2.16).fill({color: 0xffffff, alpha: 0.06})
+                    .rect(-radius, -radius, radius*2, radius*2).fill({color: 0x06060f, alpha: 1.0})
+                    .rect(-radius, -radius, radius*2, radius*2).stroke({color: 0xffffff, width: radius*0.1, alpha: 0.9});
             } else {
-                buttonContainer.buttonBackground.circle(0, 0, radius).fill({alpha: 1.0, color: 0xFFFFFF}).stroke({alpha: 0.5, color: 0x000000, width: radius/10});
+                buttonContainer.buttonBackground
+                    .circle(0, 0, radius*1.08).fill({color: 0xffffff, alpha: 0.06})
+                    .circle(0, 0, radius).fill({color: 0x06060f, alpha: 1.0})
+                    .circle(0, 0, radius).stroke({color: 0xffffff, width: radius*0.1, alpha: 0.9});
             }
+            buttonContainer.buttonHighlight = new PIXI.Graphics();
+            if (i === 12 || i === 13 || i === 14 || i === 15) {
+                buttonContainer.buttonHighlight.rect(-radius, -radius, radius*2, radius*2).fill({color: 0xffffff, alpha: 0.45});
+            } else {
+                buttonContainer.buttonHighlight.circle(0, 0, radius).fill({color: 0xffffff, alpha: 0.45});
+            }
+            buttonContainer.buttonHighlight.visible = false;
             buttonContainer.buttonText = new PIXI.Text({text: i, style: (i === 8 || i === 9 || i === 16 || i === 17) ? textStyleSmall : textStyle});
             buttonContainer.buttonText.anchor.set(0.5);
-            buttonContainer.addChild(buttonContainer.buttonBackground, buttonContainer.buttonText);
+            buttonContainer.addChild(buttonContainer.buttonBackground, buttonContainer.buttonHighlight, buttonContainer.buttonText);
             buttonContainer.startRadius = radius;
             buttonContainer.index = i;
             buttonContainer.rPos = [0,0];
@@ -124,7 +139,7 @@ class FWTouchControl extends PIXI.Container {
         }
         this.dpadCenterContainer.rPos = [0,0,0,0];
         this.dpadCenterContainer.startRadius = radius;
-        this.dpadCenterContainer.stick = new PIXI.Graphics().rect(-radius, -radius, radius*2, radius*2).fill({alpha: 1.0, color: 0xFFFFFF});
+        this.dpadCenterContainer.stick = new PIXI.Graphics().rect(-radius, -radius, radius*2, radius*2).fill({color: 0xffffff, alpha: 0.18});
         this.dpadCenterContainer.addChild(this.dpadCenterContainer.stick);
         this.addChild(this.dpadCenterContainer);
 
@@ -151,10 +166,14 @@ class FWTouchControl extends PIXI.Container {
 
         for (let i = 1; i >= 0; i--) {
             let axisContainer = new PIXI.Container();
-            let axisBackground = new PIXI.Graphics().circle(0, 0, radius).fill({alpha: 0.5, color: 0xFFFFFF}).stroke({alpha: 0.5, color: 0xffffff, width: radius/10});
-            let axisStick = new PIXI.Graphics().circle(0, 0, radius/2).fill({alpha: 1.0, color: 0xFFFFFF}).stroke({alpha: 0.5, color: 0x000000, width: radius/10});
+            let axisBackground = new PIXI.Graphics()
+                .circle(0, 0, radius).fill({color: 0x06060f, alpha: 1.0})
+                .circle(0, 0, radius).stroke({color: 0xffffff, alpha: 0.5, width: radius/10});
+            let axisStick = new PIXI.Graphics()
+                .circle(0, 0, radius/2).fill({color: 0xffffff, alpha: 1.0})
+                .circle(0, 0, radius/2).stroke({color: 0x000000, alpha: 0.2, width: radius/15});
             let axisStickShadow = new PIXI.Graphics().circle(0, 0, radius/2).fill({alpha: 1.0, color: 0xFFFFFF});
-            axisStickShadow.alpha = 0.1;
+            axisStickShadow.alpha = 0.08;
             axisStick.startRadius = axisStick.radius = radius/2;
             axisStickShadow.startRadius = axisStickShadow.radius = radius/2;
             axisContainer.addChild(axisBackground, axisStick, axisStickShadow);
@@ -289,10 +308,10 @@ class FWTouchControl extends PIXI.Container {
       
             this.buttonContainers.forEach((buttonContainer, i) => {
                 switch(i) {
-                    case 0: buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -0.5, 0.0]; break;
-                    case 1: buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, 0.1, -1]; break;
-                    case 2: buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -1.15, -1]; break;
-                    case 3: buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -0.5, -2]; break;
+                    case 0: buttonContainer.rPos = [1.0, 1.0, 0.09, -0.5, 0.0]; break;
+                    case 1: buttonContainer.rPos = [1.0, 1.0, 0.09, 0.1, -1]; break;
+                    case 2: buttonContainer.rPos = [1.0, 1.0, 0.09, -1.15, -1]; break;
+                    case 3: buttonContainer.rPos = [1.0, 1.0, 0.09, -0.5, -2]; break;
                     case 4:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 5:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 6:  buttonContainer.rPos = R_POS_INVISIBLE; break;
@@ -321,10 +340,10 @@ class FWTouchControl extends PIXI.Container {
             });
             this.buttonContainers.forEach((buttonContainer, i) => {
                 switch(i) {
-                    case 0:  buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -0.5,  0.0]; break;
-                    case 1:  buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative,  0.1, -1];   break;
-                    case 2:  buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -1.15,-1];   break;
-                    case 3:  buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -0.5, -2];   break;
+                    case 0:  buttonContainer.rPos = [1.0, 1.0, 0.09, -0.5,  0.0]; break;
+                    case 1:  buttonContainer.rPos = [1.0, 1.0, 0.09,  0.1, -1];   break;
+                    case 2:  buttonContainer.rPos = [1.0, 1.0, 0.09, -1.15,-1];   break;
+                    case 3:  buttonContainer.rPos = [1.0, 1.0, 0.09, -0.5, -2];   break;
                     case 4:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 5:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 6:  buttonContainer.rPos = R_POS_INVISIBLE; break;
@@ -424,8 +443,9 @@ class FWTouchControl extends PIXI.Container {
         this.buttonContainers.forEach((container, index) => {
             container.radius = container.rPos[2] * minHeightWidth;
             container.scale = container.radius / container.startRadius;
-            container.alpha = (container.pressed ? 0.5 : 1.0);
-            container.tint = (container.pressed ? 0x000000 : 0xffffff);
+            container.alpha = 1.0;
+            container.tint = 0xffffff;
+            container.buttonHighlight.visible = container.pressed;
             container.x = (distanceToBorderX + container.radius) + container.rPos[0] * (app.containerGame.screenWidth - distanceToBorderX * 2 - container.radius * 2) + (container.rPos.length > 3 ? container.rPos[3] * container.radius * 2 : 0);
             container.y = (distanceToBorderY + container.radius) + container.rPos[1] * (app.containerGame.screenHeight - distanceToBorderY * 2 - container.radius * 2) + (container.rPos.length > 4 ? container.rPos[4] * container.radius * 2 : 0);
         });
@@ -438,10 +458,19 @@ class FWTouchControl extends PIXI.Container {
         this.dpadCenterContainer.y = (distanceToBorderY + this.dpadCenterContainer.radius) + this.dpadCenterContainer.rPos[1] * (app.containerGame.screenHeight - distanceToBorderY * 2 - this.dpadCenterContainer.radius * 2) + (this.dpadCenterContainer.rPos.length > 4 ? this.dpadCenterContainer.rPos[4] * this.dpadCenterContainer.radius * 2 : 0);
         
         if (this.border.screenWidth !== app.containerGame.screenWidth || this.border.screenHeight !== app.containerGame.screenHeight) {
+            const sw = app.containerGame.screenWidth;
+            const sh = app.containerGame.screenHeight;
             this.border.clear();
-            this.border.rect(0, 0, app.containerGame.screenWidth, app.containerGame.screenHeight).fill({alpha: 1.0, color: 0xFFFFFF});
-            this.border.screenWidth = app.containerGame.screenWidth;
-            this.border.screenHeight = app.containerGame.screenHeight;
+            this.border.rect(0, 0, sw, sh).fill({alpha: 1.0, color: 0x808080});
+            this.border.screenWidth = sw;
+            this.border.screenHeight = sh;
+
+            this.scanlines.clear();
+            for (let y = 0; y < sh; y += 4) {
+                this.scanlines.rect(0, y, sw, 2).fill({color: 0x000000, alpha: 0.2});
+            }
+            this.scanlines.screenWidth = sw;
+            this.scanlines.screenHeight = sh;
         }
 
         this.border.tint = app.color.toNumber();
@@ -470,6 +499,14 @@ class FWTouchControl extends PIXI.Container {
             container.x = (distanceToBorderX + container.radius) + container.rPos[0] * (app.containerGame.screenWidth - distanceToBorderX * 2 - container.radius * 2) + (container.rPos.length > 3 ? container.rPos[3] * container.radius * 2 : 0);
             container.y = (distanceToBorderY + container.radius) + container.rPos[1] * (app.containerGame.screenHeight - distanceToBorderY * 2 - container.radius * 2) + (container.rPos.length > 4 ? container.rPos[4] * container.radius * 2 : 0);
         });
+    }
+
+    setControlsVisible(visible) {
+        this.buttonContainers.forEach(c => c.visible = visible);
+        this.axesContainers.forEach(c => c.visible = visible);
+        this.dpadCenterContainer.visible = visible;
+        this.connectionContainers.forEach(c => c.visible = visible);
+        this.title.visible = visible;
     }
 
     // Neue Methode: Befüllt ein übergebenes FWNetworkGamepad mit den aktuellen Eingaben
