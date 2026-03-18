@@ -463,7 +463,7 @@ class FWTouchControl extends PIXI.Container {
             const sw = app.containerGame.screenWidth;
             const sh = app.containerGame.screenHeight;
             this.border.clear();
-            this.border.rect(0, 0, sw, sh).fill({alpha: 1.0, color: 0x808080});
+            this.border.rect(0, 0, sw, sh).fill({alpha: 1.0, color: 0xffffff});
             this.border.screenWidth = sw;
             this.border.screenHeight = sh;
 
