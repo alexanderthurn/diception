@@ -1,6 +1,7 @@
 import { isDesktopContext } from '../scenarios/user-identity.js';
 import { loadBindings } from './key-bindings.js';
 import { gilrsAdapter } from './gilrs-input-adapter.js';
+import { FWNetwork } from '../fwnetwork/fwnetwork.js';
 
 /**
  * InputManager - Unified input handling for keyboard and gamepad.
@@ -46,16 +47,25 @@ export class InputManager {
         this.bindings = loadBindings();
         this._buildMaps();
 
-        // Gamepad backend: 'auto' | 'gilrs' | 'navigator'
-        //  auto      = gilrs if available, else navigator.getGamepads()
-        //  gilrs     = force gilrs (Tauri desktop only)
-        //  navigator = force browser Gamepad API (4-gamepad limit)
+        // Gamepad backend: 'auto' | 'gilrs' | 'navigator' | 'fwnetwork' | 'gilrs+fwnetwork'
+        //  auto            = gilrs if available, else navigator.getGamepads()
+        //  gilrs           = force gilrs (Tauri desktop only)
+        //  navigator       = force browser Gamepad API
+        //  fwnetwork       = phone controllers via FW-Network only
+        //  gilrs+fwnetwork = native (gilrs) + phone controllers combined
         const saved = localStorage.getItem('dicy_gamepad_backend') || 'auto';
-        this._backend = saved;
-        this._useGilrs = this._resolveGilrs(saved);
+        // gilrs-based backends are only valid in Tauri/desktop — fall back on browser
+        const gilrsBased = saved === 'auto' || saved === 'gilrs' || saved === 'gilrs+fwnetwork';
+        const backend = (!isDesktopContext() && gilrsBased) ? 'navigator' : saved;
+        this._backend = backend;
+        this._useGilrs = this._resolveGilrs(backend);
         // Pending gilrs poll result (updated asynchronously)
         this._gilrsPending = false;
         this._gilrsGamepads = [];
+        // Start FWNetwork hosting if the resolved backend uses it
+        if (this._useFwNetwork) {
+            FWNetwork.getInstance().hostRoom();
+        }
 
         // Bind keyboard events
         this.setupKeyboard();
@@ -127,20 +137,27 @@ export class InputManager {
 
     /** Resolve whether to use gilrs given a backend preference string. */
     _resolveGilrs(mode) {
-        if (mode === 'gilrs') return gilrsAdapter.isAvailable;
         if (mode === 'navigator') return false;
-        // 'auto'
+        if (mode === 'fwnetwork') return false;
+        // 'auto', 'gilrs', 'gilrs+fwnetwork'
         return gilrsAdapter.isAvailable;
+    }
+
+    get _useFwNetwork() {
+        return this._backend === 'fwnetwork' || this._backend === 'gilrs+fwnetwork';
     }
 
     /**
      * Switch gamepad backend at runtime.
-     * @param {'auto'|'gilrs'|'navigator'} mode
+     * @param {'auto'|'gilrs'|'navigator'|'fwnetwork'|'gilrs+fwnetwork'} mode
      */
     setBackend(mode) {
         this._backend = mode;
         this._useGilrs = this._resolveGilrs(mode);
         localStorage.setItem('dicy_gamepad_backend', mode);
+        if (this._useFwNetwork) {
+            FWNetwork.getInstance().hostRoom();
+        }
         // Reset gamepad state so stale data doesn't linger
         this.gamepadStates.clear();
         this.connectedGamepadIndices = new Set();
@@ -161,14 +178,25 @@ export class InputManager {
      */
     getGamepads() {
         if (this._useGilrs) {
-            return this._gilrsGamepads.map(gp => ({
+            const gilrsGps = this._gilrsGamepads.map(gp => ({
                 index: gp.id,
                 id: gp.name || `gilrs-${gp.id}`,
                 buttons: gp.buttons.map(b => ({ pressed: b })),
                 axes: gp.axes,
             }));
+            if (this._backend === 'gilrs+fwnetwork') {
+                const nwGps = FWNetwork.getInstance().getNetworkGamepads();
+                const baseIdx = Math.max(4, this._gilrsGamepads.length);
+                nwGps.forEach((gp, i) => { gp.index = baseIdx + i; });
+                return [...gilrsGps, ...nwGps];
+            }
+            return gilrsGps;
         }
-        // Standard W3C: return as-is (iterable of Gamepad | null)
+        if (this._backend === 'fwnetwork') {
+            // Filter out null local slots wrapped as disconnected FWNetworkGamepad
+            return FWNetwork.getInstance().getAllGamepads().filter(g => g?.connected);
+        }
+        // Standard W3C
         return Array.from(navigator.getGamepads()).filter(Boolean);
     }
 
@@ -399,7 +427,6 @@ export class InputManager {
         let gpList;
         if (this._useGilrs) {
             // Use cached gilrs data (updated asynchronously)
-            gpList = this._gilrsGamepads;
             // Kick off next async poll if not already pending
             if (!this._gilrsPending) {
                 this._gilrsPending = true;
@@ -410,6 +437,19 @@ export class InputManager {
                     this._gilrsPending = false;
                 });
             }
+            if (this._backend === 'gilrs+fwnetwork') {
+                // Merge gilrs gamepads with phone gamepads from FW-Network
+                const nw = FWNetwork.getInstance();
+                const nwGps = nw.getNetworkGamepads();
+                // Assign network gamepad indices starting above the gilrs range
+                const baseIdx = Math.max(4, this._gilrsGamepads.length);
+                nwGps.forEach((gp, i) => { gp.index = baseIdx + i; gp._isFwNetwork = true; });
+                gpList = [...this._gilrsGamepads, ...nwGps];
+            } else {
+                gpList = this._gilrsGamepads;
+            }
+        } else if (this._backend === 'fwnetwork') {
+            gpList = FWNetwork.getInstance().getAllGamepads();
         } else {
             // Standard W3C Gamepad API
             gpList = navigator.getGamepads();
@@ -421,7 +461,7 @@ export class InputManager {
             if (!gp) continue;
 
             // Normalise: gilrs snapshots use { id, name, buttons: bool[], axes: number[] }
-            // navigator gamepads use { index, buttons: GamepadButton[], axes: number[] }
+            // FWNetworkGamepad and navigator gamepads use { index, buttons: GamepadButton[], axes: number[] }
             const gpIndex = gp.index ?? gp.id;
             currentIndices.add(gpIndex);
 
@@ -431,20 +471,21 @@ export class InputManager {
                 moveRepeat: { active: false, dir: null, started: 0, lastFire: 0 }
             };
 
-            // Build a normalised gamepad-like object for the processing methods
-            const normalised = this._useGilrs
+            // gilrs items have bool[] buttons; everything else has GamepadButton[] buttons
+            const isGilrsItem = this._useGilrs && !gp._isFwNetwork;
+            const normalised = isGilrsItem
                 ? {
                     index: gpIndex,
                     buttons: gp.buttons.map(b => ({ pressed: b })),
                     axes: gp.axes,
                 }
-                : { index: gp.index, buttons: gp.buttons, axes: [...gp.axes] };
+                : { index: gpIndex, buttons: gp.buttons, axes: [...(gp.axes || [0, 0, 0, 0])] };
 
             // For gilrs: apply pressed_events as virtual presses for buttons that
             // were briefly tapped and already released by the time the IPC returned.
             // Without this, any press shorter than the IPC round-trip is silently lost.
             const forcedButtons = new Set();
-            if (this._useGilrs && gp.pressed_events) {
+            if (isGilrsItem && gp.pressed_events) {
                 for (const idx of gp.pressed_events) {
                     if (!normalised.buttons[idx]?.pressed && !prevState.buttons[idx]) {
                         normalised.buttons[idx] = { pressed: true };

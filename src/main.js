@@ -1,4 +1,5 @@
-import { Assets } from 'pixi.js';
+import { Assets, Container, Sprite, Text, TextStyle } from 'pixi.js';
+import { FWNetwork } from './fwnetwork/fwnetwork.js';
 import { Game } from './core/game.js';
 import { Renderer } from './render/renderer.js';
 import { InputController } from './input/input-controller.js';
@@ -252,6 +253,49 @@ async function init() {
     }
 
     window.gameApp = renderer.app;
+
+    // ── FW-Network QR code overlay (shown on main menu when FW-Network backend active) ──
+    {
+        const nw = FWNetwork.getInstance();
+        const app = renderer.app;
+        const qrCodeContainer = new Container();
+        qrCodeContainer.sprite = new Sprite();
+        qrCodeContainer.sprite.anchor.set(0, 0);
+        qrCodeContainer.label = new Text({
+            text: '',
+            style: new TextStyle({
+                fontFamily: 'Rajdhani',
+                fontSize: 22,
+                fontWeight: '700',
+                fill: '#00ffff',
+                align: 'center',
+                letterSpacing: 1,
+            }),
+        });
+        qrCodeContainer.label.anchor.set(0.5, 0);
+        qrCodeContainer.addChild(qrCodeContainer.sprite, qrCodeContainer.label);
+        app.stage.addChild(qrCodeContainer);
+
+        app.ticker.add(() => {
+            const usesFw = inputManager._useFwNetwork;
+            const anyMenuOpen = ['main-menu', 'setup-modal', 'pause-modal', 'howto-modal', 'settings-modal']
+                .some(id => !document.getElementById(id)?.classList.contains('hidden'))
+                || document.body.classList.contains('loading-active');
+            const hasSpace = app.screen.width >= 830;
+
+            qrCodeContainer.visible = anyMenuOpen && hasSpace && usesFw && !!nw.qrCodeTexture && !!nw.roomNumber;
+
+            if (qrCodeContainer.visible) {
+                const qrWidth = Math.min(app.screen.width, app.screen.height) * 0.28;
+                const margin = Math.max(24, app.screen.width * 0.03);
+                qrCodeContainer.position.set(margin, app.screen.height - qrWidth - margin - 60);
+                qrCodeContainer.sprite.texture = nw.qrCodeTexture;
+                qrCodeContainer.sprite.width = qrCodeContainer.sprite.height = qrWidth;
+                qrCodeContainer.label.text = nw.qrCodeBaseUrl + '\n' + nw.roomNumber;
+                qrCodeContainer.label.position.set(qrWidth * 0.5, qrWidth + 4);
+            }
+        });
+    }
 
     // Apply dice texture to UI elements
     document.querySelectorAll('.dice-icon-sprite').forEach(el => {
@@ -1467,14 +1511,22 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         configHtml += '<div><button class="tron-btn small" id="configure-keyboard-btn" style="margin-bottom:10px;">KEYBOARD</button></div>';
         configHtml += '<div style="width:100%; height:0;"></div>';
 
-        // Gamepad Type toggle button (desktop only)
-        if (isDesktopContext()) {
+        {
+            const BACKEND_LABELS = {
+                'auto':            'GAMEPAD: NATIVE',
+                'navigator':       'GAMEPAD: BROWSER',
+                'fwnetwork':       'GAMEPAD: FW-NETWORK',
+                'gilrs+fwnetwork': 'GAMEPAD: NATIVE+FW',
+            };
             const currentBackend = inputManager.backend || 'auto';
-            const label = currentBackend === 'navigator' ? 'GAMEPAD: BROWSER' : 'GAMEPAD: NATIVE';
+            const label = BACKEND_LABELS[currentBackend] ?? 'GAMEPAD: BROWSER';
             configHtml += `<div><button class="tron-btn small" id="gamepad-type-toggle-btn" style="margin-bottom:10px;">${label}</button></div>`;
         }
 
-        const connectedGamepads = Array.from(inputManager.connectedGamepadIndices || []).sort();
+        const gcm = inputManager.gamepadCursorManager;
+        const connectedGamepads = Array.from(inputManager.connectedGamepadIndices || [])
+            .filter(idx => gcm?.cursors?.has(idx))
+            .sort();
 
         configHtml += '<div class="gce-section-label">Gamepads</div>';
 
@@ -1511,9 +1563,14 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             if (saved) refreshControlsSection();
         });
 
-        // Gamepad Type toggle button
+        // Gamepad Type toggle button — cycles through available backends
         document.getElementById('gamepad-type-toggle-btn')?.addEventListener('click', () => {
-            const next = inputManager.backend === 'navigator' ? 'auto' : 'navigator';
+            const backends = isDesktopContext()
+                ? ['auto', 'navigator', 'fwnetwork', 'gilrs+fwnetwork']
+                : ['navigator', 'fwnetwork'];
+            const current = inputManager.backend || 'auto';
+            const idx = backends.indexOf(current);
+            const next = backends[(idx + 1) % backends.length];
             inputManager.setBackend(next);
             refreshControlsSection();
         });
