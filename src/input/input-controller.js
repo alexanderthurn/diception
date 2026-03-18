@@ -82,6 +82,10 @@ export class InputController {
 
     onMove(data) {
         if (this.renderer.editorActive) return;
+        // Don't move the game cursor while a modal or dialog is open
+        const visibleModal = document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
+        if ((visibleModal && visibleModal.offsetParent !== null) ||
+            document.querySelector('.dialog-overlay')) return;
         const { x: dx, y: dy, index } = data;
         if (!this.game.players || this.game.players.length === 0) return;
         if (this.game.gameOver) return;
@@ -166,6 +170,10 @@ export class InputController {
     onConfirm(data) {
         if (!this.game.players || this.game.players.length === 0) return;
         if (this.game.gameOver) return;
+        // Don't interact with tiles while a modal or dialog is open
+        const visibleModal = document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
+        if ((visibleModal && visibleModal.offsetParent !== null) ||
+            document.querySelector('.dialog-overlay')) return;
         const gpIndex = data?.source === 'gamepad' ? (data?.index ?? -1) : -1;
         if (!this._sourceCanAct(gpIndex)) return;
 
@@ -209,6 +217,10 @@ export class InputController {
     }
 
     onCancel(data) {
+        // Don't deselect tiles while a modal or dialog is open
+        const visibleModal = document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
+        if ((visibleModal && visibleModal.offsetParent !== null) ||
+            document.querySelector('.dialog-overlay')) return;
         const index = data?.source === 'gamepad' ? (data?.index ?? -1) : -1;
         const sourceId = this._sourceId(index);
         const cursorState = this._getCursorState(sourceId);

@@ -172,6 +172,7 @@ export class GamepadCursorManager {
             // D-pad press → snap mode (no center dot), regardless of context
             if ([b.moveUp, b.moveDown, b.moveLeft, b.moveRight].includes(button)) {
                 this._setCursorMode(cursor, 'dpad');
+                this._lastDpadGamepad = index;
             }
 
             // In menu mode, only allow cursor/zoom/confirm/cancel buttons
@@ -825,8 +826,18 @@ export class GamepadCursorManager {
     /** Switch a cursor between 'analog' (free-move, dot visible) and 'dpad' (snap, dot hidden). */
     _setCursorMode(cursor, mode) {
         if (cursor.mode === mode) return;
+        const wasAnalog = cursor.mode === 'analog';
         cursor.mode = mode;
         cursor.element.classList.toggle('analog-mode', mode === 'analog');
+        // Transitioning from analog → dpad: clear stale DOM focus so navigateModal
+        // treats the first D-pad press as 'nothing focused' (direction-aware).
+        if (wasAnalog && mode === 'dpad') {
+            const prev = document.querySelector('.gamepad-focused');
+            if (prev) prev.classList.remove('gamepad-focused');
+            if (document.activeElement && document.activeElement !== document.body) {
+                document.activeElement.blur();
+            }
+        }
     }
 
     /** Move a cursor's crosshair to the centre of a DOM element. */
@@ -892,9 +903,12 @@ export class GamepadCursorManager {
             if (c !== -1) { rowIdx = r; colIdx = c; break; }
         }
 
-        // Nothing focused yet — jump to first element
+        // Nothing focused yet — direction-aware: Up → last element, otherwise → first
         if (rowIdx === -1) {
-            const t = rows[0][0].el;
+            const lastRow = rows[rows.length - 1];
+            const t = isUp
+                ? lastRow[lastRow.length - 1].el
+                : rows[0][0].el;
             if (current) current.classList.remove('gamepad-focused');
             t.focus({ preventScroll: false });
             t.classList.add('gamepad-focused');
@@ -939,6 +953,13 @@ export class GamepadCursorManager {
                 target = rows[nextRowIdx].reduce((best, item) =>
                     Math.abs(item.cx - currentCx) < Math.abs(best.cx - currentCx) ? item : best
                 ).el;
+            } else if (isDown && nextRowIdx >= rows.length) {
+                // Wrap to first element
+                target = rows[0][0].el;
+            } else if (isUp && nextRowIdx < 0) {
+                // Wrap to last element
+                const lastRow = rows[rows.length - 1];
+                target = lastRow[lastRow.length - 1].el;
             }
         }
 
@@ -959,9 +980,17 @@ export class GamepadCursorManager {
             if (this.cursors.size === 0) return; // only when gamepad is connected
             const first = container.querySelector(GamepadCursorManager.FOCUSABLE);
             if (!first) return;
-            // Focus the element so D-pad navigation works immediately,
-            // but don't move the cursor — the user knows where it is.
-            setTimeout(() => first.focus({ preventScroll: true }), 80);
+            setTimeout(() => {
+                first.focus({ preventScroll: true });
+                // Snap the last D-pad gamepad cursor to the focused element
+                if (this._lastDpadGamepad != null) {
+                    const cursor = this.cursors.get(this._lastDpadGamepad);
+                    if (cursor && cursor.mode === 'dpad') {
+                        first.classList.add('gamepad-focused');
+                        this.moveCursorToElement(cursor, first);
+                    }
+                }
+            }, 80);
         };
 
         this._modalObserver = new MutationObserver((mutations) => {
