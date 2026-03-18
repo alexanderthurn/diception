@@ -16,7 +16,7 @@ var initDialog = (app) => {
       button.addEventListener('click', function() {
           let color = button.dataset.color
           app.color = new PIXI.Color(color)
-          app.settingsDialog.style.backgroundColor = app.color.toHex();
+          document.documentElement.style.setProperty('--pad-color', app.color.toHex());
           setUrlParam('color',color)
           updateSettingsDialog(app)
       })

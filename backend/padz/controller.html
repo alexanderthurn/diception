@@ -15,12 +15,29 @@
     <meta name="application-name" content="FW Remote" />
     <meta name="mobile-web-app-title" content="FW Remote" />
     <style>
+        :root {
+            --pad-color: #f4b400;
+        }
+
         html, body {
             margin: 0;
             padding: 0;
-            background: #000;
             overflow: hidden;
             overscroll-behavior: none;
+            background-color: var(--pad-color);
+            background-image:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent 0px,
+                    transparent 3px,
+                    rgba(0,0,0,0.18) 3px,
+                    rgba(0,0,0,0.18) 4px
+                ),
+                radial-gradient(
+                    ellipse 80% 55% at 28% 22%,
+                    rgba(255,255,255,0.22) 0%,
+                    transparent 65%
+                );
         }
 
         #settingsDialog, #settingsDialog * {
@@ -96,7 +113,9 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
             -webkit-overflow-scrolling: touch;
-            background: #0d0d0d;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
         }
 
         /* ── Close button ── */
@@ -397,7 +416,7 @@
         /* ── Footer ── */
         #dialog-footer {
             padding: 8px 16px;
-            background: #0d0d0d;
+            background: rgba(0, 0, 0, 0.82);
             border-top: 1px solid rgba(255, 255, 255, 0.07);
             font-family: 'Courier New', monospace;
             font-size: 10px;

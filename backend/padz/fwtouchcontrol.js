@@ -28,10 +28,6 @@ class FWTouchControl extends PIXI.Container {
         this.axesContainers = [];
         this.connectionContainers = [];
         this.dpadCenterContainer = new PIXI.Container();
-        this.border = new PIXI.Graphics();
-        this.addChild(this.border);
-        this.scanlines = new PIXI.Graphics();
-        this.addChild(this.scanlines);
 
         this.title = new PIXI.Text({text: 'F-Mote ' + version, style: textStyleTitle});
         this.title.anchor.set(1, 1);
@@ -459,23 +455,7 @@ class FWTouchControl extends PIXI.Container {
         this.dpadCenterContainer.x = (distanceToBorderX + this.dpadCenterContainer.radius) + this.dpadCenterContainer.rPos[0] * (app.containerGame.screenWidth - distanceToBorderX * 2 - this.dpadCenterContainer.radius * 2) + (this.dpadCenterContainer.rPos.length > 3 ? this.dpadCenterContainer.rPos[3] * this.dpadCenterContainer.radius * 2 : 0);
         this.dpadCenterContainer.y = (distanceToBorderY + this.dpadCenterContainer.radius) + this.dpadCenterContainer.rPos[1] * (app.containerGame.screenHeight - distanceToBorderY * 2 - this.dpadCenterContainer.radius * 2) + (this.dpadCenterContainer.rPos.length > 4 ? this.dpadCenterContainer.rPos[4] * this.dpadCenterContainer.radius * 2 : 0);
         
-        if (this.border.screenWidth !== app.containerGame.screenWidth || this.border.screenHeight !== app.containerGame.screenHeight) {
-            const sw = app.containerGame.screenWidth;
-            const sh = app.containerGame.screenHeight;
-            this.border.clear();
-            this.border.rect(0, 0, sw, sh).fill({alpha: 1.0, color: 0xffffff});
-            this.border.screenWidth = sw;
-            this.border.screenHeight = sh;
-
-            this.scanlines.clear();
-            for (let y = 0; y < sh; y += 4) {
-                this.scanlines.rect(0, y, sw, 2).fill({color: 0x000000, alpha: 0.2});
-            }
-            this.scanlines.screenWidth = sw;
-            this.scanlines.screenHeight = sh;
-        }
-
-        this.border.tint = app.color.toNumber();
+        document.documentElement.style.setProperty('--pad-color', app.color.toHex());
         this.title.position.set(app.containerGame.screenWidth * 0.98, app.containerGame.screenHeight * 0.98);
         this.title.scale.set(Math.min(0.5,app.containerGame.screenWidth / 1500));
         this.connectionContainers[2].status = app.connectionStatus;

@@ -45,7 +45,7 @@ async function init() {
         version: version,
         width: window.innerWidth,
         height: window.innerHeight,
-        backgroundColor: 0xf4b400,
+        backgroundAlpha: 0,
         antialias: true,
         resolution: window.devicePixelRatio || 1,
         autoDensity: true,
