@@ -21,7 +21,7 @@ class FWNetwork {
         this.connection = null;
         this.roomId = null;
         this.isHost = false;
-        this.gamepadLayout = '';
+        this.gamepadLayout = 'dpad';
         this.networkGamepads = [];
         this.clientGamepadIndices = new Map();
         this.status = 'disconnected';
@@ -72,7 +72,7 @@ class FWNetwork {
 
         this.options = {
             debug: FWNetwork.getQueryParam('debug') && Number.parseInt(FWNetwork.getQueryParam('debug')) || 0,
-            config: { iceServers:  this.iceServers },
+            config: { iceServers: this.iceServers },
         }
 
         this.qrCodeTexture = null
@@ -93,7 +93,7 @@ class FWNetwork {
         }
     }
 
-        // Funktion, um URL-Parameter auszulesen
+    // Funktion, um URL-Parameter auszulesen
     static getQueryParam = (key) => {
         const params = new URLSearchParams(window.location.search);
         return params.get(key);
@@ -108,7 +108,7 @@ class FWNetwork {
 
     hostRoom() {
         this.isHost = true;
-        let wantedRoomNumber = FWNetwork.getQueryParam('id') || sessionStorage.getItem('roomNumber') || Math.floor(1000+Math.random()*9000)
+        let wantedRoomNumber = FWNetwork.getQueryParam('id') || sessionStorage.getItem('roomNumber') || Math.floor(1000 + Math.random() * 9000)
         let wantedRoomId = this.roomPrefix + wantedRoomNumber
 
         console.log(`Try Hosting room: ${wantedRoomId}`);
@@ -144,12 +144,12 @@ class FWNetwork {
                 console.log(`PeerJS initialized with ID: ${id}`);
                 console.log(`Hosting room: ${id}`);
             });
-    
+
             this.peer.on('error', (err) => {
                 console.error('PeerJS error:', err);
                 this.status = 'error';
                 console.log(this.getPeerErrorMessage(err))
-                switch(err.type) {
+                switch (err.type) {
                     case 'network':
                     case 'webrtc':
                     case 'socket-closed':
@@ -159,11 +159,11 @@ class FWNetwork {
                         break;
                     case 'unavailable-id':
                         sessionStorage.removeItem('roomNumber')
-  
+
                         this.roomNumber = 0
                         this.roomId = 0
                         this.peer.destroy()
-                        this.peer = null 
+                        this.peer = null
                         this.attemptReconnect();
                         break;
                 }
@@ -175,18 +175,18 @@ class FWNetwork {
                 this.status = 'disconnected';
                 this.attemptReconnect();
             });
-            
+
             this.peer.on('connection', (conn) => {
                 console.log(`Client connected: ${conn.peer}`);
                 this.#setupHostConnection(conn);
                 this.status = `hosting`;
             });
-    
+
             this.peer.on('open', () => {
                 this.status = 'open';
             });
         }
-        
+
     }
 
     #connectAsClient(roomId) {
@@ -195,7 +195,7 @@ class FWNetwork {
         this.status = 'connecting';
         this.connection = this.peer.connect(roomId);
         this.connection.on('open', () => {
-            console.log(`Connected to host: ${roomId}`); 
+            console.log(`Connected to host: ${roomId}`);
             this.reconnectAttempts = 0;
             this.status = 'connected';
         });
@@ -203,7 +203,7 @@ class FWNetwork {
         this.connection.on('data', (data) => {
             this.stats.messagesReceived++
             let uint8array = new Uint8Array(data)
-            this.stats.bytesReceived+=uint8array.length
+            this.stats.bytesReceived += uint8array.length
 
             console.log('Received data:', data);
         });
@@ -231,8 +231,8 @@ class FWNetwork {
             if (this.peer.disconnected) {
                 console.log('client reconnecting and is NOT connected to the network')
                 this.peer.reconnect()
-            } 
-            
+            }
+
             if (!this.peer.disconnected) {
                 console.log('connected to the network and trying to connect to the room now')
                 this.#connectAsClient(roomId)
@@ -240,7 +240,7 @@ class FWNetwork {
                 console.log('reconnecting to the network did not work, trying it again ')
                 this.attemptReconnect();
             }
-            
+
         } else {
             this.peer = new Peer(peerId, this.options)
 
@@ -257,7 +257,7 @@ class FWNetwork {
                 if (err.type === 'unavailable-id') {
                     sessionStorage.removeItem('peerId')
                     this.peer.destroy()
-                    this.peer = null 
+                    this.peer = null
                     this.attemptReconnect();
                 } else {
                     this.attemptReconnect();
@@ -276,7 +276,7 @@ class FWNetwork {
     attemptReconnect() {
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
             console.log('Maxi retry connections reached');
-             this.status = 'error'
+            this.status = 'error'
             return;
         }
 
@@ -284,10 +284,10 @@ class FWNetwork {
             clearTimeout(this.reconnectTimeout); // Vorherigen Timeout löschen
         }
 
-        let delay =  Math.pow(1.5, this.reconnectAttempts)* this.reconnectDelay
+        let delay = Math.pow(1.5, this.reconnectAttempts) * this.reconnectDelay
         this.reconnectAttempts++;
         this.status = 'connecting'
-        console.log(`Trying to connect again (${this.reconnectAttempts}/${this.maxReconnectAttempts}) with delay ${delay/1000}s...`);
+        console.log(`Trying to connect again (${this.reconnectAttempts}/${this.maxReconnectAttempts}) with delay ${delay / 1000}s...`);
 
         this.reconnectTimeout = setTimeout(() => {
             if (this.isHost) {
@@ -296,22 +296,22 @@ class FWNetwork {
                 this.connectToRoom(this.roomId);
             }
 
-        },delay);
+        }, delay);
     }
 
     getJSONGamepadsButtonsOnlyState(touchGamepad) {
-        
+
         const realGamepads = navigator.getGamepads();
         const gamepads = [touchGamepad, undefined, undefined, undefined, undefined];
         for (let i = 0; i < 4 && i < realGamepads.length; i++) {
             if (realGamepads[i] && realGamepads[i].connected) {
                 const netGamepad = new FWNetworkGamepad();
                 netGamepad.setFromRealGamepad(realGamepads[i]);
-                gamepads[1+i] = netGamepad;
+                gamepads[1 + i] = netGamepad;
             }
         }
 
-            return JSON.stringify(gamepads.map(gamepad => gamepad?.buttons.map(b => b.pressed)
+        return JSON.stringify(gamepads.map(gamepad => gamepad?.buttons.map(b => b.pressed)
         ));
     }
 
@@ -319,10 +319,10 @@ class FWNetwork {
         const realGamepads = navigator.getGamepads();
         const gamepads = [touchGamepad, undefined, undefined, undefined, undefined];
         for (let i = 0; i < 4 && i < realGamepads.length; i++) {
-            if (realGamepads[i] && realGamepads[i].connected ) {
+            if (realGamepads[i] && realGamepads[i].connected) {
                 const netGamepad = new FWNetworkGamepad();
                 netGamepad.setFromRealGamepad(realGamepads[i]);
-                gamepads[1+i] = netGamepad;
+                gamepads[1 + i] = netGamepad;
             }
         }
 
@@ -362,22 +362,22 @@ class FWNetwork {
 
 
         conn.on('data', (data) => {
-            
+
             let uint8array = new Uint8Array(data)
             this.stats.messagesReceived++
-            this.stats.bytesReceived+=uint8array.length
+            this.stats.bytesReceived += uint8array.length
 
             let arr = FWFixedSizeByteArray.extract(uint8array)
-            for (let i=0;i<5;i++) {
+            for (let i = 0; i < 5; i++) {
                 const gpIndex = this.clientGamepadIndices.get(clientId)[i];
                 if (arr[i]) {
                     this.networkGamepads[gpIndex].fromByteArray(arr[i].buffer);
                 } else {
                     this.networkGamepads[gpIndex].connected = false
                 }
-               
+
             }
-            
+
         });
 
         conn.on('close', () => {
@@ -394,14 +394,14 @@ class FWNetwork {
         });
     }
 
-    
+
     // Sendet Daten über die aktive Verbindung
     sendData(data) {
 
         if (this.connection && this.connection.open) {
             this.stats.messagesSent++
             let uint8array = new Uint8Array(data)
-            this.stats.bytesSent+=uint8array.length
+            this.stats.bytesSent += uint8array.length
 
             this.connection.send(data);
         } else {
@@ -423,11 +423,11 @@ class FWNetwork {
         const allGamepads = [...localGamepads.map(g => {
             const netGamepad = new FWNetworkGamepad();
             netGamepad.setFromRealGamepad(g);
-            return netGamepad       
+            return netGamepad
         }), ...this.networkGamepads];
-        
+
         return allGamepads;
-       
+
     }
 
     // Gibt nur die Netzwerk-Gamepads zurück (nur relevant für Host)
@@ -455,8 +455,8 @@ class FWNetwork {
         return this.stats;
     }
 
-     // Erstellt oder aktualisiert einen QR-Code für die Netzwerkverbindung
-     getQRCodeTexture() {
+    // Erstellt oder aktualisiert einen QR-Code für die Netzwerkverbindung
+    getQRCodeTexture() {
         let url = this.qrCodeUrl
 
         if (!url) {
@@ -476,7 +476,7 @@ class FWNetwork {
         if (!this.peer || !this.peer.connections) {
             return "no active peer connections";
         }
-    
+
         let states = {};
         for (const [peerId, connections] of Object.entries(this.peer.connections)) {
             if (connections.length > 0 && connections[0].peerConnection) {
@@ -485,7 +485,7 @@ class FWNetwork {
                 states[peerId] = "no connection";
             }
         }
-    
+
         return states;
     }
 
@@ -493,9 +493,9 @@ class FWNetwork {
         if (!this.peer || !this.peer.connections) {
             return "no active peer connections";
         }
-    
+
         let turnUsage = {};
-    
+
         for (const [peerId, connections] of Object.entries(this.peer.connections)) {
             if (connections.length > 0 && connections[0].peerConnection) {
                 const pc = connections[0].peerConnection;
@@ -504,23 +504,23 @@ class FWNetwork {
                 turnUsage[peerId] = "no connection";
             }
         }
-    
+
         return turnUsage;
     }
-    
+
     async #checkTurnUsage(peerConnection) {
         let foundRelay = false;
-    
+
         const stats = await peerConnection.getStats();
 
         let bytesReceived = 0;
         let bytesSent = 0;
-        let currentRoundTripTime = 0;  
+        let currentRoundTripTime = 0;
         let totalRoundTripTime = 0;
         stats.forEach(report => {
             if (report.type === "candidate-pair" && report.nominated && report.state === "succeeded") {
                 bytesReceived += report.bytesReceived;
-                bytesSent += report.bytesSent;  
+                bytesSent += report.bytesSent;
                 currentRoundTripTime = report.currentRoundTripTime;
                 totalRoundTripTime = report.totalRoundTripTime;
                 //console.log(report)
@@ -529,9 +529,9 @@ class FWNetwork {
                 }
             }
         });
-        
+
         this.stats.reported.bytesReceived = bytesReceived;
-        this.stats.reported.bytesSent = bytesSent;      
+        this.stats.reported.bytesSent = bytesSent;
         this.stats.reported.currentRoundTripTime = (currentRoundTripTime / stats.size);
         this.stats.reported.totalRoundTripTime = (totalRoundTripTime / stats.size);
         this.stats.reported.foundRelay = foundRelay;
@@ -540,7 +540,7 @@ class FWNetwork {
 
     getPeerErrorMessage(err) {
         let msg = ''
-        switch(err.type) {
+        switch (err.type) {
             case 'browser-incompatible':
                 msg = 'The client\'s browser does not support some or all WebRTC features that you are trying to use.'
                 break;
