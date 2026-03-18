@@ -385,7 +385,7 @@ async function init() {
         const pauseVisible = !document.getElementById('pause-modal')?.classList.contains('hidden');
         const humanCount = parseInt(document.getElementById('human-count')?.value ?? '1');
 
-        if (gamepads.length < 2 || (!setupVisible && !pauseVisible) || humanCount <= 1) {
+        if (gcm?.cursors?.size <= 1 || (!setupVisible && !pauseVisible)) {
             gamepadSidePanel.classList.remove('gp-panel-active');
             gamepadLeftPanel?.classList.remove('gp-panel-active');
             updateControlsPanel();
@@ -405,9 +405,9 @@ async function init() {
             pmSelect.id = 'play-mode';
             pmSelect.className = 'gp-play-mode-select';
             [
-                ['classic',    'Classic — turns one at a time'],
-                ['parallel',   'Parallel — everyone attacks anytime'],
-                ['parallel-s', 'Parallel S — active player is safe'],
+                ['classic',    'Classic — One at a time'],
+                ['parallel',   'Parallel — Everyone anytime'],
+                ['parallel-s', 'Parallel S — Active player is safe'],
             ].forEach(([val, label]) => {
                 const opt = document.createElement('option');
                 opt.value = val;
@@ -553,14 +553,11 @@ async function init() {
         const gcm = inputManager.gamepadCursorManager;
         if (!gcm) return;
         const humanCount = Math.max(1, parseInt(document.getElementById('human-count')?.value ?? '1'));
-        const activatedIndices = [...gcm.activatedGamepads].sort((a, b) => a - b);
-        activatedIndices.forEach((idx, i) => {
-            if (activatedIndices.length === 1 || humanCount <= 1) {
-                inputManager.setGamepadAssignment(idx, 'master');
-            } else {
-                inputManager.setGamepadAssignment(idx, i % humanCount);
-            }
-        });
+        for (const idx of gcm.activatedGamepads) {
+            const current = inputManager.getGamepadAssignment(idx);
+            const fits = typeof current === 'number' && current < humanCount;
+            if (!fits) inputManager.setGamepadAssignment(idx, 'master');
+        }
     }
 
     // When human count changes: redistribute all gamepads, then re-render
@@ -1467,7 +1464,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
         // Build configure buttons
         let configHtml = '<div class="controls-configure-row" style="flex-wrap: wrap; gap: 15px;">';
-        configHtml += '<div><button class="tron-btn small" id="configure-keyboard-btn" style="margin-bottom:10px;">CONFIGURE KEYBOARD</button></div>';
+        configHtml += '<div><button class="tron-btn small" id="configure-keyboard-btn" style="margin-bottom:10px;">KEYBOARD</button></div>';
+        configHtml += '<div style="width:100%; height:0;"></div>';
 
         // Gamepad Type toggle button (desktop only)
         if (isDesktopContext()) {
@@ -1477,29 +1475,32 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         }
 
         const connectedGamepads = Array.from(inputManager.connectedGamepadIndices || []).sort();
-        connectedGamepads.forEach((rawIdx) => {
-            const humanIdx = inputManager.getHumanIndex(rawIdx);
-            const color = GAME.HUMAN_COLORS[humanIdx % GAME.HUMAN_COLORS.length];
-            const colorHex = '#' + color.toString(16).padStart(6, '0');
 
-            // Read saved deadzone or default to 0.15
-            const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + rawIdx);
-            const currentDeadzone = savedDeadzone ? parseFloat(savedDeadzone) : 0.15;
-            const displayPct = Math.round(currentDeadzone * 100);
+        configHtml += '<div class="gce-section-label">Gamepads</div>';
 
-            configHtml += `
-            <div class="gamepad-config-group" style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-left: 4px solid ${colorHex}; display: flex; flex-direction: column; gap: 10px; width: 300px; max-width: 100%;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color:${colorHex}; font-weight:bold; letter-spacing: 1px;">GP ${humanIdx + 1}</span>
-                    <button class="tron-btn small gamepad-configure-btn" data-gamepad-index="${rawIdx}" style="border-color:${colorHex};color:${colorHex}; margin:0;">BINDINGS</button>
-                </div>
-                <div class="control-group range-row" style="margin: 0; display:flex; align-items:center; gap: 10px;">
-                    <label style="margin:0; min-width: 70px;">Deadzone</label>
-                    <input type="range" class="gamepad-deadzone-slider" data-gamepad-index="${rawIdx}" min="0.0" max="0.5" step="0.01" value="${currentDeadzone}" style="flex:1;">
-                    <span class="deadzone-value" id="deadzone-val-${rawIdx}" style="min-width:35px; text-align:right;">${displayPct}%</span>
-                </div>
-            </div>`;
-        });
+        if (connectedGamepads.length === 0) {
+            configHtml += '<div class="gce-no-gamepad">Press any button on your Gamepad to activate it</div>';
+        } else {
+            connectedGamepads.forEach((rawIdx) => {
+                const humanIdx = inputManager.getHumanIndex(rawIdx);
+                const color = GAME.HUMAN_COLORS[humanIdx % GAME.HUMAN_COLORS.length];
+                const colorHex = '#' + color.toString(16).padStart(6, '0');
+
+                // Read saved deadzone or default to 0.15
+                const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + rawIdx);
+                const currentDeadzone = savedDeadzone ? parseFloat(savedDeadzone) : 0.15;
+                const displayPct = Math.round(currentDeadzone * 100);
+
+                configHtml += `
+                <div class="gamepad-config-entry" style="border-left-color:${colorHex}">
+                    <span class="gce-label" style="color:${colorHex}">${humanIdx + 1}</span>
+                    <button class="tron-btn small gamepad-configure-btn" data-gamepad-index="${rawIdx}" style="border-color:${colorHex};color:${colorHex}">BINDINGS</button>
+                    <label class="gce-dz-label">DZ</label>
+                    <input type="range" class="gamepad-deadzone-slider" data-gamepad-index="${rawIdx}" min="0.0" max="0.5" step="0.01" value="${currentDeadzone}">
+                    <span class="deadzone-value" id="deadzone-val-${rawIdx}">${displayPct}%</span>
+                </div>`;
+            });
+        }
 
         configHtml += '</div>';
         configArea.innerHTML = configHtml;

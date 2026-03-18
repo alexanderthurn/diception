@@ -528,9 +528,7 @@ export class GamepadCursorManager {
     }
 
     updateCursorColor(cursor, index) {
-        const isMenuOpen = !!document.querySelector(
-            '#main-menu:not(.hidden), #setup-modal:not(.hidden), #pause-modal:not(.hidden)'
-        );
+        const isMenuOpen = !!document.querySelector('.modal:not(.hidden)');
         const isMainMenu = !document.getElementById('main-menu')?.classList.contains('hidden');
         let colorHex;
 
@@ -554,14 +552,15 @@ export class GamepadCursorManager {
             cursor.lastColor = colorHex;
         }
 
-        // Show controller number next to cursor only in menus
+        // Show controller number next to cursor only in menus with 2+ active gamepads
         if (cursor.label) {
             const labelText = String(index + 1);
             if (cursor.lastLabelText !== labelText) {
                 cursor.label.textContent = labelText;
                 cursor.lastLabelText = labelText;
             }
-            cursor.label.style.display = isMenuOpen ? '' : 'none';
+            const multipleActive = this.cursors.size > 1;
+            cursor.label.style.display = (isMenuOpen && multipleActive) ? 'block' : 'none';
         }
     }
 
