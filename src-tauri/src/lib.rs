@@ -42,6 +42,10 @@ struct GamepadSnapshot {
     buttons: Vec<bool>,
     /// 4 floats: LeftStickX, LeftStickY, RightStickX, RightStickY
     axes: [f32; 4],
+    /// W3C button indices that fired a ButtonPressed event since the last poll.
+    /// Guarantees detection of brief presses even if the button was already
+    /// released by the time this snapshot is read.
+    pressed_events: Vec<usize>,
 }
 
 // ─── Steam commands (desktop only) ────────────────────────────────────────────
@@ -219,8 +223,19 @@ fn gilrs_poll(state: tauri::State<GilrsState>) -> Result<Vec<GamepadSnapshot>, S
 
     let gilrs = guard.as_mut().unwrap();
 
-    // Drain events so cached state is up-to-date
-    while gilrs.next_event().is_some() {}
+    // Drain events, collecting ButtonPressed events so brief taps are never lost.
+    // If we only drained and then read is_pressed(), a button pressed-and-released
+    // between two polls would be completely invisible to JS.
+    let mut pressed_events_map: std::collections::HashMap<usize, Vec<usize>> =
+        std::collections::HashMap::new();
+    while let Some(event) = gilrs.next_event() {
+        if let gilrs::EventType::ButtonPressed(btn, _) = event.event {
+            if let Some(idx) = gilrs_button_to_w3c(btn) {
+                let pad_id: usize = event.id.into();
+                pressed_events_map.entry(pad_id).or_default().push(idx);
+            }
+        }
+    }
 
     let mut result = Vec::new();
 
@@ -246,11 +261,15 @@ fn gilrs_poll(state: tauri::State<GilrsState>) -> Result<Vec<GamepadSnapshot>, S
             -gamepad.value(Axis::RightStickY),  // gilrs: +up, W3C: +down
         ];
 
+        let pad_id: usize = id.into();
+        let pressed_events = pressed_events_map.remove(&pad_id).unwrap_or_default();
+
         result.push(GamepadSnapshot {
-            id: Into::<usize>::into(id),
+            id: pad_id,
             name: gamepad.name().to_string(),
             buttons,
             axes,
+            pressed_events,
         });
     }
 

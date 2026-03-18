@@ -440,9 +440,28 @@ export class InputManager {
                 }
                 : { index: gp.index, buttons: gp.buttons, axes: [...gp.axes] };
 
+            // For gilrs: apply pressed_events as virtual presses for buttons that
+            // were briefly tapped and already released by the time the IPC returned.
+            // Without this, any press shorter than the IPC round-trip is silently lost.
+            const forcedButtons = new Set();
+            if (this._useGilrs && gp.pressed_events) {
+                for (const idx of gp.pressed_events) {
+                    if (!normalised.buttons[idx]?.pressed && !prevState.buttons[idx]) {
+                        normalised.buttons[idx] = { pressed: true };
+                        forcedButtons.add(idx);
+                    }
+                }
+            }
+
             this.processGamepadButtons(normalised, prevState);
             this.processGamepadMovement(normalised, prevState);
             this.processGamepadPan(normalised);
+
+            // Restore forced buttons to their actual state (not pressed) so prevState
+            // records false — preventing spurious button-up events on the next frame.
+            for (const idx of forcedButtons) {
+                normalised.buttons[idx] = { pressed: false };
+            }
 
             this.gamepadStates.set(gpIndex, {
                 buttons: normalised.buttons.map(b => b.pressed),
