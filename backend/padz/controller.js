@@ -52,14 +52,22 @@ async function init() {
         resizeTo: window
     });
 
-    initDialog(app);
     app.setLoading(0.0, 'Loading');
     touchControl = new FWTouchControl(app);
     app.containerGame.addChild(touchControl);
 
     app.serverPrefix = 'hidden'
     app.serverId = getQueryParam('id') || '';
-    app.color = new PIXI.Color(getQueryParam('color') || 'ff0000');
+    const rawColorParam = getQueryParam('color') || 'pff0000';
+    const colorParam = /^[pg]/.test(rawColorParam) ? rawColorParam : 'p' + rawColorParam;
+    app.colorCode = colorParam;
+    try { app.color = new PIXI.Color(colorParam.slice(1)); } catch(e) { app.color = new PIXI.Color('ff0000'); }
+
+    initDialog(app);
+    const savedBtn = document.querySelector(`#colors [data-color="${colorParam}"]`);
+    if (savedBtn?.dataset.bg) {
+        document.documentElement.style.setProperty('--pad-bg-image', savedBtn.dataset.bg);
+    }
     app.layout = getQueryParam('layout') || 'default';
     app.mode = getQueryParam('mode') || 'default';
     app.connectionStatus = CONNECTION_STATUS_OFF;

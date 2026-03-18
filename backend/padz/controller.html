@@ -17,6 +17,7 @@
     <style>
         :root {
             --pad-color: #f4b400;
+            --pad-bg-image: repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px), radial-gradient(ellipse 80% 55% at 28% 22%, rgba(255,255,255,0.22) 0%, transparent 65%);
         }
 
         html, body {
@@ -25,19 +26,7 @@
             overflow: hidden;
             overscroll-behavior: none;
             background-color: var(--pad-color);
-            background-image:
-                repeating-linear-gradient(
-                    0deg,
-                    transparent 0px,
-                    transparent 3px,
-                    rgba(0,0,0,0.18) 3px,
-                    rgba(0,0,0,0.18) 4px
-                ),
-                radial-gradient(
-                    ellipse 80% 55% at 28% 22%,
-                    rgba(255,255,255,0.22) 0%,
-                    transparent 65%
-                );
+            background-image: var(--pad-bg-image);
         }
 
         #settingsDialog, #settingsDialog * {
@@ -113,9 +102,8 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
             -webkit-overflow-scrolling: touch;
-            background: rgba(0, 0, 0, 0.82);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            background-color: var(--pad-color);
+            background-image: linear-gradient(rgba(0,0,0,0.78), rgba(0,0,0,0.78)), var(--pad-bg-image);
         }
 
         /* ── Close button ── */
@@ -356,7 +344,7 @@
             border-color: transparent;
         }
 
-        /* ── Color swatches ── */
+        /* ── Style theme buttons ── */
         #colors {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
@@ -373,7 +361,7 @@
             font-size: 0;
             padding: 0;
             margin: 0;
-            transition: transform 0.12s, border-color 0.12s;
+            transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
             display: block;
         }
 
@@ -416,7 +404,8 @@
         /* ── Footer ── */
         #dialog-footer {
             padding: 8px 16px;
-            background: rgba(0, 0, 0, 0.82);
+            background-color: var(--pad-color);
+            background-image: linear-gradient(rgba(0,0,0,0.88), rgba(0,0,0,0.88)), var(--pad-bg-image);
             border-top: 1px solid rgba(255, 255, 255, 0.07);
             font-family: 'Courier New', monospace;
             font-size: 10px;
@@ -488,37 +477,77 @@
                     <button class="btn-small" data-layout="dpad-full">D-Pad Full</button>
                 </div>
 
-                <!-- Color -->
-                <h2>Color</h2>
+                <!-- Style -->
+                <h2>Style</h2>
                 <div id="colors">
-                            <button class="btn-small" data-color="ff0000" style="background:#ff0000"></button>
-                            <button class="btn-small" data-color="ff4400" style="background:#ff4400"></button>
-                            <button class="btn-small" data-color="ff9900" style="background:#ff9900"></button>
-                            <button class="btn-small" data-color="ffff00" style="background:#ffff00"></button>
-                            <button class="btn-small" data-color="aaff00" style="background:#aaff00"></button>
-                            <button class="btn-small" data-color="00ff00" style="background:#00ff00"></button>
-                            <button class="btn-small" data-color="00ff7f" style="background:#00ff7f"></button>
-                            <button class="btn-small" data-color="00ffcc" style="background:#00ffcc"></button>
-                            <button class="btn-small" data-color="00ffff" style="background:#00ffff"></button>
-                            <button class="btn-small" data-color="00bfff" style="background:#00bfff"></button>
-                            <button class="btn-small" data-color="0066ff" style="background:#0066ff"></button>
-                            <button class="btn-small" data-color="0000ff" style="background:#0000ff"></button>
-                            <button class="btn-small" data-color="7700ff" style="background:#7700ff"></button>
-                            <button class="btn-small" data-color="bb00ff" style="background:#bb00ff"></button>
-                            <button class="btn-small" data-color="ff00ff" style="background:#ff00ff"></button>
-                            <button class="btn-small" data-color="ff0099" style="background:#ff0099"></button>
-                            <button class="btn-small" data-color="ff0055" style="background:#ff0055"></button>
-                            <button class="btn-small" data-color="ff1493" style="background:#ff1493"></button>
-                            <button class="btn-small" data-color="39ff14" style="background:#39ff14"></button>
-                            <button class="btn-small" data-color="ccff00" style="background:#ccff00"></button>
-                            <button class="btn-small" data-color="ff6ec7" style="background:#ff6ec7"></button>
-                            <button class="btn-small" data-color="fe4164" style="background:#fe4164"></button>
-                            <button class="btn-small" data-color="ff6600" style="background:#ff6600"></button>
-                            <button class="btn-small" data-color="ffcc00" style="background:#ffcc00"></button>
-                            <button class="btn-small" data-color="ffffff" style="background:#ffffff"></button>
-                            <button class="btn-small" data-color="aaaaaa" style="background:#aaaaaa"></button>
-                            <button class="btn-small" data-color="555555" style="background:#555555"></button>
-                            <button class="btn-small" data-color="222222" style="background:#222222"></button>
+                    <button class="btn-small" data-color="gf4b400"
+                        data-bg="repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px), radial-gradient(ellipse 80% 55% at 28% 22%, rgba(255,255,255,0.22) 0%, transparent 65%)"
+                        style="background-color:#f4b400;background-image:repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px), radial-gradient(ellipse 80% 55% at 28% 22%, rgba(255,255,255,0.22) 0%, transparent 65%)"></button>
+                    <button class="btn-small" data-color="gff3300"
+                        data-bg="radial-gradient(ellipse at 30% 25%, rgba(255,200,0,0.7) 0%, rgba(255,60,0,0.9) 45%, rgba(80,0,0,1) 100%)"
+                        style="background-color:#ff3300;background-image:radial-gradient(ellipse at 30% 25%, rgba(255,200,0,0.7) 0%, rgba(255,60,0,0.9) 45%, rgba(80,0,0,1) 100%)"></button>
+                    <button class="btn-small" data-color="gcc00ff"
+                        data-bg="linear-gradient(180deg, #0a0018 0%, #220040 40%, #880055 80%, #ff0088 100%), repeating-linear-gradient(90deg, rgba(255,0,150,0.06) 0px, rgba(255,0,150,0.06) 1px, transparent 1px, transparent 50px)"
+                        style="background:linear-gradient(180deg, #0a0018 0%, #220040 40%, #880055 80%, #ff0088 100%)"></button>
+                    <button class="btn-small" data-color="g00ffff"
+                        data-bg="repeating-linear-gradient(0deg, transparent 0px, transparent 29px, rgba(0,255,255,0.1) 29px, rgba(0,255,255,0.1) 30px), repeating-linear-gradient(90deg, transparent 0px, transparent 29px, rgba(0,255,255,0.1) 29px, rgba(0,255,255,0.1) 30px), linear-gradient(180deg, #000811 0%, #001122 100%)"
+                        style="background:linear-gradient(180deg, #000811 0%, #001a33 100%)"></button>
+                    <button class="btn-small" data-color="g00ff00"
+                        data-bg="repeating-linear-gradient(180deg, rgba(0,255,0,0.07) 0px, rgba(0,255,0,0.07) 1px, transparent 1px, transparent 4px), linear-gradient(180deg, #000500 0%, #001000 100%)"
+                        style="background:linear-gradient(180deg, #000a00, #001500)"></button>
+                    <button class="btn-small" data-color="g0099ff"
+                        data-bg="radial-gradient(ellipse at 20% 65%, rgba(0,180,255,0.5) 0%, transparent 60%), radial-gradient(ellipse at 80% 15%, rgba(0,50,200,0.6) 0%, transparent 50%), linear-gradient(180deg, #000a22, #000520)"
+                        style="background:radial-gradient(ellipse at 30% 40%, rgba(0,150,255,0.6) 0%, #000a22 70%)"></button>
+                    <button class="btn-small" data-color="gff6600"
+                        data-bg="linear-gradient(180deg, #ff6600 0%, #cc0066 40%, #110033 80%, #000011 100%)"
+                        style="background:linear-gradient(180deg, #ff6600 0%, #cc0066 50%, #110033 100%)"></button>
+                    <button class="btn-small" data-color="gaaff00"
+                        data-bg="radial-gradient(ellipse at 50% 40%, rgba(170,255,0,0.5) 0%, transparent 65%), repeating-linear-gradient(45deg, rgba(170,255,0,0.04) 0px, rgba(170,255,0,0.04) 1px, transparent 1px, transparent 8px), linear-gradient(135deg, #010800, #0a1a00)"
+                        style="background:radial-gradient(ellipse at 40% 35%, rgba(170,255,0,0.6) 0%, #010800 70%)"></button>
+                    <button class="btn-small" data-color="gff00aa"
+                        data-bg="linear-gradient(135deg, #ff0000 0%, #ff8800 17%, #ffff00 33%, #00ff00 50%, #00ffff 67%, #0055ff 83%, #ff00ff 100%)"
+                        style="background:linear-gradient(135deg, #ff0000 0%, #ff8800 17%, #ffff00 33%, #00ff00 50%, #00ffff 67%, #0055ff 83%, #ff00ff 100%)"></button>
+                    <button class="btn-small" data-color="gffcc00"
+                        data-bg="linear-gradient(135deg, #1a0e00 0%, #cc8800 25%, #ffdd00 45%, #ffee88 55%, #cc8800 75%, #1a0e00 100%)"
+                        style="background:linear-gradient(135deg, #1a0e00 0%, #cc8800 25%, #ffdd00 50%, #1a0e00 100%)"></button>
+                    <button class="btn-small" data-color="g4400ff"
+                        data-bg="radial-gradient(ellipse at 40% 50%, rgba(100,0,255,0.9) 0%, rgba(0,0,180,0.6) 40%, #000005 80%)"
+                        style="background:radial-gradient(ellipse at 40% 50%, rgba(120,0,255,0.9) 0%, #000005 75%)"></button>
+                    <button class="btn-small" data-color="gff4400"
+                        data-bg="radial-gradient(ellipse at 50% 110%, rgba(255,200,0,0.9) 0%, rgba(255,80,0,0.7) 35%, rgba(150,0,0,0.5) 65%, transparent 85%), linear-gradient(180deg, #050000, #0a0000)"
+                        style="background:radial-gradient(ellipse at 50% 100%, rgba(255,200,0,0.8) 0%, rgba(255,60,0,0.6) 40%, #050000 80%)"></button>
+                    <button class="btn-small" data-color="gaaaaaa"
+                        data-bg="repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 2px, transparent 2px, transparent 8px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 2px, transparent 2px, transparent 8px), linear-gradient(180deg, #181818, #0a0a0a)"
+                        style="background:linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 50%, #151515 100%)"></button>
+                    <button class="btn-small" data-color="gaaccff"
+                        data-bg="radial-gradient(ellipse at 30% 20%, rgba(200,230,255,0.7) 0%, rgba(100,170,255,0.3) 45%, transparent 70%), linear-gradient(180deg, #001133, #000820)"
+                        style="background:radial-gradient(ellipse at 30% 20%, rgba(180,220,255,0.7) 0%, #001133 65%)"></button>
+                    <button class="btn-small" data-color="g8800ff"
+                        data-bg="radial-gradient(ellipse at 70% 30%, rgba(180,0,255,0.5) 0%, transparent 50%), radial-gradient(ellipse at 20% 80%, rgba(0,50,200,0.4) 0%, transparent 40%), linear-gradient(180deg, #030008, #010005)"
+                        style="background:radial-gradient(ellipse at 60% 35%, rgba(160,0,255,0.6) 0%, #030008 70%)"></button>
+                    <button class="btn-small" data-color="gff0099"
+                        data-bg="radial-gradient(ellipse at 50% 50%, rgba(255,0,200,0.7) 0%, rgba(150,0,100,0.4) 40%, #080002 80%)"
+                        style="background:radial-gradient(ellipse at 50% 50%, rgba(255,0,180,0.8) 0%, #080002 70%)"></button>
+                    <button class="btn-small" data-color="pff0000" style="background:#ff0000"></button>
+                    <button class="btn-small" data-color="pff4400" style="background:#ff4400"></button>
+                    <button class="btn-small" data-color="pff8800" style="background:#ff8800"></button>
+                    <button class="btn-small" data-color="pffcc00" style="background:#ffcc00"></button>
+                    <button class="btn-small" data-color="pffff00" style="background:#ffff00"></button>
+                    <button class="btn-small" data-color="paaff00" style="background:#aaff00"></button>
+                    <button class="btn-small" data-color="p39ff14" style="background:#39ff14"></button>
+                    <button class="btn-small" data-color="p00ff00" style="background:#00ff00"></button>
+                    <button class="btn-small" data-color="p00ff88" style="background:#00ff88"></button>
+                    <button class="btn-small" data-color="p00ffff" style="background:#00ffff"></button>
+                    <button class="btn-small" data-color="p00aaff" style="background:#00aaff"></button>
+                    <button class="btn-small" data-color="p0044ff" style="background:#0044ff"></button>
+                    <button class="btn-small" data-color="p4400ff" style="background:#4400ff"></button>
+                    <button class="btn-small" data-color="p8800ff" style="background:#8800ff"></button>
+                    <button class="btn-small" data-color="pcc00ff" style="background:#cc00ff"></button>
+                    <button class="btn-small" data-color="pff00ff" style="background:#ff00ff"></button>
+                    <button class="btn-small" data-color="pff0088" style="background:#ff0088"></button>
+                    <button class="btn-small" data-color="pff6ec7" style="background:#ff6ec7"></button>
+                    <button class="btn-small" data-color="pffffff" style="background:#ffffff"></button>
+                    <button class="btn-small" data-color="p888888" style="background:#888888"></button>
                 </div>
                 </div><!-- /customizePanel -->
 

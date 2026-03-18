@@ -30,7 +30,7 @@ class FWTouchControl extends PIXI.Container {
         this.dpadCenterContainer = new PIXI.Container();
 
         this.title = new PIXI.Text({text: 'F-Mote ' + version, style: textStyleTitle});
-        this.title.anchor.set(1, 1);
+        this.title.anchor.set(1, 0);
         this.title.alpha = 0.5;
         this.addChild(this.title);
           
@@ -456,7 +456,7 @@ class FWTouchControl extends PIXI.Container {
         this.dpadCenterContainer.y = (distanceToBorderY + this.dpadCenterContainer.radius) + this.dpadCenterContainer.rPos[1] * (app.containerGame.screenHeight - distanceToBorderY * 2 - this.dpadCenterContainer.radius * 2) + (this.dpadCenterContainer.rPos.length > 4 ? this.dpadCenterContainer.rPos[4] * this.dpadCenterContainer.radius * 2 : 0);
         
         document.documentElement.style.setProperty('--pad-color', app.color.toHex());
-        this.title.position.set(app.containerGame.screenWidth * 0.98, app.containerGame.screenHeight * 0.98);
+        this.title.position.set(app.containerGame.screenWidth * 0.98, app.containerGame.screenHeight * 0.02);
         this.title.scale.set(Math.min(0.5,app.containerGame.screenWidth / 1500));
         this.connectionContainers[2].status = app.connectionStatus;
 

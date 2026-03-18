@@ -14,10 +14,16 @@ var initDialog = (app) => {
 
   divButtonsColor.querySelectorAll("button").forEach((button) => {
       button.addEventListener('click', function() {
-          let color = button.dataset.color
-          app.color = new PIXI.Color(color)
+          let rawColor = button.dataset.color
+          app.color = new PIXI.Color(rawColor.slice(1))
+          app.colorCode = rawColor
           document.documentElement.style.setProperty('--pad-color', app.color.toHex());
-          setUrlParam('color',color)
+          if (button.dataset.bg) {
+              document.documentElement.style.setProperty('--pad-bg-image', button.dataset.bg);
+          } else {
+              document.documentElement.style.removeProperty('--pad-bg-image');
+          }
+          setUrlParam('color', rawColor)
           updateSettingsDialog(app)
       })
   })
@@ -66,8 +72,9 @@ var initDialog = (app) => {
 
       const customizePanel = document.getElementById('customizePanel')
       const btnCustomize = document.getElementById('btnCustomize')
-      if (customizePanel) customizePanel.hidden = true
-      if (btnCustomize) btnCustomize.hidden = false
+      const hasId = app.serverId && app.serverId !== ''
+      if (customizePanel) customizePanel.hidden = !hasId
+      if (btnCustomize) btnCustomize.hidden = hasId
 
       updateSettingsDialog(app)
       if (touchControl) touchControl.setControlsVisible(false);
@@ -116,7 +123,7 @@ var updateSettingsDialog = function(app) {
 
 
   divButtonsColor.querySelectorAll("button").forEach((button) => {
-    if (app.color?.value === button.dataset.color) {
+    if (app.colorCode === button.dataset.color) {
       button.classList.add('selected')
     } else {
       button.classList.remove('selected')

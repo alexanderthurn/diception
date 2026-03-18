@@ -67,7 +67,8 @@ class FWNetwork {
         this.qrCodeTexture = null
         this.qrCodeBaseUrl = 'pad.feuerware.com'
         this.qrCodeUrl = ''
-        this.qrCodeColor = new PIXI.Color(FWNetwork.getQueryParam('color') || '00aa00');
+        const _fwColorParam = FWNetwork.getQueryParam('color') || '00aa00';
+        this.qrCodeColor = new PIXI.Color(_fwColorParam.replace(/^[pg]/, ''));
         this.roomPrefix = 'hidden'
 
         this.qrCodeOptions = {
