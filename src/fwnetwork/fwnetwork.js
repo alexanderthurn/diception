@@ -421,9 +421,10 @@ class FWNetwork {
         })
 
         const allGamepads = [...localGamepads.map(g => {
+            if (!g) return null;
             const netGamepad = new FWNetworkGamepad();
             netGamepad.setFromRealGamepad(g);
-            return netGamepad
+            return netGamepad;
         }), ...this.networkGamepads];
 
         return allGamepads;
