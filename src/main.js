@@ -1565,10 +1565,9 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
         // Gamepad Type toggle button — cycles through available backends
         document.getElementById('gamepad-type-toggle-btn')?.addEventListener('click', () => {
-            const backends = isDesktopContext()
-                ? ['auto', 'navigator', 'fwnetwork', 'gilrs+fwnetwork']
-                : ['navigator', 'fwnetwork'];
-            const current = inputManager.backend || 'auto';
+            // Native backends deactivated for now (previously used isDesktopContext() to add 'auto' and 'gilrs+fwnetwork')
+            const backends = ['navigator', 'fwnetwork'];
+            const current = inputManager.backend || 'navigator';
             const idx = backends.indexOf(current);
             const next = backends[(idx + 1) % backends.length];
             inputManager.setBackend(next);

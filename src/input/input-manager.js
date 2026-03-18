@@ -53,10 +53,10 @@ export class InputManager {
         //  navigator       = force browser Gamepad API
         //  fwnetwork       = phone controllers via FW-Network only
         //  gilrs+fwnetwork = native (gilrs) + phone controllers combined
-        const saved = localStorage.getItem('dicy_gamepad_backend') || 'auto';
-        // gilrs-based backends are only valid in Tauri/desktop — fall back on browser
+        const saved = localStorage.getItem('dicy_gamepad_backend') || 'navigator';
+        // Native backends deactivated for now; force navigator if user had native saved
         const gilrsBased = saved === 'auto' || saved === 'gilrs' || saved === 'gilrs+fwnetwork';
-        const backend = (!isDesktopContext() && gilrsBased) ? 'navigator' : saved;
+        const backend = gilrsBased ? 'navigator' : saved;
         this._backend = backend;
         this._useGilrs = this._resolveGilrs(backend);
         // Pending gilrs poll result (updated asynchronously)
