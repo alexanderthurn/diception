@@ -63,6 +63,12 @@ var initDialog = (app) => {
       canvasElement.height = 0;
       canvasElement.width = 0;
       btnScan.hidden = false
+
+      const customizePanel = document.getElementById('customizePanel')
+      const btnCustomize = document.getElementById('btnCustomize')
+      if (customizePanel) customizePanel.hidden = true
+      if (btnCustomize) btnCustomize.hidden = false
+
       updateSettingsDialog(app)
       if (touchControl) touchControl.setControlsVisible(false);
       app.settingsDialog.showModal()

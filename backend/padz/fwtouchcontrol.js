@@ -330,8 +330,10 @@ class FWTouchControl extends PIXI.Container {
             })
         } else if (app.layout === 'dpad') {
             // Simple layout exactly, but D-pad replaces analog stick 0
-            const dp = goodButtonSizeInRelative * 0.60;
-            this.dpadCenterContainer.rPos = [0.0, 1.0, dp, 0.5, -1.0];
+            // D-pad uses same size (0.09) as face buttons so distances from left edge
+            // mirror the face button distances from the right edge.
+            // left button at rPos[3]=0.0 → border+radius from left (mirrors face B from right)
+            this.dpadCenterContainer.rPos = [0.0, 1.0, 0.09, 1.0, -1.0];
             this.axesContainers.forEach((axisContainer, i) => {
                 switch(i) {
                     case 0: axisContainer.rPos = R_POS_INVISIBLE; break;
@@ -352,10 +354,10 @@ class FWTouchControl extends PIXI.Container {
                     case 9:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 10: buttonContainer.rPos = [-2.5, 1.0, 0.05, -0.5]; break;
                     case 11: buttonContainer.rPos = [-2.5, 1.0, 0.05,  0.5]; break;
-                    case 12: buttonContainer.rPos = [0.0, 1.0, dp,  0.5, -2.0]; break; // up
-                    case 13: buttonContainer.rPos = [0.0, 1.0, dp,  0.5,  0.0]; break; // down
-                    case 14: buttonContainer.rPos = [0.0, 1.0, dp, -0.5, -1.0]; break; // left
-                    case 15: buttonContainer.rPos = [0.0, 1.0, dp,  1.5, -1.0]; break; // right
+                    case 12: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0, -2.0]; break; // up
+                    case 13: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0,  0.0]; break; // down
+                    case 14: buttonContainer.rPos = [0.0, 1.0, 0.09, 0.0, -1.0]; break; // left
+                    case 15: buttonContainer.rPos = [0.0, 1.0, 0.09, 2.0, -1.0]; break; // right
                     case 16: buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 17: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
                 }
@@ -363,8 +365,8 @@ class FWTouchControl extends PIXI.Container {
 
         } else if (app.layout === 'dpad-full') {
             // Full layout exactly, but D-pad replaces analog stick 0
-            const dp = goodButtonSizeInRelative * 0.60;
-            this.dpadCenterContainer.rPos = [0.0, 1.0, dp, 0.5, -1.0];
+            // Same left-anchor symmetry as dpad layout
+            this.dpadCenterContainer.rPos = [0.0, 1.0, 0.09, 1.0, -1.0];
             this.axesContainers.forEach((axisContainer, i) => {
                 switch(i) {
                     case 0: axisContainer.rPos = [0.035, 0.2, 0.1, 1.0, 0]; break;
@@ -385,10 +387,10 @@ class FWTouchControl extends PIXI.Container {
                     case 9:  buttonContainer.rPos = [0.6, 0.35, 0.075]; break;
                     case 10: buttonContainer.rPos = [-2.5, 1.0, 0.05, -0.5]; break;
                     case 11: buttonContainer.rPos = [-2.5, 1.0, 0.05,  0.5]; break;
-                    case 12: buttonContainer.rPos = [0.0, 1.0, dp,  0.5, -2.0]; break; // up
-                    case 13: buttonContainer.rPos = [0.0, 1.0, dp,  0.5,  0.0]; break; // down
-                    case 14: buttonContainer.rPos = [0.0, 1.0, dp, -0.5, -1.0]; break; // left
-                    case 15: buttonContainer.rPos = [0.0, 1.0, dp,  1.5, -1.0]; break; // right
+                    case 12: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0, -2.0]; break; // up
+                    case 13: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0,  0.0]; break; // down
+                    case 14: buttonContainer.rPos = [0.0, 1.0, 0.09, 0.0, -1.0]; break; // left
+                    case 15: buttonContainer.rPos = [0.0, 1.0, 0.09, 2.0, -1.0]; break; // right
                     case 16: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
                     case 17: buttonContainer.rPos = [0.5, 0.55, 0.075]; break;
                 }

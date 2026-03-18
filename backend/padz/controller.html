@@ -93,7 +93,7 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
             -webkit-overflow-scrolling: touch;
-            background: rgba(0, 0, 0, 0.72);
+            background: #0d0d0d;
         }
 
         /* ── Close button ── */
@@ -175,9 +175,9 @@
         #inputServerId {
             width: 100%;
             max-width: none;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            height: 48px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.55);
             border-radius: 8px;
             color: #fff;
             font-family: 'Courier New', monospace;
@@ -188,15 +188,17 @@
             outline: none;
             transition: border-color 0.15s, background 0.15s;
             padding: 0 12px;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset;
         }
 
         #inputServerId:focus {
-            border-color: rgba(255, 255, 255, 0.5);
-            background: rgba(255, 255, 255, 0.11);
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.22);
         }
 
         #inputServerId::placeholder {
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.35);
+            font-weight: 400;
         }
 
         #btnAccept {
@@ -365,10 +367,34 @@
             outline-offset: 2px;
         }
 
+        /* ── Customize toggle ── */
+        #btnCustomize {
+            width: 100%;
+            height: 36px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.55);
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        #btnCustomize:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.85);
+        }
+
         /* ── Footer ── */
         #dialog-footer {
             padding: 8px 16px;
-            background: rgba(0, 0, 0, 0.72);
+            background: #0d0d0d;
             border-top: 1px solid rgba(255, 255, 255, 0.07);
             font-family: 'Courier New', monospace;
             font-size: 10px;
@@ -428,7 +454,10 @@
                     <div id="loadingMessage" hidden>Unable to access camera — please allow webcam access.</div>
                 </div>
 
-                <!-- Layout -->
+                <!-- Layout + Color toggle -->
+                <button id="btnCustomize" onclick="document.getElementById('customizePanel').hidden=false;this.hidden=true;">Customize</button>
+
+                <div id="customizePanel" hidden>
                 <h2>Layout</h2>
                 <div id="layouts">
                     <button class="btn-small" data-layout="full">Full</button>
@@ -474,6 +503,7 @@
                             <button class="btn-small" data-color="999999" style="background:#999999"></button>
                             <button class="btn-small" data-color="333333" style="background:#333333"></button>
                 </div>
+                </div><!-- /customizePanel -->
 
             </div><!-- /dialog-body -->
 
