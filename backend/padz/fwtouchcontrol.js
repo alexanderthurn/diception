@@ -42,15 +42,8 @@ class FWTouchControl extends PIXI.Container {
             let buttonContainer = new PIXI.Container();
             buttonContainer.buttonBackground = new PIXI.Graphics();
             
-            if ((i === 12 || i === 13 || i === 14 || i === 15)) {
-                buttonContainer.buttonBackground.rect(-radius, -radius, radius*2, radius*2);
-                let rot = 0;
-                if (i === 12) rot = 0;
-                else if (i === 13) rot = 180;
-                else if (i === 14) rot = 90;
-                else if (i === 15) rot = 270;
-                
-                buttonContainer.buttonBackground.regularPoly(Math.sin(PIXI.DEG_TO_RAD * rot)*radius*1.5, -Math.cos(PIXI.DEG_TO_RAD * rot)*radius*1.5, radius, 3, PIXI.DEG_TO_RAD * rot).fill({alpha: 1.0, color: 0xFFFFFF}).stroke({alpha: 0.5, color: 0x000000, width: radius/10});
+            if (i === 12 || i === 13 || i === 14 || i === 15) {
+                buttonContainer.buttonBackground.rect(-radius, -radius, radius*2, radius*2).fill({alpha: 1.0, color: 0xFFFFFF}).stroke({alpha: 0.5, color: 0x000000, width: radius/10});
             } else {
                 buttonContainer.buttonBackground.circle(0, 0, radius).fill({alpha: 1.0, color: 0xFFFFFF}).stroke({alpha: 0.5, color: 0x000000, width: radius/10});
             }
@@ -316,6 +309,72 @@ class FWTouchControl extends PIXI.Container {
                     case 17: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
                 }
             })
+        } else if (app.layout === 'dpad') {
+            // Simple layout exactly, but D-pad replaces analog stick 0
+            const dp = goodButtonSizeInRelative * 0.60;
+            this.dpadCenterContainer.rPos = [0.0, 1.0, dp, 0.5, -1.0];
+            this.axesContainers.forEach((axisContainer, i) => {
+                switch(i) {
+                    case 0: axisContainer.rPos = R_POS_INVISIBLE; break;
+                    case 1: axisContainer.rPos = R_POS_INVISIBLE; break;
+                }
+            });
+            this.buttonContainers.forEach((buttonContainer, i) => {
+                switch(i) {
+                    case 0:  buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -0.5,  0.0]; break;
+                    case 1:  buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative,  0.1, -1];   break;
+                    case 2:  buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -1.15,-1];   break;
+                    case 3:  buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -0.5, -2];   break;
+                    case 4:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 5:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 6:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 7:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 8:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 9:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 10: buttonContainer.rPos = [-2.5, 1.0, 0.05, -0.5]; break;
+                    case 11: buttonContainer.rPos = [-2.5, 1.0, 0.05,  0.5]; break;
+                    case 12: buttonContainer.rPos = [0.0, 1.0, dp,  0.5, -2.0]; break; // up
+                    case 13: buttonContainer.rPos = [0.0, 1.0, dp,  0.5,  0.0]; break; // down
+                    case 14: buttonContainer.rPos = [0.0, 1.0, dp, -0.5, -1.0]; break; // left
+                    case 15: buttonContainer.rPos = [0.0, 1.0, dp,  1.5, -1.0]; break; // right
+                    case 16: buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 17: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
+                }
+            });
+
+        } else if (app.layout === 'dpad-full') {
+            // Full layout exactly, but D-pad replaces analog stick 0
+            const dp = goodButtonSizeInRelative * 0.60;
+            this.dpadCenterContainer.rPos = [0.0, 1.0, dp, 0.5, -1.0];
+            this.axesContainers.forEach((axisContainer, i) => {
+                switch(i) {
+                    case 0: axisContainer.rPos = [0.035, 0.2, 0.1, 1.0, 0]; break;
+                    case 1: axisContainer.rPos = [0.5, 0.95, 0.1, 0.0]; break;
+                }
+            });
+            this.buttonContainers.forEach((buttonContainer, i) => {
+                switch(i) {
+                    case 0:  buttonContainer.rPos = [1.0, 1.0, 0.09, -0.75, 0.0]; break;
+                    case 1:  buttonContainer.rPos = [1.0, 0.8, 0.09,  0.0,  0.0]; break;
+                    case 2:  buttonContainer.rPos = [1.0, 0.8, 0.09, -1.5,  0.0]; break;
+                    case 3:  buttonContainer.rPos = [1.0, 0.6, 0.09, -0.75, 0.0]; break;
+                    case 4:  buttonContainer.rPos = [0.925, 0.1, 0.07, -0.6]; break;
+                    case 5:  buttonContainer.rPos = [0.925, 0.1, 0.07,  0.6]; break;
+                    case 6:  buttonContainer.rPos = [0.925, 0.3, 0.07,  0.6]; break;
+                    case 7:  buttonContainer.rPos = [0.925, 0.3, 0.07, -0.6]; break;
+                    case 8:  buttonContainer.rPos = [0.4, 0.35, 0.075]; break;
+                    case 9:  buttonContainer.rPos = [0.6, 0.35, 0.075]; break;
+                    case 10: buttonContainer.rPos = [-2.5, 1.0, 0.05, -0.5]; break;
+                    case 11: buttonContainer.rPos = [-2.5, 1.0, 0.05,  0.5]; break;
+                    case 12: buttonContainer.rPos = [0.0, 1.0, dp,  0.5, -2.0]; break; // up
+                    case 13: buttonContainer.rPos = [0.0, 1.0, dp,  0.5,  0.0]; break; // down
+                    case 14: buttonContainer.rPos = [0.0, 1.0, dp, -0.5, -1.0]; break; // left
+                    case 15: buttonContainer.rPos = [0.0, 1.0, dp,  1.5, -1.0]; break; // right
+                    case 16: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
+                    case 17: buttonContainer.rPos = [0.5, 0.55, 0.075]; break;
+                }
+            });
+
         } else {
             this.dpadCenterContainer.rPos =[0.035, 0.2, 0.05, 1.0, 0]
 
@@ -325,7 +384,7 @@ class FWTouchControl extends PIXI.Container {
                     case 1: axisContainer.rPos = [0.5, 0.95, 0.1, 0.0]; break;
                 }
             })
-            
+
             this.buttonContainers.forEach((buttonContainer, i) => {
                 switch(i) {
                     case 0: buttonContainer.rPos = [1.0, 1.0, 0.09, -0.75, 0.0]; break;
@@ -378,13 +437,13 @@ class FWTouchControl extends PIXI.Container {
         this.dpadCenterContainer.x = (distanceToBorderX + this.dpadCenterContainer.radius) + this.dpadCenterContainer.rPos[0] * (app.containerGame.screenWidth - distanceToBorderX * 2 - this.dpadCenterContainer.radius * 2) + (this.dpadCenterContainer.rPos.length > 3 ? this.dpadCenterContainer.rPos[3] * this.dpadCenterContainer.radius * 2 : 0);
         this.dpadCenterContainer.y = (distanceToBorderY + this.dpadCenterContainer.radius) + this.dpadCenterContainer.rPos[1] * (app.containerGame.screenHeight - distanceToBorderY * 2 - this.dpadCenterContainer.radius * 2) + (this.dpadCenterContainer.rPos.length > 4 ? this.dpadCenterContainer.rPos[4] * this.dpadCenterContainer.radius * 2 : 0);
         
-        if (this.border.screenWidth !== app.containerGame.screenWidth || this.border.screenHeight !== app.containerGame.screenHeight) {    
+        if (this.border.screenWidth !== app.containerGame.screenWidth || this.border.screenHeight !== app.containerGame.screenHeight) {
             this.border.clear();
-            this.border.roundRect(app.containerGame.screenWidth * 0.01, app.containerGame.screenHeight * 0.01, app.containerGame.screenWidth * 0.98, app.containerGame.screenHeight * 0.98, app.containerGame.screenWidth * 0.1).fill({alpha: 1.0, color: 0xFFFFFF}).stroke({alpha: 1, color: 0x000000, width: app.containerGame.screenHeight * 0.01});
+            this.border.rect(0, 0, app.containerGame.screenWidth, app.containerGame.screenHeight).fill({alpha: 1.0, color: 0xFFFFFF});
             this.border.screenWidth = app.containerGame.screenWidth;
             this.border.screenHeight = app.containerGame.screenHeight;
         }
-        
+
         this.border.tint = app.color.toNumber();
         this.title.position.set(app.containerGame.screenWidth * 0.8, app.containerGame.screenHeight * 0.07);
         this.title.scale.set(Math.min(0.5,app.containerGame.screenWidth / 1500));

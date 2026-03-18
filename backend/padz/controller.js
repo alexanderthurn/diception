@@ -4,7 +4,7 @@ const CONNECTION_STATUS_WORKING = 2
 const CONNECTION_STATUS_ERROR = 3
 
 const angle = (x1, y1, x2, y2) => Math.atan2(y2 - y1, x2 - x1); 
-const version = '1.1.0';
+const version = '2.0.0';
 const getQueryParam = (key) => {
     const params = new URLSearchParams(window.location.search);
     return params.get(key);
