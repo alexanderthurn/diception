@@ -32,7 +32,7 @@ class FWTouchControl extends PIXI.Container {
         this.addChild(this.border);
 
         this.title = new PIXI.Text({text: 'F-Mote ' + version, style: textStyleTitle});
-        this.title.anchor.set(0.5, 1);
+        this.title.anchor.set(1, 1);
         this.title.alpha = 0.5;
         this.addChild(this.title);
           
@@ -445,7 +445,7 @@ class FWTouchControl extends PIXI.Container {
         }
 
         this.border.tint = app.color.toNumber();
-        this.title.position.set(app.containerGame.screenWidth * 0.8, app.containerGame.screenHeight * 0.07);
+        this.title.position.set(app.containerGame.screenWidth * 0.98, app.containerGame.screenHeight * 0.98);
         this.title.scale.set(Math.min(0.5,app.containerGame.screenWidth / 1500));
         this.connectionContainers[2].status = app.connectionStatus;
 
