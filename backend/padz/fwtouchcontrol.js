@@ -316,16 +316,16 @@ class FWTouchControl extends PIXI.Container {
                     case 5:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 6:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 7:  buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 8: buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 9: buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 8:  buttonContainer.rPos = [0.4, 0.35, 0.075]; break;
+                    case 9:  buttonContainer.rPos = [0.6, 0.35, 0.075]; break;
                     case 10:; buttonContainer.rPos = [-2.5, 1.0, 0.05, -0.5]; break;
                     case 11:; buttonContainer.rPos = [-2.5, 1.0, 0.05, 0.5]; break;
                     case 12: buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 13: buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 14: buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 15: buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 16: buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 17: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
+                    case 16: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
+                    case 17: buttonContainer.rPos = [0.5, 0.55, 0.075]; break;
                 }
             })
         } else if (app.layout === 'dpad') {
@@ -350,16 +350,16 @@ class FWTouchControl extends PIXI.Container {
                     case 5:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 6:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 7:  buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 8:  buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 9:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 8:  buttonContainer.rPos = [0.4, 0.35, 0.075]; break;
+                    case 9:  buttonContainer.rPos = [0.6, 0.35, 0.075]; break;
                     case 10: buttonContainer.rPos = [-2.5, 1.0, 0.05, -0.5]; break;
                     case 11: buttonContainer.rPos = [-2.5, 1.0, 0.05,  0.5]; break;
                     case 12: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0, -2.0]; break; // up
                     case 13: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0,  0.0]; break; // down
                     case 14: buttonContainer.rPos = [0.0, 1.0, 0.09, 0.0, -1.0]; break; // left
                     case 15: buttonContainer.rPos = [0.0, 1.0, 0.09, 2.0, -1.0]; break; // right
-                    case 16: buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 17: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
+                    case 16: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
+                    case 17: buttonContainer.rPos = [0.5, 0.55, 0.075]; break;
                 }
             });
 

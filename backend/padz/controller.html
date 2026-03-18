@@ -7,7 +7,7 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="manifest" href="site.webmanifest">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-status-bar-style" content="black" />
     <meta name="description" content="">
@@ -15,9 +15,12 @@
     <meta name="application-name" content="FW Remote" />
     <meta name="mobile-web-app-title" content="FW Remote" />
     <style>
-        body {
+        html, body {
             margin: 0;
             padding: 0;
+            background: #000;
+            overflow: hidden;
+            overscroll-behavior: none;
         }
 
         #settingsDialog, #settingsDialog * {
