@@ -530,15 +530,23 @@ export class GamepadCursorManager {
 
     updateCursorColor(cursor, index) {
         const isMenuOpen = !!document.querySelector('.modal:not(.hidden)');
-        const isMainMenu = !document.getElementById('main-menu')?.classList.contains('hidden');
+        // Non-game screens: use sequential humanIndex color (same as settings dialog)
+        const isNonGameScreen = !!(
+            document.querySelector('#main-menu:not(.hidden)') ||
+            document.querySelector('#settings-modal:not(.hidden)') ||
+            document.querySelector('#howto-modal:not(.hidden)') ||
+            document.querySelector('#about-modal:not(.hidden)') ||
+            document.querySelector('#achievements-modal:not(.hidden)')
+        );
         let colorHex;
 
-        if (isMainMenu) {
-            // Main menu: use auto-sequential color (existing behavior)
+        if (isNonGameScreen || !isMenuOpen) {
+            // Non-game menus or no menu: use auto-sequential color
             const humanIndex = this.inputManager.getHumanIndex(index);
             const color = GAME.HUMAN_COLORS[humanIndex % GAME.HUMAN_COLORS.length];
             colorHex = '#' + color.toString(16).padStart(6, '0');
         } else {
+            // Game context (setup, in-game, pause): use assignment color
             const assignment = this.inputManager.getGamepadAssignment(index);
             if (assignment === 'master') {
                 colorHex = '#AAAAAA'; // grey for master
@@ -555,7 +563,8 @@ export class GamepadCursorManager {
 
         // Show controller number next to cursor only in menus with 2+ active gamepads
         if (cursor.label) {
-            const labelText = String(index + 1);
+            const humanIndex = this.inputManager.getHumanIndex(index);
+            const labelText = String(humanIndex + 1);
             if (cursor.lastLabelText !== labelText) {
                 cursor.label.textContent = labelText;
                 cursor.lastLabelText = labelText;
