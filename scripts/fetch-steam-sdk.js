@@ -7,7 +7,7 @@ import { execSync }                                       from 'child_process';
 import { mkdirSync, copyFileSync, existsSync, rmSync,
          readdirSync, statSync }                          from 'fs';
 import { join, basename, dirname }                        from 'path';
-import { tmpdir }                                         from 'os';
+import { tmpdir, platform }                               from 'os';
 
 const url = process.env.STEAM_SDK_ZIP_URL;
 if (!url) {
@@ -26,7 +26,11 @@ console.log('[fetch-steam-sdk] Downloading...');
 execSync(`curl -fsSL "${url}" -o "${zip}"`);
 
 console.log('[fetch-steam-sdk] Extracting...');
-execSync(`unzip -o "${zip}" -d "${extract}"`);
+if (platform() === 'win32') {
+    execSync(`powershell -Command "Expand-Archive -Force -Path '${zip}' -DestinationPath '${extract}'"`);
+} else {
+    execSync(`unzip -o "${zip}" -d "${extract}"`);
+}
 
 // Walk the extracted tree and collect all file paths.
 function walk(dir, results = []) {
