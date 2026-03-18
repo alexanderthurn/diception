@@ -15,12 +15,10 @@
  */
 
 export class GilrsInputAdapter {
-    constructor() {
-        this._available = typeof window !== 'undefined' && !!window.gilrs?.poll;
-    }
-
     /** True when running inside a Tauri desktop build with gilrs enabled. */
-    get isAvailable() { return this._available; }
+    get isAvailable() {
+        return typeof window !== 'undefined' && !!window.gilrs?.poll;
+    }
 
     /**
      * Poll all connected gamepads via gilrs.
@@ -30,7 +28,7 @@ export class GilrsInputAdapter {
      * Returns empty array if gilrs is unavailable or poll fails.
      */
     async poll() {
-        if (!this._available) return [];
+        if (!this.isAvailable) return [];
         try {
             return await window.gilrs.poll();
         } catch {
