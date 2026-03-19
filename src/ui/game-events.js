@@ -415,7 +415,39 @@ export class GameEventManager {
             clearInterval(this._timerInterval);
             this._timerInterval = null;
         }
+        this._timerPaused = false;
         if (this._timerEl) this._timerEl.classList.add('hidden');
+    }
+
+    /** Pause the turn timer (freeze countdown, keep display visible). */
+    pauseTurnTimer() {
+        if (!this._timerInterval || this._timerPaused) return;
+        clearInterval(this._timerInterval);
+        this._timerInterval = null;
+        this._timerPaused = true;
+    }
+
+    /** Resume a previously paused turn timer. */
+    resumeTurnTimer() {
+        if (!this._timerPaused || !this._timerEl) return;
+        this._timerPaused = false;
+        if (this._timerSecsLeft <= 0) return;
+
+        this._timerInterval = setInterval(() => {
+            this._timerSecsLeft--;
+            this._timerEl.textContent = this._timerSecsLeft;
+
+            if (this._timerSecsLeft <= 5) {
+                this._timerEl.classList.add('timer-urgent');
+                if (this.sfx) this.sfx.timeTick(this._timerSecsLeft);
+            }
+
+            if (this._timerSecsLeft <= 0) {
+                this.stopTurnTimer();
+                // Auto-end the human turn
+                if (!this.game.gameOver) this.game.endTurn();
+            }
+        }, 1000);
     }
 
     _flushStreakAchievement() {

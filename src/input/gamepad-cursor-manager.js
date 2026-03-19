@@ -188,9 +188,15 @@ export class GamepadCursorManager {
                         this.navigateModal(button, cursor);
                         return;
                     }
-                    // B (drag) → close the current modal
+                    // B (drag) → close the current modal (master-mode restricted)
                     if (button === b.drag) {
-                        this.closeCurrentModal();
+                        if (this.inputManager.isGamepadAllowedGlobalAction(index)) {
+                            this.closeCurrentModal();
+                        }
+                        return;
+                    }
+                    // START (menu) in a menu → only master-assigned gamepads allowed
+                    if (button === b.menu && !this.inputManager.isGamepadAllowedGlobalAction(index)) {
                         return;
                     }
                 }
@@ -321,7 +327,7 @@ export class GamepadCursorManager {
                 const b = this._gb();
                 const dragHeld = gp.buttons[b.drag]?.pressed ?? false;
 
-                if (dragHeld) {
+                if (dragHeld && this.inputManager.isGamepadAllowedGlobalAction(idx)) {
                     this.inputManager.emit('panAnalog', { x: -dx, y: -dy });
                 } else {
                     this._setCursorMode(cursor, 'analog');

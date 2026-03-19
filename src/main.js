@@ -1060,6 +1060,18 @@ async function init() {
     gameEventManager.init();
     sessionManager.setGameEventManager(gameEventManager);
 
+    // Pause / resume turn timer when pause modal is shown / hidden
+    const _pauseModalEl = document.getElementById('pause-modal');
+    if (_pauseModalEl) {
+        new MutationObserver(() => {
+            if (!_pauseModalEl.classList.contains('hidden')) {
+                gameEventManager.pauseTurnTimer();
+            } else {
+                gameEventManager.resumeTurnTimer();
+            }
+        }).observe(_pauseModalEl, { attributes: true, attributeFilter: ['class'] });
+    }
+
     // Refresh UI hints whenever bindings are reloaded after configuration
     inputManager.on('bindingsReloaded', () => gameEventManager.refreshHints());
 
