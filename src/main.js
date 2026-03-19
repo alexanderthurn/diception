@@ -1060,6 +1060,7 @@ async function init() {
     gameEventManager.setScenarioBrowser(scenarioBrowser);
     gameEventManager.init();
     sessionManager.setGameEventManager(gameEventManager);
+    renderer.gameEventManager = gameEventManager;
 
     // Pause / resume turn timer when pause modal is shown / hidden
     const _pauseModalEl = document.getElementById('pause-modal');

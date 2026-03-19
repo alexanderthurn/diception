@@ -33,8 +33,8 @@ export const GAME = {
         0xFFFFFF  // White (Bot 7)
     ],
     // Duration of the supply animation (frames at 60 fps = seconds × 60)
-    SUPPLY_ANIM_FRAMES_BEGINNER: 540, // 9 seconds
-    SUPPLY_ANIM_FRAMES_NORMAL:   180, // 3 seconds
+    SUPPLY_ANIM_FRAMES_BEGINNER: 360, // 6 seconds
+    SUPPLY_ANIM_FRAMES_NORMAL:   120, // 2 seconds
 };
 
 // === MAP GENERATION ===

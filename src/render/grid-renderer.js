@@ -1619,15 +1619,13 @@ export class GridRenderer {
             overlays.push(gfx);
         }
 
-        // Centroid of region for the label
-        const cx = regionTiles.length
-            ? regionTiles.reduce((s, t) => s + t.x, 0) / regionTiles.length
-            : this.game.map.width / 2;
-        const cy = regionTiles.length
-            ? regionTiles.reduce((s, t) => s + t.y, 0) / regionTiles.length
-            : this.game.map.height / 2;
-        const labelX = cx * (this.tileSize + this.gap) + this.tileSize / 2;
-        const labelY = cy * (this.tileSize + this.gap) + this.tileSize / 2;
+
+        // ── "+N" label: pop in, brief hold, fast dissolve (first 20% of tween) ─
+        // Position at screen center by inverting the rootContainer transform.
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
+        const labelX = (screenW / 2 - this.stage.x) / this.stage.scale.x;
+        const labelY = (screenH / 2 - this.stage.y) / this.stage.scale.y;
 
         const label = new Text({
             text: `+${totalDice}`,
@@ -1679,15 +1677,19 @@ export class GridRenderer {
                 const pulse = 0.15 + 0.12 * Math.sin(p * Math.PI * 8);
                 for (const gfx of overlays) gfx.alpha = pulse;
 
-                // Label: pop in, hold, fade out
-                if (p < 0.08) {
-                    label.alpha = p / 0.08;
-                    label.scale.set(0.3 + (p / 0.08) * 0.7);
-                } else if (p > 0.88) {
-                    label.alpha = (1 - p) / 0.12;
-                } else {
+                // Label: quick pop-in (0–5%), brief hold (5–12%), fast dissolve (12–20%)
+                if (p < 0.05) {
+                    const t = p / 0.05;
+                    label.alpha = t;
+                    label.scale.set(0.5 + t * 0.7);
+                } else if (p < 0.12) {
                     label.alpha = 1;
-                    label.scale.set(1);
+                    label.scale.set(1.2);
+                } else if (p < 0.20) {
+                    label.alpha = 1 - (p - 0.12) / 0.08;
+                    label.scale.set(1.2 + (p - 0.12) / 0.08 * 0.6);
+                } else {
+                    label.alpha = 0;
                 }
 
                 // Phase B: step through placements

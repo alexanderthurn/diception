@@ -106,10 +106,14 @@ export class Renderer {
                 continueEndTurn();
                 return;
             }
+            // Freeze the turn timer so it doesn't tick during the animation
+            this.gameEventManager?.pauseTurnTimer();
             this.draw(); // show updated dice immediately
             this.inputManager?.setSuspended(true);
             this.grid.animateSupply(data, this.sfx ?? null, () => {
                 this.inputManager?.setSuspended(false);
+                // Turn is ending — stop timer entirely (a new one starts on the next turn)
+                this.gameEventManager?.stopTurnTimer();
                 continueEndTurn();
             });
         };
