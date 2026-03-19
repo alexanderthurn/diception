@@ -1620,14 +1620,14 @@ export class GridRenderer {
         }
 
 
-        // ── "+N" label: pop in, brief hold, fast dissolve (first 20% of tween) ─
-        // Position at screen center by inverting the rootContainer transform.
+        // ── "+N" label: pop in, brief hold, fast dissolve — desktop only ────────
         const screenW = window.innerWidth;
         const screenH = window.innerHeight;
+        const isMobile = screenW <= 768 || screenH <= 720;
         const labelX = (screenW / 2 - this.stage.x) / this.stage.scale.x;
         const labelY = (screenH / 2 - this.stage.y) / this.stage.scale.y;
 
-        const label = new Text({
+        const label = isMobile ? null : new Text({
             text: `+${totalDice}`,
             style: new TextStyle({
                 fontFamily: 'Rajdhani, Arial',
@@ -1640,12 +1640,14 @@ export class GridRenderer {
                 dropShadowDistance: 2,
             }),
         });
-        label.anchor.set(0.5);
-        label.x = labelX;
-        label.y = labelY;
-        label.alpha = 0;
-        label.scale.set(0.3);
-        this.animationContainer.addChild(label);
+        if (label) {
+            label.anchor.set(0.5);
+            label.x = labelX;
+            label.y = labelY;
+            label.alpha = 0;
+            label.scale.set(0.3);
+            this.animationContainer.addChild(label);
+        }
 
         // ── Pre-compute dice overrides (show pre-reinforcement counts) ────────
         if (placements.length > 0) {
@@ -1678,18 +1680,20 @@ export class GridRenderer {
                 for (const gfx of overlays) gfx.alpha = pulse;
 
                 // Label: quick pop-in (0–15%), brief hold (15–36%), fast dissolve (36–60%)
-                if (p < 0.15) {
-                    const t = p / 0.15;
-                    label.alpha = t;
-                    label.scale.set(0.5 + t * 0.7);
-                } else if (p < 0.36) {
-                    label.alpha = 1;
-                    label.scale.set(1.2);
-                } else if (p < 0.60) {
-                    label.alpha = 1 - (p - 0.36) / 0.24;
-                    label.scale.set(1.2 + (p - 0.36) / 0.24 * 0.6);
-                } else {
-                    label.alpha = 0;
+                if (label) {
+                    if (p < 0.15) {
+                        const t = p / 0.15;
+                        label.alpha = t;
+                        label.scale.set(0.5 + t * 0.7);
+                    } else if (p < 0.36) {
+                        label.alpha = 1;
+                        label.scale.set(1.2);
+                    } else if (p < 0.60) {
+                        label.alpha = 1 - (p - 0.36) / 0.24;
+                        label.scale.set(1.2 + (p - 0.36) / 0.24 * 0.6);
+                    } else {
+                        label.alpha = 0;
+                    }
                 }
 
                 // Phase B: step through placements
@@ -1706,7 +1710,7 @@ export class GridRenderer {
                         const cur = this._diceOverrides.get(idx) ?? 0;
                         this.setDiceOverride(pl.x, pl.y, cur + 1);
                         this._wobbleTile(pl.x, pl.y);
-                        sfx?.coin();
+                        if (this.gameSpeed !== 'expert') sfx?.coin();
                     }
                     if (stepsThisFrame > 0) this.draw();
                 }
@@ -1715,7 +1719,7 @@ export class GridRenderer {
                 // Clean up
                 this._supplyAnimActive = false;
                 for (const gfx of overlays) gfx.destroy();
-                label.destroy();
+                label?.destroy();
                 this.clearDiceOverrides();
                 this.draw(); // restore final counts
                 onComplete?.();

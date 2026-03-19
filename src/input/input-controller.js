@@ -439,6 +439,7 @@ export class InputController {
 
     handleTileClick(tile, x, y, sourceId = 'mouse') {
         if (this.game.gameOver) return;
+        if (this.inputManager?.suspended) return;
 
         const playMode = this.game.playMode || 'classic';
         const isParallel = playMode === 'parallel' || playMode === 'parallel-s';

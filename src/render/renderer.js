@@ -111,8 +111,11 @@ export class Renderer {
             this.gameEventManager?.pauseTurnTimer();
             this.draw(); // show updated dice immediately
             this.inputManager?.setSuspended(true);
+            const endTurnBtn = document.getElementById('end-turn-btn');
+            if (endTurnBtn) endTurnBtn.disabled = true;
             this.grid.animateSupply(data, this.sfx ?? null, () => {
                 this.inputManager?.setSuspended(false);
+                if (endTurnBtn) endTurnBtn.disabled = false;
                 // Turn is ending — stop timer entirely (a new one starts on the next turn)
                 this.gameEventManager?.stopTurnTimer();
                 continueEndTurn();

@@ -70,6 +70,27 @@
         <div id="dice-result-content"></div>
     </div>
 
+    <!-- Dramatic attack overlay (Beginner mode) -->
+    <div id="attack-overlay" class="hidden">
+        <div id="attack-panel">
+            <div class="attack-side" id="attack-attacker-side">
+                <span class="attack-side-name" id="attack-attacker-name"></span>
+                <div class="attack-dice-row" id="attack-attacker-dice"></div>
+                <span class="attack-side-sum" id="attack-attacker-sum"></span>
+            </div>
+            <div class="attack-center-col">
+                <span class="attack-vs-label">VS</span>
+                <span class="attack-compare-sign" id="attack-compare-sign"></span>
+            </div>
+            <div class="attack-side" id="attack-defender-side">
+                <span class="attack-side-name" id="attack-defender-name"></span>
+                <div class="attack-dice-row" id="attack-defender-dice"></div>
+                <span class="attack-side-sum" id="attack-defender-sum"></span>
+            </div>
+            <div class="attack-result-banner" id="attack-result-banner"></div>
+        </div>
+    </div>
+
     <div id="fps-counter" class="hidden">FPS: 00</div>
 
     <div id="ui-overlay">
@@ -292,7 +313,7 @@
                 <div class="pause-module">
                     <span class="pause-module-label">Speed</span>
                     <div class="segmented-btn game-speed-segmented">
-                        <button type="button" class="segmented-option" data-value="beginner">Slow</button>
+                        <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
                         <button type="button" class="segmented-option" data-value="normal">Normal</button>
                         <button type="button" class="segmented-option" data-value="expert">Expert</button>
                     </div>

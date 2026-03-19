@@ -7,13 +7,23 @@ export class DiceHUD {
         this.diceResultContent = document.getElementById('dice-result-content');
         this.hideTimeout = null;
         this.diceDataURL = null;
+        // Set to true when the user manually dismisses the small HUD in beginner mode.
+        // Skips the dramatic overlay for the rest of the game session.
+        this.skipDramatic = false;
 
         // Allow clicking to dismiss
         if (this.diceResultHud) {
             this.diceResultHud.style.pointerEvents = 'auto';
             this.diceResultHud.style.cursor = 'pointer';
-            this.diceResultHud.addEventListener('click', () => this.hide());
+            this.diceResultHud.addEventListener('click', () => {
+                this.skipDramatic = true;
+                this.hide();
+            });
         }
+    }
+
+    resetSession() {
+        this.skipDramatic = false;
     }
 
     setDiceDataURL(url) {
@@ -71,6 +81,120 @@ export class DiceHUD {
                 this.diceResultHud.classList.add('hidden');
             }, 1500);
         }
+    }
+
+    showDramaticAttackResult(result, attacker, defender, sfx, getPlayerName, onComplete) {
+        const overlay = document.getElementById('attack-overlay');
+        const panel   = document.getElementById('attack-panel');
+        if (!overlay) { onComplete?.(); return; }
+
+        const attackerColor = attacker ? '#' + attacker.color.toString(16).padStart(6, '0') : '#fff';
+        const defenderColor = defender ? '#' + defender.color.toString(16).padStart(6, '0') : '#fff';
+
+        // Reset all elements
+        const nameA    = document.getElementById('attack-attacker-name');
+        const nameD    = document.getElementById('attack-defender-name');
+        const diceRowA = document.getElementById('attack-attacker-dice');
+        const diceRowD = document.getElementById('attack-defender-dice');
+        const sumA     = document.getElementById('attack-attacker-sum');
+        const sumD     = document.getElementById('attack-defender-sum');
+        const cmpSign  = document.getElementById('attack-compare-sign');
+        const banner   = document.getElementById('attack-result-banner');
+
+        nameA.textContent = getPlayerName?.(attacker) ?? 'Attacker';
+        nameA.style.color = attackerColor;
+        nameD.textContent = getPlayerName?.(defender) ?? 'Defender';
+        nameD.style.color = defenderColor;
+        diceRowA.innerHTML = '';
+        diceRowD.innerHTML = '';
+        sumA.textContent = '';
+        sumA.className = 'attack-side-sum';
+        sumD.textContent = '';
+        sumD.className = 'attack-side-sum';
+        cmpSign.textContent = '';
+        cmpSign.className = 'attack-compare-sign';
+        banner.textContent = '';
+        banner.className = 'attack-result-banner';
+
+        panel.style.borderColor = attackerColor;
+        panel.style.boxShadow   = `0 0 60px rgba(0,0,0,0.9), 0 0 24px ${attackerColor}44`;
+
+        let dismissed = false;
+        let autoTimer = null;
+
+        const dismiss = (manual = false) => {
+            if (dismissed) return;
+            dismissed = true;
+            clearTimeout(autoTimer);
+            if (manual) this.skipDramatic = true;
+            overlay.classList.add('hidden');
+            onComplete?.();
+        };
+        overlay.addEventListener('click', () => dismiss(true), { once: true });
+        overlay.classList.remove('hidden');
+
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+
+        const rollDice = async (container, rolls, color) => {
+            const els = rolls.map(() => {
+                const die = document.createElement('span');
+                die.className = 'attack-die rolling';
+                die.style.borderColor = color;
+                die.style.color = color;
+                die.textContent = '?';
+                container.appendChild(die);
+                return die;
+            });
+            await wait(280);
+            const perDie = Math.max(35, Math.min(70, 350 / rolls.length));
+            for (let i = 0; i < rolls.length; i++) {
+                if (dismissed) return;
+                els[i].textContent = rolls[i];
+                els[i].classList.remove('rolling');
+                els[i].classList.add('revealed');
+                sfx?.coin();
+                if (i < rolls.length - 1) await wait(perDie);
+            }
+        };
+
+        (async () => {
+            await rollDice(diceRowA, result.attackerRolls, attackerColor);
+            if (dismissed) return;
+            sumA.textContent = `= ${result.attackerSum}`;
+            sumA.classList.add('visible');
+
+            await wait(160);
+            if (dismissed) return;
+
+            await rollDice(diceRowD, result.defenderRolls, defenderColor);
+            if (dismissed) return;
+            sumD.textContent = `= ${result.defenderSum}`;
+            sumD.classList.add('visible');
+
+            await wait(220);
+            if (dismissed) return;
+
+            cmpSign.textContent = result.won ? '>' : '≤';
+            cmpSign.classList.add(result.won ? 'win' : 'loss', 'visible');
+
+            sumA.style.color = attackerColor;
+            sumD.style.color = defenderColor;
+            if (result.won) {
+                sumA.classList.add('winner');
+                sumD.classList.add('loser');
+            } else {
+                sumD.classList.add('winner');
+                sumA.classList.add('loser');
+            }
+
+            await wait(280);
+            if (dismissed) return;
+
+            banner.textContent = result.won ? '✓  VICTORY' : '✗  DEFEAT';
+            banner.classList.add(result.won ? 'win' : 'defeat', 'visible');
+
+            autoTimer = setTimeout(dismiss, 1800);
+        })();
     }
 
     showReinforcements(data, gameSpeed, autoplayPlayers) {

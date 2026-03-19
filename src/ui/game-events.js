@@ -527,7 +527,15 @@ export class GameEventManager {
         }
 
         // Show dice result in HUD
-        if (this.diceHUD) {
+        const isHumanAttackerForHUD = attacker && !attacker.isBot && !autoplayPlayers.has(attacker.id);
+        if (this.diceHUD && gameSpeed === 'beginner' && isHumanAttackerForHUD && !this.diceHUD.skipDramatic) {
+            // Dramatic center overlay first, then small HUD after dismiss
+            this.renderer.inputManager?.setSuspended(true);
+            this.diceHUD.showDramaticAttackResult(result, attacker, defender, this.sfx, this.getPlayerName, () => {
+                this.renderer.inputManager?.setSuspended(false);
+                this.diceHUD.showAttackResult(result, attacker, defender, gameSpeed, autoplayPlayers);
+            });
+        } else if (this.diceHUD) {
             this.diceHUD.showAttackResult(result, attacker, defender, gameSpeed, autoplayPlayers);
         }
 
@@ -855,6 +863,9 @@ export class GameEventManager {
     }
 
     handleGameStart() {
+        // Reset per-session HUD preferences
+        this.diceHUD?.resetSession();
+
         // Attach names for AI serialization
         this.game.players.forEach(p => {
             p.name = this.getPlayerName(p);
