@@ -4867,9 +4867,15 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 }
 .gamepad-cursor-label.primary-master {
     opacity: 1;
-    outline: 1px solid currentColor;
-    outline-offset: 3px;
-    padding: 1px 2px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    font-size: 10px;
+    padding: 0;
+    border: 1.5px solid currentColor;
+    box-shadow: 0 0 6px currentColor, inset 0 0 4px rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.35);
 }
 
 #main-menu-branding {

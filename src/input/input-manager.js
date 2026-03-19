@@ -282,8 +282,9 @@ export class InputManager {
     }
 
     /**
-     * Returns the raw index of the primary master gamepad (lowest index among activated masters).
-     * Returns -1 if no master gamepads are activated.
+     * Returns the raw index of the primary master gamepad.
+     * Prefers lowest-index activated gamepad with 'master' assignment.
+     * Falls back to lowest-index activated gamepad if none are assigned as master.
      */
     getPrimaryMasterIndex() {
         const activated = this.gamepadCursorManager?.activatedGamepads;
@@ -292,7 +293,8 @@ export class InputManager {
         for (const rawIdx of sorted) {
             if (this.getGamepadAssignment(rawIdx) === 'master') return rawIdx;
         }
-        return -1;
+        // No master-assigned gamepads — fall back to lowest activated index
+        return sorted[0];
     }
 
     /**
@@ -303,8 +305,14 @@ export class InputManager {
         const mode = this.getMasterMode();
         if (mode === 0) return true;
         const assignment = this.getGamepadAssignment(rawIndex);
-        if (mode === 1) return assignment === 'master';
-        // mode 2: only the primary master
+        const hasMaster = (() => {
+            const activated = this.gamepadCursorManager?.activatedGamepads;
+            if (!activated) return false;
+            return Array.from(activated).some(i => this.getGamepadAssignment(i) === 'master');
+        })();
+        // Mode 1: master-assigned gamepads can act; if none are master, fall back to lowest index
+        if (mode === 1) return hasMaster ? assignment === 'master' : rawIndex === this.getPrimaryMasterIndex();
+        // Mode 2: only the single primary master (with fallback)
         return rawIndex === this.getPrimaryMasterIndex();
     }
 
