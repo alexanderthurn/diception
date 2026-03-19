@@ -136,7 +136,7 @@ export class SoundManager {
 
     /** Generic UI button click */
     button() {
-        this._play('button', { speed: 0.85 + Math.random() * 0.30 });
+        this._play('button', { speed: 0.85 + Math.random() * 0.30, volume: this.volume * 0.5 });
     }
 
     /**

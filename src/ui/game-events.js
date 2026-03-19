@@ -599,8 +599,8 @@ export class GameEventManager {
         // Show reinforcement popup in HUD
         if (this.diceHUD) this.diceHUD.showReinforcements(data, gameSpeed, autoplayPlayers);
 
-        // Play sound for human players only
-        if (!data.player.isBot && !autoplayPlayers.has(data.player.id) && this.sfx) {
+        // Play sound for human players only (not in expert speed)
+        if (!data.player.isBot && !autoplayPlayers.has(data.player.id) && this.sfx && gameSpeed !== 'expert') {
             this.sfx.reinforce();
             this.sfx.resetWinStreak();
         }
