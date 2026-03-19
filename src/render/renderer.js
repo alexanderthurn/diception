@@ -66,6 +66,7 @@ export class Renderer {
 
         // Initialize sub-renderers
         this.grid = new GridRenderer(this.rootContainer, this.game, this.animator, this.inputManager);
+        this.grid.app = this.app;
 
         // Center the grid initially
         this.centerGrid();

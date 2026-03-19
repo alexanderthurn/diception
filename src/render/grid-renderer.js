@@ -1621,9 +1621,9 @@ export class GridRenderer {
 
 
         // ── "+N" label: pop in, brief hold, fast dissolve — desktop only ────────
-        const screenW = window.innerWidth;
-        const screenH = window.innerHeight;
-        const isMobile = screenW <= 768 || screenH <= 720;
+        const screenW = this.app?.screen.width ?? window.innerWidth;
+        const screenH = this.app?.screen.height ?? window.innerHeight;
+        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 720;
         const labelX = (screenW / 2 - this.stage.x) / this.stage.scale.x;
         const labelY = (screenH / 2 - this.stage.y) / this.stage.scale.y;
 
