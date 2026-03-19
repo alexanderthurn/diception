@@ -54,6 +54,7 @@ export class SoundManager {
     _play(alias, options = {}) {
         if (!this.isReady) return;
         if (!this.enabled) return;
+        if (document.hidden) return;
         if (!sound.exists(alias)) return;
         sound.play(alias, {
             volume: this.volume,
