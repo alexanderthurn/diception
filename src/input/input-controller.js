@@ -97,14 +97,24 @@ export class InputController {
         // Handle UI button focus navigation
         if (this.uiFocusStates.has(sourceId)) {
             const uiFocus = this.uiFocusStates.get(sourceId);
-            if (dx === -1) {
+            const isRight = uiFocus.side === 'right';
+            // Exit conditions:
+            //  right-side: left exits
+            //  top: down exits, or left exits when on the first button (global-back-btn)
+            const exitRight = isRight && dx === -1;
+            const exitTop = !isRight && (dy === 1 || (dx === -1 && uiFocus.buttonIndex === 0));
+            if (exitRight || exitTop) {
                 this._exitUIFocus(sourceId);
-            } else if (dy !== 0) {
-                const buttons = this._getGameFocusableButtons();
-                if (buttons.length > 0) {
-                    buttons[uiFocus.buttonIndex]?.classList.remove('gamepad-focused');
-                    uiFocus.buttonIndex = (uiFocus.buttonIndex + dy + buttons.length) % buttons.length;
-                    buttons[uiFocus.buttonIndex].classList.add('gamepad-focused');
+            } else {
+                // Navigate within group: up/down for right-side, left/right for top
+                const navDelta = isRight ? dy : dx;
+                if (navDelta !== 0) {
+                    const buttons = this._getUIButtons(uiFocus.side);
+                    if (buttons.length > 0) {
+                        buttons[uiFocus.buttonIndex]?.classList.remove('gamepad-focused');
+                        uiFocus.buttonIndex = (uiFocus.buttonIndex + navDelta + buttons.length) % buttons.length;
+                        buttons[uiFocus.buttonIndex].classList.add('gamepad-focused');
+                    }
                 }
             }
             return;
@@ -119,11 +129,15 @@ export class InputController {
         this.renderer.setHover(null, null, sourceId);
 
         // If tile is selected for this source, try to attack in direction
-        // (but allow right-edge navigation to UI buttons even in attack mode)
+        // (but allow edge navigation to UI buttons even in attack mode)
         if (this.selectedTiles.has(sourceId)) {
             const sel = this.selectedTiles.get(sourceId);
             if (dx === 1 && sel.x >= this.game.map.width - 1) {
-                this._enterUIFocus(sourceId);
+                this._enterUIFocus(sourceId, 'right');
+                return;
+            }
+            if (dy === -1 && sel.y <= 0) {
+                this._enterUIFocus(sourceId, 'top');
                 return;
             }
             this.handleKeyboardAttack(dx, dy, index, sourceId);
@@ -182,9 +196,14 @@ export class InputController {
         const newX = Math.max(0, Math.min(this.game.map.width - 1, cursorState.x + dx));
         const newY = Math.max(0, Math.min(this.game.map.height - 1, cursorState.y + dy));
 
-        // Right edge + right press → enter UI button focus
+        // Right edge + right press → enter right-side UI button focus
         if (dx === 1 && newX === cursorState.x) {
-            this._enterUIFocus(sourceId);
+            this._enterUIFocus(sourceId, 'right');
+            return;
+        }
+        // Top edge + up press → enter top UI button focus
+        if (dy === -1 && newY === cursorState.y) {
+            this._enterUIFocus(sourceId, 'top');
             return;
         }
 
@@ -216,7 +235,7 @@ export class InputController {
         // UI button focus: confirm clicks the focused button
         if (this.uiFocusStates.has(sourceId)) {
             const uiFocus = this.uiFocusStates.get(sourceId);
-            const buttons = this._getGameFocusableButtons();
+            const buttons = this._getUIButtons(uiFocus.side);
             buttons[uiFocus.buttonIndex]?.click();
             return;
         }
@@ -685,18 +704,20 @@ export class InputController {
         this.renderer.setCursor(null, null, sourceId);
     }
 
-    /** Returns visible, non-disabled game action buttons (end-turn, autoplay). */
-    _getGameFocusableButtons() {
-        return ['end-turn-btn', 'autoplay-btn']
-            .map(id => document.getElementById(id))
+    /** Returns visible, non-disabled buttons for a UI group ('right' or 'top'). */
+    _getUIButtons(side) {
+        const ids = side === 'right'
+            ? ['end-turn-btn', 'autoplay-btn']
+            : ['global-back-btn', 'zoom-out-btn', 'zoom-in-btn'];
+        return ids.map(id => document.getElementById(id))
             .filter(btn => btn && !btn.hidden && !btn.classList.contains('hidden') && !btn.disabled);
     }
 
-    _enterUIFocus(sourceId, startIndex = 0) {
-        const buttons = this._getGameFocusableButtons();
+    _enterUIFocus(sourceId, side, startIndex = 0) {
+        const buttons = this._getUIButtons(side);
         if (buttons.length === 0) return;
         const idx = Math.max(0, Math.min(startIndex, buttons.length - 1));
-        this.uiFocusStates.set(sourceId, { buttonIndex: idx });
+        this.uiFocusStates.set(sourceId, { buttonIndex: idx, side });
         buttons[idx].classList.add('gamepad-focused');
         // Hide the map cursor so it's clear focus has left the map
         this.renderer.setCursor(null, null, sourceId);
@@ -704,8 +725,8 @@ export class InputController {
 
     _exitUIFocus(sourceId) {
         if (!this.uiFocusStates.has(sourceId)) return;
-        // Remove highlight from all focusable buttons
-        for (const btn of this._getGameFocusableButtons()) {
+        const { side } = this.uiFocusStates.get(sourceId);
+        for (const btn of this._getUIButtons(side)) {
             btn.classList.remove('gamepad-focused');
         }
         this.uiFocusStates.delete(sourceId);
