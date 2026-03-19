@@ -6869,6 +6869,13 @@ details.settings-group[open]>summary.settings-group-header::after {
     animation: supply-flash-pulse 0.5s ease-out 3;
 }
 
+/* Gamepad D-pad UI button focus highlight */
+.gamepad-focused {
+    outline: 2px solid #00ffff;
+    outline-offset: 3px;
+    box-shadow: 0 0 12px rgba(0, 255, 255, 0.55), inset 0 0 0 1px rgba(0, 255, 255, 0.15);
+}
+
 /* ── Attack overlay (Beginner mode dramatic dice duel) ── */
 
 #attack-overlay {

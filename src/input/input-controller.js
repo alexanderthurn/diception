@@ -15,6 +15,8 @@ export class InputController {
         this.cursorStates = new Map();
         // Per-source selection: Map<sourceId, {x, y}>
         this.selectedTiles = new Map();
+        // Per-source UI button focus: Map<sourceId, {buttonIndex}> or absent when on map
+        this.uiFocusStates = new Map();
 
         // Bind interaction events (mouse/touch)
         this.renderer.app.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -89,9 +91,27 @@ export class InputController {
         const { x: dx, y: dy, index } = data;
         if (!this.game.players || this.game.players.length === 0) return;
         if (this.game.gameOver) return;
-        if (!this._sourceCanAct(index)) return;
 
         const sourceId = this._sourceId(index);
+
+        // Handle UI button focus navigation
+        if (this.uiFocusStates.has(sourceId)) {
+            const uiFocus = this.uiFocusStates.get(sourceId);
+            if (dx === -1) {
+                this._exitUIFocus(sourceId);
+            } else if (dy !== 0) {
+                const buttons = this._getGameFocusableButtons();
+                if (buttons.length > 0) {
+                    buttons[uiFocus.buttonIndex]?.classList.remove('gamepad-focused');
+                    uiFocus.buttonIndex = (uiFocus.buttonIndex + dy + buttons.length) % buttons.length;
+                    buttons[uiFocus.buttonIndex].classList.add('gamepad-focused');
+                }
+            }
+            return;
+        }
+
+        if (!this._sourceCanAct(index)) return;
+
         const cursorState = this._getCursorState(sourceId);
 
         // Show D-pad cursor, hide same-source hover
@@ -99,7 +119,13 @@ export class InputController {
         this.renderer.setHover(null, null, sourceId);
 
         // If tile is selected for this source, try to attack in direction
+        // (but allow right-edge navigation to UI buttons even in attack mode)
         if (this.selectedTiles.has(sourceId)) {
+            const sel = this.selectedTiles.get(sourceId);
+            if (dx === 1 && sel.x >= this.game.map.width - 1) {
+                this._enterUIFocus(sourceId);
+                return;
+            }
             this.handleKeyboardAttack(dx, dy, index, sourceId);
             return;
         }
@@ -156,6 +182,12 @@ export class InputController {
         const newX = Math.max(0, Math.min(this.game.map.width - 1, cursorState.x + dx));
         const newY = Math.max(0, Math.min(this.game.map.height - 1, cursorState.y + dy));
 
+        // Right edge + right press → enter UI button focus
+        if (dx === 1 && newX === cursorState.x) {
+            this._enterUIFocus(sourceId);
+            return;
+        }
+
         if (newX !== cursorState.x || newY !== cursorState.y) {
             cursorState.x = newX;
             cursorState.y = newY;
@@ -180,6 +212,15 @@ export class InputController {
         const source = data?.source ?? 'keyboard';
         const index = source === 'gamepad' ? (data?.index ?? -1) : -1;
         const sourceId = this._sourceId(index);
+
+        // UI button focus: confirm clicks the focused button
+        if (this.uiFocusStates.has(sourceId)) {
+            const uiFocus = this.uiFocusStates.get(sourceId);
+            const buttons = this._getGameFocusableButtons();
+            buttons[uiFocus.buttonIndex]?.click();
+            return;
+        }
+
         const cursorState = this._getCursorState(sourceId);
 
         // Analog cursor mode: GamepadCursorManager fires pointer events for this button — skip D-pad handling.
@@ -223,6 +264,13 @@ export class InputController {
             document.querySelector('.dialog-overlay')) return;
         const index = data?.source === 'gamepad' ? (data?.index ?? -1) : -1;
         const sourceId = this._sourceId(index);
+
+        // Exit UI button focus on cancel
+        if (this.uiFocusStates.has(sourceId)) {
+            this._exitUIFocus(sourceId);
+            return;
+        }
+
         const cursorState = this._getCursorState(sourceId);
 
         if (this.selectedTiles.has(sourceId)) {
@@ -637,7 +685,43 @@ export class InputController {
         this.renderer.setCursor(null, null, sourceId);
     }
 
+    /** Returns visible, non-disabled game action buttons (end-turn, autoplay). */
+    _getGameFocusableButtons() {
+        return ['end-turn-btn', 'autoplay-btn']
+            .map(id => document.getElementById(id))
+            .filter(btn => btn && !btn.hidden && !btn.classList.contains('hidden') && !btn.disabled);
+    }
+
+    _enterUIFocus(sourceId, startIndex = 0) {
+        const buttons = this._getGameFocusableButtons();
+        if (buttons.length === 0) return;
+        const idx = Math.max(0, Math.min(startIndex, buttons.length - 1));
+        this.uiFocusStates.set(sourceId, { buttonIndex: idx });
+        buttons[idx].classList.add('gamepad-focused');
+        // Hide the map cursor so it's clear focus has left the map
+        this.renderer.setCursor(null, null, sourceId);
+    }
+
+    _exitUIFocus(sourceId) {
+        if (!this.uiFocusStates.has(sourceId)) return;
+        // Remove highlight from all focusable buttons
+        for (const btn of this._getGameFocusableButtons()) {
+            btn.classList.remove('gamepad-focused');
+        }
+        this.uiFocusStates.delete(sourceId);
+        // Restore map cursor to last known position
+        const cursorState = this._getCursorState(sourceId);
+        if (cursorState.x !== null && cursorState.y !== null) {
+            this.renderer.setCursor(cursorState.x, cursorState.y, sourceId);
+        }
+    }
+
     onTurnStart() {
+        // Clear any active UI button focus on turn change
+        for (const sourceId of [...this.uiFocusStates.keys()]) {
+            this._exitUIFocus(sourceId);
+        }
+
         // In parallel mode: selections are validated at the time of use, not on turn transitions
         const isParallel = ['parallel', 'parallel-s'].includes(this.game.playMode);
         if (isParallel || this.game.currentPlayer.isBot) {
