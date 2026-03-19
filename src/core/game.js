@@ -23,6 +23,10 @@ export class Game {
 
         // When muted, emit() is a no-op (used for headless fast-forward)
         this.muted = false;
+
+        // Optional hook set by the renderer to show a reinforcement animation
+        // before the player switch happens.  Signature: (data, continueCallback) => void
+        this.reinforcementAnimationHook = null;
     }
 
     on(event, callback) {
@@ -205,36 +209,42 @@ export class Game {
     endTurn() {
         if (this.gameOver || this.players.length === 0) return;
 
-        // 1. Reinforce current player (use new decoupled interface)
+        // 1. Reinforce current player
         const reinforceResult = this.reinforcement.distributeReinforcements({
             map: this.map,
             player: this.currentPlayer,
             maxDice: this.maxDice
         }, this.currentPlayer.id);
-        this.emit('reinforcements', { player: this.currentPlayer, ...reinforceResult });
+        const reinforceData = { player: this.currentPlayer, ...reinforceResult };
+        this.emit('reinforcements', reinforceData);
 
-        // 2. Switch player
-        // Skip dead players
-        let loops = 0;
-        do {
-            this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
-            loops++;
-            if (loops > this.players.length) {
-                // Should not happen if game not over
-                this.gameOver = true;
-                break;
+        // 2. Switch player — deferred if an animation hook is registered
+        const continueEndTurn = () => {
+            let loops = 0;
+            do {
+                this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+                loops++;
+                if (loops > this.players.length) {
+                    this.gameOver = true;
+                    break;
+                }
+            } while (!this.players[this.currentPlayerIndex].alive);
+
+            this.turn++;
+
+            if (this.turn > GAME.MAX_TURNS) {
+                this.determineTurnLimitWinner();
+                return;
             }
-        } while (!this.players[this.currentPlayerIndex].alive);
 
-        this.turn++;
+            this.startTurn();
+        };
 
-        // Check turn limit
-        if (this.turn > GAME.MAX_TURNS) {
-            this.determineTurnLimitWinner();
-            return;
+        if (this.reinforcementAnimationHook) {
+            this.reinforcementAnimationHook(reinforceData, continueEndTurn);
+        } else {
+            continueEndTurn();
         }
-
-        this.startTurn();
     }
 
     startTurn() {

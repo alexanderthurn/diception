@@ -7,7 +7,7 @@ function premultiplyColor(hex, alpha) {
     return (r << 16) | (g << 8) | b;
 }
 import { TileRenderer } from './tile-renderer.js';
-import { RENDER } from '../core/constants.js';
+import { RENDER, GAME } from '../core/constants.js';
 import { TileGlow } from './effects/tile-glow.js';
 import { getWinProbability, getProbabilityHexColor } from '../core/probability.js';
 import { shouldShowInputHints, getInputHint, ACTION_MOVE_UP, ACTION_MOVE_DOWN, ACTION_MOVE_LEFT, ACTION_MOVE_RIGHT, ACTION_ATTACK } from '../ui/input-hints.js';
@@ -77,6 +77,10 @@ export class GridRenderer {
         this.tileCache = new Map();
         // Track last known state for dirty checking
         this.lastTileStates = new Map();
+        // Temporary dice count overrides used during supply animation
+        this._diceOverrides = new Map(); // tileIdx → displayed count
+        // True while supply animation is running — shimmer runs 5× faster
+        this._supplyAnimActive = false;
         // Track last current player for region highlighting changes
         this.lastCurrentPlayerId = null;
         // Track if full redraw is needed
@@ -176,7 +180,8 @@ export class GridRenderer {
             lastState.blocked !== tileRaw.blocked ||
             lastState.isCurrentPlayer !== isCurrentPlayer ||
             lastState.isInRegion !== isInRegion ||
-            lastState.hideSmallBorders !== hideSmallBorders) return true;
+            lastState.hideSmallBorders !== hideSmallBorders ||
+            lastState.diceOverride !== (this._diceOverrides.get(tileIdx) ?? null)) return true;
 
         // Borders depend on neighbor ownership — redraw if any orthogonal neighbor changed owner
         const dirs = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }];
@@ -205,6 +210,7 @@ export class GridRenderer {
             isInRegion,
             hideSmallBorders,
             neighborOwners,
+            diceOverride: this._diceOverrides.get(tileIdx) ?? null,
         });
     }
 
@@ -469,8 +475,10 @@ export class GridRenderer {
 
         // Dice rendering (skip in paint mode)
         if (!this.paintMode) {
+            const tileIdx = x + y * this.game.map.width;
+            const diceCount = this._diceOverrides.get(tileIdx) ?? tileRaw.dice;
             const diceColor = isCurrentPlayer ? null : color;
-            this.renderDice(tileContainer, tileRaw.dice, diceColor);
+            this.renderDice(tileContainer, diceCount, diceColor);
         }
 
         return tileContainer;
@@ -855,8 +863,9 @@ export class GridRenderer {
             }
         };
 
-        // 1. Primary (Largest) Region - Standard size/speed
-        drawComets(this.currentPlayerRegionEdges, 1.0, 1.0, 1.0);
+        // 1. Primary (Largest) Region — 5× faster during supply animation
+        const primaryDurationScale = this._supplyAnimActive ? 0.2 : 1.0;
+        drawComets(this.currentPlayerRegionEdges, primaryDurationScale, 1.0, 1.0);
 
         // 2. Secondary Regions - Smaller, slower (50% of previous speed = 2x duration)
         // drawComets(this.currentPlayerSecondaryRegionEdges, 3.6, 0.6, 1);
@@ -1532,5 +1541,193 @@ export class GridRenderer {
 
         // Start the sequence
         animateNextPlacement(0);
+    }
+
+    // ── Supply animation helpers ─────────────────────────────────────────────
+
+    /** Set a temporary visual dice count for one tile and mark it dirty. */
+    setDiceOverride(x, y, count) {
+        const idx = x + y * this.game.map.width;
+        this._diceOverrides.set(idx, count);
+        this.lastTileStates.delete(idx); // force redraw
+    }
+
+    /** Remove all overrides and force a full redraw. */
+    clearDiceOverrides() {
+        for (const idx of this._diceOverrides.keys()) this.lastTileStates.delete(idx);
+        this._diceOverrides.clear();
+    }
+
+    /** Brief white flash+scale overlay on a tile to indicate a die was placed. */
+    _wobbleTile(x, y) {
+        const px = x * (this.tileSize + this.gap);
+        const py = y * (this.tileSize + this.gap);
+        const gfx = new Graphics();
+        gfx.rect(0, 0, this.tileSize, this.tileSize);
+        gfx.fill({ color: 0xffffff, alpha: 0 });
+        gfx.x = px;
+        gfx.y = py;
+        this.animationContainer.addChild(gfx);
+        this.animator.addTween({
+            duration: 8,
+            onUpdate: (p) => {
+                const s = 1 + 0.2 * Math.sin(p * Math.PI);
+                gfx.alpha = Math.sin(p * Math.PI) * 0.55;
+                gfx.scale.set(s);
+                gfx.x = px - (s - 1) * this.tileSize / 2;
+                gfx.y = py - (s - 1) * this.tileSize / 2;
+            },
+            onComplete: () => gfx.destroy(),
+        });
+    }
+
+    /**
+     * Supply animation: region pulse + big "+N" text + one-by-one die placement.
+     * Runs in beginner and normal mode; expert skips entirely.
+     * @param {Object}   data       - reinforcements event data
+     * @param {Function} onComplete - called when animation finishes
+     */
+    animateSupply(data, sfx, onComplete) {
+        if (this.gameSpeed === 'expert') { onComplete?.(); return; }
+        this._supplyAnimActive = true;
+
+        const placements = data.placements || [];
+        const totalDice = (data.placed || 0) + (data.stored || 0);
+        const mapWidth = this.game.map.width;
+        const playerColor = data.player.color;
+        const totalFrames = this.gameSpeed === 'beginner'
+            ? GAME.SUPPLY_ANIM_FRAMES_BEGINNER
+            : GAME.SUPPLY_ANIM_FRAMES_NORMAL;
+
+        // Phase split: 25 % for region reveal, 75 % for sequential placement
+        const phaseARatio = 0.25;
+        const phaseBRatio = 0.75;
+
+        // ── Region tiles (source of the animation) ───────────────────────────
+        const regionTiles = this.game.map.findLargestConnectedRegionTiles(data.player.id);
+
+        // ── Phase A: pulsing overlay + "+N" label ─────────────────────────────
+        const overlays = [];
+        for (const t of regionTiles) {
+            const gfx = new Graphics();
+            gfx.rect(0, 0, this.tileSize, this.tileSize);
+            gfx.fill({ color: playerColor, alpha: 1 });
+            gfx.x = t.x * (this.tileSize + this.gap);
+            gfx.y = t.y * (this.tileSize + this.gap);
+            gfx.alpha = 0;
+            this.animationContainer.addChild(gfx);
+            overlays.push(gfx);
+        }
+
+        // Centroid of region for the label
+        const cx = regionTiles.length
+            ? regionTiles.reduce((s, t) => s + t.x, 0) / regionTiles.length
+            : this.game.map.width / 2;
+        const cy = regionTiles.length
+            ? regionTiles.reduce((s, t) => s + t.y, 0) / regionTiles.length
+            : this.game.map.height / 2;
+        const labelX = cx * (this.tileSize + this.gap) + this.tileSize / 2;
+        const labelY = cy * (this.tileSize + this.gap) + this.tileSize / 2;
+
+        const label = new Text({
+            text: `+${totalDice}`,
+            style: new TextStyle({
+                fontFamily: 'Rajdhani, Arial',
+                fontSize: Math.round(this.tileSize * 1.4),
+                fontWeight: '700',
+                fill: '#ffffff',
+                stroke: { color: playerColor, width: 4 },
+                dropShadow: true,
+                dropShadowBlur: 10,
+                dropShadowDistance: 2,
+            }),
+        });
+        label.anchor.set(0.5);
+        label.x = labelX;
+        label.y = labelY;
+        label.alpha = 0;
+        label.scale.set(0.3);
+        this.animationContainer.addChild(label);
+
+        // ── Pre-compute dice overrides (show pre-reinforcement counts) ────────
+        if (placements.length > 0) {
+            const placementCounts = new Map();
+            for (const p of placements) {
+                const idx = p.x + p.y * mapWidth;
+                placementCounts.set(idx, (placementCounts.get(idx) || 0) + 1);
+            }
+            for (const [idx, cnt] of placementCounts) {
+                const x = idx % mapWidth;
+                const y = Math.floor(idx / mapWidth);
+                const tile = this.game.map.getTileRaw(x, y);
+                if (tile) this.setDiceOverride(x, y, tile.dice - cnt);
+            }
+            this.draw();
+        }
+
+        // ── Main tween: runs for the full duration ────────────────────────────
+        let stepIndex = 0;
+        let nextStepProgress = phaseARatio;
+        const stepProgressInterval = placements.length > 0
+            ? phaseBRatio / placements.length
+            : Infinity;
+
+        this.animator.addTween({
+            duration: totalFrames,
+            onUpdate: (p) => {
+                // Overlay pulse
+                const pulse = 0.15 + 0.12 * Math.sin(p * Math.PI * 8);
+                for (const gfx of overlays) gfx.alpha = pulse;
+
+                // Label: pop in, hold, fade out
+                if (p < 0.08) {
+                    label.alpha = p / 0.08;
+                    label.scale.set(0.3 + (p / 0.08) * 0.7);
+                } else if (p > 0.88) {
+                    label.alpha = (1 - p) / 0.12;
+                } else {
+                    label.alpha = 1;
+                    label.scale.set(1);
+                }
+
+                // Phase B: step through placements
+                if (placements.length > 0) {
+                    let stepsThisFrame = 0;
+                    while (stepIndex < placements.length &&
+                           p >= nextStepProgress &&
+                           stepsThisFrame < 6) {
+                        const pl = placements[stepIndex++];
+                        nextStepProgress += stepProgressInterval;
+                        stepsThisFrame++;
+
+                        const idx = pl.x + pl.y * mapWidth;
+                        const cur = this._diceOverrides.get(idx) ?? 0;
+                        this.setDiceOverride(pl.x, pl.y, cur + 1);
+                        this._wobbleTile(pl.x, pl.y);
+                        sfx?.coin();
+                    }
+                    if (stepsThisFrame > 0) this.draw();
+                }
+            },
+            onComplete: () => {
+                // Clean up
+                this._supplyAnimActive = false;
+                for (const gfx of overlays) gfx.destroy();
+                label.destroy();
+                this.clearDiceOverrides();
+                this.draw(); // restore final counts
+                onComplete?.();
+            },
+        });
+
+        // ── All-full fallback: flash the end-turn button ───────────────────────
+        if (placements.length === 0) {
+            const btn = document.getElementById('end-turn-btn');
+            if (btn) {
+                btn.classList.add('supply-flash');
+                setTimeout(() => btn.classList.remove('supply-flash'),
+                    Math.round(totalFrames * 1000 / 60));
+            }
+        }
     }
 }

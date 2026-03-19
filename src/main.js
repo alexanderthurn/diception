@@ -694,6 +694,7 @@ async function init() {
     }
     const audioController = new AudioController(sfxManager);
     audioController.init();
+    renderer.sfx = sfxManager;
 
     // Achievement toast notification
     {

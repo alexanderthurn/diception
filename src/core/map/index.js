@@ -212,6 +212,10 @@ export class MapManager {
     findLargestConnectedRegion(playerId) {
         return queries.findLargestConnectedRegion(this, playerId);
     }
+
+    findLargestConnectedRegionTiles(playerId) {
+        return queries.findLargestConnectedRegionTiles(this, playerId);
+    }
 }
 
 // Re-export for direct access if needed

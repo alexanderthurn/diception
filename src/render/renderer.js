@@ -90,10 +90,29 @@ export class Renderer {
         });
 
         this.game.on('reinforcements', (data) => {
-            // Trigger reinforcement animation removed as per user request
-            // Redraw numbers
-            this.draw();
+            // When the hook is active, animateSupply handles drawing + input suspension.
+            // Without a hook (expert speed) just redraw immediately.
+            if (!this.game.reinforcementAnimationHook) {
+                this.draw();
+            }
         });
+
+        // Set up the reinforcement animation hook so endTurn() defers player switching
+        // until the supply animation completes.  Re-evaluated each call so speed changes
+        // take effect immediately.
+        this.game.reinforcementAnimationHook = (data, continueEndTurn) => {
+            if (this.gameSpeed === 'expert') {
+                this.draw();
+                continueEndTurn();
+                return;
+            }
+            this.draw(); // show updated dice immediately
+            this.inputManager?.setSuspended(true);
+            this.grid.animateSupply(data, this.sfx ?? null, () => {
+                this.inputManager?.setSuspended(false);
+                continueEndTurn();
+            });
+        };
         this.game.on('turnStart', () => this.draw()); // update highlights
 
         // Add shake update to ticker
@@ -356,4 +375,5 @@ export class Renderer {
             }
         }
     }
+
 }

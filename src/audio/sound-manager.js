@@ -13,6 +13,7 @@ const SFX_FILES = {
     victory: 'victory.ogg',
     defeat: 'defeat.ogg',
     time: 'time.ogg',
+    coin: 'coin.ogg',
 };
 
 export class SoundManager {
@@ -124,6 +125,11 @@ export class SoundManager {
     /** Game over — defeat */
     defeat() {
         this._play('defeat');
+    }
+
+    /** Single die placed during supply animation */
+    coin() {
+        this._play('coin');
     }
 
     /**

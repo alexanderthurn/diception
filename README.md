@@ -146,3 +146,4 @@ Created as a Dice Wars inspired strategy game.
 **SFX**
 - Thank you  [SFXR](https://pro.sfxr.me/)
 
+- ffmpeg -i coin.wav -c:a libopus -b:a 64k coin.ogg

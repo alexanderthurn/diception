@@ -95,6 +95,46 @@ export function findLargestConnectedRegion(map, playerId) {
 }
 
 /**
+ * Return the tile positions {x, y} of the largest connected region for a player.
+ * Falls back to all owned tiles if no region is found.
+ */
+export function findLargestConnectedRegionTiles(map, playerId) {
+    const visited = new Set();
+    let bestTiles = [];
+
+    for (let y = 0; y < map.height; y++) {
+        for (let x = 0; x < map.width; x++) {
+            const idx = getTileIndex(map, x, y);
+            const tile = map.tiles[idx];
+            if (!tile.blocked && tile.owner === playerId && !visited.has(idx)) {
+                const tiles = collectRegion(map, x, y, playerId, visited);
+                if (tiles.length > bestTiles.length) bestTiles = tiles;
+            }
+        }
+    }
+    return bestTiles;
+}
+
+function collectRegion(map, startX, startY, playerId, visited) {
+    const tiles = [];
+    const stack = [{ x: startX, y: startY }];
+    visited.add(getTileIndex(map, startX, startY));
+
+    while (stack.length > 0) {
+        const { x, y } = stack.pop();
+        tiles.push({ x, y });
+        for (const n of getAdjacentTiles(map, x, y)) {
+            const nIdx = getTileIndex(map, n.x, n.y);
+            if (n.owner === playerId && !visited.has(nIdx)) {
+                visited.add(nIdx);
+                stack.push({ x: n.x, y: n.y });
+            }
+        }
+    }
+    return tiles;
+}
+
+/**
  * Measure the size of a connected region starting from a tile
  */
 export function measureRegion(map, startX, startY, playerId, visited) {
