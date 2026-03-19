@@ -232,10 +232,12 @@ export class InputController {
         const index = source === 'gamepad' ? (data?.index ?? -1) : -1;
         const sourceId = this._sourceId(index);
 
-        // UI button focus: confirm clicks the focused button
+        // UI button focus: confirm clicks the focused button, then clears focus
+        // so any modal that opens doesn't inherit a stale uiFocusState
         if (this.uiFocusStates.has(sourceId)) {
             const uiFocus = this.uiFocusStates.get(sourceId);
             const buttons = this._getUIButtons(uiFocus.side);
+            this._exitUIFocus(sourceId);
             buttons[uiFocus.buttonIndex]?.click();
             return;
         }
