@@ -1523,6 +1523,12 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             configHtml += `<div><button class="tron-btn small" id="gamepad-type-toggle-btn" style="margin-bottom:10px;">${label}</button></div>`;
         }
 
+        {
+            const MASTER_MODE_LABELS = ['GAMEPAD LOCK: OFF', 'GAMEPAD LOCK: MULTI', 'GAMEPAD LOCK: STRICT'];
+            const currentMode = parseInt(localStorage.getItem('dicy_gamepad_master_mode') || '0');
+            configHtml += `<div><button class="tron-btn small" id="gamepad-master-mode-btn" style="margin-bottom:10px;">${MASTER_MODE_LABELS[currentMode]}</button></div>`;
+        }
+
         const gcm = inputManager.gamepadCursorManager;
         const connectedGamepads = Array.from(inputManager.connectedGamepadIndices || [])
             .filter(idx => gcm?.cursors?.has(idx))
@@ -1561,6 +1567,14 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         document.getElementById('configure-keyboard-btn')?.addEventListener('click', async () => {
             const saved = await KeyBindingDialog.configureKeyboard(inputManager);
             if (saved) refreshControlsSection();
+        });
+
+        // Gamepad Master Mode toggle button — cycles through 0/1/2
+        document.getElementById('gamepad-master-mode-btn')?.addEventListener('click', () => {
+            const current = parseInt(localStorage.getItem('dicy_gamepad_master_mode') || '0');
+            const next = (current + 1) % 3;
+            localStorage.setItem('dicy_gamepad_master_mode', String(next));
+            refreshControlsSection();
         });
 
         // Gamepad Type toggle button — cycles through available backends

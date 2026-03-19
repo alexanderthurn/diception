@@ -267,6 +267,47 @@ export class InputManager {
         return assignment === 'master' || assignment === playerId;
     }
 
+    // ── Gamepad master mode ───────────────────────────────────────────────────
+
+    /**
+     * Gamepad master mode restricts which gamepads can perform global actions
+     * (zoom, pan map, open pause menu, drag map).
+     * 0 = default: all gamepads can do everything
+     * 1 = multi-master: only master-assigned gamepads can do global actions
+     * 2 = strict: only the single primary master (lowest index) can do global actions
+     */
+    getMasterMode() {
+        const saved = localStorage.getItem('dicy_gamepad_master_mode');
+        return saved ? parseInt(saved) : 0;
+    }
+
+    /**
+     * Returns the raw index of the primary master gamepad (lowest index among activated masters).
+     * Returns -1 if no master gamepads are activated.
+     */
+    getPrimaryMasterIndex() {
+        const activated = this.gamepadCursorManager?.activatedGamepads;
+        if (!activated || activated.size === 0) return -1;
+        const sorted = Array.from(activated).sort((a, b) => a - b);
+        for (const rawIdx of sorted) {
+            if (this.getGamepadAssignment(rawIdx) === 'master') return rawIdx;
+        }
+        return -1;
+    }
+
+    /**
+     * Returns true if this gamepad is allowed to perform global actions
+     * (zoom, pan, open menu, drag map) given the current master mode.
+     */
+    isGamepadAllowedGlobalAction(rawIndex) {
+        const mode = this.getMasterMode();
+        if (mode === 0) return true;
+        const assignment = this.getGamepadAssignment(rawIndex);
+        if (mode === 1) return assignment === 'master';
+        // mode 2: only the primary master
+        return rawIndex === this.getPrimaryMasterIndex();
+    }
+
     setupKeyboard() {
         document.addEventListener('keydown', this.boundKeyDown);
         document.addEventListener('keyup', this.boundKeyUp);
@@ -549,10 +590,10 @@ export class InputManager {
                     if (action === 'confirm') this.emit('confirm', { source: 'gamepad', index: gp.index });
                     if (action === 'cancel') this.emit('cancel', { source: 'gamepad', index: gp.index });
                     if (action === 'end_turn') this.emit('endTurn', { index: gp.index });
-                    if (action === 'menu') this.emit('menu');
+                    if (action === 'menu' && this.isGamepadAllowedGlobalAction(gp.index)) this.emit('menu');
                     // move_up/down/left/right handled by processGamepadMovement
                     const zoomDir = this._zoomDirections[action];
-                    if (zoomDir !== undefined) this.emit('zoom', { direction: zoomDir });
+                    if (zoomDir !== undefined && this.isGamepadAllowedGlobalAction(gp.index)) this.emit('zoom', { direction: zoomDir });
                 }
             } else if (!pressed && wasPressed) {
                 this.emit('gamepadButtonUp', { index: gp.index, button: i });
@@ -614,6 +655,7 @@ export class InputManager {
         if (this.suspended) return;
         // Only activated (joined) gamepads may pan
         if (!this.gamepadCursorManager?.activatedGamepads?.has(gp.index)) return;
+        if (!this.isGamepadAllowedGlobalAction(gp.index)) return;
 
         // Right stick: axes 2 (X), 3 (Y)
         let rx = gp.axes[2] ?? 0;

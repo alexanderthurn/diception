@@ -223,7 +223,7 @@ export class GamepadCursorManager {
                         }
                     }
                 }
-            } else if (button === b.drag) {
+            } else if (button === b.drag && this.inputManager.isGamepadAllowedGlobalAction(index)) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
             } else if (button === b.cursorSpeedDown) {
                 // Persistent Speed: slower (0.5x)
@@ -262,7 +262,7 @@ export class GamepadCursorManager {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
                 }
-            } else if (button === b.drag) {
+            } else if (button === b.drag && this.inputManager.isGamepadAllowedGlobalAction(index)) {
                 this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 1, index);
             }
         };
@@ -571,6 +571,11 @@ export class GamepadCursorManager {
             }
             const multipleActive = this.cursors.size > 1;
             cursor.label.style.display = (isMenuOpen && multipleActive) ? 'block' : 'none';
+
+            // In strict mode (2), mark the primary master with a bracket indicator
+            const isPrimaryMaster = this.inputManager.getMasterMode() === 2 &&
+                index === this.inputManager.getPrimaryMasterIndex();
+            cursor.label.classList.toggle('primary-master', isPrimaryMaster);
         }
     }
 

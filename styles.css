@@ -4865,6 +4865,12 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     display: none;
     letter-spacing: 0.04em;
 }
+.gamepad-cursor-label.primary-master {
+    opacity: 1;
+    outline: 1px solid currentColor;
+    outline-offset: 3px;
+    padding: 1px 2px;
+}
 
 #main-menu-branding {
     position: fixed;
