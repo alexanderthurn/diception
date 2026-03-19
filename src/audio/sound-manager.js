@@ -14,6 +14,7 @@ const SFX_FILES = {
     defeat: 'defeat.ogg',
     time: 'time.ogg',
     coin: 'coin.ogg',
+    button: 'button.ogg',
 };
 
 export class SoundManager {
@@ -85,8 +86,8 @@ export class SoundManager {
     // === GAME SOUND EFFECTS ===
 
     /** Player's turn notification */
-    turnStart() {
-        this._play('turnStart');
+    turnStart(speed = 1.0) {
+        this._play('turnStart', { speed });
     }
 
     /** Attack initiated */
@@ -109,8 +110,8 @@ export class SoundManager {
     }
 
     /** Reinforcements received */
-    reinforce() {
-        this._play('reinforce');
+    reinforce(speed = 1.0) {
+        this._play('reinforce', { speed });
     }
 
     /** Player eliminated */
@@ -130,7 +131,12 @@ export class SoundManager {
 
     /** Single die placed during supply animation */
     coin() {
-        this._play('coin');
+        this._play('coin', { speed: 0.90 + Math.random() * 0.20 });
+    }
+
+    /** Generic UI button click */
+    button() {
+        this._play('button', { speed: 0.85 + Math.random() * 0.30 });
     }
 
     /**

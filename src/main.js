@@ -353,9 +353,9 @@ async function init() {
 
     // Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);
-    gamepadCursors.onIntroSpawn  = (playerIndex, x, y) => effectsManager.spawnPlayerDie(playerIndex, x, y);
-    gamepadCursors.onIntroRemove = (x, y) => effectsManager.removePlayerDie(x, y);
-    gamepadCursors.onIntroMutate = (x, y) => effectsManager.mutatePlayerDie(x, y);
+    gamepadCursors.onIntroSpawn  = (playerIndex, x, y) => { sfxManager.coin();                                    effectsManager.spawnPlayerDie(playerIndex, x, y); };
+    gamepadCursors.onIntroRemove = (x, y)              => { sfxManager.reinforce(0.85 + Math.random() * 0.30);   effectsManager.removePlayerDie(x, y); };
+    gamepadCursors.onIntroMutate = (x, y)              => { sfxManager.turnStart(0.85 + Math.random() * 0.30);   effectsManager.mutatePlayerDie(x, y); };
     inputManager.gamepadCursorManager = gamepadCursors;
 
     // FPS Counter
@@ -695,6 +695,13 @@ async function init() {
     const audioController = new AudioController(sfxManager);
     audioController.init();
     renderer.sfx = sfxManager;
+
+    // Play button.ogg on every button click except end-turn
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn || btn.id === 'end-turn-btn' || btn.hasAttribute('data-no-sfx')) return;
+        sfxManager.button();
+    }, { capture: true });
 
     // Achievement toast notification
     {

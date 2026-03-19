@@ -546,6 +546,7 @@ export class ScenarioBrowser {
 
             const playBtn = document.createElement('button');
             playBtn.className = 'tron-btn primary';
+            playBtn.dataset.noSfx = '';
             playBtn.textContent = 'Play';
             playBtn.onclick = () => finish('play');
             primaryRow.appendChild(playBtn);

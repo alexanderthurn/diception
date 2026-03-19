@@ -1677,17 +1677,17 @@ export class GridRenderer {
                 const pulse = 0.15 + 0.12 * Math.sin(p * Math.PI * 8);
                 for (const gfx of overlays) gfx.alpha = pulse;
 
-                // Label: quick pop-in (0–5%), brief hold (5–12%), fast dissolve (12–20%)
-                if (p < 0.05) {
-                    const t = p / 0.05;
+                // Label: quick pop-in (0–15%), brief hold (15–36%), fast dissolve (36–60%)
+                if (p < 0.15) {
+                    const t = p / 0.15;
                     label.alpha = t;
                     label.scale.set(0.5 + t * 0.7);
-                } else if (p < 0.12) {
+                } else if (p < 0.36) {
                     label.alpha = 1;
                     label.scale.set(1.2);
-                } else if (p < 0.20) {
-                    label.alpha = 1 - (p - 0.12) / 0.08;
-                    label.scale.set(1.2 + (p - 0.12) / 0.08 * 0.6);
+                } else if (p < 0.60) {
+                    label.alpha = 1 - (p - 0.36) / 0.24;
+                    label.scale.set(1.2 + (p - 0.36) / 0.24 * 0.6);
                 } else {
                     label.alpha = 0;
                 }

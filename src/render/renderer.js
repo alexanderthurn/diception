@@ -101,7 +101,8 @@ export class Renderer {
         // until the supply animation completes.  Re-evaluated each call so speed changes
         // take effect immediately.
         this.game.reinforcementAnimationHook = (data, continueEndTurn) => {
-            if (this.gameSpeed === 'expert') {
+            // Skip animation for bots and expert speed — just advance immediately
+            if (this.gameSpeed === 'expert' || data.player.isBot) {
                 this.draw();
                 continueEndTurn();
                 return;
