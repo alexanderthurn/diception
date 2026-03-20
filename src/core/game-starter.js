@@ -2,6 +2,29 @@ import { createAI } from './ai/index.js';
 import { Dialog } from '../ui/dialog.js';
 
 /**
+ * Attacks per turn + wall-clock seconds from level data and/or UI config.
+ * Legacy `turnTimeLimit` in scenarios: 10/15/30/60 → seconds; 0/1/3/5 → attacks.
+ */
+function resolveTurnLimitsFromLevel(level, config) {
+    let ap = level?.attacksPerTurn;
+    let sec = level?.secondsPerTurn;
+    let secAtk = level?.secondsPerAttack;
+    const raw = level?.turnTimeLimit;
+    if (raw != null && raw !== '') {
+        const v = Number(raw);
+        if ([10, 15, 30, 60].includes(v)) {
+            if (sec == null || sec === '') sec = v;
+        } else if ([0, 1, 3, 5].includes(v)) {
+            if (ap == null || ap === '') ap = v;
+        }
+    }
+    const attacksPerTurn = Math.max(0, Number(ap ?? config?.attacksPerTurn ?? 0) || 0);
+    const secondsPerTurn = Math.max(0, Number(sec ?? config?.secondsPerTurn ?? 0) || 0);
+    const secondsPerAttack = Math.max(0, Number(secAtk ?? config?.secondsPerAttack ?? 0) || 0);
+    return { attacksPerTurn, secondsPerTurn, secondsPerAttack };
+}
+
+/**
  * GameStarter - Handles game initialization and start logic
  */
 export class GameStarter {
@@ -29,6 +52,12 @@ export class GameStarter {
 
         /** Max attacks per active-player turn (0 = unlimited). Mirrored from game during play. */
         this.attacksPerTurn = 0;
+
+        /** Wall-clock seconds per turn (0 = unlimited). Not enforced in parallel modes. */
+        this.secondsPerTurn = 0;
+
+        /** Wall-clock seconds per attack (0 = unlimited). Not enforced in parallel modes. */
+        this.secondsPerAttack = 0;
 
         // Parallel-mode bot timers (setInterval IDs)
         this._parallelBotTimers = [];
@@ -82,6 +111,14 @@ export class GameStarter {
 
     getAttacksPerTurn() {
         return this.attacksPerTurn;
+    }
+
+    getSecondsPerTurn() {
+        return this.secondsPerTurn;
+    }
+
+    getSecondsPerAttack() {
+        return this.secondsPerAttack;
     }
 
     getPlayMode() {
@@ -139,6 +176,8 @@ export class GameStarter {
 
         this.gameSpeed = config.gameSpeed;
         this.attacksPerTurn = config.attacksPerTurn ?? 0;
+        this.secondsPerTurn = config.secondsPerTurn ?? 0;
+        this.secondsPerAttack = config.secondsPerAttack ?? 0;
         this.playMode = config.playMode ?? 'classic';
         this.renderer.setGameSpeed(this.gameSpeed);
 
@@ -171,12 +210,16 @@ export class GameStarter {
 
         const applyScenarioBranch = (pendingLevel) => {
             this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);
-            const ap = pendingLevel.attacksPerTurn ?? pendingLevel.turnTimeLimit ?? config.attacksPerTurn ?? 0;
+            const { attacksPerTurn: ap, secondsPerTurn: secLim, secondsPerAttack: secAtkLim } = resolveTurnLimitsFromLevel(pendingLevel, config);
             this.game.fullBoardRule = fullBoardRule;
             this.game._fullBoardRuleFired = false;
             this.game.attacksPerTurn = ap;
+            this.game.secondsPerTurn = secLim;
+            this.game.secondsPerAttack = secAtkLim;
             this.game.attacksUsedThisTurn = 0;
             this.attacksPerTurn = ap;
+            this.secondsPerTurn = secLim;
+            this.secondsPerAttack = secAtkLim;
             this.game.emit('gameStart', { players: this.game.players, map: this.game.map });
             this.game.startTurn();
             this.initializePlayerAIs(config.botAI);
@@ -190,8 +233,10 @@ export class GameStarter {
 
             if (pendingLevel?.type === 'config') {
                 const [w, h] = (pendingLevel.mapSize || '6x6').split('x').map(Number);
-                const apLvl = pendingLevel.attacksPerTurn ?? pendingLevel.turnTimeLimit ?? config.attacksPerTurn ?? 0;
+                const { attacksPerTurn: apLvl, secondsPerTurn: secLvl, secondsPerAttack: secAtkLvl } = resolveTurnLimitsFromLevel(pendingLevel, config);
                 this.attacksPerTurn = apLvl;
+                this.secondsPerTurn = secLvl;
+                this.secondsPerAttack = secAtkLvl;
                 const gameConfig = {
                     humanCount: 1,
                     botCount: pendingLevel.bots ?? 1,
@@ -203,10 +248,14 @@ export class GameStarter {
                     gameMode: pendingLevel.gameMode || 'classic',
                     fullBoardRule,
                     mapSeed,
-                    attacksPerTurn: apLvl
+                    attacksPerTurn: apLvl,
+                    secondsPerTurn: secLvl,
+                    secondsPerAttack: secAtkLvl,
                 };
                 this.game.startGame(gameConfig);
                 this.attacksPerTurn = this.game.attacksPerTurn;
+                this.secondsPerTurn = this.game.secondsPerTurn;
+                this.secondsPerAttack = this.game.secondsPerAttack;
                 this.initializePlayerAIs(pendingLevel.botAI || 'easy');
             } else if (pendingLevel && pendingLevel.type !== 'map') {
                 applyScenarioBranch(pendingLevel);
@@ -230,14 +279,25 @@ export class GameStarter {
                     if (pendingLevel.bots != null) gameConfig.botCount = pendingLevel.bots;
                     if (pendingLevel.maxDice != null) gameConfig.maxDice = pendingLevel.maxDice;
                     if (pendingLevel.diceSides != null) gameConfig.diceSides = pendingLevel.diceSides;
-                    const apMap = pendingLevel.attacksPerTurn ?? pendingLevel.turnTimeLimit ?? config.attacksPerTurn ?? 0;
+                    const { attacksPerTurn: apMap, secondsPerTurn: secMap, secondsPerAttack: secAtkMap } = resolveTurnLimitsFromLevel(pendingLevel, config);
                     gameConfig.attacksPerTurn = apMap;
+                    gameConfig.secondsPerTurn = secMap;
+                    gameConfig.secondsPerAttack = secAtkMap;
                     this.attacksPerTurn = apMap;
+                    this.secondsPerTurn = secMap;
+                    this.secondsPerAttack = secAtkMap;
                 } else {
                     gameConfig.attacksPerTurn = config.attacksPerTurn ?? 0;
+                    gameConfig.secondsPerTurn = config.secondsPerTurn ?? 0;
+                    gameConfig.secondsPerAttack = config.secondsPerAttack ?? 0;
                     this.attacksPerTurn = gameConfig.attacksPerTurn;
+                    this.secondsPerTurn = gameConfig.secondsPerTurn;
+                    this.secondsPerAttack = gameConfig.secondsPerAttack;
                 }
                 this.game.startGame(gameConfig);
+                this.attacksPerTurn = this.game.attacksPerTurn;
+                this.secondsPerTurn = this.game.secondsPerTurn;
+                this.secondsPerAttack = this.game.secondsPerAttack;
                 const botAI = (pendingLevel?.type === 'map' && pendingLevel?.botAI) || config.botAI;
                 this.initializePlayerAIs(botAI);
             }
@@ -253,10 +313,17 @@ export class GameStarter {
                 gameMode: config.gameMode,
                 fullBoardRule,
                 mapSeed,
-                attacksPerTurn: config.attacksPerTurn ?? 0
+                attacksPerTurn: config.attacksPerTurn ?? 0,
+                secondsPerTurn: config.secondsPerTurn ?? 0,
+                secondsPerAttack: config.secondsPerAttack ?? 0,
             };
             this.attacksPerTurn = gameConfig.attacksPerTurn;
+            this.secondsPerTurn = gameConfig.secondsPerTurn;
+            this.secondsPerAttack = gameConfig.secondsPerAttack;
             this.game.startGame(gameConfig);
+            this.attacksPerTurn = this.game.attacksPerTurn;
+            this.secondsPerTurn = this.game.secondsPerTurn;
+            this.secondsPerAttack = this.game.secondsPerAttack;
             this.initializePlayerAIs(config.botAI);
         }
 

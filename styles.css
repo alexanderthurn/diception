@@ -1607,6 +1607,13 @@ select {
         box-sizing: border-box;
     }
 
+    /* Keep custom game usable: cap height so content scrolls inside the modal */
+    #setup-modal {
+        max-height: calc(var(--body-h) - 40px) !important;
+        width: min(420px, calc(100cqi - 32px));
+        max-width: min(420px, calc(100cqi - 32px));
+    }
+
     .tron-title {
         font-size: 24px;
     }
@@ -2449,6 +2456,34 @@ select {
     padding: 30px;
 }
 
+/* Custom game: wider than default shrink-to-fit modal, scroll when Mods + panels exceed viewport */
+#setup-modal {
+    width: min(420px, calc(100% - 40px));
+    max-width: min(420px, calc(100% - 40px));
+    box-sizing: border-box;
+    text-align: left;
+    max-height: calc(var(--body-h) - 40px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 255, 255, 0.35) rgba(0, 0, 0, 0.2);
+}
+
+#setup-modal::-webkit-scrollbar {
+    display: block;
+    width: 10px;
+}
+
+#setup-modal::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#setup-modal::-webkit-scrollbar-thumb {
+    background: rgba(0, 255, 255, 0.3);
+    border-radius: 5px;
+}
+
 #howto-modal {
     display: flex;
     flex-direction: column;
@@ -2838,12 +2873,17 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     text-align: left;
 }
 
-#tournament-games {
+#tournament-games,
+.tournament-games-input {
     background: #000;
     border: 1px solid var(--border-color);
     color: #fff;
     padding: 5px;
     font-family: inherit;
+}
+
+.tournament-games-input {
+    width: 100px;
 }
 
 #tournament-results-modal {
@@ -5069,9 +5109,29 @@ canvas {
     top: auto;
     left: auto;
     transform: none;
-    min-width: 320px;
-    max-width: 500px;
+    min-width: min(320px, calc(100vw - 40px));
+    max-width: min(640px, calc(100vw - 40px));
+    max-height: calc(var(--body-h) - 48px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     margin: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 255, 255, 0.35) rgba(0, 0, 0, 0.2);
+}
+
+.dialog-box::-webkit-scrollbar {
+    display: block;
+    width: 10px;
+}
+
+.dialog-box::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.dialog-box::-webkit-scrollbar-thumb {
+    background: rgba(0, 255, 255, 0.3);
+    border-radius: 5px;
 }
 
 .dialog-body {
@@ -5966,6 +6026,85 @@ canvas {
 .large-modal .howto-content {
     max-height: calc(var(--body-h) - 160px);
     overflow-y: auto;
+}
+
+/* ── Custom game: Mods toolbar + panel ── */
+
+#setup-modal .setup-game-speed-row {
+    width: 100%;
+}
+
+#setup-modal .setup-game-speed-row .setup-game-speed-group {
+    flex: 1 1 100%;
+    min-width: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.setup-mods-toolbar {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    margin-top: 18px;
+    margin-bottom: 6px;
+}
+
+.setup-mods-toolbar:not(.setup-mods-toolbar--split) .setup-mods-toggle {
+    flex: 1;
+    min-width: 0;
+}
+
+.setup-mods-toolbar--split .setup-mods-toggle {
+    flex: 2;
+    min-width: 0;
+}
+
+.setup-mods-toolbar--split .setup-mods-reset {
+    flex: 1;
+    min-width: 0;
+}
+
+.setup-mods-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.setup-mods-chevron {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 7px solid var(--primary-color, #7fdfff);
+    transform: rotate(0deg);
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+}
+
+.setup-mods-toggle--open .setup-mods-chevron {
+    transform: rotate(90deg);
+}
+
+.setup-mods-panel .style-mode-row {
+    margin-top: 10px;
+}
+
+.setup-mods-active-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 4px;
+    background: rgba(255, 200, 100, 0.18);
+    color: #ffcc77;
+    border: 1px solid rgba(255, 200, 100, 0.35);
+}
+
+.setup-mods-reset {
+    align-self: stretch;
 }
 
 /* ── Achievement Panel ── */

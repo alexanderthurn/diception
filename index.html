@@ -144,33 +144,6 @@
                 </div>
             </div>
 
-
-            <div class="control-row style-mode-row">
-                <div class="control-group half" id="map-style-group">
-                    <label>Map Style</label>
-                    <select id="map-style">
-                        <option value="random" selected>Random</option>
-                        <option value="full">Full Grid</option>
-                        <option value="continents">Continents</option>
-                        <option value="caves">Caves</option>
-                        <option value="islands">Islands</option>
-                        <option value="maze">Maze</option>
-                        <option value="tunnels">Tunnels</option>
-                        <option value="swiss">Swiss Cheese</option>
-                    </select>
-                </div>
-                <div class="control-group half">
-                    <label>Start Mode</label>
-                    <select id="game-mode">
-                        <option value="classic" selected>Classic</option>
-                        <option value="fair">Fair Start</option>
-                        <option value="madness">Full Madness</option>
-                        <option value="2of2">2 of 2</option>
-                    </select>
-                </div>
-            </div>
-
-
             <div class="control-row">
                 <div class="control-group quarter">
                     <label>Humans</label>
@@ -211,36 +184,8 @@
                 </div>
             </div>
 
-            <div class="control-row" id="tournament-config" style="display: none; margin-top: 10px;">
-                <div class="control-group">
-                    <label>Tournament Games</label>
-                    <div class="range-row">
-                        <input type="number" id="tournament-games" min="1" max="10000" value="100"
-                            style="width: 100px;">
-                        <button id="run-tournament-btn" class="tron-btn small">▶ Run Tournament</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="control-row">
-                <div class="control-group half">
-                    <label>Max Dice per Territory</label>
-                    <div class="range-row">
-                        <input type="range" id="max-dice" min="2" max="12" value="9">
-                        <span id="max-dice-val">9</span>
-                    </div>
-                </div>
-                <div class="control-group half">
-                    <label>Dice Sides</label>
-                    <div class="range-row">
-                        <input type="range" id="dice-sides" min="1" max="12" value="6">
-                        <span id="dice-sides-val">6</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="control-row">
-                <div class="control-group half">
+            <div class="control-row setup-game-speed-row">
+                <div class="control-group setup-game-speed-group">
                     <label>Game Speed</label>
                     <div class="segmented-btn game-speed-segmented">
                         <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
@@ -248,28 +193,117 @@
                         <button type="button" class="segmented-option" data-value="expert">Expert</button>
                     </div>
                 </div>
-                <div class="control-group half">
-                    <label>Turn Limit</label>
-                    <select id="turn-time-limit">
-                        <option value="0" selected>∞ Unlimited attacks</option>
-                        <option value="1">1 attack / turn</option>
-                        <option value="3">3 attacks / turn</option>
-                        <option value="5">5 attacks / turn</option>
-                    </select>
-                </div>
             </div>
-            <div class="control-row">
-                <div class="control-group">
-                    <label>When every territory is full (max dice)</label>
-                    <select id="full-board-rule">
-                        <option value="nothing" selected>Nothing — keep playing</option>
-                        <option value="most_territories">Most territories wins</option>
-                        <option value="biggest_territory">Largest connected region wins</option>
-                        <option value="random_picker">Random tile — that owner wins</option>
-                        <option value="raise_max_dice">Raise max dice +2 (repeat until cap 16)</option>
-                        <option value="autoplay_humans">Autoplay all humans until there is a winner</option>
-                    </select>
-                </div>
+
+            <div class="setup-mods-toolbar" id="setup-mods-toolbar">
+                <button type="button" class="tron-btn setup-mods-toggle" id="setup-mods-toggle"
+                    aria-expanded="false" aria-controls="setup-mods-panel">
+                    <span class="setup-mods-chevron" aria-hidden="true"></span>
+                    <span class="setup-mods-toggle-label">Mods</span>
+                    <span class="setup-mods-active-badge hidden" id="setup-mods-active-badge">On</span>
+                </button>
+                <button type="button" id="setup-mods-reset"
+                    class="tron-btn small setup-mods-reset hidden"
+                    title="Reset all Mods to defaults">Reset</button>
+            </div>
+
+            <div id="setup-mods-panel" class="setup-mods-panel hidden" data-setup-mods-panel>
+                <div class="control-row style-mode-row">
+                            <div class="control-group half" id="map-style-group">
+                                <label>Map Style</label>
+                                <select id="map-style">
+                                    <option value="random" selected>Random</option>
+                                    <option value="full">Full Grid</option>
+                                    <option value="continents">Continents</option>
+                                    <option value="caves">Caves</option>
+                                    <option value="islands">Islands</option>
+                                    <option value="maze">Maze</option>
+                                    <option value="tunnels">Tunnels</option>
+                                    <option value="swiss">Swiss Cheese</option>
+                                </select>
+                            </div>
+                            <div class="control-group half">
+                                <label>Start Mode</label>
+                                <select id="game-mode">
+                                    <option value="classic" selected>Classic</option>
+                                    <option value="fair">Fair Start</option>
+                                    <option value="madness">Full Madness</option>
+                                    <option value="2of2">2 of 2</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="control-row tournament-config-row hidden" id="tournament-config">
+                            <div class="control-group">
+                                <label>Tournament Games</label>
+                                <div class="range-row tournament-games-row">
+                                    <input type="number" id="tournament-games" class="tournament-games-input" min="1"
+                                        max="10000" value="100">
+                                    <button id="run-tournament-btn" class="tron-btn small">▶ Run Tournament</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-row">
+                            <div class="control-group half">
+                                <label>Max Dice per Territory</label>
+                                <div class="range-row">
+                                    <input type="range" id="max-dice" min="2" max="12" value="8">
+                                    <span id="max-dice-val">8</span>
+                                </div>
+                            </div>
+                            <div class="control-group half">
+                                <label>Dice Sides</label>
+                                <div class="range-row">
+                                    <input type="range" id="dice-sides" min="1" max="12" value="6">
+                                    <span id="dice-sides-val">6</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-row">
+                            <div class="control-group quarter">
+                                <label>Attacks</label>
+                                <select id="turn-time-limit">
+                                    <option value="0" selected>∞ Unlimited</option>
+                                    <option value="1">1 / turn</option>
+                                    <option value="3">3 / turn</option>
+                                    <option value="5">5 / turn</option>
+                                </select>
+                            </div>
+                            <div class="control-group quarter">
+                                <label>Turn time</label>
+                                <select id="turn-seconds-limit">
+                                    <option value="0" selected>∞ Unlimited</option>
+                                    <option value="10">10s</option>
+                                    <option value="15">15s</option>
+                                    <option value="30">30s</option>
+                                    <option value="60">60s</option>
+                                </select>
+                            </div>
+                            <div class="control-group quarter">
+                                <label>Attack time</label>
+                                <select id="attack-seconds-limit">
+                                    <option value="0" selected>∞ Unlimited</option>
+                                    <option value="10">10s</option>
+                                    <option value="15">15s</option>
+                                    <option value="30">30s</option>
+                                    <option value="60">60s</option>
+                                </select>
+                            </div>
+
+                            <div class="control-group quarter">
+                                <label>End Game</label>
+                                <select id="full-board-rule">
+                                    <option value="nothing" selected>Default</option>
+                                    <option value="most_territories">Territories</option>
+                                    <option value="biggest_territory">Largest region</option>
+                                    <option value="random_picker">Random tile</option>
+                                    <option value="raise_max_dice">Max dice +2</option>
+                                    <option value="autoplay_humans">Autoplay</option>
+                                </select>
+                            </div>
+                        </div>
             </div>
             <div class="setup-start-row">
                 <button id="start-game-btn" class="tron-btn large" data-no-sfx>START</button>

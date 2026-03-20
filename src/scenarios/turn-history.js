@@ -71,6 +71,8 @@ export class TurnHistory {
             gameMode: game.gameMode,
             attacksPerTurn: game.attacksPerTurn ?? 0,
             attacksUsedThisTurn: game.attacksUsedThisTurn ?? 0,
+            secondsPerTurn: game.secondsPerTurn ?? 0,
+            secondsPerAttack: game.secondsPerAttack ?? 0,
 
             // Map state
             map: {
@@ -134,6 +136,8 @@ export class TurnHistory {
             game.winner = null;
             game.attacksPerTurn = state.attacksPerTurn ?? 0;
             game.attacksUsedThisTurn = state.attacksUsedThisTurn ?? 0;
+            game.secondsPerTurn = state.secondsPerTurn ?? 0;
+            game.secondsPerAttack = state.secondsPerAttack ?? 0;
 
             // Restore map
             game.map.width = state.map.width;

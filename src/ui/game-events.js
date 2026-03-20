@@ -45,8 +45,18 @@ export class GameEventManager {
 
         this.scenarioBrowser = null;
 
-        // Attack limit display (reuses #turn-timer element)
+        // Attack + clock display (reuses #turn-timer element)
         this._timerEl = document.getElementById('turn-timer');
+        this._wallTimerId = null;
+        this._wallSecondsLeft = 0;
+        this._wallTimerGen = 0;
+        this._wallClockActive = false;
+        this._wallTimerPaused = false;
+        this._attackWallTimerId = null;
+        this._attackSecondsLeft = 0;
+        this._attackTimerGen = 0;
+        this._attackClockActive = false;
+        this._attackTimerPaused = false;
     }
 
     setScenarioBrowser(scenarioBrowser) {
@@ -98,6 +108,8 @@ export class GameEventManager {
     }
 
     handleTurnStart(data) {
+        this._endAllHumanClocks();
+
         const autoplayPlayers = this.gameStarter.getAutoplayPlayers();
         const playerAIs = this.gameStarter.getPlayerAIs();
         const gameSpeed = this.gameStarter.getGameSpeed();
@@ -334,7 +346,119 @@ export class GameEventManager {
         this.updateEndTurnHint(gameSpeed);
         this.updateMenuHint(gameSpeed);
 
-        this.updateAttackLimitDisplay();
+        this._armWallClockForHumanTurn();
+        this._armAttackClockForHumanTurn();
+    }
+
+    _clearWallInterval() {
+        if (this._wallTimerId != null) {
+            clearInterval(this._wallTimerId);
+            this._wallTimerId = null;
+        }
+    }
+
+    _scheduleWallInterval() {
+        this._clearWallInterval();
+        const myGen = this._wallTimerGen;
+        this._wallTimerId = setInterval(() => {
+            if (this.game.gameOver || myGen !== this._wallTimerGen) {
+                this._clearWallInterval();
+                return;
+            }
+            this._wallSecondsLeft -= 1;
+            this.updateTurnLimitHud();
+            if (this._wallSecondsLeft <= 0) {
+                this._clearWallInterval();
+                this._wallClockActive = false;
+                if (!this.game.gameOver) this.game.endTurn();
+            }
+        }, 1000);
+    }
+
+    _clearAttackWallInterval() {
+        if (this._attackWallTimerId != null) {
+            clearInterval(this._attackWallTimerId);
+            this._attackWallTimerId = null;
+        }
+    }
+
+    _scheduleAttackWallInterval() {
+        this._clearAttackWallInterval();
+        const myGen = this._attackTimerGen;
+        this._attackWallTimerId = setInterval(() => {
+            if (this.game.gameOver || myGen !== this._attackTimerGen) {
+                this._clearAttackWallInterval();
+                return;
+            }
+            this._attackSecondsLeft -= 1;
+            this.updateTurnLimitHud();
+            if (this._attackSecondsLeft <= 0) {
+                this._clearAttackWallInterval();
+                this._attackClockActive = false;
+                if (!this.game.gameOver) this.game.endTurn();
+            }
+        }, 1000);
+    }
+
+    _armAttackClockForHumanTurn() {
+        const sec = this.game.secondsPerAttack ?? 0;
+        const parallel = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
+        this._clearAttackWallInterval();
+        if (sec <= 0 || parallel) {
+            this._attackClockActive = false;
+            this._attackSecondsLeft = 0;
+            this.updateTurnLimitHud();
+            return;
+        }
+        this._attackClockActive = true;
+        this._attackTimerPaused = false;
+        this._attackSecondsLeft = sec;
+        this._attackTimerGen++;
+        this.updateTurnLimitHud();
+        this._scheduleAttackWallInterval();
+    }
+
+    _restartAttackClockAfterHumanAttack() {
+        const sec = this.game.secondsPerAttack ?? 0;
+        const parallel = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
+        if (sec <= 0 || parallel || this.game.gameOver) return;
+        this._attackClockActive = true;
+        this._attackTimerPaused = false;
+        this._attackSecondsLeft = sec;
+        this._attackTimerGen++;
+        this.updateTurnLimitHud();
+        this._scheduleAttackWallInterval();
+    }
+
+    _armWallClockForHumanTurn() {
+        const sec = this.game.secondsPerTurn ?? 0;
+        const parallel = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
+        this._clearWallInterval();
+        if (sec <= 0 || parallel) {
+            this._wallClockActive = false;
+            this._wallSecondsLeft = 0;
+            this.updateTurnLimitHud();
+            return;
+        }
+        this._wallClockActive = true;
+        this._wallTimerPaused = false;
+        this._wallSecondsLeft = sec;
+        this._wallTimerGen++;
+        this.updateTurnLimitHud();
+        this._scheduleWallInterval();
+    }
+
+    _endAllHumanClocks() {
+        this._clearWallInterval();
+        this._clearAttackWallInterval();
+        this._wallClockActive = false;
+        this._attackClockActive = false;
+        this._wallTimerPaused = false;
+        this._attackTimerPaused = false;
+        this._wallSecondsLeft = 0;
+        this._attackSecondsLeft = 0;
+        this._wallTimerGen++;
+        this._attackTimerGen++;
     }
 
     /** 
@@ -378,39 +502,99 @@ export class GameEventManager {
         this.newGameHint.classList.add('hidden');
     }
 
-    updateAttackLimitDisplay() {
+    updateTurnLimitHud() {
         if (!this._timerEl) return;
+        const parallel = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
         const lim = this.gameStarter.getAttacksPerTurn();
-        if (!lim || lim <= 0) {
+        const turnSecCfg = this.game.secondsPerTurn ?? 0;
+        const atkSecCfg = this.game.secondsPerAttack ?? 0;
+
+        let atkCountPart = null;
+        if (lim > 0) {
+            const rem = this.game.attacksRemaining();
+            if (Number.isFinite(rem)) atkCountPart = String(rem);
+        }
+
+        let turnSecPart = null;
+        if (!parallel && turnSecCfg > 0 && this._wallClockActive && this._wallSecondsLeft > 0) {
+            turnSecPart = String(this._wallSecondsLeft);
+        }
+
+        let atkSecPart = null;
+        if (!parallel && atkSecCfg > 0 && this._attackClockActive && this._attackSecondsLeft > 0) {
+            atkSecPart = String(this._attackSecondsLeft);
+        }
+
+        if (atkCountPart == null && turnSecPart == null && atkSecPart == null) {
             this._timerEl.classList.add('hidden');
             return;
         }
-        const rem = this.game.attacksRemaining();
+
         this._timerEl.classList.remove('hidden');
-        this._timerEl.textContent = rem;
-        this._timerEl.title = 'Attacks remaining this turn';
-        if (rem <= 1) {
+        const parts = [];
+        if (turnSecPart != null) parts.push(`${turnSecPart}s`);
+        if (atkSecPart != null) parts.push(`${atkSecPart}s`);
+        if (atkCountPart != null) parts.push(atkCountPart);
+        this._timerEl.textContent = parts.join(' · ');
+
+        const urgentAtk = lim > 0 && this.game.attacksRemaining() <= 1;
+        const urgentTurn = turnSecPart != null && parseInt(turnSecPart, 10) <= 3;
+        const urgentAtkSec = atkSecPart != null && parseInt(atkSecPart, 10) <= 3;
+        if (urgentAtk || urgentTurn || urgentAtkSec) {
             this._timerEl.classList.add('timer-urgent');
         } else {
             this._timerEl.classList.remove('timer-urgent');
         }
+
+        const tt = [];
+        if (turnSecPart != null) tt.push(`${turnSecPart}s left on turn`);
+        if (atkSecPart != null) tt.push(`${atkSecPart}s for this attack`);
+        if (atkCountPart != null) tt.push(`${atkCountPart} attacks left`);
+        this._timerEl.title = tt.length ? tt.join(' · ') : 'Turn limits';
     }
 
     hideAttackLimitDisplay() {
         if (this._timerEl) this._timerEl.classList.add('hidden');
     }
 
-    /** @deprecated was interval-based turn timer; kept as no-op for supply animation hook */
     stopTurnTimer() {
+        this._endAllHumanClocks();
         this.hideAttackLimitDisplay();
     }
 
     pauseTurnTimer() {
-        /* attack limit is not time-based */
+        if (this._wallTimerId != null) {
+            clearInterval(this._wallTimerId);
+            this._wallTimerId = null;
+            this._wallTimerPaused = true;
+        }
+        if (this._attackWallTimerId != null) {
+            clearInterval(this._attackWallTimerId);
+            this._attackWallTimerId = null;
+            this._attackTimerPaused = true;
+        }
     }
 
     resumeTurnTimer() {
-        /* attack limit is not time-based */
+        if (this.game.gameOver) {
+            this._wallTimerPaused = false;
+            this._attackTimerPaused = false;
+            return;
+        }
+        if (this._wallTimerPaused && this._wallClockActive && this._wallSecondsLeft > 0) {
+            this._wallTimerPaused = false;
+            this._wallTimerGen++;
+            this._scheduleWallInterval();
+        } else {
+            this._wallTimerPaused = false;
+        }
+        if (this._attackTimerPaused && this._attackClockActive && this._attackSecondsLeft > 0) {
+            this._attackTimerPaused = false;
+            this._attackTimerGen++;
+            this._scheduleAttackWallInterval();
+        } else {
+            this._attackTimerPaused = false;
+        }
     }
 
     async handleFullBoardRandomPick() {
@@ -559,9 +743,19 @@ export class GameEventManager {
             }
         }
 
-        this.updateAttackLimitDisplay();
+        this.updateTurnLimitHud();
 
         const lim = this.gameStarter.getAttacksPerTurn();
+        if (
+            isHumanAttacker &&
+            this.game.currentPlayer &&
+            result.attackerId === this.game.currentPlayer.id &&
+            !this.game.gameOver &&
+            (lim <= 0 || this.game.attacksRemaining() > 0)
+        ) {
+            this._restartAttackClockAfterHumanAttack();
+        }
+
         if (
             lim > 0 &&
             this.game.attacksRemaining() <= 0 &&
@@ -966,6 +1160,7 @@ export class GameEventManager {
         // Clear turn history
         this.turnHistory.clear();
 
+        this._endAllHumanClocks();
         this.hideAttackLimitDisplay();
     }
 }

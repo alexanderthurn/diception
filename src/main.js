@@ -461,6 +461,7 @@ async function init() {
             pmSelect.value = localStorage.getItem('dicy_playMode') ?? 'classic';
             pmSelect.addEventListener('change', () => {
                 localStorage.setItem('dicy_playMode', pmSelect.value);
+                configManager.syncSetupModsExpanderLive();
             });
             gamepadSidePanel.appendChild(pmSelect);
 
@@ -635,6 +636,13 @@ async function init() {
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
     configManager.setupInputListeners(effectsManager, renderer);
+    document.getElementById('setup-mods-toggle')?.addEventListener('click', () => {
+        configManager.toggleSetupModsPanel();
+    });
+    document.getElementById('setup-mods-reset')?.addEventListener('click', () => {
+        configManager.resetModsToDefaults();
+        renderGamepadAssignments();
+    });
 
     const gameStarter = new GameStarter(
         game, renderer, effectsManager, turnHistory,
@@ -1167,6 +1175,8 @@ async function init() {
         // This matches what happens in gameStarter.startGame()
         gameStarter.gameSpeed = config.gameSpeed;
         gameStarter.attacksPerTurn = config.attacksPerTurn ?? 0;
+        gameStarter.secondsPerTurn = config.secondsPerTurn ?? 0;
+        gameStarter.secondsPerAttack = config.secondsPerAttack ?? 0;
 
         const resumed = sessionManager.checkResume(
             createAI,
@@ -1179,6 +1189,8 @@ async function init() {
         );
         if (resumed) {
             gameStarter.attacksPerTurn = game.attacksPerTurn ?? 0;
+            gameStarter.secondsPerTurn = game.secondsPerTurn ?? 0;
+            gameStarter.secondsPerAttack = game.secondsPerAttack ?? 0;
         }
     }, 100);
 

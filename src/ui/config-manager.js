@@ -4,17 +4,46 @@
  */
 import { GAME } from '../core/constants.js';
 
-function migrateAttacksPerTurnValue() {
-    let v = localStorage.getItem('dicy_attacksPerTurn');
-    if (v != null) return v;
-    const legacy = localStorage.getItem('dicy_turnTimeLimit') || '0';
-    if (legacy === '0' || legacy === '1' || legacy === '3' || legacy === '5') {
-        v = legacy;
-    } else {
-        v = '0';
+/** Defaults for setup "Mods" panel — reset restores these. */
+export const SETUP_MOD_DEFAULTS = {
+    mapStyle: 'full',
+    gameMode: 'classic',
+    maxDice: '8',
+    diceSides: '6',
+    attacksPerTurn: '0',
+    secondsPerTurn: '0',
+    secondsPerAttack: '0',
+    fullBoardRule: 'nothing',
+    tournamentGames: '100',
+    playMode: 'classic',
+};
+
+/** One-time split of legacy `dicy_turnTimeLimit` into attacks vs clock. */
+function migrateTurnLimitStorage() {
+    const legacy = localStorage.getItem('dicy_turnTimeLimit');
+    if (legacy != null && legacy !== '') {
+        if (localStorage.getItem('dicy_attacksPerTurn') == null) {
+            if (legacy === '0' || legacy === '1' || legacy === '3' || legacy === '5') {
+                localStorage.setItem('dicy_attacksPerTurn', legacy);
+            } else {
+                localStorage.setItem('dicy_attacksPerTurn', '0');
+            }
+        }
+        if (localStorage.getItem('dicy_secondsPerTurn') == null) {
+            if (legacy === '10' || legacy === '15' || legacy === '30' || legacy === '60') {
+                localStorage.setItem('dicy_secondsPerTurn', legacy);
+            } else {
+                localStorage.setItem('dicy_secondsPerTurn', '0');
+            }
+        }
+        localStorage.removeItem('dicy_turnTimeLimit');
     }
-    localStorage.setItem('dicy_attacksPerTurn', v);
-    return v;
+    if (localStorage.getItem('dicy_secondsPerTurn') == null) {
+        localStorage.setItem('dicy_secondsPerTurn', '0');
+    }
+    if (localStorage.getItem('dicy_secondsPerAttack') == null) {
+        localStorage.setItem('dicy_secondsPerAttack', '0');
+    }
 }
 
 export class ConfigManager {
@@ -54,6 +83,8 @@ export class ConfigManager {
             tournamentGamesInput: document.getElementById('tournament-games'),
             tournamentConfig: document.getElementById('tournament-config'),
             turnTimeLimitInput: document.getElementById('turn-time-limit'),
+            turnSecondsLimitInput: document.getElementById('turn-seconds-limit'),
+            attackSecondsLimitInput: document.getElementById('attack-seconds-limit'),
             fullBoardRuleInput: document.getElementById('full-board-rule'),
         };
 
@@ -111,7 +142,10 @@ export class ConfigManager {
         const savedGameMode = localStorage.getItem('dicy_gameMode') || 'classic';
         const savedPlayMode = localStorage.getItem('dicy_playMode') || 'classic';
         const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || '100';
-        const savedAttacksPerTurn = migrateAttacksPerTurnValue();
+        migrateTurnLimitStorage();
+        const savedAttacksPerTurn = localStorage.getItem('dicy_attacksPerTurn') || '0';
+        const savedSecondsPerTurn = localStorage.getItem('dicy_secondsPerTurn') || '0';
+        const savedSecondsPerAttack = localStorage.getItem('dicy_secondsPerAttack') || '0';
 
         const savedFullBoardRule = localStorage.getItem('dicy_fullBoardRule') || 'nothing';
 
@@ -134,6 +168,8 @@ export class ConfigManager {
         el.tournamentGamesInput.value = savedTournamentGames;
         el.effectsQualityInput.value = savedEffectsQuality;
         if (el.turnTimeLimitInput) el.turnTimeLimitInput.value = savedAttacksPerTurn;
+        if (el.turnSecondsLimitInput) el.turnSecondsLimitInput.value = savedSecondsPerTurn;
+        if (el.attackSecondsLimitInput) el.attackSecondsLimitInput.value = savedSecondsPerAttack;
         if (el.fullBoardRuleInput) el.fullBoardRuleInput.value = savedFullBoardRule;
         this.updateEffectsQualityClass(savedEffectsQuality);
 
@@ -143,12 +179,125 @@ export class ConfigManager {
         }
 
         // Initialize tournament config visibility
-        if (parseInt(savedHumanCount) === 0) {
-            el.tournamentConfig.style.display = 'block';
+        if (el.tournamentConfig) {
+            el.tournamentConfig.classList.toggle('hidden', parseInt(savedHumanCount, 10) !== 0);
         }
 
         // Initial map size display
         this.updateMapSizeDisplay();
+        this.syncSetupModsExpanderFromStorage();
+    }
+
+    /**
+     * True when every Mods control matches SETUP_MOD_DEFAULTS (play mode included).
+     */
+    areModsAtDefaults() {
+        const el = this.elements;
+        const d = SETUP_MOD_DEFAULTS;
+        const ap = el.turnTimeLimitInput?.value ?? '0';
+        const sec = el.turnSecondsLimitInput?.value ?? '0';
+        const secAtk = el.attackSecondsLimitInput?.value ?? '0';
+        const pm = localStorage.getItem('dicy_playMode') ?? d.playMode;
+        return (
+            el.mapStyleInput?.value === d.mapStyle &&
+            el.gameModeInput?.value === d.gameMode &&
+            String(el.maxDiceInput?.value) === d.maxDice &&
+            String(el.diceSidesInput?.value) === d.diceSides &&
+            String(ap) === d.attacksPerTurn &&
+            String(sec) === d.secondsPerTurn &&
+            String(secAtk) === d.secondsPerAttack &&
+            (el.fullBoardRuleInput?.value || 'nothing') === d.fullBoardRule &&
+            String(el.tournamentGamesInput?.value) === d.tournamentGames &&
+            pm === d.playMode
+        );
+    }
+
+    _setSetupModsPanelOpen(open) {
+        const panel = document.getElementById('setup-mods-panel');
+        const toggle = document.getElementById('setup-mods-toggle');
+        if (!panel || !toggle) return;
+        panel.classList.toggle('hidden', !open);
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.classList.toggle('setup-mods-toggle--open', open);
+    }
+
+    _applySetupModsToolbar(nonDefault) {
+        const toolbar = document.getElementById('setup-mods-toolbar');
+        const resetBtn = document.getElementById('setup-mods-reset');
+        if (resetBtn) resetBtn.classList.toggle('hidden', !nonDefault);
+        if (toolbar) toolbar.classList.toggle('setup-mods-toolbar--split', nonDefault);
+    }
+
+    /** Show/hide Mods fields (button toggle). */
+    toggleSetupModsPanel() {
+        const panel = document.getElementById('setup-mods-panel');
+        if (!panel) return;
+        const isOpen = !panel.classList.contains('hidden');
+        this._setSetupModsPanelOpen(!isOpen);
+    }
+
+    /** Open Mods + badge when any mod differs; collapsed when all default (initial load). */
+    syncSetupModsExpanderFromStorage() {
+        const badge = document.getElementById('setup-mods-active-badge');
+        const nonDefault = !this.areModsAtDefaults();
+        if (badge) badge.classList.toggle('hidden', !nonDefault);
+        this._applySetupModsToolbar(nonDefault);
+        this._setSetupModsPanelOpen(nonDefault);
+    }
+
+    /** After user tweaks a mod: keep badge accurate and expand if they left defaults. */
+    syncSetupModsExpanderLive() {
+        const badge = document.getElementById('setup-mods-active-badge');
+        const nonDefault = !this.areModsAtDefaults();
+        if (badge) badge.classList.toggle('hidden', !nonDefault);
+        this._applySetupModsToolbar(nonDefault);
+        if (nonDefault) this._setSetupModsPanelOpen(true);
+    }
+
+    /** Reset all Mods (not map size, humans, bots, bot AI, or game speed). */
+    resetModsToDefaults() {
+        const el = this.elements;
+        const d = SETUP_MOD_DEFAULTS;
+
+        el.mapStyleInput.value = d.mapStyle;
+        localStorage.setItem('dicy_mapStyle', d.mapStyle);
+
+        el.gameModeInput.value = d.gameMode;
+        localStorage.setItem('dicy_gameMode', d.gameMode);
+
+        el.maxDiceInput.value = d.maxDice;
+        el.maxDiceVal.textContent = d.maxDice;
+        localStorage.setItem('dicy_maxDice', d.maxDice);
+
+        el.diceSidesInput.value = d.diceSides;
+        el.diceSidesVal.textContent = d.diceSides;
+        localStorage.setItem('dicy_diceSides', d.diceSides);
+
+        if (el.turnTimeLimitInput) {
+            el.turnTimeLimitInput.value = d.attacksPerTurn;
+            localStorage.setItem('dicy_attacksPerTurn', d.attacksPerTurn);
+        }
+        if (el.turnSecondsLimitInput) {
+            el.turnSecondsLimitInput.value = d.secondsPerTurn;
+            localStorage.setItem('dicy_secondsPerTurn', d.secondsPerTurn);
+        }
+        if (el.attackSecondsLimitInput) {
+            el.attackSecondsLimitInput.value = d.secondsPerAttack;
+            localStorage.setItem('dicy_secondsPerAttack', d.secondsPerAttack);
+        }
+        if (el.fullBoardRuleInput) {
+            el.fullBoardRuleInput.value = d.fullBoardRule;
+            localStorage.setItem('dicy_fullBoardRule', d.fullBoardRule);
+        }
+
+        el.tournamentGamesInput.value = d.tournamentGames;
+        localStorage.setItem('dicy_tournamentGames', d.tournamentGames);
+
+        localStorage.setItem('dicy_playMode', d.playMode);
+        const playModeEl = document.getElementById('play-mode');
+        if (playModeEl) playModeEl.value = d.playMode;
+
+        this.syncSetupModsExpanderFromStorage();
     }
 
     /**
@@ -172,19 +321,22 @@ export class ConfigManager {
             el.maxDiceVal.textContent = el.maxDiceInput.value;
             localStorage.setItem('dicy_maxDice', el.maxDiceInput.value);
             handleChange();
+            this.syncSetupModsExpanderLive();
         });
 
         el.diceSidesInput.addEventListener('input', () => {
             el.diceSidesVal.textContent = el.diceSidesInput.value;
             localStorage.setItem('dicy_diceSides', el.diceSidesInput.value);
             handleChange();
+            this.syncSetupModsExpanderLive();
         });
 
         el.humanCountInput.addEventListener('change', () => {
             localStorage.setItem('dicy_humanCount', el.humanCountInput.value);
-            // Show tournament config when humans = 0
-            const humans = parseInt(el.humanCountInput.value);
-            el.tournamentConfig.style.display = humans === 0 ? 'block' : 'none';
+            const humans = parseInt(el.humanCountInput.value, 10);
+            if (el.tournamentConfig) {
+                el.tournamentConfig.classList.toggle('hidden', humans !== 0);
+            }
             handleChange();
         });
 
@@ -201,16 +353,19 @@ export class ConfigManager {
         el.mapStyleInput.addEventListener('change', () => {
             localStorage.setItem('dicy_mapStyle', el.mapStyleInput.value);
             handleChange();
+            this.syncSetupModsExpanderLive();
         });
 
         el.gameModeInput.addEventListener('change', () => {
             localStorage.setItem('dicy_gameMode', el.gameModeInput.value);
             handleChange();
+            this.syncSetupModsExpanderLive();
         });
         // playMode is managed dynamically in the gamepad side panel
 
         el.tournamentGamesInput.addEventListener('input', () => {
             localStorage.setItem('dicy_tournamentGames', el.tournamentGamesInput.value);
+            this.syncSetupModsExpanderLive();
         });
 
         el.botAISelect.addEventListener('change', () => {
@@ -221,12 +376,28 @@ export class ConfigManager {
         if (el.turnTimeLimitInput) {
             el.turnTimeLimitInput.addEventListener('change', () => {
                 localStorage.setItem('dicy_attacksPerTurn', el.turnTimeLimitInput.value);
+                this.syncSetupModsExpanderLive();
+            });
+        }
+
+        if (el.turnSecondsLimitInput) {
+            el.turnSecondsLimitInput.addEventListener('change', () => {
+                localStorage.setItem('dicy_secondsPerTurn', el.turnSecondsLimitInput.value);
+                this.syncSetupModsExpanderLive();
+            });
+        }
+
+        if (el.attackSecondsLimitInput) {
+            el.attackSecondsLimitInput.addEventListener('change', () => {
+                localStorage.setItem('dicy_secondsPerAttack', el.attackSecondsLimitInput.value);
+                this.syncSetupModsExpanderLive();
             });
         }
 
         if (el.fullBoardRuleInput) {
             el.fullBoardRuleInput.addEventListener('change', () => {
                 localStorage.setItem('dicy_fullBoardRule', el.fullBoardRuleInput.value);
+                this.syncSetupModsExpanderLive();
             });
         }
 
@@ -284,9 +455,29 @@ export class ConfigManager {
             this.elements.diceSidesVal.textContent = level.diceSides ?? 6;
             this.elements.botAISelect.value = level.botAI || 'easy';
             this.selectedBotAI = level.botAI || 'easy';
+
+            let ap = level.attacksPerTurn;
+            let sec = level.secondsPerTurn;
+            const raw = level.turnTimeLimit;
+            if (raw != null && raw !== '') {
+                const v = Number(raw);
+                if ([10, 15, 30, 60].includes(v)) {
+                    if (sec == null || sec === '') sec = v;
+                } else if ([0, 1, 3, 5].includes(v)) {
+                    if (ap == null || ap === '') ap = v;
+                }
+            }
+            const elc = this.elements;
+            if (elc.turnTimeLimitInput != null && ap != null) elc.turnTimeLimitInput.value = String(ap);
+            if (elc.turnSecondsLimitInput != null && sec != null) elc.turnSecondsLimitInput.value = String(sec);
+            if (elc.attackSecondsLimitInput != null && level.secondsPerAttack != null) {
+                elc.attackSecondsLimitInput.value = String(level.secondsPerAttack);
+            }
         } else {
             this.updateConfigFromScenario(level);
+            return;
         }
+        this.syncSetupModsExpanderLive();
     }
 
     /**
@@ -347,6 +538,24 @@ export class ConfigManager {
                 }
             }
         }
+
+        if (scenario.turnTimeLimit != null && scenario.turnTimeLimit !== '') {
+            const v = String(scenario.turnTimeLimit);
+            if (el.turnSecondsLimitInput && ['0', '10', '15', '30', '60'].includes(v)) {
+                el.turnSecondsLimitInput.value = v;
+            }
+        }
+        if (scenario.secondsPerTurn != null && scenario.secondsPerTurn !== '' && el.turnSecondsLimitInput) {
+            el.turnSecondsLimitInput.value = String(scenario.secondsPerTurn);
+        }
+        if (scenario.attacksPerTurn != null && scenario.attacksPerTurn !== '' && el.turnTimeLimitInput) {
+            el.turnTimeLimitInput.value = String(scenario.attacksPerTurn);
+        }
+        if (scenario.secondsPerAttack != null && scenario.secondsPerAttack !== '' && el.attackSecondsLimitInput) {
+            el.attackSecondsLimitInput.value = String(scenario.secondsPerAttack);
+        }
+
+        this.syncSetupModsExpanderLive();
     }
 
     /**
@@ -356,6 +565,8 @@ export class ConfigManager {
         const el = this.elements;
         const sizePreset = this.getMapSize(parseInt(el.mapSizeInput.value));
         const ap = parseInt(el.turnTimeLimitInput?.value ?? '0', 10);
+        const sec = parseInt(el.turnSecondsLimitInput?.value ?? '0', 10);
+        const secAtk = parseInt(el.attackSecondsLimitInput?.value ?? '0', 10);
 
         return {
             humanCount: parseInt(el.humanCountInput.value),
@@ -371,6 +582,8 @@ export class ConfigManager {
             effectsQuality: el.effectsQualityInput.value,
             botAI: this.selectedBotAI,
             attacksPerTurn: Number.isFinite(ap) ? Math.max(0, ap) : 0,
+            secondsPerTurn: Number.isFinite(sec) ? Math.max(0, sec) : 0,
+            secondsPerAttack: Number.isFinite(secAtk) ? Math.max(0, secAtk) : 0,
             fullBoardRule: el.fullBoardRuleInput?.value || 'nothing',
         };
     }
@@ -392,6 +605,8 @@ export class ConfigManager {
         localStorage.setItem('dicy_playMode', config.playMode);
         localStorage.setItem('effectsQuality', config.effectsQuality);
         localStorage.setItem('dicy_attacksPerTurn', el.turnTimeLimitInput?.value ?? '0');
+        localStorage.setItem('dicy_secondsPerTurn', el.turnSecondsLimitInput?.value ?? '0');
+        localStorage.setItem('dicy_secondsPerAttack', el.attackSecondsLimitInput?.value ?? '0');
         localStorage.setItem('dicy_fullBoardRule', config.fullBoardRule || 'nothing');
     }
 

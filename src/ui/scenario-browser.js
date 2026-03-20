@@ -844,7 +844,9 @@ export class ScenarioBrowser {
             this.pendingLevel = level;
             this.pendingCampaign = campaign;
             this.selectedLevelIndex = index;
-            this.configManager.updateConfigFromLevel(level);
+            // Do not call updateConfigFromLevel here: loadSavedSettings() already applied
+            // persisted setup prefs. Pushing the campaign level into the form would clobber
+            // them in the UI and the next START would saveCurrentSettings() onto localStorage.
         }
     }
 

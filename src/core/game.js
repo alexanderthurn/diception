@@ -26,6 +26,10 @@ export class Game {
         /** Max attacks per turn for the active player (0 = unlimited). */
         this.attacksPerTurn = 0;
         this.attacksUsedThisTurn = 0;
+        /** Wall-clock seconds per turn for the active player (0 = unlimited). Parallel modes ignore this. */
+        this.secondsPerTurn = 0;
+        /** Wall-clock seconds to make each attack (0 = unlimited). Resets after each attack. Parallel modes ignore. */
+        this.secondsPerAttack = 0;
 
         // Event listeners
         this.listeners = {};
@@ -63,6 +67,8 @@ export class Game {
         this._pendingFullBoardWinner = null;
         this.attacksPerTurn = 0;
         this.attacksUsedThisTurn = 0;
+        this.secondsPerTurn = 0;
+        this.secondsPerAttack = 0;
         // Reset map to empty
         this.map.generateMap(0, 0, [], this.maxDice, 'empty');
         this.emit('gameReset');
@@ -84,6 +90,8 @@ export class Game {
         this._pendingFullBoardWinner = null;
         this.attacksPerTurn = config.attacksPerTurn ?? 0;
         this.attacksUsedThisTurn = 0;
+        this.secondsPerTurn = config.secondsPerTurn ?? 0;
+        this.secondsPerAttack = config.secondsPerAttack ?? 0;
 
         const rng = Number.isFinite(config.mapSeed) ? mulberry32(config.mapSeed) : Math.random;
 
