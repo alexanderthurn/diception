@@ -222,10 +222,36 @@ export class ConfigManager {
     }
 
     _applySetupModsToolbar(nonDefault) {
-        const toolbar = document.getElementById('setup-mods-toolbar');
         const resetBtn = document.getElementById('setup-mods-reset');
+        const toggle = document.getElementById('setup-mods-toggle');
         if (resetBtn) resetBtn.classList.toggle('hidden', !nonDefault);
-        if (toolbar) toolbar.classList.toggle('setup-mods-toolbar--split', nonDefault);
+        if (toggle) toggle.classList.toggle('hidden', nonDefault);
+    }
+
+    /** Highlight each Mods control that differs from SETUP_MOD_DEFAULTS. */
+    syncSetupModsFieldHighlights() {
+        const el = this.elements;
+        const d = SETUP_MOD_DEFAULTS;
+        const pmEl = document.getElementById('play-mode');
+        const playMode = pmEl?.value ?? localStorage.getItem('dicy_playMode') ?? d.playMode;
+
+        /** @type {Array<[string, () => boolean]>} */
+        const rows = [
+            ['map-style-group', () => el.mapStyleInput?.value !== d.mapStyle],
+            ['setup-game-mode-group', () => el.gameModeInput?.value !== d.gameMode],
+            ['setup-tournament-games-group', () => String(el.tournamentGamesInput?.value) !== d.tournamentGames],
+            ['setup-max-dice-group', () => String(el.maxDiceInput?.value) !== d.maxDice],
+            ['setup-dice-sides-group', () => String(el.diceSidesInput?.value) !== d.diceSides],
+            ['setup-attacks-limit-group', () => String(el.turnTimeLimitInput?.value ?? '0') !== d.attacksPerTurn],
+            ['setup-turn-seconds-group', () => String(el.turnSecondsLimitInput?.value ?? '0') !== d.secondsPerTurn],
+            ['setup-attack-seconds-group', () => String(el.attackSecondsLimitInput?.value ?? '0') !== d.secondsPerAttack],
+            ['setup-full-board-rule-group', () => (el.fullBoardRuleInput?.value || 'nothing') !== d.fullBoardRule],
+            ['setup-play-mode-group', () => playMode !== d.playMode],
+        ];
+        for (const [id, differs] of rows) {
+            const node = document.getElementById(id);
+            if (node) node.classList.toggle('setup-mod-nondefault', differs());
+        }
     }
 
     /** Show/hide Mods fields (button toggle). */
@@ -242,6 +268,7 @@ export class ConfigManager {
         const nonDefault = !this.areModsAtDefaults();
         if (badge) badge.classList.toggle('hidden', !nonDefault);
         this._applySetupModsToolbar(nonDefault);
+        this.syncSetupModsFieldHighlights();
         this._setSetupModsPanelOpen(nonDefault);
     }
 
@@ -251,6 +278,7 @@ export class ConfigManager {
         const nonDefault = !this.areModsAtDefaults();
         if (badge) badge.classList.toggle('hidden', !nonDefault);
         this._applySetupModsToolbar(nonDefault);
+        this.syncSetupModsFieldHighlights();
         if (nonDefault) this._setSetupModsPanelOpen(true);
     }
 
@@ -338,6 +366,7 @@ export class ConfigManager {
                 el.tournamentConfig.classList.toggle('hidden', humans !== 0);
             }
             handleChange();
+            this.syncSetupModsFieldHighlights();
         });
 
         el.botCountInput.addEventListener('change', () => {

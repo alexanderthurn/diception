@@ -45,8 +45,10 @@ export class GameEventManager {
 
         this.scenarioBrowser = null;
 
-        // Attack + clock display (reuses #turn-timer element)
+        // Turn / per-attack clocks (#turn-timer) + attack quota line (#turn-attacks-left)
+        this._limitHudEl = document.getElementById('turn-limit-hud');
         this._timerEl = document.getElementById('turn-timer');
+        this._attacksLeftEl = document.getElementById('turn-attacks-left');
         this._wallTimerId = null;
         this._wallSecondsLeft = 0;
         this._wallTimerGen = 0;
@@ -57,6 +59,8 @@ export class GameEventManager {
         this._attackTimerGen = 0;
         this._attackClockActive = false;
         this._attackTimerPaused = false;
+        /** Wall-clock second (floor(Date.now()/1000)) when we last played `time.ogg` */
+        this._timerSfxLastBeatSec = null;
     }
 
     setScenarioBrowser(scenarioBrowser) {
@@ -459,6 +463,7 @@ export class GameEventManager {
         this._attackSecondsLeft = 0;
         this._wallTimerGen++;
         this._attackTimerGen++;
+        this._timerSfxLastBeatSec = null;
     }
 
     /** 
@@ -502,17 +507,48 @@ export class GameEventManager {
         this.newGameHint.classList.add('hidden');
     }
 
+    /**
+     * `time.ogg` once per real second while turn or per-attack clock is in the last 5s.
+     * Pitch rises toward zero via SoundManager.timeTick (beeps start at 5s left).
+     */
+    _tryTimerCountdownSfx() {
+        if (!this.sfx?.timeTick) return;
+        const parallel = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
+        const turnSecCfg = this.game.secondsPerTurn ?? 0;
+        const atkSecCfg = this.game.secondsPerAttack ?? 0;
+        const bandLo = 1;
+        const bandHi = 5;
+        const cand = [];
+        if (!parallel && turnSecCfg > 0 && this._wallClockActive && this._wallSecondsLeft > 0) {
+            const w = this._wallSecondsLeft;
+            if (w >= bandLo && w <= bandHi) cand.push(w);
+        }
+        if (!parallel && atkSecCfg > 0 && this._attackClockActive && this._attackSecondsLeft > 0) {
+            const a = this._attackSecondsLeft;
+            if (a >= bandLo && a <= bandHi) cand.push(a);
+        }
+        if (cand.length === 0) {
+            this._timerSfxLastBeatSec = null;
+            return;
+        }
+        const secsLeft = Math.min(...cand);
+        const wallChunk = Math.floor(Date.now() / 1000);
+        if (this._timerSfxLastBeatSec === wallChunk) return;
+        this._timerSfxLastBeatSec = wallChunk;
+        this.sfx.timeTick(secsLeft);
+    }
+
     updateTurnLimitHud() {
-        if (!this._timerEl) return;
+        if (!this._limitHudEl || !this._timerEl) return;
         const parallel = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
         const lim = this.gameStarter.getAttacksPerTurn();
         const turnSecCfg = this.game.secondsPerTurn ?? 0;
         const atkSecCfg = this.game.secondsPerAttack ?? 0;
 
-        let atkCountPart = null;
+        let remAttacks = null;
         if (lim > 0) {
             const rem = this.game.attacksRemaining();
-            if (Number.isFinite(rem)) atkCountPart = String(rem);
+            if (Number.isFinite(rem)) remAttacks = rem;
         }
 
         let turnSecPart = null;
@@ -525,36 +561,60 @@ export class GameEventManager {
             atkSecPart = String(this._attackSecondsLeft);
         }
 
-        if (atkCountPart == null && turnSecPart == null && atkSecPart == null) {
-            this._timerEl.classList.add('hidden');
+        const hasTimeLine = turnSecPart != null || atkSecPart != null;
+        const hasAttackLine = remAttacks != null;
+
+        if (!hasTimeLine && !hasAttackLine) {
+            this._limitHudEl.classList.add('hidden');
+            this._timerSfxLastBeatSec = null;
             return;
         }
 
-        this._timerEl.classList.remove('hidden');
-        const parts = [];
-        if (turnSecPart != null) parts.push(`${turnSecPart}s`);
-        if (atkSecPart != null) parts.push(`${atkSecPart}s`);
-        if (atkCountPart != null) parts.push(atkCountPart);
-        this._timerEl.textContent = parts.join(' · ');
+        this._limitHudEl.classList.remove('hidden');
 
-        const urgentAtk = lim > 0 && this.game.attacksRemaining() <= 1;
-        const urgentTurn = turnSecPart != null && parseInt(turnSecPart, 10) <= 3;
-        const urgentAtkSec = atkSecPart != null && parseInt(atkSecPart, 10) <= 3;
-        if (urgentAtk || urgentTurn || urgentAtkSec) {
+        if (hasTimeLine) {
+            this._timerEl.classList.remove('hidden');
+            const parts = [];
+            if (turnSecPart != null) parts.push(`${turnSecPart}s`);
+            if (atkSecPart != null) parts.push(`${atkSecPart}s`);
+            this._timerEl.textContent = parts.join(' · ');
+        } else {
+            this._timerEl.classList.add('hidden');
+            this._timerEl.textContent = '';
+            this._timerEl.classList.remove('timer-urgent');
+        }
+
+        const urgentMaxSec = 5;
+        const urgentTurn = turnSecPart != null && parseInt(turnSecPart, 10) < urgentMaxSec;
+        const urgentAtkSec = atkSecPart != null && parseInt(atkSecPart, 10) < urgentMaxSec;
+        if (urgentTurn || urgentAtkSec) {
             this._timerEl.classList.add('timer-urgent');
         } else {
             this._timerEl.classList.remove('timer-urgent');
         }
 
+        if (hasAttackLine && this._attacksLeftEl) {
+            this._attacksLeftEl.classList.remove('hidden');
+            const n = remAttacks;
+            this._attacksLeftEl.textContent = n === 1 ? '1 attack left' : `${n} attacks left`;
+        } else if (this._attacksLeftEl) {
+            this._attacksLeftEl.classList.add('hidden');
+            this._attacksLeftEl.textContent = '';
+        }
+
         const tt = [];
         if (turnSecPart != null) tt.push(`${turnSecPart}s left on turn`);
         if (atkSecPart != null) tt.push(`${atkSecPart}s for this attack`);
-        if (atkCountPart != null) tt.push(`${atkCountPart} attacks left`);
-        this._timerEl.title = tt.length ? tt.join(' · ') : 'Turn limits';
+        if (hasAttackLine) tt.push(remAttacks === 1 ? '1 attack left' : `${remAttacks} attacks left`);
+        this._limitHudEl.title = tt.length ? tt.join(' · ') : 'Turn limits';
+
+        this._tryTimerCountdownSfx();
     }
 
     hideAttackLimitDisplay() {
-        if (this._timerEl) this._timerEl.classList.add('hidden');
+        if (this._limitHudEl) this._limitHudEl.classList.add('hidden');
+        if (this._timerEl) this._timerEl.classList.remove('timer-urgent');
+        this._timerSfxLastBeatSec = null;
     }
 
     stopTurnTimer() {
@@ -573,6 +633,7 @@ export class GameEventManager {
             this._attackWallTimerId = null;
             this._attackTimerPaused = true;
         }
+        this._timerSfxLastBeatSec = null;
     }
 
     resumeTurnTimer() {

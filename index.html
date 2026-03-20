@@ -94,7 +94,10 @@
     <div id="fps-counter" class="hidden">FPS: 00</div>
 
     <div id="ui-overlay">
-        <div id="turn-timer" class="game-ui hidden"></div>
+        <div id="turn-limit-hud" class="turn-limit-hud game-ui hidden">
+            <div id="turn-timer"></div>
+            <div id="turn-attacks-left" class="turn-attacks-left hidden"></div>
+        </div>
         <button id="end-turn-btn" class="tron-btn game-ui hidden">
             <span id="end-turn-reinforcement" class="reinforcement-count"></span>
             <span id="end-turn-text">End Turn</span>
@@ -196,7 +199,7 @@
             </div>
 
             <div class="setup-mods-toolbar" id="setup-mods-toolbar">
-                <button type="button" class="tron-btn setup-mods-toggle" id="setup-mods-toggle"
+                <button type="button" class="tron-btn small setup-mods-toggle" id="setup-mods-toggle"
                     aria-expanded="false" aria-controls="setup-mods-panel">
                     <span class="setup-mods-chevron" aria-hidden="true"></span>
                     <span class="setup-mods-toggle-label">Mods</span>
@@ -204,7 +207,7 @@
                 </button>
                 <button type="button" id="setup-mods-reset"
                     class="tron-btn small setup-mods-reset hidden"
-                    title="Reset all Mods to defaults">Reset</button>
+                    title="Reset all Mods to defaults">Reset Mods</button>
             </div>
 
             <div id="setup-mods-panel" class="setup-mods-panel hidden" data-setup-mods-panel>
@@ -222,7 +225,7 @@
                                     <option value="swiss">Swiss Cheese</option>
                                 </select>
                             </div>
-                            <div class="control-group half">
+                            <div class="control-group half" id="setup-game-mode-group">
                                 <label>Start Mode</label>
                                 <select id="game-mode">
                                     <option value="classic" selected>Classic</option>
@@ -234,7 +237,7 @@
                         </div>
 
                         <div class="control-row tournament-config-row hidden" id="tournament-config">
-                            <div class="control-group">
+                            <div class="control-group" id="setup-tournament-games-group">
                                 <label>Tournament Games</label>
                                 <div class="range-row tournament-games-row">
                                     <input type="number" id="tournament-games" class="tournament-games-input" min="1"
@@ -245,14 +248,14 @@
                         </div>
 
                         <div class="control-row">
-                            <div class="control-group half">
+                            <div class="control-group half" id="setup-max-dice-group">
                                 <label>Max Dice per Territory</label>
                                 <div class="range-row">
                                     <input type="range" id="max-dice" min="2" max="12" value="8">
                                     <span id="max-dice-val">8</span>
                                 </div>
                             </div>
-                            <div class="control-group half">
+                            <div class="control-group half" id="setup-dice-sides-group">
                                 <label>Dice Sides</label>
                                 <div class="range-row">
                                     <input type="range" id="dice-sides" min="1" max="12" value="6">
@@ -262,7 +265,7 @@
                         </div>
 
                         <div class="control-row">
-                            <div class="control-group quarter">
+                            <div class="control-group quarter" id="setup-attacks-limit-group">
                                 <label>Attacks</label>
                                 <select id="turn-time-limit">
                                     <option value="0" selected>∞ Unlimited</option>
@@ -271,7 +274,7 @@
                                     <option value="5">5 / turn</option>
                                 </select>
                             </div>
-                            <div class="control-group quarter">
+                            <div class="control-group quarter" id="setup-turn-seconds-group">
                                 <label>Turn time</label>
                                 <select id="turn-seconds-limit">
                                     <option value="0" selected>∞ Unlimited</option>
@@ -281,7 +284,7 @@
                                     <option value="60">60s</option>
                                 </select>
                             </div>
-                            <div class="control-group quarter">
+                            <div class="control-group quarter" id="setup-attack-seconds-group">
                                 <label>Attack time</label>
                                 <select id="attack-seconds-limit">
                                     <option value="0" selected>∞ Unlimited</option>
@@ -292,7 +295,7 @@
                                 </select>
                             </div>
 
-                            <div class="control-group quarter">
+                            <div class="control-group quarter" id="setup-full-board-rule-group">
                                 <label>End Game</label>
                                 <select id="full-board-rule">
                                     <option value="nothing" selected>Default</option>

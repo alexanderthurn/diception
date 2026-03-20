@@ -440,10 +440,14 @@ async function init() {
 
         // ── Play Mode (setup only — cannot change mid-game) ──────────────────
         if (setupVisible) {
+            const pmBlock = document.createElement('div');
+            pmBlock.id = 'setup-play-mode-group';
+            gamepadSidePanel.appendChild(pmBlock);
+
             const pmTitle = document.createElement('div');
             pmTitle.className = 'gp-panel-title';
             pmTitle.textContent = 'PLAY MODE';
-            gamepadSidePanel.appendChild(pmTitle);
+            pmBlock.appendChild(pmTitle);
 
             const pmSelect = document.createElement('select');
             pmSelect.id = 'play-mode';
@@ -463,11 +467,13 @@ async function init() {
                 localStorage.setItem('dicy_playMode', pmSelect.value);
                 configManager.syncSetupModsExpanderLive();
             });
-            gamepadSidePanel.appendChild(pmSelect);
+            pmBlock.appendChild(pmSelect);
 
             const divider = document.createElement('div');
             divider.className = 'gp-panel-divider';
             gamepadSidePanel.appendChild(divider);
+
+            configManager.syncSetupModsFieldHighlights();
         }
 
         // Controllers title

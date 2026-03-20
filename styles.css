@@ -6043,25 +6043,11 @@ canvas {
 
 .setup-mods-toolbar {
     display: flex;
-    align-items: stretch;
+    justify-content: flex-end;
+    align-items: center;
     gap: 12px;
     margin-top: 18px;
     margin-bottom: 6px;
-}
-
-.setup-mods-toolbar:not(.setup-mods-toolbar--split) .setup-mods-toggle {
-    flex: 1;
-    min-width: 0;
-}
-
-.setup-mods-toolbar--split .setup-mods-toggle {
-    flex: 2;
-    min-width: 0;
-}
-
-.setup-mods-toolbar--split .setup-mods-reset {
-    flex: 1;
-    min-width: 0;
 }
 
 .setup-mods-toggle {
@@ -6103,8 +6089,57 @@ canvas {
     border: 1px solid rgba(255, 200, 100, 0.35);
 }
 
-.setup-mods-reset {
-    align-self: stretch;
+.setup-mods-reset.tron-btn {
+    color: #ffcc77;
+    border-color: rgba(255, 190, 110, 0.65);
+    text-shadow: 0 0 8px rgba(255, 180, 100, 0.45);
+    box-shadow: 0 0 14px rgba(255, 160, 80, 0.28), var(--button-glow);
+}
+
+.setup-mods-reset.tron-btn:hover {
+    background: rgba(255, 180, 100, 0.14);
+    color: #ffe8c4;
+    border-color: rgba(255, 210, 150, 0.85);
+    box-shadow: 0 0 18px rgba(255, 170, 90, 0.38);
+}
+
+/* Mods row differs from SETUP_MOD_DEFAULTS — match active-mod badge / reset accent */
+#setup-modal .setup-mod-nondefault > label {
+    color: #ffb366;
+}
+
+#setup-modal .setup-mod-nondefault select,
+#setup-modal .setup-mod-nondefault .tournament-games-input {
+    border-color: rgba(255, 180, 100, 0.7);
+    box-shadow: 0 0 10px rgba(255, 160, 80, 0.22);
+}
+
+#setup-modal .setup-mod-nondefault .range-row span {
+    color: #ffcc88;
+}
+
+#setup-modal .setup-mod-nondefault input[type="range"]::-webkit-slider-runnable-track {
+    background: rgba(255, 180, 100, 0.45);
+    box-shadow: 0 0 8px rgba(255, 160, 80, 0.35);
+}
+
+#setup-modal .setup-mod-nondefault input[type="range"]::-webkit-slider-thumb {
+    background: #ffaa55;
+    box-shadow: 0 0 12px rgba(255, 170, 90, 0.65);
+}
+
+#setup-modal .setup-mod-nondefault input[type="range"]::-moz-range-thumb {
+    background: #ffaa55;
+    box-shadow: 0 0 12px rgba(255, 170, 90, 0.65);
+}
+
+#setup-play-mode-group.setup-mod-nondefault .gp-panel-title {
+    color: #ffb366;
+}
+
+#setup-play-mode-group.setup-mod-nondefault .gp-play-mode-select {
+    border-color: rgba(255, 180, 100, 0.7);
+    box-shadow: 0 0 10px rgba(255, 160, 80, 0.22);
 }
 
 /* ── Achievement Panel ── */
@@ -6777,34 +6812,53 @@ details.settings-group[open]>summary.settings-group-header::after {
     letter-spacing: 1px;
 }
 
-/* ── Turn Timer ── */
+/* ── Turn / attack clocks + attacks remaining ── */
 
-#turn-timer {
+.turn-limit-hud {
     position: fixed;
     top: 12px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    pointer-events: none;
+    text-align: center;
+}
+
+#turn-timer {
     font-family: 'Rajdhani', sans-serif;
     font-size: 32px;
     font-weight: 700;
     color: var(--border-color);
-    text-align: center;
     min-width: 56px;
     letter-spacing: 3px;
     text-shadow: var(--text-glow);
-    pointer-events: none;
+    line-height: 1.15;
+}
+
+.turn-attacks-left {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--border-color);
+    text-shadow: var(--text-glow);
+    line-height: 1.2;
 }
 
 #turn-timer.timer-urgent {
     color: #FF4444;
     text-shadow: 0 0 8px rgba(255, 68, 68, 0.8), 0 0 20px rgba(255, 68, 68, 0.5);
-    animation: timer-pulse 0.55s ease-in-out infinite alternate;
+    animation: timer-pulse-line 0.55s ease-in-out infinite alternate;
 }
 
-@keyframes timer-pulse {
-    from { transform: translateX(-50%) scale(1);    opacity: 1; }
-    to   { transform: translateX(-50%) scale(1.28); opacity: 0.75; }
+@keyframes timer-pulse-line {
+    from { transform: scale(1);    opacity: 1; }
+    to   { transform: scale(1.28); opacity: 0.75; }
 }
 /* ── Gamepad Controls Reference Panel ── */
 
