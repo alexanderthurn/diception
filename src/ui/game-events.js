@@ -841,7 +841,7 @@ export class GameEventManager {
             campaignFinished = humanWon && totalLevels > 0 && levelIndex === totalLevels - 1;
 
             if (!campaign) {
-                buttons = [{ text: 'Main Menu', value: 'restart', className: 'tron-btn' }];
+                buttons = [{ text: 'Exit', value: 'exit', className: 'tron-btn' }];
             } else if (campaignFinished) {
                 title = 'CAMPAIGN COMPLETE!';
                 const celebrationEl = document.createElement('p');
@@ -853,28 +853,68 @@ export class GameEventManager {
 
             if (campaign) {
                 if (hasNextLevel) {
-                    buttons.push({ text: 'Next Level', value: 'next', className: 'tron-btn primary' });
+                    buttons.push({ text: 'Next Level', value: 'next', className: 'tron-btn' });
                 }
 
                 if (campaignFinished) {
-                    buttons.push({ text: 'Main Menu', value: 'restart', className: 'tron-btn primary' });
+                    buttons.push({ text: 'Exit', value: 'exit', className: 'tron-btn' });
                 } else {
-                    buttons.push({ text: 'Back to Campaign', value: 'campaign', className: 'tron-btn' });
+                    buttons.push({ text: 'Exit', value: 'exit', className: 'tron-btn' });
                 }
             }
         }
         if (buttons.length === 0) {
-            buttons.push({ text: 'Main Menu', value: 'restart', className: 'tron-btn' });
+            buttons.push({ text: 'Exit', value: 'exit', className: 'tron-btn' });
         }
 
         if (!campaignFinished && !buttons.some(b => b.value === 'rematch')) {
             const rematchBtn = { text: 'Rematch', value: 'rematch', className: 'tron-btn' };
-            const restartIdx = buttons.findIndex(b => b.value === 'restart');
-            if (restartIdx >= 0) {
-                buttons.splice(restartIdx + 1, 0, rematchBtn);
+            const exitIdx = buttons.findIndex(b => b.value === 'exit');
+            if (exitIdx >= 0) {
+                buttons.splice(exitIdx + 1, 0, rematchBtn);
             } else {
                 buttons.unshift(rematchBtn);
             }
+        }
+
+        for (const b of buttons) {
+            b.className = 'tron-btn';
+        }
+        if (campaignFinished) {
+            const ex = buttons.find((b) => b.value === 'exit');
+            if (ex) ex.className = 'tron-btn primary';
+        } else if (buttons.some((b) => b.value === 'next')) {
+            const nx = buttons.find((b) => b.value === 'next');
+            if (nx) nx.className = 'tron-btn primary';
+        } else if (buttons.some((b) => b.value === 'rematch')) {
+            const rm = buttons.find((b) => b.value === 'rematch');
+            if (rm) rm.className = 'tron-btn primary';
+        } else {
+            const ex = buttons.find((b) => b.value === 'exit');
+            if (ex) ex.className = 'tron-btn primary';
+        }
+
+        // Put primary first in DOM order → first focus for Dialog + gamepad D-pad navigation
+        const primaryVal = campaignFinished
+            ? 'exit'
+            : buttons.some((b) => b.value === 'next')
+                ? 'next'
+                : buttons.some((b) => b.value === 'rematch')
+                    ? 'rematch'
+                    : 'exit';
+        const prim = buttons.find((b) => b.value === primaryVal);
+        const rest = buttons.filter((b) => b !== prim);
+        const tailKeys =
+            primaryVal === 'next'
+                ? ['exit', 'rematch']
+                : primaryVal === 'rematch'
+                    ? ['next', 'exit']
+                    : ['next', 'rematch', 'exit'].filter((k) => k !== primaryVal);
+        const tail = tailKeys.map((k) => rest.find((b) => b.value === k)).filter(Boolean);
+        const seen = new Set([prim, ...tail]);
+        const leftover = rest.filter((b) => !seen.has(b));
+        if (prim) {
+            buttons = [prim, ...tail, ...leftover];
         }
 
         await new Promise((r) => setTimeout(r, 1000));
@@ -885,17 +925,18 @@ export class GameEventManager {
             buttons
         });
 
-        if (choice === 'restart') {
-            // If campaign is finished, clear the loaded campaign data
+        if (choice === 'exit') {
             if (campaignFinished && this.scenarioBrowser) {
                 this.scenarioBrowser.clearPendingScenario();
             }
-            this.sessionManager.quitToMainMenu();
+            if (isCampaignMode && this.scenarioBrowser) {
+                await this.sessionManager.quitToCampaignScreen();
+            } else {
+                this.sessionManager.quitToCustomGame();
+            }
         } else if (choice === 'rematch') {
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
             this.gameStarter.startFreshSameSettings();
-        } else if (choice === 'campaign') {
-            await this.sessionManager.quitToCampaignScreen();
         } else if (choice === 'next') {
             const campaign = owner ? this.scenarioBrowser.campaignManager.getCampaign(owner) : null;
             const nextIndex = levelIndex + 1;
