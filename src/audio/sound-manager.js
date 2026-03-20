@@ -134,6 +134,14 @@ export class SoundManager {
         this._play('coin', { speed: 0.90 + Math.random() * 0.20 });
     }
 
+    /** Full-board random picker: one step tick — soft, pitch-varied coin */
+    coinSweepStep() {
+        this._play('coin', {
+            speed: 0.84 + Math.random() * 0.34,
+            volume: this.volume * 0.28,
+        });
+    }
+
     /** Generic UI button click */
     button() {
         this._play('button', { speed: 0.85 + Math.random() * 0.30, volume: this.volume * 0.5 });

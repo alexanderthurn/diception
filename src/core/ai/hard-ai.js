@@ -66,6 +66,7 @@ export class HardAI extends BaseAI {
 
         while (safety < 500) {
             safety++;
+            if (!this.hasAttackBudget()) break;
 
             // Get territory counts for strategic targeting
             const territoryCounts = this.countTerritories();

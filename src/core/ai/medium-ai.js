@@ -22,6 +22,7 @@ export class MediumAI extends BaseAI {
 
         while (safety < 500) {
             safety++;
+            if (!this.hasAttackBudget()) break;
 
             // Get all attackable territories
             const attackers = this.getMyTiles().filter(t => t.dice > 1);

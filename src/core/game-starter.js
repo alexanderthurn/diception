@@ -13,6 +13,7 @@ export class GameStarter {
         this.configManager = configManager;
         this.scenarioBrowser = scenarioBrowser;
         this.scenarioManager = scenarioManager;
+        this.mapEditor = null;
 
         // Player AIs
         this.playerAIs = new Map();
@@ -26,8 +27,8 @@ export class GameStarter {
         // Play mode ('classic' | 'parallel' | 'parallel-s')
         this.playMode = 'classic';
 
-        // Turn time limit (0 = unlimited)
-        this.turnTimeLimit = 0;
+        /** Max attacks per active-player turn (0 = unlimited). Mirrored from game during play. */
+        this.attacksPerTurn = 0;
 
         // Parallel-mode bot timers (setInterval IDs)
         this._parallelBotTimers = [];
@@ -79,11 +80,8 @@ export class GameStarter {
         return this.gameSpeed;
     }
 
-    /**
-     * Get current turn time limit in seconds (0 = unlimited)
-     */
-    getTurnTimeLimit() {
-        return this.turnTimeLimit;
+    getAttacksPerTurn() {
+        return this.attacksPerTurn;
     }
 
     getPlayMode() {
@@ -100,7 +98,7 @@ export class GameStarter {
     }
 
     /**
-     * Start a new game
+     * Start a new game from the setup screen (persists settings).
      */
     startGame() {
         const config = this.configManager.getGameConfig();
@@ -110,52 +108,90 @@ export class GameStarter {
             return;
         }
 
-        // Save settings
         this.configManager.saveCurrentSettings();
+        this.prepareAndBegin(config, {});
+    }
 
-        // Update game speed, time limit, and play mode
+    /**
+     * New match with the same settings as the current setup UI (new RNG seed). Use from pause or game-over Rematch.
+     */
+    startFreshSameSettings() {
+        const config = this.configManager.getGameConfig();
+
+        if (config.humanCount + config.botCount < 2) {
+            Dialog.alert('A game must have at least 2 players!');
+            return;
+        }
+
+        const seed = (Math.imul(Date.now(), 0x9e3779b1) ^ (Math.random() * 0x7fffffff | 0)) >>> 0;
+        this.prepareAndBegin(config, { mapSeed: seed, skipSaveSettings: true });
+    }
+
+    /**
+     * Shared launch path for startGame / startFreshSameSettings.
+     * @param {object} config - from ConfigManager.getGameConfig()
+     * @param {object} options
+     * @param {number} [options.mapSeed] - 32-bit seed for procedural randomness (skirmish / procedural campaign)
+     * @param {boolean} [options.skipSaveSettings] - do not write localStorage (in-match restart)
+     */
+    prepareAndBegin(config, options = {}) {
+        const { mapSeed, skipSaveSettings = false } = options;
+
         this.gameSpeed = config.gameSpeed;
-        this.turnTimeLimit = config.turnTimeLimit ?? 0;
+        this.attacksPerTurn = config.attacksPerTurn ?? 0;
         this.playMode = config.playMode ?? 'classic';
         this.renderer.setGameSpeed(this.gameSpeed);
 
-        // Stop any timers from the previous game
         this._stopParallelBotTimers();
 
-        // Apply effects quality
         this.effectsManager.setQuality(config.effectsQuality);
         this.renderer.setEffectsQuality(config.effectsQuality);
         this.effectsManager.stopIntroMode();
         this.renderer.setDiceSides(config.diceSides);
 
-        // Clear autoplay state
         this.autoplayPlayers.clear();
 
-        // Clear previous auto-save when explicitly starting new game
         this.turnHistory.clearAutoSave();
 
-        // Clear logs
-        if (this.gameLog) this.gameLog.clear();
-        if (this.addLog) this.addLog('Game started!', '');
+        if (this.mapEditor && this.mapEditor.isOpen) {
+            this.mapEditor.close();
+        }
 
-        // Show Game UI
+        if (this.gameLog) this.gameLog.clear();
+        if (this.addLog) {
+            this.addLog(skipSaveSettings ? '🎲 New match!' : 'Game started!', '');
+        }
+
         this.setupModal.classList.add('hidden');
         document.getElementById('main-menu')?.classList.add('hidden');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
-        // Keep dice HUD hidden until first attack result — no content yet
         document.getElementById('dice-result-hud')?.classList.add('hidden');
+
+        const fullBoardRule = config.fullBoardRule || 'nothing';
+
+        const applyScenarioBranch = (pendingLevel) => {
+            this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);
+            const ap = pendingLevel.attacksPerTurn ?? pendingLevel.turnTimeLimit ?? config.attacksPerTurn ?? 0;
+            this.game.fullBoardRule = fullBoardRule;
+            this.game._fullBoardRuleFired = false;
+            this.game.attacksPerTurn = ap;
+            this.game.attacksUsedThisTurn = 0;
+            this.attacksPerTurn = ap;
+            this.game.emit('gameStart', { players: this.game.players, map: this.game.map });
+            this.game.startTurn();
+            this.initializePlayerAIs(config.botAI);
+        };
 
         const isCampaignMode = localStorage.getItem('dicy_campaignMode');
 
         if (isCampaignMode) {
-            // Playing directly from campaign browser (immediateStart) — use the pending level
             this.scenarioBrowser.loadPendingScenarioIfNeeded();
             const pendingLevel = this.scenarioBrowser.getPendingScenario();
 
             if (pendingLevel?.type === 'config') {
-                // Procedural level - build gameConfig from level
                 const [w, h] = (pendingLevel.mapSize || '6x6').split('x').map(Number);
-                if (pendingLevel.turnTimeLimit != null) this.turnTimeLimit = pendingLevel.turnTimeLimit;
+                const apLvl = pendingLevel.attacksPerTurn ?? pendingLevel.turnTimeLimit ?? config.attacksPerTurn ?? 0;
+                this.attacksPerTurn = apLvl;
                 const gameConfig = {
                     humanCount: 1,
                     botCount: pendingLevel.bots ?? 1,
@@ -164,19 +200,17 @@ export class GameStarter {
                     maxDice: pendingLevel.maxDice ?? 8,
                     diceSides: pendingLevel.diceSides ?? 6,
                     mapStyle: pendingLevel.mapStyle || 'full',
-                    gameMode: pendingLevel.gameMode || 'classic'
+                    gameMode: pendingLevel.gameMode || 'classic',
+                    fullBoardRule,
+                    mapSeed,
+                    attacksPerTurn: apLvl
                 };
                 this.game.startGame(gameConfig);
+                this.attacksPerTurn = this.game.attacksPerTurn;
                 this.initializePlayerAIs(pendingLevel.botAI || 'easy');
             } else if (pendingLevel && pendingLevel.type !== 'map') {
-                // Scenario type - apply fixed state
-                if (pendingLevel.turnTimeLimit != null) this.turnTimeLimit = pendingLevel.turnTimeLimit;
-                this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);
-                this.game.emit('gameStart', { players: this.game.players, map: this.game.map });
-                this.game.startTurn();
-                this.initializePlayerAIs(config.botAI);
+                applyScenarioBranch(pendingLevel);
             } else {
-                // Map type or fallback
                 const gameConfig = {
                     humanCount: config.humanCount,
                     botCount: config.botCount,
@@ -185,7 +219,9 @@ export class GameStarter {
                     maxDice: config.maxDice,
                     diceSides: config.diceSides,
                     mapStyle: config.mapStyle,
-                    gameMode: config.gameMode
+                    gameMode: config.gameMode,
+                    fullBoardRule,
+                    mapSeed
                 };
                 if (pendingLevel?.type === 'map') {
                     gameConfig.predefinedMap = pendingLevel;
@@ -194,14 +230,18 @@ export class GameStarter {
                     if (pendingLevel.bots != null) gameConfig.botCount = pendingLevel.bots;
                     if (pendingLevel.maxDice != null) gameConfig.maxDice = pendingLevel.maxDice;
                     if (pendingLevel.diceSides != null) gameConfig.diceSides = pendingLevel.diceSides;
-                    if (pendingLevel.turnTimeLimit != null) this.turnTimeLimit = pendingLevel.turnTimeLimit;
+                    const apMap = pendingLevel.attacksPerTurn ?? pendingLevel.turnTimeLimit ?? config.attacksPerTurn ?? 0;
+                    gameConfig.attacksPerTurn = apMap;
+                    this.attacksPerTurn = apMap;
+                } else {
+                    gameConfig.attacksPerTurn = config.attacksPerTurn ?? 0;
+                    this.attacksPerTurn = gameConfig.attacksPerTurn;
                 }
                 this.game.startGame(gameConfig);
                 const botAI = (pendingLevel?.type === 'map' && pendingLevel?.botAI) || config.botAI;
                 this.initializePlayerAIs(botAI);
             }
         } else {
-            // Custom game from setup modal — always use UI config, ignore any pending level
             const gameConfig = {
                 humanCount: config.humanCount,
                 botCount: config.botCount,
@@ -210,36 +250,37 @@ export class GameStarter {
                 maxDice: config.maxDice,
                 diceSides: config.diceSides,
                 mapStyle: config.mapStyle,
-                gameMode: config.gameMode
+                gameMode: config.gameMode,
+                fullBoardRule,
+                mapSeed,
+                attacksPerTurn: config.attacksPerTurn ?? 0
             };
+            this.attacksPerTurn = gameConfig.attacksPerTurn;
             this.game.startGame(gameConfig);
             this.initializePlayerAIs(config.botAI);
         }
 
-        // Save the initial state for "Play Again" functionality
-        this.turnHistory.saveInitialState(this.game);
-
-        // Force update of autosave to include the newly assigned AI IDs
         this.turnHistory.saveAutoSave(this.game);
 
-        // Store play mode on the game object so input-controller can read it
         this.game.playMode = this.playMode;
 
-        // Start parallel-mode background bot timers (after AIs are initialized)
         if (this.playMode === 'parallel' || this.playMode === 'parallel-s') {
             this._startParallelBotTimers();
         }
 
-        // Ensure camera fits after game start
         setTimeout(() => {
             this.renderer.autoFitCamera();
         }, 50);
     }
 
+    /** @param {import('../editor/map-editor.js').MapEditor | null} editor */
+    setMapEditor(editor) {
+        this.mapEditor = editor;
+    }
+
     /** Background attack timers for bots in parallel mode. */
     _startParallelBotTimers() {
         this._stopParallelBotTimers();
-        // Interval per difficulty (ms): easy=10s, medium=5s, hard=2s
         const intervals = { easy: 10000, medium: 5000, hard: 2000, autoplay: 3000 };
 
         for (const player of this.game.players) {
@@ -250,7 +291,6 @@ export class GameStarter {
             const id = setInterval(() => this._doParallelBotAttack(player, ai), ms);
             this._parallelBotTimers.push(id);
         }
-
     }
 
     _stopParallelBotTimers() {
@@ -260,7 +300,6 @@ export class GameStarter {
 
     _doParallelBotAttack(player, ai) {
         if (this.game.gameOver || !player.alive) return;
-        // Skip: this bot's normal turn handles attacks when it's the active player
         if (this.game.currentPlayer?.id === player.id) return;
 
         const excludeId = this.playMode === 'parallel-s' ? this.game.currentPlayer?.id : null;
@@ -270,14 +309,12 @@ export class GameStarter {
         }
     }
 
-
     /**
      * Initialize AIs for all players
      */
     initializePlayerAIs(botAI) {
         this.clearPlayerAIs();
 
-        // For custom mode, define the AI cycle
         const aiCycle = ['easy', 'medium', 'hard'];
         let botIndex = 0;
 
@@ -287,10 +324,8 @@ export class GameStarter {
                 continue;
             }
 
-            // Determine AI for this bot
             let aiId;
             if (botAI === 'custom') {
-                // Cycle through easy, medium, hard
                 aiId = aiCycle[botIndex % aiCycle.length];
                 botIndex++;
             } else {

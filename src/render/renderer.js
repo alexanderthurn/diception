@@ -1,4 +1,4 @@
-import { Application, Container, Ticker } from 'pixi.js';
+import { Application, Container, Graphics, Ticker } from 'pixi.js';
 import { ScanlineFilter } from './effects/scanline-filter.js';
 import { GridRenderer } from './grid-renderer.js';
 import { AnimationManager } from './animation-manager.js';
@@ -382,6 +382,185 @@ export class Renderer {
                 this.rootContainer.pivot.x = (Math.random() - 0.5) * currentIntensity;
                 this.rootContainer.pivot.y = (Math.random() - 0.5) * currentIntensity;
             }
+        }
+    }
+
+    /**
+     * Full-board stalemate: choose a tile up front, then sweep playable cells left→right, top→bottom
+     * (skipping blocked holes) for ≥2 full passes — slow clear steps at first, then faster — and
+     * finish on the chosen tile with a hold pulse.
+     * Beginner = full pacing; normal = ~⅓ shorter sweep+pulse; expert = winner pulse only at normal timing.
+     * @returns {Promise<{ x: number, y: number } | null>}
+     */
+    async playFullBoardRandomPick() {
+        const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+        const game = this.game;
+        const grid = this.grid;
+        if (!game?.map || !grid) return null;
+
+        const w = game.map.width;
+        const h = game.map.height;
+        /** Row-major order, non-blocked tiles only. */
+        const ordered = [];
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const t = game.map.tiles[y * w + x];
+                if (!t.blocked) ordered.push({ x, y });
+            }
+        }
+        if (ordered.length === 0) return null;
+
+        const n = ordered.length;
+        const targetIdx = Math.floor(Math.random() * n);
+        const target = ordered[targetIdx];
+
+        const speed = this.gameSpeed;
+        const isExpert = speed === 'expert';
+        /** Normal = ⅓ shorter than beginner (× ⅔). Expert winning pulse uses same factor as normal. */
+        const sweepTimeScale = speed === 'normal' ? 2 / 3 : 1;
+        const pulseTimeScale = speed === 'beginner' ? 1 : 2 / 3;
+
+        /** At least two complete row-by-row cycles before the final run to the pick. */
+        const FULL_PASSES = 2;
+        const path = [];
+        for (let lap = 0; lap < FULL_PASSES; lap++) {
+            for (let j = 0; j < n; j++) path.push(ordered[j]);
+        }
+        for (let j = 0; j <= targetIdx; j++) path.push(ordered[j]);
+
+        const gfx = new Graphics();
+        grid.animationContainer.addChild(gfx);
+        const ts = grid.tileSize;
+        const gap = grid.gap;
+        const slowPhaseSteps = FULL_PASSES * n;
+        /** Steady row-by-row scans (cf. supply phase A + even phase-B cadence). */
+        const STEP_SLOW_MS = 54;
+        /**
+         * Final partial pass: start near scan speed, then ramp toward much slower steps.
+         * Ease-out on progress so longer pauses begin well before the last tile (settles earlier, lands heavy).
+         */
+        const STEP_FINAL_START_MS = 50;
+        const STEP_FINAL_END_MS = 175;
+
+        const stepDelayMsBeginner = (i) => {
+            if (i < slowPhaseSteps) return STEP_SLOW_MS;
+            const fi = i - slowPhaseSteps;
+            const finalLen = path.length - slowPhaseSteps;
+            if (finalLen <= 1) return STEP_FINAL_END_MS;
+            const u = fi / (finalLen - 1);
+            /** Ease-out: most of the slow-down unfolds in the first ~half of this pass (1-(1-u)^2). */
+            const easeOut = 1 - (1 - u) * (1 - u);
+            return STEP_FINAL_START_MS + (STEP_FINAL_END_MS - STEP_FINAL_START_MS) * easeOut;
+        };
+
+        const stepDelayMs = (i) =>
+            Math.max(5, Math.round(stepDelayMsBeginner(i) * sweepTimeScale));
+
+        const pulseStepMs = Math.round(115 * pulseTimeScale);
+        const holdMs = Math.round(950 * pulseTimeScale);
+        const pulseSteps = 10;
+
+        this.inputManager?.setSuspended(true);
+        try {
+            if (!isExpert) {
+                for (let i = 0; i < path.length; i++) {
+                    const p = path[i];
+                    gfx.clear();
+                    const pad = 3;
+                    gfx.rect(pad, pad, ts - pad * 2, ts - pad * 2);
+                    gfx.stroke({ width: 4, color: 0xffcc33, alpha: 0.92 });
+                    gfx.x = p.x * (ts + gap);
+                    gfx.y = p.y * (ts + gap);
+                    this.draw();
+                    this.sfx?.coinSweepStep();
+                    await sleep(stepDelayMs(i));
+                }
+            }
+
+            const px = target.x * (ts + gap);
+            const py = target.y * (ts + gap);
+            for (let s = 0; s < pulseSteps; s++) {
+                const t = s / (pulseSteps - 1 || 1);
+                const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 2.4);
+                const shrink = 1 + pulse * 2;
+                const pad = 2;
+                gfx.clear();
+                gfx.rect(pad + shrink, pad + shrink, ts - 2 * (pad + shrink), ts - 2 * (pad + shrink));
+                gfx.fill({ color: 0xffe8a8, alpha: 0.14 + pulse * 0.38 });
+                gfx.stroke({ width: 5 + pulse * 12, color: 0xfffdf0, alpha: 0.97 });
+                gfx.x = px;
+                gfx.y = py;
+                this.draw();
+                await sleep(pulseStepMs);
+            }
+            await sleep(holdMs);
+        } finally {
+            grid.animationContainer.removeChild(gfx);
+            gfx.destroy();
+            this.inputManager?.setSuspended(false);
+            this.draw();
+        }
+        return target;
+    }
+
+    /**
+     * After most_territories / biggest_territory full-board rules: pulse the winning area in the winner's color.
+     * @param {'most_territories'|'biggest_territory'} rule
+     * @param {number} winnerPlayerId
+     */
+    async playFullBoardWinnerReveal(rule, winnerPlayerId) {
+        const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+        const game = this.game;
+        const grid = this.grid;
+        if (!game?.map || !grid || winnerPlayerId == null) return;
+
+        const player = game.players.find((p) => p.id === winnerPlayerId);
+        const color = player?.color ?? 0xffcc66;
+
+        let tiles;
+        if (rule === 'biggest_territory') {
+            tiles = game.map.findLargestConnectedRegionTiles(winnerPlayerId);
+            if (!tiles.length) {
+                tiles = game.map.getTilesByOwner(winnerPlayerId).map((t) => ({ x: t.x, y: t.y }));
+            }
+        } else {
+            tiles = game.map.getTilesByOwner(winnerPlayerId).map((t) => ({ x: t.x, y: t.y }));
+        }
+        if (!tiles.length) return;
+
+        const gfx = new Graphics();
+        grid.animationContainer.addChild(gfx);
+        const ts = grid.tileSize;
+        const gap = grid.gap;
+        const pad = 2;
+        const steps = 34;
+        const stepMs = 50;
+
+        this.inputManager?.setSuspended(true);
+        try {
+            for (let i = 0; i < steps; i++) {
+                const t = i / (steps - 1 || 1);
+                const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 3.1);
+                const strokeW = 2.5 + pulse * 5.5;
+                const fillA = 0.07 + pulse * 0.26;
+
+                gfx.clear();
+                for (const tile of tiles) {
+                    const bx = tile.x * (ts + gap);
+                    const by = tile.y * (ts + gap);
+                    gfx.rect(bx + pad, by + pad, ts - 2 * pad, ts - 2 * pad);
+                }
+                gfx.fill({ color, alpha: fillA });
+                gfx.stroke({ width: strokeW, color: 0xfff8e0, alpha: 0.91 });
+                this.draw();
+                await sleep(stepMs);
+            }
+            await sleep(420);
+        } finally {
+            grid.animationContainer.removeChild(gfx);
+            gfx.destroy();
+            this.inputManager?.setSuspended(false);
+            this.draw();
         }
     }
 

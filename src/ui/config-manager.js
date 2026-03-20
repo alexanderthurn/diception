@@ -4,6 +4,19 @@
  */
 import { GAME } from '../core/constants.js';
 
+function migrateAttacksPerTurnValue() {
+    let v = localStorage.getItem('dicy_attacksPerTurn');
+    if (v != null) return v;
+    const legacy = localStorage.getItem('dicy_turnTimeLimit') || '0';
+    if (legacy === '0' || legacy === '1' || legacy === '3' || legacy === '5') {
+        v = legacy;
+    } else {
+        v = '0';
+    }
+    localStorage.setItem('dicy_attacksPerTurn', v);
+    return v;
+}
+
 export class ConfigManager {
     constructor() {
         // Map size presets: slider value -> {width, height, label}
@@ -41,6 +54,7 @@ export class ConfigManager {
             tournamentGamesInput: document.getElementById('tournament-games'),
             tournamentConfig: document.getElementById('tournament-config'),
             turnTimeLimitInput: document.getElementById('turn-time-limit'),
+            fullBoardRuleInput: document.getElementById('full-board-rule'),
         };
 
         // Current selected bot AI
@@ -97,7 +111,9 @@ export class ConfigManager {
         const savedGameMode = localStorage.getItem('dicy_gameMode') || 'classic';
         const savedPlayMode = localStorage.getItem('dicy_playMode') || 'classic';
         const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || '100';
-        const savedTurnTimeLimit = localStorage.getItem('dicy_turnTimeLimit') || '0';
+        const savedAttacksPerTurn = migrateAttacksPerTurnValue();
+
+        const savedFullBoardRule = localStorage.getItem('dicy_fullBoardRule') || 'nothing';
 
         // Load effects quality
         let savedEffectsQuality = localStorage.getItem('effectsQuality') || 'high';
@@ -117,7 +133,8 @@ export class ConfigManager {
         if (el.playModeInput) el.playModeInput.value = savedPlayMode;
         el.tournamentGamesInput.value = savedTournamentGames;
         el.effectsQualityInput.value = savedEffectsQuality;
-        if (el.turnTimeLimitInput) el.turnTimeLimitInput.value = savedTurnTimeLimit;
+        if (el.turnTimeLimitInput) el.turnTimeLimitInput.value = savedAttacksPerTurn;
+        if (el.fullBoardRuleInput) el.fullBoardRuleInput.value = savedFullBoardRule;
         this.updateEffectsQualityClass(savedEffectsQuality);
 
         // Load saved AI selection
@@ -203,7 +220,13 @@ export class ConfigManager {
 
         if (el.turnTimeLimitInput) {
             el.turnTimeLimitInput.addEventListener('change', () => {
-                localStorage.setItem('dicy_turnTimeLimit', el.turnTimeLimitInput.value);
+                localStorage.setItem('dicy_attacksPerTurn', el.turnTimeLimitInput.value);
+            });
+        }
+
+        if (el.fullBoardRuleInput) {
+            el.fullBoardRuleInput.addEventListener('change', () => {
+                localStorage.setItem('dicy_fullBoardRule', el.fullBoardRuleInput.value);
             });
         }
 
@@ -332,6 +355,7 @@ export class ConfigManager {
     getGameConfig() {
         const el = this.elements;
         const sizePreset = this.getMapSize(parseInt(el.mapSizeInput.value));
+        const ap = parseInt(el.turnTimeLimitInput?.value ?? '0', 10);
 
         return {
             humanCount: parseInt(el.humanCountInput.value),
@@ -346,7 +370,8 @@ export class ConfigManager {
             gameSpeed: el.gameSpeedInput.value,
             effectsQuality: el.effectsQualityInput.value,
             botAI: this.selectedBotAI,
-            turnTimeLimit: parseInt(el.turnTimeLimitInput?.value ?? '0'),
+            attacksPerTurn: Number.isFinite(ap) ? Math.max(0, ap) : 0,
+            fullBoardRule: el.fullBoardRuleInput?.value || 'nothing',
         };
     }
 
@@ -354,6 +379,7 @@ export class ConfigManager {
      * Save current settings to localStorage
      */
     saveCurrentSettings() {
+        const el = this.elements;
         const config = this.getGameConfig();
         localStorage.setItem('dicy_mapSize', `${config.mapWidth}x${config.mapHeight}`);
         localStorage.setItem('dicy_humanCount', config.humanCount.toString());
@@ -365,7 +391,8 @@ export class ConfigManager {
         localStorage.setItem('dicy_gameMode', config.gameMode);
         localStorage.setItem('dicy_playMode', config.playMode);
         localStorage.setItem('effectsQuality', config.effectsQuality);
-        localStorage.setItem('dicy_turnTimeLimit', config.turnTimeLimit.toString());
+        localStorage.setItem('dicy_attacksPerTurn', el.turnTimeLimitInput?.value ?? '0');
+        localStorage.setItem('dicy_fullBoardRule', config.fullBoardRule || 'nothing');
     }
 
 

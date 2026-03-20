@@ -108,10 +108,6 @@
                 <span class="sprite-icon icon-close"></span>
                 <span class="sprite-icon icon-settings hidden"></span>
             </button>
-            <!-- retry-game-btn kept in DOM for JS reference, never shown in toolbar -->
-            <button id="retry-game-btn" class="tron-btn small hidden" data-no-sfx title="Retry Game" style="display:none"><span
-                    class="btn-text">Restart Game</span><span class="btn-icon"><span
-                        class="sprite-icon icon-retry"></span></span></button>
             <button id="new-game-btn" class="tron-btn small hidden" title="Menu" style="display:none"><span
                     class="btn-text">Menu</span><span class="btn-icon"><span
                         class="sprite-icon icon-settings"></span></span><span id="new-game-hint"
@@ -253,13 +249,25 @@
                     </div>
                 </div>
                 <div class="control-group half">
-                    <label>Turn Time Limit</label>
+                    <label>Turn Limit</label>
                     <select id="turn-time-limit">
-                        <option value="10">10 s</option>
-                        <option value="15">15 s</option>
-                        <option value="30">30 s</option>
-                        <option value="60">60 s</option>
-                        <option value="0" selected>∞ Unlimited</option>
+                        <option value="0" selected>∞ Unlimited attacks</option>
+                        <option value="1">1 attack / turn</option>
+                        <option value="3">3 attacks / turn</option>
+                        <option value="5">5 attacks / turn</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <label>When every territory is full (max dice)</label>
+                    <select id="full-board-rule">
+                        <option value="nothing" selected>Nothing — keep playing</option>
+                        <option value="most_territories">Most territories wins</option>
+                        <option value="biggest_territory">Largest connected region wins</option>
+                        <option value="random_picker">Random tile — that owner wins</option>
+                        <option value="raise_max_dice">Raise max dice +2 (repeat until cap 16)</option>
+                        <option value="autoplay_humans">Autoplay all humans until there is a winner</option>
                     </select>
                 </div>
             </div>
@@ -338,7 +346,7 @@
 
                 <div class="pause-btn-row">
                     <button id="pause-save-btn" class="tron-btn large">Save</button>
-                    <button id="pause-retry-btn" class="tron-btn large">Restart</button>
+                    <button id="pause-retry-btn" class="tron-btn large">Rematch</button>
                 </div>
 
                 <div class="pause-btn-row">

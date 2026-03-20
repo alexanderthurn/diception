@@ -1519,10 +1519,6 @@ select {
         display: inline;
     }
 
-    #retry-game-btn {
-        display: none;
-    }
-
     /* Make new-game-btn a square icon button on mobile (matches audio/zoom buttons) */
     #new-game-btn {
         width: 36px;

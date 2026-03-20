@@ -53,6 +53,15 @@ export class BaseAI {
     }
 
     /**
+     * True if this AI may still attack this turn (respects global attacks-per-turn limit).
+     */
+    hasAttackBudget() {
+        const lim = this.game.attacksPerTurn;
+        if (!lim || lim <= 0) return true;
+        return this.game.attacksUsedThisTurn < lim;
+    }
+
+    /**
      * Get delay between attacks based on game speed
      */
     getAttackDelay(gameSpeed) {

@@ -14,10 +14,11 @@ export class MapManager {
         this.maxDice = 9;
     }
 
-    generateMap(width, height, players, maxDice = 9, mapStyle = 'random', presetLayout = null) {
+    generateMap(width, height, players, maxDice = 9, mapStyle = 'random', presetLayout = null, rng = null) {
         this.width = width;
         this.height = height;
         this.maxDice = maxDice;
+        this._rng = rng == null ? Math.random : rng;
         const totalTiles = width * height;
 
         // Initialize all as blocked
@@ -27,7 +28,7 @@ export class MapManager {
         let style = mapStyle;
         if (mapStyle === 'random') {
             const styles = ['continents', 'caves', 'islands', 'maze'];
-            style = styles[Math.floor(Math.random() * styles.length)];
+            style = styles[Math.floor(this._rng() * styles.length)];
         }
 
         console.log(`Generating ${style} map (${width}x${height})...`);
@@ -88,7 +89,7 @@ export class MapManager {
 
         // Shuffle and assign to players
         for (let i = finalPlayable.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
+            const j = Math.floor(this._rng() * (i + 1));
             [finalPlayable[i], finalPlayable[j]] = [finalPlayable[j], finalPlayable[i]];
         }
 
@@ -100,6 +101,7 @@ export class MapManager {
         }
 
         this.distributeInitialDice(players, finalPlayable.length);
+        this._rng = null;
     }
 
     applyPresetLayout(tiles) {
@@ -168,7 +170,7 @@ export class MapManager {
             const eligibleTiles = ownedTiles.filter(t => t.dice < this.maxDice);
 
             while (remainingDice > 0 && eligibleTiles.length > 0) {
-                const randomIndex = Math.floor(Math.random() * eligibleTiles.length);
+                const randomIndex = Math.floor((this._rng || Math.random)() * eligibleTiles.length);
                 const randomTile = eligibleTiles[randomIndex];
 
                 randomTile.dice++;

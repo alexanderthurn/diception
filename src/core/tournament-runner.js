@@ -79,7 +79,8 @@ export class TournamentRunner {
                 maxDice: config.maxDice,
                 diceSides: config.diceSides,
                 mapStyle: config.mapStyle,
-                gameMode: config.gameMode
+                gameMode: config.gameMode,
+                attacksPerTurn: 0
             });
 
             // Assign names and create AI instances for each player

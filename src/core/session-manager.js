@@ -1,6 +1,6 @@
 /**
  * SessionManager - Handles game session lifecycle
- * Manages reset, restart, auto-save, and resume functionality
+ * Manages reset, auto-save, and resume functionality
  */
 export class SessionManager {
     constructor(game, renderer, effectsManager, turnHistory, mapEditor) {
@@ -21,15 +21,12 @@ export class SessionManager {
         this.endTurnBtn = document.getElementById('end-turn-btn');
         this.autoWinBtn = document.getElementById('auto-win-btn');
         this.newGameBtn = document.getElementById('new-game-btn');
-        this.retryGameBtn = document.getElementById('retry-game-btn');
-        this.retrySeparator = document.querySelector('.retry-separator');
 
         this.scenarioBrowser = null;
         this.configManager = null;
 
         game.on('gameStart', () => {
             this.updateNewGameBtnLabel();
-            this.updateRetryBtnVisibility();
         });
     }
 
@@ -52,16 +49,6 @@ export class SessionManager {
         if (mainMenuBtn) {
             mainMenuBtn.textContent = 'Exit to Menu';
         }
-    }
-
-    /**
-     * Update retry button visibility based on whether we have an initial state to retry
-     */
-    updateRetryBtnVisibility() {
-        if (!this.retryGameBtn) return;
-        const hasInitialState = this.turnHistory.hasInitialState();
-        this.retryGameBtn.classList.toggle('hidden', !hasInitialState);
-        if (this.retrySeparator) this.retrySeparator.classList.toggle('hidden', !hasInitialState);
     }
 
     /**
@@ -92,8 +79,6 @@ export class SessionManager {
         if (this.autoWinBtn) this.autoWinBtn.classList.add('hidden');
         if (this.playerDashboard) this.playerDashboard.hide();
         if (this.newGameBtn) this.newGameBtn.classList.add('hidden');
-        if (this.retryGameBtn) this.retryGameBtn.classList.add('hidden');
-        if (this.retrySeparator) this.retrySeparator.classList.add('hidden');
     }
 
     /**
@@ -173,44 +158,6 @@ export class SessionManager {
     }
 
     /**
-     * Restart current game from initial state
-     * @param {Function} addLog - Function to add log entries
-     * @param {Set} autoplayPlayers - Set of autoplay player IDs (to preserve)
-     */
-    restartCurrentGame(addLog, autoplayPlayers) {
-        // Close editor if open
-        if (this.mapEditor && this.mapEditor.isOpen) {
-            this.mapEditor.close();
-        }
-
-        const success = this.turnHistory.restoreInitialSnapshot(this.game);
-
-        if (success) {
-            this.resetUI();
-
-            // Restore UI visibility
-            document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
-            this.updateNewGameBtnLabel();
-            this.updateRetryBtnVisibility();
-            const dashToggle = document.getElementById('dash-toggle');
-            if (dashToggle) dashToggle.textContent = '[-]';
-
-            // Redraw and restart
-            this.renderer.draw();
-            if (this.playerDashboard) this.playerDashboard.update();
-            this.game.emit('turnStart', { player: this.game.currentPlayer });
-            this.renderer.forceUpdate(false);
-
-            // Clear any lingering auto-save from the finished game
-            this.turnHistory.clearAutoSave();
-
-            if (addLog) addLog('🔄 Game Restarted', 'info');
-        }
-
-        return success;
-    }
-
-    /**
      * Check for auto-save and resume if found
      * @param {Function} createAI - Function to create AI instances
      * @param {Function} clearPlayerAIs - Function to clear AI map
@@ -250,7 +197,6 @@ export class SessionManager {
             document.getElementById('main-menu')?.classList.add('hidden');
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
             this.updateNewGameBtnLabel();
-            this.updateRetryBtnVisibility();
 
             // Restore state
             this.turnHistory.applyGameState(this.game, snapshot.gameState);
@@ -278,9 +224,9 @@ export class SessionManager {
             }
             if (this.effectsManager) this.effectsManager.stopIntroMode();
 
-            // Trigger start
+            // Trigger start (do not call startTurn() — it resets attacksUsedThisTurn; snapshot already has mid-turn state)
             this.game.emit('gameStart', { players: this.game.players, map: this.game.map });
-            this.game.startTurn();
+            this.game.emit('turnStart', { player: this.game.currentPlayer });
 
             if (addLog) addLog(`🔄 Game automatically resumed from Turn ${this.game.turn}`, 'reinforce');
             setTimeout(() => this.renderer.autoFitCamera(), 50);

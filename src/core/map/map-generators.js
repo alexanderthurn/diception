@@ -5,6 +5,11 @@
 
 import { MAP_GENERATION as CONFIG } from '../constants.js';
 
+function rand(map) {
+    const r = map._rng || Math.random;
+    return r();
+}
+
 /**
  * Generate a full grid with no holes
  */
@@ -18,14 +23,14 @@ export function generateFull(map) {
  * Generate narrow winding corridors with choke points
  */
 export function generateTunnels(map) {
-    const numPaths = CONFIG.TUNNELS_MIN_PATHS + Math.floor(Math.random() * CONFIG.TUNNELS_MAX_ADDITIONAL_PATHS);
+    const numPaths = CONFIG.TUNNELS_MIN_PATHS + Math.floor(rand(map) * CONFIG.TUNNELS_MAX_ADDITIONAL_PATHS);
 
     for (let p = 0; p < numPaths; p++) {
-        let x = Math.floor(Math.random() * map.width);
-        let y = Math.floor(Math.random() * map.height);
+        let x = Math.floor(rand(map) * map.width);
+        let y = Math.floor(rand(map) * map.height);
 
         const pathLength = Math.floor(map.width * map.height * CONFIG.TUNNELS_PATH_LENGTH_FACTOR);
-        let direction = Math.floor(Math.random() * 4);
+        let direction = Math.floor(rand(map) * 4);
         const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
 
         for (let i = 0; i < pathLength; i++) {
@@ -33,8 +38,8 @@ export function generateTunnels(map) {
                 map.tiles[y * map.width + x].blocked = false;
             }
 
-            if (Math.random() < CONFIG.TUNNELS_DIRECTION_CHANGE_CHANCE) {
-                direction = Math.floor(Math.random() * 4);
+            if (rand(map) < CONFIG.TUNNELS_DIRECTION_CHANGE_CHANCE) {
+                direction = Math.floor(rand(map) * 4);
             }
 
             const [dx, dy] = directions[direction];
@@ -51,11 +56,11 @@ export function generateTunnels(map) {
     // Occasionally widen some path sections
     const tempTiles = [...map.tiles.map(t => ({ ...t }))];
     for (let i = 0; i < map.tiles.length; i++) {
-        if (!tempTiles[i].blocked && Math.random() < CONFIG.TUNNELS_WIDEN_CHANCE) {
+        if (!tempTiles[i].blocked && rand(map) < CONFIG.TUNNELS_WIDEN_CHANCE) {
             const x = i % map.width;
             const y = Math.floor(i / map.width);
             const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-            const [dx, dy] = directions[Math.floor(Math.random() * 4)];
+            const [dx, dy] = directions[Math.floor(rand(map) * 4)];
             const nx = x + dx;
             const ny = y + dy;
             if (nx >= 0 && nx < map.width && ny >= 0 && ny < map.height) {
@@ -75,14 +80,14 @@ export function generateSwissCheese(map) {
     }
 
     const holeRange = CONFIG.SWISS_MAX_HOLE_PERCENTAGE - CONFIG.SWISS_MIN_HOLE_PERCENTAGE;
-    const holePercentage = CONFIG.SWISS_MIN_HOLE_PERCENTAGE + Math.random() * holeRange;
+    const holePercentage = CONFIG.SWISS_MIN_HOLE_PERCENTAGE + rand(map) * holeRange;
     const targetHoles = Math.floor(map.width * map.height * holePercentage);
     let holesCreated = 0;
     let attempts = 0;
     const maxAttempts = targetHoles * CONFIG.SWISS_MAX_ATTEMPTS_MULTIPLIER;
 
     while (holesCreated < targetHoles && attempts < maxAttempts) {
-        const idx = Math.floor(Math.random() * map.tiles.length);
+        const idx = Math.floor(rand(map) * map.tiles.length);
 
         if (!map.tiles[idx].blocked) {
             map.tiles[idx].blocked = true;
@@ -102,7 +107,7 @@ export function generateSwissCheese(map) {
  */
 export function generateContinents(map) {
     const isSmallMap = map.width * map.height < 25;
-    const numContinents = isSmallMap ? 2 : (2 + Math.floor(Math.random() * 3));
+    const numContinents = isSmallMap ? 2 : (2 + Math.floor(rand(map) * 3));
 
     const centers = [];
     const avgDim = (map.width + map.height) / 2;
@@ -110,8 +115,8 @@ export function generateContinents(map) {
 
     let attempts = 0;
     while (centers.length < numContinents && attempts < 50) {
-        const cx = Math.floor(Math.random() * map.width);
-        const cy = Math.floor(Math.random() * map.height);
+        const cx = Math.floor(rand(map) * map.width);
+        const cy = Math.floor(rand(map) * map.height);
 
         let tooClose = false;
         for (const center of centers) {
@@ -124,7 +129,7 @@ export function generateContinents(map) {
 
         if (!tooClose) {
             const maxRadius = minDistance * 0.6;
-            const radius = (maxRadius * 0.6) + Math.random() * (maxRadius * 0.4);
+            const radius = (maxRadius * 0.6) + rand(map) * (maxRadius * 0.4);
             centers.push({ x: cx, y: cy, radius });
         }
         attempts++;
@@ -144,7 +149,7 @@ export function generateContinents(map) {
 
             for (const center of centers) {
                 const dist = Math.sqrt((x - center.x) ** 2 + (y - center.y) ** 2);
-                const noise = (Math.random() - 0.5) * center.radius * 0.6;
+                const noise = (rand(map) - 0.5) * center.radius * 0.6;
 
                 if (dist + noise < center.radius) {
                     map.tiles[idx].blocked = false;
@@ -168,7 +173,7 @@ export function generateContinents(map) {
 export function generateCaves(map) {
     // Start with random fill
     for (let i = 0; i < map.tiles.length; i++) {
-        map.tiles[i].blocked = Math.random() < CONFIG.CAVES_INITIAL_BLOCK_CHANCE;
+        map.tiles[i].blocked = rand(map) < CONFIG.CAVES_INITIAL_BLOCK_CHANCE;
     }
 
     // Run cellular automata iterations
@@ -212,13 +217,13 @@ export function generateIslands(map) {
     fillCircle(map, centerX, centerY, mainRadius / 3);
 
     // Smaller islands around
-    const numSmallIslands = 3 + Math.floor(Math.random() * 4);
+    const numSmallIslands = 3 + Math.floor(rand(map) * 4);
     for (let i = 0; i < numSmallIslands; i++) {
         const angle = (i / numSmallIslands) * Math.PI * 2;
-        const dist = mainRadius + 2 + Math.random() * 3;
+        const dist = mainRadius + 2 + rand(map) * 3;
         const ix = Math.floor(centerX + Math.cos(angle) * dist);
         const iy = Math.floor(centerY + Math.sin(angle) * dist);
-        const radius = 2 + Math.random() * 2;
+        const radius = 2 + rand(map) * 2;
         carveCircle(map, ix, iy, radius);
 
         // Bridge to main
@@ -247,7 +252,7 @@ export function generateMaze(map) {
         if (neighbors.length === 0) {
             stack.pop();
         } else {
-            const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+            const next = neighbors[Math.floor(rand(map) * neighbors.length)];
             visited.add(`${next.x},${next.y}`);
             map.tiles[next.y * map.width + next.x].blocked = false;
 
@@ -263,7 +268,7 @@ export function generateMaze(map) {
 
     // Widen corridors randomly
     for (let i = 0; i < map.tiles.length; i++) {
-        if (!map.tiles[i].blocked && Math.random() < 0.3) {
+        if (!map.tiles[i].blocked && rand(map) < 0.3) {
             const x = i % map.width;
             const y = Math.floor(i / map.width);
             const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
@@ -291,7 +296,7 @@ export function generateSimple(map, holePercentage = 0.2) {
     let attempts = 0;
 
     while (holesCreated < targetHoles && attempts < targetHoles * 10) {
-        const idx = Math.floor(Math.random() * map.tiles.length);
+        const idx = Math.floor(rand(map) * map.tiles.length);
         if (!map.tiles[idx].blocked) {
             map.tiles[idx].blocked = true;
             if (arePlayableTilesConnected(map)) {
@@ -338,7 +343,7 @@ export function carveCircle(map, cx, cy, radius) {
     for (let y = 0; y < map.height; y++) {
         for (let x = 0; x < map.width; x++) {
             const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-            const noise = (Math.random() - 0.5) * radius * 0.3;
+            const noise = (rand(map) - 0.5) * radius * 0.3;
             if (dist + noise < radius) {
                 map.tiles[y * map.width + x].blocked = false;
             }

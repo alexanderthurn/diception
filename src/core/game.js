@@ -2,6 +2,7 @@ import { MapManager } from './map.js';
 import { CombatManager } from './combat.js';
 import { ReinforcementManager } from './reinforcement.js';
 import { GAME } from './constants.js';
+import { mulberry32 } from './rng.js';
 
 export class Game {
     constructor() {
@@ -17,6 +18,14 @@ export class Game {
         this.turnLimitReached = false; // Set when game ends due to turn limit
         this.maxDice = 9;
         this.diceSides = 6; // Default to standard 6-sided dice
+        this.fullBoardRule = 'nothing';
+        this._fullBoardRuleFired = false;
+        this.fullBoardResolution = false;
+        /** Set between full-board rule resolve and `confirmFullBoardResolution` (UI reveal). */
+        this._pendingFullBoardWinner = null;
+        /** Max attacks per turn for the active player (0 = unlimited). */
+        this.attacksPerTurn = 0;
+        this.attacksUsedThisTurn = 0;
 
         // Event listeners
         this.listeners = {};
@@ -48,6 +57,12 @@ export class Game {
         this.gameOver = false;
         this.winner = null;
         this.turnLimitReached = false;
+        this.fullBoardRule = 'nothing';
+        this._fullBoardRuleFired = false;
+        this.fullBoardResolution = false;
+        this._pendingFullBoardWinner = null;
+        this.attacksPerTurn = 0;
+        this.attacksUsedThisTurn = 0;
         // Reset map to empty
         this.map.generateMap(0, 0, [], this.maxDice, 'empty');
         this.emit('gameReset');
@@ -63,6 +78,14 @@ export class Game {
         this.maxDice = config.maxDice || 9;
         this.diceSides = config.diceSides || 6;
         this.gameMode = config.gameMode || 'classic';
+        this.fullBoardRule = config.fullBoardRule || 'nothing';
+        this._fullBoardRuleFired = false;
+        this.fullBoardResolution = false;
+        this._pendingFullBoardWinner = null;
+        this.attacksPerTurn = config.attacksPerTurn ?? 0;
+        this.attacksUsedThisTurn = 0;
+
+        const rng = Number.isFinite(config.mapSeed) ? mulberry32(config.mapSeed) : Math.random;
 
         const totalPlayers = config.humanCount + config.botCount;
 
@@ -90,7 +113,7 @@ export class Game {
 
         // Shuffle players to randomize starting player
         for (let i = this.players.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
+            const j = Math.floor(rng() * (i + 1));
             [this.players[i], this.players[j]] = [this.players[j], this.players[i]];
         }
 
@@ -98,14 +121,14 @@ export class Game {
 
         // Generate map with the specified style
         if (config.predefinedMap) {
-            this.map.generateMap(config.mapWidth, config.mapHeight, this.players, this.maxDice, 'preset', config.predefinedMap.tiles);
+            this.map.generateMap(config.mapWidth, config.mapHeight, this.players, this.maxDice, 'preset', config.predefinedMap.tiles, rng);
         } else {
-            this.map.generateMap(config.mapWidth, config.mapHeight, this.players, this.maxDice, config.mapStyle || 'random');
+            this.map.generateMap(config.mapWidth, config.mapHeight, this.players, this.maxDice, config.mapStyle || 'random', null, rng);
         }
 
         // Apply Game Modes
         if (this.gameMode === 'fair') {
-            this.applyFairStartMode();
+            this.applyFairStartMode(rng);
         } else if (this.gameMode === 'madness') {
             this.applyMadnessMode();
         } else if (this.gameMode === '2of2') {
@@ -116,7 +139,8 @@ export class Game {
         this.startTurn();
     }
 
-    applyFairStartMode() {
+    applyFairStartMode(rng) {
+        const rnd = rng || Math.random;
         // Ensure all players have the same total dice count
         const stats = this.players.map(p => {
             const tiles = this.map.getTilesByOwner(p.id);
@@ -137,7 +161,7 @@ export class Game {
             const reducibleTiles = s.tiles.filter(t => t.dice > 1);
 
             while (excess > 0 && reducibleTiles.length > 0) {
-                const randomIndex = Math.floor(Math.random() * reducibleTiles.length);
+                const randomIndex = Math.floor(rnd() * reducibleTiles.length);
                 const tile = reducibleTiles[randomIndex];
 
                 tile.dice--;
@@ -187,16 +211,25 @@ export class Game {
         try {
             // attackingPlayerId is provided in parallel modes where the attacker
             // may differ from currentPlayer.
+            const activePid = attackingPlayerId ?? this.currentPlayer.id;
             const result = this.combat.resolveAttack({
                 map: this.map,
-                currentPlayerId: attackingPlayerId ?? this.currentPlayer.id,
+                currentPlayerId: activePid,
                 diceSides: this.diceSides
             }, fromX, fromY, toX, toY);
+
+            if (!result.error && this.attacksPerTurn > 0 && activePid === this.currentPlayer.id) {
+                this.attacksUsedThisTurn++;
+            }
 
             this.checkWinCondition();
             this.emit('attackResult', result);
             if (result.won) {
                 // this.checkRowColumnCompletion(result.to.x, result.to.y, result.attackerId);
+            }
+
+            if (!this.gameOver) {
+                this.tryFullBoardRule(true);
             }
 
             return result;
@@ -237,6 +270,10 @@ export class Game {
                 return;
             }
 
+            if (!this.gameOver) {
+                this.tryFullBoardRule();
+            }
+
             this.startTurn();
         };
 
@@ -249,9 +286,155 @@ export class Game {
 
     startTurn() {
         if (this.gameOver) return;
+        this.attacksUsedThisTurn = 0;
         this.emit('turnStart', { player: this.currentPlayer });
 
         // If bot, trigger AI (handled by main loop or AI controller listening to events)
+    }
+
+    attacksRemaining() {
+        if (!this.attacksPerTurn || this.attacksPerTurn <= 0) return Infinity;
+        return Math.max(0, this.attacksPerTurn - this.attacksUsedThisTurn);
+    }
+
+    _allPlayableTilesAtMaxDice() {
+        for (const tile of this.map.tiles) {
+            if (tile.blocked) continue;
+            if (tile.dice < this.maxDice) return false;
+        }
+        return true;
+    }
+
+    /** Unique tile.owner values on non-blocked cells (ignores null/undefined). */
+    _distinctPlayableOwners() {
+        const ids = new Set();
+        for (const tile of this.map.tiles) {
+            if (tile.blocked) continue;
+            const o = tile.owner;
+            if (o === undefined || o === null) continue;
+            ids.add(o);
+        }
+        return ids;
+    }
+
+    tryFullBoardRule(fromAttack = false) {
+        if (this.gameOver || !this.fullBoardRule || this.fullBoardRule === 'nothing') return;
+        if (!this._allPlayableTilesAtMaxDice()) return;
+
+        const ownerIds = this._distinctPlayableOwners();
+        if (ownerIds.size === 1) {
+            const onlyId = ownerIds.values().next().value;
+            const winner = this.players.find((p) => p.id === onlyId);
+            if (winner) {
+                this.gameOver = true;
+                this.winner = winner;
+                this.fullBoardResolution = false;
+                this.emit('gameOver', { winner: this.winner });
+            }
+            return;
+        }
+
+        const rule = this.fullBoardRule;
+
+        if (rule === 'raise_max_dice') {
+            if (this.maxDice >= GAME.MAX_DICE_PER_TERRITORY) {
+                this.resolveFullBoardWinner('most_territories');
+                return;
+            }
+            this.maxDice = Math.min(this.maxDice + 2, GAME.MAX_DICE_PER_TERRITORY);
+            this.map.maxDice = this.maxDice;
+            this.emit('maxDiceRaised', { maxDice: this.maxDice });
+            return;
+        }
+
+        if (this._fullBoardRuleFired) return;
+        this._fullBoardRuleFired = true;
+
+        if (rule === 'most_territories' || rule === 'biggest_territory') {
+            this.resolveFullBoardWinner(rule);
+            return;
+        }
+        if (rule === 'random_picker') {
+            this.emit('fullBoardRandomPick', { fromAttack });
+            return;
+        }
+        if (rule === 'autoplay_humans') {
+            this.emit('fullBoardRule', { rule, fromAttack });
+            return;
+        }
+
+        this._fullBoardRuleFired = false;
+    }
+
+    resolveFullBoardWinner(rule) {
+        let best = null;
+
+        if (rule === 'most_territories') {
+            let bestN = -1;
+            let bestDice = -1;
+            for (const p of this.players) {
+                if (!p.alive) continue;
+                const tiles = this.map.getTilesByOwner(p.id);
+                const n = tiles.length;
+                const td = tiles.reduce((s, t) => s + t.dice, 0) + (p.storedDice || 0);
+                if (n > bestN || (n === bestN && td > bestDice)) {
+                    bestN = n;
+                    bestDice = td;
+                    best = p;
+                }
+            }
+        } else if (rule === 'biggest_territory') {
+            let bestR = -1;
+            let bestDice = -1;
+            for (const p of this.players) {
+                if (!p.alive) continue;
+                const r = this.map.findLargestConnectedRegion(p.id);
+                const tiles = this.map.getTilesByOwner(p.id);
+                const td = tiles.reduce((s, t) => s + t.dice, 0) + (p.storedDice || 0);
+                if (r > bestR || (r === bestR && td > bestDice)) {
+                    bestR = r;
+                    bestDice = td;
+                    best = p;
+                }
+            }
+        }
+
+        if (!best) {
+            const alive = this.players.filter(p => p.alive);
+            best = alive[0] || this.players[0] || null;
+        }
+
+        this._pendingFullBoardWinner = best;
+        if (this.muted) {
+            this.confirmFullBoardResolution();
+            return;
+        }
+        this.emit('fullBoardWinnerPending', { rule, winnerId: best != null ? best.id : null });
+    }
+
+    /** Call after UI reveal for most_territories / biggest_territory full-board end. */
+    confirmFullBoardResolution() {
+        const best = this._pendingFullBoardWinner;
+        this._pendingFullBoardWinner = null;
+        if (this.gameOver) return;
+
+        this.gameOver = true;
+        this.winner = best;
+        this.fullBoardResolution = true;
+        this.emit('gameOver', { winner: this.winner, fullBoardResolution: true });
+    }
+
+    declareWinnerFromRandomFullBoardTile(x, y) {
+        const t = this.map.getTile(x, y);
+        const ownerId = t != null ? t.owner : -1;
+        this.winner = this.players.find(p => p.alive && p.id === ownerId) || null;
+        if (!this.winner) {
+            const alive = this.players.filter(p => p.alive);
+            this.winner = alive[Math.floor(Math.random() * alive.length)] || null;
+        }
+        this.gameOver = true;
+        this.fullBoardResolution = true;
+        this.emit('gameOver', { winner: this.winner, fullBoardResolution: true });
     }
 
     checkWinCondition() {
@@ -260,7 +443,9 @@ export class Game {
         for (const tile of this.map.tiles) {
             // Skip blocked tiles - they have no owner
             if (tile.blocked) continue;
-            activePlayers.add(tile.owner);
+            const o = tile.owner;
+            if (o === undefined || o === null) continue;
+            activePlayers.add(o);
         }
 
         // Mark dead players
@@ -287,6 +472,7 @@ export class Game {
      */
     determineTurnLimitWinner() {
         this.turnLimitReached = true;
+        this.fullBoardResolution = false;
         this.gameOver = true;
 
         // Calculate total dice for each alive player (territory dice + stored/reserve dice)

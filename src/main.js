@@ -640,6 +640,7 @@ async function init() {
         game, renderer, effectsManager, turnHistory,
         configManager, scenarioBrowser, scenarioManager
     );
+    gameStarter.setMapEditor(mapEditor);
     scenarioBrowser.setOnStartGame(() => gameStarter.startGame());
     scenarioBrowserOpen = () => scenarioBrowser.open();
     sessionManagerRef = sessionManager;
@@ -1165,9 +1166,9 @@ async function init() {
         // Initialize gameStarter's state so it's available during turn handlers
         // This matches what happens in gameStarter.startGame()
         gameStarter.gameSpeed = config.gameSpeed;
-        gameStarter.turnTimeLimit = config.turnTimeLimit ?? 0;
+        gameStarter.attacksPerTurn = config.attacksPerTurn ?? 0;
 
-        sessionManager.checkResume(
+        const resumed = sessionManager.checkResume(
             createAI,
             () => gameStarter.clearPlayerAIs(),
             gameStarter.getPlayerAIs(),
@@ -1176,6 +1177,9 @@ async function init() {
             config.gameSpeed,
             config.effectsQuality
         );
+        if (resumed) {
+            gameStarter.attacksPerTurn = game.attacksPerTurn ?? 0;
+        }
     }, 100);
 
     // Save Scenario
@@ -1247,7 +1251,6 @@ function setupFPSCounter(renderer) {
 function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboard, toggleAutoplay, inputManager) {
     const endTurnBtn = document.getElementById('end-turn-btn');
     const newGameBtn = document.getElementById('new-game-btn');
-    const retryGameBtn = document.getElementById('retry-game-btn');
     const autoWinBtn = document.getElementById('auto-win-btn');
     const setupModal = document.getElementById('setup-modal');
 
@@ -1273,35 +1276,20 @@ function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboar
 
     // New Game Button — now opens the pause menu (wired in setupMenuNavigation)
 
-    // Retry Current Game Button
-    if (retryGameBtn) {
-        retryGameBtn.addEventListener('click', () => {
-            sessionManager.restartCurrentGame((msg, type) => {
-                const gameLog = sessionManager.gameLog;
-                if (gameLog && gameLog.addEntry) {
-                    gameLog.addEntry(msg, type);
-                }
-            }, gameStarter.getAutoplayPlayers());
-        });
-    }
-
-    // Auto-Win Button
+    // Auto-Win Button — toggles autoplay for the current human only (never clears other humans)
     autoWinBtn.addEventListener('click', (e) => {
         if (e.isGamepadSimulated && e.gamepadIndex !== undefined &&
             !inputManager.canGamepadControlPlayer(e.gamepadIndex, game.currentPlayer?.id)) return;
+        const cp = game.currentPlayer;
+        if (!cp || cp.isBot) return;
         const autoplayPlayers = gameStarter.getAutoplayPlayers();
-        if (autoplayPlayers.size > 0) {
-            autoplayPlayers.clear();
+        toggleAutoplay(cp.id);
+        if (autoplayPlayers.has(cp.id)) {
+            autoWinBtn.classList.add('active');
+        } else {
             autoWinBtn.classList.remove('active');
-            playerDashboard.update();
-        } else if (game.currentPlayer && !game.currentPlayer.isBot) {
-            toggleAutoplay(game.currentPlayer.id);
-            if (autoplayPlayers.has(game.currentPlayer.id)) {
-                autoWinBtn.classList.add('active');
-            } else {
-                autoWinBtn.classList.remove('active');
-            }
         }
+        playerDashboard.update();
     });
 
     // Connect InputController end turn callback
@@ -1957,8 +1945,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
     document.getElementById('pause-retry-btn')?.addEventListener('click', () => {
         pauseModal.classList.add('hidden');
-        const retryBtn = document.getElementById('retry-game-btn');
-        retryBtn?.click();
+        gameStarter.startFreshSameSettings();
     });
 
     document.getElementById('pause-mainmenu-btn')?.addEventListener('click', async () => {

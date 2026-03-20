@@ -5,6 +5,7 @@
 
 // === GAME DEFAULTS ===
 export const GAME = {
+    /** Safety cap so bot / autoplay loops cannot run unbounded (not the user-facing turn limit). */
     MAX_TURNS: 999,
     DEFAULT_MAX_DICE: 9,
     DEFAULT_DICE_SIDES: 6,

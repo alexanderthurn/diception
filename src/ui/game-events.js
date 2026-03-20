@@ -45,10 +45,8 @@ export class GameEventManager {
 
         this.scenarioBrowser = null;
 
-        // Turn timer state
+        // Attack limit display (reuses #turn-timer element)
         this._timerEl = document.getElementById('turn-timer');
-        this._timerInterval = null;
-        this._timerSecsLeft = 0;
     }
 
     setScenarioBrowser(scenarioBrowser) {
@@ -88,6 +86,10 @@ export class GameEventManager {
         this.game.on('reinforcements', (data) => this.handleReinforcements(data));
         this.game.on('gameOver', (data) => this.handleGameOver(data));
         this.game.on('gameStart', () => this.handleGameStart());
+        this.game.on('fullBoardRule', (payload) => this.handleFullBoardRule(payload));
+        this.game.on('fullBoardRandomPick', () => this.handleFullBoardRandomPick());
+        this.game.on('fullBoardWinnerPending', (payload) => { void this.handleFullBoardWinnerPending(payload); });
+        this.game.on('maxDiceRaised', (data) => this.handleMaxDiceRaised(data));
 
         // Refresh hints whenever a gamepad connects/disconnects so the correct
         // controller icon is shown immediately (before the first button press).
@@ -150,8 +152,7 @@ export class GameEventManager {
     }
 
     handleAutomatedTurn(player, playerAIs, gameSpeed, autoplayPlayers) {
-        // Stop turn timer during bot turns
-        this.stopTurnTimer();
+        this.hideAttackLimitDisplay();
 
         // Hide End Turn button during bot turns
         this.endTurnBtn.classList.add('hidden');
@@ -333,8 +334,7 @@ export class GameEventManager {
         this.updateEndTurnHint(gameSpeed);
         this.updateMenuHint(gameSpeed);
 
-        // Start turn timer (0 = unlimited)
-        this.startTurnTimer(this.gameStarter.getTurnTimeLimit());
+        this.updateAttackLimitDisplay();
     }
 
     /** 
@@ -378,76 +378,61 @@ export class GameEventManager {
         this.newGameHint.classList.add('hidden');
     }
 
-    /** Start the per-turn countdown timer. seconds=0 means unlimited (hidden). */
-    startTurnTimer(seconds) {
-        this.stopTurnTimer();
+    updateAttackLimitDisplay() {
         if (!this._timerEl) return;
-        if (!seconds || seconds <= 0) {
+        const lim = this.gameStarter.getAttacksPerTurn();
+        if (!lim || lim <= 0) {
             this._timerEl.classList.add('hidden');
             return;
         }
-
-        this._timerSecsLeft = seconds;
+        const rem = this.game.attacksRemaining();
         this._timerEl.classList.remove('hidden');
-        this._timerEl.classList.remove('timer-urgent');
-        this._timerEl.textContent = seconds;
-
-        this._timerInterval = setInterval(() => {
-            this._timerSecsLeft--;
-            this._timerEl.textContent = this._timerSecsLeft;
-
-            if (this._timerSecsLeft <= 5) {
-                this._timerEl.classList.add('timer-urgent');
-                if (this.sfx) this.sfx.timeTick(this._timerSecsLeft);
-            }
-
-            if (this._timerSecsLeft <= 0) {
-                this.stopTurnTimer();
-                // Auto-end the human turn
-                if (!this.game.gameOver) this.game.endTurn();
-            }
-        }, 1000);
+        this._timerEl.textContent = rem;
+        this._timerEl.title = 'Attacks remaining this turn';
+        if (rem <= 1) {
+            this._timerEl.classList.add('timer-urgent');
+        } else {
+            this._timerEl.classList.remove('timer-urgent');
+        }
     }
 
-    /** Stop and hide the turn timer. */
-    stopTurnTimer() {
-        if (this._timerInterval) {
-            clearInterval(this._timerInterval);
-            this._timerInterval = null;
-        }
-        this._timerPaused = false;
+    hideAttackLimitDisplay() {
         if (this._timerEl) this._timerEl.classList.add('hidden');
     }
 
-    /** Pause the turn timer (freeze countdown, keep display visible). */
-    pauseTurnTimer() {
-        if (!this._timerInterval || this._timerPaused) return;
-        clearInterval(this._timerInterval);
-        this._timerInterval = null;
-        this._timerPaused = true;
+    /** @deprecated was interval-based turn timer; kept as no-op for supply animation hook */
+    stopTurnTimer() {
+        this.hideAttackLimitDisplay();
     }
 
-    /** Resume a previously paused turn timer. */
+    pauseTurnTimer() {
+        /* attack limit is not time-based */
+    }
+
     resumeTurnTimer() {
-        if (!this._timerPaused || !this._timerEl) return;
-        this._timerPaused = false;
-        if (this._timerSecsLeft <= 0) return;
+        /* attack limit is not time-based */
+    }
 
-        this._timerInterval = setInterval(() => {
-            this._timerSecsLeft--;
-            this._timerEl.textContent = this._timerSecsLeft;
+    async handleFullBoardRandomPick() {
+        const tile = await (this.renderer.playFullBoardRandomPick?.() ?? Promise.resolve(null));
+        if (!tile || this.game.gameOver) return;
+        this.game.declareWinnerFromRandomFullBoardTile(tile.x, tile.y);
+    }
 
-            if (this._timerSecsLeft <= 5) {
-                this._timerEl.classList.add('timer-urgent');
-                if (this.sfx) this.sfx.timeTick(this._timerSecsLeft);
+    async handleFullBoardWinnerPending(payload) {
+        const wid = payload?.winnerId;
+        try {
+            if (wid != null) {
+                await this.renderer.playFullBoardWinnerReveal?.(payload.rule, wid);
             }
+        } finally {
+            this.game.confirmFullBoardResolution();
+        }
+    }
 
-            if (this._timerSecsLeft <= 0) {
-                this.stopTurnTimer();
-                // Auto-end the human turn
-                if (!this.game.gameOver) this.game.endTurn();
-            }
-        }, 1000);
+    handleMaxDiceRaised(data) {
+        if (this.addLog) this.addLog(`Board full — max dice per territory is now ${data.maxDice}.`, 'info');
+        if (this.renderer?.forceUpdate) this.renderer.forceUpdate(false);
     }
 
     _flushStreakAchievement() {
@@ -573,6 +558,55 @@ export class GameEventManager {
                 this.playerDashboard.rumbleActive(result.won);
             }
         }
+
+        this.updateAttackLimitDisplay();
+
+        const lim = this.gameStarter.getAttacksPerTurn();
+        if (
+            lim > 0 &&
+            this.game.attacksRemaining() <= 0 &&
+            this.game.currentPlayer &&
+            result.attackerId === this.game.currentPlayer.id &&
+            !this.game.currentPlayer.isBot &&
+            !autoplayPlayers.has(result.attackerId) &&
+            !this.game.gameOver
+        ) {
+            setTimeout(() => {
+                if (!this.game.gameOver) this.game.endTurn();
+            }, 320);
+        }
+    }
+
+    handleFullBoardRule({ rule, fromAttack }) {
+        if (rule !== 'autoplay_humans') return;
+
+        const autoplayPlayers = this.gameStarter.getAutoplayPlayers();
+        const playerAIs = this.gameStarter.getPlayerAIs();
+        const gameSpeed = this.gameStarter.getGameSpeed();
+
+        for (const p of this.game.players) {
+            if (!p.isBot && p.alive) {
+                autoplayPlayers.add(p.id);
+                if (!playerAIs.has(p.id)) {
+                    playerAIs.set(p.id, createAI('autoplay', this.game, p.id));
+                }
+            }
+        }
+
+        if (this.playerDashboard) this.playerDashboard.update();
+
+        const cur = this.game.currentPlayer;
+        if (
+            !fromAttack ||
+            !cur ||
+            cur.isBot ||
+            !autoplayPlayers.has(cur.id) ||
+            this.game.gameOver
+        ) {
+            return;
+        }
+
+        this.handleAutomatedTurn(cur, playerAIs, gameSpeed, autoplayPlayers);
     }
 
     handlePlayerEliminated(player) {
@@ -627,9 +661,12 @@ export class GameEventManager {
 
         const name = this.getPlayerName(data.winner);
         const turnLimitReached = data.turnLimitReached || false;
+        const fullBoardResolution = data.fullBoardResolution || false;
         if (this.addLog) {
             if (turnLimitReached) {
                 this.addLog(`⏱️ Turn limit reached! ${name} wins by dice count!`, 'death');
+            } else if (fullBoardResolution) {
+                this.addLog(`🎯 Board settled — ${name} wins!`, 'death');
             } else {
                 this.addLog(`🏆 ${name} wins the game!`, 'death');
             }
@@ -637,10 +674,10 @@ export class GameEventManager {
 
         // Determine if human played and won
         const humanPlayed = this.game.players.some(p => !p.isBot);
-        const humanWon = !data.winner.isBot;
+        const humanWon = data.winner && !data.winner.isBot;
 
         // Record the win with human stats
-        if (this.highscoreManager) {
+        if (this.highscoreManager && data.winner) {
             this.highscoreManager.recordWin(name, humanPlayed, humanWon);
         }
 
@@ -656,7 +693,7 @@ export class GameEventManager {
         // 🏆 ACHIEVEMENT: ACH_PURE_HUMANS
         if (allHumans && this.game.players.length >= 2) fireAchievementEvent('pureHumans');
 
-        if (humanWon) {
+        if (humanWon && data.winner) {
             // 🏆 ACHIEVEMENT: ACH_FIRST_WIN
             incrementStat('gamesWon');
 
@@ -665,7 +702,7 @@ export class GameEventManager {
         }
 
         // Mark campaign level as solved when human wins
-        if (humanWon) {
+        if (humanWon && data.winner) {
             const owner = localStorage.getItem('dicy_loadedCampaign');
             const idxStr = localStorage.getItem('dicy_loadedLevelIndex');
             if (owner != null && idxStr != null) {
@@ -678,7 +715,7 @@ export class GameEventManager {
         }
 
         // Play victory or defeat sound
-        if (this.sfx) {
+        if (this.sfx && data.winner) {
             if (!data.winner.isBot) {
                 this.sfx.victory();
             } else {
@@ -704,8 +741,9 @@ export class GameEventManager {
                 totalDiceLost += ps.diceLost;
             });
 
+            const settleNote = turnLimitReached ? ' <em>Turn limit reached!</em>' : (fullBoardResolution ? ' <em>Board settled.</em>' : '');
             let statsHtml = `
-                <p class="dice-obituary">A total of <strong>${totalDiceLost}</strong> dice lost their lives in this battle in <strong>${gameStats.gameDuration}</strong> rounds.${turnLimitReached ? ' <em>Turn limit reached!</em>' : ''}</p>
+                <p class="dice-obituary">A total of <strong>${totalDiceLost}</strong> dice lost their lives in this battle in <strong>${gameStats.gameDuration}</strong> rounds.${settleNote}</p>
             `;
 
             // Elimination timeline (redesigned to horizontal sentence)
@@ -732,12 +770,12 @@ export class GameEventManager {
                 }
             });
 
-            if (turnLimitReached) {
+            if (turnLimitReached || fullBoardResolution) {
                 // Show all surviving players — winner gets ✓ (green), others get ≈ (yellow)
                 const survivors = this.game.players.filter(p => p.alive);
                 survivors.forEach(p => {
                     const pName = this.getPlayerName(p);
-                    if (p.id === data.winner.id) {
+                    if (data.winner && p.id === data.winner.id) {
                         statsHtml += `<span class="timeline-entry winner"><span class="symbol">✓</span> ${pName}</span> `;
                     } else {
                         statsHtml += `<span class="timeline-entry survivor"><span class="symbol">≈</span> ${pName}</span> `;
@@ -804,7 +842,6 @@ export class GameEventManager {
 
             if (!campaign) {
                 buttons = [{ text: 'Main Menu', value: 'restart', className: 'tron-btn' }];
-                if (this.turnHistory.hasInitialState() && !humanWon) buttons.push({ text: 'Play Again', value: 'clone', className: 'tron-btn' });
             } else if (campaignFinished) {
                 title = 'CAMPAIGN COMPLETE!';
                 const celebrationEl = document.createElement('p');
@@ -814,9 +851,6 @@ export class GameEventManager {
                 content.insertBefore(celebrationEl, content.firstChild);
             }
 
-            if (campaign && this.turnHistory.hasInitialState() && !humanWon) {
-                buttons.push({ text: 'Retry', value: 'clone', className: 'tron-btn' });
-            }
             if (campaign) {
                 if (hasNextLevel) {
                     buttons.push({ text: 'Next Level', value: 'next', className: 'tron-btn primary' });
@@ -831,10 +865,19 @@ export class GameEventManager {
         }
         if (buttons.length === 0) {
             buttons.push({ text: 'Main Menu', value: 'restart', className: 'tron-btn' });
-            if (this.turnHistory.hasInitialState()) {
-                buttons.push({ text: 'Play Again', value: 'clone', className: 'tron-btn' });
+        }
+
+        if (!campaignFinished && !buttons.some(b => b.value === 'rematch')) {
+            const rematchBtn = { text: 'Rematch', value: 'rematch', className: 'tron-btn' };
+            const restartIdx = buttons.findIndex(b => b.value === 'restart');
+            if (restartIdx >= 0) {
+                buttons.splice(restartIdx + 1, 0, rematchBtn);
+            } else {
+                buttons.unshift(rematchBtn);
             }
         }
+
+        await new Promise((r) => setTimeout(r, 1000));
 
         const choice = await Dialog.show({
             title,
@@ -848,8 +891,9 @@ export class GameEventManager {
                 this.scenarioBrowser.clearPendingScenario();
             }
             this.sessionManager.quitToMainMenu();
-        } else if (choice === 'clone') {
-            this.sessionManager.restartCurrentGame(this.addLog, this.gameStarter.getAutoplayPlayers());
+        } else if (choice === 'rematch') {
+            document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
+            this.gameStarter.startFreshSameSettings();
         } else if (choice === 'campaign') {
             await this.sessionManager.quitToCampaignScreen();
         } else if (choice === 'next') {
@@ -880,5 +924,7 @@ export class GameEventManager {
 
         // Clear turn history
         this.turnHistory.clear();
+
+        this.hideAttackLimitDisplay();
     }
 }
