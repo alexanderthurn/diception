@@ -508,8 +508,8 @@ export class GameEventManager {
     }
 
     /**
-     * `time.ogg` once per real second while turn or per-attack clock is in the last 5s.
-     * Pitch rises toward zero via SoundManager.timeTick (beeps start at 5s left).
+     * `time.ogg` once per real second while turn or per-attack clock matches red HUD (4…1 s, same as urgent styling).
+     * Pitch rises toward zero via SoundManager.timeTick (first beep at 4s left).
      */
     _tryTimerCountdownSfx() {
         if (!this.sfx?.timeTick) return;
@@ -517,7 +517,7 @@ export class GameEventManager {
         const turnSecCfg = this.game.secondsPerTurn ?? 0;
         const atkSecCfg = this.game.secondsPerAttack ?? 0;
         const bandLo = 1;
-        const bandHi = 5;
+        const bandHi = 4;
         const cand = [];
         if (!parallel && turnSecCfg > 0 && this._wallClockActive && this._wallSecondsLeft > 0) {
             const w = this._wallSecondsLeft;

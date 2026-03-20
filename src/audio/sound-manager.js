@@ -148,11 +148,11 @@ export class SoundManager {
     }
 
     /**
-     * Timer tick sound — pitch rises as time runs out.
-     * secsLeft: 5 → normal pitch, 1 → highest pitch (5 semitones up)
+     * Timer tick sound — pitch rises as time runs out (aligned with red HUD: 4…1 s left).
+     * secsLeft: 4 → normal pitch, 1 → highest pitch (3 semitones up)
      */
     timeTick(secsLeft) {
-        const semitones = Math.max(0, 5 - secsLeft); // 0 at 5s, 4 at 1s
+        const semitones = Math.max(0, 4 - secsLeft); // 0 at 4s max, 3 at 1s
         const speed = Math.pow(2, semitones / 12);
         this._play('time', { speed });
     }

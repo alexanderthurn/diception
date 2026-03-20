@@ -46,6 +46,18 @@ function migrateTurnLimitStorage() {
     }
 }
 
+/** Setup Attack time select: ∞, 5, 10, 15, 30 — maps legacy `60` → `30`. */
+const ATTACK_SECONDS_UI_ALLOWED = ['0', '5', '10', '15', '30'];
+
+function normalizeAttackSecondsUi(raw) {
+    const s = String(raw ?? '0').trim();
+    if (ATTACK_SECONDS_UI_ALLOWED.includes(s)) return s;
+    const n = Number.parseInt(s, 10);
+    if (n === 60) return '30';
+    if (n === 5 || n === 10 || n === 15 || n === 30) return String(n);
+    return '0';
+}
+
 export class ConfigManager {
     constructor() {
         // Map size presets: slider value -> {width, height, label}
@@ -145,7 +157,12 @@ export class ConfigManager {
         migrateTurnLimitStorage();
         const savedAttacksPerTurn = localStorage.getItem('dicy_attacksPerTurn') || '0';
         const savedSecondsPerTurn = localStorage.getItem('dicy_secondsPerTurn') || '0';
-        const savedSecondsPerAttack = localStorage.getItem('dicy_secondsPerAttack') || '0';
+        let savedSecondsPerAttack = localStorage.getItem('dicy_secondsPerAttack') || '0';
+        const normSecondsPerAttack = normalizeAttackSecondsUi(savedSecondsPerAttack);
+        if (normSecondsPerAttack !== savedSecondsPerAttack) {
+            savedSecondsPerAttack = normSecondsPerAttack;
+            localStorage.setItem('dicy_secondsPerAttack', normSecondsPerAttack);
+        }
 
         const savedFullBoardRule = localStorage.getItem('dicy_fullBoardRule') || 'nothing';
 
@@ -169,7 +186,7 @@ export class ConfigManager {
         el.effectsQualityInput.value = savedEffectsQuality;
         if (el.turnTimeLimitInput) el.turnTimeLimitInput.value = savedAttacksPerTurn;
         if (el.turnSecondsLimitInput) el.turnSecondsLimitInput.value = savedSecondsPerTurn;
-        if (el.attackSecondsLimitInput) el.attackSecondsLimitInput.value = savedSecondsPerAttack;
+        if (el.attackSecondsLimitInput) el.attackSecondsLimitInput.value = normSecondsPerAttack;
         if (el.fullBoardRuleInput) el.fullBoardRuleInput.value = savedFullBoardRule;
         this.updateEffectsQualityClass(savedEffectsQuality);
 
@@ -500,7 +517,7 @@ export class ConfigManager {
             if (elc.turnTimeLimitInput != null && ap != null) elc.turnTimeLimitInput.value = String(ap);
             if (elc.turnSecondsLimitInput != null && sec != null) elc.turnSecondsLimitInput.value = String(sec);
             if (elc.attackSecondsLimitInput != null && level.secondsPerAttack != null) {
-                elc.attackSecondsLimitInput.value = String(level.secondsPerAttack);
+                elc.attackSecondsLimitInput.value = normalizeAttackSecondsUi(level.secondsPerAttack);
             }
         } else {
             this.updateConfigFromScenario(level);
@@ -581,7 +598,7 @@ export class ConfigManager {
             el.turnTimeLimitInput.value = String(scenario.attacksPerTurn);
         }
         if (scenario.secondsPerAttack != null && scenario.secondsPerAttack !== '' && el.attackSecondsLimitInput) {
-            el.attackSecondsLimitInput.value = String(scenario.secondsPerAttack);
+            el.attackSecondsLimitInput.value = normalizeAttackSecondsUi(scenario.secondsPerAttack);
         }
 
         this.syncSetupModsExpanderLive();
