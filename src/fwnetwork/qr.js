@@ -1,3 +1,19 @@
+import * as PIXI from 'pixi.js';
+import jsQR from 'jsqr';
+
+const getQueryParam = (key) => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(key);
+};
+
+function setUrlParam(name, value) {
+    let url = new URL(window.location.href);
+    let params = new URLSearchParams(url.search);
+    if (value) params.set(name, value);
+    url.search = params.toString();
+    window.history.replaceState({}, '', url);
+}
+
 
 
 var initDialog = (app) => {
@@ -14,10 +30,16 @@ var initDialog = (app) => {
 
   divButtonsColor.querySelectorAll("button").forEach((button) => {
       button.addEventListener('click', function() {
-          let color = button.dataset.color
-          app.color = new PIXI.Color(color)
-          app.settingsDialog.style.backgroundColor = app.color.toHex();
-          setUrlParam('color',color)
+          let rawColor = button.dataset.color
+          app.color = new PIXI.Color(rawColor.slice(1))
+          app.colorCode = rawColor
+          document.documentElement.style.setProperty('--pad-color', app.color.toHex());
+          if (button.dataset.bg) {
+              document.documentElement.style.setProperty('--pad-bg-image', button.dataset.bg);
+          } else {
+              document.documentElement.style.removeProperty('--pad-bg-image');
+          }
+          setUrlParam('color', rawColor)
           updateSettingsDialog(app)
       })
   })
@@ -34,6 +56,7 @@ var initDialog = (app) => {
 
   app.settingsDialog.addEventListener("close", () => {
           console.log("Dialog wurde geschlossen")
+          if (app.touchControl) app.touchControl.setControlsVisible(true);
           if (app.qrCodeReader) {
               app.qrCodeReader.onClose()
           }
@@ -62,9 +85,15 @@ var initDialog = (app) => {
       canvasElement.height = 0;
       canvasElement.width = 0;
       btnScan.hidden = false
+
+      const customizePanel = document.getElementById('customizePanel')
+      const btnCustomize = document.getElementById('btnCustomize')
+      const hasId = app.serverId && app.serverId !== ''
+      if (customizePanel) customizePanel.hidden = !hasId
+      if (btnCustomize) btnCustomize.hidden = hasId
+
       updateSettingsDialog(app)
-      //let dialogColor = new PIXI.Color([app.color.red*0.5, app.color.green*0.5, app.color.blue*0.5])
-      //app.settingsDialog.style.backgroundColor = app.color.toHex();
+      if (app.touchControl) app.touchControl.setControlsVisible(false);
       app.settingsDialog.showModal()
   }
 
@@ -110,7 +139,7 @@ var updateSettingsDialog = function(app) {
 
 
   divButtonsColor.querySelectorAll("button").forEach((button) => {
-    if (app.color?.value === button.dataset.color) {
+    if (app.colorCode === button.dataset.color) {
       button.classList.add('selected')
     } else {
       button.classList.remove('selected')
@@ -221,3 +250,5 @@ var startQRCode = function(app, callbackCode) {
         }
     }
 }
+
+export { initDialog, updateSettingsDialog, startQRCode, setUrlParam, getQueryParam };

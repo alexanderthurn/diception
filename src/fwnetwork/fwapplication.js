@@ -1,3 +1,5 @@
+import * as PIXI from 'pixi.js';
+
 class FWApplication extends PIXI.Application {
     constructor() {
         super()
@@ -79,3 +81,4 @@ class FWApplication extends PIXI.Application {
 }
 
 window.FWApplication = FWApplication
+export { FWApplication };

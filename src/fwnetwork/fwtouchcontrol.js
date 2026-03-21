@@ -1,100 +1,62 @@
-const getPixelPerCentimeter = (function() {
-    // Diese Variable existiert nur innerhalb dieses Scopes und speichert das Ergebnis
-    let cachedValue = null;
+import * as PIXI from 'pixi.js';
+import { FWNetworkGamepad } from './fwnetworkgamepad.js';
+import { FWNetwork } from './fwnetwork.js';
 
-    return function() {
-        // 1. Cache prüfen: Wenn wir den Wert schon haben, sofort zurückgeben
-        if (cachedValue !== null) {
-            return cachedValue;
-        }
+const FMOTE_CONNECTION_STATUS_OFF = 0;
+const FMOTE_CONNECTION_STATUS_INITIALIZNG = 1;
+const FMOTE_CONNECTION_STATUS_WORKING = 2;
+const FMOTE_CONNECTION_STATUS_ERROR = 3;
+const CONNECTION_STATUS_OFF = 0;
+const CONNECTION_STATUS_INITIALIZNG = 1;
+const CONNECTION_STATUS_WORKING = 2;
+const CONNECTION_STATUS_ERROR = 3;
+const version = '2.0.0';
 
-        // 2. Element dynamisch erstellen
-        const div = document.createElement('div');
-
-        // 3. Styling setzen:
-        // 'width: 1cm' ist das, was wir messen wollen.
-        // Die anderen Styles sorgen dafür, dass das Element unsichtbar ist
-        // und das Layout nicht verschiebt.
-        div.style.width = '1cm';
-        div.style.height = '1px';
-        div.style.position = 'absolute'; // Aus dem Fluss nehmen
-        div.style.visibility = 'hidden'; // Unsichtbar machen
-        div.style.left = '-9999px';      // Sicherstellen, dass es nirgends stört
-        div.style.boxSizing = 'content-box'; // Sicherstellen, dass padding/border nicht stören
-        div.style.margin = '0';
-        div.style.padding = '0';
-        div.style.border = 'none';
-
-        // 4. Kurzzeitig in den DOM hängen (notwendig zum Messen)
-        document.body.appendChild(div);
-
-        // 5. Messen
-        cachedValue = div.offsetWidth;
-
-        // 6. Aufräumen: Element sofort wieder entfernen
-        document.body.removeChild(div);
-
-        return cachedValue;
-    };
-})();
-
-
-function centimeterToPixel(cm) {
-    return cm * getPixelPerCentimeter()
+function getPixelPerCentimeter() {
+    const div = document.createElement('div');
+    div.style.width = '1cm';
+    div.style.height = '1px';
+    div.style.position = 'absolute';
+    div.style.visibility = 'hidden';
+    document.body.appendChild(div);
+    const px = div.offsetWidth;
+    document.body.removeChild(div);
+    return px;
 }
 
 class FWTouchControl extends PIXI.Container {
     constructor(app, options) {
         super(options);
         let self = this;
-        
-        this.x = options?.x || this.x;
-        this.y = options?.y || this.y;
-        this.wantedWidth = options?.wantedWidth ?? window.innerWidth;
-        this.wantedHeight = options?.wantedHeight ?? window.innerHeight;
-        this.isPassive = options?.isPassive ?? false;
-        this.layout = options?.layout ?? 'simple';
-        this.color = options?.color ?? new PIXI.Color(0xff0000);
-        this.showButtonLabels = options?.showButtonLabels ?? true;
-        this.showButtonHints = options?.showButtonHints ?? false;
-        this.isBitmapFont = options?.isBitmapFont ?? false;
-
-
-        this.textStyle = options?.textStyle ?? new PIXI.TextStyle({
+        const textStyle = new PIXI.TextStyle({
             fontFamily: 'Xolonium',
             fontStyle: 'Bold',
             fontSize: 64,
-            fill: '#000'
+            fill: '#ffffff'
         });
 
-
-        this.textStyleSmall = options?.textStyleSmall ?? new PIXI.TextStyle({
+        const textStyleSmall = new PIXI.TextStyle({
             fontFamily: 'Xolonium',
             fontStyle: 'Bold',
             fontSize: 48,
-            fill: '#000'
+            fill: '#ffffff'
         });
 
-        this.textStyleTitle = options?.textStyleTitle ?? new PIXI.TextStyle({
+        const textStyleTitle = new PIXI.TextStyle({
             fontFamily: 'Xolonium',
             fontStyle: 'Bold',
             fontSize: 32,
-            fill: '#000'
+            fill: '#ffffff'
         });
-
-    
-        this.textStyleHints = options?.textStyleHints ?? this.textStyle
         
         this.pointer = {pointerType: 'unknown', x: 0, y: 0, xCenter: undefined, yCenter: undefined, pressed: new Set(), events: {}};
         this.buttonContainers = [];
         this.axesContainers = [];
         this.connectionContainers = [];
         this.dpadCenterContainer = new PIXI.Container();
-        this.border = new PIXI.Graphics();
-        this.addChild(this.border);
 
-        this.title = new PIXI.Text({text: app.version ? 'F-Mote ' + app.version : 'F-Mote', style: this.textStyleTitle});
-        this.title.anchor.set(0.5, 1);
+        this.title = new PIXI.Text({text: 'F-Mote ' + version, style: textStyleTitle});
+        this.title.anchor.set(1, 0);
         this.title.alpha = 0.5;
         this.addChild(this.title);
           
@@ -104,34 +66,35 @@ class FWTouchControl extends PIXI.Container {
             let buttonContainer = new PIXI.Container();
             buttonContainer.buttonBackground = new PIXI.Graphics();
             
-            if ((i === 12 || i === 13 || i === 14 || i === 15)) {
-                buttonContainer.buttonBackground.rect(-radius, -radius, radius*2, radius*2);
-                let rot = 0;
-                if (i === 12) rot = 0;
-                else if (i === 13) rot = 180;
-                else if (i === 14) rot = 90;
-                else if (i === 15) rot = 270;
-                
-                buttonContainer.buttonBackground.regularPoly(Math.sin(PIXI.DEG_TO_RAD * rot)*radius*1.5, -Math.cos(PIXI.DEG_TO_RAD * rot)*radius*1.5, radius, 3, PIXI.DEG_TO_RAD * rot).fill({alpha: 1.0, color: 0xFFFFFF}).stroke({alpha: 0.5, color: 0x000000, width: radius/10});
+            if (i === 12 || i === 13 || i === 14 || i === 15) {
+                buttonContainer.buttonBackground
+                    .rect(-radius*1.08, -radius*1.08, radius*2.16, radius*2.16).fill({color: 0xffffff, alpha: 0.06})
+                    .rect(-radius, -radius, radius*2, radius*2).fill({color: 0x06060f, alpha: 1.0})
+                    .rect(-radius, -radius, radius*2, radius*2).stroke({color: 0xffffff, width: radius*0.1, alpha: 0.9});
             } else {
-                buttonContainer.buttonBackground.circle(0, 0, radius).fill({alpha: 1.0, color: 0xFFFFFF}).stroke({alpha: 0.5, color: 0x000000, width: radius/10});
+                buttonContainer.buttonBackground
+                    .circle(0, 0, radius*1.08).fill({color: 0xffffff, alpha: 0.06})
+                    .circle(0, 0, radius).fill({color: 0x06060f, alpha: 1.0})
+                    .circle(0, 0, radius).stroke({color: 0xffffff, width: radius*0.1, alpha: 0.9});
             }
-            buttonContainer.buttonText = this.createTextElement({text: i, style: (i === 8 || i === 9 || i === 16 || i === 17) ? this.textStyleSmall : this.textStyle});
+            buttonContainer.buttonHighlight = new PIXI.Graphics();
+            if (i === 12 || i === 13 || i === 14 || i === 15) {
+                buttonContainer.buttonHighlight.rect(-radius, -radius, radius*2, radius*2).fill({color: 0xffffff, alpha: 0.45});
+            } else {
+                buttonContainer.buttonHighlight.circle(0, 0, radius).fill({color: 0xffffff, alpha: 0.45});
+            }
+            buttonContainer.buttonHighlight.visible = false;
+            buttonContainer.buttonText = new PIXI.Text({text: i, style: (i === 8 || i === 9 || i === 16 || i === 17) ? textStyleSmall : textStyle});
             buttonContainer.buttonText.anchor.set(0.5);
-            buttonContainer.addChild(buttonContainer.buttonBackground, buttonContainer.buttonText);
+            buttonContainer.addChild(buttonContainer.buttonBackground, buttonContainer.buttonHighlight, buttonContainer.buttonText);
             buttonContainer.startRadius = radius;
             buttonContainer.index = i;
             buttonContainer.rPos = [0,0];
             buttonContainer.pressed = false;
             buttonContainer.interactive = true;
-            buttonContainer.hintText = this.createTextElement({text: '', style: this.textStyleHints});
-            buttonContainer.hintText.anchor.set(0.5, 0.5);
-            buttonContainer.addChild(buttonContainer.hintText);
-            buttonContainer.hintText.visible = self.showButtonHints;
-            
+
             buttonContainer.addEventListener('pointerdown', {
                 handleEvent: function(event) {
-                    if (self.isPassive) return;
                     buttonContainer.pressed = true;
                     buttonContainer.pointerdown = event;
                 }
@@ -139,46 +102,42 @@ class FWTouchControl extends PIXI.Container {
 
             if (i === 17) {
                 buttonContainer.addEventListener('pointerdown', {
-                    handleEvent: function() {
-                        if (self.isPassive) return;
+                    handleEvent: function(event) {
                         app.settingsDialog.show();
                     }
-                });
+                }); 
             }
 
             buttonContainer.addEventListener('pointerup', {
-                handleEvent: function() {
-                    if (self.isPassive) return;
+                handleEvent: function(event) {
                     buttonContainer.pressed = false;
                     buttonContainer.pointerdown = null;
                 }
-            });
+            }); 
 
             buttonContainer.addEventListener('pointerleave', {
-                handleEvent: function() {
-                    if (self.isPassive) return;
+                handleEvent: function(event) {
                     buttonContainer.pressed = false;
                 }
-            });
+            }); 
 
             if ((i === 12 || i === 13 || i === 14 || i === 15)) {
                 buttonContainer.addEventListener('pointerenter', {
-                    handleEvent: function() {
-                        if (self.isPassive) return;
-                        if (self.buttonContainers[12].pointerdown ||
+                    handleEvent: function(event) {
+                        if (self.buttonContainers[12].pointerdown || 
                             self.buttonContainers[13].pointerdown ||
                             self.buttonContainers[14].pointerdown ||
                             self.buttonContainers[15].pointerdown) {
                             buttonContainer.pressed = true;
                         }
                     }
-                });
+                }); 
             }
             this.buttonContainers.push(buttonContainer);
             this.addChild(buttonContainer);
 
             switch(i) {
-                case 0: buttonContainer.buttonText.text = 'A'; buttonContainer.key = 'k'; break;
+                case 0: buttonContainer.buttonText.text = 'A'; buttonContainer.key = 'k';  break;
                 case 1: buttonContainer.buttonText.text = 'B'; buttonContainer.key = 'l'; break;
                 case 2: buttonContainer.buttonText.text = 'X'; buttonContainer.key = 'j'; break;
                 case 3: buttonContainer.buttonText.text = 'Y'; buttonContainer.key = 'i'; break;
@@ -190,8 +149,8 @@ class FWTouchControl extends PIXI.Container {
                 case 9: buttonContainer.buttonText.text = 'START'; buttonContainer.key = 'ArrowRight';  break;
                 case 10: buttonContainer.buttonText.text = 'A1'; buttonContainer.key = 'q'; break;
                 case 11: buttonContainer.buttonText.text = 'A2'; buttonContainer.key = 'e'; break;
-                case 12: buttonContainer.buttonText.text = 'v'; buttonContainer.key = 's'; break;
-                case 13: buttonContainer.buttonText.text = '^'; buttonContainer.key = 'w'; break;
+                case 12: buttonContainer.buttonText.text = '^'; buttonContainer.key = 'w'; break;
+                case 13: buttonContainer.buttonText.text = 'v'; buttonContainer.key = 's'; break;
                 case 14: buttonContainer.buttonText.text = '<'; buttonContainer.key = 'a'; break;
                 case 15: buttonContainer.buttonText.text = '>'; buttonContainer.key = 'd'; break;
                 case 16: buttonContainer.buttonText.text = 'HOME'; buttonContainer.key = 'ArrowUp'; break;
@@ -202,7 +161,7 @@ class FWTouchControl extends PIXI.Container {
         }
         this.dpadCenterContainer.rPos = [0,0,0,0];
         this.dpadCenterContainer.startRadius = radius;
-        this.dpadCenterContainer.stick = new PIXI.Graphics().rect(-radius, -radius, radius*2, radius*2).fill({alpha: 1.0, color: 0xFFFFFF});
+        this.dpadCenterContainer.stick = new PIXI.Graphics().rect(-radius, -radius, radius*2, radius*2).fill({color: 0xffffff, alpha: 0.18});
         this.dpadCenterContainer.addChild(this.dpadCenterContainer.stick);
         this.addChild(this.dpadCenterContainer);
 
@@ -215,7 +174,7 @@ class FWTouchControl extends PIXI.Container {
             connectionContainer.radius = radius;
             connectionContainer.index = i;
             connectionContainer.rPos = [0,0];
-            connectionContainer.status = FMOTE_CONNECTION_STATUS_OFF;
+            connectionContainer.status = CONNECTION_STATUS_OFF;
             switch(i) {
                 case 0: connectionContainer.rPos = [0.5, 0.0, 0.01, -3, 0.0]; break;
                 case 1: connectionContainer.rPos = [0.5, 0.0, 0.01, -1.5, 0.0]; break;
@@ -229,10 +188,14 @@ class FWTouchControl extends PIXI.Container {
 
         for (let i = 1; i >= 0; i--) {
             let axisContainer = new PIXI.Container();
-            let axisBackground = new PIXI.Graphics().circle(0, 0, radius).fill({alpha: 0.5, color: 0xFFFFFF}).stroke({alpha: 0.5, color: 0xffffff, width: radius/10});
-            let axisStick = new PIXI.Graphics().circle(0, 0, radius/2).fill({alpha: 1.0, color: 0xFFFFFF}).stroke({alpha: 0.5, color: 0x000000, width: radius/10});
+            let axisBackground = new PIXI.Graphics()
+                .circle(0, 0, radius).fill({color: 0x06060f, alpha: 1.0})
+                .circle(0, 0, radius).stroke({color: 0xffffff, alpha: 0.5, width: radius/10});
+            let axisStick = new PIXI.Graphics()
+                .circle(0, 0, radius/2).fill({color: 0xffffff, alpha: 1.0})
+                .circle(0, 0, radius/2).stroke({color: 0x000000, alpha: 0.2, width: radius/15});
             let axisStickShadow = new PIXI.Graphics().circle(0, 0, radius/2).fill({alpha: 1.0, color: 0xFFFFFF});
-            axisStickShadow.alpha = 0.1;
+            axisStickShadow.alpha = 0.08;
             axisStick.startRadius = axisStick.radius = radius/2;
             axisStickShadow.startRadius = axisStickShadow.radius = radius/2;
             axisContainer.addChild(axisBackground, axisStick, axisStickShadow);
@@ -250,7 +213,6 @@ class FWTouchControl extends PIXI.Container {
             axisContainer.interactive = true;
             axisContainer.addEventListener('pointerdown', {
                 handleEvent: function(event) {
-                    if (self.isPassive) return;
                     if (axisContainer.lastTimeClicked && (Date.now() - axisContainer.lastTimeClicked < 500)) {
                         self.buttonContainers[axisContainer.clickIndex].pressed = true;
                     }
@@ -260,8 +222,7 @@ class FWTouchControl extends PIXI.Container {
             });
 
             axisContainer.addEventListener('pointerup', {
-                handleEvent: function() {
-                    if (self.isPassive) return;
+                handleEvent: function(event) {
                     axisContainer.xAxis = 0;
                     axisContainer.yAxis = 0;
                     axisContainer.xAxisShadow = 0;
@@ -269,11 +230,10 @@ class FWTouchControl extends PIXI.Container {
                     self.buttonContainers[axisContainer.clickIndex].pressed = false;
                     axisContainer.pointerdown = null;
                 }
-            });
+            }); 
 
             axisContainer.addEventListener('pointerleave', {
-                handleEvent: function() {
-                    if (self.isPassive) return;
+                handleEvent: function(event) {
                    /* axisContainer.xAxis = 0;
                     axisContainer.yAxis = 0;
                     axisContainer.xAxisShadow = 0;
@@ -285,12 +245,11 @@ class FWTouchControl extends PIXI.Container {
 
             axisContainer.addEventListener('pointermove', {
                 handleEvent: function(event) {
-                    if (self.isPassive) return;
                    // if (!axisContainer.pointerdown) {
                      //   return;
                     //}
                     if (app.isPortrait) {
-                        let localEvent = {x: event.y, y: this.wantedHeight - event.x};
+                        let localEvent = {x: event.y, y: app.containerGame.screenHeight - event.x};
                         axisContainer.xAxis = (localEvent.x - axisContainer.x) / axisContainer.radius;
                         axisContainer.yAxis = (localEvent.y - axisContainer.y) / axisContainer.radius;
                     } else {
@@ -309,20 +268,12 @@ class FWTouchControl extends PIXI.Container {
                 }
             }); 
 
-
-
-            axisContainer.hintText = this.createTextElement({text: '', style: this.textStyleHints});
-            axisContainer.hintText.anchor.set(0.5, 0.5);
-            axisContainer.addChild(axisContainer.hintText);
-            axisContainer.hintText.visible = self.showButtonHints;
-
             this.axesContainers.push(axisContainer);
             this.addChild(axisContainer);
         }
 
         window.addEventListener('keydown', {
             handleEvent: function(event) {
-                if (self.isPassive) return;
                 if (app.settingsDialog.open) return;
 
                 self.buttonContainers.forEach(buttonContainer => {
@@ -335,7 +286,6 @@ class FWTouchControl extends PIXI.Container {
 
         window.addEventListener('keyup', {
             handleEvent: function(event) {
-                if (self.isPassive) return;
                 if (app.settingsDialog.open) return;
                 
                 let foundMatching = false;
@@ -355,72 +305,24 @@ class FWTouchControl extends PIXI.Container {
         });
     }
 
-    createTextElement(settings) {
-        if (this.isBitmapFont) {
-            return new PIXI.BitmapText(settings);
-        }
-        return new PIXI.Text(settings);
-    }
-
-    setHintForButton(buttonIndex, hint) {
-        this.buttonContainers[buttonIndex].hintText.text = hint?.text;
-        this.buttonContainers[buttonIndex].hintText.visible = hint?.visible;
-        this.buttonContainers[buttonIndex].hintText.scale = hint?.scale || 1;
-        this.buttonContainers[buttonIndex].hintText.tint = hint?.tint || 0xffffff;
-        this.buttonContainers[buttonIndex].hintText.alpha = hint?.alpha || 1;
-        this.buttonContainers[buttonIndex].hintText.anchor.set(hint?.anchorX || 0.5, hint?.anchorY || 0.5);
-        this.buttonContainers[buttonIndex].hintText.position.set(hint?.x || 0, hint?.y || 0);
-        this.buttonContainers[buttonIndex].hintText.rotation = hint?.rotation || 0;
-        this.buttonContainers[buttonIndex].hintText.skew.set(hint?.skewX || 0, hint?.skewY || 0);
-    }
-
-    setHintForAxis(axisIndex, hint) {
-        this.axesContainers[axisIndex].hintText.text = hint?.text;
-        this.axesContainers[axisIndex].hintText.visible = hint?.visible;
-        this.axesContainers[axisIndex].hintText.scale = hint?.scale || 1;
-        this.axesContainers[axisIndex].hintText.tint = hint?.tint || 0xffffff;
-        this.axesContainers[axisIndex].hintText.alpha = hint?.alpha || 1;
-        this.axesContainers[axisIndex].hintText.anchor.set(hint?.anchorX || 0.5, hint?.anchorY || 0.5);
-        this.axesContainers[axisIndex].hintText.position.set(hint?.x || 0, hint?.y || 0);
-        this.axesContainers[axisIndex].hintText.rotation = hint?.rotation || 0;
-        this.axesContainers[axisIndex].hintText.skew.set(hint?.skewX || 0, hint?.skewY || 0);
-    }
-
-    setButton(buttonIndex, button) {
-        this.buttonContainers[buttonIndex].buttonText.text = button?.text;
-        this.buttonContainers[buttonIndex].buttonText.visible = button?.visible;
-        this.buttonContainers[buttonIndex].buttonText.scale = button?.scale || 1;
-        this.buttonContainers[buttonIndex].buttonText.tint = button?.tint || 0xffffff;
-        this.buttonContainers[buttonIndex].buttonText.alpha = button?.alpha || 1;
-        this.buttonContainers[buttonIndex].buttonText.anchor.set(button?.anchorX || 0.5, button?.anchorY || 0.5);
-        this.buttonContainers[buttonIndex].buttonText.position.set(button?.x || 0, button?.y || 0);
-    }
-
-    
-    update(app, options) {
-        let self = this;
-        this.x = options?.x || this.x;
-        this.y = options?.y || this.y;
-        this.wantedWidth = options?.wantedWidth || this.wantedWidth;
-        this.wantedHeight = options?.wantedHeight || this.wantedHeight;
-        let minHeightWidth = Math.min(this.wantedWidth, this.wantedHeight);
-        const distanceToBorderX = 0.05 * this.wantedWidth;
-        const distanceToBorderY = 0.05 * this.wantedHeight;
+    update(app) {
+        let minHeightWidth = Math.min(app.containerGame.screenWidth, app.containerGame.screenHeight);
+        let maxHeightWidth = Math.max(app.containerGame.screenWidth, app.containerGame.screenHeight);
+        const distanceToBorderX = 0.05 * app.containerGame.screenWidth;
+        const distanceToBorderY = 0.05 * app.containerGame.screenHeight;
 
 
         const R_POS_INVISIBLE = [- 10.0, -10.0, 0.0, 0.0];
+        const screenSizeinCm = Math.max(window.innerHeight, window.innerWidth) / getPixelPerCentimeter()
+        const goodButtonSizeinPixel = 1.2 * getPixelPerCentimeter()
 
-        if (this.layout === 'simple') {
-            const goodButtonSizeinPixel = 1.2 * getPixelPerCentimeter()
-            const goodButtonSizeInRelative = Math.min(0.12, goodButtonSizeinPixel / minHeightWidth)
-            const goodLeftAxisSizeInRelative = Math.min(0.24, 1.2*goodButtonSizeinPixel / minHeightWidth)
-
-
+        const goodButtonSizeInRelative = goodButtonSizeinPixel / minHeightWidth
+        if (app.layout === 'simple') {
             this.dpadCenterContainer.rPos = R_POS_INVISIBLE;
 
             this.axesContainers.forEach((axisContainer, i) => {
                 switch(i) {
-                    case 0: axisContainer.rPos = [0.0, 1, goodLeftAxisSizeInRelative, 0.25, -0.25]; break;
+                    case 0: axisContainer.rPos = [0.0, 1, goodButtonSizeInRelative*1.2, 0.25, -0.25]; break;
                     case 1: axisContainer.rPos = R_POS_INVISIBLE; break;
                 }
             })
@@ -428,26 +330,94 @@ class FWTouchControl extends PIXI.Container {
       
             this.buttonContainers.forEach((buttonContainer, i) => {
                 switch(i) {
-                    case 0: buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -0.5, 0.0]; break;
-                    case 1: buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, 0.1, -1]; break;
-                    case 2: buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -1.15, -1]; break;
-                    case 3: buttonContainer.rPos = [1.0, 1.0, goodButtonSizeInRelative, -0.5, -2]; break;
+                    case 0: buttonContainer.rPos = [1.0, 1.0, 0.09, -0.5, 0.0]; break;
+                    case 1: buttonContainer.rPos = [1.0, 1.0, 0.09, 0.1, -1]; break;
+                    case 2: buttonContainer.rPos = [1.0, 1.0, 0.09, -1.15, -1]; break;
+                    case 3: buttonContainer.rPos = [1.0, 1.0, 0.09, -0.5, -2]; break;
                     case 4:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 5:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 6:  buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 7:  buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 8: buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 9: buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 10:; buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 11:; buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 8:  buttonContainer.rPos = [0.4, 0.35, 0.075]; break;
+                    case 9:  buttonContainer.rPos = [0.6, 0.35, 0.075]; break;
+                    case 10:; buttonContainer.rPos = [-2.5, 1.0, 0.05, -0.5]; break;
+                    case 11:; buttonContainer.rPos = [-2.5, 1.0, 0.05, 0.5]; break;
                     case 12: buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 13: buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 14: buttonContainer.rPos = R_POS_INVISIBLE; break;
                     case 15: buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 16: buttonContainer.rPos = R_POS_INVISIBLE; break;
-                    case 17: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
+                    case 16: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
+                    case 17: buttonContainer.rPos = [0.5, 0.55, 0.075]; break;
                 }
             })
+        } else if (app.layout === 'dpad') {
+            // Simple layout exactly, but D-pad replaces analog stick 0
+            // D-pad uses same size (0.09) as face buttons so distances from left edge
+            // mirror the face button distances from the right edge.
+            // left button at rPos[3]=0.0 → border+radius from left (mirrors face B from right)
+            this.dpadCenterContainer.rPos = [0.0, 1.0, 0.09, 1.0, -1.0];
+            this.axesContainers.forEach((axisContainer, i) => {
+                switch(i) {
+                    case 0: axisContainer.rPos = R_POS_INVISIBLE; break;
+                    case 1: axisContainer.rPos = R_POS_INVISIBLE; break;
+                }
+            });
+            this.buttonContainers.forEach((buttonContainer, i) => {
+                switch(i) {
+                    case 0:  buttonContainer.rPos = [1.0, 1.0, 0.09, -0.5,  0.0]; break;
+                    case 1:  buttonContainer.rPos = [1.0, 1.0, 0.09,  0.1, -1];   break;
+                    case 2:  buttonContainer.rPos = [1.0, 1.0, 0.09, -1.15,-1];   break;
+                    case 3:  buttonContainer.rPos = [1.0, 1.0, 0.09, -0.5, -2];   break;
+                    case 4:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 5:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 6:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 7:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 8:  buttonContainer.rPos = [0.4, 0.35, 0.075]; break;
+                    case 9:  buttonContainer.rPos = [0.6, 0.35, 0.075]; break;
+                    case 10: buttonContainer.rPos = [-2.5, 1.0, 0.05, -0.5]; break;
+                    case 11: buttonContainer.rPos = [-2.5, 1.0, 0.05,  0.5]; break;
+                    case 12: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0, -2.0]; break; // up
+                    case 13: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0,  0.0]; break; // down
+                    case 14: buttonContainer.rPos = [0.0, 1.0, 0.09, 0.0, -1.0]; break; // left
+                    case 15: buttonContainer.rPos = [0.0, 1.0, 0.09, 2.0, -1.0]; break; // right
+                    case 16: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
+                    case 17: buttonContainer.rPos = [0.5, 0.55, 0.075]; break;
+                }
+            });
+
+        } else if (app.layout === 'dpad-full') {
+            // Full layout exactly, but D-pad replaces analog stick 0
+            // Same left-anchor symmetry as dpad layout
+            this.dpadCenterContainer.rPos = [0.0, 1.0, 0.09, 1.0, -1.0];
+            this.axesContainers.forEach((axisContainer, i) => {
+                switch(i) {
+                    case 0: axisContainer.rPos = [0.035, 0.2, 0.1, 1.0, 0]; break;
+                    case 1: axisContainer.rPos = [0.5, 0.95, 0.1, 0.0]; break;
+                }
+            });
+            this.buttonContainers.forEach((buttonContainer, i) => {
+                switch(i) {
+                    case 0:  buttonContainer.rPos = [1.0, 1.0, 0.09, -0.75, 0.0]; break;
+                    case 1:  buttonContainer.rPos = [1.0, 0.8, 0.09,  0.0,  0.0]; break;
+                    case 2:  buttonContainer.rPos = [1.0, 0.8, 0.09, -1.5,  0.0]; break;
+                    case 3:  buttonContainer.rPos = [1.0, 0.6, 0.09, -0.75, 0.0]; break;
+                    case 4:  buttonContainer.rPos = [0.925, 0.1, 0.07, -0.6]; break;
+                    case 5:  buttonContainer.rPos = [0.925, 0.1, 0.07,  0.6]; break;
+                    case 6:  buttonContainer.rPos = [0.925, 0.3, 0.07,  0.6]; break;
+                    case 7:  buttonContainer.rPos = [0.925, 0.3, 0.07, -0.6]; break;
+                    case 8:  buttonContainer.rPos = [0.4, 0.35, 0.075]; break;
+                    case 9:  buttonContainer.rPos = [0.6, 0.35, 0.075]; break;
+                    case 10: buttonContainer.rPos = [-2.5, 1.0, 0.05, -0.5]; break;
+                    case 11: buttonContainer.rPos = [-2.5, 1.0, 0.05,  0.5]; break;
+                    case 12: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0, -2.0]; break; // up
+                    case 13: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0,  0.0]; break; // down
+                    case 14: buttonContainer.rPos = [0.0, 1.0, 0.09, 0.0, -1.0]; break; // left
+                    case 15: buttonContainer.rPos = [0.0, 1.0, 0.09, 2.0, -1.0]; break; // right
+                    case 16: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
+                    case 17: buttonContainer.rPos = [0.5, 0.55, 0.075]; break;
+                }
+            });
+
         } else {
             this.dpadCenterContainer.rPos =[0.035, 0.2, 0.05, 1.0, 0]
 
@@ -457,7 +427,7 @@ class FWTouchControl extends PIXI.Container {
                     case 1: axisContainer.rPos = [0.5, 0.95, 0.1, 0.0]; break;
                 }
             })
-            
+
             this.buttonContainers.forEach((buttonContainer, i) => {
                 switch(i) {
                     case 0: buttonContainer.rPos = [1.0, 1.0, 0.09, -0.75, 0.0]; break;
@@ -472,8 +442,8 @@ class FWTouchControl extends PIXI.Container {
                     case 9: buttonContainer.rPos = [0.6, 0.35, 0.075]; break;
                     case 10: buttonContainer.rPos = [-2.5, 1.0, 0.05, -0.5]; break;
                     case 11: buttonContainer.rPos = [-2.5, 1.0, 0.05, 0.5]; break;
-                    case 12: buttonContainer.rPos = [0.035, 0.2, 0.05, 1.0, 1.0]; break;
-                    case 13: buttonContainer.rPos = [0.035, 0.2, 0.05, 1.0, -1.0]; break;
+                    case 12: buttonContainer.rPos = [0.035, 0.2, 0.05, 1.0, -1.0]; break;
+                    case 13: buttonContainer.rPos = [0.035, 0.2, 0.05, 1.0, 1.0]; break;
                     case 14: buttonContainer.rPos = [0.035, 0.2, 0.05, 0.0, 0]; break;
                     case 15: buttonContainer.rPos = [0.035, 0.2, 0.05, 2.0, 0]; break;
                     case 16: buttonContainer.rPos = [0.5, 0.15, 0.075]; break;
@@ -483,85 +453,68 @@ class FWTouchControl extends PIXI.Container {
         }
 
 
-        this.axesContainers.forEach((container) => {
+        this.axesContainers.forEach((container, index) => {
             container.radius = container.rPos[2] * minHeightWidth;
             container.scale = container.radius / container.startRadius;
-            container.x = (distanceToBorderX + container.radius) + container.rPos[0] * (this.wantedWidth - distanceToBorderX * 2 - container.radius * 2) + (container.rPos.length > 3 ? container.rPos[3] * container.radius * 2 : 0);
-            container.y = (distanceToBorderY + container.radius) + container.rPos[1] * (this.wantedHeight - distanceToBorderY * 2 - container.radius * 2) + (container.rPos.length > 4 ? container.rPos[4] * container.radius * 2 : 0);
+            container.x = (distanceToBorderX + container.radius) + container.rPos[0] * (app.containerGame.screenWidth - distanceToBorderX * 2 - container.radius * 2) + (container.rPos.length > 3 ? container.rPos[3] * container.radius * 2 : 0);
+            container.y = (distanceToBorderY + container.radius) + container.rPos[1] * (app.containerGame.screenHeight - distanceToBorderY * 2 - container.radius * 2) + (container.rPos.length > 4 ? container.rPos[4] * container.radius * 2 : 0);
             container.stickShadow.position.set(container.xAxisShadow * (container.startRadius), container.yAxisShadow * (container.startRadius));
             container.stick.position.set(container.xAxis * (container.startRadius), container.yAxis * (container.startRadius));
             container.stick.tint = (this.buttonContainers[container.clickIndex].pressed ? 0x000000 : 0xffffff);
             container.stick.alpha = (this.buttonContainers[container.clickIndex].pressed ? 0.5 : 1.0);
-       
-            if (self.showHintLabels) {
-                container.hintText.visible = true;
-            } else {
-                container.hintText.visible = false;
-            }
         });
 
-
-        this.buttonContainers.forEach((container) => {
+        this.buttonContainers.forEach((container, index) => {
             container.radius = container.rPos[2] * minHeightWidth;
             container.scale = container.radius / container.startRadius;
-            container.alpha = (container.pressed ? 0.5 : 1.0);
-            container.tint = (container.pressed ? 0x000000 : 0xffffff);
-            container.x = (distanceToBorderX + container.radius) + container.rPos[0] * (this.wantedWidth - distanceToBorderX * 2 - container.radius * 2) + (container.rPos.length > 3 ? container.rPos[3] * container.radius * 2 : 0);
-            container.y = (distanceToBorderY + container.radius) + container.rPos[1] * (this.wantedHeight - distanceToBorderY * 2 - container.radius * 2) + (container.rPos.length > 4 ? container.rPos[4] * container.radius * 2 : 0);
-        
-            if (self.showButtonLabels) {
-                container.buttonText.visible = true;
-            } else {
-                container.buttonText.visible = false;
-            }
-
-            if (self.showHintLabels) {
-                container.hintText.visible = true;
-            } else {
-                container.hintText.visible = false;
-            }
+            container.alpha = 1.0;
+            container.tint = 0xffffff;
+            container.buttonHighlight.visible = container.pressed;
+            container.x = (distanceToBorderX + container.radius) + container.rPos[0] * (app.containerGame.screenWidth - distanceToBorderX * 2 - container.radius * 2) + (container.rPos.length > 3 ? container.rPos[3] * container.radius * 2 : 0);
+            container.y = (distanceToBorderY + container.radius) + container.rPos[1] * (app.containerGame.screenHeight - distanceToBorderY * 2 - container.radius * 2) + (container.rPos.length > 4 ? container.rPos[4] * container.radius * 2 : 0);
         });
 
-        this.buttonContainers[17].buttonText.text = app.serverId || '';
+        this.buttonContainers[17].buttonText.text = app.serverId;
 
         this.dpadCenterContainer.radius = this.dpadCenterContainer.rPos[2] * minHeightWidth;
         this.dpadCenterContainer.scale = this.dpadCenterContainer.radius / this.dpadCenterContainer.startRadius;
-        this.dpadCenterContainer.x = (distanceToBorderX + this.dpadCenterContainer.radius) + this.dpadCenterContainer.rPos[0] * (this.wantedWidth - distanceToBorderX * 2 - this.dpadCenterContainer.radius * 2) + (this.dpadCenterContainer.rPos.length > 3 ? this.dpadCenterContainer.rPos[3] * this.dpadCenterContainer.radius * 2 : 0);
-        this.dpadCenterContainer.y = (distanceToBorderY + this.dpadCenterContainer.radius) + this.dpadCenterContainer.rPos[1] * (this.wantedHeight - distanceToBorderY * 2 - this.dpadCenterContainer.radius * 2) + (this.dpadCenterContainer.rPos.length > 4 ? this.dpadCenterContainer.rPos[4] * this.dpadCenterContainer.radius * 2 : 0);
+        this.dpadCenterContainer.x = (distanceToBorderX + this.dpadCenterContainer.radius) + this.dpadCenterContainer.rPos[0] * (app.containerGame.screenWidth - distanceToBorderX * 2 - this.dpadCenterContainer.radius * 2) + (this.dpadCenterContainer.rPos.length > 3 ? this.dpadCenterContainer.rPos[3] * this.dpadCenterContainer.radius * 2 : 0);
+        this.dpadCenterContainer.y = (distanceToBorderY + this.dpadCenterContainer.radius) + this.dpadCenterContainer.rPos[1] * (app.containerGame.screenHeight - distanceToBorderY * 2 - this.dpadCenterContainer.radius * 2) + (this.dpadCenterContainer.rPos.length > 4 ? this.dpadCenterContainer.rPos[4] * this.dpadCenterContainer.radius * 2 : 0);
         
-        if (this.border.wantedWidth !== this.wantedWidth || this.border.wantedHeight !== this.wantedHeight) {    
-            this.border.clear();
-            this.border.roundRect(this.wantedWidth * 0.01, this.wantedHeight * 0.01, this.wantedWidth * 0.98, this.wantedHeight * 0.98, this.wantedWidth * 0.1).fill({alpha: 1.0, color: 0xFFFFFF}).stroke({alpha: 1, color: 0x000000, width: this.wantedHeight * 0.01});
-            this.border.wantedWidth = this.wantedWidth;
-            this.border.wantedHeight = this.wantedHeight;
-        }
-        
-        this.border.tint = this.color.toNumber();
-        this.title.position.set(this.wantedWidth * 0.8, this.wantedHeight * 0.07);
-        this.title.scale.set(Math.min(0.5,this.wantedWidth / 1500));
+        document.documentElement.style.setProperty('--pad-color', app.color.toHex());
+        this.title.position.set(app.containerGame.screenWidth * 0.98, app.containerGame.screenHeight * 0.02);
+        this.title.scale.set(Math.min(0.5,app.containerGame.screenWidth / 1500));
         this.connectionContainers[2].status = app.connectionStatus;
 
         let localGamepads = FWNetwork.getInstance().getLocalGamepads();
   
         [0, 1, 3, 4].forEach(i => {
             let j = i > 2 ? i-1 : i
-            this.connectionContainers[i].status = localGamepads[j] && localGamepads[j].connected && this.connectionContainers[2].status || FMOTE_CONNECTION_STATUS_OFF
+            this.connectionContainers[i].status = localGamepads[j] && localGamepads[j].connected && this.connectionContainers[2].status || CONNECTION_STATUS_OFF
         })
         
-        this.connectionContainers.forEach((container) => {
+        this.connectionContainers.forEach((container, index) => {
             container.radius = container.rPos[2] * minHeightWidth;
             container.scale = container.radius / container.startRadius;
 
 
-            if (container.status === FMOTE_CONNECTION_STATUS_OFF) container.tint = 0x000000;
-            else if (container.status === FMOTE_CONNECTION_STATUS_INITIALIZNG) container.tint = app.ticker.lastTime % 1000 < 500 ? 0xffff00 : 0x000000;
-            else if (container.status === FMOTE_CONNECTION_STATUS_WORKING) container.tint = 0x00ff00;
-            else if (container.status === FMOTE_CONNECTION_STATUS_ERROR) container.tint = 0xaa0000;
+            if (container.status === CONNECTION_STATUS_OFF) container.tint = 0x000000;
+            else if (container.status === CONNECTION_STATUS_INITIALIZNG) container.tint = app.ticker.lastTime % 1000 < 500 ? 0xffff00 : 0x000000;
+            else if (container.status === CONNECTION_STATUS_WORKING) container.tint = 0x00ff00;
+            else if (container.status === CONNECTION_STATUS_ERROR) container.tint = 0xaa0000;
             else container.tint = 0x0f00ff;
             
-            container.x = (distanceToBorderX + container.radius) + container.rPos[0] * (this.wantedWidth - distanceToBorderX * 2 - container.radius * 2) + (container.rPos.length > 3 ? container.rPos[3] * container.radius * 2 : 0);
-            container.y = (distanceToBorderY + container.radius) + container.rPos[1] * (this.wantedHeight - distanceToBorderY * 2 - container.radius * 2) + (container.rPos.length > 4 ? container.rPos[4] * container.radius * 2 : 0);
+            container.x = (distanceToBorderX + container.radius) + container.rPos[0] * (app.containerGame.screenWidth - distanceToBorderX * 2 - container.radius * 2) + (container.rPos.length > 3 ? container.rPos[3] * container.radius * 2 : 0);
+            container.y = (distanceToBorderY + container.radius) + container.rPos[1] * (app.containerGame.screenHeight - distanceToBorderY * 2 - container.radius * 2) + (container.rPos.length > 4 ? container.rPos[4] * container.radius * 2 : 0);
         });
+    }
+
+    setControlsVisible(visible) {
+        this.buttonContainers.forEach(c => c.visible = visible);
+        this.axesContainers.forEach(c => c.visible = visible);
+        this.dpadCenterContainer.visible = visible;
+        this.connectionContainers.forEach(c => c.visible = visible);
+        this.title.visible = visible;
     }
 
     // Neue Methode: Befüllt ein übergebenes FWNetworkGamepad mit den aktuellen Eingaben
@@ -592,10 +545,6 @@ class FWTouchControl extends PIXI.Container {
     }
 }
 
-window.getPixelPerCentimeter = getPixelPerCentimeter
-window.centimeterToPixel = centimeterToPixel
-window.FWTouchControl = FWTouchControl
-
 
 
    /*
@@ -620,7 +569,7 @@ window.FWTouchControl = FWTouchControl
             Gamepads16: Guide (Home Button, optional)
         */
 
-            /* ine
+            /* 
 
 
 Type	Index	Location
@@ -650,3 +599,4 @@ axes
 
 
             */
+export { FWTouchControl };

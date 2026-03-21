@@ -76,9 +76,10 @@ class FWNetwork {
         }
 
         this.qrCodeTexture = null
-        this.qrCodeBaseUrl = 'padz.feuerware.com'
+        this.qrCodeBaseUrl = import.meta.env.VITE_PAD_URL || 'padz.feuerware.com'
         this.qrCodeUrl = ''
-        this.qrCodeColor = new PIXI.Color(FWNetwork.getQueryParam('color') || '000005');
+        const rawColor = FWNetwork.getQueryParam('color') || '000005';
+        this.qrCodeColor = new PIXI.Color(/^[pg]/.test(rawColor) ? rawColor.slice(1) : rawColor);
         this.roomPrefix = 'hidden'
 
         this.qrCodeOptions = {
