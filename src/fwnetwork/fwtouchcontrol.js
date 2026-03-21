@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import { sound } from '@pixi/sound';
 import { FWNetworkGamepad } from './fwnetworkgamepad.js';
 import { FWNetwork } from './fwnetwork.js';
 
@@ -11,6 +12,29 @@ const CONNECTION_STATUS_INITIALIZNG = 1;
 const CONNECTION_STATUS_WORKING = 2;
 const CONNECTION_STATUS_ERROR = 3;
 const version = '2.0.0';
+
+// Per-button pitch (speed multiplier for button.ogg, index = W3C gamepad button index)
+// Spread across ~2 octaves so each button is aurally distinct
+const BUTTON_PITCH = [
+    1.00,  // 0  A / Cross        (center)
+    1.12,  // 1  B / Circle       (minor third up)
+    0.89,  // 2  X / Square       (major second down)
+    1.26,  // 3  Y / Triangle     (major third up)
+    0.84,  // 4  LB               (major second down from X)
+    0.94,  // 5  RB               (half step down)
+    0.75,  // 6  LT               (perfect fourth down)
+    0.79,  // 7  RT               (minor third down)
+    1.33,  // 8  Back / Select    (perfect fourth up)
+    1.50,  // 9  Start            (perfect fifth up)
+    0.84,  // 10 L3               (same as LB, stick click)
+    0.94,  // 11 R3               (same as RB, stick click)
+    1.41,  // 12 D-Pad Up         (tritone up — feels like "going up")
+    0.71,  // 13 D-Pad Down       (tritone down — feels like "going down")
+    0.89,  // 14 D-Pad Left       (step down)
+    1.12,  // 15 D-Pad Right      (step up)
+    1.68,  // 16 Guide            (high, distinctive)
+    0.67,  // 17 Settings         (low, distinctive)
+];
 
 function getPixelPerCentimeter() {
     const div = document.createElement('div');
@@ -97,8 +121,9 @@ class FWTouchControl extends PIXI.Container {
                 handleEvent: function(event) {
                     buttonContainer.pressed = true;
                     buttonContainer.pointerdown = event;
+                    if (sound.exists('padButton')) sound.play('padButton', { volume: 0.4, speed: BUTTON_PITCH[i] });
                 }
-            }); 
+            });
 
             if (i === 17) {
                 buttonContainer.addEventListener('pointerdown', {
@@ -124,11 +149,12 @@ class FWTouchControl extends PIXI.Container {
             if ((i === 12 || i === 13 || i === 14 || i === 15)) {
                 buttonContainer.addEventListener('pointerenter', {
                     handleEvent: function(event) {
-                        if (self.buttonContainers[12].pointerdown || 
+                        if (self.buttonContainers[12].pointerdown ||
                             self.buttonContainers[13].pointerdown ||
                             self.buttonContainers[14].pointerdown ||
                             self.buttonContainers[15].pointerdown) {
                             buttonContainer.pressed = true;
+                            if (sound.exists('padButton')) sound.play('padButton', { volume: 0.4, speed: BUTTON_PITCH[i] });
                         }
                     }
                 }); 

@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import { sound } from '@pixi/sound';
 import { FWApplication } from '../fwnetwork/fwapplication.js';
 import { FWTouchControl } from '../fwnetwork/fwtouchcontrol.js';
 import { FWNetwork } from '../fwnetwork/fwnetwork.js';
@@ -80,6 +81,8 @@ async function init() {
         app.settingsDialog.show();
     }
 
+
+    sound.add('padButton', { url: './assets/sfx/button.ogg', preload: true });
 
     app.finishLoading();
 
