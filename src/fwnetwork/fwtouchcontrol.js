@@ -14,26 +14,27 @@ const CONNECTION_STATUS_ERROR = 3;
 const version = '2.0.0';
 
 // Per-button pitch (speed multiplier for button.ogg, index = W3C gamepad button index)
-// Spread across ~2 octaves so each button is aurally distinct
+// 18 unique values in 1.5-semitone steps across 3 octaves (0.50–2.18),
+// assigned so directional/positional pairs are maximally apart
 const BUTTON_PITCH = [
-    1.00,  // 0  A / Cross        (center)
-    1.12,  // 1  B / Circle       (minor third up)
-    0.89,  // 2  X / Square       (major second down)
-    1.26,  // 3  Y / Triangle     (major third up)
-    0.84,  // 4  LB               (major second down from X)
-    0.94,  // 5  RB               (half step down)
-    0.75,  // 6  LT               (perfect fourth down)
-    0.79,  // 7  RT               (minor third down)
-    1.33,  // 8  Back / Select    (perfect fourth up)
-    1.50,  // 9  Start            (perfect fifth up)
-    0.84,  // 10 L3               (same as LB, stick click)
-    0.94,  // 11 R3               (same as RB, stick click)
-    1.41,  // 12 D-Pad Up         (tritone up — feels like "going up")
-    0.71,  // 13 D-Pad Down       (tritone down — feels like "going down")
-    0.89,  // 14 D-Pad Left       (step down)
-    1.12,  // 15 D-Pad Right      (step up)
-    1.68,  // 16 Guide            (high, distinctive)
-    0.67,  // 17 Settings         (low, distinctive)
+    1.00,  // 0  A / Cross        (center reference)
+    1.19,  // 1  B / Circle       (+3 semitones)
+    0.84,  // 2  X / Square       (-3 semitones)
+    1.54,  // 3  Y / Triangle     (+7.5 semitones)
+    0.71,  // 4  LB               (-6 semitones)
+    1.30,  // 5  RB               (+4.5 semitones)
+    0.59,  // 6  LT               (-9 semitones)
+    1.09,  // 7  RT               (+1.5 semitones)
+    0.92,  // 8  Back / Select    (-1.5 semitones)
+    1.68,  // 9  Start            (+9 semitones — high, feels important)
+    0.65,  // 10 L3               (-7.5 semitones)
+    1.41,  // 11 R3               (+6 semitones)
+    1.83,  // 12 D-Pad Up         (+10.5 semitones — high feels like "up")
+    0.55,  // 13 D-Pad Down       (-10.5 semitones — low feels like "down")
+    0.77,  // 14 D-Pad Left       (-4.5 semitones)
+    2.00,  // 15 D-Pad Right      (+12 semitones, octave up)
+    2.18,  // 16 Guide            (+13.5 semitones — highest, most distinctive)
+    0.50,  // 17 Settings         (-12 semitones — lowest, most distinctive)
 ];
 
 function getPixelPerCentimeter() {
@@ -241,6 +242,7 @@ class FWTouchControl extends PIXI.Container {
                 handleEvent: function(event) {
                     if (axisContainer.lastTimeClicked && (Date.now() - axisContainer.lastTimeClicked < 500)) {
                         self.buttonContainers[axisContainer.clickIndex].pressed = true;
+                        if (sound.exists('padButton')) sound.play('padButton', { volume: 0.4, speed: BUTTON_PITCH[axisContainer.clickIndex] });
                     }
                     axisContainer.lastTimeClicked = Date.now();
                     axisContainer.pointerdown = event;
