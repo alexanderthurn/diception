@@ -377,6 +377,7 @@ async function init() {
     gamepadCursors.onIntroRemove = (x, y)              => { sfxManager.reinforce(0.85 + Math.random() * 0.30);   effectsManager.removePlayerDie(x, y); };
     gamepadCursors.onIntroMutate = (x, y)              => { sfxManager.turnStart(0.85 + Math.random() * 0.30);   effectsManager.mutatePlayerDie(x, y); };
     inputManager.gamepadCursorManager = gamepadCursors;
+    gamepadCursors.getTileScreenSize = () => renderer.getTileScreenSize();
 
     // FPS Counter
     setupFPSCounter(renderer);

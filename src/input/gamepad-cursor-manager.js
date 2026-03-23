@@ -18,6 +18,7 @@ export class GamepadCursorManager {
         this.activatedGamepads = new Set(); // indices that have pressed at least one button
         this._pressedWithoutModal = new Map(); // gamepadIndex -> Set of buttons pressed while no modal was open
         this.onIntroSpawn = null; // optional callback: (playerIndex, screenX, screenY) => void
+        this.getTileScreenSize = null; // injected by main.js: () => number
         const isDesktop = isDesktopContext();
         this.cursorSpeed = isDesktop ? 12 : 20;
 
@@ -305,13 +306,18 @@ export class GamepadCursorManager {
             }
         };
 
-        this.boundEventHandlers.gamepadCursorMoveRequest = ({ index, x, y }) => {
+        this.boundEventHandlers.gamepadCursorMoveRequest = ({ index, x, y, tileSize }) => {
             const cursor = this.cursors.get(index);
             if (!cursor) return;
 
             cursor.x = x;
             cursor.y = y;
             GamepadCursorManager.savedPositions.set(index, { x, y });
+            // Size cursor to tile
+            if (this.getTileScreenSize) {
+                const sz = Math.round(this.getTileScreenSize() / this._uiScale());
+                this._resizeCursor(cursor, sz, sz, 0.20);
+            }
             this._positionCursor(cursor);
             cursor.element.style.opacity = '0.35';
             this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, index);
@@ -379,8 +385,18 @@ export class GamepadCursorManager {
                 }
             }
 
+
             // Periodically check if player info changed (e.g. game started)
             this.updateCursorColor(cursor, idx);
+
+            // Dim cursor when it's not this gamepad's turn
+            const inGame = this.game?.players?.length > 0 && !this.game?.gameOver;
+            if (inGame) {
+                const canAct = this.inputManager.canGamepadControlPlayer(idx, this.game.currentPlayer?.id);
+                cursor.element.style.opacity = canAct ? '1.0' : '0.3';
+            } else {
+                cursor.element.style.opacity = '1.0';
+            }
         }
 
         // Remove cursors for gamepads that are no longer connected
@@ -465,23 +481,21 @@ export class GamepadCursorManager {
         const el = document.createElement('div');
         el.className = 'gamepad-cursor';
         el.style.position = 'absolute';
-        el.style.width = '64px'; // 2x size
-        el.style.height = '64px'; // 2x size
-        el.style.marginLeft = '-32px';
-        el.style.marginTop = '-32px';
+        el.style.width = '44px';
+        el.style.height = '44px';
+        el.style.marginLeft = '-22px';
+        el.style.marginTop = '-22px';
         el.style.transition = 'none';
 
         // Corner-bracket crosshair — open centre keeps tile text readable,
         // square geometry fits the rectangular game aesthetic.
         el.innerHTML = `
-            <svg width="64" height="64" viewBox="0 0 64 64" style="filter: drop-shadow(0 0 5px rgba(0,0,0,0.9))">
-                <path d="M 8 24 L 8 8 L 24 8"  fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
-                <path d="M 40 8 L 56 8 L 56 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
-                <path d="M 8 40 L 8 56 L 24 56"  fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
-                <path d="M 40 56 L 56 56 L 56 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
-                <rect class="center-dot" x="29" y="29" width="6" height="6" fill="currentColor"/>
+            <svg viewBox="0 0 64 64" style="filter: drop-shadow(0 0 5px rgba(0,0,0,0.9))">
+                <path d="M 0 20 L 0 0 L 20 0"  fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
+                <path d="M 44 0 L 64 0 L 64 20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
+                <path d="M 0 44 L 0 64 L 20 64"  fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
+                <path d="M 44 64 L 64 64 L 64 44" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
             </svg>
-            <div class="gamepad-cursor-label"></div>
         `;
 
         // Restore last known position, or place at player corner on first appearance.
@@ -506,11 +520,9 @@ export class GamepadCursorManager {
             x: initialX,
             y: initialY,
             element: el,
-            label: el.querySelector('.gamepad-cursor-label'),
             controllerType: gamepad ? detectControllerType(gamepad) : 'xbox',
             lastPlayerId: -1,
             lastColor: '',
-            lastLabelText: '',
             speedMultiplier: parseFloat(localStorage.getItem('dicy_gamepad_speed_' + index)) || 1.0,
             dragTarget: null,
             mode: 'dpad',
@@ -590,19 +602,6 @@ export class GamepadCursorManager {
             cursor.lastColor = colorHex;
         }
 
-        // Show controller number next to cursor only in menus with 2+ active gamepads
-        if (cursor.label) {
-            const humanIndex = this.inputManager.getHumanIndex(index);
-            const labelText = String(humanIndex + 1);
-            if (cursor.lastLabelText !== labelText) {
-                cursor.label.textContent = labelText;
-                cursor.lastLabelText = labelText;
-            }
-            cursor.label.style.display = isMenuOpen ? 'block' : 'none';
-
-            const isPrimaryMaster = index === this.inputManager.getPrimaryMasterIndex();
-            cursor.label.classList.toggle('primary-master', isPrimaryMaster);
-        }
     }
 
     simulateMouseEvent(type, x, y, button = 0, gamepadIndex = 0) {
@@ -880,11 +879,43 @@ export class GamepadCursorManager {
         }
     }
 
+    /** Resize the cursor element to w×h CSS pixels and update SVG bracket paths. */
+    _resizeCursor(cursor, w, h = w, insetPct = 0.10) {
+        const inset = Math.max(w * insetPct, h * insetPct);
+        w = Math.round(w - inset);
+        h = Math.round(h - inset);
+        const key = `${w}x${h}`;
+        if (cursor._lastSz === key) return;
+        cursor._lastSz = key;
+        cursor.element.style.width = w + 'px';
+        cursor.element.style.height = h + 'px';
+        cursor.element.style.marginLeft = (-w / 2) + 'px';
+        cursor.element.style.marginTop = (-h / 2) + 'px';
+        const svg = cursor.element.querySelector('svg');
+        if (!svg) return;
+        svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        const b = Math.round(Math.min(w, h) * 0.3); // bracket arm length = 30% of shorter side
+        const W = w, H = h;
+        const paths = svg.querySelectorAll('path');
+        const d = [
+            `M 0 ${b} L 0 0 L ${b} 0`,
+            `M ${W - b} 0 L ${W} 0 L ${W} ${b}`,
+            `M 0 ${H - b} L 0 ${H} L ${b} ${H}`,
+            `M ${W - b} ${H} L ${W} ${H} L ${W} ${H - b}`,
+        ];
+        paths.forEach((p, i) => { if (d[i]) p.setAttribute('d', d[i]); });
+    }
+
     /** Move a cursor's crosshair to the centre of a DOM element. */
     moveCursorToElement(cursor, el) {
         const rect = el.getBoundingClientRect();
         cursor.x = Math.max(0, Math.min(window.innerWidth, rect.left + rect.width / 2));
         cursor.y = Math.max(0, Math.min(window.innerHeight, rect.top + rect.height / 2));
+        // Size cursor to match the focused element exactly
+        const s = this._uiScale();
+        const w = Math.max(24, Math.round(rect.width / s));
+        const h = Math.max(24, Math.round(rect.height / s));
+        this._resizeCursor(cursor, w, h);
         this._positionCursor(cursor);
         cursor.element.style.opacity = '1.0';
         this._setCursorMode(cursor, 'dpad');

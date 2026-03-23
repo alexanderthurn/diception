@@ -4870,6 +4870,8 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 
 .gamepad-cursor svg {
     display: block;
+    width: 100%;
+    height: 100%;
 }
 
 #gamepad-cursors-container {
@@ -4888,9 +4890,9 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 /* Player number label shown next to the cursor in menus */
 .gamepad-cursor-label {
     position: absolute;
-    left: 48px;
-    top: 16px;
-    transform: translate(-50%, -50%);
+    right: 0;
+    top: 0;
+    transform: translate(50%, -50%);
     font-family: 'Rajdhani', sans-serif;
     font-size: 11px;
     font-weight: 700;

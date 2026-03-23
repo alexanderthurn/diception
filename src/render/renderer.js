@@ -352,6 +352,11 @@ export class Renderer {
     /**
      * Get screen coordinates for a tile's center.
      */
+    getTileScreenSize() {
+        if (!this.rootContainer || !this.grid) return 0;
+        return this.grid.tileSize * this.rootContainer.scale.x;
+    }
+
     getTileScreenPosition(x, y) {
         if (!this.rootContainer || !this.grid) return null;
 

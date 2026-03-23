@@ -41,6 +41,7 @@ export class InputController {
                 this.renderer.likelyTrackpad = !looksLikeMouseStep;
             }
             this.renderer.zoom(e.deltaY, e.clientX, e.clientY);
+            this._syncAllGamepadCursors();
         }, { passive: false });
 
         // Multi-touch state
@@ -319,18 +320,29 @@ export class InputController {
     onPan(dir) {
         const panSpeed = 4;
         this.renderer.pan(dir.x * panSpeed, dir.y * panSpeed);
+        this._syncAllGamepadCursors();
     }
 
     onZoom(data) {
         this.renderer.zoom(data.direction, window.innerWidth / 2, window.innerHeight / 2);
+        this._syncAllGamepadCursors();
     }
 
     onPanAnalog(dir) {
         const panSpeed = 15;
         this.renderer.pan(dir.x * panSpeed, dir.y * panSpeed);
-
         if (dir.zoom) {
             this.renderer.zoom(dir.zoom * 20, window.innerWidth / 2, window.innerHeight / 2);
+        }
+        this._syncAllGamepadCursors();
+    }
+
+    _syncAllGamepadCursors() {
+        const gcm = this.inputManager.gamepadCursorManager;
+        if (!gcm) return;
+        for (const idx of gcm.activatedGamepads) {
+            const sourceId = this._sourceId(idx);
+            this.syncGamepadCursor(idx, sourceId);
         }
     }
 
@@ -413,9 +425,11 @@ export class InputController {
                     if (ratio > 1.02) {
                         this.renderer.zoom(1, centerX, centerY);
                         this.lastPinchDistance = currentDistance;
+                        this._syncAllGamepadCursors();
                     } else if (ratio < 0.98) {
                         this.renderer.zoom(-1, centerX, centerY);
                         this.lastPinchDistance = currentDistance;
+                        this._syncAllGamepadCursors();
                     }
                 }
             } else {
@@ -426,6 +440,7 @@ export class InputController {
             const dy = e.global.y - this.lastPos.y;
             this.renderer.pan(dx, dy);
             this.lastPos = { x: e.global.x, y: e.global.y };
+            this._syncAllGamepadCursors();
         } else if (this.activePointers.size <= 1) {
             const isSimulated = this._isGamepadSimulated(e);
 
@@ -692,6 +707,7 @@ export class InputController {
                 y: screenPos.y
             });
         }
+
     }
 
     calculatePinchDistance() {

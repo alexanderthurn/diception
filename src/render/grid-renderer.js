@@ -263,7 +263,7 @@ export class GridRenderer {
     setCursor(x, y, sourceId = 'mouse') {
         if (x === null) {
             if (sourceId === null) {
-                this.cursorTiles.clear(); // clear all sources
+                this.cursorTiles.clear();
             } else {
                 this.cursorTiles.delete(sourceId);
             }
@@ -929,20 +929,7 @@ export class GridRenderer {
             const selTile = this.selectedTiles.get(sourceId);
             const sameAsSelection = selTile && selTile.x === cursorTile.x && selTile.y === cursorTile.y;
             if (!sameAsSelection) {
-                const cursorGfx = this._getCursorGfx(sourceId);
-                cursorGfx.clear();
-                const inset = 3;
-                cursorGfx.rect(inset, inset, this.tileSize - inset * 2, this.tileSize - inset * 2);
-                cursorGfx.stroke({ width: 3, color: 0x00ffff, alpha: 0.8, join: 'miter', cap: 'square' });
-                const bracketSize = 10;
-                cursorGfx.moveTo(0, bracketSize); cursorGfx.lineTo(0, 0); cursorGfx.lineTo(bracketSize, 0);
-                cursorGfx.moveTo(this.tileSize - bracketSize, 0); cursorGfx.lineTo(this.tileSize, 0); cursorGfx.lineTo(this.tileSize, bracketSize);
-                cursorGfx.moveTo(this.tileSize, this.tileSize - bracketSize); cursorGfx.lineTo(this.tileSize, this.tileSize); cursorGfx.lineTo(this.tileSize - bracketSize, this.tileSize);
-                cursorGfx.moveTo(bracketSize, this.tileSize); cursorGfx.lineTo(0, this.tileSize); cursorGfx.lineTo(0, this.tileSize - bracketSize);
-                cursorGfx.stroke({ width: 2, color: 0x00ffff, alpha: 1.0, join: 'miter', cap: 'square', alignment: 0 });
-                cursorGfx.x = cursorTile.x * (this.tileSize + this.gap);
-                cursorGfx.y = cursorTile.y * (this.tileSize + this.gap);
-                cursorGfx.visible = true;
+                if (this._cursorGfxPool.has(sourceId)) this._cursorGfxPool.get(sourceId).visible = false;
             } else {
                 if (this._cursorGfxPool.has(sourceId)) this._cursorGfxPool.get(sourceId).visible = false;
             }
