@@ -20,6 +20,8 @@ export class GamepadCursorManager {
         this._inUIFocus = new Set(); // gamepadIndices currently in UI button focus (cursor hidden)
         this.onIntroSpawn = null; // optional callback: (playerIndex, screenX, screenY) => void
         this.getTileScreenSize = null; // injected by main.js: () => number
+        this._attackOverlay = document.getElementById('attack-overlay');
+        this._diceResultHud = document.getElementById('dice-result-hud');
         const isDesktop = isDesktopContext();
         this.cursorSpeed = isDesktop ? 12 : 20;
 
@@ -340,6 +342,12 @@ export class GamepadCursorManager {
 
     update() {
         if (this.disposed) return;
+
+        // Hide all cursors when fullscreen attack overlay or beginner dice HUD is shown
+        const attackVisible = this._attackOverlay && !this._attackOverlay.classList.contains('hidden');
+        const diceVisible   = this._diceResultHud && !this._diceResultHud.classList.contains('hidden') &&
+                              (localStorage.getItem('dicy_gameSpeed') || 'beginner') === 'beginner';
+        this.container.style.visibility = (attackVisible || diceVisible) ? 'hidden' : '';
 
         // Use InputManager's unified gamepad source (gilrs or navigator, never both)
         const gamepads = this.inputManager.getGamepads();
