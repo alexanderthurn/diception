@@ -167,7 +167,7 @@ export class GamepadCursorManager {
 
             const buttonLabels = isEditorOpen ? editorLabels : gameLabels;
             const label = buttonLabels[button];
-            if (label && document.querySelector('#main-menu:not(.hidden)')) {
+            if (label && document.querySelector('#main-menu:not(.hidden)') && !this.inputManager.isGamepadAllowedGlobalAction(index)) {
                 this.showFeedback(index, label, button);
             }
 

@@ -459,44 +459,6 @@ async function init() {
         gamepadSidePanel.innerHTML = '';
         if (gamepadLeftPanel) gamepadLeftPanel.innerHTML = '';
 
-        // ── Play Mode (setup only — cannot change mid-game) ──────────────────
-        if (setupVisible) {
-            const pmBlock = document.createElement('div');
-            pmBlock.id = 'setup-play-mode-group';
-            gamepadSidePanel.appendChild(pmBlock);
-
-            const pmTitle = document.createElement('div');
-            pmTitle.className = 'gp-panel-title';
-            pmTitle.textContent = 'PLAY MODE';
-            pmBlock.appendChild(pmTitle);
-
-            const pmSelect = document.createElement('select');
-            pmSelect.id = 'play-mode';
-            pmSelect.className = 'gp-play-mode-select';
-            [
-                ['classic',    'Classic — One at a time'],
-                ['parallel',   'Parallel — Everyone anytime'],
-                ['parallel-s', 'Parallel S — Active player is safe'],
-            ].forEach(([val, label]) => {
-                const opt = document.createElement('option');
-                opt.value = val;
-                opt.textContent = label;
-                pmSelect.appendChild(opt);
-            });
-            pmSelect.value = localStorage.getItem('dicy_playMode') ?? 'classic';
-            pmSelect.addEventListener('change', () => {
-                localStorage.setItem('dicy_playMode', pmSelect.value);
-                configManager.syncSetupModsExpanderLive();
-            });
-            pmBlock.appendChild(pmSelect);
-
-            const divider = document.createElement('div');
-            divider.className = 'gp-panel-divider';
-            gamepadSidePanel.appendChild(divider);
-
-            configManager.syncSetupModsFieldHighlights();
-        }
-
         // Controllers title
         const title = document.createElement('div');
         title.className = 'gp-panel-title';

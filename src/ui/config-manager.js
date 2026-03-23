@@ -90,7 +90,7 @@ export class ConfigManager {
             effectsQualityInput: document.getElementById('effects-quality'),
             mapStyleInput: document.getElementById('map-style'),
             gameModeInput: document.getElementById('game-mode'),
-            playModeInput: null, // Managed dynamically in gamepad side panel
+            playModeInput: document.getElementById('play-mode'),
             botAISelect: document.getElementById('bot-ai-select'),
             tournamentGamesInput: document.getElementById('tournament-games'),
             tournamentConfig: document.getElementById('tournament-config'),
@@ -407,7 +407,11 @@ export class ConfigManager {
             handleChange();
             this.syncSetupModsExpanderLive();
         });
-        // playMode is managed dynamically in the gamepad side panel
+        el.playModeInput.addEventListener('change', () => {
+            localStorage.setItem('dicy_playMode', el.playModeInput.value);
+            handleChange();
+            this.syncSetupModsExpanderLive();
+        });
 
         el.tournamentGamesInput.addEventListener('input', () => {
             localStorage.setItem('dicy_tournamentGames', el.tournamentGamesInput.value);
