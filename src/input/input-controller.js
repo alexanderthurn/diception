@@ -239,7 +239,16 @@ export class InputController {
             const uiFocus = this.uiFocusStates.get(sourceId);
             const buttons = this._getUIButtons(uiFocus.side);
             this._exitUIFocus(sourceId);
-            buttons[uiFocus.buttonIndex]?.click();
+            const btn = buttons[uiFocus.buttonIndex];
+            if (btn) {
+                const gcm = this.inputManager?.gamepadCursorManager;
+                if (index >= 0 && gcm) {
+                    // Defer to button-up so press doesn't also trigger the newly-opened modal's back button
+                    gcm._pendingUIClick.set(index, btn);
+                } else {
+                    btn.click();
+                }
+            }
             return;
         }
 

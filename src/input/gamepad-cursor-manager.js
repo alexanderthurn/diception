@@ -18,6 +18,7 @@ export class GamepadCursorManager {
         this.activatedGamepads = new Set(); // indices that have pressed at least one button
         this._pressedWithoutModal = new Map(); // gamepadIndex -> Set of buttons pressed while no modal was open
         this._inUIFocus = new Set(); // gamepadIndices currently in UI button focus (cursor hidden)
+        this._pendingUIClick = new Map(); // gamepadIndex → button element to click on button-up
         this.onIntroSpawn = null; // optional callback: (playerIndex, screenX, screenY) => void
         this.getTileScreenSize = null; // injected by main.js: () => number
         this._attackOverlay = document.getElementById('attack-overlay');
@@ -287,7 +288,12 @@ export class GamepadCursorManager {
             const swallow = pressedOutsideModal && isMenuOpen;
 
             if (b.confirmButtons.includes(button)) {
-                if (isAssignedTurnUp && !swallow && !this._inUIFocus.has(index)) {
+                // Fire deferred UI button click (set on button-down by input-controller)
+                if (this._pendingUIClick.has(index)) {
+                    const btn = this._pendingUIClick.get(index);
+                    this._pendingUIClick.delete(index);
+                    btn.click();
+                } else if (isAssignedTurnUp && !swallow && !this._inUIFocus.has(index)) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = index;
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
