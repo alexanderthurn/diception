@@ -194,6 +194,13 @@ export class ScenarioBrowser {
         if (!this.campaignButtonList) return;
         this.campaignButtonList.innerHTML = '';
 
+        // Find first campaign that is not fully solved (for gamepad auto-focus)
+        const firstUnsolvedCampaignIdx = campaigns.findIndex(c => {
+            const levelCount = c.levels?.length ?? 0;
+            const solvedCount = getSolvedLevels(c.owner).length;
+            return levelCount > 0 && solvedCount < levelCount;
+        });
+
         campaigns.forEach((c, idx) => {
             const levelCount = c.levels?.length ?? 0;
             const solvedCount = getSolvedLevels(c.owner).length;
@@ -205,6 +212,7 @@ export class ScenarioBrowser {
 
             const btn = document.createElement('button');
             btn.className = 'tron-btn large campaign-select-btn';
+            if (idx === firstUnsolvedCampaignIdx) btn.dataset.gamepadAutofocus = '';
 
             const nameSpan = document.createElement('span');
             nameSpan.textContent = (allComplete ? '✓ ' : '') + displayName;
@@ -311,7 +319,11 @@ export class ScenarioBrowser {
             const level = levels[i];
             const tile = document.createElement('div');
             tile.className = 'level-grid-tile';
-            if (firstUnsolvedIndex === i) tile.classList.add('selected');
+            tile.tabIndex = 0;
+            if (firstUnsolvedIndex === i) {
+                tile.classList.add('selected');
+                tile.dataset.gamepadAutofocus = '';
+            }
             if (this.justSavedLevelIndex === i) tile.classList.add('just-saved');
             if (solvedLevels.includes(i)) tile.classList.add('solved');
             tile.dataset.index = i;
@@ -344,6 +356,7 @@ export class ScenarioBrowser {
         if (this.isOwner) {
             const addTile = document.createElement('div');
             addTile.className = 'level-grid-tile add-tile';
+            addTile.tabIndex = 0;
             addTile.innerHTML = ''; // No icon at all
             addTile.addEventListener('click', () => this.openEditorForNewLevel(levels.length));
             this.levelGrid.appendChild(addTile);

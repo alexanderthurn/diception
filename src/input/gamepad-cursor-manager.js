@@ -1054,16 +1054,15 @@ export class GamepadCursorManager {
     _setupModalAutoFocus() {
         const autoFocus = (container) => {
             if (this.cursors.size === 0) return; // only when gamepad is connected
-            const first = container.querySelector(GamepadCursorManager.FOCUSABLE);
+            const first = container.querySelector('[data-gamepad-autofocus]') ||
+                          container.querySelector(GamepadCursorManager.FOCUSABLE);
             if (!first) return;
             setTimeout(() => {
                 first.focus({ preventScroll: true });
-                // Snap the last D-pad gamepad cursor to the focused element
-                if (this._lastDpadGamepad != null &&
-                        this.inputManager.isGamepadAllowedGlobalAction(this._lastDpadGamepad)) {
-                    const cursor = this.cursors.get(this._lastDpadGamepad);
-                    if (cursor && cursor.mode === 'dpad') {
-                        first.classList.add('gamepad-focused');
+                first.classList.add('gamepad-focused');
+                // Snap all active dpad gamepad cursors to the focused element
+                for (const [, cursor] of this.cursors) {
+                    if (cursor.mode === 'dpad') {
                         this.moveCursorToElement(cursor, first);
                     }
                 }
