@@ -89,7 +89,7 @@ export class InputController {
         const visibleModal = document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
         if ((visibleModal && visibleModal.offsetParent !== null) ||
             document.querySelector('.dialog-overlay')) return;
-        const { x: dx, y: dy, index, fromStick = false } = data;
+        const { x: dx, y: dy, index } = data;
         if (!this.game.players || this.game.players.length === 0) return;
         if (this.game.gameOver) return;
 
@@ -137,7 +137,7 @@ export class InputController {
                 return;
             }
             if (dy === -1 && sel.y <= 0) {
-                if (!fromStick && (index < 0 || this.inputManager.isGamepadAllowedGlobalAction(index)))
+                if (index < 0 || this.inputManager.isGamepadAllowedGlobalAction(index))
                     this._enterUIFocus(sourceId, 'top');
                 return;
             }
@@ -151,7 +151,7 @@ export class InputController {
             return;
         }
 
-        this.moveCursor(dx, dy, index, sourceId, fromStick);
+        this.moveCursor(dx, dy, index, sourceId);
     }
 
     initCursorAtNearestTile(gamepadIndex = -1, sourceId = 'mouse') {
@@ -192,7 +192,7 @@ export class InputController {
         }
     }
 
-    moveCursor(dx, dy, gamepadIndex = -1, sourceId = 'mouse', fromStick = false) {
+    moveCursor(dx, dy, gamepadIndex = -1, sourceId = 'mouse') {
         const cursorState = this._getCursorState(sourceId);
         const newX = Math.max(0, Math.min(this.game.map.width - 1, cursorState.x + dx));
         const newY = Math.max(0, Math.min(this.game.map.height - 1, cursorState.y + dy));
@@ -203,9 +203,9 @@ export class InputController {
                 this._enterUIFocus(sourceId, 'right');
             return;
         }
-        // Top edge + up press → enter top UI button focus (maestro only, not from analog stick)
+        // Top edge + up press → enter top UI button focus (maestro only)
         if (dy === -1 && newY === cursorState.y) {
-            if (!fromStick && (gamepadIndex < 0 || this.inputManager.isGamepadAllowedGlobalAction(gamepadIndex)))
+            if (gamepadIndex < 0 || this.inputManager.isGamepadAllowedGlobalAction(gamepadIndex))
                 this._enterUIFocus(sourceId, 'top');
             return;
         }

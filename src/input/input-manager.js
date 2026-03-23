@@ -631,14 +631,30 @@ export class InputManager {
             // Pick dominant axis, then quantise to -1/0/+1
             const stickDir = (Math.abs(lx) >= Math.abs(ly))
                 ? (lx > 0 ? { x: 1, y: 0 } : lx < 0 ? { x: -1, y: 0 } : null)
-                : (ly > 0 ? { x: 0, y: -1 } : ly < 0 ? { x: 0, y: 1 } : null);
+                : (ly > 0 ? { x: 0, y: 1 } : ly < 0 ? { x: 0, y: -1 } : null);
+
+            // Map stick direction → corresponding D-pad button index (for virtual events)
+            const gpad = this.bindings.gamepad;
+            const stickDirToBtn = (dir) => {
+                if (!dir) return null;
+                if (dir.x === -1) return gpad.move_left?.[0]  ?? 14;
+                if (dir.x === 1)  return gpad.move_right?.[0] ?? 15;
+                if (dir.y === -1) return gpad.move_up?.[0]    ?? 12;
+                if (dir.y === 1)  return gpad.move_down?.[0]  ?? 13;
+                return null;
+            };
 
             const stickRepeat = prevState.stickRepeat;
 
             if (stickDir) {
                 const dirChanged = !stickRepeat.dir || stickRepeat.dir.x !== stickDir.x || stickRepeat.dir.y !== stickDir.y;
                 if (dirChanged) {
-                    this.emit('move', { ...stickDir, index: gp.index, fromStick: true });
+                    // Virtual button-up for previous direction, button-down for new direction
+                    const oldBtn = stickDirToBtn(stickRepeat.dir);
+                    if (oldBtn !== null) this.emit('gamepadButtonUp', { index: gp.index, button: oldBtn, virtual: true });
+                    const newBtn = stickDirToBtn(stickDir);
+                    if (newBtn !== null) this.emit('gamepadButtonDown', { index: gp.index, button: newBtn, virtual: true });
+                    this.emit('move', { ...stickDir, index: gp.index });
                     stickRepeat.active = true;
                     stickRepeat.dir = stickDir;
                     stickRepeat.started = now;
@@ -647,12 +663,18 @@ export class InputManager {
                     const elapsed = now - stickRepeat.started;
                     const sinceLast = now - stickRepeat.lastFire;
                     if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
-                        this.emit('move', { ...stickDir, index: gp.index, fromStick: true });
+                        // Re-emit button-down on repeat so held stick keeps navigating menus
+                        const btn = stickDirToBtn(stickDir);
+                        if (btn !== null) this.emit('gamepadButtonDown', { index: gp.index, button: btn, virtual: true });
+                        this.emit('move', { ...stickDir, index: gp.index });
                         stickRepeat.lastFire = now;
                     }
                 }
                 if (stickDir) activeDir = stickDir;
             } else {
+                // Stick released: emit virtual button-up
+                const oldBtn = stickDirToBtn(stickRepeat.dir);
+                if (oldBtn !== null) this.emit('gamepadButtonUp', { index: gp.index, button: oldBtn, virtual: true });
                 stickRepeat.active = false;
                 stickRepeat.dir = null;
             }
