@@ -638,7 +638,7 @@ export class InputManager {
             if (stickDir) {
                 const dirChanged = !stickRepeat.dir || stickRepeat.dir.x !== stickDir.x || stickRepeat.dir.y !== stickDir.y;
                 if (dirChanged) {
-                    this.emit('move', { ...stickDir, index: gp.index });
+                    this.emit('move', { ...stickDir, index: gp.index, fromStick: true });
                     stickRepeat.active = true;
                     stickRepeat.dir = stickDir;
                     stickRepeat.started = now;
@@ -647,7 +647,7 @@ export class InputManager {
                     const elapsed = now - stickRepeat.started;
                     const sinceLast = now - stickRepeat.lastFire;
                     if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
-                        this.emit('move', { ...stickDir, index: gp.index });
+                        this.emit('move', { ...stickDir, index: gp.index, fromStick: true });
                         stickRepeat.lastFire = now;
                     }
                 }

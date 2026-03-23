@@ -49,6 +49,7 @@ export class GamepadCursorManager {
             gamepadButtonUp: null,
             gamepadCursorMoveRequest: null,
             gamepadUIFocus: null,
+            gamepadMove: null,
         };
 
         // Update loop for movement
@@ -339,11 +340,30 @@ export class GamepadCursorManager {
             }
         };
 
+        // Left analog stick → modal navigation when a menu is open
+        this.boundEventHandlers.gamepadMove = ({ x, y, index, fromStick }) => {
+            if (!fromStick) return;
+            const cursor = this.cursors.get(index);
+            if (!cursor) return;
+            const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
+            if (!isMenuOpen) return;
+            if (!this.inputManager.isGamepadAllowedGlobalAction(index)) return;
+            const b = this._gb();
+            let button;
+            if (x === -1)      button = b.moveLeft;
+            else if (x === 1)  button = b.moveRight;
+            else if (y === -1) button = b.moveUp;
+            else if (y === 1)  button = b.moveDown;
+            else return;
+            this.navigateModal(button, cursor);
+        };
+
         // Register the handlers
         this.inputManager.on('gamepadButtonDown', this.boundEventHandlers.gamepadButtonDown);
         this.inputManager.on('gamepadButtonUp', this.boundEventHandlers.gamepadButtonUp);
         this.inputManager.on('gamepadCursorMoveRequest', this.boundEventHandlers.gamepadCursorMoveRequest);
         this.inputManager.on('gamepadUIFocus', this.boundEventHandlers.gamepadUIFocus);
+        this.inputManager.on('move', this.boundEventHandlers.gamepadMove);
     }
 
     update() {
@@ -456,6 +476,9 @@ export class GamepadCursorManager {
             }
             if (this.boundEventHandlers.gamepadUIFocus) {
                 this.inputManager.off('gamepadUIFocus', this.boundEventHandlers.gamepadUIFocus);
+            }
+            if (this.boundEventHandlers.gamepadMove) {
+                this.inputManager.off('move', this.boundEventHandlers.gamepadMove);
             }
         }
 
