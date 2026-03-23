@@ -7061,7 +7061,8 @@ details.settings-group[open]>summary.settings-group-header::after {
         width: 92vw;
     }
     .attack-side { min-width: 80px; gap: 6px; }
-    .attack-side-name { font-size: 13px; }
+    .attack-role-label { font-size: 13px; }
+    .attack-role-icon { height: 18px !important; }
     .attack-die { width: 36px; height: 36px; font-size: 17px; border-radius: 4px; }
     .attack-dice-row { gap: 3px; max-width: 180px; }
     .attack-side-sum { font-size: 22px; }
@@ -7084,12 +7085,27 @@ details.settings-group[open]>summary.settings-group-header::after {
     min-width: 120px;
 }
 
-.attack-side-name {
+.attack-role-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 2px solid transparent;
+    padding-bottom: 4px;
+}
+
+.attack-role-icon {
+    height: 26px !important;
+    width: auto !important;
+    opacity: 0.75;
+}
+
+.attack-role-label {
     font-family: 'Rajdhani', sans-serif;
     font-size: 17px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.65);
 }
 
 .attack-dice-row {

@@ -92,8 +92,8 @@ export class DiceHUD {
         const defenderColor = defender ? '#' + defender.color.toString(16).padStart(6, '0') : '#fff';
 
         // Reset all elements
-        const nameA    = document.getElementById('attack-attacker-name');
-        const nameD    = document.getElementById('attack-defender-name');
+        const roleRowA = document.getElementById('attack-attacker-role');
+        const roleRowD = document.getElementById('attack-defender-role');
         const diceRowA = document.getElementById('attack-attacker-dice');
         const diceRowD = document.getElementById('attack-defender-dice');
         const sumA     = document.getElementById('attack-attacker-sum');
@@ -101,10 +101,8 @@ export class DiceHUD {
         const cmpSign  = document.getElementById('attack-compare-sign');
         const banner   = document.getElementById('attack-result-banner');
 
-        nameA.textContent = getPlayerName?.(attacker) ?? 'Attacker';
-        nameA.style.color = attackerColor;
-        nameD.textContent = getPlayerName?.(defender) ?? 'Defender';
-        nameD.style.color = defenderColor;
+        if (roleRowA) roleRowA.style.borderBottomColor = attackerColor;
+        if (roleRowD) roleRowD.style.borderBottomColor = defenderColor;
         diceRowA.innerHTML = '';
         diceRowD.innerHTML = '';
         sumA.textContent = '';
