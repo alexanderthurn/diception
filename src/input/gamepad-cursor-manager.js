@@ -595,7 +595,7 @@ export class GamepadCursorManager {
             // Game context (setup, in-game, pause): use assignment color
             const assignment = this.inputManager.getGamepadAssignment(index);
             if (assignment === 'master') {
-                colorHex = '#AAAAAA'; // grey for master
+                colorHex = '#FFFFFF';
             } else {
                 const color = GAME.HUMAN_COLORS[assignment % GAME.HUMAN_COLORS.length];
                 colorHex = '#' + color.toString(16).padStart(6, '0');

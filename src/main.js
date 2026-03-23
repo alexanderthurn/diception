@@ -472,7 +472,7 @@ async function init() {
             const slotIndex = isMaster ? null : assignment;
             const pColor = slotIndex != null
                 ? '#' + GAME.HUMAN_COLORS[slotIndex % GAME.HUMAN_COLORS.length].toString(16).padStart(6, '0')
-                : '#888888';
+                : '#FFFFFF';
 
             const entry = document.createElement('div');
             entry.className = 'gp-entry';
