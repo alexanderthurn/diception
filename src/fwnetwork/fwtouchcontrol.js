@@ -413,6 +413,38 @@ class FWTouchControl extends PIXI.Container {
                 }
             });
 
+        } else if (app.layout === 'dice1') {
+            // D-pad layout without Home, Select, Start, and B buttons
+            this.dpadCenterContainer.rPos = [0.0, 1.0, 0.09, 1.0, -1.0];
+            this.axesContainers.forEach((axisContainer, i) => {
+                switch(i) {
+                    case 0: axisContainer.rPos = R_POS_INVISIBLE; break;
+                    case 1: axisContainer.rPos = R_POS_INVISIBLE; break;
+                }
+            });
+            this.buttonContainers.forEach((buttonContainer, i) => {
+                switch(i) {
+                    case 0:  buttonContainer.rPos = [1.0, 1.0, 0.09, -0.5,  0.0]; break;
+                    case 1:  buttonContainer.rPos = R_POS_INVISIBLE; break; // B
+                    case 2:  buttonContainer.rPos = [1.0, 1.0, 0.09, -1.15,-1];   break;
+                    case 3:  buttonContainer.rPos = [1.0, 1.0, 0.09, -0.5, -2];   break;
+                    case 4:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 5:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 6:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 7:  buttonContainer.rPos = R_POS_INVISIBLE; break;
+                    case 8:  buttonContainer.rPos = R_POS_INVISIBLE; break; // Select
+                    case 9:  buttonContainer.rPos = R_POS_INVISIBLE; break; // Start
+                    case 10: buttonContainer.rPos = [-2.5, 1.0, 0.05, -0.5]; break;
+                    case 11: buttonContainer.rPos = [-2.5, 1.0, 0.05,  0.5]; break;
+                    case 12: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0, -2.0]; break; // up
+                    case 13: buttonContainer.rPos = [0.0, 1.0, 0.09, 1.0,  0.0]; break; // down
+                    case 14: buttonContainer.rPos = [0.0, 1.0, 0.09, 0.0, -1.0]; break; // left
+                    case 15: buttonContainer.rPos = [0.0, 1.0, 0.09, 2.0, -1.0]; break; // right
+                    case 16: buttonContainer.rPos = R_POS_INVISIBLE; break; // Home
+                    case 17: buttonContainer.rPos = [0.5, 0.55, 0.075]; break;
+                }
+            });
+
         } else if (app.layout === 'dpad-full') {
             // Full layout exactly, but D-pad replaces analog stick 0
             // Same left-anchor symmetry as dpad layout
