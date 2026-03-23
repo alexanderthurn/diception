@@ -6921,31 +6921,6 @@ details.settings-group[open]>summary.settings-group-header::after {
 }
 
 
-/* ── Gamepad Left Panel (controls SVG) ── */
-
-#gamepad-left-panel {
-    position: absolute;
-    top: 50%;
-    right: calc(50% + 232px);
-    transform: translateY(-50%);
-    width: 200px;
-    display: none;
-    flex-direction: column;
-    gap: 6px;
-    background: rgba(0, 0, 5, 0.92);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--panel-glow);
-    padding: 12px 10px;
-    z-index: 100;
-    pointer-events: none;
-}
-
-@media (min-width: 830px) {
-    #gamepad-left-panel.gp-panel-active {
-        display: flex;
-    }
-}
-
 /* ── Gamepad Side Panel ── */
 
 #gamepad-side-panel {
@@ -6987,59 +6962,41 @@ details.settings-group[open]>summary.settings-group-header::after {
     margin-bottom: 2px;
 }
 
-.gp-player-row {
+.gp-list {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
     gap: 5px;
 }
 
-.gp-player-label {
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 2px;
-    color: var(--gp-color, #aaa);
-    padding: 0 4px 0 2px;
-    min-width: 28px;
-    line-height: 34px;
-}
-
-.gp-player-label-master {
-    color: #666;
-}
-
-.gp-join-btn {
-    flex: 1;
-    min-height: 34px;
-    font-size: 11px;
-    letter-spacing: 2px;
-}
-
-.gp-join-btn-master {
-    border-color: #666;
-    color: #666;
-}
-
-.gp-chip {
-    min-height: 34px;
-    min-width: 34px;
-    padding: 0 8px;
+.gp-entry {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 3px;
+}
+
+
+.gp-cycle-btn {
+    min-height: 30px;
+    min-width: 30px;
+    padding: 0 8px;
     border-color: var(--gp-color, #aaa);
     color: var(--gp-color, #aaa);
     font-family: 'Rajdhani', sans-serif;
     font-size: 15px;
     font-weight: 700;
-    opacity: 0.75;
-    transition: opacity 0.15s, background 0.15s;
 }
 
-.gp-chip:hover {
-    opacity: 1;
-    background: rgba(0,0,0,0.3);
+.gp-remove-btn {
+    min-height: 30px;
+    min-width: 30px;
+    padding: 0 8px;
+    border-color: rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.4);
+}
+
+.gp-remove-btn:hover {
+    border-color: #ff4444;
+    color: #ff4444;
 }
 
 

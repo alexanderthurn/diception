@@ -428,7 +428,6 @@ async function init() {
 
     // ── Gamepad panels ────────────────────────────────────────────────────────
     const gamepadSidePanel = document.getElementById('gamepad-side-panel');
-    const gamepadLeftPanel = document.getElementById('gamepad-left-panel');
     const gamepadControlsPanel = document.getElementById('gamepad-controls-panel');
 
     function updateControlsPanel() {
@@ -441,7 +440,6 @@ async function init() {
 
     function renderGamepadAssignments() {
         if (!gamepadSidePanel) return;
-        // Only show gamepads activated this session (cursor exists) — avoids stale saved assignments
         const gcm = inputManager.gamepadCursorManager;
         const gamepads = Array.from(inputManager.connectedGamepadIndices || [])
             .filter(idx => gcm?.cursors?.has(idx))
@@ -450,134 +448,92 @@ async function init() {
         const pauseVisible = !document.getElementById('pause-modal')?.classList.contains('hidden');
         const humanCount = parseInt(document.getElementById('human-count')?.value ?? '1');
 
-        if (gcm?.cursors?.size <= 1 || (!setupVisible && !pauseVisible)) {
+        if (gamepads.length === 0 || (!setupVisible && !pauseVisible)) {
             gamepadSidePanel.classList.remove('gp-panel-active');
-            gamepadLeftPanel?.classList.remove('gp-panel-active');
             updateControlsPanel();
             return;
         }
         gamepadSidePanel.innerHTML = '';
-        if (gamepadLeftPanel) gamepadLeftPanel.innerHTML = '';
 
         // Controllers title
         const title = document.createElement('div');
         title.className = 'gp-panel-title';
-        title.textContent = 'GAMEPADS MAPPING';
+        title.textContent = 'GAMEPADS';
         gamepadSidePanel.appendChild(title);
 
-        const ctrlHint = document.createElement('div');
-        ctrlHint.className = 'gp-master-hint';
-        ctrlHint.textContent = 'Press a button to assign yourself to a player slot. (Gamepads only)';
-        gamepadSidePanel.appendChild(ctrlHint);
+        // All gamepad entries in one wrapping container
+        const gpList = document.createElement('div');
+        gpList.className = 'gp-list';
+        gamepadSidePanel.appendChild(gpList);
 
-        // One row per human player
-        for (let i = 0; i < humanCount; i++) {
-            const pColor = '#' + GAME.HUMAN_COLORS[i % GAME.HUMAN_COLORS.length].toString(16).padStart(6, '0');
-            const assignedGPs = gamepads.filter(g => inputManager.getGamepadAssignment(g) === i);
+        for (const gpIdx of gamepads) {
+            const assignment = inputManager.getGamepadAssignment(gpIdx);
+            const isMaster = assignment === 'master' || (typeof assignment === 'number' && assignment >= humanCount);
+            const slotIndex = isMaster ? null : assignment;
+            const pColor = slotIndex != null
+                ? '#' + GAME.HUMAN_COLORS[slotIndex % GAME.HUMAN_COLORS.length].toString(16).padStart(6, '0')
+                : '#888888';
 
-            const row = document.createElement('div');
-            row.className = 'gp-player-row';
+            const entry = document.createElement('div');
+            entry.className = 'gp-entry';
 
-            const playerLabel = document.createElement('div');
-            playerLabel.className = 'gp-player-label';
-            playerLabel.style.setProperty('--gp-color', pColor);
-            playerLabel.textContent = `P${i + 1}`;
-            row.appendChild(playerLabel);
-
-            const joinBtn = document.createElement('button');
-            joinBtn.className = 'tron-btn gp-join-btn';
-            joinBtn.title = `Click with gamepad to join as Player ${i + 1}`;
-            joinBtn.textContent = 'JOIN';
-            joinBtn.addEventListener('click', () => {
-                const gpIdx = inputManager.lastClickingGamepad;
-                if (gpIdx != null) inputManager.setGamepadAssignment(gpIdx, i);
+            // Colored button showing controller index — click cycles assignment
+            const cycleBtn = document.createElement('button');
+            cycleBtn.className = 'tron-btn small gp-cycle-btn';
+            cycleBtn.style.setProperty('--gp-color', pColor);
+            cycleBtn.title = 'Change player assignment';
+            cycleBtn.textContent = String(gpIdx + 1);
+            cycleBtn.addEventListener('click', () => {
+                gcm?._cycleAssignment(gpIdx, 1);
+                renderGamepadAssignments();
             });
-            row.appendChild(joinBtn);
+            entry.appendChild(cycleBtn);
 
-            for (const gpIdx of assignedGPs) {
-                const chip = document.createElement('button');
-                chip.className = 'tron-btn gp-chip';
-                chip.style.setProperty('--gp-color', pColor);
-                chip.title = `Remove controller ${gpIdx + 1}`;
-                chip.textContent = String(gpIdx + 1);
-                chip.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    inputManager.gamepadCursorManager?.kickGamepad(gpIdx);
-                });
-                row.appendChild(chip);
-            }
-
-            gamepadSidePanel.appendChild(row);
-        }
-
-        // Master row
-        const masterGPs = gamepads.filter(g => {
-            const a = inputManager.getGamepadAssignment(g);
-            return a === 'master' || (typeof a === 'number' && a >= humanCount);
-        });
-        const masterRow = document.createElement('div');
-        masterRow.className = 'gp-player-row';
-        const masterLabel = document.createElement('div');
-        masterLabel.className = 'gp-player-label gp-player-label-master';
-        masterLabel.textContent = '—';
-        masterRow.appendChild(masterLabel);
-        const masterJoinBtn = document.createElement('button');
-        masterJoinBtn.className = 'tron-btn gp-join-btn gp-join-btn-master';
-        masterJoinBtn.title = 'Click with gamepad to become unrestricted (any player)';
-        masterJoinBtn.textContent = 'Join Master';
-        masterJoinBtn.addEventListener('click', () => {
-            const gpIdx = inputManager.lastClickingGamepad;
-            if (gpIdx != null) inputManager.setGamepadAssignment(gpIdx, 'master');
-        });
-        masterRow.appendChild(masterJoinBtn);
-        for (const gpIdx of masterGPs) {
-            const chip = document.createElement('button');
-            chip.className = 'tron-btn gp-chip';
-            chip.style.setProperty('--gp-color', '#666');
-            chip.title = `Remove controller ${gpIdx + 1}`;
-            chip.textContent = String(gpIdx + 1);
-            chip.addEventListener('click', (e) => {
-                e.stopPropagation();
-                inputManager.gamepadCursorManager?.kickGamepad(gpIdx);
+            // Remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'tron-btn small gp-remove-btn';
+            removeBtn.title = `Remove controller ${gpIdx + 1}`;
+            removeBtn.textContent = '✕';
+            removeBtn.addEventListener('click', () => {
+                gcm?.kickGamepad(gpIdx);
             });
-            masterRow.appendChild(chip);
-        }
-        gamepadSidePanel.appendChild(masterRow);
+            entry.appendChild(removeBtn);
 
-        const masterHint = document.createElement('div');
-        masterHint.className = 'gp-master-hint';
-        masterHint.textContent = 'Masters control any player';
-        gamepadSidePanel.appendChild(masterHint);
-
-        // Controls SVG — rendered in the left panel
-        if (gamepadLeftPanel) {
-            gamepadLeftPanel.innerHTML = `
-                <div class="gp-panel-title">CONTROLS</div>
-                <svg class="gcp-svg" viewBox="40 2 155 162" xmlns="http://www.w3.org/2000/svg">
-                    <rect class="gcp-body" x="58" y="55" width="124" height="68" rx="8"/>
-                    <rect class="gcp-el" x="77" y="73" width="6" height="18" rx="1"/>
-                    <rect class="gcp-el" x="71" y="79" width="18" height="6" rx="1"/>
-                    <circle class="gcp-el" cx="162" cy="77" r="4"/>
-                    <circle class="gcp-el" cx="162" cy="97" r="4"/>
-                    <circle class="gcp-el" cx="152" cy="87" r="4"/>
-                    <circle class="gcp-el gcp-dim" cx="172" cy="87" r="4"/>
-                    <circle class="gcp-stick gcp-dim" cx="90" cy="112" r="7"/>
-                    <circle class="gcp-stick gcp-dim" cx="150" cy="112" r="7"/>
-                    <circle class="gcp-dot" cx="80" cy="73" r="1.5"/>
-                    <line class="gcp-line" x1="80" y1="73" x2="80" y2="36"/>
-                    <text class="gcp-lbl" text-anchor="middle" x="80" y="20">Move /<tspan x="80" dy="13">Attack</tspan></text>
-                    <circle class="gcp-dot" cx="162" cy="73" r="1.5"/>
-                    <line class="gcp-line" x1="162" y1="73" x2="162" y2="36"/>
-                    <text class="gcp-lbl" text-anchor="middle" x="162" y="20">End Turn</text>
-                    <circle class="gcp-dot" cx="162" cy="101" r="1.5"/>
-                    <line class="gcp-line" x1="162" y1="101" x2="162" y2="142"/>
-                    <text class="gcp-lbl" text-anchor="middle" x="162" y="154">Select</text>
-                    <circle class="gcp-dot" cx="148" cy="90" r="1.5"/>
-                    <line class="gcp-line" x1="148" y1="90" x2="92" y2="142"/>
-                    <text class="gcp-lbl" text-anchor="middle" x="92" y="154">Deselect</text>
-                </svg>`;
-            gamepadLeftPanel.classList.add('gp-panel-active');
+            gpList.appendChild(entry);
         }
+
+        // Controls SVG — below the gamepad list
+        const divider = document.createElement('div');
+        divider.className = 'gp-panel-divider';
+        gamepadSidePanel.appendChild(divider);
+
+        const controlsDiv = document.createElement('div');
+        controlsDiv.innerHTML = `
+            <div class="gp-panel-title">CONTROLS</div>
+            <svg class="gcp-svg" viewBox="40 2 155 162" xmlns="http://www.w3.org/2000/svg">
+                <rect class="gcp-body" x="58" y="55" width="124" height="68" rx="8"/>
+                <rect class="gcp-el" x="77" y="73" width="6" height="18" rx="1"/>
+                <rect class="gcp-el" x="71" y="79" width="18" height="6" rx="1"/>
+                <circle class="gcp-el" cx="162" cy="77" r="4"/>
+                <circle class="gcp-el" cx="162" cy="97" r="4"/>
+                <circle class="gcp-el" cx="152" cy="87" r="4"/>
+                <circle class="gcp-el gcp-dim" cx="172" cy="87" r="4"/>
+                <circle class="gcp-stick gcp-dim" cx="90" cy="112" r="7"/>
+                <circle class="gcp-stick gcp-dim" cx="150" cy="112" r="7"/>
+                <circle class="gcp-dot" cx="80" cy="73" r="1.5"/>
+                <line class="gcp-line" x1="80" y1="73" x2="80" y2="36"/>
+                <text class="gcp-lbl" text-anchor="middle" x="80" y="20">Move /<tspan x="80" dy="13">Attack</tspan></text>
+                <circle class="gcp-dot" cx="162" cy="73" r="1.5"/>
+                <line class="gcp-line" x1="162" y1="73" x2="162" y2="36"/>
+                <text class="gcp-lbl" text-anchor="middle" x="162" y="20">End Turn</text>
+                <circle class="gcp-dot" cx="162" cy="101" r="1.5"/>
+                <line class="gcp-line" x1="162" y1="101" x2="162" y2="142"/>
+                <text class="gcp-lbl" text-anchor="middle" x="162" y="154">Select</text>
+                <circle class="gcp-dot" cx="148" cy="90" r="1.5"/>
+                <line class="gcp-line" x1="148" y1="90" x2="92" y2="142"/>
+                <text class="gcp-lbl" text-anchor="middle" x="92" y="154">Deselect</text>
+            </svg>`;
+        gamepadSidePanel.appendChild(controlsDiv);
 
         gamepadSidePanel.classList.add('gp-panel-active');
         updateControlsPanel();
