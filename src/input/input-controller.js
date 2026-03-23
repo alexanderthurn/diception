@@ -721,9 +721,11 @@ export class InputController {
     deselect(sourceId = 'mouse') {
         this.selectedTiles.delete(sourceId);
         const cursorState = this._getCursorState(sourceId);
-        cursorState.visible = false;
+        // Gamepad cursors are always on screen — keep visible so next confirm re-selects immediately
+        const keepVisible = sourceId.startsWith('gamepad-');
+        cursorState.visible = keepVisible;
         this.renderer.setSelection(null, null, sourceId);
-        this.renderer.setCursor(null, null, sourceId);
+        if (!keepVisible) this.renderer.setCursor(null, null, sourceId);
     }
 
     /** Returns visible, non-disabled buttons for a UI group ('right' or 'top'). */
