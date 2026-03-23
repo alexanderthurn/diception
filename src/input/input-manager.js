@@ -270,49 +270,22 @@ export class InputManager {
     // ── Gamepad master mode ───────────────────────────────────────────────────
 
     /**
-     * Gamepad master mode restricts which gamepads can perform global actions
-     * (zoom, pan map, open pause menu, drag map).
-     * 0 = default: all gamepads can do everything
-     * 1 = multi-master: only master-assigned gamepads can do global actions
-     * 2 = strict: only the single primary master (lowest index) can do global actions
-     */
-    getMasterMode() {
-        const saved = localStorage.getItem('dicy_gamepad_master_mode');
-        return saved ? parseInt(saved) : 0;
-    }
-
-    /**
-     * Returns the raw index of the primary master gamepad.
-     * Prefers lowest-index activated gamepad with 'master' assignment.
-     * Falls back to lowest-index activated gamepad if none are assigned as master.
+     * Returns the raw index of the primary gamepad (first one to activate).
+     * This gamepad controls the UI regardless of player assignment.
+     * If it disconnects, the next earliest activation takes over.
      */
     getPrimaryMasterIndex() {
         const activated = this.gamepadCursorManager?.activatedGamepads;
         if (!activated || activated.size === 0) return -1;
-        const sorted = Array.from(activated).sort((a, b) => a - b);
-        for (const rawIdx of sorted) {
-            if (this.getGamepadAssignment(rawIdx) === 'master') return rawIdx;
-        }
-        // No master-assigned gamepads — fall back to lowest activated index
-        return sorted[0];
+        return activated.values().next().value;
     }
 
     /**
      * Returns true if this gamepad is allowed to perform global actions
-     * (zoom, pan, open menu, drag map) given the current master mode.
+     * (zoom, pan, open menu, drag map).
+     * Strict mode: only the single primary master gamepad can perform global actions.
      */
     isGamepadAllowedGlobalAction(rawIndex) {
-        const mode = this.getMasterMode();
-        if (mode === 0) return true;
-        const assignment = this.getGamepadAssignment(rawIndex);
-        const hasMaster = (() => {
-            const activated = this.gamepadCursorManager?.activatedGamepads;
-            if (!activated) return false;
-            return Array.from(activated).some(i => this.getGamepadAssignment(i) === 'master');
-        })();
-        // Mode 1: master-assigned gamepads can act; if none are master, fall back to lowest index
-        if (mode === 1) return hasMaster ? assignment === 'master' : rawIndex === this.getPrimaryMasterIndex();
-        // Mode 2: only the single primary master (with fallback)
         return rawIndex === this.getPrimaryMasterIndex();
     }
 
@@ -517,7 +490,8 @@ export class InputManager {
             const prevState = this.gamepadStates.get(gpIndex) || {
                 buttons: new Array(16).fill(false),
                 axes: [0, 0, 0, 0],
-                moveRepeat: { active: false, dir: null, started: 0, lastFire: 0 }
+                moveRepeat: { active: false, dir: null, started: 0, lastFire: 0 },
+                stickRepeat: { active: false, dir: null, started: 0, lastFire: 0 }
             };
 
             // gilrs items have bool[] buttons; everything else has GamepadButton[] buttons
@@ -556,7 +530,8 @@ export class InputManager {
             this.gamepadStates.set(gpIndex, {
                 buttons: normalised.buttons.map(b => b.pressed),
                 axes: [...normalised.axes],
-                moveRepeat: prevState.moveRepeat
+                moveRepeat: prevState.moveRepeat,
+                stickRepeat: prevState.stickRepeat
             });
         }
 
@@ -644,7 +619,46 @@ export class InputManager {
             }
         }
 
-        // Handle repeat
+        // Left analog stick → same tile movement as D-pad
+        {
+            const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.index);
+            const dz = savedDeadzone ? parseFloat(savedDeadzone) : 0.40;
+            let lx = gp.axes[0] ?? 0;
+            let ly = gp.axes[1] ?? 0;
+            if (Math.abs(lx) < dz) lx = 0;
+            if (Math.abs(ly) < dz) ly = 0;
+
+            // Pick dominant axis, then quantise to -1/0/+1
+            const stickDir = (Math.abs(lx) >= Math.abs(ly))
+                ? (lx > 0 ? { x: 1, y: 0 } : lx < 0 ? { x: -1, y: 0 } : null)
+                : (ly > 0 ? { x: 0, y: -1 } : ly < 0 ? { x: 0, y: 1 } : null);
+
+            const stickRepeat = prevState.stickRepeat;
+
+            if (stickDir) {
+                const dirChanged = !stickRepeat.dir || stickRepeat.dir.x !== stickDir.x || stickRepeat.dir.y !== stickDir.y;
+                if (dirChanged) {
+                    this.emit('move', { ...stickDir, index: gp.index });
+                    stickRepeat.active = true;
+                    stickRepeat.dir = stickDir;
+                    stickRepeat.started = now;
+                    stickRepeat.lastFire = now;
+                } else if (stickRepeat.active) {
+                    const elapsed = now - stickRepeat.started;
+                    const sinceLast = now - stickRepeat.lastFire;
+                    if (elapsed > this.repeatDelay && sinceLast > this.repeatRate) {
+                        this.emit('move', { ...stickDir, index: gp.index });
+                        stickRepeat.lastFire = now;
+                    }
+                }
+                if (stickDir) activeDir = stickDir;
+            } else {
+                stickRepeat.active = false;
+                stickRepeat.dir = null;
+            }
+        }
+
+        // Handle D-pad repeat
         if (activeDir && repeat.active) {
             const elapsed = now - repeat.started;
             const sinceLast = now - repeat.lastFire;

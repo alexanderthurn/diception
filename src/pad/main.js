@@ -130,6 +130,18 @@ window.addEventListener("load", (event) => {
     init();
 });
 
+// Reconnect immediately when the page becomes visible again (phone wake, tab switch back)
+function _onPageVisible() {
+    FWNetwork.getInstance().forceReconnect();
+}
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') _onPageVisible();
+});
+window.addEventListener('pageshow', (e) => {
+    if (e.persisted) _onPageVisible(); // restored from bfcache
+});
+window.addEventListener('focus', _onPageVisible);
+
 function main(app) {
     let networkStatus = FWNetwork.getInstance().getStatus()
 

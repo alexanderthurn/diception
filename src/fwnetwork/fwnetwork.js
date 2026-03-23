@@ -42,8 +42,8 @@ class FWNetwork {
             }
         }
         this.reconnectAttempts = 0
-        this.maxReconnectAttempts = 10;
-        this.reconnectDelay = 2000;
+        this.maxReconnectAttempts = 30;
+        this.reconnectDelay = 500;
         this.reconnectTimeout = null;
         this.iceServers = [
             {
@@ -294,7 +294,7 @@ class FWNetwork {
             clearTimeout(this.reconnectTimeout); // Vorherigen Timeout löschen
         }
 
-        let delay = Math.pow(1.5, this.reconnectAttempts) * this.reconnectDelay
+        let delay = Math.min(Math.pow(1.5, this.reconnectAttempts) * this.reconnectDelay, 8000)
         this.reconnectAttempts++;
         this.status = 'connecting'
         console.log(`Trying to connect again (${this.reconnectAttempts}/${this.maxReconnectAttempts}) with delay ${delay / 1000}s...`);
@@ -307,6 +307,21 @@ class FWNetwork {
             }
 
         }, delay);
+    }
+
+    /** Immediately cancel any pending reconnect and retry now (e.g. on page visibility restore). */
+    forceReconnect() {
+        if (this.status === 'connected' || this.status === 'hosting') return;
+        if (!this.roomId) return;
+        if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
+        this.reconnectAttempts = 0;
+        this.status = 'connecting';
+        console.log('Force reconnect triggered');
+        if (this.isHost) {
+            this.hostRoom();
+        } else {
+            this.connectToRoom(this.roomId);
+        }
     }
 
     getJSONGamepadsButtonsOnlyState(touchGamepad) {
@@ -411,6 +426,7 @@ class FWNetwork {
             const indices = this.clientGamepadIndices.get(clientId);
             indices.forEach((idx) => {
                 this.networkGamepads[idx] = undefined;
+                this.onClientDisconnected?.(idx);
             });
             this.clientConnections.delete(clientId);
             this.status = `hosting`;

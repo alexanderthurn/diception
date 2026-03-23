@@ -16,6 +16,7 @@ export class GamepadCursorManager {
         this.inputManager = inputManager;
         this.cursors = new Map(); // gamepadIndex -> { x, y, element, player }
         this.activatedGamepads = new Set(); // indices that have pressed at least one button
+        this._pressedWithoutModal = new Map(); // gamepadIndex -> Set of buttons pressed while no modal was open
         this.onIntroSpawn = null; // optional callback: (playerIndex, screenX, screenY) => void
         const isDesktop = isDesktopContext();
         this.cursorSpeed = isDesktop ? 12 : 20;
@@ -114,6 +115,11 @@ export class GamepadCursorManager {
             const isEditorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
 
+            // Track which buttons were pressed while no modal was open (for swallowing spurious button-up clicks)
+            if (!this._pressedWithoutModal.has(index)) this._pressedWithoutModal.set(index, new Set());
+            if (!isMenuOpen) this._pressedWithoutModal.get(index).add(button);
+            else this._pressedWithoutModal.get(index).delete(button);
+
             // Intro mode interactions (button-specific)
             if (b.confirmButtons.includes(button) && this.onIntroSpawn) {
                 const assignment = this.inputManager.getGamepadAssignment(index);
@@ -183,9 +189,20 @@ export class GamepadCursorManager {
                 if (!allowedInMenu.includes(button)) return;
 
                 if (!isEditorOpen) {
-                    // D-pad → focus navigation between dialog elements
+                    // D-pad → master navigates menu; non-master nudges cursor
                     if ([b.moveUp, b.moveDown, b.moveLeft, b.moveRight].includes(button)) {
-                        this.navigateModal(button, cursor);
+                        if (this.inputManager.isGamepadAllowedGlobalAction(index)) {
+                            this.navigateModal(button, cursor);
+                        } else {
+                            const nudge = 80;
+                            if (button === b.moveUp)    cursor.y -= nudge;
+                            if (button === b.moveDown)  cursor.y += nudge;
+                            if (button === b.moveLeft)  cursor.x -= nudge;
+                            if (button === b.moveRight) cursor.x += nudge;
+                            cursor.x = Math.max(0, Math.min(window.innerWidth, cursor.x));
+                            cursor.y = Math.max(0, Math.min(window.innerHeight, cursor.y));
+                            this._positionCursor(cursor);
+                        }
                         return;
                     }
                     // B (drag) → close the current modal (master-mode restricted)
@@ -200,6 +217,15 @@ export class GamepadCursorManager {
                         return;
                     }
                 }
+            }
+
+            // Non-master in menu: confirm/cancel cycle assignment (pause only), endTurn kicks
+            if (isMenuOpen && !this.inputManager.isGamepadAllowedGlobalAction(index)) {
+                const isAssignmentMenu = !!document.querySelector('#pause-modal:not(.hidden), #setup-modal:not(.hidden)');
+                if (isAssignmentMenu && b.confirmButtons.includes(button)) { this._cycleAssignment(index, 1); return; }
+                if (isAssignmentMenu && b.cancelButtons.includes(button))  { this._cycleAssignment(index, -1); return; }
+                if (button === b.endTurn)               { this.kickGamepad(index); return; }
+                return;
             }
 
             // In-game action guard: non-master gamepads can only act on their assigned player's turn
@@ -256,15 +282,21 @@ export class GamepadCursorManager {
             const isAssignedTurnUp = !inGameUp || !currentPlayerUp || currentPlayerUp.isBot ||
                 this.inputManager.canGamepadControlPlayer(index, currentPlayerUp.id);
 
+            // Swallow button-up click only when: button was pressed outside a modal AND a modal is now open
+            // (meaning this press caused the modal to open). Buttons pressed inside a modal always fire normally.
+            const pressedOutsideModal = this._pressedWithoutModal.get(index)?.has(button) ?? false;
+            this._pressedWithoutModal.get(index)?.delete(button);
+            const swallow = pressedOutsideModal && isMenuOpen;
+
             if (b.confirmButtons.includes(button)) {
-                if (isAssignedTurnUp) {
+                if (isAssignedTurnUp && !swallow) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = index;
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = null;
                 }
             } else if (b.cancelButtons.includes(button)) {
-                if (isAssignedTurnUp) {
+                if (isAssignedTurnUp && !swallow) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
                 }
@@ -310,44 +342,18 @@ export class GamepadCursorManager {
                 cursor = this.createCursor(idx, gp);
             }
 
-            // Move cursor based on left stick
-            let dx = gp.axes[0] || 0;
-            let dy = gp.axes[1] || 0;
-
-            // Load dynamically saved deadzone per gamepad, default to 0.15
-            const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + idx);
-            const currentDeadZone = savedDeadzone ? parseFloat(savedDeadzone) : 0.15;
-
-            // Apply deadzone
-            if (Math.abs(dx) < currentDeadZone) dx = 0;
-            if (Math.abs(dy) < currentDeadZone) dy = 0;
-
-            if (dx !== 0 || dy !== 0) {
-                const scale = (val) => Math.sign(val) * Math.pow(Math.abs(val), 1.5);
+            // Left stick pan (drag held) — tile movement is handled by input-manager processGamepadMovement
+            {
                 const b = this._gb();
+                let lx = gp.axes[0] || 0;
+                let ly = gp.axes[1] || 0;
+                const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + idx);
+                const dz = savedDeadzone ? parseFloat(savedDeadzone) : 0.40;
+                if (Math.abs(lx) < dz) lx = 0;
+                if (Math.abs(ly) < dz) ly = 0;
                 const dragHeld = gp.buttons[b.drag]?.pressed ?? false;
-
-                if (dragHeld && this.inputManager.isGamepadAllowedGlobalAction(idx)) {
-                    this.inputManager.emit('panAnalog', { x: -dx, y: -dy });
-                } else {
-                    this._setCursorMode(cursor, 'analog');
-                    let speedMultiplier = cursor.speedMultiplier || 1.0;
-
-                    cursor.x += scale(dx) * this.cursorSpeed * speedMultiplier;
-                    cursor.y += scale(dy) * this.cursorSpeed * speedMultiplier;
-
-                    // Clamp to screen bounds
-                    cursor.x = Math.max(0, Math.min(window.innerWidth, cursor.x));
-                    cursor.y = Math.max(0, Math.min(window.innerHeight, cursor.y));
-
-                    GamepadCursorManager.savedPositions.set(idx, { x: cursor.x, y: cursor.y });
-
-                    // Update DOM element
-                    this._positionCursor(cursor);
-                    cursor.element.style.opacity = '1.0';
-
-                    // Trigger mousemove on current position
-                    this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, idx);
+                if (dragHeld && (lx !== 0 || ly !== 0) && this.inputManager.isGamepadAllowedGlobalAction(idx)) {
+                    this.inputManager.emit('panAnalog', { x: -lx, y: -ly });
                 }
             }
 
@@ -355,6 +361,8 @@ export class GamepadCursorManager {
             // axes[2] is scroll horizontal, axes[3] is scroll vertical
             let sx = gp.axes[2] || 0;
             let sy = gp.axes[3] || 0;
+            const savedDeadzoneScroll = localStorage.getItem('dicy_gamepad_deadzone_' + idx);
+            const currentDeadZone = savedDeadzoneScroll ? parseFloat(savedDeadzoneScroll) : 0.40;
 
             if (Math.abs(sx) < currentDeadZone) sx = 0;
             if (Math.abs(sy) < currentDeadZone) sy = 0;
@@ -484,13 +492,14 @@ export class GamepadCursorManager {
             initialY = Math.max(0, Math.min(window.innerHeight, saved.y));
         } else {
             const humanIndex = this.inputManager.getHumanIndex(index);
-            const padding = 0;
+            const qx = window.innerWidth * 0.25;
+            const qy = window.innerHeight * 0.25;
             initialX = window.innerWidth / 2;
             initialY = window.innerHeight / 2;
-            if (humanIndex % 4 === 0) { initialX = padding; initialY = padding; }
-            else if (humanIndex % 4 === 1) { initialX = window.innerWidth - padding; initialY = padding; }
-            else if (humanIndex % 4 === 2) { initialX = padding; initialY = window.innerHeight - padding; }
-            else if (humanIndex % 4 === 3) { initialX = window.innerWidth - padding; initialY = window.innerHeight - padding; }
+            if (humanIndex % 4 === 0)      { initialX = qx; initialY = qy; }
+            else if (humanIndex % 4 === 1) { initialX = window.innerWidth - qx; initialY = qy; }
+            else if (humanIndex % 4 === 2) { initialX = qx; initialY = window.innerHeight - qy; }
+            else if (humanIndex % 4 === 3) { initialX = window.innerWidth - qx; initialY = window.innerHeight - qy; }
         }
 
         const cursor = {
@@ -524,6 +533,20 @@ export class GamepadCursorManager {
             cursor.element.remove();
             this.cursors.delete(index);
         }
+    }
+
+    /** Cycle this gamepad's player assignment forward (+1) or backward (-1). */
+    _cycleAssignment(index, direction) {
+        const inGame = this.game?.players?.length > 0 && !this.game?.gameOver;
+        const humanCount = inGame
+            ? this.game.players.filter(p => !p.isBot).length
+            : parseInt(document.getElementById('human-count')?.value ?? '0') || 1;
+        const slots = [...Array.from({ length: humanCount }, (_, i) => i), 'master'];
+        const current = this.inputManager.getGamepadAssignment(index);
+        const currentSlot = slots.indexOf(current);
+        const safeSlot = currentSlot === -1 ? 0 : currentSlot;
+        const nextSlot = slots[(safeSlot + direction + slots.length) % slots.length];
+        this.inputManager.setGamepadAssignment(index, nextSlot);
     }
 
     /** Fully remove a gamepad from the session. They must press a button to rejoin. */
@@ -575,12 +598,9 @@ export class GamepadCursorManager {
                 cursor.label.textContent = labelText;
                 cursor.lastLabelText = labelText;
             }
-            const multipleActive = this.cursors.size > 1;
-            cursor.label.style.display = (isMenuOpen && multipleActive) ? 'block' : 'none';
+            cursor.label.style.display = isMenuOpen ? 'block' : 'none';
 
-            // In strict mode (2), mark the primary master with a bracket indicator
-            const isPrimaryMaster = this.inputManager.getMasterMode() === 2 &&
-                index === this.inputManager.getPrimaryMasterIndex();
+            const isPrimaryMaster = index === this.inputManager.getPrimaryMasterIndex();
             cursor.label.classList.toggle('primary-master', isPrimaryMaster);
         }
     }
@@ -1003,7 +1023,8 @@ export class GamepadCursorManager {
             setTimeout(() => {
                 first.focus({ preventScroll: true });
                 // Snap the last D-pad gamepad cursor to the focused element
-                if (this._lastDpadGamepad != null) {
+                if (this._lastDpadGamepad != null &&
+                        this.inputManager.isGamepadAllowedGlobalAction(this._lastDpadGamepad)) {
                     const cursor = this.cursors.get(this._lastDpadGamepad);
                     if (cursor && cursor.mode === 'dpad') {
                         first.classList.add('gamepad-focused');

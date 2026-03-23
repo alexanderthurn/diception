@@ -220,6 +220,7 @@ async function init() {
 
     // Initialize Input System (create before renderer needs it)
     const inputManager = new InputManager();
+    window._im = inputManager; window._nw = FWNetwork.getInstance(); // DEBUG
 
     // Initialize Core Components
     const game = new Game();
@@ -636,11 +637,33 @@ async function init() {
         renderGamepadAssignments();
     });
 
-    // When a gamepad connects or reconnects: always start as master
+    // When a gamepad connects: restore saved assignment if it exists, otherwise auto-assign
     inputManager.on('gamepadActivated', ({ index }) => {
-        inputManager.setGamepadAssignment(index, 'master');
+        const gcm = inputManager.gamepadCursorManager;
+        const others = Array.from(gcm?.activatedGamepads ?? []).filter(i => i !== index);
+        const savedAssignment = inputManager.gamepadAssignments.get(index);
+        if (savedAssignment !== undefined) {
+            // Reconnect — keep previous assignment as-is
+        } else if (others.length === 0) {
+            inputManager.setGamepadAssignment(index, 'master');
+        } else {
+            const humanCount = Math.max(1, parseInt(document.getElementById('human-count')?.value ?? '0') ||
+                                           game.players.filter(p => !p.isBot).length || 1);
+            const taken = new Set(others.map(i => inputManager.getGamepadAssignment(i)).filter(a => typeof a === 'number'));
+            let slot = 'master';
+            for (let i = 0; i < humanCount; i++) {
+                if (!taken.has(i)) { slot = i; break; }
+            }
+            inputManager.setGamepadAssignment(index, slot);
+        }
         renderGamepadAssignments();
     });
+
+    // When a network pad disconnects: soft-kick (remove cursor) but preserve assignment for reconnect
+    FWNetwork.getInstance().onClientDisconnected = (rawIndex) => {
+        inputManager.gamepadCursorManager?.kickGamepad(rawIndex);
+        renderGamepadAssignments();
+    };
 
     // Re-render on any assignment change (e.g. manual chip reassignment)
     inputManager.on('gamepadAssignmentChange', renderGamepadAssignments);
@@ -1569,11 +1592,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             configHtml += `<div><button class="tron-btn small" id="gamepad-type-toggle-btn" style="margin-bottom:10px;">${label}</button></div>`;
         }
 
-        {
-            const MASTER_MODE_LABELS = ['GAMEPAD LOCK: OFF', 'GAMEPAD LOCK: MULTI', 'GAMEPAD LOCK: STRICT'];
-            const currentMode = parseInt(localStorage.getItem('dicy_gamepad_master_mode') || '0');
-            configHtml += `<div><button class="tron-btn small" id="gamepad-master-mode-btn" style="margin-bottom:10px;">${MASTER_MODE_LABELS[currentMode]}</button></div>`;
-        }
 
         const gcm = inputManager.gamepadCursorManager;
         const connectedGamepads = Array.from(inputManager.connectedGamepadIndices || [])
@@ -1615,13 +1633,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             if (saved) refreshControlsSection();
         });
 
-        // Gamepad Master Mode toggle button — cycles through 0/1/2
-        document.getElementById('gamepad-master-mode-btn')?.addEventListener('click', () => {
-            const current = parseInt(localStorage.getItem('dicy_gamepad_master_mode') || '0');
-            const next = (current + 1) % 3;
-            localStorage.setItem('dicy_gamepad_master_mode', String(next));
-            refreshControlsSection();
-        });
 
         // Gamepad Type toggle button — cycles through available backends
         document.getElementById('gamepad-type-toggle-btn')?.addEventListener('click', () => {

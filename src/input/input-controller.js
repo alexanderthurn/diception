@@ -137,7 +137,8 @@ export class InputController {
                 return;
             }
             if (dy === -1 && sel.y <= 0) {
-                this._enterUIFocus(sourceId, 'top');
+                if (index < 0 || this.inputManager.isGamepadAllowedGlobalAction(index))
+                    this._enterUIFocus(sourceId, 'top');
                 return;
             }
             this.handleKeyboardAttack(dx, dy, index, sourceId);
@@ -201,9 +202,10 @@ export class InputController {
             this._enterUIFocus(sourceId, 'right');
             return;
         }
-        // Top edge + up press → enter top UI button focus
+        // Top edge + up press → enter top UI button focus (maestro only)
         if (dy === -1 && newY === cursorState.y) {
-            this._enterUIFocus(sourceId, 'top');
+            if (gamepadIndex < 0 || this.inputManager.isGamepadAllowedGlobalAction(gamepadIndex))
+                this._enterUIFocus(sourceId, 'top');
             return;
         }
 
@@ -303,6 +305,8 @@ export class InputController {
     }
 
     onEndTurn(data) {
+        const visibleModal = document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
+        if ((visibleModal && visibleModal.offsetParent !== null) || document.querySelector('.dialog-overlay')) return;
         if (this.onEndTurnCallback) {
             this.onEndTurnCallback(data);
         }
