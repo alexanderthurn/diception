@@ -306,13 +306,13 @@ export class GamepadCursorManager {
             } else if (button === b.drag && this.inputManager.isGamepadAllowedGlobalAction(index)) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
             } else if (button === b.cursorSpeedDown) {
-                // Persistent Speed: slower (0.5x)
-                cursor.speedMultiplier *= 0.5;
+                cursor.speedMultiplier = Math.max(0.25, parseFloat((cursor.speedMultiplier - 0.25).toFixed(2)));
                 localStorage.setItem('dicy_gamepad_speed_' + index, cursor.speedMultiplier);
+                this.showFeedback(index, `Speed ×${cursor.speedMultiplier}`, button);
             } else if (button === b.cursorSpeedUp) {
-                // Persistent Speed: faster (2x)
-                cursor.speedMultiplier *= 2.0;
+                cursor.speedMultiplier = Math.min(3, parseFloat((cursor.speedMultiplier + 0.25).toFixed(2)));
                 localStorage.setItem('dicy_gamepad_speed_' + index, cursor.speedMultiplier);
+                this.showFeedback(index, `Speed ×${cursor.speedMultiplier}`, button);
             }
             // zoom_in / zoom_out are handled by InputManager → input-controller via 'zoom' event
         };
@@ -450,8 +450,8 @@ export class GamepadCursorManager {
             if (Math.abs(sy) < currentDeadZone) sy = 0;
 
             if (sx !== 0 || sy !== 0) {
-                const scrollX = sx * 15; // Scroll speed
-                const scrollY = sy * 15;
+                const scrollX = sx * 15 * cursor.speedMultiplier;
+                const scrollY = sy * 15 * cursor.speedMultiplier;
                 const target = document.elementFromPoint(cursor.x, cursor.y);
                 if (target) {
                     const scrollable = this.findScrollableParent(target);

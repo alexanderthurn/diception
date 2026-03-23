@@ -715,7 +715,8 @@ export class InputManager {
         ry = -ry;
 
         if (rx !== 0 || ry !== 0) {
-            this.emit('panAnalog', { x: rx, y: ry });
+            const speedMult = this.gamepadCursorManager?.cursors?.get(gp.index)?.speedMultiplier ?? 1;
+            this.emit('panAnalog', { x: rx * speedMult, y: ry * speedMult });
         }
     }
 
