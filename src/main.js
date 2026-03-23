@@ -448,7 +448,7 @@ async function init() {
         const pauseVisible = !document.getElementById('pause-modal')?.classList.contains('hidden');
         const humanCount = parseInt(document.getElementById('human-count')?.value ?? '1');
 
-        if (gamepads.length === 0 || (!setupVisible && !pauseVisible)) {
+        if (gamepads.length === 0 || (humanCount <= 1 && gamepads.length <= 1) || (!setupVisible && !pauseVisible)) {
             gamepadSidePanel.classList.remove('gp-panel-active');
             updateControlsPanel();
             return;
