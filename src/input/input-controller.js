@@ -121,8 +121,6 @@ export class InputController {
             return;
         }
 
-        if (!this._sourceCanAct(index)) return;
-
         const cursorState = this._getCursorState(sourceId);
 
         // Show D-pad cursor, hide same-source hover
@@ -134,7 +132,8 @@ export class InputController {
         if (this.selectedTiles.has(sourceId)) {
             const sel = this.selectedTiles.get(sourceId);
             if (dx === 1 && sel.x >= this.game.map.width - 1) {
-                this._enterUIFocus(sourceId, 'right');
+                if (index < 0 || this._sourceCanAct(index))
+                    this._enterUIFocus(sourceId, 'right');
                 return;
             }
             if (dy === -1 && sel.y <= 0) {
@@ -198,9 +197,10 @@ export class InputController {
         const newX = Math.max(0, Math.min(this.game.map.width - 1, cursorState.x + dx));
         const newY = Math.max(0, Math.min(this.game.map.height - 1, cursorState.y + dy));
 
-        // Right edge + right press → enter right-side UI button focus
+        // Right edge + right press → enter right-side UI button focus (active player only)
         if (dx === 1 && newX === cursorState.x) {
-            this._enterUIFocus(sourceId, 'right');
+            if (gamepadIndex < 0 || this._sourceCanAct(gamepadIndex))
+                this._enterUIFocus(sourceId, 'right');
             return;
         }
         // Top edge + up press → enter top UI button focus (maestro only)
@@ -228,15 +228,13 @@ export class InputController {
         const visibleModal = document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
         if ((visibleModal && visibleModal.offsetParent !== null) ||
             document.querySelector('.dialog-overlay')) return;
-        const gpIndex = data?.source === 'gamepad' ? (data?.index ?? -1) : -1;
-        if (!this._sourceCanAct(gpIndex)) return;
-
         const source = data?.source ?? 'keyboard';
         const index = source === 'gamepad' ? (data?.index ?? -1) : -1;
+        const gpIndex = index;
         const sourceId = this._sourceId(index);
 
-        // UI button focus: confirm clicks the focused button, then clears focus
-        // so any modal that opens doesn't inherit a stale uiFocusState
+        // UI button focus: confirm clicks the focused button regardless of whose turn it is.
+        // Clear focus first so any modal that opens doesn't inherit a stale uiFocusState.
         if (this.uiFocusStates.has(sourceId)) {
             const uiFocus = this.uiFocusStates.get(sourceId);
             const buttons = this._getUIButtons(uiFocus.side);
@@ -244,6 +242,8 @@ export class InputController {
             buttons[uiFocus.buttonIndex]?.click();
             return;
         }
+
+        if (!this._sourceCanAct(gpIndex)) return;
 
         const cursorState = this._getCursorState(sourceId);
 
@@ -741,8 +741,8 @@ export class InputController {
         const idx = Math.max(0, Math.min(startIndex, buttons.length - 1));
         this.uiFocusStates.set(sourceId, { buttonIndex: idx, side });
         buttons[idx].classList.add('gamepad-focused');
-        // Hide the map cursor so it's clear focus has left the map
         this.renderer.setCursor(null, null, sourceId);
+        this.inputManager.emit('gamepadUIFocus', { sourceId, active: true });
     }
 
     _exitUIFocus(sourceId) {
@@ -752,11 +752,11 @@ export class InputController {
             btn.classList.remove('gamepad-focused');
         }
         this.uiFocusStates.delete(sourceId);
-        // Restore map cursor to last known position
         const cursorState = this._getCursorState(sourceId);
         if (cursorState.x !== null && cursorState.y !== null) {
             this.renderer.setCursor(cursorState.x, cursorState.y, sourceId);
         }
+        this.inputManager.emit('gamepadUIFocus', { sourceId, active: false });
     }
 
     onTurnStart() {

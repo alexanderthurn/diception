@@ -17,6 +17,7 @@ export class GamepadCursorManager {
         this.cursors = new Map(); // gamepadIndex -> { x, y, element, player }
         this.activatedGamepads = new Set(); // indices that have pressed at least one button
         this._pressedWithoutModal = new Map(); // gamepadIndex -> Set of buttons pressed while no modal was open
+        this._inUIFocus = new Set(); // gamepadIndices currently in UI button focus (cursor hidden)
         this.onIntroSpawn = null; // optional callback: (playerIndex, screenX, screenY) => void
         this.getTileScreenSize = null; // injected by main.js: () => number
         const isDesktop = isDesktopContext();
@@ -43,7 +44,8 @@ export class GamepadCursorManager {
         this.boundEventHandlers = {
             gamepadButtonDown: null,
             gamepadButtonUp: null,
-            gamepadCursorMoveRequest: null
+            gamepadCursorMoveRequest: null,
+            gamepadUIFocus: null,
         };
 
         // Update loop for movement
@@ -165,15 +167,8 @@ export class GamepadCursorManager {
 
             const buttonLabels = isEditorOpen ? editorLabels : gameLabels;
             const label = buttonLabels[button];
-            if (label) {
-                const gameSpeed = localStorage.getItem('dicy_gameSpeed') || 'beginner';
-                const isBeginner = gameSpeed === 'beginner';
-                const isMainMenu = !!document.querySelector('#main-menu:not(.hidden), #setup-modal:not(.hidden)');
-
-                // Beginner: show hints everywhere. Normal/Expert: only in the main menu.
-                if (isBeginner || isMainMenu) {
-                    this.showFeedback(index, label, button);
-                }
+            if (label && document.querySelector('#main-menu:not(.hidden)')) {
+                this.showFeedback(index, label, button);
             }
 
             // D-pad press → snap mode (no center dot), regardless of context
@@ -236,9 +231,9 @@ export class GamepadCursorManager {
                 this.inputManager.canGamepadControlPlayer(index, currentPlayer.id);
 
             if (b.confirmButtons.includes(button)) {
-                if (isAssignedTurn) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
+                if (isAssignedTurn && !this._inUIFocus.has(index)) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
             } else if (b.cancelButtons.includes(button)) {
-                if (isAssignedTurn) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
+                if (isAssignedTurn && !this._inUIFocus.has(index)) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
             } else if (button === b.endTurn) {
                 if (isEditorOpen) {
                     // In editor: end_turn button = Paint mode
@@ -290,14 +285,14 @@ export class GamepadCursorManager {
             const swallow = pressedOutsideModal && isMenuOpen;
 
             if (b.confirmButtons.includes(button)) {
-                if (isAssignedTurnUp && !swallow) {
+                if (isAssignedTurnUp && !swallow && !this._inUIFocus.has(index)) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = index;
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = null;
                 }
             } else if (b.cancelButtons.includes(button)) {
-                if (isAssignedTurnUp && !swallow) {
+                if (isAssignedTurnUp && !swallow && !this._inUIFocus.has(index)) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
                 }
@@ -323,10 +318,24 @@ export class GamepadCursorManager {
             this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, index);
         };
 
+        this.boundEventHandlers.gamepadUIFocus = ({ sourceId, active }) => {
+            const idx = sourceId?.startsWith('gamepad-') ? parseInt(sourceId.slice('gamepad-'.length)) : -1;
+            if (idx < 0) return;
+            const cursor = this.cursors.get(idx);
+            if (active) {
+                this._inUIFocus.add(idx);
+                if (cursor) cursor.element.style.visibility = 'hidden';
+            } else {
+                this._inUIFocus.delete(idx);
+                if (cursor) cursor.element.style.visibility = '';
+            }
+        };
+
         // Register the handlers
         this.inputManager.on('gamepadButtonDown', this.boundEventHandlers.gamepadButtonDown);
         this.inputManager.on('gamepadButtonUp', this.boundEventHandlers.gamepadButtonUp);
         this.inputManager.on('gamepadCursorMoveRequest', this.boundEventHandlers.gamepadCursorMoveRequest);
+        this.inputManager.on('gamepadUIFocus', this.boundEventHandlers.gamepadUIFocus);
     }
 
     update() {
@@ -389,14 +398,7 @@ export class GamepadCursorManager {
             // Periodically check if player info changed (e.g. game started)
             this.updateCursorColor(cursor, idx);
 
-            // Dim cursor when it's not this gamepad's turn
-            const inGame = this.game?.players?.length > 0 && !this.game?.gameOver;
-            if (inGame) {
-                const canAct = this.inputManager.canGamepadControlPlayer(idx, this.game.currentPlayer?.id);
-                cursor.element.style.opacity = canAct ? '1.0' : '0.3';
-            } else {
-                cursor.element.style.opacity = '1.0';
-            }
+            cursor.element.style.opacity = '1.0';
         }
 
         // Remove cursors for gamepads that are no longer connected
@@ -437,6 +439,9 @@ export class GamepadCursorManager {
             }
             if (this.boundEventHandlers.gamepadCursorMoveRequest) {
                 this.inputManager.off('gamepadCursorMoveRequest', this.boundEventHandlers.gamepadCursorMoveRequest);
+            }
+            if (this.boundEventHandlers.gamepadUIFocus) {
+                this.inputManager.off('gamepadUIFocus', this.boundEventHandlers.gamepadUIFocus);
             }
         }
 
