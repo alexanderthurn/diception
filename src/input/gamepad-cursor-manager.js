@@ -1080,6 +1080,17 @@ export class GamepadCursorManager {
      * Watch for modals becoming visible and auto-focus their first element
      * so D-pad navigation works immediately without needing an initial Tab press.
      */
+    _clearUIFocusOnModalOpen() {
+        if (this._inUIFocus.size === 0) return;
+        for (const idx of [...this._inUIFocus]) {
+            this._inUIFocus.delete(idx);
+            const cursor = this.cursors.get(idx);
+            if (cursor) cursor.element.style.visibility = '';
+        }
+        // Tell input-controller to clear its uiFocusStates (removes gamepad-focused classes etc.)
+        this.inputManager.emit('gamepadClearUIFocus');
+    }
+
     _setupModalAutoFocus() {
         const autoFocus = (container) => {
             if (this.cursors.size === 0) return; // only when gamepad is connected
@@ -1106,6 +1117,7 @@ export class GamepadCursorManager {
                         if (node.nodeType !== 1) continue;
                         if (node.classList?.contains('dialog-overlay') ||
                             node.classList?.contains('modal')) {
+                            this._clearUIFocusOnModalOpen();
                             autoFocus(node);
                         }
                     }
@@ -1114,6 +1126,7 @@ export class GamepadCursorManager {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                     const el = mutation.target;
                     if (el.classList?.contains('modal') && !el.classList.contains('hidden')) {
+                        this._clearUIFocusOnModalOpen();
                         autoFocus(el);
                     }
                 }

@@ -81,6 +81,11 @@ export class InputController {
         this.inputManager.on('pan', (dir) => this.onPan(dir));
         this.inputManager.on('panAnalog', (dir) => this.onPanAnalog(dir));
         this.inputManager.on('zoom', (data) => this.onZoom(data));
+        this.inputManager.on('gamepadClearUIFocus', () => {
+            for (const sourceId of [...this.uiFocusStates.keys()]) {
+                this._exitUIFocus(sourceId);
+            }
+        });
     }
 
     onMove(data) {
@@ -239,14 +244,18 @@ export class InputController {
             const uiFocus = this.uiFocusStates.get(sourceId);
             const buttons = this._getUIButtons(uiFocus.side);
             this._exitUIFocus(sourceId);
-            const btn = buttons[uiFocus.buttonIndex];
-            if (btn) {
-                const gcm = this.inputManager?.gamepadCursorManager;
-                if (index >= 0 && gcm) {
-                    // Defer to button-up so press doesn't also trigger the newly-opened modal's back button
-                    gcm._pendingUIClick.set(index, btn);
-                } else {
-                    btn.click();
+            // If a modal is already open (opened via another path e.g. START button),
+            // don't queue a click — just clearing the stuck focus is enough.
+            const visibleModalNow = document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
+            if (!visibleModalNow || visibleModalNow.offsetParent === null) {
+                const btn = buttons[uiFocus.buttonIndex];
+                if (btn) {
+                    const gcm = this.inputManager?.gamepadCursorManager;
+                    if (index >= 0 && gcm) {
+                        gcm._pendingUIClick.set(index, btn);
+                    } else {
+                        btn.click();
+                    }
                 }
             }
             return;
