@@ -7024,6 +7024,18 @@ details.settings-group[open]>summary.settings-group-header::after {
     box-shadow: 0 0 12px rgba(0, 255, 255, 0.55), inset 0 0 0 1px rgba(0, 255, 255, 0.15);
 }
 
+/* Gamepad slider edit mode — brighter glow + animated pulse to show active editing */
+input[type="range"].gamepad-slider-editing {
+    outline: 2px solid #00ffff;
+    outline-offset: 3px;
+    box-shadow: 0 0 18px rgba(0, 255, 255, 0.85);
+    animation: gamepad-slider-pulse 0.9s ease-in-out infinite alternate;
+}
+@keyframes gamepad-slider-pulse {
+    from { box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); }
+    to   { box-shadow: 0 0 22px rgba(0, 255, 255, 1.0); }
+}
+
 /* ── Attack overlay (Beginner mode dramatic dice duel) ── */
 
 #attack-overlay {

@@ -19,6 +19,7 @@ export class GamepadCursorManager {
         this._pressedWithoutModal = new Map(); // gamepadIndex -> Set of buttons pressed while no modal was open
         this._inUIFocus = new Set(); // gamepadIndices currently in UI button focus (cursor hidden)
         this._pendingUIClick = new Map(); // gamepadIndex → button element to click on button-up
+        this._sliderEditMode = new Map(); // gamepadIndex → <input type="range"> being edited
         this.onIntroSpawn = null; // optional callback: (playerIndex, screenX, screenY) => void
         this.getTileScreenSize = null; // injected by main.js: () => number
         this._attackOverlay = document.getElementById('attack-overlay');
@@ -102,7 +103,7 @@ export class GamepadCursorManager {
     setupEventListeners() {
         // Define and store bound handlers for cleanup
         this.boundEventHandlers.gamepadButtonDown = ({ index, button, virtual }) => {
-            // Virtual D-pad events (from analog stick): only handle menu navigation, nothing else
+            // Virtual D-pad events (from analog stick): only handle menu navigation + slider editing
             if (virtual) {
                 const cursor = this.cursors.get(index);
                 if (!cursor) return;
@@ -111,6 +112,13 @@ export class GamepadCursorManager {
                 const isEditorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
                 if (isMenuOpen && !isEditorOpen && [b.moveUp, b.moveDown, b.moveLeft, b.moveRight].includes(button)) {
                     if (this.inputManager.isGamepadAllowedGlobalAction(index)) {
+                        if (this._sliderEditMode.has(index)) {
+                            if (button === b.moveLeft || button === b.moveRight) {
+                                this._adjustSlider(index, button === b.moveRight ? 1 : -1);
+                                return;
+                            }
+                            this._exitSliderEditMode(index); // up/down: exit edit mode then navigate
+                        }
                         this.navigateModal(button, cursor);
                     }
                 }
@@ -206,6 +214,13 @@ export class GamepadCursorManager {
                     // D-pad → master navigates menu; non-master nudges cursor
                     if ([b.moveUp, b.moveDown, b.moveLeft, b.moveRight].includes(button)) {
                         if (this.inputManager.isGamepadAllowedGlobalAction(index)) {
+                            if (this._sliderEditMode.has(index)) {
+                                if (button === b.moveLeft || button === b.moveRight) {
+                                    this._adjustSlider(index, button === b.moveRight ? 1 : -1);
+                                    return;
+                                }
+                                this._exitSliderEditMode(index); // up/down: exit edit mode then navigate
+                            }
                             this.navigateModal(button, cursor);
                         } else {
                             const nudge = 80;
@@ -217,6 +232,25 @@ export class GamepadCursorManager {
                             cursor.y = Math.max(0, Math.min(window.innerHeight, cursor.y));
                             this._positionCursor(cursor);
                         }
+                        return;
+                    }
+                    // Confirm on a focused range slider → enter/exit slider edit mode
+                    if (b.confirmButtons.includes(button) && this.inputManager.isGamepadAllowedGlobalAction(index)) {
+                        const active = document.activeElement;
+                        if (active?.tagName === 'INPUT' && active.type === 'range') {
+                            if (this._sliderEditMode.has(index)) {
+                                this._exitSliderEditMode(index);
+                            } else {
+                                this._sliderEditMode.set(index, active);
+                                active.classList.add('gamepad-slider-editing');
+                            }
+                            return;
+                        }
+                    }
+                    // Cancel or B (drag) while in slider edit mode → exit edit mode only
+                    if (this._sliderEditMode.has(index) &&
+                        (b.cancelButtons.includes(button) || button === b.drag)) {
+                        this._exitSliderEditMode(index);
                         return;
                     }
                     // B (drag) → close the current modal (master-mode restricted)
@@ -302,20 +336,24 @@ export class GamepadCursorManager {
             this._pressedWithoutModal.get(index)?.delete(button);
             const swallow = pressedOutsideModal && isMenuOpen;
 
+            // Don't simulate clicks on range sliders — confirm/cancel are handled for slider edit mode
+            const activeEl = document.activeElement;
+            const onRangeSlider = isMenuOpen && activeEl?.tagName === 'INPUT' && activeEl.type === 'range';
+
             if (b.confirmButtons.includes(button)) {
                 // Fire deferred UI button click (set on button-down by input-controller)
                 if (this._pendingUIClick.has(index)) {
                     const btn = this._pendingUIClick.get(index);
                     this._pendingUIClick.delete(index);
                     btn.click();
-                } else if (isAssignedTurnUp && !swallow && !this._inUIFocus.has(index)) {
+                } else if (!onRangeSlider && isAssignedTurnUp && !swallow && !this._inUIFocus.has(index)) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = index;
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = null;
                 }
             } else if (b.cancelButtons.includes(button)) {
-                if (isAssignedTurnUp && !swallow && !this._inUIFocus.has(index)) {
+                if (!onRangeSlider && isAssignedTurnUp && !swallow && !this._inUIFocus.has(index)) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
                 }
@@ -1081,14 +1119,37 @@ export class GamepadCursorManager {
      * so D-pad navigation works immediately without needing an initial Tab press.
      */
     _clearUIFocusOnModalOpen() {
-        if (this._inUIFocus.size === 0) return;
+        if (this._inUIFocus.size === 0 && this._sliderEditMode.size === 0) return;
         for (const idx of [...this._inUIFocus]) {
             this._inUIFocus.delete(idx);
             const cursor = this.cursors.get(idx);
             if (cursor) cursor.element.style.visibility = '';
         }
+        for (const idx of [...this._sliderEditMode.keys()]) {
+            this._exitSliderEditMode(idx);
+        }
         // Tell input-controller to clear its uiFocusStates (removes gamepad-focused classes etc.)
         this.inputManager.emit('gamepadClearUIFocus');
+    }
+
+    _exitSliderEditMode(index) {
+        const slider = this._sliderEditMode.get(index);
+        if (slider) slider.classList.remove('gamepad-slider-editing');
+        this._sliderEditMode.delete(index);
+    }
+
+    _adjustSlider(index, direction) {
+        const slider = this._sliderEditMode.get(index);
+        if (!slider) return;
+        const min  = parseFloat(slider.min)  || 0;
+        const max  = parseFloat(slider.max)  || 100;
+        const base = parseFloat(slider.step) || 1;
+        // Use at least 1/20th of the range per press so large-range sliders aren't tedious
+        const step = Math.max(base, (max - min) / 20);
+        const newVal = Math.min(max, Math.max(min, parseFloat(slider.value) + direction * step));
+        slider.value = newVal;
+        slider.dispatchEvent(new Event('input',  { bubbles: true }));
+        slider.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
     _setupModalAutoFocus() {
