@@ -37,6 +37,21 @@ const BUTTON_PITCH = [
     0.50,  // 17 Settings         (-12 semitones — lowest, most distinctive)
 ];
 
+// Default labels for each button index
+const DEFAULT_LABELS = {
+    0: 'A', 1: 'B', 2: 'X', 3: 'Y',
+    4: 'LB', 5: 'RB', 6: 'LT', 7: 'RT',
+    8: 'SELECT', 9: 'START',
+    10: 'A1', 11: 'A2',
+    12: '^', 13: 'v', 14: '<', 15: '>',
+    16: 'HOME', 17: '',
+};
+
+// Per-layout label overrides (only entries that differ from defaults)
+const LAYOUT_LABELS = {
+    dice1: { 0: 'Select', 2: 'Deselect', 3: 'End Turn' },
+};
+
 function getPixelPerCentimeter() {
     const div = document.createElement('div');
     div.style.width = '1cm';
@@ -345,7 +360,14 @@ class FWTouchControl extends PIXI.Container {
         const goodButtonSizeinPixel = 1.2 * getPixelPerCentimeter()
 
         const goodButtonSizeInRelative = goodButtonSizeinPixel / minHeightWidth
-        if (app.layout === 'simple') {
+        if (app.layout === 'loading') {
+            this.dpadCenterContainer.rPos = R_POS_INVISIBLE;
+            this.axesContainers.forEach(c => c.rPos = R_POS_INVISIBLE);
+            this.buttonContainers.forEach((buttonContainer, i) => {
+                buttonContainer.rPos = i === 17 ? [0.5, 0.5, 0.1] : R_POS_INVISIBLE;
+            });
+
+        } else if (app.layout === 'simple') {
             this.dpadCenterContainer.rPos = R_POS_INVISIBLE;
 
             this.axesContainers.forEach((axisContainer, i) => {
@@ -535,6 +557,21 @@ class FWTouchControl extends PIXI.Container {
         });
 
         this.buttonContainers[17].buttonText.text = app.serverId;
+
+        // Apply button labels: defaults → layout overrides → network config overrides
+        const layoutOverrides = LAYOUT_LABELS[app.layout] || {};
+        const netOverrides = app.padConfigOverride?.buttons || {};
+        this.buttonContainers.forEach((container, i) => {
+            if (i === 17) return; // serverId display, never relabelled
+            const netBtn = netOverrides[i] || netOverrides[String(i)];
+            if (netBtn?.label !== undefined) {
+                container.buttonText.text = netBtn.label;
+            } else if (layoutOverrides[i] !== undefined) {
+                container.buttonText.text = layoutOverrides[i];
+            } else {
+                container.buttonText.text = DEFAULT_LABELS[i] ?? '';
+            }
+        });
 
         this.dpadCenterContainer.radius = this.dpadCenterContainer.rPos[2] * minHeightWidth;
         this.dpadCenterContainer.scale = this.dpadCenterContainer.radius / this.dpadCenterContainer.startRadius;

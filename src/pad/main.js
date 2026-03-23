@@ -64,13 +64,32 @@ async function init() {
     if (savedBtn?.dataset.bg) {
         document.documentElement.style.setProperty('--pad-bg-image', savedBtn.dataset.bg);
     }
-    app.layout = getQueryParam('layout') || 'default';
+    app.layout = 'loading';
     app.mode = getQueryParam('mode') || 'default';
     app.connectionStatus = CONNECTION_STATUS_OFF;
 
     const network = FWNetwork.getInstance();
 
     app.connectionStatus = CONNECTION_STATUS_INITIALIZNG;
+    app.padConfigOverride = null;
+
+    network.onJsonMessage = (msg) => {
+        if (msg.type === 'padConfig') {
+            app.padConfigOverride = msg;
+            if (msg.layout) {
+                app.layout = msg.layout;
+                setUrlParam('layout', msg.layout);
+            }
+            if (msg.color) {
+                try {
+                    app.color = new PIXI.Color(msg.color.slice(1));
+                    app.colorCode = msg.color;
+                    document.documentElement.style.setProperty('--pad-color', app.color.toHex());
+                    setUrlParam('color', msg.color);
+                } catch(e) {}
+            }
+        }
+    };
 
     if (app.serverId && app.serverId !== '') {
         network.connectToRoom(app.serverPrefix + app.serverId);

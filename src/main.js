@@ -257,7 +257,9 @@ async function init() {
     // ── FW-Network QR code overlay (shown on main menu when FW-Network backend active) ──
     {
         const nw = FWNetwork.getInstance();
+        nw.sendPadConfig({ type: 'padConfig', layout: 'dice1' });
         const app = renderer.app;
+        const padColorPerClient = new Map();
         const qrCodeContainer = new Container();
         qrCodeContainer.sprite = new Sprite();
         qrCodeContainer.sprite.anchor.set(0, 0);
@@ -282,6 +284,23 @@ async function init() {
                 .some(id => !document.getElementById(id)?.classList.contains('hidden'))
                 || document.body.classList.contains('loading-active');
             const hasSpace = app.screen.width >= 830;
+
+            // Sync pad color to each connected client based on their human player assignment
+            if (usesFw) {
+                const localCount = navigator.getGamepads().length;
+                const gcm = inputManager.gamepadCursorManager;
+                for (const [clientId, gpIndices] of nw.clientGamepadIndices) {
+                    const rawIndex = localCount + gpIndices[0];
+                    const cursor = gcm?.cursors?.get(rawIndex);
+                    if (!cursor?.lastColor) continue;
+                    const colorHex = 'p' + cursor.lastColor.slice(1); // '#RRGGBB' → 'pRRGGBB'
+                    if (padColorPerClient.get(clientId) !== colorHex) {
+                        if (nw.sendPadConfigToClient(clientId, { type: 'padConfig', color: colorHex })) {
+                            padColorPerClient.set(clientId, colorHex);
+                        }
+                    }
+                }
+            }
 
             qrCodeContainer.visible = anyMenuOpen && hasSpace && usesFw && !!nw.qrCodeTexture && !!nw.roomNumber;
 

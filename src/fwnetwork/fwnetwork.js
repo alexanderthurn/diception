@@ -24,6 +24,7 @@ class FWNetwork {
         this.gamepadLayout = 'dpad';
         this.networkGamepads = [];
         this.clientGamepadIndices = new Map();
+        this.clientConnections = new Map();
         this.status = 'disconnected';
         this.stats = {
             bytesReceived: 0,
@@ -92,6 +93,9 @@ class FWNetwork {
             padding: 40,
             size: 1024,
         }
+
+        this.onJsonMessage = null; // pad sets this to receive JSON messages from host
+        this.lastPadConfig = null; // host stores last sent config for replay on reconnect
     }
 
     // Funktion, um URL-Parameter auszulesen
@@ -181,6 +185,9 @@ class FWNetwork {
                 console.log(`Client connected: ${conn.peer}`);
                 this.#setupHostConnection(conn);
                 this.status = `hosting`;
+                if (this.lastPadConfig) {
+                    conn.on('open', () => conn.send(this.lastPadConfig));
+                }
             });
 
             this.peer.on('open', () => {
@@ -203,10 +210,12 @@ class FWNetwork {
 
         this.connection.on('data', (data) => {
             this.stats.messagesReceived++
-            let uint8array = new Uint8Array(data)
-            this.stats.bytesReceived += uint8array.length
-
-            console.log('Received data:', data);
+            if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
+                let uint8array = new Uint8Array(data)
+                this.stats.bytesReceived += uint8array.length
+            } else if (typeof data === 'object' && data.type) {
+                if (this.onJsonMessage) this.onJsonMessage(data);
+            }
         });
 
         this.connection.on('close', () => {
@@ -334,6 +343,21 @@ class FWNetwork {
         return gamepadData
     }
 
+    sendPadConfig(config) {
+        this.lastPadConfig = config;
+        if (this.peer) {
+            this.peer.connections && Object.values(this.peer.connections).forEach(conns => {
+                conns.forEach(conn => { if (conn.open) conn.send(config); });
+            });
+        }
+    }
+
+    sendPadConfigToClient(clientId, config) {
+        const conn = this.clientConnections.get(clientId);
+        if (conn && conn.open) { conn.send(config); return true; }
+        return false;
+    }
+
     sendGamepadData(gamepadData) {
         if (!this.connection || !this.connection.open) {
             console.log('No active connection to send gamepads');
@@ -346,6 +370,7 @@ class FWNetwork {
     // Host: Verarbeitet eingehende Gamepad-Daten
     #setupHostConnection(conn) {
         const clientId = conn.peer;
+        this.clientConnections.set(clientId, conn);
         if (this.clientGamepadIndices.get(clientId)) {
             console.log('reconnecting client found, reusing indices')
             const indices = this.clientGamepadIndices.get(clientId)
@@ -387,6 +412,7 @@ class FWNetwork {
             indices.forEach((idx) => {
                 this.networkGamepads[idx] = undefined;
             });
+            this.clientConnections.delete(clientId);
             this.status = `hosting`;
         });
 
