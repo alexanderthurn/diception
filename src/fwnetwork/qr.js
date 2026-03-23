@@ -88,9 +88,9 @@ var initDialog = (app) => {
 
       const customizePanel = document.getElementById('customizePanel')
       const btnCustomize = document.getElementById('btnCustomize')
-      const hasId = app.serverId && app.serverId !== ''
-      if (customizePanel) customizePanel.hidden = !hasId
-      if (btnCustomize) btnCustomize.hidden = hasId
+      const isDev = getQueryParam('dev') !== null
+      if (customizePanel) customizePanel.hidden = !isDev
+      if (btnCustomize) btnCustomize.hidden = !isDev
 
       updateSettingsDialog(app)
       if (app.touchControl) app.touchControl.setControlsVisible(false);
