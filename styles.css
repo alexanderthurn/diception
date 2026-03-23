@@ -2538,6 +2538,7 @@ body:has(#settings-modal:not(.hidden)) #global-back-btn,
 body:has(#about-modal:not(.hidden)) #global-back-btn,
 body:has(#howto-modal:not(.hidden)) #global-back-btn,
 body:has(#pause-modal:not(.hidden)) #global-back-btn,
+body:has(#achievements-modal:not(.hidden)) #global-back-btn,
 body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     display: none !important;
 }

@@ -194,6 +194,7 @@ export class AchievementsPanel {
 
                 const card = document.createElement('div');
                 card.className = 'ach-card' + (isUnlocked ? ' unlocked' : '');
+                card.tabIndex = 0;
                 card.innerHTML = `
                     <span class="sprite-icon ach-icon ${iconClass}"></span>
                     <div class="ach-card-body">

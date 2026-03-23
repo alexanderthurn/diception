@@ -1053,8 +1053,9 @@ export class GamepadCursorManager {
                 ? lastRow[lastRow.length - 1].el
                 : rows[0][0].el;
             if (current) current.classList.remove('gamepad-focused');
-            t.focus({ preventScroll: false });
+            t.focus({ preventScroll: true });
             t.classList.add('gamepad-focused');
+            t.scrollIntoView({ block: 'nearest', behavior: 'instant' });
             this.moveCursorToElement(cursor, t);
             return;
         }
@@ -1097,10 +1098,23 @@ export class GamepadCursorManager {
                     Math.abs(item.cx - currentCx) < Math.abs(best.cx - currentCx) ? item : best
                 ).el;
             } else if (isDown && nextRowIdx >= rows.length) {
-                // Wrap to first element
+                // Scroll remaining content first; wrap only when already at the bottom
+                const sc = activeContainer.querySelector('.howto-content') || activeContainer;
+                const canScroll = sc.scrollHeight > sc.clientHeight;
+                const atBottom = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 4;
+                if (canScroll && !atBottom) {
+                    sc.scrollBy({ top: 160, behavior: 'instant' });
+                    return;
+                }
                 target = rows[0][0].el;
             } else if (isUp && nextRowIdx < 0) {
-                // Wrap to last element
+                // Scroll up first; wrap only when already at the top
+                const sc = activeContainer.querySelector('.howto-content') || activeContainer;
+                const canScroll = sc.scrollHeight > sc.clientHeight;
+                if (canScroll && sc.scrollTop > 4) {
+                    sc.scrollBy({ top: -160, behavior: 'instant' });
+                    return;
+                }
                 const lastRow = rows[rows.length - 1];
                 target = lastRow[lastRow.length - 1].el;
             }
@@ -1109,8 +1123,9 @@ export class GamepadCursorManager {
         if (!target) return;
 
         if (current) current.classList.remove('gamepad-focused');
-        target.focus({ preventScroll: false });
+        target.focus({ preventScroll: true });
         target.classList.add('gamepad-focused');
+        target.scrollIntoView({ block: 'nearest', behavior: 'instant' });
         this.moveCursorToElement(cursor, target);
     }
 
