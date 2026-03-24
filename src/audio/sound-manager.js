@@ -15,6 +15,8 @@ const SFX_FILES = {
     time: 'time.ogg',
     coin: 'coin.ogg',
     button: 'button.ogg',
+    achieve1: 'achieve1.ogg',
+    achieve2: 'achieve2.ogg',
 };
 
 export class SoundManager {
@@ -145,6 +147,16 @@ export class SoundManager {
     /** Generic UI button click */
     button() {
         this._play('button', { speed: 0.85 + Math.random() * 0.30, volume: this.volume * 0.5 });
+    }
+
+    /** Achievement progress step. speed: 1.0 = normal pitch, higher = harder achievement */
+    achievementProgress(speed = 1.0) {
+        this._play('achieve1', { speed });
+    }
+
+    /** Achievement unlocked */
+    achievementUnlock() {
+        this._play('achieve2');
     }
 
     /**

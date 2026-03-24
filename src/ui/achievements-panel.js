@@ -11,7 +11,7 @@ import { registerCheatContext } from '../cheat.js';
 const STATS_KEY    = 'dicy_ach_stats';
 const UNLOCKED_KEY = 'dicy_ach_unlocked';
 
-const TITLES = {
+export const TITLES = {
     ACH_TUTORIAL:      'First Steps',
     ACH_CHAPTER1:      'Chapter 1 Complete',
     ACH_CHAPTER2:      'Chapter 2 Complete',
@@ -192,8 +192,9 @@ export class AchievementsPanel {
                         </div>`;
                 }
 
+                const isInProgress = !isUnlocked && ach.type === 'stat' && (stats[ach.stat] || 0) > 0;
                 const card = document.createElement('div');
-                card.className = 'ach-card' + (isUnlocked ? ' unlocked' : '');
+                card.className = 'ach-card' + (isUnlocked ? ' unlocked' : isInProgress ? ' in-progress' : '');
                 card.tabIndex = 0;
                 card.innerHTML = `
                     <span class="sprite-icon ach-icon ${iconClass}"></span>

@@ -6213,6 +6213,26 @@ canvas {
     border-color: var(--border-color);
 }
 
+.ach-card.in-progress {
+    border-color: #0a3a3a;
+}
+
+.ach-card.in-progress .ach-card-title {
+    color: #b0e0e0;
+}
+
+.ach-card.in-progress .ach-card-desc {
+    color: #7ab;
+}
+
+.ach-card.in-progress .ach-progress-fill {
+    background: #00cccc;
+}
+
+.ach-card.in-progress .ach-progress-label {
+    color: #7ab;
+}
+
 .ach-icon {
     width: 64px;
     height: 64px;
@@ -6319,6 +6339,57 @@ canvas {
     color: #fff;
     letter-spacing: 1px;
     text-transform: uppercase;
+}
+
+/* ── Achievement Progress Toast ── */
+
+#ach-progress-toast {
+    position: fixed;
+    bottom: 115px;
+    right: 24px;
+    z-index: 9998;
+    background: rgba(0, 0, 5, 0.88);
+    border: 1px solid #0a4040;
+    padding: 8px 14px;
+    min-width: 180px;
+    max-width: 280px;
+    font-family: Rajdhani, sans-serif;
+    opacity: 0;
+    transform: translateX(24px);
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+}
+
+.ach-progress-toast-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #7ab;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ach-progress-toast-bar {
+    background: #111;
+    height: 3px;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.ach-progress-toast-fill {
+    height: 100%;
+    background: #00cccc;
+    transition: width 0.3s;
+}
+
+.ach-progress-toast-label {
+    font-size: 11px;
+    color: #7ab;
+    text-align: right;
 }
 
 /* ═══════════════════════════════════════════════════════════════════

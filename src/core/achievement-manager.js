@@ -52,6 +52,7 @@ function pushStatToSteam(stat, value) {
 // ── Public API ───────────────────────────────────────────────────────────────
 
 let _unlockCallback = null;
+let _progressCallback = null;
 
 /**
  * Register a callback fired whenever a new achievement is unlocked.
@@ -59,6 +60,14 @@ let _unlockCallback = null;
  */
 export function setUnlockCallback(fn) {
     _unlockCallback = fn;
+}
+
+/**
+ * Register a callback fired whenever a stat increments and at least one
+ * achievement for that stat is still locked. Called with (stat, newValue).
+ */
+export function setProgressCallback(fn) {
+    _progressCallback = fn;
 }
 
 /**
@@ -94,6 +103,15 @@ export function incrementStat(stat, amount = 1) {
         if (ach.type === 'stat' && ach.stat === stat && stats[stat] >= ach.threshold) {
             unlockAchievement(ach.id);
         }
+    }
+
+    // Fire progress callback if any achievement for this stat is still unfinished
+    if (_progressCallback) {
+        const unlocked = loadUnlocked();
+        const stillPending = ACHIEVEMENTS.some(
+            ach => ach.type === 'stat' && ach.stat === stat && !unlocked.includes(ach.id)
+        );
+        if (stillPending) _progressCallback(stat, stats[stat]);
     }
 }
 

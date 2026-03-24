@@ -34,11 +34,11 @@ import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode, registerCheatContext } from './cheat.js';
 import { markLevelSolved, unmarkLevelSolved } from './scenarios/campaign-progress.js';
-import { unlockAchievement, removeAchievement, setUnlockCallback, resetAllAchievementsAndStats } from './core/achievement-manager.js';
+import { unlockAchievement, removeAchievement, setUnlockCallback, setProgressCallback, resetAllAchievementsAndStats } from './core/achievement-manager.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
 import { initStorage, flushStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
-import { AchievementsPanel } from './ui/achievements-panel.js';
+import { AchievementsPanel, TITLES as ACH_TITLES } from './ui/achievements-panel.js';
 import { ACHIEVEMENTS } from './core/achievements.js';
 import { initCustomSelects } from './ui/custom-select.js';
 import {
@@ -698,7 +698,7 @@ async function init() {
             // Slide in
             toast.style.opacity = '1';
             toast.style.transform = 'translateX(0)';
-            sfxManager.victory();
+            sfxManager.achievementUnlock();
             // Hold then slide out
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -733,6 +733,48 @@ async function init() {
         setUnlockCallback((id) => {
             toastQueue.push({ id, name: getFriendlyName(id) });
             if (!toastActive) showNext();
+        });
+
+        const progressToast = document.getElementById('ach-progress-toast');
+        const progressToastName = document.getElementById('ach-progress-toast-name');
+        const progressToastFill = document.getElementById('ach-progress-toast-fill');
+        const progressToastLabel = document.getElementById('ach-progress-toast-label');
+        let progressToastTimer = null;
+
+        const PROGRESS_PITCH = {
+            gamesWon:     0.80,
+            underdogWins: 1.10,
+            streak3:      0.85,
+            streak4:      1.00,
+            streak5:      1.20,
+            streak6:      1.45,
+            streak7:      1.70,
+        };
+
+        setProgressCallback((stat, newValue) => {
+            if (stat === 'gamesPlayed') return;
+            sfxManager.achievementProgress(PROGRESS_PITCH[stat] ?? 1.0);
+
+            // Find the lowest-threshold still-locked achievement for this stat
+            const pending = ACHIEVEMENTS
+                .filter(a => a.type === 'stat' && a.stat === stat)
+                .sort((a, b) => a.threshold - b.threshold)
+                .find(a => newValue < a.threshold);
+            if (!pending || !progressToast) return;
+
+            const pct = Math.round((Math.min(newValue, pending.threshold) / pending.threshold) * 100);
+            progressToastName.textContent = ACH_TITLES[pending.id] || pending.id;
+            progressToastFill.style.width = pct + '%';
+            progressToastLabel.textContent = `${newValue.toLocaleString()} / ${pending.threshold.toLocaleString()}`;
+
+            progressToast.style.opacity = '1';
+            progressToast.style.transform = 'translateX(0)';
+
+            clearTimeout(progressToastTimer);
+            progressToastTimer = setTimeout(() => {
+                progressToast.style.opacity = '0';
+                progressToast.style.transform = 'translateX(24px)';
+            }, 2200);
         });
     }
 
