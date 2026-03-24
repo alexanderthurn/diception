@@ -56,6 +56,7 @@ export class InputController {
 
         // Listen for turn transitions
         this.game.on('turnStart', () => this.onTurnStart());
+        this.game.on('gameStart', () => { this.selectedTiles.clear(); this.cursorStates.clear(); });
     }
 
     /** Get or create cursor state for a source */

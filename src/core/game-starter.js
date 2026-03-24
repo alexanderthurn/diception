@@ -192,6 +192,14 @@ export class GameStarter {
 
         this.turnHistory.clearAutoSave();
 
+        // Clear any lingering selection/hover visuals from the previous game
+        this.renderer.setSelection(null, null, null);
+        this.renderer.setCursor(null, null, null);
+        if (this.renderer.grid?.hoverTiles) {
+            this.renderer.grid.hoverTiles.clear();
+            this.renderer.grid._lastHoverCursorId = null;
+        }
+
         if (this.mapEditor && this.mapEditor.isOpen) {
             this.mapEditor.close();
         }
