@@ -757,7 +757,7 @@ export class MapEditor {
 
             // Render
             if (action === 'remove') {
-                element.innerHTML = '✖';
+                element.innerHTML = '<span class="sprite-icon icon-cross"></span>';
                 element.classList.add('preview-tile-remove');
                 element.style.background = 'rgba(0,0,0,0.8)';
                 element.style.borderColor = '#aaa';
@@ -1256,7 +1256,7 @@ export class MapEditor {
         const btn = this.elements.saveBtn;
         if (!btn) return;
         const idx = this.editorOptions?.levelIndex;
-        btn.textContent = idx != null ? `💾 Save #${idx + 1}` : '💾 Save';
+        btn.innerHTML = '<span class="sprite-icon icon-save"></span> ' + (idx != null ? `Save #${idx + 1}` : 'Save');
     }
 
     handleSave() {

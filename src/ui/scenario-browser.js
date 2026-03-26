@@ -220,7 +220,15 @@ export class ScenarioBrowser {
             if (!locked && idx === firstUnsolvedCampaignIdx) btn.dataset.gamepadAutofocus = '';
 
             const nameSpan = document.createElement('span');
-            nameSpan.textContent = (locked ? '🔒 ' : allComplete ? '✓ ' : '') + displayName;
+            if (locked) {
+                nameSpan.innerHTML = '<span class="sprite-icon icon-lock"></span> ';
+                nameSpan.appendChild(document.createTextNode(displayName));
+            } else if (allComplete) {
+                nameSpan.innerHTML = '<span class="sprite-icon icon-check"></span> ';
+                nameSpan.appendChild(document.createTextNode(displayName));
+            } else {
+                nameSpan.textContent = displayName;
+            }
 
             const subSpan = document.createElement('span');
             subSpan.className = 'campaign-btn-sub';

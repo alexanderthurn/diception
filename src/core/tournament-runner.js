@@ -141,7 +141,7 @@ export class TournamentRunner {
             const percent = (wins / gameCount * 100).toFixed(1);
             return `
                 <div class="tournament-result-row ${index === 0 ? 'winner' : ''}">
-                    <span class="tournament-rank">${index === 0 ? '🏆' : index + 1}</span>
+                    <span class="tournament-rank">${index === 0 ? '<span class="sprite-icon icon-achievements"></span>' : index + 1}</span>
                     <span class="tournament-ai-name">${name}</span>
                     <span class="tournament-wins">${wins} wins</span>
                     <span class="tournament-percent">${percent}%</span>

@@ -230,7 +230,7 @@ export class GameEventManager {
      */
     async runHeadlessFastForward(startingPlayer, playerAIs, autoplayPlayers) {
         // Show "fast-forwarding" indicator on the auto-win button
-        this.autoWinBtn.textContent = '⏩';
+        this.autoWinBtn.innerHTML = '<span class="sprite-icon icon-fast-forward"></span>';
         this.autoWinBtn.classList.add('active');
 
         // Ensure all players have AIs
@@ -866,7 +866,7 @@ export class GameEventManager {
 
     handlePlayerEliminated(player) {
         const name = this.getPlayerName ? this.getPlayerName(player) : (player.isBot ? `Bot ${player.id}` : `Player ${player.id}`);
-        if (this.addLog) this.addLog(`☠️ ${name} has been eliminated!`, 'death');
+        if (this.addLog) this.addLog(`${name} has been eliminated!`, 'death', 'icon-skull');
         if (this.sfx) this.sfx.playerEliminated();
         if (this.playerDashboard) this.playerDashboard.update();
     }
@@ -919,11 +919,11 @@ export class GameEventManager {
         const fullBoardResolution = data.fullBoardResolution || false;
         if (this.addLog) {
             if (turnLimitReached) {
-                this.addLog(`⏱️ Turn limit reached! ${name} wins by dice count!`, 'death');
+                this.addLog(`Turn limit reached! ${name} wins by dice count!`, 'death', 'icon-timer');
             } else if (fullBoardResolution) {
-                this.addLog(`🎯 Board settled — ${name} wins!`, 'death');
+                this.addLog(`Board settled — ${name} wins!`, 'death', 'icon-target');
             } else {
-                this.addLog(`🏆 ${name} wins the game!`, 'death');
+                this.addLog(`${name} wins the game!`, 'death', 'icon-achievements');
             }
         }
 
@@ -1014,14 +1014,14 @@ export class GameEventManager {
 
             // Show tracked eliminations first (in order)
             gameStats.eliminationOrder.forEach(e => {
-                statsHtml += `<span class="timeline-entry eliminated"><span class="symbol">✗</span> ${e.name}</span> `;
+                statsHtml += `<span class="timeline-entry eliminated"><span class="sprite-icon icon-cross"></span> ${e.name}</span> `;
             });
 
             // Show any untracked eliminations (from headless mode)
             deadPlayers.forEach(p => {
                 if (!trackedIds.has(p.id)) {
                     const pName = this.getPlayerName(p);
-                    statsHtml += `<span class="timeline-entry eliminated"><span class="symbol">✗</span> ${pName}</span> `;
+                    statsHtml += `<span class="timeline-entry eliminated"><span class="sprite-icon icon-cross"></span> ${pName}</span> `;
                 }
             });
 
@@ -1031,14 +1031,14 @@ export class GameEventManager {
                 survivors.forEach(p => {
                     const pName = this.getPlayerName(p);
                     if (data.winner && p.id === data.winner.id) {
-                        statsHtml += `<span class="timeline-entry winner"><span class="symbol">✓</span> ${pName}</span> `;
+                        statsHtml += `<span class="timeline-entry winner"><span class="sprite-icon icon-check"></span> ${pName}</span> `;
                     } else {
                         statsHtml += `<span class="timeline-entry survivor"><span class="symbol">≈</span> ${pName}</span> `;
                     }
                 });
             } else {
                 // Show winner with green check
-                statsHtml += `<span class="timeline-entry winner"><span class="symbol">✓</span> ${name}</span>`;
+                statsHtml += `<span class="timeline-entry winner"><span class="sprite-icon icon-check"></span> ${name}</span>`;
             }
 
             statsHtml += '</div>';

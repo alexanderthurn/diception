@@ -140,7 +140,7 @@ export class PlayerDashboard {
             const isAutoplay = this.autoplayPlayers.has(p.id);
 
             const autoplayBtn = !p.isBot && p.alive ?
-                `<button class="autoplay-toggle ${isAutoplay ? 'active' : ''}" data-player-id="${p.id}">🤖</button>` : '';
+                `<button class="autoplay-toggle ${isAutoplay ? 'active' : ''}" data-player-id="${p.id}"><span class="sprite-icon icon-autoplay"></span></button>` : '';
 
             div.innerHTML = `
                 <div class="player-info-row">
@@ -148,10 +148,10 @@ export class PlayerDashboard {
                    ${autoplayBtn}
                 </div>
                 <div class="p-stats-row">
-                   <span title="Tiles owned">🗺️ ${p.tileCount || 0}</span>
-                   <span title="Connected region size">🔗 ${p.connectedTiles || 0}</span>
+                   <span title="Tiles owned"><span class="sprite-icon icon-map"></span> ${p.tileCount || 0}</span>
+                   <span title="Connected region size"><span class="sprite-icon icon-link"></span> ${p.connectedTiles || 0}</span>
                    <span title="Total dice" style="display: flex; align-items: center; gap: 4px;"><span class="dice-icon-sprite mini" style="background-color: #888; -webkit-mask-image: url(${this.diceDataURL}); mask-image: url(${this.diceDataURL});"></span> ${p.totalDice || 0}</span>
-                   ${p.storedDice > 0 ? `<span title="Stored dice">📦 ${p.storedDice}</span>` : ''}
+                   ${p.storedDice > 0 ? `<span title="Stored dice"><span class="sprite-icon icon-dice"></span> ${p.storedDice}</span>` : ''}
                 </div>
             `;
             this.playerList.appendChild(div);

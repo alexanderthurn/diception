@@ -400,12 +400,17 @@
             <key type="filename">gfx/game/icon_attack.png</key>
             <key type="filename">gfx/game/icon_autoplay.png</key>
             <key type="filename">gfx/game/icon_campaigns.png</key>
+            <key type="filename">gfx/game/icon_check.png</key>
             <key type="filename">gfx/game/icon_close.png</key>
+            <key type="filename">gfx/game/icon_cross.png</key>
             <key type="filename">gfx/game/icon_defend.png</key>
             <key type="filename">gfx/game/icon_dice.png</key>
+            <key type="filename">gfx/game/icon_fast_forward.png</key>
             <key type="filename">gfx/game/icon_gamepad.png</key>
             <key type="filename">gfx/game/icon_help.png</key>
             <key type="filename">gfx/game/icon_input_mk.png</key>
+            <key type="filename">gfx/game/icon_link.png</key>
+            <key type="filename">gfx/game/icon_lock.png</key>
             <key type="filename">gfx/game/icon_map.png</key>
             <key type="filename">gfx/game/icon_music_off.png</key>
             <key type="filename">gfx/game/icon_music_on.png</key>
@@ -416,6 +421,9 @@
             <key type="filename">gfx/game/icon_settings.png</key>
             <key type="filename">gfx/game/icon_sfx_off.png</key>
             <key type="filename">gfx/game/icon_sfx_on.png</key>
+            <key type="filename">gfx/game/icon_skull.png</key>
+            <key type="filename">gfx/game/icon_target.png</key>
+            <key type="filename">gfx/game/icon_timer.png</key>
             <key type="filename">gfx/game/icon_zoom_in.png</key>
             <key type="filename">gfx/game/icon_zoom_out.png</key>
             <struct type="IndividualSpriteSettings">

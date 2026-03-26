@@ -85,7 +85,7 @@ export class GameLog {
 
         let summaryHtml = '';
         if (this.turnStats.attacks > 0) {
-            summaryHtml = `⚔️${this.turnStats.wins}/${this.turnStats.attacks}`;
+            summaryHtml = `<span class="sprite-icon icon-attack"></span>${this.turnStats.wins}/${this.turnStats.attacks}`;
             if (this.turnStats.conquered > 0) {
                 summaryHtml += ` 🏴${this.turnStats.conquered}`;
             }
@@ -94,7 +94,7 @@ export class GameLog {
             summaryHtml += ` +${reinforcements}<span class="dice-icon-sprite mini" style="background-color: #888; -webkit-mask-image: url(${this.diceDataURL}); mask-image: url(${this.diceDataURL});"></span>`;
         }
         if (saved > 0) {
-            summaryHtml += ` 📦${saved}`;
+            summaryHtml += ` <span class="sprite-icon icon-dice"></span>${saved}`;
         }
         if (!summaryHtml) {
             summaryHtml = '(no action)';
@@ -103,12 +103,19 @@ export class GameLog {
         summary.innerHTML = summaryHtml;
     }
 
-    addEntry(message, type = '') {
+    addEntry(message, type = '', iconClass = null) {
         if (!this.currentTurnLog) return;
 
         const entry = document.createElement('div');
         entry.className = `log-entry ${type}`;
-        entry.textContent = message;
+        if (iconClass) {
+            const icon = document.createElement('span');
+            icon.className = `sprite-icon ${iconClass}`;
+            entry.appendChild(icon);
+            entry.appendChild(document.createTextNode(' ' + message));
+        } else {
+            entry.textContent = message;
+        }
         this.currentTurnLog.details.insertBefore(entry, this.currentTurnLog.details.firstChild);
     }
 

@@ -150,6 +150,16 @@
             { name: 'icon_help', emoji: '?', label: 'Help / How to Play' },
             { name: 'icon_input_mk', emoji: '🖱️+⌨️', label: 'Mouse + Keyboard', scale: 0.4 },
             { name: 'icon_achievements', emoji: '🏆', label: 'Achievements' },
+            // Status indicators
+            { name: 'icon_check',        label: 'Solved / Win',             custom: 'check' },
+            { name: 'icon_cross',        label: 'Loss / Eliminated',        custom: 'cross' },
+            { name: 'icon_lock',         emoji: '🔒', label: 'Locked' },
+            // Game-log / HUD icons
+            { name: 'icon_skull',        emoji: '☠️',  label: 'Player Eliminated' },
+            { name: 'icon_fast_forward', emoji: '⏩',  label: 'Auto-Win / Fast Forward' },
+            { name: 'icon_link',         emoji: '🔗',  label: 'Connected Region Size' },
+            { name: 'icon_timer',        emoji: '⏱️',  label: 'Turn Timer / Limit' },
+            { name: 'icon_target',       emoji: '🎯',  label: 'Board Settlement' },
         ];
 
         // ============================
@@ -387,6 +397,52 @@
             return texture;
         }
 
+        /**
+         * Render a checkmark (✓) in neon green — used for solved / win states
+         */
+        function createCheckTexture() {
+            const size = SPRITE_SIZE;
+            const container = new PIXI.Container();
+            const bounds = new PIXI.Graphics();
+            bounds.rect(0, 0, size, size).fill({ color: 0x000000, alpha: 0 });
+            container.addChild(bounds);
+
+            const g = new PIXI.Graphics();
+            const lw = size * 0.11;
+            g.moveTo(size * 0.14, size * 0.52)
+             .lineTo(size * 0.42, size * 0.78)
+             .lineTo(size * 0.86, size * 0.24)
+             .stroke({ color: 0x00FF88, width: lw, cap: 'round', join: 'round' });
+            container.addChild(g);
+
+            const texture = app.renderer.generateTexture({ target: container, resolution: 1, antialias: true });
+            container.destroy({ children: true });
+            return texture;
+        }
+
+        /**
+         * Render a cross (✗) in neon red — used for loss / eliminated states
+         */
+        function createCrossTexture() {
+            const size = SPRITE_SIZE;
+            const container = new PIXI.Container();
+            const bounds = new PIXI.Graphics();
+            bounds.rect(0, 0, size, size).fill({ color: 0x000000, alpha: 0 });
+            container.addChild(bounds);
+
+            const g = new PIXI.Graphics();
+            const lw = size * 0.11;
+            const m  = size * 0.18;
+            g.moveTo(m, m).lineTo(size - m, size - m)
+             .moveTo(size - m, m).lineTo(m, size - m)
+             .stroke({ color: 0xFF3333, width: lw, cap: 'round' });
+            container.addChild(g);
+
+            const texture = app.renderer.generateTexture({ target: container, resolution: 1, antialias: true });
+            container.destroy({ children: true });
+            return texture;
+        }
+
         // ============================
         // EXTRACT TEXTURE TO BLOB
         // ============================
@@ -456,6 +512,10 @@
                 let tex;
                 if (icon.name === 'icon_input_mk') {
                     tex = createMouseKeyboardTexture();
+                } else if (icon.custom === 'check') {
+                    tex = createCheckTexture();
+                } else if (icon.custom === 'cross') {
+                    tex = createCrossTexture();
                 } else {
                     tex = createIconTexture(icon.emoji, icon.scale, icon.color);
                 }

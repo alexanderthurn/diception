@@ -1692,6 +1692,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         [achBtn, editorBtn, campaignBtn].forEach(btn => {
             if (!btn) return;
             btn.classList.add('btn-locked');
+            const icon = btn.querySelector('.sprite-icon');
+            if (icon) icon.className = 'sprite-icon icon-lock';
         });
     }
 

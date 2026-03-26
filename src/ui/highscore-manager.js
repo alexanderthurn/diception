@@ -123,7 +123,7 @@ export class HighscoreManager {
                 return `
                     <div class="highscore-item ${isHighlighted}">
                         <span class="highscore-player-name">${name}</span>
-                        <span class="highscore-wins">${wins} 🏆</span>
+                        <span class="highscore-wins">${wins} <span class="sprite-icon icon-achievements"></span></span>
                     </div>
                 `;
             }).join('');

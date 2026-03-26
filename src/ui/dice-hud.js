@@ -188,7 +188,9 @@ export class DiceHUD {
             await wait(280);
             if (dismissed) return;
 
-            banner.textContent = result.won ? '✓  VICTORY' : '✗  DEFEAT';
+            banner.innerHTML = result.won
+                ? '<span class="sprite-icon icon-check"></span>  VICTORY'
+                : '<span class="sprite-icon icon-cross"></span>  DEFEAT';
             banner.classList.add(result.won ? 'win' : 'defeat', 'visible');
 
             autoTimer = setTimeout(dismiss, 1800);
