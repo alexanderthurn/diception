@@ -192,7 +192,10 @@ export class AchievementsPanel {
                         </div>`;
                 }
 
-                const isInProgress = !isUnlocked && ach.type === 'stat' && (stats[ach.stat] || 0) > 0;
+                const isPreviousTierUnlocked = ach.type !== 'stat' || ACHIEVEMENTS
+                    .filter(a => a.stat === ach.stat && a.threshold < ach.threshold)
+                    .every(a => unlocked.includes(a.id));
+                const isInProgress = !isUnlocked && ach.type === 'stat' && (stats[ach.stat] || 0) > 0 && isPreviousTierUnlocked;
                 const card = document.createElement('div');
                 card.className = 'ach-card' + (isUnlocked ? ' unlocked' : isInProgress ? ' in-progress' : '');
                 card.tabIndex = 0;

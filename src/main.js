@@ -35,7 +35,7 @@ import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode, registerCheatContext } from './cheat.js';
 import { markLevelSolved, unmarkLevelSolved } from './scenarios/campaign-progress.js';
 import { unlockAchievement, removeAchievement, setUnlockCallback, setProgressCallback, resetAllAchievementsAndStats } from './core/achievement-manager.js';
-import { isTauriContext, isSteamContext, isDesktopContext, isAndroid } from './scenarios/user-identity.js';
+import { isTauriContext, isSteamContext, isDesktopContext, isAndroid, isFullVersion } from './scenarios/user-identity.js';
 import { initStorage, flushStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { AchievementsPanel, TITLES as ACH_TITLES } from './ui/achievements-panel.js';
@@ -207,15 +207,17 @@ async function init() {
         }
     }
 
-    // Steam-specific identity display
+    // Credits line: "Hi, name" on Steam, "Full Version" or "Free Version" elsewhere
     if (window.steam) {
         window.steam.getUserName().then(name => {
             console.log('Steam User:', name);
-            const creditsElements = document.querySelectorAll('.credits');
-            creditsElements.forEach(credits => {
-                credits.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">Hi, ${name}</span>`;
-            });
+            const el = document.getElementById('main-menu-credits');
+            if (el) el.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">Hi, ${name}</span>`;
         });
+    } else {
+        const versionLabel = isFullVersion() ? 'by Alexander Thurn' : 'Free Version';
+        const el = document.getElementById('main-menu-credits');
+        if (el) el.textContent = versionLabel;
     }
 
     // Initialize Input System (create before renderer needs it)
@@ -618,6 +620,7 @@ async function init() {
     gameStarter.setMapEditor(mapEditor);
     scenarioBrowser.setOnStartGame(() => gameStarter.startGame());
     scenarioBrowserOpen = () => scenarioBrowser.open();
+    scenarioBrowserOpenUserCampaign = () => scenarioBrowser.openUserCampaign();
     sessionManagerRef = sessionManager;
 
     const showStartupDialogs = async () => {
@@ -1680,9 +1683,28 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     // --- Main Menu button wiring ---
     const achievementsPanel = new AchievementsPanel(achievementsModal);
 
-    document.getElementById('main-achievements-btn')?.addEventListener('click', () => {
+    function showFullVersionOnlyDialog() { Dialog.showFullVersion(); }
+
+    if (!isFullVersion()) {
+        const achBtn      = document.getElementById('main-icons-achievements-btn');
+        const editorBtn   = document.getElementById('main-icons-editor-btn');
+        const campaignBtn = document.getElementById('main-campaign-btn');
+        [achBtn, editorBtn, campaignBtn].forEach(btn => {
+            if (!btn) return;
+            btn.classList.add('btn-locked');
+        });
+    }
+
+    document.getElementById('main-icons-achievements-btn')?.addEventListener('click', () => {
+        if (!isFullVersion()) { showFullVersionOnlyDialog(); return; }
         mainMenu.classList.add('hidden');
         achievementsPanel.open();
+    });
+
+    document.getElementById('main-icons-editor-btn')?.addEventListener('click', () => {
+        if (!isFullVersion()) { showFullVersionOnlyDialog(); return; }
+        mainMenu.classList.add('hidden');
+        scenarioBrowserOpenUserCampaign();
     });
 
     document.getElementById('main-campaign-btn')?.addEventListener('click', () => {
@@ -1988,6 +2010,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
 // scenarioBrowserOpen / sessionManagerRef set by caller via module-level vars
 let scenarioBrowserOpen = () => {};
+let scenarioBrowserOpenUserCampaign = () => {};
 let sessionManagerRef = null;
 
 // --- Benchmark Tool (console only) ---

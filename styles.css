@@ -7077,6 +7077,127 @@ details.settings-group[open]>summary.settings-group-header::after {
     margin: 8px 0;
 }
 
+/* ── Full Version Dialog ── */
+
+.full-version-dialog-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 0 0 4px;
+    text-align: center;
+    overflow-y: auto;
+    max-height: calc(var(--body-h, 100vh) - 200px);
+}
+
+.full-version-intro {
+    color: rgba(0, 255, 255, 0.7);
+    font-size: 0.9em;
+    letter-spacing: 1px;
+    margin: 0 0 2px;
+}
+
+.full-version-features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.full-version-features li {
+    color: #fff;
+    font-size: 1em;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.full-version-features li::before {
+    content: '▸';
+    color: #00ffff;
+    font-size: 0.8em;
+    flex-shrink: 0;
+    margin-top: 0.15em;
+}
+
+.full-version-support {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.8em;
+    letter-spacing: 0.5px;
+    margin: 0;
+    font-style: italic;
+}
+
+.steam-store-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 0;
+    margin-bottom: 2px;
+    padding: 8px 16px;
+    border: 1px solid rgba(0, 255, 255, 0.35);
+    color: #00ffff;
+    text-decoration: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: border-color 0.15s, box-shadow 0.15s, color 0.15s;
+}
+
+.steam-store-link:hover {
+    border-color: #00ffff;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    color: #fff;
+}
+
+.steam-store-logo {
+    height: 22px;
+    width: auto;
+    opacity: 0.85;
+    filter: brightness(0) invert(1);
+}
+
+
+/* ── Locked feature buttons (non-full version) ── */
+
+.tron-btn.btn-locked {
+    border-color: rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 1);
+    box-shadow: none;
+    text-shadow: none;
+    cursor: pointer;
+}
+
+.tron-btn.btn-locked .sprite-icon {
+    background-image: none !important;
+    position: relative;
+}
+
+.tron-btn.btn-locked .sprite-icon::after {
+    content: '🔒';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1em;
+}
+
+.tron-btn.btn-locked:hover {
+    border-color: rgba(255, 255, 255, 0.30);
+    color: rgba(255, 255, 255, 0.40);
+    box-shadow: none;
+}
+
+.tron-btn.btn-locked:active {
+    transform: scale(0.98);
+}
+
 /* Supply animation: all-full fallback — flash the end-turn button */
 @keyframes supply-flash-pulse {
     0%   { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); border-color: inherit; }

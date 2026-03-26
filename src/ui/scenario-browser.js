@@ -2,7 +2,7 @@ import { Dialog } from './dialog.js';
 import { CampaignManager } from '../scenarios/campaign-manager.js';
 import { getGridDimensions } from '../scenarios/campaign-data.js';
 import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress.js';
-import { getCachedIdentity } from '../scenarios/user-identity.js';
+import { getCachedIdentity, isFullVersion } from '../scenarios/user-identity.js';
 import { MapManager } from '../core/map.js';
 
 /**
@@ -78,6 +78,17 @@ export class ScenarioBrowser {
         this.scenarioBrowserModal.classList.remove('hidden');
         this.pendingLevel = null;
         await this.showCampaignView();
+    }
+
+    async openUserCampaign() {
+        this.scenarioBrowserModal.classList.remove('hidden');
+        this.pendingLevel = null;
+        const campaigns = this.campaignManager.listCampaigns();
+        let userCampaign = campaigns.find(c => c.isUserCampaign);
+        if (!userCampaign) {
+            userCampaign = { id: '_user_empty', owner: 'Your Campaign', levels: [], isUserCampaign: true, isEmpty: true };
+        }
+        await this.showLevelGridView(userCampaign);
     }
 
     hasHoverCapability() {
@@ -177,19 +188,10 @@ export class ScenarioBrowser {
     }
 
     async renderCampaignList() {
-        const campaigns = this.campaignManager.listCampaigns();
+        // User campaign is accessed via the Map Editor icon — exclude from the campaign list
+        const campaigns = this.campaignManager.listCampaigns().filter(c => !c.isUserCampaign);
 
         getCachedIdentity();
-        const hasUserCampaign = campaigns.some(c => c.isUserCampaign);
-        if (!hasUserCampaign) {
-            campaigns.push({
-                id: '_user_empty',
-                owner: 'Your Campaign',
-                levels: [],
-                isUserCampaign: true,
-                isEmpty: true
-            });
-        }
 
         if (!this.campaignButtonList) return;
         this.campaignButtonList.innerHTML = '';
@@ -201,30 +203,36 @@ export class ScenarioBrowser {
             return levelCount > 0 && solvedCount < levelCount;
         });
 
+        const fullVersion = isFullVersion();
         campaigns.forEach((c, idx) => {
             const levelCount = c.levels?.length ?? 0;
             const solvedCount = getSolvedLevels(c.owner).length;
             const allComplete = levelCount > 0 && solvedCount >= levelCount;
             const displayName = this.getCampaignDisplayName(c);
+            const isTutorial = c.id === 'tutorial' || c.owner === 'Tutorial';
+            const locked = !fullVersion && !isTutorial;
 
             const nodeDiv = document.createElement('div');
             nodeDiv.className = 'campaign-list-node';
 
             const btn = document.createElement('button');
-            btn.className = 'tron-btn large campaign-select-btn';
-            if (idx === firstUnsolvedCampaignIdx) btn.dataset.gamepadAutofocus = '';
+            btn.className = 'tron-btn large campaign-select-btn' + (locked ? ' btn-locked' : '');
+            if (!locked && idx === firstUnsolvedCampaignIdx) btn.dataset.gamepadAutofocus = '';
 
             const nameSpan = document.createElement('span');
-            nameSpan.textContent = (allComplete ? '✓ ' : '') + displayName;
+            nameSpan.textContent = (locked ? '🔒 ' : allComplete ? '✓ ' : '') + displayName;
 
             const subSpan = document.createElement('span');
             subSpan.className = 'campaign-btn-sub';
-            subSpan.textContent = `${levelCount} levels${solvedCount > 0 ? ` · ${solvedCount} solved` : ''}`;
+            subSpan.textContent = locked
+                ? 'Full version only'
+                : `${levelCount} levels${solvedCount > 0 ? ` · ${solvedCount} solved` : ''}`;
 
             btn.appendChild(nameSpan);
             btn.appendChild(subSpan);
 
             btn.addEventListener('click', () => {
+                if (locked) { Dialog.showFullVersion(); return; }
                 const target = (c.isEmpty || (c.levels && c.levels.length === 0 && c.isUserCampaign))
                     ? { ...c, isEmpty: true } : c;
                 this.showLevelGridView(target);

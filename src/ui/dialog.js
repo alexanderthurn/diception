@@ -138,8 +138,43 @@ export class Dialog {
     }
 
     /**
+     * Shows the "Full Version" upsell dialog with Steam link
+     */
+    static showFullVersion() {
+        const STEAM_URL = 'https://store.steampowered.com/app/4429000/DICEPTION/';
+        const content = document.createElement('div');
+        content.className = 'full-version-dialog-body';
+        content.innerHTML = `
+            <p class="full-version-intro">You are playing the free version of Diception. Unlock the full experience.</p>
+            <a href="${STEAM_URL}" target="_blank" rel="noopener" class="steam-store-link">
+                <img src="assets/icons/steam-logo.png" alt="Steam" class="steam-store-logo">
+                <span>Available on Steam</span>
+            </a>
+            <ul class="full-version-features">
+                <li>A Handcrafted Campaign with 84 levels</li>
+                <li>34 Achievements</li>
+                <li>Map Editor to create Maps and custom Scenarios</li>
+                <li>Steam Cloud Save to not lose your progress</li>
+                <li>Steam Remote Play</li>
+            </ul>
+            <p class="full-version-support">Your purchase directly supports an indie developer — thank you!</p>`;
+        content.querySelector('.steam-store-link').addEventListener('click', e => {
+            e.preventDefault();
+            window.open(STEAM_URL, '_blank');
+        });
+        return this.show({
+            title: 'FULL VERSION',
+            content,
+            buttons: [
+                { text: 'GET ON STEAM', value: 'steam', className: 'tron-btn' },
+                { text: 'CLOSE', value: 'close', className: 'tron-btn small' },
+            ],
+        }).then(val => { if (val === 'steam') window.open(STEAM_URL, '_blank'); });
+    }
+
+    /**
      * Closes the dialog
-     * @param {HTMLElement} overlay 
+     * @param {HTMLElement} overlay
      */
     static close(overlay) {
         if (this.activeOverlay === overlay) {

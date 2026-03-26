@@ -143,6 +143,17 @@ export function isDesktopContext() {
 }
 
 /**
+ * Whether this is the full (paid) version of the game.
+ * Priority: URL param ?full=true/false > Steam (always full) > false
+ */
+export function isFullVersion() {
+    const param = new URLSearchParams(window.location.search).get('full');
+    if (param === 'true')  return true;
+    if (param === 'false') return false;
+    return isSteamContext();
+}
+
+/**
  * Cache identity in memory to avoid repeated async calls
  */
 let _cachedIdentity = null;
