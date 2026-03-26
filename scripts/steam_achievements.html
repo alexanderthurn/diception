@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DICEPTION — Achievement Icons</title>
+    <!-- Pull sprite positions directly from the game's CSS — auto-updates when spritesheet is regenerated -->
+    <link rel="stylesheet" href="../public/assets/gfx/sprites.css">
     <style>
         @font-face {
             font-family: 'Rajdhani';
@@ -193,8 +195,45 @@
         const PLAYER_COLORS = ['#AA00FF','#0088FF','#FFCC00','#00AA44','#FF0055','#55FF00','#FF00AA','#FF8800'];
         const PARTICLE_COLORS = ['#00FFFF','#AA00FF','#00ff88','#0088ff'];
 
-        // ── D6 sprite coords — exact copy from steam_assets.html ──────────────
-        const DICE_SPRITE = { x: 1, y: 259, w: 204, h: 202 };
+        // ── Derive sprite pixel coords from sprites.css (auto-updates with spritesheet) ──
+        // getComputedStyle may return % strings for background-position/size, so we resolve them.
+        function getCssSpriteCrop(cssClass, img) {
+            const ELEM_SIZE = 100;
+            const el = document.createElement('span');
+            el.className = 'sprite-icon ' + cssClass;
+            el.style.cssText = `position:fixed;visibility:hidden;pointer-events:none;width:${ELEM_SIZE}px;height:${ELEM_SIZE}px;`;
+            document.body.appendChild(el);
+            const cs = getComputedStyle(el);
+
+            // Resolve a size token: '495.098px' → 495.098, '495.098%' → pct/100 * ELEM_SIZE
+            function resolveSize(token, container) {
+                return token.endsWith('%') ? parseFloat(token) / 100 * container : parseFloat(token);
+            }
+            const sizeParts = cs.backgroundSize.split(' ');
+            const bgW = resolveSize(sizeParts[0], ELEM_SIZE);
+            const bgH = resolveSize(sizeParts[1] ?? sizeParts[0], ELEM_SIZE);
+
+            // Resolve a position token: '-128px' → -128, '18.79%' → (container - bgSize) * pct/100
+            function resolvePos(token, container, bgSize) {
+                return token.endsWith('%') ? (container - bgSize) * parseFloat(token) / 100 : parseFloat(token);
+            }
+            const posParts = cs.backgroundPosition.split(' ');
+            const posX = resolvePos(posParts[0], ELEM_SIZE, bgW);
+            const posY = resolvePos(posParts[1] ?? posParts[0], ELEM_SIZE, bgH);
+
+            document.body.removeChild(el);
+            const scaleX = bgW / img.naturalWidth;
+            const scaleY = bgH / img.naturalHeight;
+            return {
+                x: Math.round(-posX / scaleX),
+                y: Math.round(-posY / scaleY),
+                w: Math.round(ELEM_SIZE / scaleX),
+                h: Math.round(ELEM_SIZE / scaleY),
+            };
+        }
+
+        // ── D6 sprite coords — read from sprites.css (set after spritesheet loads) ──
+        let DICE_SPRITE = null; // populated in the load-wait block below
 
         // ── Dice face dot layouts — exact copy from steam_assets.html ─────────
         const SPRITE_PATTERNS = {
@@ -904,6 +943,10 @@
             if (spriteSheet.complete && spriteSheet.naturalWidth) resolve();
             else { spriteSheet.onload = resolve; spriteSheet.onerror = resolve; }
         });
+
+        // Derive die pip coords from CSS now that the image natural size is known
+        DICE_SPRITE = getCssSpriteCrop('die-d6', spriteSheet);
+
 
         for (const { id, colorCanvas, greyCanvas } of allEntries) {
             const fn = RENDERERS[id];
