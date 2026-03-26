@@ -4,6 +4,8 @@
  */
 
 const MAX_LEVELS = 144; // 12×12 grid
+/** Minimum map/scenario width and height (campaign levels + editor saves). */
+const MIN_LEVEL_DIMENSION = 1;
 const OWNER_ID_TYPES = ['steam', 'web', 'android'];
 
 /**
@@ -81,8 +83,8 @@ export function validateLevel(level) {
     }
 
     if (type === 'scenario') {
-        if (!level.width || level.width < 3) errors.push('Invalid width');
-        if (!level.height || level.height < 3) errors.push('Invalid height');
+        if (typeof level.width !== 'number' || level.width < MIN_LEVEL_DIMENSION) errors.push('Invalid width');
+        if (typeof level.height !== 'number' || level.height < MIN_LEVEL_DIMENSION) errors.push('Invalid height');
         if (!Array.isArray(level.tiles)) errors.push('Tiles must be an array');
         if (!Array.isArray(level.players)) errors.push('Players must be an array');
         if (level.players && level.players.length < 2) errors.push('At least 2 players required');
@@ -99,8 +101,8 @@ export function validateLevel(level) {
     }
 
     if (type === 'map') {
-        if (!level.width || level.width < 3) errors.push('Invalid width');
-        if (!level.height || level.height < 3) errors.push('Invalid height');
+        if (typeof level.width !== 'number' || level.width < MIN_LEVEL_DIMENSION) errors.push('Invalid width');
+        if (typeof level.height !== 'number' || level.height < MIN_LEVEL_DIMENSION) errors.push('Invalid height');
         if (!Array.isArray(level.tiles)) errors.push('Tiles must be an array');
         if (Array.isArray(level.tiles)) {
             for (let i = 0; i < level.tiles.length; i++) {

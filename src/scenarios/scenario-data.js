@@ -81,8 +81,8 @@ export function validateScenario(scenario) {
 
     // Required fields for all types
     if (!scenario.name) errors.push('Missing name');
-    if (!scenario.width || scenario.width < 3) errors.push('Invalid width');
-    if (!scenario.height || scenario.height < 3) errors.push('Invalid height');
+    if (typeof scenario.width !== 'number' || scenario.width < 1) errors.push('Invalid width');
+    if (typeof scenario.height !== 'number' || scenario.height < 1) errors.push('Invalid height');
     if (!Array.isArray(scenario.tiles)) errors.push('Tiles must be an array');
 
     // Players only required for scenarios (not maps)

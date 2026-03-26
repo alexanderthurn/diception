@@ -653,15 +653,6 @@ export class ScenarioBrowser {
             const typeLabel = lvl.type === 'config' ? 'Procedural' : (lvl.type === 'map' ? 'Map' : 'Scenario');
             p.textContent = `${typeLabel} · Level ${idx + 1}`;
             content.appendChild(p);
-            const infoBlock = document.createElement('div');
-            infoBlock.className = 'level-preview-info';
-            this.getLevelInfoLines(lvl).forEach(line => {
-                const span = document.createElement('span');
-                span.className = 'level-preview-info-line';
-                span.textContent = line;
-                infoBlock.appendChild(span);
-            });
-            content.appendChild(infoBlock);
             return { content, prevBtn, nextBtn };
         };
 

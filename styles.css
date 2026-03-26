@@ -3532,19 +3532,6 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     color: #888;
 }
 
-.level-preview-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    font-size: 0.85em;
-    color: rgba(255, 255, 255, 0.7);
-    text-align: center;
-}
-
-.level-preview-info .level-preview-info-line {
-    display: block;
-}
-
 .level-grid-tile .tile-add {
     font-size: 2em;
     color: rgba(255, 255, 255, 0.5);

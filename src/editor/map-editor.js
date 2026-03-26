@@ -406,7 +406,6 @@ export class MapEditor {
             editorSharedBotAI: document.getElementById('editor-shared-bot-ai'),
             editorMapGameMode: document.getElementById('editor-map-game-mode'),
             editorMapTurnTimeLimit: document.getElementById('editor-map-turn-time-limit'),
-            editorTurnTimeLimit: document.getElementById('editor-turn-time-limit'),
 
             // Actions
             clearBtn: document.getElementById('editor-clear-btn'),
@@ -526,11 +525,6 @@ export class MapEditor {
 
         this.elements.editorMapTurnTimeLimit?.addEventListener('change', () => {
             this.state.turnTimeLimit = parseInt(this.elements.editorMapTurnTimeLimit.value);
-            this.state.isDirty = true;
-        });
-
-        this.elements.editorTurnTimeLimit?.addEventListener('change', () => {
-            this.state.turnTimeLimit = parseInt(this.elements.editorTurnTimeLimit.value);
             this.state.isDirty = true;
         });
 
@@ -1264,6 +1258,12 @@ export class MapEditor {
         if (this.state.editorType === 'scenario') return this.saveAsScenario();
     }
 
+    /** Log save errors to the console (campaign validation, storage, etc.). */
+    _logSaveFailure(context, err) {
+        const detail = err instanceof Error ? err.message : String(err);
+        console.error(`[MapEditor] Save failed (${context}): ${detail}`, err);
+    }
+
     _buildMapSnapshot() {
         this.state.bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
         this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
@@ -1424,7 +1424,6 @@ export class MapEditor {
         if (this.elements.editorMapGameMode) this.elements.editorMapGameMode.value = this.state.gameMode || 'classic';
         const ttl = this.state.turnTimeLimit ?? 0;
         if (this.elements.editorMapTurnTimeLimit) this.elements.editorMapTurnTimeLimit.value = ttl;
-        if (this.elements.editorTurnTimeLimit) this.elements.editorTurnTimeLimit.value = ttl;
     }
 
     /**
@@ -1960,6 +1959,7 @@ export class MapEditor {
                 this.close();
                 return mapData;
             } catch (e) {
+                this._logSaveFailure('campaign map → setUserLevel', e);
                 this.showStatus('Failed to save', 'error');
                 return null;
             }
@@ -1985,7 +1985,7 @@ export class MapEditor {
             this.showStatus('Map saved!', 'success');
             return mapData;
         } catch (e) {
-            console.error('Failed to save map:', e);
+            this._logSaveFailure('standalone map → scenario library', e);
             this.showStatus('Failed to save', 'error');
             return null;
         }
@@ -2006,6 +2006,7 @@ export class MapEditor {
                 this.close();
                 return scenarioData;
             } catch (e) {
+                this._logSaveFailure('campaign scenario → setUserLevel', e);
                 this.showStatus('Failed to save', 'error');
                 return null;
             }
@@ -2031,7 +2032,7 @@ export class MapEditor {
             this.showStatus('Scenario saved!', 'success');
             return scenarioData;
         } catch (e) {
-            console.error('Failed to save scenario:', e);
+            this._logSaveFailure('standalone scenario → scenario library', e);
             this.showStatus('Failed to save', 'error');
             return null;
         }
@@ -2065,6 +2066,7 @@ export class MapEditor {
                 this.close();
                 return configData;
             } catch (e) {
+                this._logSaveFailure('campaign config → setUserLevel', e);
                 this.showStatus('Failed to save', 'error');
                 return null;
             }

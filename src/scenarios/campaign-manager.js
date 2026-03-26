@@ -115,7 +115,7 @@ export class CampaignManager {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(this.userCampaign));
         } catch (e) {
-            console.error('Failed to save user campaign:', e);
+            console.error('Failed to save user campaign to localStorage:', e?.name, e?.message, e);
             if (e.name === 'QuotaExceededError') {
                 throw new Error('Storage full. Try removing some levels.');
             }
