@@ -195,6 +195,10 @@ const CONFIG_MAP_SIZE_PRESETS = [
     { width: 12, height: 12, label: '12×12' }
 ];
 
+const RANDOM_DIALOG_PREFS_KEY = 'dicy_editor_random_prefs';
+const VALID_RANDOM_MAP_STYLES = new Set(['random', 'full', 'continents', 'caves', 'islands', 'maze', 'tunnels', 'swiss']);
+const VALID_RANDOM_GAME_MODES = new Set(['classic', 'fair', 'madness', '2of2']);
+
 // Available AI difficulties
 const AVAILABLE_AIS = [
     { id: 'easy', name: 'Easy' },
@@ -537,7 +541,10 @@ export class MapEditor {
             const idx = parseInt(e.target.value) - 1;
             const preset = CONFIG_MAP_SIZE_PRESETS[Math.max(0, Math.min(idx, CONFIG_MAP_SIZE_PRESETS.length - 1))];
             if (this.elements.editorMapSizeVal) this.elements.editorMapSizeVal.textContent = preset.label;
+            this.saveRandomDialogPrefs();
         });
+        this.elements.editorMapStyle?.addEventListener('change', () => this.saveRandomDialogPrefs());
+        this.elements.editorGameMode?.addEventListener('change', () => this.saveRandomDialogPrefs());
 
         // Quick actions
         this.elements.clearBtn?.addEventListener('click', () => this.clearGrid());
@@ -1358,13 +1365,52 @@ export class MapEditor {
         this.syncConfigFromUI();
         await this.regenerateConfigPreview();
         this.renderToCanvas();
+        this.saveRandomDialogPrefs();
+    }
+
+    saveRandomDialogPrefs() {
+        try {
+            const mapSize = parseInt(this.elements.editorMapSize?.value || '4', 10);
+            const mapStyle = this.elements.editorMapStyle?.value || 'random';
+            const gameMode = this.elements.editorGameMode?.value || 'classic';
+            if (mapSize < 1 || mapSize > 10) return;
+            if (!VALID_RANDOM_MAP_STYLES.has(mapStyle) || !VALID_RANDOM_GAME_MODES.has(gameMode)) return;
+            localStorage.setItem(RANDOM_DIALOG_PREFS_KEY, JSON.stringify({ mapSize, mapStyle, gameMode }));
+        } catch (e) {
+            console.warn('Could not save random dialog prefs:', e);
+        }
+    }
+
+    applyRandomDialogPrefsFromStorage() {
+        try {
+            const raw = localStorage.getItem(RANDOM_DIALOG_PREFS_KEY);
+            if (!raw) return false;
+            const p = JSON.parse(raw);
+            const mapSize = Number(p.mapSize);
+            if (!Number.isInteger(mapSize) || mapSize < 1 || mapSize > 10) return false;
+            if (typeof p.mapStyle !== 'string' || !VALID_RANDOM_MAP_STYLES.has(p.mapStyle)) return false;
+            if (typeof p.gameMode !== 'string' || !VALID_RANDOM_GAME_MODES.has(p.gameMode)) return false;
+
+            const preset = CONFIG_MAP_SIZE_PRESETS[mapSize - 1];
+            if (!preset) return false;
+
+            if (this.elements.editorMapSize) this.elements.editorMapSize.value = String(mapSize);
+            if (this.elements.editorMapSizeVal) this.elements.editorMapSizeVal.textContent = preset.label;
+            if (this.elements.editorMapStyle) this.elements.editorMapStyle.value = p.mapStyle;
+            if (this.elements.editorGameMode) this.elements.editorGameMode.value = p.gameMode;
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     setRandomDialogOpen(open) {
         if (open) {
             this.elements.randomDialog?.classList.remove('hidden');
             this.elements.randomBtn?.classList.add('active');
-            if (this.state.configData) this.syncConfigToUI();
+            if (!this.applyRandomDialogPrefsFromStorage() && this.state.configData) {
+                this.syncConfigToUI();
+            }
             this.syncConfigFromUI();
             this.setEditorType('map');
             // Don't randomize here - only when user clicks Generate or opens new map
