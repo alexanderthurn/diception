@@ -553,7 +553,7 @@ export class EffectsManager {
             for (const [, tiles] of rowMap) {
                 for (const e of tiles) {
                     const c = grid.tileCache.get(e.idx);
-                    if (c) { c.alpha = 0; c.scale.set(1); }
+                    if (c) c.alpha = 0;
                 }
             }
 
@@ -571,6 +571,7 @@ export class EffectsManager {
                     setTimeout(() => {
                         const container = grid.tileCache.get(e.idx);
                         if (!container) return;
+
                         container.scale.set(0.88);
                         let t = 0;
                         const step = (ticker) => {
