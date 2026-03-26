@@ -6,26 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DICEPTION — Steam Assets</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- Pull sprite positions directly from the game's CSS — auto-updates when spritesheet is regenerated -->
+    <link rel="stylesheet" href="../public/assets/gfx/sprites.css">
     <style>
         @font-face {
             font-family: 'Rajdhani';
             font-style: normal;
             font-weight: 400;
-            src: url('public/fonts/Rajdhani-Regular.ttf') format('truetype');
+            src: url('../public/assets/fonts/Rajdhani-Regular.ttf') format('truetype');
         }
 
         @font-face {
             font-family: 'Rajdhani';
             font-style: normal;
             font-weight: 600;
-            src: url('public/fonts/Rajdhani-SemiBold.ttf') format('truetype');
+            src: url('../public/assets/fonts/Rajdhani-SemiBold.ttf') format('truetype');
         }
 
         @font-face {
             font-family: 'Rajdhani';
             font-style: normal;
             font-weight: 700;
-            src: url('public/fonts/Rajdhani-Bold.ttf') format('truetype');
+            src: url('../public/assets/fonts/Rajdhani-Bold.ttf') format('truetype');
         }
 
         * {
@@ -276,9 +278,15 @@
             addSection('Broadcast Assets', BROADCAST_ASSETS);
             addSection('Soundtrack Assets', SOUNDTRACK_ASSETS);
 
-            // Load spritesheet then render all assets
-            spriteSheet.onload = () => pendingRenders.forEach(r => renderAsset(r.canvas, r.asset));
-            if (spriteSheet.complete) pendingRenders.forEach(r => renderAsset(r.canvas, r.asset));
+            // Load spritesheet then derive die coords and render all assets
+            spriteSheet.onload = () => {
+                DICE_SPRITE = getCssSpriteCrop('die-d6', spriteSheet);
+                pendingRenders.forEach(r => renderAsset(r.canvas, r.asset));
+            };
+            if (spriteSheet.complete) {
+                DICE_SPRITE = getCssSpriteCrop('die-d6', spriteSheet);
+                pendingRenders.forEach(r => renderAsset(r.canvas, r.asset));
+            }
         });
 
         // ── Global spritesheet & pending renders ──
@@ -498,8 +506,38 @@ void main(void) {
         ];
         const PARTICLE_COLORS = ['#00FFFF', '#AA00FF', '#00ff88', '#0088ff'];
 
-        // ── D6 sprite in spritesheet (coordinates from diception.json) ──
-        const DICE_SPRITE = { x: 1, y: 775, w: 204, h: 202 };
+        // ── D6 sprite coords — derived from sprites.css (auto-updates with spritesheet) ──
+        // getComputedStyle may return % strings; resolve them to pixels manually.
+        function getCssSpriteCrop(cssClass, img) {
+            const ELEM_SIZE = 100;
+            const el = document.createElement('span');
+            el.className = 'sprite-icon ' + cssClass;
+            el.style.cssText = `position:fixed;visibility:hidden;pointer-events:none;width:${ELEM_SIZE}px;height:${ELEM_SIZE}px;`;
+            document.body.appendChild(el);
+            const cs = getComputedStyle(el);
+            function resolveSize(token, container) {
+                return token.endsWith('%') ? parseFloat(token) / 100 * container : parseFloat(token);
+            }
+            const sizeParts = cs.backgroundSize.split(' ');
+            const bgW = resolveSize(sizeParts[0], ELEM_SIZE);
+            const bgH = resolveSize(sizeParts[1] ?? sizeParts[0], ELEM_SIZE);
+            function resolvePos(token, container, bgSize) {
+                return token.endsWith('%') ? (container - bgSize) * parseFloat(token) / 100 : parseFloat(token);
+            }
+            const posParts = cs.backgroundPosition.split(' ');
+            const posX = resolvePos(posParts[0], ELEM_SIZE, bgW);
+            const posY = resolvePos(posParts[1] ?? posParts[0], ELEM_SIZE, bgH);
+            document.body.removeChild(el);
+            const scaleX = bgW / img.naturalWidth;
+            const scaleY = bgH / img.naturalHeight;
+            return {
+                x: Math.round(-posX / scaleX),
+                y: Math.round(-posY / scaleY),
+                w: Math.round(ELEM_SIZE / scaleX),
+                h: Math.round(ELEM_SIZE / scaleY),
+            };
+        }
+        let DICE_SPRITE = null; // populated after spritesheet loads
 
         // ── Dice face layouts (matching game TileRenderer classicPatterns exactly) ──
         const SPRITE_PATTERNS = {
