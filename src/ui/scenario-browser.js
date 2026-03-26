@@ -5,6 +5,14 @@ import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress
 import { getCachedIdentity, isFullVersion } from '../scenarios/user-identity.js';
 import { MapManager } from '../core/map.js';
 
+/** Dev-only campaign tools (import/export JSON, etc.): ?dev=true or ?dev=1 */
+function isCampaignDevToolsEnabled() {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('dev')) return false;
+    const v = (params.get('dev') ?? '').toLowerCase();
+    return v === '' || v === '1' || v === 'true' || v === 'yes';
+}
+
 /**
  * ScenarioBrowser - Campaign-based map/level selection
  * Shows campaign list, then level grid. Supports play and edit (for own campaign).
@@ -32,6 +40,7 @@ export class ScenarioBrowser {
         this.campaignSelect = document.getElementById('campaign-select');
         this.levelGridContainer = document.getElementById('level-grid-container');
         this.levelGrid = document.getElementById('level-grid');
+        this.campaignUserActions = document.getElementById('campaign-user-actions');
         this.levelGridHeader = document.getElementById('level-grid-header');
         this.previewContent = document.getElementById('scenario-preview-content');
         this.setupModal = document.getElementById('setup-modal');
@@ -257,6 +266,143 @@ export class ScenarioBrowser {
         });
     }
 
+    exportUserCampaignJson() {
+        const payload = this.campaignManager.getExportPayload();
+        const text = JSON.stringify(payload, null, 2);
+        const blob = new Blob([text], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const base = String(payload.id || 'campaign').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64) || 'campaign';
+        a.download = `${base}.json`;
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    renderCampaignDevToolbar() {
+        if (!this.campaignUserActions) return;
+        this.campaignUserActions.innerHTML = '';
+
+        this._devImportableCampaigns = [
+            ...this.campaignManager.builtinCampaigns,
+            ...(this.campaignManager.onlineCampaigns || [])
+        ];
+
+        const copyRow = document.createElement('div');
+        copyRow.className = 'campaign-dev-import-row';
+
+        const sourceSelect = document.createElement('select');
+        sourceSelect.className = 'campaign-dev-import-select';
+        sourceSelect.setAttribute('aria-label', 'Built-in or online campaign to copy into yours');
+
+        const placeholderOpt = document.createElement('option');
+        placeholderOpt.value = '';
+        placeholderOpt.textContent = 'Copy from campaign…';
+        placeholderOpt.disabled = true;
+        placeholderOpt.selected = true;
+        sourceSelect.appendChild(placeholderOpt);
+
+        this._devImportableCampaigns.forEach((c, i) => {
+            const opt = document.createElement('option');
+            opt.value = String(i);
+            const label = this.getCampaignDisplayName(c);
+            const count = c.levels?.length ?? 0;
+            opt.textContent = `${label} (${count})`;
+            sourceSelect.appendChild(opt);
+        });
+
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'tron-btn small campaign-dev-btn';
+        copyBtn.textContent = 'Copy';
+        copyBtn.setAttribute('aria-label', 'Copy the selected campaign into your campaign');
+        copyBtn.addEventListener('click', () => this.importUserCampaignFromExisting(sourceSelect));
+
+        copyRow.appendChild(sourceSelect);
+        copyRow.appendChild(copyBtn);
+
+        const importBtn = document.createElement('button');
+        importBtn.type = 'button';
+        importBtn.className = 'tron-btn small campaign-dev-btn';
+        importBtn.textContent = 'Import JSON';
+        importBtn.setAttribute('aria-label', 'Import campaign from a JSON file');
+        importBtn.addEventListener('click', () => this.importUserCampaignJson());
+
+        const exportBtn = document.createElement('button');
+        exportBtn.type = 'button';
+        exportBtn.className = 'tron-btn small campaign-dev-btn';
+        exportBtn.textContent = 'Export JSON';
+        exportBtn.setAttribute('aria-label', 'Download your campaign as JSON');
+        exportBtn.addEventListener('click', () => this.exportUserCampaignJson());
+
+        this.campaignUserActions.appendChild(copyRow);
+        this.campaignUserActions.appendChild(importBtn);
+        this.campaignUserActions.appendChild(exportBtn);
+    }
+
+    async importUserCampaignFromExisting(sourceSelect) {
+        if (!isCampaignDevToolsEnabled()) return;
+        const idx = parseInt(sourceSelect.value, 10);
+        if (Number.isNaN(idx) || idx < 0) {
+            await Dialog.alert('Choose a campaign from the list first.', 'Copy campaign');
+            return;
+        }
+        const source = this._devImportableCampaigns?.[idx];
+        if (!source?.levels?.length) {
+            await Dialog.alert('That campaign has no levels.', 'Copy campaign');
+            return;
+        }
+
+        const displayName = this.getCampaignDisplayName(source);
+        const proceed = await Dialog.confirm(
+            `Replace your entire saved campaign with "${displayName}" (${source.levels.length} levels)?`,
+            'Copy campaign'
+        );
+        if (!proceed) return;
+
+        const imp = await this.campaignManager.importFromExistingCampaign(source);
+        if (!imp.ok) {
+            await Dialog.alert(imp.errors.join('\n'), 'Copy failed');
+            return;
+        }
+        this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
+        await this.renderLevelGrid(this.selectedCampaign);
+    }
+
+    async importUserCampaignJson() {
+        if (!isCampaignDevToolsEnabled()) return;
+        const proceed = await Dialog.confirm(
+            'Replace your entire saved campaign with the imported JSON file?',
+            'Import campaign'
+        );
+        if (!proceed) return;
+
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json,application/json';
+        input.addEventListener('change', async () => {
+            const file = input.files?.[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                const imp = await this.campaignManager.importFromPortableJson(data);
+                if (!imp.ok) {
+                    await Dialog.alert(imp.errors.join('\n'), 'Import failed');
+                    return;
+                }
+                this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
+                await this.renderLevelGrid(this.selectedCampaign);
+            } catch (e) {
+                await Dialog.alert(e?.message || String(e), 'Import failed');
+            }
+        });
+        input.click();
+    }
+
     handleBack() {
         if (this.campaignDetailView && !this.campaignDetailView.classList.contains('hidden')) {
             // Detail view → go back to campaign selection
@@ -323,6 +469,16 @@ export class ScenarioBrowser {
                 localStorage.setItem('dicy_loadedCampaignId', campaign.ownerId);
             } else {
                 localStorage.removeItem('dicy_loadedCampaignId');
+            }
+        }
+
+        if (this.campaignUserActions) {
+            if (isUserCampaign && isCampaignDevToolsEnabled()) {
+                this.campaignUserActions.classList.remove('hidden');
+                this.renderCampaignDevToolbar();
+            } else {
+                this.campaignUserActions.classList.add('hidden');
+                this.campaignUserActions.innerHTML = '';
             }
         }
 

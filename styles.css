@@ -3185,6 +3185,48 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     padding-top: 10px;
 }
 
+/* Dev-only toolbar (?dev=true) above Your Campaign level grid */
+.campaign-dev-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 6px;
+}
+
+.campaign-dev-toolbar.hidden {
+    display: none;
+}
+
+.campaign-dev-import-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    flex: 1 1 auto;
+    min-width: min(100%, 220px);
+    justify-content: flex-end;
+}
+
+.campaign-dev-import-select {
+    flex: 1 1 160px;
+    min-width: 140px;
+    max-width: 280px;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(0, 255, 255, 0.25);
+    border-radius: 2px;
+    color: #fff;
+    font-size: 12px;
+    font-family: inherit;
+}
+
+.campaign-dev-import-select:focus {
+    border-color: rgba(0, 255, 255, 0.55);
+    outline: none;
+}
+
 #level-grid-header {
     display: flex;
     align-items: center;

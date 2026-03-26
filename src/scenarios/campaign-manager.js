@@ -3,7 +3,7 @@
  * One campaign per user. Built-ins are read-only.
  */
 
-import { validateCampaign, validateLevel, getGridDimensions } from './campaign-data.js';
+import { validateCampaign, validateLevel, getGridDimensions, sanitizeLevel } from './campaign-data.js';
 import { getCachedIdentity } from './user-identity.js';
 import builtinChapter1 from './builtin-chapter1.json';
 import builtinChapter2 from './builtin-chapter2.json';
@@ -190,6 +190,68 @@ export class CampaignManager {
      */
     setOnlineCampaigns(campaigns) {
         this.onlineCampaigns = campaigns;
+    }
+
+    /**
+     * Portable campaign JSON (same shape as src/scenarios/builtin-*.json): id, owner, levels only.
+     * Omits ownerId / ownerIdType. Levels are deep-cloned with name/description stripped.
+     */
+    getExportPayload() {
+        if (!this.userCampaign) {
+            return { id: 'my-campaign', owner: 'Your Campaign', levels: [] };
+        }
+        const levels = this.userCampaign.levels
+            .filter(l => l != null)
+            .map(l => JSON.parse(JSON.stringify(sanitizeLevel(l))));
+        return {
+            id: this.userCampaign.id,
+            owner: this.userCampaign.owner,
+            levels
+        };
+    }
+
+    /**
+     * Replace user campaign levels (and optional id/owner) from builtin-style JSON.
+     * Preserves ownerId / ownerIdType. Ensures a user campaign exists.
+     * @returns {Promise<{ok: true, levelCount: number}|{ok: false, errors: string[]}>}
+     */
+    async importFromPortableJson(portable) {
+        const result = validateCampaign(portable, { requireAuthFields: false });
+        if (!result.valid) {
+            return { ok: false, errors: result.errors };
+        }
+        await this.ensureUserCampaign();
+        const levels = portable.levels.map(l => JSON.parse(JSON.stringify(sanitizeLevel(l))));
+        this.userCampaign.levels = levels;
+        if (typeof portable.id === 'string' && portable.id.trim()) {
+            this.userCampaign.id = portable.id.trim().slice(0, 128);
+        }
+        if (typeof portable.owner === 'string' && portable.owner.trim()) {
+            this.userCampaign.owner = portable.owner.trim().slice(0, 128);
+        }
+        this.saveUserCampaign();
+        return { ok: true, levelCount: levels.length };
+    }
+
+    /**
+     * Copy id, owner, and levels from a built-in or online campaign into the user campaign.
+     * @param {Object} source - Campaign object with levels (e.g. from builtinCampaigns / onlineCampaigns)
+     */
+    async importFromExistingCampaign(source) {
+        if (!source?.levels || !Array.isArray(source.levels)) {
+            return { ok: false, errors: ['Campaign has no levels'] };
+        }
+        const levels = source.levels
+            .filter(l => l != null)
+            .map(l => JSON.parse(JSON.stringify(sanitizeLevel(l))));
+        const portable = { levels };
+        if (typeof source.id === 'string' && source.id.trim()) {
+            portable.id = source.id.trim().slice(0, 128);
+        }
+        if (typeof source.owner === 'string' && source.owner.trim()) {
+            portable.owner = source.owner.trim().slice(0, 128);
+        }
+        return this.importFromPortableJson(portable);
     }
 
     /**
