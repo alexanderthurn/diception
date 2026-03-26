@@ -5,8 +5,6 @@ import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress
 import { getCachedIdentity, isFullVersion } from '../scenarios/user-identity.js';
 import { MapManager } from '../core/map.js';
 
-const EDITOR_PLAYTEST_RESUME_KEY = 'dicy_editorResume';
-
 /** Dev-only campaign tools (import/export JSON, etc.): ?dev=true or ?dev=1 */
 function isCampaignDevToolsEnabled() {
     const params = new URLSearchParams(window.location.search);
@@ -939,67 +937,7 @@ export class ScenarioBrowser {
         };
     }
 
-    /**
-     * Start game from campaign editor playtest; on exit, reopen editor with the same unsaved snapshot.
-     */
-    beginEditorPlaytest({ levelData, campaignOwner, levelIndex }) {
-        if (levelData == null || campaignOwner == null || levelIndex == null) return;
-        const campaign = this.campaignManager.getCampaign(campaignOwner);
-        if (!campaign) return;
-
-        try {
-            sessionStorage.setItem(EDITOR_PLAYTEST_RESUME_KEY, JSON.stringify({
-                levelData,
-                campaignOwner,
-                levelIndex
-            }));
-        } catch (e) {
-            console.warn('Could not store editor playtest resume:', e);
-        }
-
-        this.selectedCampaign = campaign;
-        this.pendingLevel = levelData;
-        this.pendingCampaign = campaign;
-        this.selectedLevelIndex = levelIndex;
-        this.configManager.updateConfigFromLevel(levelData);
-
-        localStorage.setItem('dicy_loadedCampaign', campaignOwner);
-        localStorage.setItem('dicy_loadedLevelIndex', String(levelIndex));
-        if (campaign.ownerId) {
-            localStorage.setItem('dicy_loadedCampaignId', campaign.ownerId);
-        } else {
-            localStorage.removeItem('dicy_loadedCampaignId');
-        }
-
-        localStorage.setItem('dicy_campaignMode', '1');
-        this.scenarioBrowserModal.classList.add('hidden');
-        this.setupModal.classList.add('hidden');
-        if (this.effectsManager) this.effectsManager.stopIntroMode();
-        if (this.onStartGame) this.onStartGame(true);
-    }
-
-    resumeEditorAfterPlaytest(levelData, campaignOwner, levelIndex) {
-        const campaign = this.campaignManager.getCampaign(campaignOwner);
-        if (!campaign || !levelData) {
-            this.showCampaignView();
-            this.scenarioBrowserModal.classList.remove('hidden');
-            return;
-        }
-        this.selectedCampaign = campaign;
-        this.scenarioBrowserModal.classList.add('hidden');
-        if (this.effectsManager) this.effectsManager.stopIntroMode();
-        const { onSave, onClose } = this.mapEditorCallbacksForCampaignLevel(levelIndex);
-        this.mapEditor.open(levelData, {
-            campaign,
-            levelIndex,
-            onSave,
-            onClose
-        });
-    }
-
     selectAndPlayLevel(index, opts = {}) {
-        sessionStorage.removeItem(EDITOR_PLAYTEST_RESUME_KEY);
-
         const level = this.campaignManager.getLevel(this.selectedCampaign, index);
         if (!level) return;
 

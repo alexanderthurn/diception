@@ -115,7 +115,6 @@ export class SessionManager {
      * Quit to main menu
      */
     quitToMainMenu() {
-        sessionStorage.removeItem('dicy_editorResume');
         this.resetGameSession();
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
         localStorage.removeItem('dicy_campaignMode');
@@ -134,7 +133,6 @@ export class SessionManager {
      * Quit back to the custom game setup screen
      */
     quitToCustomGame() {
-        sessionStorage.removeItem('dicy_editorResume');
         this.resetGameSession();
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
         localStorage.removeItem('dicy_campaignMode');
@@ -147,7 +145,6 @@ export class SessionManager {
      * Quit to campaign screen (when in campaign mode)
      */
     async quitToCampaignScreen() {
-        sessionStorage.removeItem('dicy_editorResume');
         this.resetGameSession();
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
         this.setupModal.classList.add('hidden');
@@ -158,41 +155,6 @@ export class SessionManager {
             this.scenarioBrowser.scenarioBrowserModal.classList.remove('hidden');
         }
         if (this.effectsManager) this.effectsManager.startIntroMode();
-    }
-
-    /**
-     * After campaign playtest from map editor: leave the match and reopen the editor.
-     */
-    async quitToEditorAfterPlaytest() {
-        let resume = null;
-        try {
-            const raw = sessionStorage.getItem('dicy_editorResume');
-            sessionStorage.removeItem('dicy_editorResume');
-            if (raw) resume = JSON.parse(raw);
-        } catch (e) {
-            sessionStorage.removeItem('dicy_editorResume');
-        }
-
-        localStorage.removeItem('dicy_campaignMode');
-
-        this.resetGameSession();
-        if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
-        this.setupModal.classList.add('hidden');
-        document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
-        document.getElementById('main-menu')?.classList.add('hidden');
-
-        if (!resume?.levelData || resume.campaignOwner == null || resume.levelIndex == null
-            || !this.scenarioBrowser || !this.mapEditor) {
-            if (this.scenarioBrowser) {
-                await this.scenarioBrowser.showCampaignView();
-                this.scenarioBrowser.scenarioBrowserModal.classList.remove('hidden');
-            }
-            if (this.effectsManager) this.effectsManager.startIntroMode();
-            return;
-        }
-
-        this.scenarioBrowser.resumeEditorAfterPlaytest(resume.levelData, resume.campaignOwner, resume.levelIndex);
-        if (this.effectsManager) this.effectsManager.stopIntroMode();
     }
 
     /**

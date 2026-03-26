@@ -1181,12 +1181,8 @@ export class GameEventManager {
             if (campaignFinished && this.scenarioBrowser) {
                 this.scenarioBrowser.clearPendingScenario();
             }
-            const editorPlaytestResume = sessionStorage.getItem('dicy_editorResume');
             if (campaignFinished) {
-                sessionStorage.removeItem('dicy_editorResume');
                 await this.sessionManager.quitToMainMenu();
-            } else if (editorPlaytestResume) {
-                await this.sessionManager.quitToEditorAfterPlaytest();
             } else if (isCampaignMode && this.scenarioBrowser) {
                 await this.sessionManager.quitToCampaignScreen();
             } else {
@@ -1196,7 +1192,6 @@ export class GameEventManager {
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
             this.gameStarter.startFreshSameSettings();
         } else if (choice === 'next') {
-            sessionStorage.removeItem('dicy_editorResume');
             const campaign = owner ? this.scenarioBrowser.campaignManager.getCampaign(owner) : null;
             const nextIndex = levelIndex + 1;
             if (campaign && this.scenarioBrowser.campaignManager.getLevel(campaign, nextIndex)) {

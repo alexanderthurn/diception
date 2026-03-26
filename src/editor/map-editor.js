@@ -235,9 +235,6 @@ export class MapEditor {
         // Callback for when editor closes
         this.onClose = null;
 
-        /** Set from main: ({ levelData, campaignOwner, levelIndex }) => void */
-        this.onPlaytest = null;
-
         // Campaign context (when editing level in campaign)
         this.editorOptions = null;
 
@@ -305,10 +302,6 @@ export class MapEditor {
         this.renderer = renderer;
     }
 
-    setPlaytestHandler(fn) {
-        this.onPlaytest = typeof fn === 'function' ? fn : null;
-    }
-
     setInputManager(inputManager) {
         this.inputManager = inputManager;
     }
@@ -372,7 +365,6 @@ export class MapEditor {
             randomBtn: document.getElementById('editor-random-btn'),
             quickActions: document.getElementById('editor-quick-actions'),
             saveBtn: document.getElementById('editor-save-btn'),
-            playtestBtn: document.getElementById('editor-playtest-btn'),
             randomizeBtn: document.getElementById('editor-randomize-btn'),
             editorMapSize: document.getElementById('editor-map-size'),
             editorMapSizeVal: document.getElementById('editor-map-size-val'),
@@ -544,7 +536,6 @@ export class MapEditor {
 
         // Save button (calls saveAsMap or saveAsScenario based on type)
         this.elements.saveBtn?.addEventListener('click', () => this.handleSave());
-        this.elements.playtestBtn?.addEventListener('click', () => this.runCampaignPlaytest());
         this.elements.randomizeBtn?.addEventListener('click', () => this.handleRandomize());
 
         // Config inputs (Random dialog) - only update label, Generate does the rest
@@ -1273,28 +1264,6 @@ export class MapEditor {
         if (this.state.editorType === 'scenario') return this.saveAsScenario();
     }
 
-    /**
-     * Campaign editor only: start a playtest with current canvas (does not save to disk).
-     */
-    runCampaignPlaytest() {
-        if (!this.editorOptions || typeof this.onPlaytest !== 'function') return;
-        let levelData = null;
-        if (this.state.editorType === 'scenario') {
-            levelData = this._buildScenarioSnapshot();
-        } else {
-            levelData = this._buildMapSnapshot();
-            if (!levelData && this.state.configData) {
-                levelData = this._buildConfigSnapshot();
-            }
-        }
-        if (!levelData) return;
-        this.onPlaytest({
-            levelData,
-            campaignOwner: this.editorOptions.campaign.owner,
-            levelIndex: this.editorOptions.levelIndex
-        });
-    }
-
     _buildMapSnapshot() {
         this.state.bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
         this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
@@ -1385,22 +1354,6 @@ export class MapEditor {
         };
     }
 
-    _buildConfigSnapshot() {
-        this.syncConfigFromUI();
-        const cfg = this.state.configData;
-        if (!cfg) return null;
-        return {
-            type: 'config',
-            mapSize: cfg.mapSize || '6x6',
-            mapStyle: cfg.mapStyle || 'islands',
-            gameMode: cfg.gameMode || 'classic',
-            bots: 2,
-            botAI: 'easy',
-            maxDice: 8,
-            diceSides: 6
-        };
-    }
-
     async handleRandomize() {
         this.syncConfigFromUI();
         await this.regenerateConfigPreview();
@@ -1452,9 +1405,6 @@ export class MapEditor {
         hideInCampaign.forEach(el => {
             if (el) el.style.display = inCampaign ? 'none' : '';
         });
-        if (this.elements.playtestBtn) {
-            this.elements.playtestBtn.classList.toggle('hidden', !inCampaign);
-        }
     }
 
     /**
