@@ -80,6 +80,14 @@ export function validateLevel(level) {
         if (!level.botAI) errors.push('config requires botAI');
         if (typeof level.maxDice !== 'number') errors.push('config requires maxDice');
         if (typeof level.diceSides !== 'number') errors.push('config requires diceSides');
+        if (level.humanStartsFirst !== undefined && typeof level.humanStartsFirst !== 'boolean') {
+            errors.push('humanStartsFirst must be a boolean');
+        }
+        if (level.startingPlayerId !== undefined && level.startingPlayerId !== null) {
+            if (typeof level.startingPlayerId !== 'number' || !Number.isInteger(level.startingPlayerId)) {
+                errors.push('startingPlayerId must be an integer');
+            }
+        }
     }
 
     if (type === 'scenario') {
@@ -98,6 +106,14 @@ export function validateLevel(level) {
                 if (typeof t.dice !== 'number' || t.dice < 1) errors.push(`Tile ${i}: invalid dice`);
             }
         }
+        if (level.humanStartsFirst !== undefined && typeof level.humanStartsFirst !== 'boolean') {
+            errors.push('humanStartsFirst must be a boolean');
+        }
+        if (level.startingPlayerId !== undefined && level.startingPlayerId !== null) {
+            if (typeof level.startingPlayerId !== 'number' || !Number.isInteger(level.startingPlayerId)) {
+                errors.push('startingPlayerId must be an integer');
+            }
+        }
     }
 
     if (type === 'map') {
@@ -110,6 +126,14 @@ export function validateLevel(level) {
                 if (typeof t.x !== 'number' || typeof t.y !== 'number') {
                     errors.push(`Tile ${i}: invalid coordinates`);
                 }
+            }
+        }
+        if (level.humanStartsFirst !== undefined && typeof level.humanStartsFirst !== 'boolean') {
+            errors.push('humanStartsFirst must be a boolean');
+        }
+        if (level.startingPlayerId !== undefined && level.startingPlayerId !== null) {
+            if (typeof level.startingPlayerId !== 'number' || !Number.isInteger(level.startingPlayerId)) {
+                errors.push('startingPlayerId must be an integer');
             }
         }
     }

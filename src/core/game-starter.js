@@ -260,6 +260,10 @@ export class GameStarter {
                     secondsPerTurn: secLvl,
                     secondsPerAttack: secAtkLvl,
                 };
+                if (pendingLevel.humanStartsFirst === true) gameConfig.humanStartsFirst = true;
+                if (pendingLevel.startingPlayerId !== undefined && pendingLevel.startingPlayerId !== null) {
+                    gameConfig.startingPlayerId = pendingLevel.startingPlayerId;
+                }
                 this.game.startGame(gameConfig);
                 this.attacksPerTurn = this.game.attacksPerTurn;
                 this.secondsPerTurn = this.game.secondsPerTurn;
@@ -291,6 +295,10 @@ export class GameStarter {
                     gameConfig.attacksPerTurn = apMap;
                     gameConfig.secondsPerTurn = secMap;
                     gameConfig.secondsPerAttack = secAtkMap;
+                    if (pendingLevel.humanStartsFirst === true) gameConfig.humanStartsFirst = true;
+                    if (pendingLevel.startingPlayerId !== undefined && pendingLevel.startingPlayerId !== null) {
+                        gameConfig.startingPlayerId = pendingLevel.startingPlayerId;
+                    }
                     this.attacksPerTurn = apMap;
                     this.secondsPerTurn = secMap;
                     this.secondsPerAttack = secAtkMap;

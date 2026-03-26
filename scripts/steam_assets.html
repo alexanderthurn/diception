@@ -213,10 +213,12 @@
         ];
 
         const SOUNDTRACK_ASSETS = [
-            { id: 'ost_cover', name: 'Cover Image (Square)', w: 1000, h: 1000, type: 'ost' },
-            { id: 'ost_small', name: 'Small Capsule', w: 460, h: 215, type: 'ost' },
-            { id: 'ost_vertical', name: 'Vertical Capsule', w: 600, h: 900, type: 'ost' },
-            { id: 'ost_header', name: 'Header / Banner', w: 2108, h: 438, type: 'ost' },
+            { id: 'ost_cover', name: 'Cover Image', w: 1000, h: 1000, type: 'ost' },
+            { id: 'ost_header_capsule', name: 'Header Capsule', w: 920, h: 430, type: 'ost' },
+            { id: 'ost_small', name: 'Small Capsule', w: 462, h: 174, type: 'ost' },
+            { id: 'ost_main', name: 'Main Capsule', w: 1232, h: 706, type: 'ost' },
+            { id: 'ost_landscape', name: 'Landscape', w: 1920, h: 1080, type: 'ost' },
+            { id: 'ost_vertical', name: 'Vertical Capsule', w: 748, h: 896, type: 'ost' },
         ];
 
         // ── Colors ──
@@ -1149,30 +1151,24 @@ void main(void) {
             const isWide = w > h * 1.5;
             const isTall = h > w * 1.15;
 
-            // ── Game background shader ──
+            // ── Game background shader (stars only, no grid) ──
             const shaderTime = (asset.w * 0.005 + asset.h * 0.009) % 20;
-            drawShaderBackground(ctx, w, h, shaderTime);
+            drawShaderBackground(ctx, w, h, shaderTime, null, 0.0);
 
-            // ── Waveform bars ──
-            // Position: lower third on square/tall, vertically centered on wide
+            // ── Waveform bars — anchored to bottom, renders behind title ──
             const barCount = Math.floor(isWide ? 80 : isTall ? 60 : 64);
-            const barAreaW = w * (isWide ? 0.9 : 0.85);
-            const barAreaH = h * (isWide ? 0.55 : isTall ? 0.28 : 0.38);
+            const barAreaW = w * 0.90;
+            const barAreaH = h * (isWide ? 0.30 : isTall ? 0.35 : 0.45);
             const barAreaX = (w - barAreaW) / 2;
-            const barAreaY = isWide
-                ? (h - barAreaH) / 2
-                : isTall
-                    ? h * 0.58
-                    : h * 0.54;
+            // Always anchor waveform to bottom edge
+            const barAreaY = h - barAreaH;
             const barW = barAreaW / barCount * 0.55;
             const gap = barAreaW / barCount * 0.45;
 
             ctx.save();
             for (let i = 0; i < barCount; i++) {
-                // Musical waveform shape: peaks in the middle, quieter at edges
                 const norm = i / (barCount - 1);
-                const envelope = Math.sin(norm * Math.PI); // 0→1→0
-                // Layered frequencies
+                const envelope = Math.sin(norm * Math.PI);
                 const freq1 = Math.abs(Math.sin(norm * Math.PI * 6 + 0.4));
                 const freq2 = Math.abs(Math.sin(norm * Math.PI * 11 + 1.2)) * 0.5;
                 const freq3 = Math.abs(Math.sin(norm * Math.PI * 3 + 0.8)) * 0.7;
@@ -1181,8 +1177,7 @@ void main(void) {
                 const bx = barAreaX + i * (barW + gap);
                 const by = barAreaY + barAreaH - barHeight;
 
-                // Color: cyan in center, purple at edges
-                const t = Math.abs(norm - 0.5) * 2; // 0 at center, 1 at edges
+                const t = Math.abs(norm - 0.5) * 2;
                 const r = Math.round(t * 170);
                 const g2 = Math.round((1 - t) * 220);
                 const b = 255;
@@ -1191,34 +1186,65 @@ void main(void) {
                 ctx.shadowColor = barColor;
                 ctx.shadowBlur = 10 * scale;
                 ctx.fillStyle = barColor;
-                ctx.globalAlpha = 0.75 + envelope * 0.25;
+                ctx.globalAlpha = (0.35 + envelope * 0.2);
                 ctx.fillRect(bx, by, barW, barHeight);
 
-                // Reflection below
-                ctx.globalAlpha = 0.15 * envelope;
-                const reflGrad = ctx.createLinearGradient(bx, barAreaY + barAreaH, bx, barAreaY + barAreaH + barHeight * 0.4);
+                ctx.globalAlpha = 0.08 * envelope;
+                const reflGrad = ctx.createLinearGradient(bx, h, bx, h + barHeight * 0.3);
                 reflGrad.addColorStop(0, barColor);
                 reflGrad.addColorStop(1, 'transparent');
                 ctx.fillStyle = reflGrad;
-                ctx.fillRect(bx, barAreaY + barAreaH, barW, barHeight * 0.4);
+                ctx.fillRect(bx, h, barW, barHeight * 0.3);
             }
             ctx.restore();
             ctx.globalAlpha = 1;
             ctx.shadowBlur = 0;
 
+            // ── Top waveform — mirrored, grows downward from top ──
+            {
+                ctx.save();
+                for (let i = 0; i < barCount; i++) {
+                    const norm = i / (barCount - 1);
+                    const envelope = Math.sin(norm * Math.PI);
+                    const freq1 = Math.abs(Math.sin(norm * Math.PI * 6 + 0.4));
+                    const freq2 = Math.abs(Math.sin(norm * Math.PI * 11 + 1.2)) * 0.5;
+                    const freq3 = Math.abs(Math.sin(norm * Math.PI * 3 + 0.8)) * 0.7;
+                    const barHeight = barAreaH * envelope * Math.max(0.08, freq1 * 0.6 + freq2 * 0.25 + freq3 * 0.25);
+
+                    const bx = barAreaX + i * (barW + gap);
+                    // Grows downward from y=0
+                    const by = 0;
+
+                    const t = Math.abs(norm - 0.5) * 2;
+                    const r = Math.round(t * 170);
+                    const g2 = Math.round((1 - t) * 220);
+                    const b = 255;
+                    const barColor = `rgb(${r},${g2},${b})`;
+
+                    ctx.shadowColor = barColor;
+                    ctx.shadowBlur = 10 * scale;
+                    ctx.fillStyle = barColor;
+                    ctx.globalAlpha = (0.35 + envelope * 0.2);
+                    ctx.fillRect(bx, by, barW, barHeight);
+                }
+                ctx.restore();
+                ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0;
+            }
+
             // ── Particles ──
             drawParticles(ctx, w, h, Math.floor(40 + scale * 30), rng);
 
             // ── Title area backdrop ──
-            const titleCenterY = isWide ? h * 0.5 : isTall ? h * 0.32 : h * 0.38;
-            const backdropH = h * (isWide ? 0.7 : 0.3);
+            const titleCenterY = h / 2;
+            const backdropH = h * 0.6;
             const backdrop = ctx.createRadialGradient(w / 2, titleCenterY, 0, w / 2, titleCenterY, Math.max(w, backdropH) * 0.6);
-            backdrop.addColorStop(0, 'rgba(5,5,16,0.7)');
+            backdrop.addColorStop(0, 'rgba(5,5,16,0.75)');
             backdrop.addColorStop(1, 'rgba(5,5,16,0)');
             ctx.fillStyle = backdrop;
             ctx.fillRect(0, 0, w, h);
 
-            // ── "DICEPTION" title ──
+            // ── "DICEPTION" title — exactly vertically centered ──
             const maxTitleW = w * (isWide ? 0.55 : 0.82);
             let titleSize = h * (isWide ? 0.38 : isTall ? 0.22 : 0.28);
             ctx.font = `700 ${titleSize}px Rajdhani`;
@@ -1226,7 +1252,9 @@ void main(void) {
             titleSize = Math.min(titleSize, titleSize * (maxTitleW / measuredTitle));
 
             const titleX = w / 2;
-            const titleY2 = titleCenterY;
+            // textBaseline 'alphabetic' sits ~0.72× cap-height below the baseline;
+            // offset upward by half that so the visual cap aligns with h/2
+            const titleY2 = titleCenterY + titleSize * 0.36;
 
             const charColors = 'DICEPTION'.split('').map((_, i) => i < 4 ? '#AA00FF' : '#00FFFF');
             ctx.shadowColor = '#AA00FF';
@@ -1237,37 +1265,6 @@ void main(void) {
             drawTextWithSpacing(ctx, 'DICEPTION', titleX, titleY2, titleSize, 700, titleSpacing, charColors);
             ctx.shadowBlur = 0;
 
-            // ── "ORIGINAL SOUNDTRACK" label ──
-            const ostSize = Math.max(titleSize * 0.22, 10);
-            const ostSpacing = Math.round(ostSize * 0.25);
-            const ostY = titleY2 + ostSize * 1.4;
-            ctx.shadowColor = '#00FFFF';
-            ctx.shadowBlur = ostSize * 0.5;
-            ctx.fillStyle = '#00FFFF';
-            ctx.globalAlpha = 0.65;
-            drawTextWithSpacing(ctx, 'ORIGINAL SOUNDTRACK', titleX, ostY, ostSize, 600, ostSpacing);
-            ctx.globalAlpha = 1;
-            ctx.shadowBlur = 0;
-
-            // ── Decorative horizontal line under OST label ──
-            const lineW = isWide ? w * 0.35 : w * 0.55;
-            const lineY = ostY + ostSize * 0.5;
-            const lineX = titleX - lineW / 2;
-            ctx.save();
-            const lineGrad = ctx.createLinearGradient(lineX, lineY, lineX + lineW, lineY);
-            lineGrad.addColorStop(0, 'rgba(0,255,255,0)');
-            lineGrad.addColorStop(0.3, 'rgba(0,255,255,0.6)');
-            lineGrad.addColorStop(0.7, 'rgba(170,0,255,0.6)');
-            lineGrad.addColorStop(1, 'rgba(170,0,255,0)');
-            ctx.strokeStyle = lineGrad;
-            ctx.lineWidth = Math.max(1, scale * 1.5);
-            ctx.shadowColor = '#00FFFF';
-            ctx.shadowBlur = 6;
-            ctx.beginPath();
-            ctx.moveTo(lineX, lineY);
-            ctx.lineTo(lineX + lineW, lineY);
-            ctx.stroke();
-            ctx.restore();
         }
 
         // ── Downloads ──

@@ -125,6 +125,15 @@ export function validateScenario(scenario) {
         }
     }
 
+    if (scenario.humanStartsFirst !== undefined && typeof scenario.humanStartsFirst !== 'boolean') {
+        errors.push('humanStartsFirst must be a boolean');
+    }
+    if (scenario.startingPlayerId !== undefined && scenario.startingPlayerId !== null) {
+        if (typeof scenario.startingPlayerId !== 'number' || !Number.isInteger(scenario.startingPlayerId)) {
+            errors.push('startingPlayerId must be an integer');
+        }
+    }
+
     return {
         valid: errors.length === 0,
         errors: errors

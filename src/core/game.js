@@ -119,13 +119,21 @@ export class Game {
             });
         }
 
-        // Shuffle players to randomize starting player
-        for (let i = this.players.length - 1; i > 0; i--) {
-            const j = Math.floor(rng() * (i + 1));
-            [this.players[i], this.players[j]] = [this.players[j], this.players[i]];
+        // Randomize turn order (skirmish / custom game). Campaign or scenarios can set
+        // `humanStartsFirst: true` to keep humans-first creation order so the human opens.
+        if (config.humanStartsFirst !== true) {
+            for (let i = this.players.length - 1; i > 0; i--) {
+                const j = Math.floor(rng() * (i + 1));
+                [this.players[i], this.players[j]] = [this.players[j], this.players[i]];
+            }
         }
 
-        this.currentPlayerIndex = 0;
+        if (config.startingPlayerId !== undefined && config.startingPlayerId !== null) {
+            const found = this.players.findIndex(p => p.id === config.startingPlayerId);
+            this.currentPlayerIndex = found >= 0 ? found : 0;
+        } else {
+            this.currentPlayerIndex = 0;
+        }
 
         // Generate map with the specified style
         if (config.predefinedMap) {

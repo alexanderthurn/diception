@@ -287,7 +287,15 @@ export class ScenarioManager {
             }
         }
 
-        game.currentPlayerIndex = 0;
+        let turnIdx = 0;
+        if (scenario.startingPlayerId !== undefined && scenario.startingPlayerId !== null) {
+            const found = game.players.findIndex(p => p.id === scenario.startingPlayerId);
+            turnIdx = found >= 0 ? found : 0;
+        } else if (scenario.humanStartsFirst === true) {
+            const found = game.players.findIndex(p => !p.isBot);
+            turnIdx = found >= 0 ? found : 0;
+        }
+        game.currentPlayerIndex = turnIdx;
     }
 
     /**
