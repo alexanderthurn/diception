@@ -508,9 +508,13 @@ export class EffectsManager {
      */
     onGameOver(data) {
         if (this.quality === 'off') return;
+        if (this.renderer?.gameSpeed === 'expert') return;
 
         const winner = data?.winner;
         const winnerColor = winner?.color || 0xffffff;
+
+        // Screen shake on victory
+        this.renderer?.screenShake?.(8, 500);
 
         // Create a custom firework preset with winner's color
         const winnerFirework = {
@@ -524,9 +528,9 @@ export class EffectsManager {
             shrink: true
         };
 
-        const burstCount = this.quality === 'high' ? 8 : 4;
+        const burstCount = this.quality === 'high' ? 15 : 6;
+        const burstInterval = this.quality === 'high' ? 350 : 500;
 
-        // Multiple firework bursts
         const viewport = window.visualViewport;
         const screenWidth = this.renderer?.app?.screen?.width || (viewport ? viewport.width : document.documentElement.clientWidth);
         const screenHeight = this.renderer?.app?.screen?.height || (viewport ? viewport.height : document.documentElement.clientHeight);
@@ -535,26 +539,94 @@ export class EffectsManager {
             setTimeout(() => {
                 const x = 100 + Math.random() * (screenWidth - 200);
                 const y = 100 + Math.random() * (screenHeight - 300);
-
                 this.screenParticles.emit(x, y, winnerFirework);
-            }, i * 300);
+            }, i * burstInterval);
         }
 
         // Confetti rain
         if (this.quality === 'high') {
-            for (let i = 0; i < 30; i++) {
+            for (let i = 0; i < 50; i++) {
                 setTimeout(() => {
                     const x = Math.random() * screenWidth;
                     this.screenParticles.emit(x, -10, 'confetti', { directionX: 0, directionY: 1 });
-                }, i * 100);
+                }, i * 80);
             }
         }
 
-        // Big pulse
-        this.background.pulse(winnerColor, 0.6);
+        // Staggered ripples across winner tiles
+        if (winner) {
+            const winnerTiles = this.game.map?.getTilesByOwner?.(winner.id) || [];
+            const step = Math.max(1, Math.floor(winnerTiles.length / 15));
+            winnerTiles.forEach((tile, i) => {
+                if (i % step !== 0) return;
+                setTimeout(() => {
+                    this.boardEffects.conquestRipple(tile.x, tile.y, winnerColor, 1.5);
+                }, i * 30);
+            });
+        }
+
+        // Staggered background pulses
+        this.background.pulse(winnerColor, 0.8);
+        setTimeout(() => this.background.pulse(winnerColor, 0.5), 1500);
+        setTimeout(() => this.background.pulse(winnerColor, 0.3), 3000);
     }
 
+    /**
+     * Campaign complete — bigger celebration on top of the standard game-over effects.
+     */
+    onCampaignComplete(data) {
+        if (this.quality === 'off') return;
+        if (this.renderer?.gameSpeed === 'expert') return;
 
+        const winner      = data?.winner;
+        const winnerColor = winner?.color || 0xFFD700;
+
+        // Bigger screen shake
+        this.renderer?.screenShake?.(14, 800);
+
+        // Burst existing dice outward from center
+        this.background.burstDiceFromCenter(winnerColor);
+
+        // Heavier fireworks with gold accent
+        const campaignFirework = {
+            count: this.quality === 'high' ? 70 : 35,
+            speed: { min: 6, max: 16 },
+            life:  { min: 60, max: 130 },
+            size:  { min: 3, max: 8 },
+            colors: [winnerColor, 0xFFD700, 0xffffff, 0x00ffff, 0xAA00FF, 0xffff00],
+            gravity: 0.08,
+            fadeOut: true,
+            shrink: true,
+        };
+
+        const viewport    = window.visualViewport;
+        const screenWidth  = this.renderer?.app?.screen?.width  || (viewport ? viewport.width  : document.documentElement.clientWidth);
+        const screenHeight = this.renderer?.app?.screen?.height || (viewport ? viewport.height : document.documentElement.clientHeight);
+        const burstCount  = this.quality === 'high' ? 22 : 10;
+
+        for (let i = 0; i < burstCount; i++) {
+            setTimeout(() => {
+                const x = 80 + Math.random() * (screenWidth  - 160);
+                const y = 80 + Math.random() * (screenHeight - 200);
+                this.screenParticles.emit(x, y, campaignFirework);
+            }, i * 250);
+        }
+
+        // Dense confetti
+        const confettiCount = this.quality === 'high' ? 80 : 40;
+        for (let i = 0; i < confettiCount; i++) {
+            setTimeout(() => {
+                const x = Math.random() * screenWidth;
+                this.screenParticles.emit(x, -10, 'confetti', { directionX: 0, directionY: 1 });
+            }, i * 50);
+        }
+
+        // Rapid background pulses
+        const pulseColors = [winnerColor, 0xFFD700, winnerColor, 0xffffff];
+        pulseColors.forEach((c, i) => {
+            setTimeout(() => this.background.pulse(c, 1.0 - i * 0.15), i * 700);
+        });
+    }
 
     /**
      * Player elimination effect

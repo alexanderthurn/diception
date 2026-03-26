@@ -6,6 +6,72 @@ import { markLevelSolved } from '../scenarios/campaign-progress.js';
 import { getWinProbability } from '../core/probability.js';
 import { incrementStat, fireAchievementEvent, checkCampaignAchievement } from '../core/achievement-manager.js';
 
+function showVictoryCard(humanWon, winnerColorHex, quality, campaignFinished = false) {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        let cls = 'victory-overlay';
+        if (campaignFinished) cls += ' victory-campaign';
+        else if (humanWon)    cls += ' victory-won';
+        else                  cls += ' victory-lost';
+        overlay.className = cls;
+
+        const cardColor = campaignFinished ? '#FFD700' : (winnerColorHex || '#00ffff');
+        overlay.style.setProperty('--victory-color', cardColor);
+
+        const showConfetti = campaignFinished ? quality !== 'off' : (humanWon && quality === 'high');
+        if (showConfetti) {
+            const confettiColors = campaignFinished
+                ? ['#FFD700', '#00ffff', '#AA00FF', '#ff8800', '#ffffff', '#ffff00']
+                : ['#00ffff', '#AA00FF', '#ffff00', '#00ff88', '#ff00cc', '#ffffff'];
+            const count = campaignFinished ? 60 : 40;
+            for (let i = 0; i < count; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'victory-confetti';
+                piece.style.left = `${Math.random() * 100}%`;
+                piece.style.animationDelay = `${(Math.random() * 1.5).toFixed(2)}s`;
+                piece.style.animationDuration = `${(2 + Math.random() * 2.5).toFixed(2)}s`;
+                piece.style.background = confettiColors[i % confettiColors.length];
+                piece.style.width = `${4 + Math.floor(Math.random() * 6)}px`;
+                piece.style.height = `${8 + Math.floor(Math.random() * 10)}px`;
+                overlay.appendChild(piece);
+            }
+        }
+
+        const body = document.createElement('div');
+        body.className = 'victory-card-body';
+        const titleEl = document.createElement('div');
+        titleEl.className = 'victory-title';
+        if (campaignFinished) {
+            titleEl.innerHTML = 'CAMPAIGN<br>COMPLETE';
+            titleEl.classList.add('victory-title-campaign');
+        } else {
+            titleEl.textContent = humanWon ? 'VICTORY' : 'DEFEAT';
+        }
+        const hintEl = document.createElement('div');
+        hintEl.className = 'victory-hint';
+        hintEl.textContent = 'click to continue';
+        body.appendChild(titleEl);
+        body.appendChild(hintEl);
+        overlay.appendChild(body);
+        document.body.appendChild(overlay);
+
+        const autoDismissMs = campaignFinished ? 4000 : 2500;
+        const dismiss = () => {
+            overlay.classList.add('fade-out');
+            setTimeout(() => overlay.remove(), 400);
+            resolve();
+        };
+
+        const autoTimer = setTimeout(dismiss, autoDismissMs);
+        overlay.addEventListener('click', () => { clearTimeout(autoTimer); dismiss(); });
+        document.addEventListener('keydown', function onKey() {
+            document.removeEventListener('keydown', onKey);
+            clearTimeout(autoTimer);
+            dismiss();
+        }, { once: true });
+    });
+}
+
 /**
  * GameEventManager - Handles all game event subscriptions and turn flow
  */
@@ -1169,7 +1235,22 @@ export class GameEventManager {
             buttons = [prim, ...tail, ...leftover];
         }
 
-        await new Promise((r) => setTimeout(r, 1000));
+        const gameSpeed = this.gameStarter.getGameSpeed();
+        const effectsQuality = this.effectsManager?.quality ?? 'high';
+        if (gameSpeed === 'expert' || effectsQuality === 'off') {
+            // Expert speed or effects off: no delay, no card — show dialog immediately
+        } else if (humanPlayed) {
+            const winnerColorHex = humanWon
+                ? (data.winner?.color != null ? '#' + data.winner.color.toString(16).padStart(6, '0') : '#00ffff')
+                : '#AA00FF';
+            if (campaignFinished) {
+                this.effectsManager?.onCampaignComplete(data);
+            }
+            await showVictoryCard(humanWon, winnerColorHex, effectsQuality, campaignFinished);
+        } else {
+            // Pure-bot game: brief delay so effects can play
+            await new Promise(r => setTimeout(r, 1000));
+        }
 
         const choice = await Dialog.show({
             title,

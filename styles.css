@@ -7494,3 +7494,112 @@ input[type="range"].gamepad-slider-editing {
     60%  { transform: translateX(-50%) scale(1.15); }
     100% { transform: translateX(-50%) scale(1); }
 }
+
+/* ── Victory Card Overlay ─────────────────────────────────────────────────── */
+.victory-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 5, 0.72);
+    backdrop-filter: blur(2px);
+    overflow: hidden;
+    animation: victory-overlay-in 0.35s ease forwards;
+    cursor: pointer;
+    --victory-color: #00ffff;
+}
+
+.victory-overlay.fade-out {
+    animation: dialog-fade-out 0.4s ease-in forwards;
+}
+
+.victory-card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.victory-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(3.5rem, 10vw, 7rem);
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--victory-color);
+    text-shadow: 0 0 40px var(--victory-color), 0 0 90px var(--victory-color);
+    opacity: 0;
+    animation: victory-title-slam 0.55s cubic-bezier(0.15, 0.85, 0.35, 1.2) 0.1s forwards;
+}
+
+.victory-hint {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    animation: victory-hint-appear 0.5s ease 1.2s forwards, victory-blink 1.8s ease 1.7s infinite;
+}
+
+.victory-confetti {
+    position: absolute;
+    top: -20px;
+    border-radius: 1px;
+    opacity: 0.9;
+    animation: victory-confetti-fall linear forwards;
+}
+
+@keyframes victory-overlay-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes victory-title-slam {
+    0%   { transform: scale(0.5) translateY(-20px); opacity: 0; }
+    65%  { transform: scale(1.08) translateY(0);    opacity: 1; }
+    100% { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+@keyframes victory-hint-appear {
+    from { color: rgba(255, 255, 255, 0); }
+    to   { color: rgba(255, 255, 255, 0.35); }
+}
+
+@keyframes victory-blink {
+    0%, 100% { opacity: 0.35; }
+    50%       { opacity: 0.1;  }
+}
+
+@keyframes victory-confetti-fall {
+    0%   { transform: translateY(0)     rotate(0deg);   opacity: 0.9; }
+    80%  { opacity: 0.7; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0;   }
+}
+
+/* Campaign complete variant — gold accent, two-line title */
+.victory-overlay.victory-campaign {
+    --victory-color: #FFD700;
+    border-top: 2px solid #FFD700;
+    box-shadow: inset 0 0 140px rgba(255, 215, 0, 0.12);
+}
+
+.victory-title-campaign {
+    font-size: clamp(2.5rem, 7vw, 5rem) !important;
+    line-height: 1.15;
+    text-align: center;
+    animation: victory-title-slam 0.65s cubic-bezier(0.1, 0.9, 0.3, 1.3) 0.1s forwards !important;
+}
+
+@keyframes victory-campaign-shimmer {
+    0%, 100% { text-shadow: 0 0 40px #FFD700, 0 0 90px #FFD700; }
+    50%       { text-shadow: 0 0 60px #FFD700, 0 0 120px #fff, 0 0 160px #FFD700; }
+}
+
+.victory-overlay.victory-campaign .victory-title {
+    animation: victory-title-slam 0.65s cubic-bezier(0.1, 0.9, 0.3, 1.3) 0.1s forwards,
+               victory-campaign-shimmer 2s ease 0.8s infinite;
+}

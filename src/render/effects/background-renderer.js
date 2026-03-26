@@ -583,6 +583,56 @@ export class BackgroundRenderer {
         this.diceContainer.scale.set(1, 1);
     }
 
+    /**
+     * Burst all dice outward from the screen center — used for campaign complete.
+     * Clears existing dice and spawns a full spread of new ones at center.
+     */
+    burstDiceFromCenter(color) {
+        if (!this.enabled) return;
+        this.clearFloatingDice();
+
+        const sc      = this.diceContainer.scale.x;
+        const ox      = this.diceContainer.x;
+        const oy      = this.diceContainer.y;
+        const s       = this._scale();
+        const minDim  = Math.min(this.width, this.height);
+        const cx      = (this.width  / 2 - ox) / sc;
+        const cy      = (this.height / 2 - oy) / sc;
+        const count   = this.quality === 'high' ? 48 : 24;
+        const colors  = [color ?? 0xFFD700, 0x00ffff, 0xAA00FF, 0xffff00, 0xffffff];
+
+        for (let i = 0; i < count; i++) {
+            const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
+            const speed = (1.0 + Math.random() * 1.5) * s / sc;
+            const vx    = Math.cos(angle) * speed;
+            const vy    = Math.sin(angle) * speed;
+
+            const size      = (0.03 + Math.random() * 0.05) * minDim / sc;
+            const diceSides = [6, 6, 6, 8, 10, 12, 20][Math.floor(Math.random() * 7)];
+            const diceCount = 1 + Math.floor(Math.random() * 6);
+            const c         = colors[i % colors.length];
+
+            const tileContainer = TileRenderer.createTile({
+                size, diceCount, diceSides, color: c, fillAlpha: 0.85, showBorder: true,
+            });
+            tileContainer.pivot.set(size / 2, size / 2);
+            tileContainer.x        = cx;
+            tileContainer.y        = cy;
+            tileContainer.rotation = Math.random() * Math.PI * 2;
+            tileContainer.alpha    = 0.9 + Math.random() * 0.1;
+
+            this.diceContainer.addChild(tileContainer);
+            this.floatingDice.push({
+                graphics: tileContainer,
+                x: cx, y: cy, vx, vy,
+                rotation: tileContainer.rotation,
+                rotationSpeed: (Math.random() - 0.5) * 0.025,
+                playerSpawned: true,
+                armyKey: 'campaign_burst',
+            });
+        }
+    }
+
     updateFloatingDice(dt) {
         const sc  = this.diceContainer.scale.x;
         const ox  = this.diceContainer.x;
