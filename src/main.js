@@ -437,6 +437,8 @@ async function init() {
     // ── Gamepad panels ────────────────────────────────────────────────────────
     const gamepadSidePanel = document.getElementById('gamepad-side-panel');
     const gamepadControlsPanel = document.getElementById('gamepad-controls-panel');
+    /** @type {Map<number, string>} Steam Remote Play session id → guest label */
+    const steamRemotePlaySessions = new Map();
 
     function updateControlsPanel() {
         if (!gamepadControlsPanel) return;
@@ -468,6 +470,25 @@ async function init() {
         title.className = 'gp-panel-title';
         title.textContent = 'GAMEPADS';
         gamepadSidePanel.appendChild(title);
+
+        if (steamRemotePlaySessions.size > 0) {
+            const remoteBlock = document.createElement('div');
+            remoteBlock.className = 'gp-remote-block';
+            const sub = document.createElement('div');
+            sub.className = 'gp-panel-subtitle';
+            sub.textContent = 'Remote guests';
+            remoteBlock.appendChild(sub);
+            const guestList = document.createElement('div');
+            guestList.className = 'gp-remote-guest-list';
+            for (const name of steamRemotePlaySessions.values()) {
+                const row = document.createElement('div');
+                row.className = 'gp-remote-guest';
+                row.textContent = name;
+                guestList.appendChild(row);
+            }
+            remoteBlock.appendChild(guestList);
+            gamepadSidePanel.appendChild(remoteBlock);
+        }
 
         // All gamepad entries in one wrapping container
         const gpList = document.createElement('div');
@@ -800,6 +821,30 @@ async function init() {
     const gameLog = new GameLog(game, turnHistory, scenarioManager);
     gameLog.setPlayerNameGetter(getPlayerName);
     gameLog.setDiceDataURL(TileRenderer.diceDataURL);
+
+    if (isTauriContext() && isSteamContext()) {
+        import('@tauri-apps/api/event')
+            .then(({ listen }) =>
+                listen('steam-remote-play', (e) => {
+                    const p = e.payload;
+                    if (!p || typeof p.sessionId !== 'number') return;
+                    if (p.kind === 'connected') {
+                        const name = p.clientName || `Session ${p.sessionId}`;
+                        steamRemotePlaySessions.set(p.sessionId, name);
+                        gameLog.addNotice(`Remote Play: ${name} connected`, 'remote-play');
+                    } else if (p.kind === 'disconnected') {
+                        const name =
+                            steamRemotePlaySessions.get(p.sessionId) ||
+                            p.clientName ||
+                            `Session ${p.sessionId}`;
+                        steamRemotePlaySessions.delete(p.sessionId);
+                        gameLog.addNotice(`Remote Play: ${name} disconnected`, 'remote-play');
+                    }
+                    renderGamepadAssignments();
+                }),
+            )
+            .catch(() => {});
+    }
 
     // Wrapper functions
     const addLog = (message, type = '') => gameLog.addEntry(message, type);

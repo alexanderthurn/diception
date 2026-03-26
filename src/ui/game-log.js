@@ -119,6 +119,21 @@ export class GameLog {
         this.currentTurnLog.details.insertBefore(entry, this.currentTurnLog.details.firstChild);
     }
 
+    /** System line in the battle log column (menu or in-game), not tied to the current turn. */
+    addNotice(message, type = 'system') {
+        if (!this.logEntries) return;
+
+        const entry = document.createElement('div');
+        entry.className = `log-entry log-notice ${type}`;
+        entry.textContent = message;
+        this.logEntries.insertBefore(entry, this.logEntries.firstChild);
+
+        const maxEntries = 48;
+        while (this.logEntries.children.length > maxEntries) {
+            this.logEntries.removeChild(this.logEntries.lastChild);
+        }
+    }
+
     recordAttack(won) {
         this.turnStats.attacks++;
         if (won) {

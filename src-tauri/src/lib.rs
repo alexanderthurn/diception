@@ -17,6 +17,9 @@ struct SteamApp {
     client: steamworks::Client,
     user_name: String,
     steam_id: u64,
+    /// Keeps Remote Play callback registrations alive for the app lifetime.
+    #[allow(dead_code)]
+    _remote_play_cbs: Vec<steamworks::CallbackHandle>,
 }
 
 #[cfg(not(target_os = "android"))]
@@ -415,7 +418,12 @@ pub fn run() {
                     }
                 });
 
-                let app = SteamApp { client, user_name, steam_id };
+                let app = SteamApp {
+                    client,
+                    user_name,
+                    steam_id,
+                    _remote_play_cbs: Vec::new(),
+                };
                 (Some(app), true)
             }
             Err(e) => {
@@ -487,6 +495,55 @@ pub fn run() {
     // ── Common setup ──────────────────────────────────────────────────────────
     builder
         .setup(|app| {
+            #[cfg(not(target_os = "android"))]
+            {
+                use tauri::{Emitter, Manager};
+                let handle = app.handle().clone();
+                if let Ok(mut guard) = app.state::<SteamState>().lock() {
+                    if let Some(sa) = guard.as_mut() {
+                        let client = sa.client.clone();
+                        let cb_connected = sa.client.register_callback({
+                            let handle = handle.clone();
+                            let client = client.clone();
+                            move |c: steamworks::RemotePlayConnected| {
+                                let label = client
+                                    .remote_play()
+                                    .session(c.session)
+                                    .client_name()
+                                    .unwrap_or_else(|| format!("Session {}", c.session.raw()));
+                                let _ = handle.emit(
+                                    "steam-remote-play",
+                                    serde_json::json!({
+                                        "kind": "connected",
+                                        "sessionId": c.session.raw(),
+                                        "clientName": label,
+                                    }),
+                                );
+                            }
+                        });
+                        let cb_disconnected = sa.client.register_callback({
+                            let handle = handle.clone();
+                            let client = client.clone();
+                            move |c: steamworks::RemotePlayDisconnected| {
+                                let opt_name = client
+                                    .remote_play()
+                                    .session(c.session)
+                                    .client_name();
+                                let _ = handle.emit(
+                                    "steam-remote-play",
+                                    serde_json::json!({
+                                        "kind": "disconnected",
+                                        "sessionId": c.session.raw(),
+                                        "clientName": opt_name,
+                                    }),
+                                );
+                            }
+                        });
+                        sa._remote_play_cbs.push(cb_connected);
+                        sa._remote_play_cbs.push(cb_disconnected);
+                    }
+                }
+            }
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
