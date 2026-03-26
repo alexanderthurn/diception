@@ -298,7 +298,7 @@ export class ParticleSystem {
     /**
      * Emit particles along a line (for trails)
      */
-    emitLine(x1, y1, x2, y2, preset, count = 10) {
+    emitLine(x1, y1, x2, y2, preset, count = 10, options = {}) {
         if (this.quality === 'off') return;
 
         const config = typeof preset === 'string' ? EffectPresets[preset] : preset;
@@ -310,7 +310,7 @@ export class ParticleSystem {
             const t = i / actualCount;
             const x = x1 + (x2 - x1) * t;
             const y = y1 + (y2 - y1) * t;
-            this.spawnParticle(x, y, config, { delay: i * 2 });
+            this.spawnParticle(x, y, config, { delay: i * 2, ...options });
         }
     }
 

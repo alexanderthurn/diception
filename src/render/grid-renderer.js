@@ -108,6 +108,7 @@ export class GridRenderer {
 
         // Persistent overlay elements (per-source pools)
         this._selectionGfxPool = new Map(); // sourceId -> Graphics
+        this._selPulseTime = 0;
         this._hoverGfxPool = new Map(); // cursorId -> Graphics (lazy-created)
         this._cursorGfxPool = new Map(); // sourceId -> Graphics
         this.neighborHighlighters = []; // Pool of Graphics
@@ -785,6 +786,15 @@ export class GridRenderer {
      * Optimized to reuse Graphics object instead of recreating every frame.
      */
     updateShimmer(deltaTime = 1 / 60) {
+        // Pulse selected tile overlay
+        if (this._selectionGfxPool.size > 0) {
+            this._selPulseTime += deltaTime;
+            const pulse = 0.65 + 0.35 * Math.sin(this._selPulseTime * 4.5);
+            for (const gfx of this._selectionGfxPool.values()) {
+                if (gfx.visible) gfx.alpha = pulse;
+            }
+        }
+
         // Skip shimmer if effects are off
         if (this.effectsQuality === 'off') {
             if (this.shimmerGraphics) {

@@ -277,16 +277,19 @@ export class EffectsManager {
     onAttack(result) {
         if (this.quality === 'off') return;
 
+        const attackerForTrail = this.game.players.find(p => p.id === result.attackerId);
+        const attackerColor    = attackerForTrail?.color ?? 0xAA00FF;
+
         // Scale territory glow by attack outcome (high quality, human attacker only)
         if (this.quality === 'high' && this.renderer?.grid?.tileGlow) {
-            const attacker = this.game.players.find(p => p.id === result.attackerId);
-            if (attacker && !attacker.isBot) {
+            if (attackerForTrail && !attackerForTrail.isBot) {
                 const maxDice = this.game.maxDice || 9;
                 const tileGlow = this.renderer.grid.tileGlow;
                 if (result.won) {
-                    // Win: intensity = fraction of max dice the defender had
+                    // Win: intensity = fraction of max dice the defender had + streak bonus
                     const defDice = result.defenderRolls?.length ?? 1;
-                    tileGlow.flash(defDice / maxDice);
+                    const streakBonus = Math.min(this.winStreak, 8) * 0.07;
+                    tileGlow.flash(Math.min(1.0, defDice / maxDice + streakBonus));
                 } else {
                     // Loss: reduce current intensity by the attacker's dice fraction
                     const atkDice = result.attackerRolls?.length ?? 1;
@@ -298,9 +301,16 @@ export class EffectsManager {
         const from = this.tileToWorld(result.from.x, result.from.y);
         const to = this.tileToWorld(result.to.x, result.to.y);
 
-        // Trail from attacker to defender
+        // Trail from attacker to defender — colored by attacker's team color
+        const lighten = (hex) => {
+            const r = Math.min(255, ((hex >> 16) & 0xff) + 80);
+            const g = Math.min(255, ((hex >>  8) & 0xff) + 80);
+            const b = Math.min(255, ( hex        & 0xff) + 80);
+            return (r << 16) | (g << 8) | b;
+        };
         this.particles.emitLine(from.x, from.y, to.x, to.y, 'attackTrail',
-            this.quality === 'high' ? 12 : 6);
+            this.quality === 'high' ? 12 : 6,
+            { colors: [attackerColor, lighten(attackerColor), 0xffffff] });
 
         // Track win streak for dynamic effects (only for current player's attacks)
         const now = Date.now();
@@ -406,9 +416,21 @@ export class EffectsManager {
                         this.particles.emit(to.x, to.y, 'closeCallBurst');
                     }
 
-                    // Conquest ripple only on underdog wins.
+                    // Conquest ripple: underdog wins always get one; streak wins get a
+                    // scaled ripple (scale grows with consecutive captures).
                     if (underdogAttack) {
                         this.boardEffects.conquestRipple(result.to.x, result.to.y, aColor);
+                    }
+                    if (this.winStreak > 1 && !underdogAttack) {
+                        const streakScale = 1.0 + Math.min(this.winStreak - 1, 5) * 0.25;
+                        this.boardEffects.conquestRipple(result.to.x, result.to.y, aColor, streakScale);
+                    }
+
+                    // Streak burst: extra particles at the captured tile on 3rd+ consecutive win.
+                    if (this.winStreak >= 3) {
+                        this.particles.emit(to.x, to.y, 'braveBurst', {
+                            colors: [aColor, 0xffffff, 0xffff00],
+                        });
                     }
 
                     // Regional merge detection.
