@@ -3,20 +3,16 @@
  * Manages localStorage settings, map size presets, and config sliders
  */
 import { GAME } from '../core/constants.js';
+import {
+    normalizeAttackSecondsUi,
+    areModsAtDefaultsForPrefix,
+    syncModsFieldHighlightsForPrefix,
+    applyModsDefaultsForPrefix,
+    setModsPanelUiOpen,
+    applyModsToolbarLayout,
+} from './mods-panel-helpers.js';
 
-/** Defaults for setup "Mods" panel — reset restores these. */
-export const SETUP_MOD_DEFAULTS = {
-    mapStyle: 'full',
-    gameMode: 'classic',
-    maxDice: '8',
-    diceSides: '6',
-    attacksPerTurn: '0',
-    secondsPerTurn: '0',
-    secondsPerAttack: '0',
-    fullBoardRule: 'nothing',
-    tournamentGames: '100',
-    playMode: 'classic',
-};
+export { SETUP_MOD_DEFAULTS } from './mods-panel-helpers.js';
 
 /** One-time split of legacy `dicy_turnTimeLimit` into attacks vs clock. */
 function migrateTurnLimitStorage() {
@@ -44,18 +40,6 @@ function migrateTurnLimitStorage() {
     if (localStorage.getItem('dicy_secondsPerAttack') == null) {
         localStorage.setItem('dicy_secondsPerAttack', '0');
     }
-}
-
-/** Setup Attack time select: ∞, 5, 10, 15, 30 — maps legacy `60` → `30`. */
-const ATTACK_SECONDS_UI_ALLOWED = ['0', '5', '10', '15', '30'];
-
-function normalizeAttackSecondsUi(raw) {
-    const s = String(raw ?? '0').trim();
-    if (ATTACK_SECONDS_UI_ALLOWED.includes(s)) return s;
-    const n = Number.parseInt(s, 10);
-    if (n === 60) return '30';
-    if (n === 5 || n === 10 || n === 15 || n === 30) return String(n);
-    return '0';
 }
 
 export class ConfigManager {
@@ -209,66 +193,20 @@ export class ConfigManager {
      * True when every Mods control matches SETUP_MOD_DEFAULTS (play mode included).
      */
     areModsAtDefaults() {
-        const el = this.elements;
-        const d = SETUP_MOD_DEFAULTS;
-        const ap = el.turnTimeLimitInput?.value ?? '0';
-        const sec = el.turnSecondsLimitInput?.value ?? '0';
-        const secAtk = el.attackSecondsLimitInput?.value ?? '0';
-        const pm = localStorage.getItem('dicy_playMode') ?? d.playMode;
-        return (
-            el.mapStyleInput?.value === d.mapStyle &&
-            el.gameModeInput?.value === d.gameMode &&
-            String(el.maxDiceInput?.value) === d.maxDice &&
-            String(el.diceSidesInput?.value) === d.diceSides &&
-            String(ap) === d.attacksPerTurn &&
-            String(sec) === d.secondsPerTurn &&
-            String(secAtk) === d.secondsPerAttack &&
-            (el.fullBoardRuleInput?.value || 'nothing') === d.fullBoardRule &&
-            String(el.tournamentGamesInput?.value) === d.tournamentGames &&
-            pm === d.playMode
-        );
+        return areModsAtDefaultsForPrefix('');
     }
 
     _setSetupModsPanelOpen(open) {
-        const panel = document.getElementById('setup-mods-panel');
-        const toggle = document.getElementById('setup-mods-toggle');
-        if (!panel || !toggle) return;
-        panel.classList.toggle('hidden', !open);
-        toggle.setAttribute('aria-expanded', String(open));
-        toggle.classList.toggle('setup-mods-toggle--open', open);
+        setModsPanelUiOpen(open, 'setup-mods-panel', 'setup-mods-toggle');
     }
 
     _applySetupModsToolbar(nonDefault) {
-        const resetBtn = document.getElementById('setup-mods-reset');
-        const toggle = document.getElementById('setup-mods-toggle');
-        if (resetBtn) resetBtn.classList.toggle('hidden', !nonDefault);
-        if (toggle) toggle.classList.toggle('hidden', nonDefault);
+        applyModsToolbarLayout(nonDefault, 'setup-mods-reset', 'setup-mods-toggle');
     }
 
     /** Highlight each Mods control that differs from SETUP_MOD_DEFAULTS. */
     syncSetupModsFieldHighlights() {
-        const el = this.elements;
-        const d = SETUP_MOD_DEFAULTS;
-        const pmEl = document.getElementById('play-mode');
-        const playMode = pmEl?.value ?? localStorage.getItem('dicy_playMode') ?? d.playMode;
-
-        /** @type {Array<[string, () => boolean]>} */
-        const rows = [
-            ['map-style-group', () => el.mapStyleInput?.value !== d.mapStyle],
-            ['setup-game-mode-group', () => el.gameModeInput?.value !== d.gameMode],
-            ['setup-tournament-games-group', () => String(el.tournamentGamesInput?.value) !== d.tournamentGames],
-            ['setup-max-dice-group', () => String(el.maxDiceInput?.value) !== d.maxDice],
-            ['setup-dice-sides-group', () => String(el.diceSidesInput?.value) !== d.diceSides],
-            ['setup-attacks-limit-group', () => String(el.turnTimeLimitInput?.value ?? '0') !== d.attacksPerTurn],
-            ['setup-turn-seconds-group', () => String(el.turnSecondsLimitInput?.value ?? '0') !== d.secondsPerTurn],
-            ['setup-attack-seconds-group', () => String(el.attackSecondsLimitInput?.value ?? '0') !== d.secondsPerAttack],
-            ['setup-full-board-rule-group', () => (el.fullBoardRuleInput?.value || 'nothing') !== d.fullBoardRule],
-            ['setup-play-mode-group', () => playMode !== d.playMode],
-        ];
-        for (const [id, differs] of rows) {
-            const node = document.getElementById(id);
-            if (node) node.classList.toggle('setup-mod-nondefault', differs());
-        }
+        syncModsFieldHighlightsForPrefix('');
     }
 
     /** Show/hide Mods fields (button toggle). */
@@ -301,47 +239,7 @@ export class ConfigManager {
 
     /** Reset all Mods (not map size, humans, bots, bot AI, or game speed). */
     resetModsToDefaults() {
-        const el = this.elements;
-        const d = SETUP_MOD_DEFAULTS;
-
-        el.mapStyleInput.value = d.mapStyle;
-        localStorage.setItem('dicy_mapStyle', d.mapStyle);
-
-        el.gameModeInput.value = d.gameMode;
-        localStorage.setItem('dicy_gameMode', d.gameMode);
-
-        el.maxDiceInput.value = d.maxDice;
-        el.maxDiceVal.textContent = d.maxDice;
-        localStorage.setItem('dicy_maxDice', d.maxDice);
-
-        el.diceSidesInput.value = d.diceSides;
-        el.diceSidesVal.textContent = d.diceSides;
-        localStorage.setItem('dicy_diceSides', d.diceSides);
-
-        if (el.turnTimeLimitInput) {
-            el.turnTimeLimitInput.value = d.attacksPerTurn;
-            localStorage.setItem('dicy_attacksPerTurn', d.attacksPerTurn);
-        }
-        if (el.turnSecondsLimitInput) {
-            el.turnSecondsLimitInput.value = d.secondsPerTurn;
-            localStorage.setItem('dicy_secondsPerTurn', d.secondsPerTurn);
-        }
-        if (el.attackSecondsLimitInput) {
-            el.attackSecondsLimitInput.value = d.secondsPerAttack;
-            localStorage.setItem('dicy_secondsPerAttack', d.secondsPerAttack);
-        }
-        if (el.fullBoardRuleInput) {
-            el.fullBoardRuleInput.value = d.fullBoardRule;
-            localStorage.setItem('dicy_fullBoardRule', d.fullBoardRule);
-        }
-
-        el.tournamentGamesInput.value = d.tournamentGames;
-        localStorage.setItem('dicy_tournamentGames', d.tournamentGames);
-
-        localStorage.setItem('dicy_playMode', d.playMode);
-        const playModeEl = document.getElementById('play-mode');
-        if (playModeEl) playModeEl.value = d.playMode;
-
+        applyModsDefaultsForPrefix('');
         this.syncSetupModsExpanderFromStorage();
     }
 

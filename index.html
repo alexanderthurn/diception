@@ -137,7 +137,118 @@
                 aria-label="Settings"><span class="sprite-icon icon-campaigns"></span></button>
         </div>
 
+        <template id="shared-mods-fields-template">
+            <div class="shared-mods-fields-root">
+                <div class="control-row style-mode-row">
+                    <div class="control-group half" data-mods-group="map-style-group">
+                        <label>Map Style</label>
+                        <select data-mods-el="map-style">
+                            <option value="random" selected>Random</option>
+                            <option value="full">Full Grid</option>
+                            <option value="continents">Continents</option>
+                            <option value="caves">Caves</option>
+                            <option value="islands">Islands</option>
+                            <option value="maze">Maze</option>
+                            <option value="tunnels">Tunnels</option>
+                            <option value="swiss">Swiss Cheese</option>
+                        </select>
+                    </div>
+                    <div class="control-group half" data-mods-group="setup-game-mode-group">
+                        <label>Start Mode</label>
+                        <select data-mods-el="game-mode">
+                            <option value="classic" selected>Classic</option>
+                            <option value="fair">Fair Start</option>
+                            <option value="madness">Full Madness</option>
+                            <option value="2of2">2 of 2</option>
+                        </select>
+                    </div>
+                </div>
 
+                <div class="control-row">
+                    <div class="control-group" data-mods-group="setup-play-mode-group">
+                        <label>Play Mode</label>
+                        <select data-mods-el="play-mode">
+                            <option value="classic" selected>Classic — One at a time</option>
+                            <option value="parallel">Parallel — Everyone anytime</option>
+                            <option value="parallel-s">Parallel S — Active player is safe</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="control-row tournament-config-row hidden" data-mods-group="tournament-config"
+                    data-mods-tournament-row>
+                    <div class="control-group" data-mods-group="setup-tournament-games-group">
+                        <label>Tournament Games</label>
+                        <div class="range-row tournament-games-row">
+                            <input type="number" data-mods-el="tournament-games" class="tournament-games-input" min="1"
+                                max="10000" value="100">
+                            <button type="button" data-mods-el="run-tournament-btn" class="tron-btn small">▶ Run Tournament</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <div class="control-group half" data-mods-group="setup-max-dice-group">
+                        <label>Max Dice per Territory</label>
+                        <div class="range-row">
+                            <input type="range" data-mods-el="max-dice" min="2" max="12" value="8">
+                            <span data-mods-val="max-dice-val">8</span>
+                        </div>
+                    </div>
+                    <div class="control-group half" data-mods-group="setup-dice-sides-group">
+                        <label>Dice Sides</label>
+                        <div class="range-row">
+                            <input type="range" data-mods-el="dice-sides" min="1" max="12" value="6">
+                            <span data-mods-val="dice-sides-val">6</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <div class="control-group quarter" data-mods-group="setup-attacks-limit-group">
+                        <label>Attacks</label>
+                        <select data-mods-el="turn-time-limit">
+                            <option value="0" selected>∞ Unlimited</option>
+                            <option value="1">1 / turn</option>
+                            <option value="3">3 / turn</option>
+                            <option value="5">5 / turn</option>
+                        </select>
+                    </div>
+                    <div class="control-group quarter" data-mods-group="setup-turn-seconds-group">
+                        <label>Turn time</label>
+                        <select data-mods-el="turn-seconds-limit">
+                            <option value="0" selected>∞ Unlimited</option>
+                            <option value="10">10s</option>
+                            <option value="15">15s</option>
+                            <option value="30">30s</option>
+                            <option value="60">60s</option>
+                        </select>
+                    </div>
+                    <div class="control-group quarter" data-mods-group="setup-attack-seconds-group">
+                        <label>Attack time</label>
+                        <select data-mods-el="attack-seconds-limit">
+                            <option value="0" selected>∞ Unlimited</option>
+                            <option value="5">5s</option>
+                            <option value="10">10s</option>
+                            <option value="15">15s</option>
+                            <option value="30">30s</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group quarter" data-mods-group="setup-full-board-rule-group">
+                        <label>End Game</label>
+                        <select data-mods-el="full-board-rule">
+                            <option value="nothing" selected>Default</option>
+                            <option value="most_territories">Territories</option>
+                            <option value="biggest_territory">Largest region</option>
+                            <option value="random_picker">Random tile</option>
+                            <option value="raise_max_dice">Max dice +2</option>
+                            <option value="autoplay_humans">Autoplay</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </template>
 
         <div id="setup-modal" class="modal hidden">
             <div class="modal-header">
@@ -216,115 +327,7 @@
                     title="Reset all Mods to defaults">Reset Mods</button>
             </div>
 
-            <div id="setup-mods-panel" class="setup-mods-panel hidden" data-setup-mods-panel>
-                <div class="control-row style-mode-row">
-                            <div class="control-group half" id="map-style-group">
-                                <label>Map Style</label>
-                                <select id="map-style">
-                                    <option value="random" selected>Random</option>
-                                    <option value="full">Full Grid</option>
-                                    <option value="continents">Continents</option>
-                                    <option value="caves">Caves</option>
-                                    <option value="islands">Islands</option>
-                                    <option value="maze">Maze</option>
-                                    <option value="tunnels">Tunnels</option>
-                                    <option value="swiss">Swiss Cheese</option>
-                                </select>
-                            </div>
-                            <div class="control-group half" id="setup-game-mode-group">
-                                <label>Start Mode</label>
-                                <select id="game-mode">
-                                    <option value="classic" selected>Classic</option>
-                                    <option value="fair">Fair Start</option>
-                                    <option value="madness">Full Madness</option>
-                                    <option value="2of2">2 of 2</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="control-row">
-                            <div class="control-group" id="setup-play-mode-group">
-                                <label>Play Mode</label>
-                                <select id="play-mode">
-                                    <option value="classic" selected>Classic — One at a time</option>
-                                    <option value="parallel">Parallel — Everyone anytime</option>
-                                    <option value="parallel-s">Parallel S — Active player is safe</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="control-row tournament-config-row hidden" id="tournament-config">
-                            <div class="control-group" id="setup-tournament-games-group">
-                                <label>Tournament Games</label>
-                                <div class="range-row tournament-games-row">
-                                    <input type="number" id="tournament-games" class="tournament-games-input" min="1"
-                                        max="10000" value="100">
-                                    <button id="run-tournament-btn" class="tron-btn small">▶ Run Tournament</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="control-row">
-                            <div class="control-group half" id="setup-max-dice-group">
-                                <label>Max Dice per Territory</label>
-                                <div class="range-row">
-                                    <input type="range" id="max-dice" min="2" max="12" value="8">
-                                    <span id="max-dice-val">8</span>
-                                </div>
-                            </div>
-                            <div class="control-group half" id="setup-dice-sides-group">
-                                <label>Dice Sides</label>
-                                <div class="range-row">
-                                    <input type="range" id="dice-sides" min="1" max="12" value="6">
-                                    <span id="dice-sides-val">6</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="control-row">
-                            <div class="control-group quarter" id="setup-attacks-limit-group">
-                                <label>Attacks</label>
-                                <select id="turn-time-limit">
-                                    <option value="0" selected>∞ Unlimited</option>
-                                    <option value="1">1 / turn</option>
-                                    <option value="3">3 / turn</option>
-                                    <option value="5">5 / turn</option>
-                                </select>
-                            </div>
-                            <div class="control-group quarter" id="setup-turn-seconds-group">
-                                <label>Turn time</label>
-                                <select id="turn-seconds-limit">
-                                    <option value="0" selected>∞ Unlimited</option>
-                                    <option value="10">10s</option>
-                                    <option value="15">15s</option>
-                                    <option value="30">30s</option>
-                                    <option value="60">60s</option>
-                                </select>
-                            </div>
-                            <div class="control-group quarter" id="setup-attack-seconds-group">
-                                <label>Attack time</label>
-                                <select id="attack-seconds-limit">
-                                    <option value="0" selected>∞ Unlimited</option>
-                                    <option value="5">5s</option>
-                                    <option value="10">10s</option>
-                                    <option value="15">15s</option>
-                                    <option value="30">30s</option>
-                                </select>
-                            </div>
-
-                            <div class="control-group quarter" id="setup-full-board-rule-group">
-                                <label>End Game</label>
-                                <select id="full-board-rule">
-                                    <option value="nothing" selected>Default</option>
-                                    <option value="most_territories">Territories</option>
-                                    <option value="biggest_territory">Largest region</option>
-                                    <option value="random_picker">Random tile</option>
-                                    <option value="raise_max_dice">Max dice +2</option>
-                                    <option value="autoplay_humans">Autoplay</option>
-                                </select>
-                            </div>
-                        </div>
-            </div>
+            <div id="setup-mods-panel" class="setup-mods-panel hidden" data-setup-mods-panel></div>
             <div class="setup-start-row">
                 <button id="start-game-btn" class="tron-btn large" data-no-sfx data-gamepad-autofocus>START</button>
             </div>
@@ -1049,28 +1052,6 @@
                             <span id="editor-map-size-val">6×6</span>
                         </div>
                     </div>
-                    <div class="control-group">
-                        <label>Map Style</label>
-                        <select id="editor-map-style">
-                            <option value="random" selected>Random</option>
-                            <option value="full">Full Grid</option>
-                            <option value="continents">Continents</option>
-                            <option value="caves">Caves</option>
-                            <option value="islands">Islands</option>
-                            <option value="maze">Maze</option>
-                            <option value="tunnels">Tunnels</option>
-                            <option value="swiss">Swiss Cheese</option>
-                        </select>
-                    </div>
-                    <div class="control-group">
-                        <label>Start Mode</label>
-                        <select id="editor-game-mode">
-                            <option value="classic" selected>Classic</option>
-                            <option value="fair">Fair Start</option>
-                            <option value="madness">Full Madness</option>
-                            <option value="2of2">2 of 2</option>
-                        </select>
-                    </div>
                     <button id="editor-randomize-btn" class="tron-btn primary editor-random-generate"><span
                             class="sprite-icon icon-dice"></span>
                         Generate</button>
@@ -1167,40 +1148,18 @@
                         <div id="editor-color-legend" class="editor-color-legend"></div>
                     </div>
 
-                    <div class="control-row" id="editor-dice-settings-section">
-                        <div class="control-group half">
-                            <label>Max Dice</label>
-                            <div class="range-row">
-                                <input type="range" id="editor-max-dice" min="2" max="12" value="9">
-                                <span id="editor-max-dice-val">9</span>
-                            </div>
+                    <div id="editor-mods-section">
+                        <div class="setup-mods-toolbar" id="editor-mods-toolbar">
+                            <button type="button" class="tron-btn small setup-mods-toggle" id="editor-mods-toggle"
+                                aria-expanded="false" aria-controls="editor-mods-panel">
+                                <span class="setup-mods-chevron" aria-hidden="true"></span>
+                                <span class="setup-mods-toggle-label">Mods</span>
+                                <span class="setup-mods-active-badge hidden" id="editor-mods-active-badge">On</span>
+                            </button>
+                            <button type="button" id="editor-mods-reset" class="tron-btn small setup-mods-reset hidden"
+                                title="Reset all Mods to defaults">Reset Mods</button>
                         </div>
-                        <div class="control-group half">
-                            <label>Dice Sides</label>
-                            <div class="range-row">
-                                <input type="range" id="editor-dice-sides" min="1" max="12" value="6">
-                                <span id="editor-dice-sides-val">6</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label>Start Mode</label>
-                        <select id="editor-map-game-mode">
-                            <option value="classic" selected>Classic</option>
-                            <option value="fair">Fair Start</option>
-                            <option value="madness">Full Madness</option>
-                            <option value="2of2">2 of 2</option>
-                        </select>
-                    </div>
-                    <div class="control-group">
-                        <label>Turn Time Limit</label>
-                        <select id="editor-map-turn-time-limit">
-                            <option value="10">10 s</option>
-                            <option value="15">15 s</option>
-                            <option value="30">30 s</option>
-                            <option value="60">60 s</option>
-                            <option value="0" selected>∞ Unlimited</option>
-                        </select>
+                        <div id="editor-mods-panel" class="setup-mods-panel hidden" data-editor-mods-panel></div>
                     </div>
                 </div>
 

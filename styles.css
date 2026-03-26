@@ -6132,40 +6132,49 @@ canvas {
 }
 
 /* Mods row differs from SETUP_MOD_DEFAULTS — match active-mod badge / reset accent */
-#setup-modal .setup-mod-nondefault > label {
+#setup-modal .setup-mod-nondefault > label,
+.editor-settings .setup-mod-nondefault > label {
     color: #ffb366;
 }
 
 #setup-modal .setup-mod-nondefault select,
-#setup-modal .setup-mod-nondefault .tournament-games-input {
+#setup-modal .setup-mod-nondefault .tournament-games-input,
+.editor-settings .setup-mod-nondefault select,
+.editor-settings .setup-mod-nondefault .tournament-games-input {
     border-color: rgba(255, 180, 100, 0.7);
     box-shadow: 0 0 10px rgba(255, 160, 80, 0.22);
 }
 
-#setup-modal .setup-mod-nondefault .range-row span {
+#setup-modal .setup-mod-nondefault .range-row span,
+.editor-settings .setup-mod-nondefault .range-row span {
     color: #ffcc88;
 }
 
-#setup-modal .setup-mod-nondefault input[type="range"]::-webkit-slider-runnable-track {
+#setup-modal .setup-mod-nondefault input[type="range"]::-webkit-slider-runnable-track,
+.editor-settings .setup-mod-nondefault input[type="range"]::-webkit-slider-runnable-track {
     background: rgba(255, 180, 100, 0.45);
     box-shadow: 0 0 8px rgba(255, 160, 80, 0.35);
 }
 
-#setup-modal .setup-mod-nondefault input[type="range"]::-webkit-slider-thumb {
+#setup-modal .setup-mod-nondefault input[type="range"]::-webkit-slider-thumb,
+.editor-settings .setup-mod-nondefault input[type="range"]::-webkit-slider-thumb {
     background: #ffaa55;
     box-shadow: 0 0 12px rgba(255, 170, 90, 0.65);
 }
 
-#setup-modal .setup-mod-nondefault input[type="range"]::-moz-range-thumb {
+#setup-modal .setup-mod-nondefault input[type="range"]::-moz-range-thumb,
+.editor-settings .setup-mod-nondefault input[type="range"]::-moz-range-thumb {
     background: #ffaa55;
     box-shadow: 0 0 12px rgba(255, 170, 90, 0.65);
 }
 
-#setup-play-mode-group.setup-mod-nondefault .gp-panel-title {
+#setup-play-mode-group.setup-mod-nondefault .gp-panel-title,
+#editor-mods-setup-play-mode-group.setup-mod-nondefault .gp-panel-title {
     color: #ffb366;
 }
 
-#setup-play-mode-group.setup-mod-nondefault .gp-play-mode-select {
+#setup-play-mode-group.setup-mod-nondefault .gp-play-mode-select,
+#editor-mods-setup-play-mode-group.setup-mod-nondefault .gp-play-mode-select {
     border-color: rgba(255, 180, 100, 0.7);
     box-shadow: 0 0 10px rgba(255, 160, 80, 0.22);
 }

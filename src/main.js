@@ -24,6 +24,7 @@ import { ProbabilityCalculator } from './ui/probability-calculator.js';
 
 // New modular components
 import { ConfigManager } from './ui/config-manager.js';
+import { mountSharedModsFields } from './ui/shared-mods-fields.js';
 import { GAME } from './core/constants.js';
 import { SessionManager } from './core/session-manager.js';
 import { TournamentRunner } from './core/tournament-runner.js';
@@ -411,6 +412,11 @@ async function init() {
     // Initialize Managers
     const scenarioManager = new ScenarioManager();
     const turnHistory = new TurnHistory();
+    mountSharedModsFields(document.getElementById('setup-mods-panel'), { idPrefix: '', hideTournamentRow: false });
+    mountSharedModsFields(document.getElementById('editor-mods-panel'), {
+        idPrefix: 'editor-mods-',
+        hideTournamentRow: true,
+    });
     const mapEditor = new MapEditor(scenarioManager);
     mapEditor.setRenderer(renderer);
     mapEditor.setInputManager(inputManager);
