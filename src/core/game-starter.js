@@ -136,8 +136,12 @@ export class GameStarter {
 
     /**
      * Start a new game from the setup screen (persists settings).
+     * @param {boolean} [keepEditorPlaytestResume] - When true, keep sessionStorage playtest marker (editor → play test).
      */
-    startGame() {
+    startGame(keepEditorPlaytestResume = false) {
+        if (!keepEditorPlaytestResume) {
+            sessionStorage.removeItem('dicy_editorResume');
+        }
         const config = this.configManager.getGameConfig();
 
         if (config.humanCount + config.botCount < 2) {

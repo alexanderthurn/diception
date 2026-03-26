@@ -235,6 +235,9 @@ export class MapEditor {
         // Callback for when editor closes
         this.onClose = null;
 
+        /** Set from main: ({ levelData, campaignOwner, levelIndex }) => void */
+        this.onPlaytest = null;
+
         // Campaign context (when editing level in campaign)
         this.editorOptions = null;
 
@@ -302,6 +305,10 @@ export class MapEditor {
         this.renderer = renderer;
     }
 
+    setPlaytestHandler(fn) {
+        this.onPlaytest = typeof fn === 'function' ? fn : null;
+    }
+
     setInputManager(inputManager) {
         this.inputManager = inputManager;
     }
@@ -365,6 +372,7 @@ export class MapEditor {
             randomBtn: document.getElementById('editor-random-btn'),
             quickActions: document.getElementById('editor-quick-actions'),
             saveBtn: document.getElementById('editor-save-btn'),
+            playtestBtn: document.getElementById('editor-playtest-btn'),
             randomizeBtn: document.getElementById('editor-randomize-btn'),
             editorMapSize: document.getElementById('editor-map-size'),
             editorMapSizeVal: document.getElementById('editor-map-size-val'),
@@ -536,6 +544,7 @@ export class MapEditor {
 
         // Save button (calls saveAsMap or saveAsScenario based on type)
         this.elements.saveBtn?.addEventListener('click', () => this.handleSave());
+        this.elements.playtestBtn?.addEventListener('click', () => this.runCampaignPlaytest());
         this.elements.randomizeBtn?.addEventListener('click', () => this.handleRandomize());
 
         // Config inputs (Random dialog) - only update label, Generate does the rest
@@ -1264,6 +1273,134 @@ export class MapEditor {
         if (this.state.editorType === 'scenario') return this.saveAsScenario();
     }
 
+    /**
+     * Campaign editor only: start a playtest with current canvas (does not save to disk).
+     */
+    runCampaignPlaytest() {
+        if (!this.editorOptions || typeof this.onPlaytest !== 'function') return;
+        let levelData = null;
+        if (this.state.editorType === 'scenario') {
+            levelData = this._buildScenarioSnapshot();
+        } else {
+            levelData = this._buildMapSnapshot();
+            if (!levelData && this.state.configData) {
+                levelData = this._buildConfigSnapshot();
+            }
+        }
+        if (!levelData) return;
+        this.onPlaytest({
+            levelData,
+            campaignOwner: this.editorOptions.campaign.owner,
+            levelIndex: this.editorOptions.levelIndex
+        });
+    }
+
+    _buildMapSnapshot() {
+        this.state.bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
+        this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
+        if (this.state.tiles.size === 0) {
+            this.showStatus('Add at least one tile first', 'error');
+            return null;
+        }
+        const bounds = this.computeMinimalBounds();
+        if (!bounds) return null;
+        return {
+            type: 'map',
+            width: bounds.width,
+            height: bounds.height,
+            bots: this.state.bots ?? 2,
+            botAI: this.state.botAI ?? 'easy',
+            maxDice: this.state.maxDice ?? 9,
+            diceSides: this.state.diceSides ?? 6,
+            gameMode: this.state.gameMode ?? 'classic',
+            turnTimeLimit: this.state.turnTimeLimit ?? 0,
+            tiles: Array.from(this.state.tiles.entries()).map(([key]) => {
+                const [x, y] = key.split(',').map(Number);
+                return { x: x - bounds.minX, y: y - bounds.minY };
+            })
+        };
+    }
+
+    _buildScenarioSnapshot() {
+        this.state.bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
+        this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
+        this.rebuildPlayersFromScenarioConfig();
+        if (this.state.tiles.size === 0) {
+            this.showStatus('Add at least one tile first', 'error');
+            return null;
+        }
+
+        for (const [, tile] of this.state.tiles) {
+            if (tile.owner === undefined || tile.owner === null || tile.owner < 0) {
+                tile.owner = 0;
+            } else if (!this.state.players.find(p => p.id === tile.owner)) {
+                tile.owner = 0;
+            }
+        }
+
+        const tileCounts = {};
+        this.state.players.forEach(p => { tileCounts[p.id] = 0; });
+        for (const tile of this.state.tiles.values()) {
+            tileCounts[tile.owner]++;
+        }
+
+        const playersWithNoTiles = this.state.players.filter(p => tileCounts[p.id] === 0);
+        if (playersWithNoTiles.length > 0) {
+            const tilesArray = Array.from(this.state.tiles.values());
+            for (const player of playersWithNoTiles) {
+                for (let i = 0; i < tilesArray.length; i++) {
+                    if (tilesArray[i].owner === 0 && tileCounts[0] > 1) {
+                        tilesArray[i].owner = player.id;
+                        tileCounts[0]--;
+                        tileCounts[player.id]++;
+                        break;
+                    }
+                }
+            }
+            this.renderToCanvas();
+        }
+
+        const bounds = this.computeMinimalBounds();
+        if (!bounds) return null;
+
+        return {
+            type: 'scenario',
+            width: bounds.width,
+            height: bounds.height,
+            maxDice: this.state.maxDice,
+            diceSides: this.state.diceSides,
+            gameMode: this.state.gameMode ?? 'classic',
+            turnTimeLimit: this.state.turnTimeLimit ?? 0,
+            players: this.state.players.map(p => ({
+                id: p.id,
+                isBot: p.isBot,
+                color: DEFAULT_COLORS[p.id % DEFAULT_COLORS.length],
+                storedDice: 0,
+                aiId: p.aiId
+            })),
+            tiles: Array.from(this.state.tiles.entries()).map(([key, tile]) => {
+                const [x, y] = key.split(',').map(Number);
+                return { x: x - bounds.minX, y: y - bounds.minY, owner: tile.owner, dice: tile.dice || 1 };
+            })
+        };
+    }
+
+    _buildConfigSnapshot() {
+        this.syncConfigFromUI();
+        const cfg = this.state.configData;
+        if (!cfg) return null;
+        return {
+            type: 'config',
+            mapSize: cfg.mapSize || '6x6',
+            mapStyle: cfg.mapStyle || 'islands',
+            gameMode: cfg.gameMode || 'classic',
+            bots: 2,
+            botAI: 'easy',
+            maxDice: 8,
+            diceSides: 6
+        };
+    }
+
     async handleRandomize() {
         this.syncConfigFromUI();
         await this.regenerateConfigPreview();
@@ -1315,6 +1452,9 @@ export class MapEditor {
         hideInCampaign.forEach(el => {
             if (el) el.style.display = inCampaign ? 'none' : '';
         });
+        if (this.elements.playtestBtn) {
+            this.elements.playtestBtn.classList.toggle('hidden', !inCampaign);
+        }
     }
 
     /**
@@ -1859,31 +1999,8 @@ export class MapEditor {
      * Save as map (tiles only, no ownership)
      */
     async saveAsMap() {
-        this.state.bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
-        this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
-        if (this.state.tiles.size === 0) {
-            this.showStatus('Add at least one tile first', 'error');
-            return null;
-        }
-
-        const bounds = this.computeMinimalBounds();
-        if (!bounds) return null;
-
-        const mapData = {
-            type: 'map',
-            width: bounds.width,
-            height: bounds.height,
-            bots: this.state.bots ?? 2,
-            botAI: this.state.botAI ?? 'easy',
-            maxDice: this.state.maxDice ?? 9,
-            diceSides: this.state.diceSides ?? 6,
-            gameMode: this.state.gameMode ?? 'classic',
-            turnTimeLimit: this.state.turnTimeLimit ?? 0,
-            tiles: Array.from(this.state.tiles.entries()).map(([key]) => {
-                const [x, y] = key.split(',').map(Number);
-                return { x: x - bounds.minX, y: y - bounds.minY };
-            })
-        };
+        const mapData = this._buildMapSnapshot();
+        if (!mapData) return null;
 
         if (this.editorOptions?.onSave) {
             try {
@@ -1928,67 +2045,8 @@ export class MapEditor {
      * Save as scenario (includes players, ownership, dice)
      */
     async saveAsScenario() {
-        this.state.bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
-        this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
-        this.rebuildPlayersFromScenarioConfig();
-        if (this.state.tiles.size === 0) {
-            this.showStatus('Add at least one tile first', 'error');
-            return null;
-        }
-
-        for (const [key, tile] of this.state.tiles) {
-            if (tile.owner === undefined || tile.owner === null || tile.owner < 0) {
-                tile.owner = 0;
-            } else if (!this.state.players.find(p => p.id === tile.owner)) {
-                tile.owner = 0;
-            }
-        }
-
-        const tileCounts = {};
-        this.state.players.forEach(p => tileCounts[p.id] = 0);
-        for (const tile of this.state.tiles.values()) {
-            tileCounts[tile.owner]++;
-        }
-
-        const playersWithNoTiles = this.state.players.filter(p => tileCounts[p.id] === 0);
-        if (playersWithNoTiles.length > 0) {
-            const tilesArray = Array.from(this.state.tiles.values());
-            for (const player of playersWithNoTiles) {
-                for (let i = 0; i < tilesArray.length; i++) {
-                    if (tilesArray[i].owner === 0 && tileCounts[0] > 1) {
-                        tilesArray[i].owner = player.id;
-                        tileCounts[0]--;
-                        tileCounts[player.id]++;
-                        break;
-                    }
-                }
-            }
-            this.renderToCanvas();
-        }
-
-        const bounds = this.computeMinimalBounds();
-        if (!bounds) return null;
-
-        const scenarioData = {
-            type: 'scenario',
-            width: bounds.width,
-            height: bounds.height,
-            maxDice: this.state.maxDice,
-            diceSides: this.state.diceSides,
-            gameMode: this.state.gameMode ?? 'classic',
-            turnTimeLimit: this.state.turnTimeLimit ?? 0,
-            players: this.state.players.map(p => ({
-                id: p.id,
-                isBot: p.isBot,
-                color: DEFAULT_COLORS[p.id % DEFAULT_COLORS.length],
-                storedDice: 0,
-                aiId: p.aiId
-            })),
-            tiles: Array.from(this.state.tiles.entries()).map(([key, tile]) => {
-                const [x, y] = key.split(',').map(Number);
-                return { x: x - bounds.minX, y: y - bounds.minY, owner: tile.owner, dice: tile.dice || 1 };
-            })
-        };
+        const scenarioData = this._buildScenarioSnapshot();
+        if (!scenarioData) return null;
 
         if (this.editorOptions?.onSave) {
             try {

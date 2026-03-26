@@ -985,22 +985,20 @@ export class GameEventManager {
         const content = document.createElement('div');
         content.className = 'game-over-content';
 
+        const humanCount = this.game.players.filter(p => !p.isBot).length;
+        const summaryP = document.createElement('p');
+        summaryP.className = 'game-over-summary';
+        summaryP.textContent = humanCount === 1
+            ? (humanWon ? "You've won the game." : "You've lost.")
+            : 'Game over.';
+        content.appendChild(summaryP);
+
         // === LAST GAME STATS (always shown) ===
         if (gameStats) {
             const lastGameSection = document.createElement('div');
             lastGameSection.className = 'last-game-section';
 
-            // Calculate total dice lost across all players
-            let totalDiceLost = 0;
-            Object.values(gameStats.playerStats).forEach(ps => {
-                totalDiceLost += ps.diceLost;
-            });
-
-            const settleNote = turnLimitReached ? ' <em>Turn limit reached!</em>' : (fullBoardResolution ? ' <em>Board settled.</em>' : '');
-            let statsHtml = `
-                <p class="dice-obituary">A total of <strong>${totalDiceLost}</strong> dice lost their lives in this battle in <strong>${gameStats.gameDuration}</strong> rounds.${settleNote}</p>
-            `;
-
+            let statsHtml = '';
             // Elimination timeline (redesigned to horizontal sentence)
             statsHtml += '<div class="timeline-section-horizontal">';
             statsHtml += '<h4 class="timeline-title">Timeline</h4>';
@@ -1079,7 +1077,6 @@ export class GameEventManager {
         const idxStr = localStorage.getItem('dicy_loadedLevelIndex');
         const levelIndex = idxStr != null ? parseInt(idxStr, 10) : -1;
 
-        const humanCount = this.game.players.filter(p => !p.isBot).length;
         let title;
         if (humanCount === 1) {
             title = humanWon ? 'WON' : 'DEFEAT';
@@ -1184,7 +1181,13 @@ export class GameEventManager {
             if (campaignFinished && this.scenarioBrowser) {
                 this.scenarioBrowser.clearPendingScenario();
             }
-            if (isCampaignMode && this.scenarioBrowser) {
+            const editorPlaytestResume = sessionStorage.getItem('dicy_editorResume');
+            if (campaignFinished) {
+                sessionStorage.removeItem('dicy_editorResume');
+                await this.sessionManager.quitToMainMenu();
+            } else if (editorPlaytestResume) {
+                await this.sessionManager.quitToEditorAfterPlaytest();
+            } else if (isCampaignMode && this.scenarioBrowser) {
                 await this.sessionManager.quitToCampaignScreen();
             } else {
                 this.sessionManager.quitToCustomGame();
@@ -1193,6 +1196,7 @@ export class GameEventManager {
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
             this.gameStarter.startFreshSameSettings();
         } else if (choice === 'next') {
+            sessionStorage.removeItem('dicy_editorResume');
             const campaign = owner ? this.scenarioBrowser.campaignManager.getCampaign(owner) : null;
             const nextIndex = levelIndex + 1;
             if (campaign && this.scenarioBrowser.campaignManager.getLevel(campaign, nextIndex)) {

@@ -1256,15 +1256,11 @@ select {
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.dice-obituary {
+.game-over-summary {
     font-size: 16px;
     color: #fff;
-    margin: 20px 0;
+    margin: 0 0 16px 0;
     line-height: 1.4;
-}
-
-.dice-obituary strong {
-    color: var(--accent-color);
 }
 
 .timeline-section-horizontal {
@@ -5260,9 +5256,9 @@ canvas {
         margin-bottom: 8px;
     }
 
-    .dice-obituary {
-        margin: 10px 0;
+    .game-over-summary {
         font-size: 14px;
+        margin-bottom: 10px;
     }
 
     .timeline-section-horizontal {
