@@ -275,6 +275,11 @@ export class GameEventManager {
             delay = player.isBot ? 800 : 1000;
         }
 
+        // Hold bots until the map reveal animation finishes
+        const revealWait = this.effectsManager?._revealEndsAt
+            ? Math.max(0, this.effectsManager._revealEndsAt - Date.now())
+            : 0;
+
         setTimeout(async () => {
             // Ensure autoplay AI exists for human players with autoplay enabled
             if (!player.isBot && autoplayPlayers.has(player.id) && !playerAIs.has(player.id)) {
@@ -287,7 +292,7 @@ export class GameEventManager {
                 await playerAI.takeTurn(effectiveSpeed);
             }
             this.game.endTurn();
-        }, delay);
+        }, delay + revealWait);
     }
 
     /**

@@ -7391,8 +7391,12 @@ input[type="range"].gamepad-slider-editing {
     animation: attack-die-wobble 0.12s infinite;
 }
 
+.attack-die.spinning {
+    animation: attack-die-spinning 0.1s ease-in-out infinite alternate;
+}
+
 .attack-die.revealed {
-    animation: attack-die-pop 0.14s ease-out;
+    animation: attack-die-pop 0.18s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
 }
 
 @keyframes attack-die-wobble {
@@ -7401,9 +7405,15 @@ input[type="range"].gamepad-slider-editing {
     100% { transform: rotate(-4deg) scale(1.0); }
 }
 
+@keyframes attack-die-spinning {
+    from { transform: scaleY(0.45) rotate(-4deg); opacity: 0.6; }
+    to   { transform: scaleY(1.08) rotate( 4deg); opacity: 1.0; }
+}
+
 @keyframes attack-die-pop {
-    0%   { transform: scale(1.5); }
-    100% { transform: scale(1.0); }
+    0%   { transform: scale(1.6) rotate(-3deg); }
+    60%  { transform: scale(0.92) rotate(1deg); }
+    100% { transform: scale(1.0)  rotate(0deg); }
 }
 
 .attack-side-sum {
@@ -7602,4 +7612,35 @@ input[type="range"].gamepad-slider-editing {
 .victory-overlay.victory-campaign .victory-title {
     animation: victory-title-slam 0.65s cubic-bezier(0.1, 0.9, 0.3, 1.3) 0.1s forwards,
                victory-campaign-shimmer 2s ease 0.8s infinite;
+}
+
+/* ── Turn transition wipe ─────────────────────────────────────────────────── */
+.turn-sweep {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    overflow: hidden;
+    --sweep-color: #00ffff;
+}
+
+.turn-sweep::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80%;
+    height: 100%;
+    background: linear-gradient(to left,
+        transparent 0%,
+        var(--sweep-color) 35%,
+        var(--sweep-color) 65%,
+        transparent 100%);
+    opacity: 0.1;
+    animation: turn-sweep-move 1.4s cubic-bezier(0.2, 0, 0.35, 1) forwards;
+}
+
+@keyframes turn-sweep-move {
+    from { transform: translateX(200%); }
+    to   { transform: translateX(-150%); }
 }

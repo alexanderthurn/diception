@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js';
+import { Container, Ticker } from 'pixi.js';
 import { ParticleSystem, EffectPresets } from './particle-system.js';
 import { BackgroundRenderer } from './background-renderer.js';
 import { BoardEffects } from './board-effects.js';
@@ -75,6 +75,11 @@ export class EffectsManager {
         // Attack effect
         this.game.on('attackResult', (result) => {
             this.onAttack(result);
+        });
+
+        // Map reveal on game start
+        this.game.on('gameStart', () => {
+            this.onGameStart();
         });
 
         // Turn change pulse
@@ -510,6 +515,89 @@ export class EffectsManager {
     }
 
     /**
+     * Map reveal animation — tiles fade in staggered by distance from board center.
+     */
+    onGameStart() {
+        if (this.quality === 'off' || this.renderer?.gameSpeed === 'expert') return;
+
+        const grid = this.renderer?.grid;
+        if (!grid) return;
+
+        const map = this.game.map;
+        if (!map || !map.tiles || map.tiles.length === 0) return;
+
+        const tileGapMs  = 35;  // stagger between tiles within a row
+        const fadeFranes = 10;  // fade + wobble duration (~165ms at 60fps)
+        const fadeMs     = Math.round(fadeFranes * (1000 / 60));
+
+        // Group non-blocked tiles by row
+        const rowMap = new Map();
+        for (const t of map.tiles) {
+            if (t.blocked) continue;
+            if (!rowMap.has(t.y)) rowMap.set(t.y, []);
+            rowMap.get(t.y).push({ idx: t.x + t.y * map.width, x: t.x, y: t.y });
+        }
+        const sortedRows = [...rowMap.keys()].sort((a, b) => a - b);
+        if (sortedRows.length === 0) return;
+
+        // Pre-compute total reveal duration so bots can be held until it finishes
+        let totalRevealMs = 0;
+        for (const rowY of sortedRows) {
+            totalRevealMs += (rowMap.get(rowY).length - 1) * tileGapMs + fadeMs;
+        }
+        this._revealEndsAt = Date.now() + 50 + totalRevealMs;
+
+        // Defer actual animation so renderer.draw() has populated tileCache
+        setTimeout(() => {
+            // Hide all tiles immediately
+            for (const [, tiles] of rowMap) {
+                for (const e of tiles) {
+                    const c = grid.tileCache.get(e.idx);
+                    if (c) { c.alpha = 0; c.scale.set(1); }
+                }
+            }
+
+            let rowStartMs = 0;
+
+            sortedRows.forEach((rowY, rowIdx) => {
+                const tiles = rowMap.get(rowY);
+                // Alternate direction each row: even rows left→right, odd rows right→left
+                const sorted = rowIdx % 2 === 0
+                    ? [...tiles].sort((a, b) => a.x - b.x)
+                    : [...tiles].sort((a, b) => b.x - a.x);
+
+                sorted.forEach((e, i) => {
+                    const delay = rowStartMs + i * tileGapMs;
+                    setTimeout(() => {
+                        const container = grid.tileCache.get(e.idx);
+                        if (!container) return;
+                        container.scale.set(0.88);
+                        let t = 0;
+                        const step = (ticker) => {
+                            if (container.destroyed) { Ticker.shared.remove(step); return; }
+                            t += ticker.deltaTime / fadeFranes;
+                            const p = Math.min(1, t);
+                            container.alpha = p;
+                            // Subtle overshoot: 0.88 → 1.06 → 1.0
+                            container.scale.set(p < 0.6
+                                ? 0.88 + p * (1/0.6) * 0.18
+                                : 1.06 - (p - 0.6) * (1/0.4) * 0.06);
+                            if (t >= 1) {
+                                container.scale.set(1);
+                                Ticker.shared.remove(step);
+                            }
+                        };
+                        Ticker.shared.add(step);
+                    }, delay);
+                });
+
+                // Next row starts after the last tile of this row finishes appearing
+                rowStartMs += (sorted.length - 1) * tileGapMs + fadeMs;
+            });
+        }, 50);
+    }
+
+    /**
      * Turn start - subtle pulse
      */
     onTurnStart(player) {
@@ -523,6 +611,16 @@ export class EffectsManager {
         this.background.pulse(color, 0.1);
         this.background.bgShader?.setGridColor(color);
         this.renderer?.setScanlineBeamColor?.(color);
+
+        // Turn transition wipe — thin colored strip sweeps across the screen
+        if (this.renderer?.gameSpeed !== 'expert') {
+            const colorHex = '#' + color.toString(16).padStart(6, '0');
+            const el = document.createElement('div');
+            el.className = 'turn-sweep';
+            el.style.setProperty('--sweep-color', colorHex);
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1500);
+        }
     }
 
     /**

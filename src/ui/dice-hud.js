@@ -134,24 +134,36 @@ export class DiceHUD {
         const wait = ms => new Promise(r => setTimeout(r, ms));
 
         const rollDice = async (container, rolls, color) => {
-            const els = rolls.map(() => {
-                const die = document.createElement('span');
-                die.className = 'attack-die rolling';
-                die.style.borderColor = color;
-                die.style.color = color;
-                die.textContent = '?';
-                container.appendChild(die);
-                return die;
-            });
-            await wait(280);
-            const perDie = Math.max(35, Math.min(70, 350 / rolls.length));
+            // Each die spins through random numbers one-at-a-time, then slams to its value.
+            const spinMs = Math.max(110, Math.min(260, 520 / rolls.length));
+            const gapMs  = 35;
+
             for (let i = 0; i < rolls.length; i++) {
                 if (dismissed) return;
-                els[i].textContent = rolls[i];
-                els[i].classList.remove('rolling');
-                els[i].classList.add('revealed');
+
+                const die = document.createElement('span');
+                die.className = 'attack-die spinning';
+                die.style.borderColor = color;
+                die.style.color = color;
+                die.textContent = Math.ceil(Math.random() * 6);
+                container.appendChild(die);
+
+                // Rapidly cycle through random face values while spinning
+                const spinInterval = setInterval(() => {
+                    die.textContent = Math.ceil(Math.random() * 6);
+                }, 45);
+
+                await wait(spinMs);
+                clearInterval(spinInterval);
+                if (dismissed) return;
+
+                // Slam to the real value
+                die.textContent = rolls[i];
+                die.classList.remove('spinning');
+                die.classList.add('revealed');
                 sfx?.coin();
-                if (i < rolls.length - 1) await wait(perDie);
+
+                if (i < rolls.length - 1) await wait(gapMs);
             }
         };
 
