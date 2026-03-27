@@ -148,14 +148,14 @@ export class Dialog {
             <p class="full-version-intro">You are playing the demo version of Diception. Unlock the full experience.</p>
             <a href="${STEAM_URL}" target="_blank" rel="noopener" class="steam-store-link">
                 <img src="assets/icons/steam-logo.png" alt="Steam" class="steam-store-logo">
-                <span>Available on Steam</span>
+                <span>Full Version</span>
             </a>
             <ul class="full-version-features">
-                <li>A Handcrafted Campaign with 84 levels</li>
+                <li>A handcrafted campaign with 84 levels</li>
                 <li>34 Achievements</li>
-                <li>Map Editor to create Maps and custom Scenarios</li>
+                <li>Map Editor and custom scenarios</li>
                 <li>Steam Cloud Save to not lose your progress</li>
-                <li>Steam Remote Play</li>
+                <li>Remote Play Together</li>
             </ul>
             <p class="full-version-support">Your purchase directly supports an indie developer — thank you!</p>`;
         content.querySelector('.steam-store-link').addEventListener('click', e => {

@@ -218,9 +218,9 @@ async function init() {
     } else {
         const versionLabel = isFullVersion() ? 'by Alexander Thurn' : 'Demo Version';
         const el = document.getElementById('main-menu-credits');
-        if (el) el.textContent = versionLabel;
+        if (el) { el.textContent = versionLabel; el.classList.toggle('demo-version-label', !isFullVersion()); }
         const loadingCredits = document.querySelector('#loading-screen .credits');
-        if (loadingCredits && !isFullVersion()) loadingCredits.textContent = 'Demo Version';
+        if (loadingCredits && !isFullVersion()) { loadingCredits.textContent = 'Demo Version'; loadingCredits.classList.add('demo-version-label'); }
     }
 
     // Initialize Input System (create before renderer needs it)
@@ -1801,8 +1801,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             ...document.querySelectorAll('#setup-mods-panel .control-group > label'),
         ].forEach(lbl => { if (lbl) lbl.append(mkLock()); });
 
-        const modsLabel = document.querySelector('#setup-mods-toggle .setup-mods-toggle-label');
-        if (modsLabel) modsLabel.append(mkLock());
     }
 
     document.getElementById('main-icons-achievements-btn')?.addEventListener('click', () => {

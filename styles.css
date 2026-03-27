@@ -2794,7 +2794,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 .credits {
     color: var(--border-color);
     font-size: 12px;
-    opacity: 0.5;
+    opacity: 1;
     margin-top: -10px;
     margin-bottom: 25px;
     letter-spacing: 2px;
@@ -7248,17 +7248,16 @@ details.settings-group[open]>summary.settings-group-header::after {
     font-size: 0.8em;
 }
 
+.demo-version-label {
+    color: #ffb366;
+}
+
 /* Turn orange (via label color inheritance) when field is non-default */
 .setup-mod-nondefault > label .demo-field-lock,
 .setup-mod-nondefault .demo-field-lock {
     color: #ffb366;
 }
 
-/* Mods button lock icon: orange when the active badge is visible */
-#setup-mods-toggle:has(.setup-mods-active-badge:not(.hidden)) .demo-field-lock {
-    opacity: 1;
-    color: #ffb366;
-}
 
 .tron-btn.btn-locked {
     border-color: #ffb366;
