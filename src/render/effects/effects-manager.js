@@ -570,15 +570,21 @@ export class EffectsManager {
         }
         this._revealEndsAt = Date.now() + 50 + totalRevealMs;
 
-        // Defer actual animation so renderer.draw() has populated tileCache
-        this._setTimeout(() => {
-            // Hide all tiles immediately
+        // Hide tiles immediately (tileCache may be partially populated already)
+        const hideAll = () => {
             for (const [, tiles] of rowMap) {
                 for (const e of tiles) {
                     const c = grid.tileCache.get(e.idx);
                     if (c) c.alpha = 0;
                 }
             }
+        };
+        hideAll();
+
+        // Defer actual animation so renderer.draw() has fully populated tileCache
+        this._setTimeout(() => {
+            // Re-hide in case any tiles were added to cache after the initial hide
+            hideAll();
 
             let rowStartMs = 0;
 
