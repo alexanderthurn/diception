@@ -7233,6 +7233,26 @@ details.settings-group[open]>summary.settings-group-header::after {
 
 /* ── Locked feature buttons (non-full version) ── */
 
+/* ── Demo-version field lock icons ── */
+.demo-field-lock {
+    opacity: 1;
+    margin-left: 4px;
+    vertical-align: middle;
+    font-size: 0.8em;
+}
+
+/* Turn orange (via label color inheritance) when field is non-default */
+.setup-mod-nondefault > label .demo-field-lock,
+.setup-mod-nondefault .demo-field-lock {
+    color: #ffb366;
+}
+
+/* Mods button lock icon: orange when the active badge is visible */
+#setup-mods-toggle:has(.setup-mods-active-badge:not(.hidden)) .demo-field-lock {
+    opacity: 1;
+    color: #ffb366;
+}
+
 .tron-btn.btn-locked {
     border-color: #ffb366;
     color: #ffb366;

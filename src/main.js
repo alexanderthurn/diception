@@ -1800,6 +1800,19 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             if (icon) icon.className = 'sprite-icon icon-lock';
             else btn.prepend(Object.assign(document.createElement('span'), { className: 'sprite-icon icon-lock' }));
         });
+
+        // Add a small lock icon next to the labels of demo-restricted setup fields
+        const mkLock = () => Object.assign(document.createElement('span'), { className: 'sprite-icon icon-lock demo-field-lock' });
+        [
+            document.querySelector('#setup-map-size-group > label'),
+            document.querySelector('#setup-humans-group > label'),
+            document.querySelector('#setup-bots-group > label'),
+            document.querySelector('#setup-bot-ai-group > label'),
+            ...document.querySelectorAll('#setup-mods-panel .control-group > label'),
+        ].forEach(lbl => { if (lbl) lbl.append(mkLock()); });
+
+        const modsLabel = document.querySelector('#setup-mods-toggle .setup-mods-toggle-label');
+        if (modsLabel) modsLabel.append(mkLock());
     }
 
     document.getElementById('main-icons-achievements-btn')?.addEventListener('click', () => {
