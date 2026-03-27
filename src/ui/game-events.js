@@ -84,6 +84,10 @@ export class GameEventManager {
         this.turnHistory = turnHistory;
         this.scenarioManager = scenarioManager;
 
+        // Incremented on each new game start — lets pending bot-turn callbacks
+        // detect that the game they were created for is no longer active.
+        this._gameGeneration = 0;
+
         // UI components (set later)
         this.diceHUD = null;
         this.gameLog = null;
@@ -280,10 +284,13 @@ export class GameEventManager {
             ? Math.max(0, this.effectsManager._revealEndsAt - Date.now())
             : 0;
 
+        const myGen = this._gameGeneration;
         setTimeout(async () => {
+            // Abort if a new game started while this timer was pending
+            if (this._gameGeneration !== myGen) return;
+
             // Ensure autoplay AI exists for human players with autoplay enabled
             if (!player.isBot && autoplayPlayers.has(player.id) && !playerAIs.has(player.id)) {
-
                 playerAIs.set(player.id, createAI('autoplay', this.game, player.id));
             }
 
@@ -291,6 +298,7 @@ export class GameEventManager {
             if (playerAI) {
                 await playerAI.takeTurn(effectiveSpeed);
             }
+            if (this._gameGeneration !== myGen) return;
             this.game.endTurn();
         }, delay + revealWait);
     }
@@ -1288,6 +1296,9 @@ export class GameEventManager {
     }
 
     handleGameStart() {
+        // Invalidate any pending bot-turn callbacks from the previous game
+        this._gameGeneration++;
+
         // Reset per-session HUD preferences
         this.diceHUD?.resetSession();
 

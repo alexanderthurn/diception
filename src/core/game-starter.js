@@ -182,6 +182,7 @@ export class GameStarter {
         this.renderer.setGameSpeed(this.gameSpeed);
 
         this._stopParallelBotTimers();
+        this.effectsManager.cancelAll();
 
         this.effectsManager.setQuality(config.effectsQuality);
         this.renderer.setEffectsQuality(config.effectsQuality);

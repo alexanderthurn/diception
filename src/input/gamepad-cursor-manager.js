@@ -1176,12 +1176,14 @@ export class GamepadCursorManager {
             setTimeout(() => {
                 first.focus({ preventScroll: true });
                 first.classList.add('gamepad-focused');
-                // Snap all active dpad gamepad cursors to the focused element
+                // Snap ALL cursors to the focused element, regardless of mode.
+                // moveCursorToElement transitions analog→dpad internally, which may
+                // blur the element — so we re-focus and re-add the class afterwards.
                 for (const [, cursor] of this.cursors) {
-                    if (cursor.mode === 'dpad') {
-                        this.moveCursorToElement(cursor, first);
-                    }
+                    this.moveCursorToElement(cursor, first);
                 }
+                first.focus({ preventScroll: true });
+                first.classList.add('gamepad-focused');
             }, 80);
         };
 

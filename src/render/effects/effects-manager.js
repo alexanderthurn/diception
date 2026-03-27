@@ -69,6 +69,29 @@ export class EffectsManager {
         // so we store the data here and consume it in onAttack.
         this._pendingElimination = null;
 
+        // Tracked setTimeout IDs — cleared by cancelAll() on new game start
+        this._timers = new Set();
+    }
+
+    /** Schedule a cancellable setTimeout. All effects timers go through here. */
+    _setTimeout(fn, delay) {
+        let id;
+        id = setTimeout(() => {
+            this._timers.delete(id);
+            fn();
+        }, delay);
+        this._timers.add(id);
+        return id;
+    }
+
+    /** Cancel all pending effect timers and clear particles. Called on new game start. */
+    cancelAll() {
+        for (const id of this._timers) clearTimeout(id);
+        this._timers.clear();
+        this.particles.clear();
+        this.screenParticles.clear();
+        // Remove any lingering turn-sweep DOM elements
+        document.querySelectorAll('.turn-sweep').forEach(el => el.remove());
     }
 
     bindEvents() {
@@ -358,7 +381,7 @@ export class EffectsManager {
             this.game.players.find(p => p.id === result.attackerId)?.isBot &&
             this.renderer?.gameSpeed === 'expert';
 
-        setTimeout(() => {
+        this._setTimeout(() => {
             if (result.won) {
                 // Victory - green/cyan burst
                 this.particles.emit(to.x, to.y, 'victoryExplosion');
@@ -548,7 +571,7 @@ export class EffectsManager {
         this._revealEndsAt = Date.now() + 50 + totalRevealMs;
 
         // Defer actual animation so renderer.draw() has populated tileCache
-        setTimeout(() => {
+        this._setTimeout(() => {
             // Hide all tiles immediately
             for (const [, tiles] of rowMap) {
                 for (const e of tiles) {
@@ -568,7 +591,7 @@ export class EffectsManager {
 
                 sorted.forEach((e, i) => {
                     const delay = rowStartMs + i * tileGapMs;
-                    setTimeout(() => {
+                    this._setTimeout(() => {
                         const container = grid.tileCache.get(e.idx);
                         if (!container) return;
 
@@ -620,7 +643,7 @@ export class EffectsManager {
             el.className = 'turn-sweep';
             el.style.setProperty('--sweep-color', colorHex);
             document.body.appendChild(el);
-            setTimeout(() => el.remove(), 1500);
+            this._setTimeout(() => el.remove(), 1500);
         }
     }
 
@@ -657,7 +680,7 @@ export class EffectsManager {
         const screenHeight = this.renderer?.app?.screen?.height || (viewport ? viewport.height : document.documentElement.clientHeight);
 
         for (let i = 0; i < burstCount; i++) {
-            setTimeout(() => {
+            this._setTimeout(() => {
                 const x = 100 + Math.random() * (screenWidth - 200);
                 const y = 100 + Math.random() * (screenHeight - 300);
                 this.screenParticles.emit(x, y, winnerFirework);
@@ -667,7 +690,7 @@ export class EffectsManager {
         // Confetti rain
         if (this.quality === 'high') {
             for (let i = 0; i < 50; i++) {
-                setTimeout(() => {
+                this._setTimeout(() => {
                     const x = Math.random() * screenWidth;
                     this.screenParticles.emit(x, -10, 'confetti', { directionX: 0, directionY: 1 });
                 }, i * 80);
@@ -680,7 +703,7 @@ export class EffectsManager {
             const step = Math.max(1, Math.floor(winnerTiles.length / 15));
             winnerTiles.forEach((tile, i) => {
                 if (i % step !== 0) return;
-                setTimeout(() => {
+                this._setTimeout(() => {
                     this.boardEffects.conquestRipple(tile.x, tile.y, winnerColor, 1.5);
                 }, i * 30);
             });
@@ -688,8 +711,8 @@ export class EffectsManager {
 
         // Staggered background pulses
         this.background.pulse(winnerColor, 0.8);
-        setTimeout(() => this.background.pulse(winnerColor, 0.5), 1500);
-        setTimeout(() => this.background.pulse(winnerColor, 0.3), 3000);
+        this._setTimeout(() => this.background.pulse(winnerColor, 0.5), 1500);
+        this._setTimeout(() => this.background.pulse(winnerColor, 0.3), 3000);
     }
 
     /**
@@ -726,7 +749,7 @@ export class EffectsManager {
         const burstCount  = this.quality === 'high' ? 22 : 10;
 
         for (let i = 0; i < burstCount; i++) {
-            setTimeout(() => {
+            this._setTimeout(() => {
                 const x = 80 + Math.random() * (screenWidth  - 160);
                 const y = 80 + Math.random() * (screenHeight - 200);
                 this.screenParticles.emit(x, y, campaignFirework);
@@ -736,7 +759,7 @@ export class EffectsManager {
         // Dense confetti
         const confettiCount = this.quality === 'high' ? 80 : 40;
         for (let i = 0; i < confettiCount; i++) {
-            setTimeout(() => {
+            this._setTimeout(() => {
                 const x = Math.random() * screenWidth;
                 this.screenParticles.emit(x, -10, 'confetti', { directionX: 0, directionY: 1 });
             }, i * 50);
@@ -745,7 +768,7 @@ export class EffectsManager {
         // Rapid background pulses
         const pulseColors = [winnerColor, 0xFFD700, winnerColor, 0xffffff];
         pulseColors.forEach((c, i) => {
-            setTimeout(() => this.background.pulse(c, 1.0 - i * 0.15), i * 700);
+            this._setTimeout(() => this.background.pulse(c, 1.0 - i * 0.15), i * 700);
         });
     }
 
@@ -782,7 +805,7 @@ export class EffectsManager {
         const maxSparks   = Math.min(data.placements.length, 12); // cap for perf
 
         for (let i = 0; i < maxSparks; i++) {
-            setTimeout(() => {
+            this._setTimeout(() => {
                 if (this.quality !== 'high') return;
                 const tile = data.placements[i];
                 const pos  = this.tileToWorld(tile.x, tile.y);
