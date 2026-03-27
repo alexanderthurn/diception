@@ -761,6 +761,7 @@ async function init() {
         };
 
         setUnlockCallback((id) => {
+            if (!isFullVersion()) return;
             toastQueue.push({ id, name: getFriendlyName(id) });
             if (!toastActive) showNext();
         });
@@ -782,6 +783,7 @@ async function init() {
         };
 
         setProgressCallback((stat, newValue) => {
+            if (!isFullVersion()) return;
             if (stat === 'gamesPlayed') return;
             sfxManager.achievementProgress(PROGRESS_PITCH[stat] ?? 1.0);
 
