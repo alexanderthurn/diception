@@ -395,7 +395,7 @@ body.loading-active #ui-overlay {
     box-sizing: border-box;
     z-index: 100;
     padding: 0 16px;
-    background: rgba(0, 0, 0, 0.0);
+    background: #000;
     border: 1px solid var(--accent-color);
     border-radius: 0;
     font-family: inherit;
@@ -405,8 +405,6 @@ body.loading-active #ui-overlay {
     box-shadow: var(--panel-glow);
     /* Make it transparent to clicks so it doesn't block territories */
     pointer-events: none;
-    /* Optional: backdrop-filter for better readability */
-    backdrop-filter: blur(4px);
     transition: opacity 0.3s ease;
 }
 
