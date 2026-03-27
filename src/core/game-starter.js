@@ -3,6 +3,42 @@ import { Dialog } from '../ui/dialog.js';
 import { isFullVersion } from '../scenarios/user-identity.js';
 
 /**
+ * After shuffle, pick the starting player index based on bot difficulty.
+ * Easy  → a human goes first (random among humans if multiple).
+ * Medium → unchanged (random from shuffle).
+ * Hard  → the bot right after a human in circular order goes first,
+ *          so the human plays last in the first round.
+ * Returns null if no adjustment is needed (all-human, all-bot, or medium).
+ * @param {any[]} players - shuffled player array from game.players
+ * @param {string} botAI
+ * @returns {number|null}
+ */
+function resolveStartingPlayerByDifficulty(players, botAI) {
+    const hasHumans = players.some(p => !p.isBot);
+    const hasBots   = players.some(p =>  p.isBot);
+    if (!hasHumans || !hasBots) return null; // pure human or pure bot game
+
+    if (botAI === 'easy') {
+        const humanIndices = players.map((p, i) => !p.isBot ? i : -1).filter(i => i >= 0);
+        return humanIndices[Math.floor(Math.random() * humanIndices.length)];
+    }
+
+    if (botAI === 'hard') {
+        const n = players.length;
+        const humanIndices = players.map((p, i) => !p.isBot ? i : -1).filter(i => i >= 0);
+        // Pick any human; find the nearest bot right after that human in circular order.
+        // That bot starts → all remaining bots play → then human plays last.
+        const humanIdx = humanIndices[Math.floor(Math.random() * humanIndices.length)];
+        for (let offset = 1; offset < n; offset++) {
+            const idx = (humanIdx + offset) % n;
+            if (players[idx].isBot) return idx;
+        }
+    }
+
+    return null; // medium: keep shuffle result
+}
+
+/**
  * Attacks per turn + wall-clock seconds from level data and/or UI config.
  * Legacy `turnTimeLimit` in scenarios: 10/15/30/60 → seconds; 0/1/3/5 → attacks.
  */
@@ -341,6 +377,7 @@ export class GameStarter {
                 attacksPerTurn: config.attacksPerTurn ?? 0,
                 secondsPerTurn: config.secondsPerTurn ?? 0,
                 secondsPerAttack: config.secondsPerAttack ?? 0,
+                resolveStartingPlayer: (players) => resolveStartingPlayerByDifficulty(players, config.botAI),
             };
             this.attacksPerTurn = gameConfig.attacksPerTurn;
             this.secondsPerTurn = gameConfig.secondsPerTurn;

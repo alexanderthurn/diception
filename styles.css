@@ -2516,6 +2516,13 @@ select {
     transform: translateY(-50%);
 }
 
+.modal-reset-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 .global-back-btn {
     /* Flows inside #music-controls flex by default (gear/game-running case).
      * Pulled out to fixed position when showing the X icon (modal-close case). */

@@ -9,7 +9,6 @@ import {
     syncModsFieldHighlightsForPrefix,
     applyModsDefaultsForPrefix,
     setModsPanelUiOpen,
-    applyModsToolbarLayout,
     SETUP_DEFAULTS,
 } from './mods-panel-helpers.js';
 
@@ -216,8 +215,10 @@ export class ConfigManager {
         setModsPanelUiOpen(open, 'setup-mods-panel', 'setup-mods-toggle');
     }
 
-    _applySetupModsToolbar(nonDefault) {
-        applyModsToolbarLayout(nonDefault, 'setup-mods-reset', 'setup-mods-toggle');
+    /** Show/hide the header reset button based on whether ANY setting differs from defaults. */
+    syncSetupResetBtn() {
+        const resetBtn = document.getElementById('setup-reset-all-btn');
+        if (resetBtn) resetBtn.classList.toggle('hidden', this.isSetupAtFreeDefaults());
     }
 
     /** Highlight each Mods control that differs from SETUP_MOD_DEFAULTS. */
@@ -233,24 +234,23 @@ export class ConfigManager {
         this._setSetupModsPanelOpen(!isOpen);
     }
 
-    /** Open Mods + badge when any mod differs; collapsed when all default (initial load). */
+    /** Sync badge + reset btn on initial load; panel always starts collapsed. */
     syncSetupModsExpanderFromStorage() {
         const badge = document.getElementById('setup-mods-active-badge');
         const nonDefault = !this.areModsAtDefaults();
         if (badge) badge.classList.toggle('hidden', !nonDefault);
-        this._applySetupModsToolbar(nonDefault);
         this.syncSetupModsFieldHighlights();
-        this._setSetupModsPanelOpen(nonDefault);
+        this.syncSetupResetBtn();
+        this._setSetupModsPanelOpen(false);
     }
 
-    /** After user tweaks a mod: keep badge accurate and expand if they left defaults. */
+    /** After user tweaks a mod: keep badge + reset btn accurate. Panel stays as-is. */
     syncSetupModsExpanderLive() {
         const badge = document.getElementById('setup-mods-active-badge');
         const nonDefault = !this.areModsAtDefaults();
         if (badge) badge.classList.toggle('hidden', !nonDefault);
-        this._applySetupModsToolbar(nonDefault);
         this.syncSetupModsFieldHighlights();
-        if (nonDefault) this._setSetupModsPanelOpen(true);
+        this.syncSetupResetBtn();
     }
 
     /** Reset all Mods (not map size, humans, bots, bot AI, or game speed). */

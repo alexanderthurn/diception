@@ -135,6 +135,13 @@ export class Game {
             this.currentPlayerIndex = 0;
         }
 
+        if (typeof config.resolveStartingPlayer === 'function') {
+            const idx = config.resolveStartingPlayer(this.players);
+            if (idx != null && idx >= 0 && idx < this.players.length) {
+                this.currentPlayerIndex = idx;
+            }
+        }
+
         // Generate map with the specified style
         if (config.predefinedMap) {
             this.map.generateMap(config.mapWidth, config.mapHeight, this.players, this.maxDice, 'preset', config.predefinedMap.tiles, rng);

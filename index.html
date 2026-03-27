@@ -255,6 +255,8 @@
                 <h2 class="tron-title small">CUSTOM GAME</h2>
                 <button class="close-btn modal-close-btn" aria-label="Back"
                     onclick="document.getElementById('global-back-btn').click()">×</button>
+                <button class="close-btn modal-reset-btn hidden" id="setup-reset-all-btn"
+                    aria-label="Reset all settings to defaults" title="Reset all settings to defaults">↺</button>
             </div>
             <div class="control-group" id="setup-map-size-group">
                 <label>Map Size</label>
@@ -322,9 +324,6 @@
                     <span class="setup-mods-toggle-label">Mods</span>
                     <span class="setup-mods-active-badge hidden" id="setup-mods-active-badge">On</span>
                 </button>
-                <button type="button" id="setup-mods-reset"
-                    class="tron-btn small setup-mods-reset hidden"
-                    title="Reset all Mods to defaults">Reset Mods</button>
             </div>
 
             <div id="setup-mods-panel" class="setup-mods-panel hidden" data-setup-mods-panel></div>

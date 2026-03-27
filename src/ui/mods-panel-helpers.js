@@ -9,7 +9,7 @@
  */
 export const SETUP_DEFAULTS = {
     // Basic fields
-    mapSize:      '2',
+    mapSize:      '3',
     humanCount:   '1',
     botCount:     '2',
     botAI:        'easy',

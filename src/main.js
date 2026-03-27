@@ -659,16 +659,19 @@ async function init() {
     };
     syncBasicFieldHighlights();
     updateStartBtnModsLock();
+    configManager.syncSetupResetBtn();
 
     configManager.setupInputListeners(effectsManager, renderer, () => {
         syncBasicFieldHighlights();
         updateStartBtnModsLock();
+        configManager.syncSetupResetBtn();
     });
     document.getElementById('setup-mods-toggle')?.addEventListener('click', () => {
         configManager.toggleSetupModsPanel();
     });
-    document.getElementById('setup-mods-reset')?.addEventListener('click', () => {
-        configManager.resetModsToDefaults();
+    document.getElementById('setup-reset-all-btn')?.addEventListener('click', () => {
+        configManager.resetToFreeDefaults();
+        syncBasicFieldHighlights();
         updateStartBtnModsLock();
         renderGamepadAssignments();
     });
