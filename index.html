@@ -165,12 +165,23 @@
                 </div>
 
                 <div class="control-row">
-                    <div class="control-group" data-mods-group="setup-play-mode-group">
+                    <div class="control-group half" data-mods-group="setup-play-mode-group">
                         <label>Play Mode</label>
                         <select data-mods-el="play-mode">
-                            <option value="classic" selected>Classic — One at a time</option>
-                            <option value="parallel">Parallel — Everyone anytime</option>
-                            <option value="parallel-s">Parallel S — Active player is safe</option>
+                            <option value="classic" selected>Classic</option>
+                            <option value="parallel">Parallel</option>
+                            <option value="parallel-s">Parallel S</option>
+                        </select>
+                    </div>
+                    <div class="control-group half" data-mods-group="setup-full-board-rule-group">
+                        <label>End Game</label>
+                        <select data-mods-el="full-board-rule">
+                            <option value="nothing" selected>Default</option>
+                            <option value="most_territories">Territories</option>
+                            <option value="biggest_territory">Largest region</option>
+                            <option value="random_picker">Random tile</option>
+                            <option value="raise_max_dice">Max dice +2</option>
+                            <option value="autoplay_humans">Autoplay</option>
                         </select>
                     </div>
                 </div>
@@ -205,7 +216,7 @@
                 </div>
 
                 <div class="control-row">
-                    <div class="control-group quarter" data-mods-group="setup-attacks-limit-group">
+                    <div class="control-group third" data-mods-group="setup-attacks-limit-group">
                         <label>Attacks</label>
                         <select data-mods-el="turn-time-limit">
                             <option value="0" selected>∞ Unlimited</option>
@@ -214,7 +225,7 @@
                             <option value="5">5 / turn</option>
                         </select>
                     </div>
-                    <div class="control-group quarter" data-mods-group="setup-turn-seconds-group">
+                    <div class="control-group third" data-mods-group="setup-turn-seconds-group">
                         <label>Turn time</label>
                         <select data-mods-el="turn-seconds-limit">
                             <option value="0" selected>∞ Unlimited</option>
@@ -224,7 +235,7 @@
                             <option value="60">60s</option>
                         </select>
                     </div>
-                    <div class="control-group quarter" data-mods-group="setup-attack-seconds-group">
+                    <div class="control-group third" data-mods-group="setup-attack-seconds-group">
                         <label>Attack time</label>
                         <select data-mods-el="attack-seconds-limit">
                             <option value="0" selected>∞ Unlimited</option>
@@ -235,17 +246,6 @@
                         </select>
                     </div>
 
-                    <div class="control-group quarter" data-mods-group="setup-full-board-rule-group">
-                        <label>End Game</label>
-                        <select data-mods-el="full-board-rule">
-                            <option value="nothing" selected>Default</option>
-                            <option value="most_territories">Territories</option>
-                            <option value="biggest_territory">Largest region</option>
-                            <option value="random_picker">Random tile</option>
-                            <option value="raise_max_dice">Max dice +2</option>
-                            <option value="autoplay_humans">Autoplay</option>
-                        </select>
-                    </div>
                 </div>
             </div>
         </template>
@@ -349,7 +349,7 @@
                 <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span> Campaign</button>
                 <button id="main-settings-btn" class="tron-btn large"><span class="sprite-icon icon-settings"></span> Settings</button>
                 <div class="main-nav-row">
-                    <button id="main-icons-achievements-btn" class="tron-btn large" style="flex:2"><span class="sprite-icon icon-achievements"></span> <span class="btn-label">Achievements</span></button>
+                    <button id="main-icons-achievements-btn" class="tron-btn large"><span class="sprite-icon icon-achievements"></span> <span class="btn-label">Achievements</span></button>
                     <button id="main-icons-editor-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span> <span class="btn-label">Editor</span></button>
                 </div>
                 <div class="main-nav-row">
@@ -636,6 +636,36 @@
                             </tbody>
                         </table>
                     </div>
+                </section>
+
+                <section>
+                    <h3>CUSTOM GAME OPTIONS</h3>
+                    <ul class="howto-list">
+                        <li><strong>Play Mode</strong>
+                            <ul class="howto-list">
+                                <li><strong>Classic</strong> — Players take turns one at a time. Only the active player can attack.</li>
+                                <li><strong>Parallel</strong> — Every player (human and bot) can attack at any time simultaneously.</li>
+                                <li><strong>Parallel S</strong> — Like Parallel, but the currently active player is safe from bot attacks.</li>
+                            </ul>
+                        </li>
+                        <li><strong>End Game</strong> — What happens when the board is completely filled by a single player:
+                            <ul class="howto-list">
+                                <li><strong>Default</strong> — That player wins immediately.</li>
+                                <li><strong>Territories</strong> — The player with the most territories wins instead.</li>
+                                <li><strong>Largest Region</strong> — The player with the biggest single connected region wins.</li>
+                                <li><strong>Random Tile</strong> — A random tile is picked; its owner wins.</li>
+                                <li><strong>Max Dice +2</strong> — The conquering player's max dice cap is raised by 2 and the game continues.</li>
+                                <li><strong>Autoplay</strong> — Human players are switched to autoplay and the game finishes automatically.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Attacks</strong> — Limits how many attacks a player can make per turn. Unlimited by default.</li>
+                        <li><strong>Turn Time</strong> — Time limit in seconds for an entire turn. Unlimited by default.</li>
+                        <li><strong>Attack Time</strong> — Time limit in seconds for each individual attack. Unlimited by default.</li>
+                        <li><strong>Max Dice per Territory</strong> — The maximum number of dice that can stack on a single tile.</li>
+                        <li><strong>Dice Sides</strong> — Sides per die. Higher sides increase variance; D1 makes all dice equal.</li>
+                        <li><strong>Map Style</strong> — Shape of the generated map (Full, Balanced, Islands, etc.).</li>
+                        <li><strong>Game Mode</strong> — Variant rules for how the map is populated at game start.</li>
+                    </ul>
                 </section>
 
             </div>

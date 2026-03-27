@@ -38,7 +38,18 @@ export class Dialog {
 
             // Header with optional close button
             const header = document.createElement('div');
-            header.className = 'dialog-header' + (closeButton ? ' dialog-header-with-close' : '');
+            header.className = 'dialog-header' + (closeButton ? ' dialog-header-with-close dialog-header-close-left' : '');
+            if (closeButton) {
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'dialog-close-btn';
+                closeBtn.textContent = '×';
+                closeBtn.setAttribute('aria-label', 'Close');
+                closeBtn.addEventListener('click', () => {
+                    this.close(overlay);
+                    resolve('close');
+                });
+                header.appendChild(closeBtn);
+            }
             const titleEl = document.createElement('h1');
             titleEl.className = 'tron-title small';
             [...title].forEach((char, i) => {
@@ -48,17 +59,6 @@ export class Dialog {
                 titleEl.appendChild(span);
             });
             header.appendChild(titleEl);
-            if (closeButton) {
-                const closeBtn = document.createElement('button');
-                closeBtn.className = 'dialog-close-btn';
-                closeBtn.innerHTML = '<span class="sprite-icon icon-close"></span>';
-                closeBtn.setAttribute('aria-label', 'Close');
-                closeBtn.addEventListener('click', () => {
-                    this.close(overlay);
-                    resolve('close');
-                });
-                header.appendChild(closeBtn);
-            }
             dialog.appendChild(header);
 
             // Body
@@ -165,9 +165,9 @@ export class Dialog {
         return this.show({
             title: 'FULL VERSION',
             content,
+            closeButton: true,
             buttons: [
                 { text: 'GET ON STEAM', value: 'steam', className: 'tron-btn' },
-                { text: 'CLOSE', value: 'close', className: 'tron-btn small' },
             ],
         }).then(val => { if (val === 'steam') window.open(STEAM_URL, '_blank'); });
     }

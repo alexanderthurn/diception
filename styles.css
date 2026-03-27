@@ -6516,6 +6516,10 @@ canvas {
 
 .main-nav-row .tron-btn {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 #main-quit-btn {
@@ -7232,18 +7236,13 @@ details.settings-group[open]>summary.settings-group-header::after {
 /* ── Locked feature buttons (non-full version) ── */
 
 .tron-btn.btn-locked {
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: #fff;
     color: rgba(255, 255, 255, 1);
-    box-shadow: none;
-    text-shadow: none;
     cursor: pointer;
 }
 
-
 .tron-btn.btn-locked:hover {
-    border-color: rgba(255, 255, 255, 0.30);
     color: rgba(255, 255, 255, 0.40);
-    box-shadow: none;
 }
 
 .tron-btn.btn-locked:active {
@@ -7643,4 +7642,21 @@ input[type="range"].gamepad-slider-editing {
 @keyframes turn-sweep-move {
     from { transform: translateX(200%); }
     to   { transform: translateX(-150%); }
+}
+
+
+/* On phones: shrink main-nav-row font so long labels like "Achievements" fit at 50% */
+@media (max-width: 599px) {
+    .main-nav-row .tron-btn {
+        font-size: 0.85em;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+
+/* On tablets and desktop: give the main menu more room so nav-row buttons are comfortably 50% */
+@media (min-width: 600px) {
+    #main-menu {
+        width: 480px;
+    }
 }
