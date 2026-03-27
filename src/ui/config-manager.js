@@ -10,9 +10,10 @@ import {
     applyModsDefaultsForPrefix,
     setModsPanelUiOpen,
     applyModsToolbarLayout,
+    SETUP_DEFAULTS,
 } from './mods-panel-helpers.js';
 
-export { SETUP_MOD_DEFAULTS } from './mods-panel-helpers.js';
+export { SETUP_MOD_DEFAULTS, SETUP_DEFAULTS } from './mods-panel-helpers.js';
 
 /** One-time split of legacy `dicy_turnTimeLimit` into attacks vs clock. */
 function migrateTurnLimitStorage() {
@@ -106,7 +107,8 @@ export class ConfigManager {
         const savedMapSizeRaw = localStorage.getItem('dicy_mapSize');
         let savedMapSizeString;
         if (!savedMapSizeRaw) {
-            savedMapSizeString = '4x4'; // New default
+            const p = this.mapSizePresets[Number(SETUP_DEFAULTS.mapSize) - 1];
+            savedMapSizeString = `${p.width}x${p.height}`;
         } else if (savedMapSizeRaw.includes('x')) {
             savedMapSizeString = savedMapSizeRaw;
         } else {
@@ -122,10 +124,10 @@ export class ConfigManager {
         const sliderValue = presetIndex !== -1 ? presetIndex + 1 : 2; // Default to 4x4
 
         // Load other settings with defaults
-        const savedHumanCount = localStorage.getItem('dicy_humanCount') || '1';
-        const savedBotCount = localStorage.getItem('dicy_botCount') || '3';
-        const savedMaxDice = localStorage.getItem('dicy_maxDice') || '8';
-        const savedDiceSides = localStorage.getItem('dicy_diceSides') || '6';
+        const savedHumanCount = localStorage.getItem('dicy_humanCount') || SETUP_DEFAULTS.humanCount;
+        const savedBotCount   = localStorage.getItem('dicy_botCount')   || SETUP_DEFAULTS.botCount;
+        const savedMaxDice    = localStorage.getItem('dicy_maxDice')    || SETUP_DEFAULTS.maxDice;
+        const savedDiceSides  = localStorage.getItem('dicy_diceSides')  || SETUP_DEFAULTS.diceSides;
 
         // Map legacy fastMode to new speeds
         const legacyFastMode = localStorage.getItem('dicy_fastMode');
@@ -134,21 +136,21 @@ export class ConfigManager {
         else if (legacyFastMode === 'false') defaultSpeed = 'beginner';
         const savedGameSpeed = localStorage.getItem('dicy_gameSpeed') || defaultSpeed;
 
-        const savedMapStyle = localStorage.getItem('dicy_mapStyle') || 'full';
-        const savedGameMode = localStorage.getItem('dicy_gameMode') || 'classic';
-        const savedPlayMode = localStorage.getItem('dicy_playMode') || 'classic';
-        const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || '100';
+        const savedMapStyle       = localStorage.getItem('dicy_mapStyle')        || SETUP_DEFAULTS.mapStyle;
+        const savedGameMode       = localStorage.getItem('dicy_gameMode')        || SETUP_DEFAULTS.gameMode;
+        const savedPlayMode       = localStorage.getItem('dicy_playMode')        || SETUP_DEFAULTS.playMode;
+        const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || SETUP_DEFAULTS.tournamentGames;
         migrateTurnLimitStorage();
-        const savedAttacksPerTurn = localStorage.getItem('dicy_attacksPerTurn') || '0';
-        const savedSecondsPerTurn = localStorage.getItem('dicy_secondsPerTurn') || '0';
-        let savedSecondsPerAttack = localStorage.getItem('dicy_secondsPerAttack') || '0';
+        const savedAttacksPerTurn = localStorage.getItem('dicy_attacksPerTurn') || SETUP_DEFAULTS.attacksPerTurn;
+        const savedSecondsPerTurn = localStorage.getItem('dicy_secondsPerTurn') || SETUP_DEFAULTS.secondsPerTurn;
+        let savedSecondsPerAttack = localStorage.getItem('dicy_secondsPerAttack') || SETUP_DEFAULTS.secondsPerAttack;
         const normSecondsPerAttack = normalizeAttackSecondsUi(savedSecondsPerAttack);
         if (normSecondsPerAttack !== savedSecondsPerAttack) {
             savedSecondsPerAttack = normSecondsPerAttack;
             localStorage.setItem('dicy_secondsPerAttack', normSecondsPerAttack);
         }
 
-        const savedFullBoardRule = localStorage.getItem('dicy_fullBoardRule') || 'nothing';
+        const savedFullBoardRule = localStorage.getItem('dicy_fullBoardRule') || SETUP_DEFAULTS.fullBoardRule;
 
         // Load effects quality
         let savedEffectsQuality = localStorage.getItem('effectsQuality') || 'high';
@@ -203,10 +205,10 @@ export class ConfigManager {
         if (!this.areModsAtDefaults()) return false;
         const el = this.elements;
         return (
-            String(el.mapSizeInput?.value)  === '2'    &&
-            String(el.humanCountInput?.value) === '1'  &&
-            String(el.botCountInput?.value)   === '3'  &&
-            (el.botAISelect?.value || 'easy') === 'easy'
+            String(el.mapSizeInput?.value)    === SETUP_DEFAULTS.mapSize     &&
+            String(el.humanCountInput?.value) === SETUP_DEFAULTS.humanCount  &&
+            String(el.botCountInput?.value)   === SETUP_DEFAULTS.botCount    &&
+            (el.botAISelect?.value || SETUP_DEFAULTS.botAI) === SETUP_DEFAULTS.botAI
         );
     }
 
@@ -261,14 +263,15 @@ export class ConfigManager {
     resetToFreeDefaults() {
         applyModsDefaultsForPrefix('');
         const el = this.elements;
-        if (el.mapSizeInput)    { el.mapSizeInput.value = '2'; this.updateMapSizeDisplay(); }
-        if (el.humanCountInput) { el.humanCountInput.value = '1'; }
-        if (el.botCountInput)   { el.botCountInput.value = '3'; }
-        if (el.botAISelect)     { el.botAISelect.value = 'easy'; this.selectedBotAI = 'easy'; }
-        localStorage.setItem('dicy_mapSize', '4x4');
-        localStorage.setItem('dicy_humanCount', '1');
-        localStorage.setItem('dicy_botCount', '3');
-        localStorage.setItem('dicy_botAI', 'easy');
+        if (el.mapSizeInput)    { el.mapSizeInput.value = SETUP_DEFAULTS.mapSize; this.updateMapSizeDisplay(); }
+        if (el.humanCountInput) { el.humanCountInput.value = SETUP_DEFAULTS.humanCount; }
+        if (el.botCountInput)   { el.botCountInput.value = SETUP_DEFAULTS.botCount; }
+        if (el.botAISelect)     { el.botAISelect.value = SETUP_DEFAULTS.botAI; this.selectedBotAI = SETUP_DEFAULTS.botAI; }
+        const mapPreset = this.mapSizePresets[Number(SETUP_DEFAULTS.mapSize) - 1];
+        localStorage.setItem('dicy_mapSize', `${mapPreset.width}x${mapPreset.height}`);
+        localStorage.setItem('dicy_humanCount', SETUP_DEFAULTS.humanCount);
+        localStorage.setItem('dicy_botCount', SETUP_DEFAULTS.botCount);
+        localStorage.setItem('dicy_botAI', SETUP_DEFAULTS.botAI);
         this.syncSetupModsExpanderFromStorage();
     }
 

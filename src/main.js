@@ -23,7 +23,7 @@ import { Dialog } from './ui/dialog.js';
 import { ProbabilityCalculator } from './ui/probability-calculator.js';
 
 // New modular components
-import { ConfigManager } from './ui/config-manager.js';
+import { ConfigManager, SETUP_DEFAULTS } from './ui/config-manager.js';
 import { mountSharedModsFields } from './ui/shared-mods-fields.js';
 import { GAME } from './core/constants.js';
 import { SessionManager } from './core/session-manager.js';
@@ -633,27 +633,14 @@ async function init() {
     sessionManager.setConfigManager(configManager);
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
-    const BASIC_DEFAULTS = { mapSize: '2', humans: '1', bots: '3', botAI: 'easy' };
-
     const syncBasicFieldHighlights = () => {
         if (isFullVersion()) return;
-        const mapSizeEl   = document.getElementById('map-size');
-        const humansEl    = document.getElementById('human-count');
-        const botsEl      = document.getElementById('bot-count');
-        const botAIEl     = document.getElementById('bot-ai-select');
         const toggle = (groupId, differs) =>
             document.getElementById(groupId)?.classList.toggle('setup-mod-nondefault', differs);
-        toggle('setup-map-size-group', mapSizeEl?.value !== BASIC_DEFAULTS.mapSize);
-        toggle('setup-humans-group',   humansEl?.value  !== BASIC_DEFAULTS.humans);
-        toggle('setup-bots-group',     botsEl?.value    !== BASIC_DEFAULTS.bots);
-        toggle('setup-bot-ai-group',   botAIEl?.value   !== BASIC_DEFAULTS.botAI);
-    };
-
-    const areBasicFieldsAtDefaults = () => {
-        return document.getElementById('map-size')?.value      === BASIC_DEFAULTS.mapSize &&
-               document.getElementById('human-count')?.value  === BASIC_DEFAULTS.humans &&
-               document.getElementById('bot-count')?.value    === BASIC_DEFAULTS.bots &&
-               document.getElementById('bot-ai-select')?.value === BASIC_DEFAULTS.botAI;
+        toggle('setup-map-size-group', document.getElementById('map-size')?.value       !== SETUP_DEFAULTS.mapSize);
+        toggle('setup-humans-group',   document.getElementById('human-count')?.value    !== SETUP_DEFAULTS.humanCount);
+        toggle('setup-bots-group',     document.getElementById('bot-count')?.value      !== SETUP_DEFAULTS.botCount);
+        toggle('setup-bot-ai-group',   document.getElementById('bot-ai-select')?.value  !== SETUP_DEFAULTS.botAI);
     };
 
     const startBtn = document.getElementById('start-game-btn');

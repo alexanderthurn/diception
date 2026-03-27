@@ -2,18 +2,42 @@
  * Shared logic for Custom Game and Editor "Mods" panels (same field set, optional id prefix).
  */
 
-/** Defaults for Mods panel — reset restores these (setup + editor). */
-export const SETUP_MOD_DEFAULTS = {
-    mapStyle: 'full',
-    gameMode: 'classic',
-    maxDice: '8',
-    diceSides: '6',
+/**
+ * Single source of truth for all Custom Game defaults.
+ * Basic fields (map size, players) and Mods fields live here.
+ * mapSize is the slider value (2 = 4x4).
+ */
+export const SETUP_DEFAULTS = {
+    // Basic fields
+    mapSize:      '2',
+    humanCount:   '1',
+    botCount:     '2',
+    botAI:        'easy',
+    // Mods fields
+    mapStyle:       'random',
+    gameMode:       'classic',
+    maxDice:        '8',
+    diceSides:      '6',
     attacksPerTurn: '0',
     secondsPerTurn: '0',
     secondsPerAttack: '0',
-    fullBoardRule: 'nothing',
+    fullBoardRule:  'nothing',
     tournamentGames: '100',
-    playMode: 'classic',
+    playMode:       'classic',
+};
+
+/** Alias for the mods subset — used by reset/highlight helpers. */
+export const SETUP_MOD_DEFAULTS = {
+    mapStyle:       SETUP_DEFAULTS.mapStyle,
+    gameMode:       SETUP_DEFAULTS.gameMode,
+    maxDice:        SETUP_DEFAULTS.maxDice,
+    diceSides:      SETUP_DEFAULTS.diceSides,
+    attacksPerTurn: SETUP_DEFAULTS.attacksPerTurn,
+    secondsPerTurn: SETUP_DEFAULTS.secondsPerTurn,
+    secondsPerAttack: SETUP_DEFAULTS.secondsPerAttack,
+    fullBoardRule:  SETUP_DEFAULTS.fullBoardRule,
+    tournamentGames: SETUP_DEFAULTS.tournamentGames,
+    playMode:       SETUP_DEFAULTS.playMode,
 };
 
 const ATTACK_SECONDS_UI_ALLOWED = ['0', '5', '10', '15', '30'];
