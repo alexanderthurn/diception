@@ -208,7 +208,7 @@ async function init() {
         }
     }
 
-    // Credits line: "Hi, name" on Steam, "Full Version" or "Free Version" elsewhere
+    // Credits line: "Hi, name" on Steam, "by Alexander Thurn" or "Demo Version" elsewhere
     if (window.steam) {
         window.steam.getUserName().then(name => {
             console.log('Steam User:', name);
@@ -216,9 +216,11 @@ async function init() {
             if (el) el.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">Hi, ${name}</span>`;
         });
     } else {
-        const versionLabel = isFullVersion() ? 'by Alexander Thurn' : 'Free Version';
+        const versionLabel = isFullVersion() ? 'by Alexander Thurn' : 'Demo Version';
         const el = document.getElementById('main-menu-credits');
         if (el) el.textContent = versionLabel;
+        const loadingCredits = document.querySelector('#loading-screen .credits');
+        if (loadingCredits && !isFullVersion()) loadingCredits.textContent = 'Demo Version';
     }
 
     // Initialize Input System (create before renderer needs it)
@@ -631,23 +633,50 @@ async function init() {
     sessionManager.setConfigManager(configManager);
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
+    const BASIC_DEFAULTS = { mapSize: '2', humans: '1', bots: '3', botAI: 'easy' };
+
+    const syncBasicFieldHighlights = () => {
+        if (isFullVersion()) return;
+        const mapSizeEl   = document.getElementById('map-size');
+        const humansEl    = document.getElementById('human-count');
+        const botsEl      = document.getElementById('bot-count');
+        const botAIEl     = document.getElementById('bot-ai-select');
+        const toggle = (groupId, differs) =>
+            document.getElementById(groupId)?.classList.toggle('setup-mod-nondefault', differs);
+        toggle('setup-map-size-group', mapSizeEl?.value !== BASIC_DEFAULTS.mapSize);
+        toggle('setup-humans-group',   humansEl?.value  !== BASIC_DEFAULTS.humans);
+        toggle('setup-bots-group',     botsEl?.value    !== BASIC_DEFAULTS.bots);
+        toggle('setup-bot-ai-group',   botAIEl?.value   !== BASIC_DEFAULTS.botAI);
+    };
+
+    const areBasicFieldsAtDefaults = () => {
+        return document.getElementById('map-size')?.value      === BASIC_DEFAULTS.mapSize &&
+               document.getElementById('human-count')?.value  === BASIC_DEFAULTS.humans &&
+               document.getElementById('bot-count')?.value    === BASIC_DEFAULTS.bots &&
+               document.getElementById('bot-ai-select')?.value === BASIC_DEFAULTS.botAI;
+    };
+
     const startBtn = document.getElementById('start-game-btn');
     const updateStartBtnModsLock = () => {
         if (!startBtn || isFullVersion()) return;
-        const modsActive = !configManager.areModsAtDefaults();
-        startBtn.classList.toggle('btn-locked', modsActive);
+        const locked = !configManager.isSetupAtFreeDefaults();
+        startBtn.classList.toggle('btn-locked', locked);
         const existingIcon = startBtn.querySelector('.sprite-icon');
-        if (modsActive && !existingIcon) {
+        if (locked && !existingIcon) {
             const icon = document.createElement('span');
             icon.className = 'sprite-icon icon-lock';
             startBtn.prepend(icon);
-        } else if (!modsActive && existingIcon) {
+        } else if (!locked && existingIcon) {
             existingIcon.remove();
         }
     };
+    syncBasicFieldHighlights();
     updateStartBtnModsLock();
 
-    configManager.setupInputListeners(effectsManager, renderer, updateStartBtnModsLock);
+    configManager.setupInputListeners(effectsManager, renderer, () => {
+        syncBasicFieldHighlights();
+        updateStartBtnModsLock();
+    });
     document.getElementById('setup-mods-toggle')?.addEventListener('click', () => {
         configManager.toggleSetupModsPanel();
     });
@@ -661,6 +690,10 @@ async function init() {
         game, renderer, effectsManager, turnHistory,
         configManager, scenarioBrowser, scenarioManager
     );
+    gameStarter._onFreeVersionBlock = () => {
+        syncBasicFieldHighlights();
+        updateStartBtnModsLock();
+    };
     gameStarter.setMapEditor(mapEditor);
     scenarioBrowser.setOnStartGame(() => gameStarter.startGame());
     scenarioBrowserOpen = () => scenarioBrowser.open();
@@ -1300,6 +1333,7 @@ async function init() {
 
     // Pause menu save button
     document.getElementById('pause-save-btn')?.addEventListener('click', async () => {
+        if (!isFullVersion()) { showFullVersionOnlyDialog(); return; }
         await openSaveScenarioDialog(gameLog.latestSnapshotIndex);
     });
 }
@@ -1758,12 +1792,13 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     if (!isFullVersion()) {
         const achBtn      = document.getElementById('main-icons-achievements-btn');
         const editorBtn   = document.getElementById('main-icons-editor-btn');
-        const campaignBtn = document.getElementById('main-campaign-btn');
-        [achBtn, editorBtn, campaignBtn].forEach(btn => {
+        const saveBtn     = document.getElementById('pause-save-btn');
+        [achBtn, editorBtn, saveBtn].forEach(btn => {
             if (!btn) return;
             btn.classList.add('btn-locked');
             const icon = btn.querySelector('.sprite-icon');
             if (icon) icon.className = 'sprite-icon icon-lock';
+            else btn.prepend(Object.assign(document.createElement('span'), { className: 'sprite-icon icon-lock' }));
         });
     }
 

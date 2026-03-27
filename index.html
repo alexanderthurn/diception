@@ -256,7 +256,7 @@
                 <button class="close-btn modal-close-btn" aria-label="Back"
                     onclick="document.getElementById('global-back-btn').click()">×</button>
             </div>
-            <div class="control-group">
+            <div class="control-group" id="setup-map-size-group">
                 <label>Map Size</label>
                 <div class="map-size-row">
                     <input type="range" id="map-size" min="1" max="10" value="2">
@@ -265,7 +265,7 @@
             </div>
 
             <div class="control-row">
-                <div class="control-group quarter">
+                <div class="control-group quarter" id="setup-humans-group">
                     <label>Humans</label>
                     <select id="human-count">
                         <option value="0">0</option>
@@ -279,7 +279,7 @@
                         <option value="8">8</option>
                     </select>
                 </div>
-                <div class="control-group quarter">
+                <div class="control-group quarter" id="setup-bots-group">
                     <label>Bots</label>
                     <select id="bot-count">
                         <option value="0">0</option>
@@ -293,7 +293,7 @@
                         <option value="8">8</option>
                     </select>
                 </div>
-                <div class="control-group half">
+                <div class="control-group half" id="setup-bot-ai-group">
                     <label>Bot AI</label>
                     <select id="bot-ai-select">
                         <option value="easy" selected>Easy</option>

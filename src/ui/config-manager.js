@@ -196,6 +196,20 @@ export class ConfigManager {
         return areModsAtDefaultsForPrefix('');
     }
 
+    /**
+     * True when both mods and basic fields (map size, humans, bots, bot AI) are at free-version defaults.
+     */
+    isSetupAtFreeDefaults() {
+        if (!this.areModsAtDefaults()) return false;
+        const el = this.elements;
+        return (
+            String(el.mapSizeInput?.value)  === '2'    &&
+            String(el.humanCountInput?.value) === '1'  &&
+            String(el.botCountInput?.value)   === '3'  &&
+            (el.botAISelect?.value || 'easy') === 'easy'
+        );
+    }
+
     _setSetupModsPanelOpen(open) {
         setModsPanelUiOpen(open, 'setup-mods-panel', 'setup-mods-toggle');
     }
@@ -240,6 +254,21 @@ export class ConfigManager {
     /** Reset all Mods (not map size, humans, bots, bot AI, or game speed). */
     resetModsToDefaults() {
         applyModsDefaultsForPrefix('');
+        this.syncSetupModsExpanderFromStorage();
+    }
+
+    /** Reset mods + basic fields (map size, humans, bots, bot AI) to free-version defaults. */
+    resetToFreeDefaults() {
+        applyModsDefaultsForPrefix('');
+        const el = this.elements;
+        if (el.mapSizeInput)    { el.mapSizeInput.value = '2'; this.updateMapSizeDisplay(); }
+        if (el.humanCountInput) { el.humanCountInput.value = '1'; }
+        if (el.botCountInput)   { el.botCountInput.value = '3'; }
+        if (el.botAISelect)     { el.botAISelect.value = 'easy'; this.selectedBotAI = 'easy'; }
+        localStorage.setItem('dicy_mapSize', '4x4');
+        localStorage.setItem('dicy_humanCount', '1');
+        localStorage.setItem('dicy_botCount', '3');
+        localStorage.setItem('dicy_botAI', 'easy');
         this.syncSetupModsExpanderFromStorage();
     }
 
@@ -319,6 +348,7 @@ export class ConfigManager {
         el.botAISelect.addEventListener('change', () => {
             this.selectedBotAI = el.botAISelect.value;
             localStorage.setItem('dicy_botAI', this.selectedBotAI);
+            handleChange();
         });
 
         if (el.turnTimeLimitInput) {

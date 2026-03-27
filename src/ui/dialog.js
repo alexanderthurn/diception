@@ -145,7 +145,7 @@ export class Dialog {
         const content = document.createElement('div');
         content.className = 'full-version-dialog-body';
         content.innerHTML = `
-            <p class="full-version-intro">You are playing the free version of Diception. Unlock the full experience.</p>
+            <p class="full-version-intro">You are playing the demo version of Diception. Unlock the full experience.</p>
             <a href="${STEAM_URL}" target="_blank" rel="noopener" class="steam-store-link">
                 <img src="assets/icons/steam-logo.png" alt="Steam" class="steam-store-logo">
                 <span>Available on Steam</span>
@@ -163,7 +163,7 @@ export class Dialog {
             window.open(STEAM_URL, '_blank');
         });
         return this.show({
-            title: 'FULL VERSION',
+            title: 'DEMO VERSION',
             content,
             closeButton: true,
             buttons: [

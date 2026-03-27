@@ -139,7 +139,9 @@ export class GameStarter {
      * Start a new game from the setup screen (persists settings).
      */
     startGame() {
-        if (!isFullVersion() && !this.configManager.areModsAtDefaults()) {
+        if (!isFullVersion() && !this.configManager.isSetupAtFreeDefaults()) {
+            this.configManager.resetToFreeDefaults();
+            this._onFreeVersionBlock?.();
             Dialog.showFullVersion();
             return;
         }

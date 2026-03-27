@@ -7234,8 +7234,9 @@ details.settings-group[open]>summary.settings-group-header::after {
 /* ── Locked feature buttons (non-full version) ── */
 
 .tron-btn.btn-locked {
-    border-color: #fff;
-    color: rgba(255, 255, 255, 1);
+    border-color: #ffb366;
+    color: #ffb366;
+    box-shadow: 0 0 8px rgba(255, 179, 102, 0.6);
     cursor: pointer;
 }
 
