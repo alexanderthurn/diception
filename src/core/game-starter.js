@@ -1,5 +1,6 @@
 import { createAI } from './ai/index.js';
 import { Dialog } from '../ui/dialog.js';
+import { isFullVersion } from '../scenarios/user-identity.js';
 
 /**
  * Attacks per turn + wall-clock seconds from level data and/or UI config.
@@ -138,6 +139,11 @@ export class GameStarter {
      * Start a new game from the setup screen (persists settings).
      */
     startGame() {
+        if (!isFullVersion() && !this.configManager.areModsAtDefaults()) {
+            Dialog.showFullVersion();
+            return;
+        }
+
         const config = this.configManager.getGameConfig();
 
         if (config.humanCount + config.botCount < 2) {

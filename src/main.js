@@ -631,12 +631,29 @@ async function init() {
     sessionManager.setConfigManager(configManager);
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
-    configManager.setupInputListeners(effectsManager, renderer);
+    const startBtn = document.getElementById('start-game-btn');
+    const updateStartBtnModsLock = () => {
+        if (!startBtn || isFullVersion()) return;
+        const modsActive = !configManager.areModsAtDefaults();
+        startBtn.classList.toggle('btn-locked', modsActive);
+        const existingIcon = startBtn.querySelector('.sprite-icon');
+        if (modsActive && !existingIcon) {
+            const icon = document.createElement('span');
+            icon.className = 'sprite-icon icon-lock';
+            startBtn.prepend(icon);
+        } else if (!modsActive && existingIcon) {
+            existingIcon.remove();
+        }
+    };
+    updateStartBtnModsLock();
+
+    configManager.setupInputListeners(effectsManager, renderer, updateStartBtnModsLock);
     document.getElementById('setup-mods-toggle')?.addEventListener('click', () => {
         configManager.toggleSetupModsPanel();
     });
     document.getElementById('setup-mods-reset')?.addEventListener('click', () => {
         configManager.resetModsToDefaults();
+        updateStartBtnModsLock();
         renderGamepadAssignments();
     });
 
