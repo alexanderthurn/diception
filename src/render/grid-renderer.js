@@ -2,8 +2,8 @@ import { Graphics, Container, Text, TextStyle, Sprite, Texture } from 'pixi.js';
 
 function premultiplyColor(hex, alpha) {
     const r = Math.round(((hex >> 16) & 0xFF) * alpha);
-    const g = Math.round(((hex >>  8) & 0xFF) * alpha);
-    const b = Math.round(( hex        & 0xFF) * alpha);
+    const g = Math.round(((hex >> 8) & 0xFF) * alpha);
+    const b = Math.round((hex & 0xFF) * alpha);
     return (r << 16) | (g << 8) | b;
 }
 import { TileRenderer } from './tile-renderer.js';
@@ -658,9 +658,9 @@ export class GridRenderer {
         // leaving a missing corner pixel. Push to cornerArray (static, no comet animation).
         if (!cornerArray) return;
         const diagonalDefs = [
-            { ddx:  1, ddy:  1 },
-            { ddx:  1, ddy: -1 },
-            { ddx: -1, ddy:  1 },
+            { ddx: 1, ddy: 1 },
+            { ddx: 1, ddy: -1 },
+            { ddx: -1, ddy: 1 },
             { ddx: -1, ddy: -1 },
         ];
         for (const { ddx, ddy } of diagonalDefs) {
@@ -896,8 +896,10 @@ export class GridRenderer {
     }
 
     drawOverlay() {
-        // Hide all human-centric overlay elements during bot turns (but allow in paint mode for editor)
-        if (!this.paintMode && this.game.currentPlayer?.isBot) {
+        // Hide all human-centric overlay elements during bot turns in classic mode.
+        // In parallel mode, humans can act at any time so keep overlays active.
+        const _isParallelOverlay = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
+        if (!this.paintMode && !_isParallelOverlay && this.game.currentPlayer?.isBot) {
             for (const gfx of this._selectionGfxPool.values()) gfx.visible = false;
             for (const gfx of this._cursorGfxPool.values()) gfx.visible = false;
             this.hidePools();
@@ -972,6 +974,8 @@ export class GridRenderer {
 
             const selectedTileData = this.game.map.getTile(selTile.x, selTile.y);
             const attackerDice = selectedTileData ? selectedTileData.dice : 0;
+            const _isParallel = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
+            const actingPlayerId = _isParallel ? selectedTileData?.owner : this.game.currentPlayer?.id;
 
             if (attackerDice > 1) {
                 const neighbors = [
@@ -986,7 +990,7 @@ export class GridRenderer {
 
                 for (const neighbor of neighbors) {
                     const neighborTile = this.game.map.getTile(neighbor.x, neighbor.y);
-                    if (!neighborTile || neighborTile.owner === this.game.currentPlayer?.id) continue;
+                    if (!neighborTile || neighborTile.owner === actingPlayerId) continue;
 
                     const neighborPixelX = neighbor.x * (this.tileSize + this.gap);
                     const neighborPixelY = neighbor.y * (this.tileSize + this.gap);
@@ -1004,10 +1008,10 @@ export class GridRenderer {
 
                     let badgeX, badgeY;
                     switch (neighbor.edge) {
-                        case 'top':    badgeX = selectedPixelX + this.tileSize / 2; badgeY = selectedPixelY + (hasHint ? 8 : 2) - this.gap / 2; break;
+                        case 'top': badgeX = selectedPixelX + this.tileSize / 2; badgeY = selectedPixelY + (hasHint ? 8 : 2) - this.gap / 2; break;
                         case 'bottom': badgeX = selectedPixelX + this.tileSize / 2; badgeY = selectedPixelY + this.tileSize + this.gap / 2; break;
-                        case 'left':   badgeX = selectedPixelX - this.gap / 2; badgeY = selectedPixelY + this.tileSize / 2; break;
-                        case 'right':  badgeX = selectedPixelX + this.tileSize + this.gap / 2; badgeY = selectedPixelY + this.tileSize / 2; break;
+                        case 'left': badgeX = selectedPixelX - this.gap / 2; badgeY = selectedPixelY + this.tileSize / 2; break;
+                        case 'right': badgeX = selectedPixelX + this.tileSize + this.gap / 2; badgeY = selectedPixelY + this.tileSize / 2; break;
                     }
 
                     if (this.gameSpeed === 'expert') {
@@ -1043,7 +1047,7 @@ export class GridRenderer {
                     const hGfx = this.getNeighborHighlighter(neighborIdx++);
                     hGfx.clear();
                     const tileContent = this.game.map.getTile(targetTile.x, targetTile.y);
-                    const isEnemy = tileContent && tileContent.owner !== this.game.currentPlayer.id;
+                    const isEnemy = tileContent && tileContent.owner !== actingPlayerId;
                     const color = isEnemy ? 0xff0000 : 0xffffff;
                     hGfx.moveTo(0, 0); hGfx.lineTo(this.tileSize, 0);
                     hGfx.stroke({ width: 3, color, alpha: 0.8, alignment: 0, cap: 'butt' });
@@ -1071,7 +1075,8 @@ export class GridRenderer {
         }
 
         // Hover for sources WITHOUT a selection
-        if (!this.game.currentPlayer?.isBot) {
+        const _parallelHover = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
+        if (_parallelHover || !this.game.currentPlayer?.isBot) {
             for (const [cursorId, tile] of this.hoverTiles) {
                 if (sourcesWithSelection.has(cursorId)) continue; // already handled above
                 const { nextBadgeIdx } = this._renderSmartHover(tile.x, tile.y, badgeIdx, cursorId);
@@ -1093,7 +1098,21 @@ export class GridRenderer {
             return { nextBadgeIdx: badgeIdx };
         }
 
-        const isOwned = tileRaw.owner === this.game.currentPlayer.id;
+        const _isParallelHover = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
+        let isOwned;
+        if (_isParallelHover) {
+            const tileOwner = this.game.players.find(p => p.id === tileRaw.owner);
+            if (!tileOwner || tileOwner.isBot) {
+                isOwned = false;
+            } else if (cursorId.startsWith('gamepad-')) {
+                const gpIdx = parseInt(cursorId.slice('gamepad-'.length));
+                isOwned = this.inputManager?.canGamepadControlPlayer(gpIdx, tileRaw.owner) ?? false;
+            } else {
+                isOwned = true; // keyboard/mouse controls all human players
+            }
+        } else {
+            isOwned = tileRaw.owner === this.game.currentPlayer.id;
+        }
         const canAttackFrom = isOwned && tileRaw.dice > 1;
 
         // Check for direct attack shortcut (expert: any attackable enemy, pick best attacker)
@@ -1228,10 +1247,10 @@ export class GridRenderer {
         if (!isSmall && this.gameSpeed === 'beginner' && shouldShowInputHints(this.inputManager)) {
             let hintAction = null;
             switch (edge) {
-                case 'top':    hintAction = ACTION_MOVE_UP;    break;
-                case 'bottom': hintAction = ACTION_MOVE_DOWN;  break;
-                case 'left':   hintAction = ACTION_MOVE_LEFT;  break;
-                case 'right':  hintAction = ACTION_MOVE_RIGHT; break;
+                case 'top': hintAction = ACTION_MOVE_UP; break;
+                case 'bottom': hintAction = ACTION_MOVE_DOWN; break;
+                case 'left': hintAction = ACTION_MOVE_LEFT; break;
+                case 'right': hintAction = ACTION_MOVE_RIGHT; break;
             }
             if (hintAction) {
                 hint = getInputHint(hintAction, this.inputManager, this.game?.currentPlayer?.id);
@@ -1240,7 +1259,7 @@ export class GridRenderer {
 
         // Badge dimensions — wider when a sprite icon is inlined on the left
         const inlineSprite = hint?.textureName != null;
-        const badgeWidth  = isSmall ? 10 : (inlineSprite ? 44 : 28);
+        const badgeWidth = isSmall ? 10 : (inlineSprite ? 44 : 28);
         const badgeHeight = isSmall ? 10 : 16;
 
         container.badgeBg.clear();
@@ -1697,8 +1716,8 @@ export class GridRenderer {
                 if (placements.length > 0) {
                     let stepsThisFrame = 0;
                     while (stepIndex < placements.length &&
-                           p >= nextStepProgress &&
-                           stepsThisFrame < 6) {
+                        p >= nextStepProgress &&
+                        stepsThisFrame < 6) {
                         const pl = placements[stepIndex++];
                         nextStepProgress += stepProgressInterval;
                         stepsThisFrame++;

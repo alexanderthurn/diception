@@ -1296,6 +1296,10 @@ async function init() {
             gameStarter.attacksPerTurn = game.attacksPerTurn ?? 0;
             gameStarter.secondsPerTurn = game.secondsPerTurn ?? 0;
             gameStarter.secondsPerAttack = game.secondsPerAttack ?? 0;
+            gameStarter.playMode = game.playMode ?? 'classic';
+            if (game.playMode === 'parallel' || game.playMode === 'parallel-s') {
+                gameStarter._startParallelBotTimers();
+            }
         }
     }, 100);
 

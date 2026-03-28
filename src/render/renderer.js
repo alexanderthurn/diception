@@ -102,8 +102,10 @@ export class Renderer {
         // until the supply animation completes.  Re-evaluated each call so speed changes
         // take effect immediately.
         this.game.reinforcementAnimationHook = (data, continueEndTurn) => {
-            // Skip animation for bots and expert speed — just advance immediately
-            if (this.gameSpeed === 'expert' || data.player.isBot) {
+            // Skip animation for bots in classic mode and in expert speed — just advance immediately.
+            // In parallel mode, run the animation for everyone so nothing happens during reinforcement.
+            const _parallelMode = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
+            if (this.gameSpeed === 'expert' || (data.player.isBot && !_parallelMode)) {
                 this.draw();
                 continueEndTurn();
                 return;

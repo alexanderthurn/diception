@@ -66,6 +66,7 @@ export class BaseAI {
      */
     getAttackDelay(gameSpeed) {
         if (gameSpeed === 'ultrafast') return 0; // Ultra-fast mode when all humans on autoplay
+        if (gameSpeed === 'parallel-slow') return 2400; // 3x beginner, for bots in parallel mode
         if (gameSpeed === 'beginner') return 1200;
         if (gameSpeed === 'normal') return 200;
         return 0; // expert/fast

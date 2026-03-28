@@ -240,7 +240,8 @@ export class GameEventManager {
     handleAutomatedTurn(player, playerAIs, gameSpeed, autoplayPlayers) {
         this.hideAttackLimitDisplay();
 
-        // Hide End Turn button during bot turns
+        const _isParallelMode = this.game.playMode === 'parallel' || this.game.playMode === 'parallel-s';
+
         this.endTurnBtn.classList.add('hidden');
         this.endTurnBtn.disabled = true;
 
@@ -277,6 +278,12 @@ export class GameEventManager {
             delay = player.isBot ? 300 : 500;
         } else if (gameSpeed === 'beginner') {
             delay = player.isBot ? 800 : 1000;
+        }
+
+        // In parallel mode, bot turns run 3x slower so the human can follow the action
+        if (_isParallelMode && player.isBot && gameSpeed !== 'expert') {
+            delay *= 3;
+            effectiveSpeed = 'parallel-slow';
         }
 
         // Hold bots until the map reveal animation finishes

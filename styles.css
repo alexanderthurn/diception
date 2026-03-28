@@ -47,7 +47,6 @@
     outline: 2px solid #00ffff;
     outline-offset: 3px;
     box-shadow: 0 0 10px rgba(0, 255, 255, 0.45), inset 0 0 0 1px rgba(0, 255, 255, 0.15);
-    border-radius: 4px;
 }
 
 :root {
@@ -202,10 +201,6 @@ body.loading-active #ui-overlay {
 
 .panel {
     pointer-events: auto;
-    /*background: var(--panel-bg);
-    border: 1px solid var(--border-color);
-    padding: 10px 20px;
-    border-radius: 5px;*/
 }
 
 
@@ -7344,7 +7339,7 @@ input[type="range"].gamepad-slider-editing {
     .attack-side { min-width: 80px; gap: 6px; }
     .attack-role-label { font-size: 13px; }
     .attack-role-icon { height: 18px !important; }
-    .attack-die { width: 36px; height: 36px; font-size: 17px; border-radius: 4px; }
+    .attack-die { width: 36px; height: 36px; font-size: 17px; }
     .attack-dice-row { gap: 3px; max-width: 180px; }
     .attack-side-sum { font-size: 22px; }
     .attack-compare-sign { font-size: 32px; min-height: 40px; }
@@ -7401,7 +7396,6 @@ input[type="range"].gamepad-slider-editing {
     width: 48px;
     height: 48px;
     border: 2px solid;
-    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
