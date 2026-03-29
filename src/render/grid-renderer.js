@@ -795,6 +795,12 @@ export class GridRenderer {
             }
         }
 
+        // Suppress shimmer during the initial tile reveal animation
+        if (this._suppressShimmerUntil && Date.now() < this._suppressShimmerUntil) {
+            if (this.shimmerGraphics) this.shimmerGraphics.clear();
+            return;
+        }
+
         // Skip shimmer if effects are off
         if (this.effectsQuality === 'off') {
             if (this.shimmerGraphics) {

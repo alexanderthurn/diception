@@ -569,6 +569,7 @@ export class EffectsManager {
             totalRevealMs += (rowMap.get(rowY).length - 1) * tileGapMs + fadeMs;
         }
         this._revealEndsAt = Date.now() + 50 + totalRevealMs;
+        if (grid) grid._suppressShimmerUntil = this._revealEndsAt;
 
         // Hide tiles immediately (tileCache may be partially populated already)
         const hideAll = () => {
