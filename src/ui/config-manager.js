@@ -9,6 +9,7 @@ import {
     syncModsFieldHighlightsForPrefix,
     applyModsDefaultsForPrefix,
     setModsPanelUiOpen,
+    getActiveModsSummaryFromDom,
     SETUP_DEFAULTS,
 } from './mods-panel-helpers.js';
 
@@ -238,13 +239,29 @@ export class ConfigManager {
         if (!panel) return;
         const isOpen = !panel.classList.contains('hidden');
         this._setSetupModsPanelOpen(!isOpen);
+        this._syncModsSummary(!this.areModsAtDefaults());
     }
 
     /** Sync badge + reset btn on initial load; panel always starts collapsed. */
+    _syncModsSummary(nonDefault) {
+        const summary = document.getElementById('setup-mods-summary');
+        if (!summary) return;
+        if (!nonDefault) {
+            summary.classList.add('hidden');
+            summary.textContent = '';
+            return;
+        }
+        const panel = document.getElementById('setup-mods-panel');
+        const panelOpen = panel && !panel.classList.contains('hidden');
+        summary.classList.toggle('hidden', panelOpen);
+        summary.textContent = getActiveModsSummaryFromDom('');
+    }
+
     syncSetupModsExpanderFromStorage() {
         const badge = document.getElementById('setup-mods-active-badge');
         const nonDefault = !this.areModsAtDefaults();
         if (badge) badge.classList.toggle('hidden', !nonDefault);
+        this._syncModsSummary(nonDefault);
         this.syncSetupModsFieldHighlights();
         this.syncSetupResetBtn();
         this._setSetupModsPanelOpen(false);
@@ -255,6 +272,7 @@ export class ConfigManager {
         const badge = document.getElementById('setup-mods-active-badge');
         const nonDefault = !this.areModsAtDefaults();
         if (badge) badge.classList.toggle('hidden', !nonDefault);
+        this._syncModsSummary(nonDefault);
         this.syncSetupModsFieldHighlights();
         this.syncSetupResetBtn();
     }

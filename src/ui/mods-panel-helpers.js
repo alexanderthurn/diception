@@ -2,6 +2,13 @@
  * Shared logic for Custom Game and Editor "Mods" panels (same field set, optional id prefix).
  */
 
+const MAP_STYLE_LABELS    = { full: 'Full Map', balanced: 'Balanced', islands: 'Islands', ring: 'Ring', cross: 'Cross' };
+const GAME_MODE_LABELS    = { fair: 'Fair Start', madness: 'Madness', '2of2': '2of2' };
+const FULL_BOARD_LABELS   = { most_territories: 'Territories', biggest_territory: 'Largest Region', random_picker: 'Random Tile', raise_max_dice: 'Max Dice +4', autoplay_humans: 'Autoplay' };
+const ATTACK_RULE_LABELS  = { easy_attack: 'Easy Attack', all_die: 'All Die' };
+const SUPPLY_RULE_LABELS  = { no_stack: 'No Stack', no_stack_hard: 'Full', reborn: 'Reborn' };
+const PLAY_MODE_LABELS    = { parallel: 'Parallel', 'parallel-s': 'Parallel S' };
+
 /**
  * Single source of truth for all Custom Game defaults.
  * Basic fields (map size, players) and Mods fields live here.
@@ -154,6 +161,64 @@ export function applyModsDefaultsForPrefix(idPrefix) {
     localStorage.setItem('dicy_playMode', d.playMode);
     const playModeEl = el(idPrefix, 'play-mode');
     if (playModeEl) playModeEl.value = d.playMode;
+}
+
+/**
+ * Return a short bullet-separated summary of all non-default mods.
+ * Accepts a plain config object (same keys as SETUP_MOD_DEFAULTS).
+ * Returns an empty string when everything is at defaults.
+ */
+export function getActiveModsSummary(config) {
+    const d = SETUP_MOD_DEFAULTS;
+    const parts = [];
+
+    if (config.mapStyle && config.mapStyle !== d.mapStyle)
+        parts.push(MAP_STYLE_LABELS[config.mapStyle] || config.mapStyle);
+    if (config.gameMode && config.gameMode !== d.gameMode)
+        parts.push(GAME_MODE_LABELS[config.gameMode] || config.gameMode);
+    if (config.maxDice != null && String(config.maxDice) !== d.maxDice)
+        parts.push(`Max ${config.maxDice}`);
+    if (config.diceSides != null && String(config.diceSides) !== d.diceSides)
+        parts.push(`D${config.diceSides}`);
+    if (config.attacksPerTurn != null && String(config.attacksPerTurn) !== d.attacksPerTurn)
+        parts.push(`${config.attacksPerTurn} Atk`);
+    if (config.secondsPerTurn != null && String(config.secondsPerTurn) !== d.secondsPerTurn)
+        parts.push(`${config.secondsPerTurn}s/Turn`);
+    if (config.secondsPerAttack != null && String(config.secondsPerAttack) !== d.secondsPerAttack)
+        parts.push(`${config.secondsPerAttack}s/Atk`);
+    const fbr = config.fullBoardRule || 'nothing';
+    if (fbr !== d.fullBoardRule)
+        parts.push(FULL_BOARD_LABELS[fbr] || fbr);
+    const ar = config.attackRule || 'classic';
+    if (ar !== d.attackRule)
+        parts.push(ATTACK_RULE_LABELS[ar] || ar);
+    const sr = config.supplyRule || 'classic';
+    if (sr !== d.supplyRule)
+        parts.push(SUPPLY_RULE_LABELS[sr] || sr);
+    if (config.playMode && config.playMode !== d.playMode)
+        parts.push(PLAY_MODE_LABELS[config.playMode] || config.playMode);
+
+    return parts.join(' · ');
+}
+
+/**
+ * Read current mod values from the DOM and return their summary string.
+ * @param {string} idPrefix  e.g. '' for setup panel, 'editor-mods-' for editor
+ */
+export function getActiveModsSummaryFromDom(idPrefix) {
+    return getActiveModsSummary({
+        mapStyle:       el(idPrefix, 'map-style')?.value,
+        gameMode:       el(idPrefix, 'game-mode')?.value,
+        maxDice:        el(idPrefix, 'max-dice')?.value,
+        diceSides:      el(idPrefix, 'dice-sides')?.value,
+        attacksPerTurn: el(idPrefix, 'turn-time-limit')?.value ?? '0',
+        secondsPerTurn: el(idPrefix, 'turn-seconds-limit')?.value ?? '0',
+        secondsPerAttack: normalizeAttackSecondsUi(el(idPrefix, 'attack-seconds-limit')?.value ?? '0'),
+        fullBoardRule:  el(idPrefix, 'full-board-rule')?.value,
+        attackRule:     el(idPrefix, 'attack-rule')?.value,
+        supplyRule:     el(idPrefix, 'supply-rule')?.value,
+        playMode:       el(idPrefix, 'play-mode')?.value ?? localStorage.getItem('dicy_playMode'),
+    });
 }
 
 /**

@@ -4,6 +4,7 @@ import { getGridDimensions } from '../scenarios/campaign-data.js';
 import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress.js';
 import { getCachedIdentity, isFullVersion } from '../scenarios/user-identity.js';
 import { MapManager } from '../core/map.js';
+import { getActiveModsSummary } from './mods-panel-helpers.js';
 
 /** Dev-only campaign tools (import/export JSON, etc.): ?dev=true or ?dev=1 */
 function isCampaignDevToolsEnabled() {
@@ -653,6 +654,14 @@ export class ScenarioBrowser {
             const typeLabel = lvl.type === 'config' ? 'Procedural' : (lvl.type === 'map' ? 'Map' : 'Scenario');
             p.textContent = `${typeLabel} · Level ${idx + 1}`;
             content.appendChild(p);
+
+            const modSummary = getActiveModsSummary(lvl);
+            if (modSummary) {
+                const modP = document.createElement('p');
+                modP.className = 'level-preview-mods';
+                modP.textContent = modSummary;
+                content.appendChild(modP);
+            }
             return { content, prevBtn, nextBtn };
         };
 

@@ -3540,6 +3540,13 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     font-size: 0.9em;
     color: #888;
 }
+.level-preview-mods {
+    margin: 4px 0 0;
+    font-size: 0.75em;
+    color: #ffcc77;
+    opacity: 0.85;
+    letter-spacing: 0.03em;
+}
 
 .level-grid-tile .tile-add {
     font-size: 2em;
@@ -6134,6 +6141,15 @@ canvas {
     background: rgba(255, 200, 100, 0.18);
     color: #ffcc77;
     border: 1px solid rgba(255, 200, 100, 0.35);
+}
+
+.setup-mods-summary {
+    font-size: 0.72rem;
+    color: #ffcc77;
+    opacity: 0.85;
+    text-align: center;
+    padding: 10px 8px 2px;
+    letter-spacing: 0.03em;
 }
 
 .setup-mods-reset.tron-btn {
