@@ -245,8 +245,11 @@ export class GameEventManager {
         this.endTurnBtn.classList.add('hidden');
         this.endTurnBtn.disabled = true;
 
-        // Show auto-win button if any human has autoplay enabled
-        if (gameSpeed !== 'beginner' && autoplayPlayers.size > 0) {
+        // Show auto-win button if any human has autoplay enabled and a stored dice stack
+        // (stack check skipped when overflow mod disables stacking)
+        const _stackingDisabled = this.game.supplyRule === 'no_stack' || this.game.supplyRule === 'no_stack_hard';
+        const anyHumanHasStack = _stackingDisabled || this.game.players.some(p => !p.isBot && p.alive && (p.storedDice || 0) > 0);
+        if (gameSpeed !== 'beginner' && autoplayPlayers.size > 0 && anyHumanHasStack) {
             const playerColorHex = '#' + player.color.toString(16).padStart(6, '0');
             this.autoWinBtn.classList.remove('hidden');
             this.autoWinBtn.classList.add('active');
@@ -418,8 +421,10 @@ export class GameEventManager {
         this.endTurnBtn.style.boxShadow = `0 0 15px ${playerColorHex}`;
         this.endTurnBtn.style.borderColor = playerColorHex;
 
-        // Show autoplay button in Normal/Fast mode
-        if (gameSpeed !== 'beginner') {
+        // Show autoplay button in Normal/Fast mode, only when human has a stored dice stack
+        // (stack check skipped when overflow mod disables stacking)
+        const stackingDisabled = this.game.supplyRule === 'no_stack' || this.game.supplyRule === 'no_stack_hard';
+        if (gameSpeed !== 'beginner' && (stackingDisabled || storedDice > 0)) {
             this.autoWinBtn.classList.remove('hidden');
             this.autoWinBtn.style.boxShadow = `0 0 15px ${playerColorHex}`;
             this.autoWinBtn.style.borderColor = playerColorHex;
