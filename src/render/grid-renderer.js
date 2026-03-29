@@ -1024,7 +1024,7 @@ export class GridRenderer {
                         this.updateProbabilityBadge(badgeIdx++, badgeX, badgeY, '', 0xffffff, neighbor.edge);
                     } else {
                         const defenderDice = neighborTile.dice;
-                        const probability = getWinProbability(attackerDice, defenderDice, this.diceSides);
+                        const probability = getWinProbability(attackerDice, defenderDice, this.diceSides, this.game.attackRule);
                         const percentValue = probability * 100;
                         let percentStr;
                         if (percentValue < 1) {

@@ -7,6 +7,7 @@ import { GAME } from '../core/constants.js';
 export class ProbabilityCalculator {
     constructor() {
         this.diceSidesSelect = document.getElementById('prob-dice-sides');
+        this.attackRuleSelect = document.getElementById('prob-attack-rule');
         this.tableBody = document.getElementById('probability-table-body');
         this.tableHead = document.querySelector('#probability-table thead tr');
         this.maxDice = GAME.MAX_DICE_PER_TERRITORY;
@@ -26,10 +27,9 @@ export class ProbabilityCalculator {
         // Generate initial table
         this.updateTable();
 
-        // Listen for dice sides changes
-        this.diceSidesSelect.addEventListener('change', () => {
-            this.updateTable();
-        });
+        // Listen for changes
+        this.diceSidesSelect.addEventListener('change', () => this.updateTable());
+        this.attackRuleSelect?.addEventListener('change', () => this.updateTable());
     }
 
     generateDiceSidesOptions() {
@@ -68,7 +68,8 @@ export class ProbabilityCalculator {
 
     updateTable() {
         const diceSides = parseInt(this.diceSidesSelect.value, 10);
-        const probTable = getProbabilityTable(diceSides);
+        const attackRule = this.attackRuleSelect?.value || 'classic';
+        const probTable = getProbabilityTable(diceSides, attackRule);
 
         // Clear existing rows
         this.tableBody.innerHTML = '';

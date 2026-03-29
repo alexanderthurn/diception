@@ -838,10 +838,10 @@ export class GameEventManager {
 
         const attackRollStr = result.attackerRolls.join('+');
         const defendRollStr = result.defenderRolls.join('+');
-        const outcome = result.won ? '✓' : '✗';
-        const operator = result.won ? '>' : '≤';
+        const outcome = result.tied ? '=' : result.won ? '✓' : '✗';
+        const operator = result.won ? '>' : result.tied ? '=' : '≤';
         if (this.addLog) {
-            this.addLog(`${attackRollStr}=${result.attackerSum}${operator}${result.defenderSum}=${defendRollStr} → ${defenderName} ${outcome}`, result.won ? 'attack-win' : 'attack-loss');
+            this.addLog(`${attackRollStr}=${result.attackerSum}${operator}${result.defenderSum}=${defendRollStr} → ${defenderName} ${outcome}`, result.won ? 'attack-win' : result.tied ? 'info' : 'attack-loss');
         }
 
         // Show dice result in HUD
@@ -867,6 +867,11 @@ export class GameEventManager {
             } else {
                 this.sfx.attackLose();
             }
+        }
+
+        if (result.tied && isHumanAttacker) {
+            const color = attacker?.color ?? 0x00ffff;
+            this.renderer?.grid?.showBigLabel('Draw', color);
         }
 
         // Update End Turn button

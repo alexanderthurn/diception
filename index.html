@@ -197,6 +197,7 @@
                     </div>
                 </div>
 
+
                 <div class="control-row tournament-config-row hidden" data-mods-group="tournament-config"
                     data-mods-tournament-row>
                     <div class="control-group" data-mods-group="setup-tournament-games-group">
@@ -602,8 +603,9 @@
                 <section>
                     <h3>WIN PROBABILITY CALCULATOR</h3>
                     <p>Select dice sides to see win probability when attacking. <span class="prob-legend"><span
-                                class="prob-high-text">Green ≥75%</span> <span class="prob-medium-text">Yellow
-                                25-74%</span> <span class="prob-low-text">Red &lt;25%</span></span></p>
+                                class="prob-high-text">Green ≥75%</span> <span class="prob-medium-high-text">Yellow
+                                50-74%</span> <span class="prob-medium-text">Orange 25-49%</span> <span
+                                class="prob-low-text">Red &lt;25%</span></span></p>
                     <div class="probability-controls">
                         <label for="prob-dice-sides">Dice Sides:</label>
                         <select id="prob-dice-sides">
@@ -619,6 +621,11 @@
                             <option value="10">D10</option>
                             <option value="11">D11</option>
                             <option value="12">D12</option>
+                        </select>
+                        <label for="prob-attack-rule">Attack Rules:</label>
+                        <select id="prob-attack-rule">
+                            <option value="classic" selected>Classic</option>
+                            <option value="easy_attack">Easy Attack</option>
                         </select>
                     </div>
                     <div class="probability-table-wrapper">

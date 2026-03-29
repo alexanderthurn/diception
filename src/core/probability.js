@@ -8,6 +8,7 @@ import { GAME } from './constants.js';
 // Pre-computed probability lookup tables indexed by dice sides
 // Structure: probabilityTables[diceSides][attackerDice][defenderDice]
 const probabilityTables = new Map();
+const easyAttackTables = new Map();
 
 /**
  * Calculate the probability distribution of sums for N dice with S sides
@@ -44,18 +45,17 @@ function getSumDistribution(n, sides) {
  * @param {number} diceSides - Number of sides per die
  * @returns {number} Win probability (0-1)
  */
-function computeWinProbability(attackerDice, defenderDice, diceSides) {
+function computeWinProbability(attackerDice, defenderDice, diceSides, easyAttack = false) {
     const attackDist = getSumDistribution(attackerDice, diceSides);
     const defenseDist = getSumDistribution(defenderDice, diceSides);
 
     let winProb = 0;
 
-    // Sum all cases where attacker sum > defender sum
     for (let a = 0; a < attackDist.length; a++) {
         if (attackDist[a] === 0) continue;
         for (let d = 0; d < defenseDist.length; d++) {
             if (defenseDist[d] === 0) continue;
-            if (a > d) {
+            if (easyAttack ? a >= d : a > d) {
                 winProb += attackDist[a] * defenseDist[d];
             }
         }
@@ -78,14 +78,19 @@ export function initializeProbabilityTables() {
 
     for (let sides = 1; sides <= maxSides; sides++) {
         const table = [];
+        const easyTable = [];
         for (let attacker = 1; attacker <= maxDice; attacker++) {
             const row = [];
+            const easyRow = [];
             for (let defender = 1; defender <= maxDice; defender++) {
-                row.push(computeWinProbability(attacker, defender, sides));
+                row.push(computeWinProbability(attacker, defender, sides, false));
+                easyRow.push(computeWinProbability(attacker, defender, sides, true));
             }
             table.push(row);
+            easyTable.push(easyRow);
         }
         probabilityTables.set(sides, table);
+        easyAttackTables.set(sides, easyTable);
     }
 
     const elapsed = (performance.now() - startTime).toFixed(1);
@@ -99,8 +104,9 @@ export function initializeProbabilityTables() {
  * @param {number} diceSides - Number of sides per die
  * @returns {number} Win probability (0-1)
  */
-export function getWinProbability(attackerDice, defenderDice, diceSides = 6) {
-    const table = probabilityTables.get(diceSides);
+export function getWinProbability(attackerDice, defenderDice, diceSides = 6, attackRule = 'classic') {
+    const tableMap = attackRule === 'easy_attack' ? easyAttackTables : probabilityTables;
+    const table = tableMap.get(diceSides);
     if (!table) {
         console.warn(`Probability table not computed for ${diceSides}-sided dice`);
         return 0.5; // Fallback
@@ -119,8 +125,9 @@ export function getWinProbability(attackerDice, defenderDice, diceSides = 6) {
  * @param {number} diceSides - Number of sides per die
  * @returns {number[][]} 2D array of probabilities [attacker-1][defender-1]
  */
-export function getProbabilityTable(diceSides = 6) {
-    return probabilityTables.get(diceSides) || [];
+export function getProbabilityTable(diceSides = 6, attackRule = 'classic') {
+    const tableMap = attackRule === 'easy_attack' ? easyAttackTables : probabilityTables;
+    return tableMap.get(diceSides) || [];
 }
 
 /**
@@ -130,6 +137,7 @@ export function getProbabilityTable(diceSides = 6) {
  */
 export function getProbabilityColor(probability) {
     if (probability >= 0.75) return 'prob-high';
+    if (probability >= 0.50) return 'prob-medium-high';
     if (probability >= 0.25) return 'prob-medium';
     return 'prob-low';
 }
@@ -141,6 +149,7 @@ export function getProbabilityColor(probability) {
  */
 export function getProbabilityHexColor(probability) {
     if (probability >= 0.75) return 0x00b400; // Green
+    if (probability >= 0.50) return 0xe6d200; // Bright yellow
     if (probability >= 0.25) return 0xffa500; // Orange/Yellow
     return 0xdc0000; // Red
 }
