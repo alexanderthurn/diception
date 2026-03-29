@@ -4901,6 +4901,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     z-index: 100050;
     /* Default color if not set */
     color: #ffffff;
+    filter: drop-shadow(0 0 5px rgba(0,0,0,0.9));
 }
 
 .gamepad-cursor svg {

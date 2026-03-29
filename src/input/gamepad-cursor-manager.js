@@ -562,7 +562,7 @@ export class GamepadCursorManager {
         // Corner-bracket crosshair — open centre keeps tile text readable,
         // square geometry fits the rectangular game aesthetic.
         el.innerHTML = `
-            <svg viewBox="0 0 64 64" style="filter: drop-shadow(0 0 5px rgba(0,0,0,0.9))">
+            <svg viewBox="0 0 64 64">
                 <path d="M 0 20 L 0 0 L 20 0"  fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
                 <path d="M 44 0 L 64 0 L 64 20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
                 <path d="M 0 44 L 0 64 L 20 64"  fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
