@@ -764,6 +764,8 @@ export class GameEventManager {
     handleMaxDiceRaised(data) {
         if (this.addLog) this.addLog(`Board full — max dice per territory is now ${data.maxDice}.`, 'info');
         if (this.renderer?.forceUpdate) this.renderer.forceUpdate(false);
+        const color = this.game.currentPlayer?.color ?? 0x00ffff;
+        this.renderer?.grid?.showBigLabel(`Max Dice: ${data.maxDice}`, color);
     }
 
     _flushStreakAchievement() {

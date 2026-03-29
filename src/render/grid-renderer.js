@@ -1609,6 +1609,68 @@ export class GridRenderer {
      * @param {Object}   data       - reinforcements event data
      * @param {Function} onComplete - called when animation finishes
      */
+
+    /**
+     * Show a large centred label that pops in, holds, then dissolves.
+     * Font size auto-scales so the text always fits within 80 % of the screen width.
+     * No-ops on mobile (≤768 px wide or ≤720 px tall).
+     * @param {string} text - text to display
+     * @param {number} color - hex colour for the stroke / glow (e.g. 0x00ffff)
+     * @param {number} [durationFrames=120] - total animation length in frames (~2 s at 60 fps)
+     */
+    showBigLabel(text, color, durationFrames = 180) {
+        if (window.innerWidth <= 768 || window.innerHeight <= 720) return;
+
+        const screenW = this.app?.screen.width ?? window.innerWidth;
+        const screenH = this.app?.screen.height ?? window.innerHeight;
+        const labelX = (screenW / 2 - this.stage.x) / this.stage.scale.x;
+        const labelY = (screenH / 2 - this.stage.y) / this.stage.scale.y;
+
+        const baseSize = Math.round(this.tileSize * 1.4);
+        const maxByWidth = Math.floor((screenW * 0.8) / (text.length * 0.6));
+        const fontSize = Math.min(baseSize, maxByWidth);
+
+        const label = new Text({
+            text,
+            style: new TextStyle({
+                fontFamily: 'Rajdhani, Arial',
+                fontSize,
+                fontWeight: '700',
+                fill: '#ffffff',
+                stroke: { color, width: 4 },
+                dropShadow: true,
+                dropShadowBlur: 10,
+                dropShadowDistance: 2,
+            }),
+        });
+        label.anchor.set(0.5);
+        label.x = labelX;
+        label.y = labelY;
+        label.alpha = 0;
+        label.scale.set(0.3);
+        this.animationContainer.addChild(label);
+
+        this.animator.addTween({
+            duration: durationFrames,
+            onUpdate: (p) => {
+                if (p < 0.15) {
+                    const t = p / 0.15;
+                    label.alpha = t;
+                    label.scale.set(0.5 + t * 0.7);
+                } else if (p < 0.36) {
+                    label.alpha = 1;
+                    label.scale.set(1.2);
+                } else if (p < 0.60) {
+                    label.alpha = 1 - (p - 0.36) / 0.24;
+                    label.scale.set(1.2 + (p - 0.36) / 0.24 * 0.6);
+                } else {
+                    label.alpha = 0;
+                }
+            },
+            onComplete: () => label.destroy(),
+        });
+    }
+
     animateSupply(data, sfx, onComplete) {
         if (this.gameSpeed === 'expert') { onComplete?.(); return; }
         this._supplyAnimActive = true;
@@ -1642,34 +1704,8 @@ export class GridRenderer {
         }
 
 
-        // ── "+N" label: pop in, brief hold, fast dissolve — desktop only ────────
-        const screenW = this.app?.screen.width ?? window.innerWidth;
-        const screenH = this.app?.screen.height ?? window.innerHeight;
-        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 720;
-        const labelX = (screenW / 2 - this.stage.x) / this.stage.scale.x;
-        const labelY = (screenH / 2 - this.stage.y) / this.stage.scale.y;
-
-        const label = isMobile ? null : new Text({
-            text: `+${totalDice}`,
-            style: new TextStyle({
-                fontFamily: 'Rajdhani, Arial',
-                fontSize: Math.round(this.tileSize * 1.4),
-                fontWeight: '700',
-                fill: '#ffffff',
-                stroke: { color: playerColor, width: 4 },
-                dropShadow: true,
-                dropShadowBlur: 10,
-                dropShadowDistance: 2,
-            }),
-        });
-        if (label) {
-            label.anchor.set(0.5);
-            label.x = labelX;
-            label.y = labelY;
-            label.alpha = 0;
-            label.scale.set(0.3);
-            this.animationContainer.addChild(label);
-        }
+        // ── "+N" label: pop in, brief hold, fast dissolve ────────────────────
+        this.showBigLabel(`+${totalDice}`, playerColor, totalFrames);
 
         // ── Pre-compute dice overrides (show pre-reinforcement counts) ────────
         if (placements.length > 0) {
@@ -1701,23 +1737,6 @@ export class GridRenderer {
                 const pulse = 0.15 + 0.12 * Math.sin(p * Math.PI * 8);
                 for (const gfx of overlays) gfx.alpha = pulse;
 
-                // Label: quick pop-in (0–15%), brief hold (15–36%), fast dissolve (36–60%)
-                if (label) {
-                    if (p < 0.15) {
-                        const t = p / 0.15;
-                        label.alpha = t;
-                        label.scale.set(0.5 + t * 0.7);
-                    } else if (p < 0.36) {
-                        label.alpha = 1;
-                        label.scale.set(1.2);
-                    } else if (p < 0.60) {
-                        label.alpha = 1 - (p - 0.36) / 0.24;
-                        label.scale.set(1.2 + (p - 0.36) / 0.24 * 0.6);
-                    } else {
-                        label.alpha = 0;
-                    }
-                }
-
                 // Phase B: step through placements
                 if (placements.length > 0) {
                     let stepsThisFrame = 0;
@@ -1741,7 +1760,6 @@ export class GridRenderer {
                 // Clean up
                 this._supplyAnimActive = false;
                 for (const gfx of overlays) gfx.destroy();
-                label?.destroy();
                 this.clearDiceOverrides();
                 this.draw(); // restore final counts
                 onComplete?.();

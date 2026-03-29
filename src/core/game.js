@@ -364,7 +364,7 @@ export class Game {
                 this.resolveFullBoardWinner('most_territories');
                 return;
             }
-            this.maxDice = Math.min(this.maxDice + 2, GAME.MAX_DICE_PER_TERRITORY);
+            this.maxDice = Math.min(this.maxDice + 4, GAME.MAX_DICE_PER_TERRITORY);
             this.map.maxDice = this.maxDice;
             this.emit('maxDiceRaised', { maxDice: this.maxDice });
             return;
