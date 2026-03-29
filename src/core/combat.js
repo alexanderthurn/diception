@@ -58,8 +58,8 @@ export class CombatManager {
      * @returns {Object} Battle result
      */
     resolveAttack(context, fromX, fromY, toX, toY) {
-        const { map, currentPlayerId, diceSides = GAME.DEFAULT_DICE_SIDES } = context;
-        
+        const { map, currentPlayerId, diceSides = GAME.DEFAULT_DICE_SIDES, attackRule = 'classic' } = context;
+
         const validation = this.canAttack({ map, currentPlayerId }, fromX, fromY, toX, toY);
         if (!validation.valid) throw new Error(validation.reason);
 
@@ -68,6 +68,14 @@ export class CombatManager {
 
         const attackRoll = this.rollDice(attackerTile.dice, diceSides);
         const defenseRoll = this.rollDice(defenderTile.dice, diceSides);
+
+        const tied = attackRoll.sum === defenseRoll.sum;
+        let won;
+        if (attackRule === 'easy_attack') {
+            won = attackRoll.sum >= defenseRoll.sum;
+        } else {
+            won = attackRoll.sum > defenseRoll.sum;
+        }
 
         const battleResult = {
             attackerId: currentPlayerId,
@@ -78,10 +86,15 @@ export class CombatManager {
             attackerSum: attackRoll.sum,
             defenderRolls: defenseRoll.rolls,
             defenderSum: defenseRoll.sum,
-            won: attackRoll.sum > defenseRoll.sum
+            won,
+            tied: tied && attackRule === 'all_die',
         };
 
-        if (battleResult.won) {
+        if (battleResult.tied) {
+            // All Die — both territories drop to 1, no ownership change
+            attackerTile.dice = 1;
+            defenderTile.dice = 1;
+        } else if (battleResult.won) {
             // Attacker wins - Move all dice - 1 to captured tile
             const movingDice = attackerTile.dice - 1;
             defenderTile.owner = attackerTile.owner;
@@ -102,7 +115,8 @@ export class CombatManager {
         return this.resolveAttack({
             map: game.map,
             currentPlayerId: game.currentPlayer.id,
-            diceSides: game.diceSides
+            diceSides: game.diceSides,
+            attackRule: game.attackRule,
         }, fromX, fromY, toX, toY);
     }
 }

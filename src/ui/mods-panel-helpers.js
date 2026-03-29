@@ -22,6 +22,7 @@ export const SETUP_DEFAULTS = {
     secondsPerTurn: '0',
     secondsPerAttack: '0',
     fullBoardRule:  'nothing',
+    attackRule:     'classic',
     tournamentGames: '100',
     playMode:       'classic',
 };
@@ -36,6 +37,7 @@ export const SETUP_MOD_DEFAULTS = {
     secondsPerTurn: SETUP_DEFAULTS.secondsPerTurn,
     secondsPerAttack: SETUP_DEFAULTS.secondsPerAttack,
     fullBoardRule:  SETUP_DEFAULTS.fullBoardRule,
+    attackRule:     SETUP_DEFAULTS.attackRule,
     tournamentGames: SETUP_DEFAULTS.tournamentGames,
     playMode:       SETUP_DEFAULTS.playMode,
 };
@@ -73,6 +75,7 @@ export function areModsAtDefaultsForPrefix(idPrefix) {
         String(sec) === d.secondsPerTurn &&
         String(secAtk) === d.secondsPerAttack &&
         (el(idPrefix, 'full-board-rule')?.value || 'nothing') === d.fullBoardRule &&
+        (el(idPrefix, 'attack-rule')?.value || 'classic') === d.attackRule &&
         String(el(idPrefix, 'tournament-games')?.value) === d.tournamentGames &&
         pm === d.playMode
     );
@@ -98,6 +101,7 @@ export function syncModsFieldHighlightsForPrefix(idPrefix) {
         ['setup-attack-seconds-group', () =>
             normalizeAttackSecondsUi(el(idPrefix, 'attack-seconds-limit')?.value ?? '0') !== d.secondsPerAttack],
         ['setup-full-board-rule-group', () => (el(idPrefix, 'full-board-rule')?.value || 'nothing') !== d.fullBoardRule],
+        ['setup-attack-rule-group', () => (el(idPrefix, 'attack-rule')?.value || 'classic') !== d.attackRule],
         ['setup-play-mode-group', () => pm !== d.playMode],
     ];
     for (const [groupSuffix, differs] of rows) {
@@ -136,6 +140,7 @@ export function applyModsDefaultsForPrefix(idPrefix) {
     setSelect('turn-seconds-limit', d.secondsPerTurn, 'dicy_secondsPerTurn');
     setSelect('attack-seconds-limit', d.secondsPerAttack, 'dicy_secondsPerAttack');
     setSelect('full-board-rule', d.fullBoardRule, 'dicy_fullBoardRule');
+    setSelect('attack-rule', d.attackRule, 'dicy_attackRule');
 
     const tg = el(idPrefix, 'tournament-games');
     if (tg) tg.value = d.tournamentGames;

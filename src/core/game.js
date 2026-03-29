@@ -23,6 +23,7 @@ export class Game {
         this.fullBoardResolution = false;
         /** Set between full-board rule resolve and `confirmFullBoardResolution` (UI reveal). */
         this._pendingFullBoardWinner = null;
+        this.attackRule = 'classic';
         /** Max attacks per turn for the active player (0 = unlimited). */
         this.attacksPerTurn = 0;
         this.attacksUsedThisTurn = 0;
@@ -65,6 +66,7 @@ export class Game {
         this._fullBoardRuleFired = false;
         this.fullBoardResolution = false;
         this._pendingFullBoardWinner = null;
+        this.attackRule = 'classic';
         this.attacksPerTurn = 0;
         this.attacksUsedThisTurn = 0;
         this.secondsPerTurn = 0;
@@ -88,6 +90,7 @@ export class Game {
         this._fullBoardRuleFired = false;
         this.fullBoardResolution = false;
         this._pendingFullBoardWinner = null;
+        this.attackRule = config.attackRule || 'classic';
         this.attacksPerTurn = config.attacksPerTurn ?? 0;
         this.attacksUsedThisTurn = 0;
         this.secondsPerTurn = config.secondsPerTurn ?? 0;
@@ -238,7 +241,8 @@ export class Game {
             const result = this.combat.resolveAttack({
                 map: this.map,
                 currentPlayerId: activePid,
-                diceSides: this.diceSides
+                diceSides: this.diceSides,
+                attackRule: this.attackRule,
             }, fromX, fromY, toX, toY);
 
             if (!result.error && this.attacksPerTurn > 0 && activePid === this.currentPlayer.id) {

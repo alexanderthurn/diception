@@ -260,12 +260,14 @@ export class GameStarter {
         document.getElementById('dice-result-hud')?.classList.add('hidden');
 
         const fullBoardRule = config.fullBoardRule || 'nothing';
+        const attackRule = config.attackRule || 'classic';
 
         const applyScenarioBranch = (pendingLevel) => {
             this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);
             const { attacksPerTurn: ap, secondsPerTurn: secLim, secondsPerAttack: secAtkLim } = resolveTurnLimitsFromLevel(pendingLevel, config);
             this.game.fullBoardRule = fullBoardRule;
             this.game._fullBoardRuleFired = false;
+            this.game.attackRule = attackRule;
             this.game.attacksPerTurn = ap;
             this.game.secondsPerTurn = secLim;
             this.game.secondsPerAttack = secAtkLim;
@@ -300,6 +302,7 @@ export class GameStarter {
                     mapStyle: pendingLevel.mapStyle || 'full',
                     gameMode: pendingLevel.gameMode || 'classic',
                     fullBoardRule,
+                    attackRule,
                     mapSeed,
                     attacksPerTurn: apLvl,
                     secondsPerTurn: secLvl,
@@ -327,6 +330,7 @@ export class GameStarter {
                     mapStyle: config.mapStyle,
                     gameMode: config.gameMode,
                     fullBoardRule,
+                    attackRule,
                     mapSeed
                 };
                 if (pendingLevel?.type === 'map') {
@@ -373,6 +377,7 @@ export class GameStarter {
                 mapStyle: config.mapStyle,
                 gameMode: config.gameMode,
                 fullBoardRule,
+                attackRule,
                 mapSeed,
                 attacksPerTurn: config.attacksPerTurn ?? 0,
                 secondsPerTurn: config.secondsPerTurn ?? 0,

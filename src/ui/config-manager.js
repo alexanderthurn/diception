@@ -82,6 +82,7 @@ export class ConfigManager {
             turnSecondsLimitInput: document.getElementById('turn-seconds-limit'),
             attackSecondsLimitInput: document.getElementById('attack-seconds-limit'),
             fullBoardRuleInput: document.getElementById('full-board-rule'),
+            attackRuleInput: document.getElementById('attack-rule'),
         };
 
         // Current selected bot AI
@@ -150,6 +151,7 @@ export class ConfigManager {
         }
 
         const savedFullBoardRule = localStorage.getItem('dicy_fullBoardRule') || SETUP_DEFAULTS.fullBoardRule;
+        const savedAttackRule = localStorage.getItem('dicy_attackRule') || SETUP_DEFAULTS.attackRule;
 
         // Load effects quality
         let savedEffectsQuality = localStorage.getItem('effectsQuality') || 'high';
@@ -173,6 +175,7 @@ export class ConfigManager {
         if (el.turnSecondsLimitInput) el.turnSecondsLimitInput.value = savedSecondsPerTurn;
         if (el.attackSecondsLimitInput) el.attackSecondsLimitInput.value = normSecondsPerAttack;
         if (el.fullBoardRuleInput) el.fullBoardRuleInput.value = savedFullBoardRule;
+        if (el.attackRuleInput) el.attackRuleInput.value = savedAttackRule;
         this.updateEffectsQualityClass(savedEffectsQuality);
 
         // Load saved AI selection
@@ -382,6 +385,13 @@ export class ConfigManager {
             });
         }
 
+        if (el.attackRuleInput) {
+            el.attackRuleInput.addEventListener('change', () => {
+                localStorage.setItem('dicy_attackRule', el.attackRuleInput.value);
+                this.syncSetupModsExpanderLive();
+            });
+        }
+
         // Effects quality - apply immediately
         el.effectsQualityInput.addEventListener('change', () => {
             const newQuality = el.effectsQualityInput.value;
@@ -566,6 +576,7 @@ export class ConfigManager {
             secondsPerTurn: Number.isFinite(sec) ? Math.max(0, sec) : 0,
             secondsPerAttack: Number.isFinite(secAtk) ? Math.max(0, secAtk) : 0,
             fullBoardRule: el.fullBoardRuleInput?.value || 'nothing',
+            attackRule: el.attackRuleInput?.value || 'classic',
         };
     }
 
@@ -589,6 +600,7 @@ export class ConfigManager {
         localStorage.setItem('dicy_secondsPerTurn', el.turnSecondsLimitInput?.value ?? '0');
         localStorage.setItem('dicy_secondsPerAttack', el.attackSecondsLimitInput?.value ?? '0');
         localStorage.setItem('dicy_fullBoardRule', config.fullBoardRule || 'nothing');
+        localStorage.setItem('dicy_attackRule', config.attackRule || 'classic');
     }
 
 

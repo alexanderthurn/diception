@@ -186,6 +186,17 @@
                     </div>
                 </div>
 
+                <div class="control-row">
+                    <div class="control-group half" data-mods-group="setup-attack-rule-group">
+                        <label>Attack Rules</label>
+                        <select data-mods-el="attack-rule">
+                            <option value="classic" selected>Classic</option>
+                            <option value="easy_attack">Easy Attack</option>
+                            <option value="all_die">All Die</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="control-row tournament-config-row hidden" data-mods-group="tournament-config"
                     data-mods-tournament-row>
                     <div class="control-group" data-mods-group="setup-tournament-games-group">
@@ -655,6 +666,13 @@
                                 <li><strong>Random Tile</strong> — A random tile is picked; its owner wins.</li>
                                 <li><strong>Max Dice +4</strong> — The conquering player's max dice cap is raised by 4 and the game continues.</li>
                                 <li><strong>Autoplay</strong> — Human players are switched to autoplay and the game finishes automatically.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Attack Rules</strong> — How ties are resolved when both sides roll the same total:
+                            <ul class="howto-list">
+                                <li><strong>Classic</strong> — Attacker must roll strictly higher to win. Ties go to the defender.</li>
+                                <li><strong>Easy Attack</strong> — Attacker wins on a tie as well as a higher roll.</li>
+                                <li><strong>All Die</strong> — On a tie, both territories drop to 1 die and no territory changes hands.</li>
                             </ul>
                         </li>
                         <li><strong>Attacks</strong> — Limits how many attacks a player can make per turn. Unlimited by default.</li>
