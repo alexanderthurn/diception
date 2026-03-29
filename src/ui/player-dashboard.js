@@ -103,11 +103,11 @@ export class PlayerDashboard {
                 : 'sprite-icon icon-assign player-tile-icon';
             tile.appendChild(typeIcon);
 
-            // Dice count label (visible on wide screens via CSS)
+            // Territory count label: largest connected / total tiles
             if (p.alive) {
                 const diceLabel = document.createElement('span');
                 diceLabel.className = 'player-tile-dice';
-                diceLabel.textContent = p.totalDice || 0;
+                diceLabel.textContent = `${p.connectedTiles}/${p.tileCount}`;
                 tile.appendChild(diceLabel);
             }
 

@@ -552,8 +552,8 @@ body.loading-active #ui-overlay {
 
 /* Individual player tile: square, colored, like game tiles */
 .player-tile {
-    width: 36px;
-    height: 36px;
+    width: 48px;
+    height: 48px;
     box-sizing: border-box;
     border: none;
     border-radius: 0;
@@ -577,8 +577,8 @@ body.loading-active #ui-overlay {
 
 /* Player type icon inside tile */
 .player-tile-icon {
-    width: 14px !important;
-    height: 14px !important;
+    width: 22px !important;
+    height: 22px !important;
     opacity: 0.85;
     pointer-events: none;
 }
@@ -586,7 +586,7 @@ body.loading-active #ui-overlay {
 /* Dice count label under icon */
 .player-tile-dice {
     display: block;
-    font-size: 14px;
+    font-size: 1.1em;
     font-weight: bold;
     color: #fff;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
@@ -609,17 +609,17 @@ body.loading-active #ui-overlay {
 /* Wider screens: bigger tiles with dice count */
 @container (min-width: 768px) {
     .player-tile {
-        width: 48px;
-        height: 48px;
+        width: 60px;
+        height: 60px;
     }
 
     .player-tile-icon {
-        width: 22px !important;
-        height: 22px !important;
+        width: 30px !important;
+        height: 30px !important;
     }
 
     .player-tile-dice {
-        font-size: 16px;
+        font-size: 1.1em;
     }
 }
 
@@ -6883,8 +6883,8 @@ details.settings-group[open]>summary.settings-group-header::after {
 
     /* Larger player tiles */
     .player-tile {
-        width: 52px;
-        height: 52px;
+        width: 66px;
+        height: 66px;
     }
 }
 
