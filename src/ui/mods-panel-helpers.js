@@ -23,6 +23,7 @@ export const SETUP_DEFAULTS = {
     secondsPerAttack: '0',
     fullBoardRule:  'nothing',
     attackRule:     'classic',
+    supplyRule:     'classic',
     tournamentGames: '100',
     playMode:       'classic',
 };
@@ -38,6 +39,7 @@ export const SETUP_MOD_DEFAULTS = {
     secondsPerAttack: SETUP_DEFAULTS.secondsPerAttack,
     fullBoardRule:  SETUP_DEFAULTS.fullBoardRule,
     attackRule:     SETUP_DEFAULTS.attackRule,
+    supplyRule:     SETUP_DEFAULTS.supplyRule,
     tournamentGames: SETUP_DEFAULTS.tournamentGames,
     playMode:       SETUP_DEFAULTS.playMode,
 };
@@ -76,6 +78,7 @@ export function areModsAtDefaultsForPrefix(idPrefix) {
         String(secAtk) === d.secondsPerAttack &&
         (el(idPrefix, 'full-board-rule')?.value || 'nothing') === d.fullBoardRule &&
         (el(idPrefix, 'attack-rule')?.value || 'classic') === d.attackRule &&
+        (el(idPrefix, 'supply-rule')?.value || 'classic') === d.supplyRule &&
         String(el(idPrefix, 'tournament-games')?.value) === d.tournamentGames &&
         pm === d.playMode
     );
@@ -102,6 +105,7 @@ export function syncModsFieldHighlightsForPrefix(idPrefix) {
             normalizeAttackSecondsUi(el(idPrefix, 'attack-seconds-limit')?.value ?? '0') !== d.secondsPerAttack],
         ['setup-full-board-rule-group', () => (el(idPrefix, 'full-board-rule')?.value || 'nothing') !== d.fullBoardRule],
         ['setup-attack-rule-group', () => (el(idPrefix, 'attack-rule')?.value || 'classic') !== d.attackRule],
+        ['setup-supply-rule-group', () => (el(idPrefix, 'supply-rule')?.value || 'classic') !== d.supplyRule],
         ['setup-play-mode-group', () => pm !== d.playMode],
     ];
     for (const [groupSuffix, differs] of rows) {
@@ -141,6 +145,7 @@ export function applyModsDefaultsForPrefix(idPrefix) {
     setSelect('attack-seconds-limit', d.secondsPerAttack, 'dicy_secondsPerAttack');
     setSelect('full-board-rule', d.fullBoardRule, 'dicy_fullBoardRule');
     setSelect('attack-rule', d.attackRule, 'dicy_attackRule');
+    setSelect('supply-rule', d.supplyRule, 'dicy_supplyRule');
 
     const tg = el(idPrefix, 'tournament-games');
     if (tg) tg.value = d.tournamentGames;

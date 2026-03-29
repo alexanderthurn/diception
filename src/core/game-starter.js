@@ -261,6 +261,7 @@ export class GameStarter {
 
         const fullBoardRule = config.fullBoardRule || 'nothing';
         const attackRule = config.attackRule || 'classic';
+        const supplyRule = config.supplyRule || 'classic';
 
         const applyScenarioBranch = (pendingLevel) => {
             this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);
@@ -268,6 +269,7 @@ export class GameStarter {
             this.game.fullBoardRule = fullBoardRule;
             this.game._fullBoardRuleFired = false;
             this.game.attackRule = attackRule;
+            this.game.supplyRule = supplyRule;
             this.game.attacksPerTurn = ap;
             this.game.secondsPerTurn = secLim;
             this.game.secondsPerAttack = secAtkLim;
@@ -303,6 +305,7 @@ export class GameStarter {
                     gameMode: pendingLevel.gameMode || 'classic',
                     fullBoardRule,
                     attackRule,
+                    supplyRule,
                     mapSeed,
                     attacksPerTurn: apLvl,
                     secondsPerTurn: secLvl,
@@ -331,6 +334,7 @@ export class GameStarter {
                     gameMode: config.gameMode,
                     fullBoardRule,
                     attackRule,
+                    supplyRule,
                     mapSeed
                 };
                 if (pendingLevel?.type === 'map') {
@@ -378,6 +382,7 @@ export class GameStarter {
                 gameMode: config.gameMode,
                 fullBoardRule,
                 attackRule,
+                supplyRule,
                 mapSeed,
                 attacksPerTurn: config.attacksPerTurn ?? 0,
                 secondsPerTurn: config.secondsPerTurn ?? 0,

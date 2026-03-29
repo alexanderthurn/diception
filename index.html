@@ -195,6 +195,15 @@
                             <option value="all_die">All Die</option>
                         </select>
                     </div>
+                    <div class="control-group half" data-mods-group="setup-supply-rule-group">
+                        <label>Overflow</label>
+                        <select data-mods-el="supply-rule">
+                            <option value="classic" selected>Classic</option>
+                            <option value="no_stack">No Stack</option>
+                            <option value="no_stack_hard">Full</option>
+                            <option value="reborn">Reborn</option>
+                        </select>
+                    </div>
                 </div>
 
 
@@ -673,6 +682,14 @@
                                 <li><strong>Random Tile</strong> — A random tile is picked; its owner wins.</li>
                                 <li><strong>Max Dice +4</strong> — The conquering player's max dice cap is raised by 4 and the game continues.</li>
                                 <li><strong>Autoplay</strong> — Human players are switched to autoplay and the game finishes automatically.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Overflow</strong> — What happens when a reinforcement die lands on a territory already at max dice:
+                            <ul class="howto-list">
+                                <li><strong>Classic</strong> — The die is redirected to another non-full territory; if all are full it goes to the stack for next turn.</li>
+                                <li><strong>No Stack</strong> — Redirected to a non-full territory as usual, but excess dice are lost instead of stacking.</li>
+                                <li><strong>Full</strong> — Reinforcements are placed randomly across all territories. If the chosen territory is full, that die is lost.</li>
+                                <li><strong>Reborn</strong> — Like No Stack Hard, but if the chosen territory is full it resets to 1 die instead of the die being lost.</li>
                             </ul>
                         </li>
                         <li><strong>Attack Rules</strong> — How ties are resolved when both sides roll the same total:

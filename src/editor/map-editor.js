@@ -408,6 +408,7 @@ export class MapEditor {
             editorModsAttackSeconds: document.getElementById('editor-mods-attack-seconds-limit'),
             editorModsFullBoard: document.getElementById('editor-mods-full-board-rule'),
             editorModsAttackRule: document.getElementById('editor-mods-attack-rule'),
+            editorModsSupplyRule: document.getElementById('editor-mods-supply-rule'),
 
             // Mode tabs and bottom bar
             bottomBar: document.querySelector('.editor-bottom-bar'),
@@ -581,6 +582,11 @@ export class MapEditor {
 
         this.elements.editorModsAttackRule?.addEventListener('change', () => {
             localStorage.setItem('dicy_attackRule', this.elements.editorModsAttackRule.value);
+            this.syncEditorModsExpanderLive();
+        });
+
+        this.elements.editorModsSupplyRule?.addEventListener('change', () => {
+            localStorage.setItem('dicy_supplyRule', this.elements.editorModsSupplyRule.value);
             this.syncEditorModsExpanderLive();
         });
 
@@ -1565,6 +1571,9 @@ export class MapEditor {
         }
         if (el.editorModsAttackRule) {
             el.editorModsAttackRule.value = localStorage.getItem('dicy_attackRule') || 'classic';
+        }
+        if (el.editorModsSupplyRule) {
+            el.editorModsSupplyRule.value = localStorage.getItem('dicy_supplyRule') || 'classic';
         }
 
         const tgi = document.getElementById(EDITOR_MODS_PREFIX + 'tournament-games');

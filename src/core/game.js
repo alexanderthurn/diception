@@ -24,6 +24,7 @@ export class Game {
         /** Set between full-board rule resolve and `confirmFullBoardResolution` (UI reveal). */
         this._pendingFullBoardWinner = null;
         this.attackRule = 'classic';
+        this.supplyRule = 'classic';
         /** Max attacks per turn for the active player (0 = unlimited). */
         this.attacksPerTurn = 0;
         this.attacksUsedThisTurn = 0;
@@ -67,6 +68,7 @@ export class Game {
         this.fullBoardResolution = false;
         this._pendingFullBoardWinner = null;
         this.attackRule = 'classic';
+        this.supplyRule = 'classic';
         this.attacksPerTurn = 0;
         this.attacksUsedThisTurn = 0;
         this.secondsPerTurn = 0;
@@ -91,6 +93,7 @@ export class Game {
         this.fullBoardResolution = false;
         this._pendingFullBoardWinner = null;
         this.attackRule = config.attackRule || 'classic';
+        this.supplyRule = config.supplyRule || 'classic';
         this.attacksPerTurn = config.attacksPerTurn ?? 0;
         this.attacksUsedThisTurn = 0;
         this.secondsPerTurn = config.secondsPerTurn ?? 0;
@@ -273,7 +276,8 @@ export class Game {
         const reinforceResult = this.reinforcement.distributeReinforcements({
             map: this.map,
             player: this.currentPlayer,
-            maxDice: this.maxDice
+            maxDice: this.maxDice,
+            supplyRule: this.supplyRule,
         }, this.currentPlayer.id);
         const reinforceData = { player: this.currentPlayer, ...reinforceResult };
         this.emit('reinforcements', reinforceData);

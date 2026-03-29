@@ -1603,6 +1603,56 @@ export class GridRenderer {
         });
     }
 
+    /** Small label that floats upward from the centre of a tile and fades out. */
+    _showTileFloat(x, y, text, color) {
+        const px = x * (this.tileSize + this.gap) + this.tileSize / 2;
+        const py = y * (this.tileSize + this.gap) + this.tileSize / 2;
+        const fontSize = Math.max(6, Math.round(this.tileSize * 0.22));
+        const label = new Text({
+            text,
+            style: new TextStyle({
+                fontFamily: 'Rajdhani, Arial',
+                fontSize,
+                fontWeight: '700',
+                fill: '#ffffff',
+                stroke: { color, width: 3 },
+                dropShadow: true,
+                dropShadowBlur: 6,
+                dropShadowDistance: 1,
+            }),
+        });
+        label.anchor.set(0.5);
+        label.x = px;
+        label.y = py;
+        label.alpha = 0;
+        this.animationContainer.addChild(label);
+        this.animator.addTween({
+            duration: 40,
+            onUpdate: (p) => {
+                label.alpha = p < 0.2 ? p / 0.2 : p > 0.6 ? 1 - (p - 0.6) / 0.4 : 1;
+                label.y = py - p * this.tileSize * 0.24;
+            },
+            onComplete: () => label.destroy(),
+        });
+    }
+
+    /** Brief coloured flash overlay on a tile (e.g. white burst for Reborn). */
+    _flashTile(x, y, color, frames = 12) {
+        const px = x * (this.tileSize + this.gap);
+        const py = y * (this.tileSize + this.gap);
+        const gfx = new Graphics();
+        gfx.rect(0, 0, this.tileSize, this.tileSize);
+        gfx.fill({ color, alpha: 0 });
+        gfx.x = px;
+        gfx.y = py;
+        this.animationContainer.addChild(gfx);
+        this.animator.addTween({
+            duration: frames,
+            onUpdate: (p) => { gfx.alpha = Math.sin(p * Math.PI) * 0.85; },
+            onComplete: () => gfx.destroy(),
+        });
+    }
+
     /**
      * Supply animation: region pulse + big "+N" text + one-by-one die placement.
      * Runs in beginner and normal mode; expert skips entirely.
@@ -1618,7 +1668,7 @@ export class GridRenderer {
      * @param {number} color - hex colour for the stroke / glow (e.g. 0x00ffff)
      * @param {number} [durationFrames=120] - total animation length in frames (~2 s at 60 fps)
      */
-    showBigLabel(text, color, durationFrames = 180) {
+    showBigLabel(text, color, durationFrames = 180, yOffset = 0) {
         if (window.innerWidth <= 768 || window.innerHeight <= 720) return;
 
         const screenW = this.app?.screen.width ?? window.innerWidth;
@@ -1645,7 +1695,7 @@ export class GridRenderer {
         });
         label.anchor.set(0.5);
         label.x = labelX;
-        label.y = labelY;
+        label.y = labelY + yOffset;
         label.alpha = 0;
         label.scale.set(0.3);
         this.animationContainer.addChild(label);
@@ -1676,7 +1726,10 @@ export class GridRenderer {
         this._supplyAnimActive = true;
 
         const placements = data.placements || [];
+        const events = data.events?.length ? data.events : null;
         const totalDice = (data.placed || 0) + (data.stored || 0);
+        const dropped = data.dropped || 0;
+        const supplyRule = data.supplyRule || 'classic';
         const mapWidth = this.game.map.width;
         const playerColor = data.player.color;
         const totalFrames = this.gameSpeed === 'beginner'
@@ -1705,10 +1758,18 @@ export class GridRenderer {
 
 
         // ── "+N" label: pop in, brief hold, fast dissolve ────────────────────
-        this.showBigLabel(`+${totalDice}`, playerColor, totalFrames);
+        const hasFullLabel = supplyRule === 'no_stack' && dropped > 0;
+        const baseOffset = hasFullLabel ? Math.round(this.tileSize * 0.9) : 0;
+        this.showBigLabel(`+${totalDice}`, playerColor, totalFrames, -baseOffset);
+        if (hasFullLabel) {
+            this.showBigLabel('Full', 0xff3322, totalFrames, baseOffset);
+        }
+
+        // ── Main tween: runs for the full duration ────────────────────────────
+        const stepList = events || placements.map(p => ({ ...p, type: 'place' }));
 
         // ── Pre-compute dice overrides (show pre-reinforcement counts) ────────
-        if (placements.length > 0) {
+        if (stepList.length > 0) {
             const placementCounts = new Map();
             for (const p of placements) {
                 const idx = p.x + p.y * mapWidth;
@@ -1720,14 +1781,21 @@ export class GridRenderer {
                 const tile = this.game.map.getTileRaw(x, y);
                 if (tile) this.setDiceOverride(x, y, tile.dice - cnt);
             }
+            // Reborn tiles: always show maxDice until the reborn event fires
+            if (supplyRule === 'reborn' && events) {
+                for (const ev of events) {
+                    if (ev.type === 'reborn') {
+                        this.setDiceOverride(ev.x, ev.y, this.game.maxDice);
+                    }
+                }
+            }
             this.draw();
         }
 
-        // ── Main tween: runs for the full duration ────────────────────────────
         let stepIndex = 0;
         let nextStepProgress = phaseARatio;
-        const stepProgressInterval = placements.length > 0
-            ? phaseBRatio / placements.length
+        const stepProgressInterval = stepList.length > 0
+            ? phaseBRatio / stepList.length
             : Infinity;
 
         this.animator.addTween({
@@ -1737,21 +1805,30 @@ export class GridRenderer {
                 const pulse = 0.15 + 0.12 * Math.sin(p * Math.PI * 8);
                 for (const gfx of overlays) gfx.alpha = pulse;
 
-                // Phase B: step through placements
-                if (placements.length > 0) {
+                // Phase B: step through events
+                if (stepList.length > 0) {
                     let stepsThisFrame = 0;
-                    while (stepIndex < placements.length &&
+                    while (stepIndex < stepList.length &&
                         p >= nextStepProgress &&
                         stepsThisFrame < 6) {
-                        const pl = placements[stepIndex++];
+                        const ev = stepList[stepIndex++];
                         nextStepProgress += stepProgressInterval;
                         stepsThisFrame++;
 
-                        const idx = pl.x + pl.y * mapWidth;
-                        const cur = this._diceOverrides.get(idx) ?? 0;
-                        this.setDiceOverride(pl.x, pl.y, cur + 1);
-                        this._wobbleTile(pl.x, pl.y);
-                        if (this.gameSpeed !== 'expert') sfx?.coin();
+                        if (ev.type === 'reject') {
+                            this._showTileFloat(ev.x, ev.y, 'Full', 0xff3322);
+                        } else if (ev.type === 'reborn') {
+                            // Snap tile to 1 die, flash white, show label
+                            this.setDiceOverride(ev.x, ev.y, 1);
+                            this._flashTile(ev.x, ev.y, 0xffffff, 14);
+                            this._showTileFloat(ev.x, ev.y, 'Reborn', 0xff3322);
+                        } else {
+                            const idx = ev.x + ev.y * mapWidth;
+                            const cur = this._diceOverrides.get(idx) ?? 0;
+                            this.setDiceOverride(ev.x, ev.y, cur + 1);
+                            this._wobbleTile(ev.x, ev.y);
+                            if (this.gameSpeed !== 'expert') sfx?.coin();
+                        }
                     }
                     if (stepsThisFrame > 0) this.draw();
                 }
@@ -1767,7 +1844,7 @@ export class GridRenderer {
         });
 
         // ── All-full fallback: flash the end-turn button ───────────────────────
-        if (placements.length === 0) {
+        if (stepList.length === 0) {
             const btn = document.getElementById('end-turn-btn');
             if (btn) {
                 btn.classList.add('supply-flash');

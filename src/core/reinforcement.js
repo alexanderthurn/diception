@@ -14,49 +14,82 @@ export class ReinforcementManager {
      * @returns {Object} Reinforcement result
      */
     distributeReinforcements(context, playerId) {
-        const { map, player, maxDice = GAME.DEFAULT_MAX_DICE } = context;
-        
+        const { map, player, maxDice = GAME.DEFAULT_MAX_DICE, supplyRule = 'classic' } = context;
+
         const earned = map.findLargestConnectedRegion(playerId);
         const fromStore = player.storedDice || 0;
 
-        // Total available to place: new earnings + previously stored
         let diceToDistribute = earned + fromStore;
         let placed = 0;
-        const placements = []; // Track where dice were placed for animation
+        let dropped = 0;
+        const placements = [];
+        // Ordered event log for animation (no_stack_hard / reborn only)
+        const events = [];
 
         const ownedTiles = map.getTilesByOwner(playerId);
 
-        // Distribute randomly
-        // Optimization: Filter once and maintain eligible list
-        const eligibleTiles = ownedTiles.filter(t => t.dice < maxDice);
+        if (supplyRule === 'no_stack_hard' || supplyRule === 'reborn') {
+            // Pick from ALL owned tiles; full tile either loses the die or reborns it
+            while (diceToDistribute > 0 && ownedTiles.length > 0) {
+                const randomIndex = Math.floor(Math.random() * ownedTiles.length);
+                const randomTile = ownedTiles[randomIndex];
+                diceToDistribute--;
 
-        while (diceToDistribute > 0 && eligibleTiles.length > 0) {
-            const randomIndex = Math.floor(Math.random() * eligibleTiles.length);
-            const randomTile = eligibleTiles[randomIndex];
+                if (randomTile.dice >= maxDice) {
+                    if (supplyRule === 'reborn') {
+                        randomTile.dice = 1;
+                        placed++;
+                        // Not added to placements — handled separately via events in animation
+                        events.push({ x: randomTile.x, y: randomTile.y, type: 'reborn' });
+                    } else {
+                        dropped++;
+                        events.push({ x: randomTile.x, y: randomTile.y, type: 'reject' });
+                    }
+                } else {
+                    randomTile.dice++;
+                    placed++;
+                    placements.push({ x: randomTile.x, y: randomTile.y });
+                    events.push({ x: randomTile.x, y: randomTile.y, type: 'place' });
+                }
+            }
+            player.storedDice = 0;
+        } else {
+            // Classic / No Stack: pre-filter to eligible tiles
+            const eligibleTiles = ownedTiles.filter(t => t.dice < maxDice);
 
-            randomTile.dice++;
-            diceToDistribute--;
-            placed++;
-            placements.push({ x: randomTile.x, y: randomTile.y });
+            while (diceToDistribute > 0 && eligibleTiles.length > 0) {
+                const randomIndex = Math.floor(Math.random() * eligibleTiles.length);
+                const randomTile = eligibleTiles[randomIndex];
 
-            // If tile becomes full, remove it from eligible list
-            if (randomTile.dice >= maxDice) {
-                // Efficient removal: swap with last element and pop
-                eligibleTiles[randomIndex] = eligibleTiles[eligibleTiles.length - 1];
-                eligibleTiles.pop();
+                randomTile.dice++;
+                diceToDistribute--;
+                placed++;
+                placements.push({ x: randomTile.x, y: randomTile.y });
+
+                if (randomTile.dice >= maxDice) {
+                    eligibleTiles[randomIndex] = eligibleTiles[eligibleTiles.length - 1];
+                    eligibleTiles.pop();
+                }
+            }
+
+            if (supplyRule === 'no_stack') {
+                dropped = diceToDistribute;
+                player.storedDice = 0;
+            } else {
+                // Classic: remainder goes to stack
+                player.storedDice = diceToDistribute;
             }
         }
 
-        // Remaining dice go back to store
-        player.storedDice = diceToDistribute;
-
         return {
-            earned: earned,
-            placed: placed,
-            dropped: 0,
+            earned,
+            placed,
+            dropped,
             stored: player.storedDice,
-            fromStore: fromStore,
-            placements: placements
+            fromStore,
+            placements,
+            events,
+            supplyRule,
         };
     }
 
@@ -66,7 +99,8 @@ export class ReinforcementManager {
         return this.distributeReinforcements({
             map: game.map,
             player: player,
-            maxDice: game.maxDice
+            maxDice: game.maxDice,
+            supplyRule: game.supplyRule,
         }, playerId);
     }
 }

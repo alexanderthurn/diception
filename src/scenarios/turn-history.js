@@ -74,6 +74,8 @@ export class TurnHistory {
             secondsPerTurn: game.secondsPerTurn ?? 0,
             secondsPerAttack: game.secondsPerAttack ?? 0,
             playMode: game.playMode ?? 'classic',
+            attackRule: game.attackRule ?? 'classic',
+            supplyRule: game.supplyRule ?? 'classic',
 
             // Map state
             map: {
@@ -140,6 +142,8 @@ export class TurnHistory {
             game.secondsPerTurn = state.secondsPerTurn ?? 0;
             game.secondsPerAttack = state.secondsPerAttack ?? 0;
             game.playMode = state.playMode ?? 'classic';
+            game.attackRule = state.attackRule ?? 'classic';
+            game.supplyRule = state.supplyRule ?? 'classic';
 
             // Restore map
             game.map.width = state.map.width;
