@@ -608,6 +608,7 @@ export class GamepadCursorManager {
         this.container.appendChild(el);
         this.cursors.set(index, cursor);
         this.updateCursorColor(cursor, index);
+        this._updateMultiGamepadClass();
 
         return cursor;
     }
@@ -618,6 +619,11 @@ export class GamepadCursorManager {
             cursor.element.remove();
             this.cursors.delete(index);
         }
+        this._updateMultiGamepadClass();
+    }
+
+    _updateMultiGamepadClass() {
+        document.body.classList.toggle('multi-gamepad', this.cursors.size > 1);
     }
 
     /** Cycle this gamepad's player assignment forward (+1) or backward (-1). */

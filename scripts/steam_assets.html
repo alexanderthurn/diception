@@ -213,6 +213,13 @@
             { id: 'broadcast_right', name: 'Broadcast Right Panel', w: 199, h: 433, type: 'broadcast', side: 'right' },
         ];
 
+        const COMMUNITY_ASSETS = [
+            { id: 'community_news',        name: 'News Post',        w: 800, h: 450, type: 'community_news', label: 'NEWS',        accentColor: '#00FFFF' },
+            { id: 'community_game_update', name: 'Game Update Post', w: 800, h: 450, type: 'community_news', label: 'GAME UPDATE', accentColor: '#55FF00' },
+            { id: 'community_discount',    name: 'Discount Post',    w: 800, h: 450, type: 'community_news', label: 'DISCOUNT',    accentColor: '#FFCC00' },
+            { id: 'community_dev_log',     name: 'Dev Log Post',     w: 800, h: 450, type: 'community_news', label: 'DEV LOG',     accentColor: '#AA00FF' },
+        ];
+
         const SOUNDTRACK_ASSETS = [
             { id: 'ost_cover', name: 'Cover Image', w: 1000, h: 1000, type: 'ost' },
             { id: 'ost_header_capsule', name: 'Header Capsule', w: 920, h: 430, type: 'ost' },
@@ -279,6 +286,7 @@
             addSection('Windows Assets (Preview Only)', WINDOWS_ASSETS);
             addSection('Custom Assets', CUSTOM_ASSETS);
             addSection('Broadcast Assets', BROADCAST_ASSETS);
+            addSection('Community Assets', COMMUNITY_ASSETS);
             addSection('Soundtrack Assets', SOUNDTRACK_ASSETS);
 
             // Load spritesheet then derive die coords and render all assets
@@ -718,6 +726,11 @@ void main(void) {
 
             if (asset.type === 'broadcast') {
                 drawBroadcastPanel(canvas, asset);
+                return;
+            }
+
+            if (asset.type === 'community_news') {
+                drawCommunityPost(canvas, asset);
                 return;
             }
 
@@ -1363,6 +1376,140 @@ void main(void) {
 
         }
 
+        // ── Community post renderer (800×450) ──
+        // Shared layout: left 40% = brand zone, right 60% = battle map.
+        // asset.label and asset.accentColor drive the type-specific visuals.
+        function drawCommunityPost(canvas, asset) {
+            const ctx = canvas.getContext('2d');
+            const w = asset.w, h = asset.h;
+            const label = asset.label || 'NEWS';
+            const accent = asset.accentColor || '#00FFFF';
+
+            // Each type gets its own RNG seed so maps/dice look different
+            const seed = asset.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+            const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED + seed);
+
+            // Stars + grid + nebula
+            drawShaderBackground(ctx, w, h, 6.0 + seed % 12, null, 2.0);
+
+            // Floating dice — spread across the full canvas, faded
+            drawFloatingDice(ctx, w, h, rng, 1.4, null, 28, 55, 0.65);
+            drawParticles(ctx, w, h, 45, rng);
+
+            // ── Layout: left 40% = brand zone, right 60% = map zone ──
+            const splitX = Math.round(w * 0.40);
+
+            // Dark vignette over left zone for text readability
+            const leftFade = ctx.createLinearGradient(0, 0, splitX * 1.4, 0);
+            leftFade.addColorStop(0,    'rgba(5,5,18,0.94)');
+            leftFade.addColorStop(0.70, 'rgba(5,5,18,0.72)');
+            leftFade.addColorStop(1,    'rgba(5,5,18,0)');
+            ctx.fillStyle = leftFade;
+            ctx.fillRect(0, 0, splitX * 1.4, h);
+
+            // ── Battle map — fills right half edge-to-edge ──
+            const mapRng = mulberry32(w * 61 + h * 19 + seed);
+            const cols = 8, rows = 6;
+            // Size tiles so the grid exactly fills the right half (w/2 → w) × (0 → h)
+            const mapHalfW = w - splitX;
+            const tileSize = Math.floor(Math.min(mapHalfW / cols, h / rows));
+            const gap = Math.max(1, Math.round(tileSize * 0.04));
+            const mapW2 = cols * (tileSize + gap) - gap;
+            const mapH2 = rows * (tileSize + gap) - gap;
+            // Center within right half, then nudge so tiles bleed to all four edges
+            const mapX = splitX + (mapHalfW - mapW2) / 2;
+            const mapY = (h - mapH2) / 2;
+
+            // Rotate the color list per type so each post has a different dominant palette
+            const rotated = [...PLAYER_COLORS].slice(seed % PLAYER_COLORS.length)
+                .concat([...PLAYER_COLORS].slice(0, seed % PLAYER_COLORS.length));
+            const mapColors = rotated.slice(0, 4);
+            const battleMap = generateBattleMap(cols, rows, mapColors, mapRng);
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(splitX, 0, w - splitX, h);
+            ctx.clip();
+            drawMiniMap(ctx, battleMap, mapX, mapY, tileSize, gap);
+            ctx.restore();
+
+            // Left fade: map bleeds from splitX, fades into background over ~35% of canvas width
+            const leftMapFade = ctx.createLinearGradient(splitX, 0, splitX + w * 0.35, 0);
+            leftMapFade.addColorStop(0, 'rgba(5,5,18,0.92)');
+            leftMapFade.addColorStop(1, 'rgba(5,5,18,0)');
+            ctx.fillStyle = leftMapFade;
+            ctx.fillRect(splitX, 0, w * 0.35, h);
+
+            // Right + top + bottom edge vignette so map bleeds cleanly to corners
+            const edgeFade = ctx.createLinearGradient(w * 0.80, 0, w, 0);
+            edgeFade.addColorStop(0, 'rgba(5,5,18,0)');
+            edgeFade.addColorStop(1, 'rgba(5,5,18,0.50)');
+            ctx.fillStyle = edgeFade;
+            ctx.fillRect(0, 0, w, h);
+
+            // ── Texts (drawn after map so they sit on top) ──
+            const titleCX = splitX * 0.72;
+            const maxLabelW = splitX * 0.85;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic';
+
+            // Ghost watermark — first word of label, faint, huge
+            const ghostWord = label.split(' ')[0];
+            const ghostSize = h * 0.68;
+            ctx.font = `700 ${ghostSize}px Rajdhani`;
+            ctx.textAlign = 'left';
+            ctx.fillStyle = accent;
+            ctx.globalAlpha = 0.035;
+            ctx.fillText(ghostWord, w * 0.02, h * 0.82);
+            ctx.globalAlpha = 1;
+            ctx.textAlign = 'center';
+
+            // Label (primary title)
+            let labelSize = h * 0.28;
+            ctx.font = `700 ${labelSize}px Rajdhani`;
+            labelSize = Math.min(labelSize, labelSize * (maxLabelW / ctx.measureText(label).width));
+            const labelLetterSpacing = Math.round(labelSize * 0.10);
+
+            // DICEPTION brand mark — fixed size across all post types
+            let brandSize = h * 0.075;
+            ctx.font = `700 ${brandSize}px Rajdhani`;
+            brandSize = Math.min(brandSize, brandSize * (maxLabelW / ctx.measureText('DICEPTION').width));
+            const brandLetterSpacing = Math.round(brandSize * 0.08);
+
+            // Vertically center the two-line block (brand + label) as a unit
+            const lineDiff = brandSize * 0.15 + labelSize * 0.87;
+            const brandY = (h + brandSize * 0.72 - lineDiff - labelSize * 0.12) / 2;
+            const labelY = brandY + lineDiff;
+
+            ctx.shadowColor = accent;
+            ctx.shadowBlur = labelSize * 0.30;
+            ctx.fillStyle = accent;
+            drawTextWithSpacing(ctx, label, titleCX, labelY, labelSize, 700, labelLetterSpacing, null);
+            ctx.shadowBlur = 0;
+            const charColors = 'DICEPTION'.split('').map((_, i) => i < 4 ? '#AA00FF' : '#00FFFF');
+            ctx.shadowColor = '#AA00FF';
+            ctx.shadowBlur = brandSize * 0.25;
+            ctx.globalAlpha = 0.75;
+            drawTextWithSpacing(ctx, 'DICEPTION', titleCX, brandY, brandSize, 700, brandLetterSpacing, charColors);
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+
+            // ── Top + bottom border lines ──
+            const accentRGB = accent === '#00FFFF' ? '0,255,255'
+                            : accent === '#55FF00' ? '85,255,0'
+                            : accent === '#FFCC00' ? '255,204,0'
+                            :                        '170,0,255';
+            const borderGrad = ctx.createLinearGradient(0, 0, w, 0);
+            borderGrad.addColorStop(0,    `rgba(${accentRGB},0)`);
+            borderGrad.addColorStop(0.25, `rgba(${accentRGB},0.85)`);
+            borderGrad.addColorStop(0.75, 'rgba(170,0,255,0.85)');
+            borderGrad.addColorStop(1,    'rgba(170,0,255,0)');
+            ctx.strokeStyle = borderGrad;
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, 1.5); ctx.lineTo(w, 1.5); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, h - 1.5); ctx.lineTo(w, h - 1.5); ctx.stroke();
+        }
+
         // ── Downloads ──
         function downloadCanvas(canvasId, filename, asJpg) {
             const canvas = document.getElementById(canvasId);
@@ -1381,7 +1528,7 @@ void main(void) {
             const game = zip.folder('diception');
             const ost = zip.folder('soundtrack');
 
-            const gameAssets = [...STORE_ASSETS, ...LIBRARY_ASSETS, ...WINDOWS_ASSETS, ...CUSTOM_ASSETS, ...BROADCAST_ASSETS];
+            const gameAssets = [...STORE_ASSETS, ...LIBRARY_ASSETS, ...WINDOWS_ASSETS, ...CUSTOM_ASSETS, ...BROADCAST_ASSETS, ...COMMUNITY_ASSETS];
             for (const asset of gameAssets) {
                 const canvas = document.getElementById(asset.id);
                 const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
