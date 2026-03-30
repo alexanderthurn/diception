@@ -1873,16 +1873,17 @@ void main(void) {
             ctx.globalAlpha = 1;
             ctx.textAlign = 'center';
 
-            // Label (primary title)
-            let labelSize = h * 0.28;
-            ctx.font = `700 ${labelSize}px Rajdhani`;
-            labelSize = Math.min(labelSize, labelSize * (maxLabelW / ctx.measureText(label).width));
+            // Shared size for both lines — cap whichever word is wider
+            const baseSize = h * 0.20;
+            ctx.font = `700 ${baseSize}px Rajdhani`;
+            const labelFit  = baseSize * Math.min(1, maxLabelW / ctx.measureText(label).width);
+            const brandFit  = baseSize * Math.min(1, maxLabelW / ctx.measureText('DICEPTION').width);
+            const sharedSize = Math.min(labelFit, brandFit);
+
+            let labelSize = sharedSize;
             const labelLetterSpacing = Math.round(labelSize * 0.10);
 
-            // DICEPTION brand mark — fixed size across all post types
-            let brandSize = h * 0.075;
-            ctx.font = `700 ${brandSize}px Rajdhani`;
-            brandSize = Math.min(brandSize, brandSize * (maxLabelW / ctx.measureText('DICEPTION').width));
+            let brandSize = sharedSize;
             const brandLetterSpacing = Math.round(brandSize * 0.08);
 
             // Vertically center the two-line block (brand + label) as a unit
