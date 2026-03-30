@@ -607,6 +607,12 @@ async function init() {
             inputManager.setGamepadAssignment(index, slot);
         }
         renderGamepadAssignments();
+
+        // If a game is already running (no modal open), snap the new cursor to a player tile immediately
+        const isGameRunning = game.players.length > 0 && !document.querySelector('.modal:not(.hidden)');
+        if (isGameRunning) {
+            inputManager.gamepadCursorManager?.focusPlayerTiles(game, renderer);
+        }
     });
 
     // When a network pad disconnects: soft-kick (remove cursor) but preserve assignment for reconnect
@@ -1182,6 +1188,11 @@ async function init() {
     gameEventManager.init();
     sessionManager.setGameEventManager(gameEventManager);
     renderer.gameEventManager = gameEventManager;
+
+    // When a game starts, snap gamepad cursors onto the player's own territory tiles
+    game.on('gameStart', () => {
+        inputManager.gamepadCursorManager?.focusPlayerTiles(game, renderer);
+    });
 
     // Pause / resume turn timer when pause modal is shown / hidden
     const _pauseModalEl = document.getElementById('pause-modal');

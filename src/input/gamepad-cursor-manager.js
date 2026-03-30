@@ -1138,6 +1138,51 @@ export class GamepadCursorManager {
     }
 
     /**
+     * Called when a game starts — moves each gamepad cursor to a tile owned by its assigned player
+     * so it's immediately in canvas mode rather than still hovering over menu buttons.
+     */
+    focusPlayerTiles(game, renderer) {
+        if (this.cursors.size === 0) return;
+
+        // Release any button/UI focus first
+        this._clearUIFocusOnModalOpen();
+
+        const humanPlayers = game.players.filter(p => !p.isBot);
+        const mapWidth = game.map.width;
+
+        for (const [idx, cursor] of this.cursors) {
+            const assignment = this.inputManager.getGamepadAssignment(idx);
+            const playerIndex = typeof assignment === 'number' ? assignment : 0;
+            const player = humanPlayers[playerIndex];
+            if (!player) continue;
+
+            // Collect tiles owned by this player
+            const owned = [];
+            for (let i = 0; i < game.map.tiles.length; i++) {
+                const tile = game.map.tiles[i];
+                if (!tile.blocked && tile.owner === player.id) {
+                    owned.push({ x: i % mapWidth, y: Math.floor(i / mapWidth) });
+                }
+            }
+            if (owned.length === 0) continue;
+
+            // Pick the median tile (roughly center of the territory)
+            const mid = owned[Math.floor(owned.length / 2)];
+            const screenPos = renderer.getTileScreenPosition(mid.x, mid.y);
+            if (!screenPos) continue;
+
+            cursor.x = screenPos.x;
+            cursor.y = screenPos.y;
+            this._positionCursor(cursor);
+
+            if (this.getTileScreenSize) {
+                const sz = Math.round(this.getTileScreenSize() / this._uiScale());
+                this._resizeCursor(cursor, sz, sz, 0.20);
+            }
+        }
+    }
+
+    /**
      * Watch for modals becoming visible and auto-focus their first element
      * so D-pad navigation works immediately without needing an initial Tab press.
      */
@@ -1209,12 +1254,18 @@ export class GamepadCursorManager {
                         }
                     }
                 }
-                // .modal lost its 'hidden' class → became visible
+                // .modal class changed — became visible or hidden
                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                     const el = mutation.target;
-                    if (el.classList?.contains('modal') && !el.classList.contains('hidden')) {
-                        this._clearUIFocusOnModalOpen();
-                        autoFocus(el);
+                    if (el.classList?.contains('modal')) {
+                        if (!el.classList.contains('hidden')) {
+                            // Modal opened → snap cursor to first focusable element
+                            this._clearUIFocusOnModalOpen();
+                            autoFocus(el);
+                        } else if (!document.querySelector('.modal:not(.hidden)')) {
+                            // Modal closed and no other modal is open → release cursors to canvas
+                            this._clearUIFocusOnModalOpen();
+                        }
                     }
                 }
             }
