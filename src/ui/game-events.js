@@ -844,7 +844,9 @@ export class GameEventManager {
         const attackRollStr = result.attackerRolls.join('+');
         const defendRollStr = result.defenderRolls.join('+');
         const outcome = result.tied ? '=' : result.won ? '✓' : '✗';
-        const operator = result.won ? '>' : result.tied ? '=' : '≤';
+        const operator = result.tied ? '=' : result.won
+            ? (result.easyAttack ? '≥' : '>')
+            : (result.easyAttack ? '<' : '≤');
         if (this.addLog) {
             this.addLog(`${attackRollStr}=${result.attackerSum}${operator}${result.defenderSum}=${defendRollStr} → ${defenderName} ${outcome}`, result.won ? 'attack-win' : result.tied ? 'info' : 'attack-loss');
         }

@@ -65,7 +65,7 @@ export class DiceHUD {
             <div class="dice-group">
                 ${this.buildDiceDisplay(result.attackerRolls.length, attackSum, attackerColor)}
             </div>
-            <span class="vs-indicator ${result.won ? 'win' : 'loss'}">${result.won ? '>' : '≤'}</span>
+            <span class="vs-indicator ${result.won ? 'win' : 'loss'}">${result.won ? (result.easyAttack ? '≥' : '>') : (result.easyAttack ? '<' : '≤')}</span>
             <div class="dice-group">
                 ${this.buildDiceDisplay(result.defenderRolls.length, defendSum, defenderColor)}
             </div>
@@ -184,7 +184,7 @@ export class DiceHUD {
             await wait(220);
             if (dismissed) return;
 
-            cmpSign.textContent = result.won ? '>' : '≤';
+            cmpSign.textContent = result.won ? (result.easyAttack ? '≥' : '>') : (result.easyAttack ? '<' : '≤');
             cmpSign.classList.add(result.won ? 'win' : 'loss', 'visible');
 
             sumA.style.color = attackerColor;

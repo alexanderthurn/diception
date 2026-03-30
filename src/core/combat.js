@@ -88,6 +88,7 @@ export class CombatManager {
             defenderSum: defenseRoll.sum,
             won,
             tied: tied && attackRule === 'all_die',
+            easyAttack: attackRule === 'easy_attack',
         };
 
         if (battleResult.tied) {
