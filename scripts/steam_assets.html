@@ -201,7 +201,10 @@
         ];
 
         const WINDOWS_ASSETS = [
-            { id: 'windows_bg_4k', name: 'Windows Background 4K', w: 3840, h: 2160, type: 'title' },
+            { id: 'windows_bg_4k',          name: 'Windows Background 4K',            w: 3840, h: 2160, type: 'title' },
+            { id: 'windows_diception_map',  name: 'Windows DICEPTION Map 4K',          w: 3840, h: 2160, type: 'diception_map' },
+            { id: 'windows_diception_neg',  name: 'Windows DICEPTION Negative Map 4K', w: 3840, h: 2160, type: 'diception_map_negative' },
+            { id: 'windows_big_territory',  name: 'Windows Big Territory 4K',          w: 3840, h: 2160, type: 'big_territory' },
         ];
 
         const CUSTOM_ASSETS = [
@@ -745,6 +748,21 @@ void main(void) {
             if (asset.type === 'game_map') {
                 ctx.clearRect(0, 0, w, h);
                 drawGameMap(ctx, w, h);
+                return;
+            }
+
+            if (asset.type === 'diception_map') {
+                drawDiceptionLetterMap(canvas, asset);
+                return;
+            }
+
+            if (asset.type === 'diception_map_negative') {
+                drawDiceptionNegativeMap(canvas, asset);
+                return;
+            }
+
+            if (asset.type === 'big_territory') {
+                drawBigTerritoryMap(canvas, asset);
                 return;
             }
 
@@ -1374,6 +1392,397 @@ void main(void) {
             drawTextWithSpacing(ctx, 'DICEPTION', titleX, titleY2, titleSize, 700, titleSpacing, charColors);
             ctx.shadowBlur = 0;
 
+        }
+
+        // ── Big Territory Map renderer (3840×2160) ──
+        // Same atmosphere as windows_bg_4k but replaces the text + territory row
+        // with a single oversized territory strip where each tile's interior shows
+        // its DICEPTION letter built from the dice character sprite.
+        function drawBigTerritoryMap(canvas, asset) {
+            const ctx = canvas.getContext('2d');
+            const w = asset.w, h = asset.h;
+            const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED);
+            const scale = Math.max(w, h) / 1080;
+
+            // ── Letter definitions (5 wide × 7 tall pixel art) ──
+            const LETTERS = {
+                D: [[1,1,1,0,0],[1,0,0,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,1,0],[1,1,1,0,0]],
+                I: [[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[1,1,1,1,1]],
+                C: [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[0,1,1,1,0]],
+                E: [[1,1,1,1,1],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
+                P: [[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0]],
+                T: [[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],
+                O: [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+                N: [[1,0,0,0,1],[1,1,0,0,1],[1,0,1,0,1],[1,0,0,1,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
+            };
+
+            const WORD = 'DICEPTION';
+            const DICE_END = 4; // DICE = cyan, PTION = purple (matching game title)
+            const LW = 5, LH = 7;
+
+            // 9 tiles at 50% of full-width — square, centered
+            const tileSize = Math.floor(w / WORD.length * 0.5);
+            const mapW = WORD.length * tileSize;
+            const offX = Math.floor((w - mapW) / 2);
+            const offY = Math.floor((h - tileSize) / 2);
+
+            // Title bounds with generous padding — used to exclude center from bg effects
+            const pad = tileSize * 0.6;
+            const titleBox = { x: offX - pad, y: offY - pad, w: mapW + pad * 2, h: tileSize + pad * 2 };
+
+            // ── Richer background pipeline (outer area only) ──
+            const shaderTime = (asset.w * 0.003 + asset.h * 0.007) % 20;
+            drawShaderBackground(ctx, w, h, shaderTime, null, 1.0); // quality 1 = grid + nebula
+            drawFloatingDice(ctx, w, h, rng, 1.0, titleBox, 35, 90, 0.7); // avoid title center
+            drawParticles(ctx, w, h, Math.floor(40 + scale * 20), rng);
+
+            // Scatter territory clusters in the outer area only
+            const clusterRng = mulberry32(asset.w * 42 + PAGE_SEED);
+            const clusterCount = Math.floor(6 + scale * 2);
+            const clusterTileSize = Math.floor(40 * scale);
+            for (let i = 0; i < clusterCount; i++) {
+                const cx = clusterRng() * w;
+                const cy = clusterRng() * h;
+                // Skip if center falls inside the title exclusion zone
+                if (cx >= titleBox.x && cx <= titleBox.x + titleBox.w &&
+                    cy >= titleBox.y && cy <= titleBox.y + titleBox.h) continue;
+                drawTerritoryCluster(ctx, cx, cy, clusterTileSize, clusterRng, scale);
+            }
+
+            // Edge vignette — darken corners to focus on center
+            const vignette = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.25, w/2, h/2, Math.max(w,h)*0.8);
+            vignette.addColorStop(0, 'rgba(0,0,0,0)');
+            vignette.addColorStop(1, 'rgba(0,0,10,0.75)');
+            ctx.fillStyle = vignette;
+            ctx.globalAlpha = 1;
+            ctx.fillRect(0, 0, w, h);
+
+            // Scanlines only in the top and bottom strips (outside the title band)
+            ctx.globalAlpha = 0.04;
+            ctx.fillStyle = '#000';
+            const lineStep = Math.max(2, Math.round(scale * 2));
+            const lineH = Math.max(1, Math.round(scale));
+            for (let y = 0; y < h; y += lineStep) {
+                if (y + lineH > titleBox.y && y < titleBox.y + titleBox.h) continue;
+                ctx.fillRect(0, y, w, lineH);
+            }
+            ctx.globalAlpha = 1;
+
+            // Subtle dark halo behind the title so it reads cleanly
+            const titleGlow = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.min(w,h) * 0.35);
+            titleGlow.addColorStop(0,   'rgba(8,8,32,0.55)');
+            titleGlow.addColorStop(0.6, 'rgba(8,8,32,0.25)');
+            titleGlow.addColorStop(1,   'rgba(8,8,32,0)');
+            ctx.fillStyle = titleGlow;
+            ctx.fillRect(0, 0, w, h);
+
+            // ── Draw dice-sprite letters inside each tile ──
+            for (let ti = 0; ti < WORD.length; ti++) {
+                const color = ti < DICE_END ? '#00FFFF' : '#AA00FF';
+                const bitmap = LETTERS[WORD[ti]];
+                const tx = offX + ti * tileSize;
+
+                // Fit the 5×7 sprite grid inside the tile with padding
+                const padding = tileSize * 0.10;
+                const innerSize = tileSize - padding * 2;
+                const cellSize = Math.min(innerSize / LW, innerSize / LH);
+                const gridW = LW * cellSize;
+                const gridH = LH * cellSize;
+                const lx = tx + (tileSize - gridW) / 2;
+                const ly = offY + (tileSize - gridH) / 2;
+                const spSize = cellSize * 0.82; // slight gap between sprite cells
+
+                ctx.globalAlpha = 0.92;
+                for (let r = 0; r < LH; r++) {
+                    for (let c = 0; c < LW; c++) {
+                        if (!bitmap[r][c]) continue;
+                        const sx = lx + c * cellSize + (cellSize - spSize) / 2;
+                        const sy = ly + r * cellSize + (cellSize - spSize) / 2;
+                        ctx.drawImage(spriteSheet,
+                            DICE_SPRITE.x, DICE_SPRITE.y, DICE_SPRITE.w, DICE_SPRITE.h,
+                            sx, sy, spSize, spSize);
+                    }
+                }
+            }
+
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+        }
+
+        // ── DICEPTION letter map renderer (3840×2160) ──
+        // Renders a game map where each letter of DICEPTION is a differently-colored territory.
+        function drawDiceptionLetterMap(canvas, asset) {
+            const ctx = canvas.getContext('2d');
+            const w = asset.w, h = asset.h;
+            const rng = mulberry32(w * 77 + h * 13 + PAGE_SEED);
+
+            // Background: stars + tron grid + nebula
+            drawShaderBackground(ctx, w, h, 10.0, null, 2.0);
+            drawFloatingDice(ctx, w, h, rng, 2.5, null, 40, 100, 0.45);
+            drawParticles(ctx, w, h, 80, rng);
+
+            // ── Pixel-art letter bitmaps (5 wide × 7 tall) ──
+            const LETTERS = {
+                D: [[1,1,1,0,0],[1,0,0,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,1,0],[1,1,1,0,0]],
+                I: [[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[1,1,1,1,1]],
+                C: [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[0,1,1,1,0]],
+                E: [[1,1,1,1,1],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
+                P: [[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0]],
+                T: [[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],
+                O: [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+                N: [[1,0,0,0,1],[1,1,0,0,1],[1,0,1,0,1],[1,0,0,1,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
+            };
+
+            // One distinct color per letter
+            const LETTER_COLORS = [
+                '#AA00FF', // D — purple
+                '#0088FF', // I — blue
+                '#FFCC00', // C — yellow
+                '#00AA44', // E — green
+                '#FF0055', // P — red
+                '#00FFFF', // T — cyan
+                '#55FF00', // I — lime
+                '#FF00AA', // O — pink
+                '#FF8800', // N — orange
+            ];
+
+            const WORD = 'DICEPTION';
+            const LW = 5, LH = 7, LGAP = 1; // letter width, height, gap cols between letters
+
+            const totalCols = WORD.length * LW + (WORD.length - 1) * LGAP;
+            const totalRows = LH;
+
+            // Build grid: grid[row][col] = { color, dice } | null
+            const mapRng = mulberry32(w * 33 + h * 7);
+            const grid = Array.from({ length: totalRows }, () => Array(totalCols).fill(null));
+
+            for (let li = 0; li < WORD.length; li++) {
+                const bitmap = LETTERS[WORD[li]];
+                const color  = LETTER_COLORS[li];
+                const startCol = li * (LW + LGAP);
+                for (let r = 0; r < LH; r++) {
+                    for (let c = 0; c < LW; c++) {
+                        if (bitmap[r][c]) {
+                            grid[r][startCol + c] = { color, dice: 1 + Math.floor(mapRng() * 6) };
+                        }
+                    }
+                }
+            }
+
+            // Tile size: scale to fill ~90% of canvas width
+            const tileSize = Math.floor(w * 0.90 / totalCols);
+            const mapW = totalCols * tileSize;
+            const mapH = totalRows * tileSize;
+            const offX = Math.floor((w - mapW) / 2);
+            const offY = Math.floor((h - mapH) / 2);
+
+            // Dark radial glow centered on map for legibility
+            const mapCX = w / 2, mapCY = h / 2;
+            const glow = ctx.createRadialGradient(mapCX, mapCY, 0, mapCX, mapCY, Math.max(mapW, mapH) * 0.65);
+            glow.addColorStop(0, 'rgba(5,5,18,0.80)');
+            glow.addColorStop(1, 'rgba(5,5,18,0)');
+            ctx.fillStyle = glow;
+            ctx.fillRect(0, 0, w, h);
+
+            // Draw tiles
+            for (let row = 0; row < totalRows; row++) {
+                for (let col = 0; col < totalCols; col++) {
+                    const cell = grid[row][col];
+                    if (!cell) continue;
+                    const { color, dice } = cell;
+                    const tx = offX + col * tileSize;
+                    const ty = offY + row * tileSize;
+
+                    // Glow + fill
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = tileSize * 0.5;
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = 0.45;
+                    ctx.fillRect(tx, ty, tileSize, tileSize);
+                    ctx.shadowBlur = 0;
+
+                    // Borders only on edges facing empty or a different-color neighbour
+                    ctx.globalAlpha = 0.92;
+                    ctx.strokeStyle = color;
+                    for (const [dx, dy, x1, y1, x2, y2] of [
+                        [ 0, -1, tx,            ty,            tx + tileSize, ty           ],
+                        [ 0,  1, tx,            ty + tileSize, tx + tileSize, ty + tileSize],
+                        [-1,  0, tx,            ty,            tx,            ty + tileSize],
+                        [ 1,  0, tx + tileSize, ty,            tx + tileSize, ty + tileSize],
+                    ]) {
+                        const nc = col + dx, nr = row + dy;
+                        const nb = (nr >= 0 && nr < totalRows && nc >= 0 && nc < totalCols) ? grid[nr][nc] : null;
+                        if (!nb || nb.color !== color) {
+                            ctx.lineWidth = nb ? Math.max(2, tileSize * 0.04) : Math.max(3, tileSize * 0.07);
+                            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                        }
+                    }
+
+                    // Dice sprites
+                    ctx.globalAlpha = 0.85;
+                    const sf = tileSize / 60;
+                    const positions = SPRITE_PATTERNS[Math.min(dice, 9)] || SPRITE_PATTERNS[9];
+                    const spacing = 13 * sf;
+                    const spriteSize = 0.06 * sf * DICE_SPRITE.w;
+                    const cx = tx + tileSize / 2, cy = ty + tileSize / 2;
+                    for (const [px, py] of positions) {
+                        ctx.drawImage(spriteSheet,
+                            DICE_SPRITE.x, DICE_SPRITE.y, DICE_SPRITE.w, DICE_SPRITE.h,
+                            cx + px * spacing - spriteSize / 2,
+                            cy + py * spacing - spriteSize / 2,
+                            spriteSize, spriteSize);
+                    }
+                }
+            }
+
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+        }
+
+        // ── DICEPTION negative map renderer (3840×2160) ──
+        // Full-canvas game map where the DICEPTION letter shapes are carved out as
+        // dark holes — the starfield background shows through the letter silhouettes.
+        function drawDiceptionNegativeMap(canvas, asset) {
+            const ctx = canvas.getContext('2d');
+            const w = asset.w, h = asset.h;
+
+            // Background shows through the letter holes
+            drawShaderBackground(ctx, w, h, 7.0, null, 2.0);
+
+            // Letter definitions — same pixel art as the positive version
+            const LETTERS = {
+                D: [[1,1,1,0,0],[1,0,0,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,1,0],[1,1,1,0,0]],
+                I: [[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[1,1,1,1,1]],
+                C: [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[0,1,1,1,0]],
+                E: [[1,1,1,1,1],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
+                P: [[1,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,1,1,1,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0]],
+                T: [[1,1,1,1,1],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0]],
+                O: [[0,1,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,1,1,1,0]],
+                N: [[1,0,0,0,1],[1,1,0,0,1],[1,0,1,0,1],[1,0,0,1,1],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1]],
+            };
+
+            const WORD = 'DICEPTION';
+            const LW = 5, LH = 7, LGAP = 1;
+            const letterCols = WORD.length * LW + (WORD.length - 1) * LGAP; // 53
+
+            // Tile size chosen so the letter map spans the full canvas width
+            const tileSize = Math.floor(w / letterCols);
+
+            // Grid dimensions: extend past canvas edges so no gaps at borders
+            const totalCols = Math.ceil(w / tileSize) + 2;
+            const totalRows = Math.ceil(h / tileSize) + 2;
+
+            // Top-left pixel offset (can be negative — tiles bleed off canvas edges)
+            const offX = Math.floor((w - totalCols * tileSize) / 2);
+            const offY = Math.floor((h - totalRows * tileSize) / 2);
+
+            // Map letter holes to grid coordinates (letter block centered in grid)
+            const letterOffCol = Math.floor((totalCols - letterCols) / 2);
+            const letterOffRow = Math.floor((totalRows - LH) / 2);
+
+            const holeSet = new Set();
+            for (let li = 0; li < WORD.length; li++) {
+                const bitmap = LETTERS[WORD[li]];
+                const startCol = li * (LW + LGAP);
+                for (let r = 0; r < LH; r++) {
+                    for (let c = 0; c < LW; c++) {
+                        if (bitmap[r][c]) {
+                            holeSet.add(`${letterOffCol + startCol + c},${letterOffRow + r}`);
+                        }
+                    }
+                }
+            }
+
+            // Voronoi seeds — 8 player colors spread across the canvas
+            const seeds = PLAYER_COLORS.map((color, i) => {
+                const angle = (i / PLAYER_COLORS.length) * Math.PI * 2 - Math.PI / 8;
+                return {
+                    x: totalCols * (0.5 + 0.38 * Math.cos(angle)),
+                    y: totalRows * (0.5 + 0.38 * Math.sin(angle)),
+                    color,
+                };
+            });
+
+            // Build full grid: hole cells = null, others = Voronoi territory
+            const mapRng = mulberry32(w * 44 + h * 9);
+            const grid = [];
+            for (let row = 0; row < totalRows; row++) {
+                grid.push([]);
+                for (let col = 0; col < totalCols; col++) {
+                    if (holeSet.has(`${col},${row}`)) {
+                        grid[row].push(null);
+                        continue;
+                    }
+                    // Jittered Voronoi: nearest seed wins
+                    const jx = mapRng() * 3 - 1.5;
+                    const jy = mapRng() * 3 - 1.5;
+                    let best = 0, bestDist = Infinity;
+                    for (let s = 0; s < seeds.length; s++) {
+                        const d = (col + jx - seeds[s].x) ** 2 + (row + jy - seeds[s].y) ** 2;
+                        if (d < bestDist) { bestDist = d; best = s; }
+                    }
+                    grid[row].push({ color: seeds[best].color, dice: 1 + Math.floor(mapRng() * 6) });
+                }
+            }
+
+            // Draw tiles
+            for (let row = 0; row < totalRows; row++) {
+                for (let col = 0; col < totalCols; col++) {
+                    const cell = grid[row][col];
+                    if (!cell) continue;
+                    const { color, dice } = cell;
+                    const tx = offX + col * tileSize;
+                    const ty = offY + row * tileSize;
+
+                    // Fill
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = tileSize * 0.35;
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = 0.50;
+                    ctx.fillRect(tx, ty, tileSize, tileSize);
+                    ctx.shadowBlur = 0;
+
+                    // Borders: draw on edges facing a different color or a hole
+                    ctx.globalAlpha = 0.90;
+                    ctx.strokeStyle = color;
+                    for (const [dx, dy, x1, y1, x2, y2] of [
+                        [ 0, -1, tx,            ty,            tx + tileSize, ty           ],
+                        [ 0,  1, tx,            ty + tileSize, tx + tileSize, ty + tileSize],
+                        [-1,  0, tx,            ty,            tx,            ty + tileSize],
+                        [ 1,  0, tx + tileSize, ty,            tx + tileSize, ty + tileSize],
+                    ]) {
+                        const nc = col + dx, nr = row + dy;
+                        const nb = (nr >= 0 && nr < totalRows && nc >= 0 && nc < totalCols)
+                            ? grid[nr][nc] : null;
+                        if (!nb || nb.color !== color) {
+                            // Thicker border on letter-hole edges so the letter outline glows
+                            const isHoleEdge = !nb || nb === null;
+                            ctx.lineWidth = isHoleEdge
+                                ? Math.max(4, tileSize * 0.10)
+                                : Math.max(1, tileSize * 0.03);
+                            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+                        }
+                    }
+
+                    // Dice sprites
+                    ctx.globalAlpha = 0.80;
+                    const sf = tileSize / 60;
+                    const positions = SPRITE_PATTERNS[Math.min(dice, 9)] || SPRITE_PATTERNS[9];
+                    const spacing = 13 * sf;
+                    const spriteSize = 0.06 * sf * DICE_SPRITE.w;
+                    const cx = tx + tileSize / 2, cy = ty + tileSize / 2;
+                    for (const [px, py] of positions) {
+                        ctx.drawImage(spriteSheet,
+                            DICE_SPRITE.x, DICE_SPRITE.y, DICE_SPRITE.w, DICE_SPRITE.h,
+                            cx + px * spacing - spriteSize / 2,
+                            cy + py * spacing - spriteSize / 2,
+                            spriteSize, spriteSize);
+                    }
+                }
+            }
+
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
         }
 
         // ── Community post renderer (800×450) ──
