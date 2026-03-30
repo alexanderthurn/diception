@@ -568,6 +568,7 @@ export class GamepadCursorManager {
                 <path d="M 0 44 L 0 64 L 20 64"  fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
                 <path d="M 44 64 L 64 64 L 64 44" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
             </svg>
+            <span class="gp-cursor-label">${index + 1}</span>
         `;
 
         // Restore last known position, or place at player corner on first appearance.

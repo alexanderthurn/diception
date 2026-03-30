@@ -4959,6 +4959,20 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     background: rgba(0, 0, 0, 0.35);
 }
 
+.gp-cursor-label {
+    position: absolute;
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    color: inherit;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
 #main-menu-branding {
     position: fixed;
     bottom: 16px;
@@ -7148,7 +7162,8 @@ details.settings-group[open]>summary.settings-group-header::after {
     min-width: 30px;
     padding: 0 8px;
     border-color: var(--gp-color, #aaa);
-    color: var(--gp-color, #aaa);
+    background: color-mix(in srgb, var(--gp-color, #aaa) 20%, transparent);
+    color: #fff;
     font-family: 'Rajdhani', sans-serif;
     font-size: 15px;
     font-weight: 700;
