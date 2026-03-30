@@ -261,9 +261,9 @@ export class GameEventManager {
         if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
         if (this.endTurnReinforcement) this.endTurnReinforcement.textContent = '';
 
-        // Check if all human players have autoplay enabled
-        const humanPlayers = this.game.players.filter(p => !p.isBot);
-        const allHumansOnAutoplay = humanPlayers.length > 0 && humanPlayers.every(p => autoplayPlayers.has(p.id));
+        // Check if all alive human players have autoplay enabled (eliminated humans are ignored)
+        const aliveHumanPlayers = this.game.players.filter(p => !p.isBot && p.alive);
+        const allHumansOnAutoplay = aliveHumanPlayers.length === 0 || aliveHumanPlayers.every(p => autoplayPlayers.has(p.id));
 
         // If all humans on autoplay, run headless fast-forward (skip all rendering)
         if (allHumansOnAutoplay) {
