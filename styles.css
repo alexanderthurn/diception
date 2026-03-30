@@ -4960,6 +4960,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 }
 
 .gp-cursor-label {
+    display: none;
     position: absolute;
     top: 48px;
     left: 50%;
@@ -4971,6 +4972,11 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     color: inherit;
     pointer-events: none;
     white-space: nowrap;
+}
+
+body:has(#pause-modal:not(.hidden)) .gp-cursor-label,
+body:has(#setup-modal:not(.hidden)) .gp-cursor-label {
+    display: block;
 }
 
 #main-menu-branding {

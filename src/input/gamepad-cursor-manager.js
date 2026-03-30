@@ -224,9 +224,9 @@ export class GamepadCursorManager {
                             this.navigateModal(button, cursor);
                         } else {
                             const nudge = 80;
-                            if (button === b.moveUp)    cursor.y -= nudge;
-                            if (button === b.moveDown)  cursor.y += nudge;
-                            if (button === b.moveLeft)  cursor.x -= nudge;
+                            if (button === b.moveUp) cursor.y -= nudge;
+                            if (button === b.moveDown) cursor.y += nudge;
+                            if (button === b.moveLeft) cursor.x -= nudge;
                             if (button === b.moveRight) cursor.x += nudge;
                             cursor.x = Math.max(0, Math.min(window.innerWidth, cursor.x));
                             cursor.y = Math.max(0, Math.min(window.innerHeight, cursor.y));
@@ -271,8 +271,8 @@ export class GamepadCursorManager {
             if (isMenuOpen && !this.inputManager.isGamepadAllowedGlobalAction(index)) {
                 const isAssignmentMenu = !!document.querySelector('#pause-modal:not(.hidden), #setup-modal:not(.hidden)');
                 if (isAssignmentMenu && b.confirmButtons.includes(button)) { this._cycleAssignment(index, 1); return; }
-                if (isAssignmentMenu && b.cancelButtons.includes(button))  { this._cycleAssignment(index, -1); return; }
-                if (button === b.endTurn)               { this.kickGamepad(index); return; }
+                if (isAssignmentMenu && b.cancelButtons.includes(button)) { this._cycleAssignment(index, -1); return; }
+                if (button === b.endTurn) { this.kickGamepad(index); return; }
                 return;
             }
 
@@ -404,8 +404,8 @@ export class GamepadCursorManager {
 
         // Hide all cursors when fullscreen attack overlay or beginner dice HUD is shown
         const attackVisible = this._attackOverlay && !this._attackOverlay.classList.contains('hidden');
-        const diceVisible   = this._diceResultHud && !this._diceResultHud.classList.contains('hidden') &&
-                              (localStorage.getItem('dicy_gameSpeed') || 'beginner') === 'beginner';
+        const diceVisible = this._diceResultHud && !this._diceResultHud.classList.contains('hidden') &&
+            (localStorage.getItem('dicy_gameSpeed') || 'beginner') === 'beginner';
         this.container.style.visibility = (attackVisible || diceVisible) ? 'hidden' : '';
 
         // Use InputManager's unified gamepad source (gilrs or navigator, never both)
@@ -583,7 +583,7 @@ export class GamepadCursorManager {
             const qy = window.innerHeight * 0.25;
             initialX = window.innerWidth / 2;
             initialY = window.innerHeight / 2;
-            if (humanIndex % 4 === 0)      { initialX = qx; initialY = qy; }
+            if (humanIndex % 4 === 0) { initialX = qx; initialY = qy; }
             else if (humanIndex % 4 === 1) { initialX = window.innerWidth - qx; initialY = qy; }
             else if (humanIndex % 4 === 2) { initialX = qx; initialY = window.innerHeight - qy; }
             else if (humanIndex % 4 === 3) { initialX = window.innerWidth - qx; initialY = window.innerHeight - qy; }
@@ -984,10 +984,11 @@ export class GamepadCursorManager {
         const rect = el.getBoundingClientRect();
         cursor.x = Math.max(0, Math.min(window.innerWidth, rect.left + rect.width / 2));
         cursor.y = Math.max(0, Math.min(window.innerHeight, rect.top + rect.height / 2));
-        // Size cursor to match the focused element exactly
+        // Size cursor to match the focused element, but cap width so wide flat
+        // buttons don't produce an extreme aspect ratio with tiny bracket arms.
         const s = this._uiScale();
-        const w = Math.max(24, Math.round(rect.width / s));
         const h = Math.max(24, Math.round(rect.height / s));
+        const w = Math.max(24, Math.min(Math.round(rect.width / s), Math.round(h * 4.5)));
         this._resizeCursor(cursor, w, h);
         this._positionCursor(cursor);
         cursor.element.style.opacity = '1.0';
@@ -1005,10 +1006,10 @@ export class GamepadCursorManager {
         const modal = this.getOpenModal();
         if (!modal) return;
 
-        const isLeft  = button === b.moveLeft;
+        const isLeft = button === b.moveLeft;
         const isRight = button === b.moveRight;
-        const isUp    = button === b.moveUp;
-        const isDown  = button === b.moveDown;
+        const isUp = button === b.moveUp;
+        const isDown = button === b.moveDown;
         const current = document.activeElement;
 
         const sidePanel = document.getElementById('gamepad-side-panel');
@@ -1157,14 +1158,14 @@ export class GamepadCursorManager {
     _adjustSlider(index, direction) {
         const slider = this._sliderEditMode.get(index);
         if (!slider) return;
-        const min  = parseFloat(slider.min)  || 0;
-        const max  = parseFloat(slider.max)  || 100;
+        const min = parseFloat(slider.min) || 0;
+        const max = parseFloat(slider.max) || 100;
         const base = parseFloat(slider.step) || 1;
         // Use at least 1/20th of the range per press so large-range sliders aren't tedious
         const step = Math.max(base, (max - min) / 20);
         const newVal = Math.min(max, Math.max(min, parseFloat(slider.value) + direction * step));
         slider.value = newVal;
-        slider.dispatchEvent(new Event('input',  { bubbles: true }));
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
         slider.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
@@ -1172,16 +1173,17 @@ export class GamepadCursorManager {
         const autoFocus = (container) => {
             if (this.cursors.size === 0) return; // only when gamepad is connected
             const first = container.querySelector('[data-gamepad-autofocus]') ||
-                          container.querySelector(GamepadCursorManager.FOCUSABLE);
+                container.querySelector(GamepadCursorManager.FOCUSABLE);
             if (!first) return;
             setTimeout(() => {
                 first.focus({ preventScroll: true });
                 first.classList.add('gamepad-focused');
-                // Snap ALL cursors to the focused element, regardless of mode.
-                // moveCursorToElement transitions analog→dpad internally, which may
-                // blur the element — so we re-focus and re-add the class afterwards.
-                for (const [, cursor] of this.cursors) {
-                    this.moveCursorToElement(cursor, first);
+                // Snap only master-assigned cursors to the focused element.
+                // Non-master gamepads have nothing to do with button navigation.
+                for (const [idx, cursor] of this.cursors) {
+                    if (this.inputManager.isGamepadAllowedGlobalAction(idx)) {
+                        this.moveCursorToElement(cursor, first);
+                    }
                 }
                 first.focus({ preventScroll: true });
                 first.classList.add('gamepad-focused');
