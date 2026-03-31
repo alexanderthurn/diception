@@ -92,7 +92,7 @@ export class CombatManager {
         };
 
         if (battleResult.tied) {
-            // All Die — both territories drop to 1, no ownership change
+            // Tie Die — both territories drop to 1, no ownership change
             attackerTile.dice = 1;
             defenderTile.dice = 1;
         } else if (battleResult.won) {

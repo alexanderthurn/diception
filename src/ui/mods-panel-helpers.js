@@ -5,7 +5,7 @@
 const MAP_STYLE_LABELS    = { full: 'Full Map', balanced: 'Balanced', islands: 'Islands', ring: 'Ring', cross: 'Cross' };
 const GAME_MODE_LABELS    = { fair: 'Fair Start', madness: 'Madness', '2of2': '2of2' };
 const FULL_BOARD_LABELS   = { most_territories: 'Territories', biggest_territory: 'Largest Region', random_picker: 'Random Tile', raise_max_dice: 'Max Dice +4', autoplay_humans: 'Autoplay' };
-const ATTACK_RULE_LABELS  = { easy_attack: 'Easy Attack', all_die: 'All Die' };
+const ATTACK_RULE_LABELS  = { easy_attack: 'Easy Attack', all_die: 'Tie Die' };
 const SUPPLY_RULE_LABELS  = { no_stack: 'No Stack', no_stack_hard: 'Full', reborn: 'Reborn' };
 const PLAY_MODE_LABELS    = { parallel: 'Parallel', 'parallel-s': 'Parallel S' };
 
