@@ -140,11 +140,15 @@ export class InputController {
             if (dx === 1 && sel.x >= this.game.map.width - 1) {
                 if (index < 0 || this._sourceCanAct(index))
                     this._enterUIFocus(sourceId, 'right');
+                else if (index !== -1)
+                    this.syncGamepadCursor(index, sourceId);
                 return;
             }
             if (dy === -1 && sel.y <= 0) {
                 if (index < 0 || this.inputManager.isGamepadAllowedGlobalAction(index))
                     this._enterUIFocus(sourceId, 'top');
+                else if (index !== -1)
+                    this.syncGamepadCursor(index, sourceId);
                 return;
             }
             this.handleKeyboardAttack(dx, dy, index, sourceId);
@@ -207,12 +211,16 @@ export class InputController {
         if (dx === 1 && newX === cursorState.x) {
             if (gamepadIndex < 0 || this._sourceCanAct(gamepadIndex))
                 this._enterUIFocus(sourceId, 'right');
+            else if (gamepadIndex !== -1)
+                this.syncGamepadCursor(gamepadIndex, sourceId); // lock cursor to edge tile
             return;
         }
         // Top edge + up press → enter top UI button focus (maestro only)
         if (dy === -1 && newY === cursorState.y) {
             if (gamepadIndex < 0 || this.inputManager.isGamepadAllowedGlobalAction(gamepadIndex))
                 this._enterUIFocus(sourceId, 'top');
+            else if (gamepadIndex !== -1)
+                this.syncGamepadCursor(gamepadIndex, sourceId); // lock cursor to edge tile
             return;
         }
 
@@ -778,6 +786,10 @@ export class InputController {
             this.renderer.setCursor(cursorState.x, cursorState.y, sourceId);
         }
         this.inputManager.emit('gamepadUIFocus', { sourceId, active: false });
+        // Snap physical cursor back to the tile it was on before UI focus
+        if (sourceId.startsWith('gamepad-')) {
+            this.syncGamepadCursor(parseInt(sourceId.slice('gamepad-'.length)), sourceId);
+        }
     }
 
     onTurnStart() {
