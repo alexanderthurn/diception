@@ -279,78 +279,84 @@
                 <button class="close-btn modal-reset-btn hidden" id="setup-reset-all-btn"
                     aria-label="Reset all settings to defaults" title="Reset all settings to defaults">↺</button>
             </div>
-            <div class="control-group" id="setup-map-size-group">
-                <label>Map Size</label>
-                <div class="map-size-row">
-                    <input type="range" id="map-size" min="1" max="10" value="2">
-                    <span id="map-size-val">4x4</span>
-                </div>
-            </div>
+            <div class="setup-columns">
+                <div class="setup-main-col">
+                    <div class="control-group" id="setup-map-size-group">
+                        <label>Map Size</label>
+                        <div class="map-size-row">
+                            <input type="range" id="map-size" min="1" max="10" value="2">
+                            <span id="map-size-val">4x4</span>
+                        </div>
+                    </div>
 
-            <div class="control-row">
-                <div class="control-group quarter" id="setup-humans-group">
-                    <label>Humans</label>
-                    <select id="human-count">
-                        <option value="0">0</option>
-                        <option value="1" selected>1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                    </select>
-                </div>
-                <div class="control-group quarter" id="setup-bots-group">
-                    <label>Bots</label>
-                    <select id="bot-count">
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="2" selected>2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                    </select>
-                </div>
-                <div class="control-group half" id="setup-bot-ai-group">
-                    <label>Bot Difficulty</label>
-                    <select id="bot-ai-select">
-                        <option value="easy" selected>Easy</option>
-                        <option value="medium">Medium</option>
-                        <option value="hard">Hard</option>
-                        <option value="custom">Custom (Mixed)</option>
-                    </select>
-                </div>
-            </div>
+                    <div class="control-row">
+                        <div class="control-group quarter" id="setup-humans-group">
+                            <label>Humans</label>
+                            <select id="human-count">
+                                <option value="0">0</option>
+                                <option value="1" selected>1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                            </select>
+                        </div>
+                        <div class="control-group quarter" id="setup-bots-group">
+                            <label>Bots</label>
+                            <select id="bot-count">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2" selected>2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                            </select>
+                        </div>
+                        <div class="control-group half" id="setup-bot-ai-group">
+                            <label>Bot Difficulty</label>
+                            <select id="bot-ai-select">
+                                <option value="easy" selected>Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                                <option value="custom">Custom (Mixed)</option>
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="control-row setup-game-speed-row">
-                <div class="control-group setup-game-speed-group">
-                    <label>Game Speed</label>
-                    <div class="segmented-btn game-speed-segmented">
-                        <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
-                        <button type="button" class="segmented-option" data-value="normal">Normal</button>
-                        <button type="button" class="segmented-option" data-value="expert">Expert</button>
+                    <div class="control-row setup-game-speed-row">
+                        <div class="control-group setup-game-speed-group">
+                            <label>Game Speed</label>
+                            <div class="segmented-btn game-speed-segmented">
+                                <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
+                                <button type="button" class="segmented-option" data-value="normal">Normal</button>
+                                <button type="button" class="segmented-option" data-value="expert">Expert</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setup-mods-toolbar" id="setup-mods-toolbar">
+                        <button type="button" class="tron-btn small setup-mods-toggle" id="setup-mods-toggle"
+                            aria-expanded="false" aria-controls="setup-mods-panel">
+                            <span class="setup-mods-chevron" aria-hidden="true"></span>
+                            <span class="setup-mods-toggle-label">Mods</span>
+                            <span class="setup-mods-active-badge hidden" id="setup-mods-active-badge">On</span>
+                        </button>
+                    </div>
+                    <div id="setup-mods-summary" class="setup-mods-summary hidden"></div>
+                    <div class="setup-start-row">
+                        <button id="start-game-btn" class="tron-btn large" data-no-sfx data-gamepad-autofocus>START</button>
                     </div>
                 </div>
-            </div>
 
-            <div class="setup-mods-toolbar" id="setup-mods-toolbar">
-                <button type="button" class="tron-btn small setup-mods-toggle" id="setup-mods-toggle"
-                    aria-expanded="false" aria-controls="setup-mods-panel">
-                    <span class="setup-mods-chevron" aria-hidden="true"></span>
-                    <span class="setup-mods-toggle-label">Mods</span>
-                    <span class="setup-mods-active-badge hidden" id="setup-mods-active-badge">On</span>
-                </button>
-            </div>
-
-            <div id="setup-mods-summary" class="setup-mods-summary hidden"></div>
-            <div id="setup-mods-panel" class="setup-mods-panel hidden" data-setup-mods-panel></div>
-            <div class="setup-start-row">
-                <button id="start-game-btn" class="tron-btn large" data-no-sfx data-gamepad-autofocus>START</button>
+                <div class="setup-mods-col">
+                    <div id="setup-mods-panel" class="setup-mods-panel hidden" data-setup-mods-panel></div>
+                </div>
             </div>
         </div>
 

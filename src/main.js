@@ -286,9 +286,8 @@ async function init() {
 
         app.ticker.add(() => {
             const usesFw = inputManager._useFwNetwork;
-            const anyMenuOpen = ['main-menu', 'setup-modal', 'pause-modal', 'howto-modal', 'settings-modal']
-                .some(id => !document.getElementById(id)?.classList.contains('hidden'))
-                || document.body.classList.contains('loading-active');
+            const anyMenuOpen = ['main-menu', 'pause-modal']
+                .some(id => !document.getElementById(id)?.classList.contains('hidden'));
             const hasSpace = app.screen.width >= 830;
 
             // Sync pad color to each connected client based on their human player assignment

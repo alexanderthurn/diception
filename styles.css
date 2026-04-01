@@ -6122,6 +6122,8 @@ canvas {
     gap: 12px;
     margin-top: 18px;
     margin-bottom: 6px;
+    border-top: 1px solid rgba(0, 255, 255, 0.12);
+    padding-top: 14px;
 }
 
 .setup-mods-toggle {
@@ -6602,6 +6604,68 @@ canvas {
 #start-game-btn {
     width: 100%;
     letter-spacing: 4px;
+}
+
+/* ── Setup modal two-column layout on wide screens (only when mods panel is open) ── */
+
+/* No gamepad panel active → two-column at 900px */
+@media (min-width: 900px) {
+    #setup-modal:has(#setup-mods-panel:not(.hidden)):not(:has(~ #gamepad-side-panel.gp-panel-active)) {
+        width: min(840px, calc(100% - 40px));
+        max-width: min(840px, calc(100% - 40px));
+    }
+    #setup-modal:has(#setup-mods-panel:not(.hidden)):not(:has(~ #gamepad-side-panel.gp-panel-active)) .setup-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 36px;
+        align-items: start;
+    }
+    #setup-modal:has(#setup-mods-panel:not(.hidden)):not(:has(~ #gamepad-side-panel.gp-panel-active)) .setup-main-col {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    #setup-modal:has(#setup-mods-panel:not(.hidden)):not(:has(~ #gamepad-side-panel.gp-panel-active)) .setup-main-col .setup-start-row {
+        margin-top: auto;
+        padding-top: 16px;
+    }
+    #setup-modal:has(#setup-mods-panel:not(.hidden)):not(:has(~ #gamepad-side-panel.gp-panel-active)) .setup-mods-col {
+        background: rgba(0, 255, 255, 0.03);
+        border: 1px solid rgba(0, 255, 255, 0.12);
+        border-radius: 4px;
+        padding: 12px 14px;
+        align-self: start;
+    }
+}
+
+/* Gamepad panel active → two-column only at 1260px (enough room for both) */
+@media (min-width: 1260px) {
+    #setup-modal:has(#setup-mods-panel:not(.hidden)):has(~ #gamepad-side-panel.gp-panel-active) {
+        width: min(840px, calc(100% - 40px));
+        max-width: min(840px, calc(100% - 40px));
+    }
+    #setup-modal:has(#setup-mods-panel:not(.hidden)):has(~ #gamepad-side-panel.gp-panel-active) .setup-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 36px;
+        align-items: start;
+    }
+    #setup-modal:has(#setup-mods-panel:not(.hidden)):has(~ #gamepad-side-panel.gp-panel-active) .setup-main-col {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    #setup-modal:has(#setup-mods-panel:not(.hidden)):has(~ #gamepad-side-panel.gp-panel-active) .setup-main-col .setup-start-row {
+        margin-top: auto;
+        padding-top: 16px;
+    }
+    #setup-modal:has(#setup-mods-panel:not(.hidden)):has(~ #gamepad-side-panel.gp-panel-active) .setup-mods-col {
+        background: rgba(0, 255, 255, 0.03);
+        border: 1px solid rgba(0, 255, 255, 0.12);
+        border-radius: 4px;
+        padding: 12px 14px;
+        align-self: start;
+    }
 }
 
 /* ── Pause Modal ── */
@@ -7112,6 +7176,22 @@ details.settings-group[open]>summary.settings-group-header::after {
 @media (min-width: 830px) {
     #gamepad-side-panel.gp-panel-active {
         display: flex;
+    }
+
+    /* Shift modals and gamepad panel left by 100px so the group looks centered */
+    body:has(#gamepad-side-panel.gp-panel-active) .modal {
+        transform: translate(calc(-50% - 100px), -50%);
+    }
+    #gamepad-side-panel.gp-panel-active {
+        left: calc(50% + 132px);
+    }
+}
+
+/* When the two-column modal is active with gamepad panel, reposition at 1260px */
+/* Modal shifts -100px, wide modal is 840px (420px half-width), so panel goes at 50% + 420px - 100px + gap */
+@media (min-width: 1260px) {
+    #setup-modal:has(#setup-mods-panel:not(.hidden)) ~ #gamepad-side-panel.gp-panel-active {
+        left: calc(50% + 332px);
     }
 }
 
