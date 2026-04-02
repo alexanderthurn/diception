@@ -4,6 +4,7 @@
  */
 
 import { createScenarioFromGame } from './scenario-data.js';
+import { mulberry32 } from '../core/rng.js';
 
 const MAX_HISTORY_LENGTH = 100; // Keep last 100 turns
 const AUTOSAVE_KEY = 'diceception_autosave';
@@ -62,6 +63,10 @@ export class TurnHistory {
      */
     serializeGameState(game) {
         return {
+            // Seed — restored so the RNG can continue from exactly this point
+            seed: game.seed ?? null,
+            rngState: (typeof game.rng?.getState === 'function') ? game.rng.getState() : null,
+
             // Core game properties
             maxDice: game.maxDice,
             diceSides: game.diceSides,
@@ -129,6 +134,13 @@ export class TurnHistory {
      */
     applyGameState(game, state) {
         try {
+            // Restore seed and RNG state so randomness continues deterministically
+            if (state.seed != null) {
+                game.seed = state.seed;
+                game.rng = mulberry32(state.seed);
+                if (state.rngState != null) game.rng.setState(state.rngState);
+            }
+
             // Restore core properties
             game.maxDice = state.maxDice;
             game.diceSides = state.diceSides;

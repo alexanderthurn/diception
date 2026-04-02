@@ -384,7 +384,7 @@ async function init() {
     gamepadCursors.getTileScreenSize = () => renderer.getTileScreenSize();
 
     // FPS Counter
-    setupFPSCounter(renderer);
+    setupFPSCounter(renderer, game);
 
     // Handle window resize with a small delay for mobile bars to settle
     let resizeTimeout;
@@ -1345,7 +1345,7 @@ async function init() {
 // Loading screen logic is now handled in LoadingScreen class in src/ui/loading-screen.js
 
 // Helper: Setup FPS Counter
-function setupFPSCounter(renderer) {
+function setupFPSCounter(renderer, game) {
     const fpsCounter = document.getElementById('fps-counter');
     if (!fpsCounter || !renderer.app) return;
 
@@ -1361,7 +1361,8 @@ function setupFPSCounter(renderer) {
         const canvas = renderer.app && (renderer.app.canvas || renderer.app.view);
         const width = canvas ? canvas.width : -3;
         const height = canvas ? canvas.height : -1;
-        fpsCounter.textContent = `FPS: ${lastFPS} · ${width}x${height}`;
+        const seedStr = game?.seed != null ? ` · seed:${game.seed}` : '';
+        fpsCounter.textContent = `FPS: ${lastFPS} · ${width}x${height}${seedStr}`;
     };
 
     renderer.app.ticker.add(() => {

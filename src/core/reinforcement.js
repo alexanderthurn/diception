@@ -14,7 +14,7 @@ export class ReinforcementManager {
      * @returns {Object} Reinforcement result
      */
     distributeReinforcements(context, playerId) {
-        const { map, player, maxDice = GAME.DEFAULT_MAX_DICE, supplyRule = 'classic' } = context;
+        const { map, player, maxDice = GAME.DEFAULT_MAX_DICE, supplyRule = 'classic', rng = Math.random } = context;
 
         const earned = map.findLargestConnectedRegion(playerId);
         const fromStore = player.storedDice || 0;
@@ -31,7 +31,7 @@ export class ReinforcementManager {
         if (supplyRule === 'no_stack_hard' || supplyRule === 'reborn') {
             // Pick from ALL owned tiles; full tile either loses the die or reborns it
             while (diceToDistribute > 0 && ownedTiles.length > 0) {
-                const randomIndex = Math.floor(Math.random() * ownedTiles.length);
+                const randomIndex = Math.floor(rng() * ownedTiles.length);
                 const randomTile = ownedTiles[randomIndex];
                 diceToDistribute--;
 
@@ -58,7 +58,7 @@ export class ReinforcementManager {
             const eligibleTiles = ownedTiles.filter(t => t.dice < maxDice);
 
             while (diceToDistribute > 0 && eligibleTiles.length > 0) {
-                const randomIndex = Math.floor(Math.random() * eligibleTiles.length);
+                const randomIndex = Math.floor(rng() * eligibleTiles.length);
                 const randomTile = eligibleTiles[randomIndex];
 
                 randomTile.dice++;

@@ -10,6 +10,7 @@ import { Dialog } from '../ui/dialog.js';
 import { GAME } from '../core/constants.js';
 import { getInputHint, ACTION_ASSIGN, ACTION_DICE } from '../ui/input-hints.js';
 import { MapManager } from '../core/map.js';
+import { mulberry32, randomSeed } from '../core/rng.js';
 import { loadBindings } from '../input/key-bindings.js';
 import {
     applyModsDefaultsForPrefix,
@@ -409,6 +410,8 @@ export class MapEditor {
             editorModsFullBoard: document.getElementById('editor-mods-full-board-rule'),
             editorModsAttackRule: document.getElementById('editor-mods-attack-rule'),
             editorModsSupplyRule: document.getElementById('editor-mods-supply-rule'),
+            editorModsSeedInput: document.getElementById('editor-mods-game-seed'),
+            editorModsSeedRerollBtn: document.getElementById('editor-mods-game-seed-reroll'),
 
             // Mode tabs and bottom bar
             bottomBar: document.querySelector('.editor-bottom-bar'),
@@ -503,6 +506,12 @@ export class MapEditor {
         // Mods panel (shared field set with Custom Game)
         this.elements.editorModsToggle?.addEventListener('click', () => this.toggleEditorModsPanel());
         this.elements.editorModsReset?.addEventListener('click', () => this.resetEditorModsToDefaults());
+
+        // Seed: generate an initial value and wire the reroll button
+        if (this.elements.editorModsSeedInput) this.elements.editorModsSeedInput.value = randomSeed();
+        this.elements.editorModsSeedRerollBtn?.addEventListener('click', () => {
+            if (this.elements.editorModsSeedInput) this.elements.editorModsSeedInput.value = randomSeed();
+        });
 
         this.elements.editorModsMaxDice?.addEventListener('input', (e) => {
             const val = parseInt(e.target.value, 10);
@@ -1957,8 +1966,12 @@ export class MapEditor {
         const diceSides = this.state.diceSides;
 
         const [genW, genH] = (cfg.mapSize || '6x6').split('x').map(Number);
+        const seedEl = this.elements.editorModsSeedInput;
+        const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
+        const mapSeed = (Number.isFinite(seedVal) && seedVal >= 0) ? seedVal >>> 0 : randomSeed();
+        if (seedEl) seedEl.value = mapSeed; // show the seed that was actually used
         const map = new MapManager();
-        map.generateMap(genW, genH, players, maxDice, cfg.mapStyle || 'random');
+        map.generateMap(genW, genH, players, maxDice, cfg.mapStyle || 'random', null, mulberry32(mapSeed));
 
         // Canvas stays 20x20; place generated map centered
         const CANVAS_SIZE = 20;

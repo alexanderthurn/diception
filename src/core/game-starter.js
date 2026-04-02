@@ -13,14 +13,14 @@ import { isFullVersion } from '../scenarios/user-identity.js';
  * @param {string} botAI
  * @returns {number|null}
  */
-function resolveStartingPlayerByDifficulty(players, botAI) {
+function resolveStartingPlayerByDifficulty(players, botAI, rng = Math.random) {
     const hasHumans = players.some(p => !p.isBot);
     const hasBots   = players.some(p =>  p.isBot);
     if (!hasHumans || !hasBots) return null; // pure human or pure bot game
 
     if (botAI === 'easy') {
         const humanIndices = players.map((p, i) => !p.isBot ? i : -1).filter(i => i >= 0);
-        return humanIndices[Math.floor(Math.random() * humanIndices.length)];
+        return humanIndices[Math.floor(rng() * humanIndices.length)];
     }
 
     if (botAI === 'hard') {
@@ -28,7 +28,7 @@ function resolveStartingPlayerByDifficulty(players, botAI) {
         const humanIndices = players.map((p, i) => !p.isBot ? i : -1).filter(i => i >= 0);
         // Pick any human; find the nearest bot right after that human in circular order.
         // That bot starts → all remaining bots play → then human plays last.
-        const humanIdx = humanIndices[Math.floor(Math.random() * humanIndices.length)];
+        const humanIdx = humanIndices[Math.floor(rng() * humanIndices.length)];
         for (let offset = 1; offset < n; offset++) {
             const idx = (humanIdx + offset) % n;
             if (players[idx].isBot) return idx;
@@ -190,7 +190,8 @@ export class GameStarter {
         }
 
         this.configManager.saveCurrentSettings();
-        this.prepareAndBegin(config, {});
+        const seed = this.configManager.consumeGameSeed();
+        this.prepareAndBegin(config, { mapSeed: seed });
     }
 
     /**
@@ -387,7 +388,7 @@ export class GameStarter {
                 attacksPerTurn: config.attacksPerTurn ?? 0,
                 secondsPerTurn: config.secondsPerTurn ?? 0,
                 secondsPerAttack: config.secondsPerAttack ?? 0,
-                resolveStartingPlayer: (players) => resolveStartingPlayerByDifficulty(players, config.botAI),
+                resolveStartingPlayer: (players, rng) => resolveStartingPlayerByDifficulty(players, config.botAI, rng),
             };
             this.attacksPerTurn = gameConfig.attacksPerTurn;
             this.secondsPerTurn = gameConfig.secondsPerTurn;

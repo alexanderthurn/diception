@@ -2892,6 +2892,34 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     width: 100px;
 }
 
+.seed-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.seed-input {
+    flex: 1;
+    min-width: 0;
+    background: #000;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 4px 6px;
+    font-family: inherit;
+    font-size: 13px;
+    /* hide number spin arrows */
+    -moz-appearance: textfield;
+}
+.seed-input::-webkit-inner-spin-button,
+.seed-input::-webkit-outer-spin-button { display: none; }
+
+.seed-reroll-btn {
+    flex-shrink: 0;
+    font-size: 16px;
+    padding: 0 8px;
+    min-height: 28px;
+}
+
 #tournament-results-modal {
     width: 500px;
     max-width: 90vw;

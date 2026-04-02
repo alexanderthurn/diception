@@ -99,7 +99,11 @@ export class Game {
         this.secondsPerTurn = config.secondsPerTurn ?? 0;
         this.secondsPerAttack = config.secondsPerAttack ?? 0;
 
-        const rng = Number.isFinite(config.mapSeed) ? mulberry32(config.mapSeed) : Math.random;
+        const rng = Number.isFinite(config.mapSeed) ? mulberry32(config.mapSeed) : mulberry32(
+            (Math.imul(Date.now(), 0x9e3779b1) ^ (Math.random() * 0x7fffffff | 0)) >>> 0
+        );
+        this.rng = rng;
+        this.seed = config.mapSeed ?? null;
 
         const totalPlayers = config.humanCount + config.botCount;
 
@@ -142,7 +146,7 @@ export class Game {
         }
 
         if (typeof config.resolveStartingPlayer === 'function') {
-            const idx = config.resolveStartingPlayer(this.players);
+            const idx = config.resolveStartingPlayer(this.players, rng);
             if (idx != null && idx >= 0 && idx < this.players.length) {
                 this.currentPlayerIndex = idx;
             }
@@ -246,6 +250,7 @@ export class Game {
                 currentPlayerId: activePid,
                 diceSides: this.diceSides,
                 attackRule: this.attackRule,
+                rng: this.rng,
             }, fromX, fromY, toX, toY);
 
             if (!result.error && this.attacksPerTurn > 0 && activePid === this.currentPlayer.id) {
@@ -278,6 +283,7 @@ export class Game {
             player: this.currentPlayer,
             maxDice: this.maxDice,
             supplyRule: this.supplyRule,
+            rng: this.rng,
         }, this.currentPlayer.id);
         const reinforceData = { player: this.currentPlayer, ...reinforceResult };
         this.emit('reinforcements', reinforceData);
@@ -461,7 +467,7 @@ export class Game {
         this.winner = this.players.find(p => p.alive && p.id === ownerId) || null;
         if (!this.winner) {
             const alive = this.players.filter(p => p.alive);
-            this.winner = alive[Math.floor(Math.random() * alive.length)] || null;
+            this.winner = alive[Math.floor(this.rng() * alive.length)] || null;
         }
         this.gameOver = true;
         this.fullBoardResolution = true;

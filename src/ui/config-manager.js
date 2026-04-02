@@ -12,6 +12,7 @@ import {
     getActiveModsSummaryFromDom,
     SETUP_DEFAULTS,
 } from './mods-panel-helpers.js';
+import { randomSeed } from '../core/rng.js';
 
 export { SETUP_MOD_DEFAULTS, SETUP_DEFAULTS } from './mods-panel-helpers.js';
 
@@ -85,6 +86,8 @@ export class ConfigManager {
             fullBoardRuleInput: document.getElementById('full-board-rule'),
             attackRuleInput: document.getElementById('attack-rule'),
             supplyRuleInput: document.getElementById('supply-rule'),
+            seedInput: document.getElementById('game-seed'),
+            seedRerollBtn: document.getElementById('game-seed-reroll'),
         };
 
         // Current selected bot AI
@@ -191,6 +194,12 @@ export class ConfigManager {
         if (el.tournamentConfig) {
             el.tournamentConfig.classList.toggle('hidden', parseInt(savedHumanCount, 10) !== 0);
         }
+
+        // Seed input: generate a fresh random seed on load and wire the reroll button
+        if (el.seedInput) el.seedInput.value = randomSeed();
+        if (el.seedRerollBtn) el.seedRerollBtn.addEventListener('click', () => {
+            if (el.seedInput) el.seedInput.value = randomSeed();
+        });
 
         // Initial map size display
         this.updateMapSizeDisplay();
@@ -575,6 +584,19 @@ export class ConfigManager {
         }
 
         this.syncSetupModsExpanderLive();
+    }
+
+    /**
+     * Read the current seed from the UI, then rotate to a new random seed for next game.
+     * Returns a 32-bit unsigned integer.
+     */
+    consumeGameSeed() {
+        const el = this.elements;
+        const val = el.seedInput ? parseInt(el.seedInput.value, 10) : NaN;
+        const seed = (Number.isFinite(val) && val >= 0) ? val >>> 0 : randomSeed();
+        // Rotate to a fresh seed so each subsequent game is different by default
+        if (el.seedInput) el.seedInput.value = randomSeed();
+        return seed;
     }
 
     /**

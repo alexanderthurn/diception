@@ -11,11 +11,11 @@ export class CombatManager {
         this.history = []; // Log of battles
     }
 
-    rollDice(count, sides = GAME.DEFAULT_DICE_SIDES) {
+    rollDice(count, sides = GAME.DEFAULT_DICE_SIDES, rng = Math.random) {
         const rolls = [];
         let sum = 0;
         for (let i = 0; i < count; i++) {
-            const roll = Math.floor(Math.random() * sides) + 1;
+            const roll = Math.floor(rng() * sides) + 1;
             rolls.push(roll);
             sum += roll;
         }
@@ -58,7 +58,7 @@ export class CombatManager {
      * @returns {Object} Battle result
      */
     resolveAttack(context, fromX, fromY, toX, toY) {
-        const { map, currentPlayerId, diceSides = GAME.DEFAULT_DICE_SIDES, attackRule = 'classic' } = context;
+        const { map, currentPlayerId, diceSides = GAME.DEFAULT_DICE_SIDES, attackRule = 'classic', rng = Math.random } = context;
 
         const validation = this.canAttack({ map, currentPlayerId }, fromX, fromY, toX, toY);
         if (!validation.valid) throw new Error(validation.reason);
@@ -66,8 +66,8 @@ export class CombatManager {
         const attackerTile = map.getTile(fromX, fromY);
         const defenderTile = map.getTile(toX, toY);
 
-        const attackRoll = this.rollDice(attackerTile.dice, diceSides);
-        const defenseRoll = this.rollDice(defenderTile.dice, diceSides);
+        const attackRoll = this.rollDice(attackerTile.dice, diceSides, rng);
+        const defenseRoll = this.rollDice(defenderTile.dice, diceSides, rng);
 
         const tied = attackRoll.sum === defenseRoll.sum;
         let won;
