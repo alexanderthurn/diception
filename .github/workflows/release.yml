@@ -193,6 +193,9 @@ jobs:
           depot3Path: "steam-builds/linux"
 
 
+      - name: Clean BuildOutput for demo deploy
+        run: rm -rf BuildOutput
+
       - name: Publish Demo to Steam
         uses: game-ci/steam-deploy@v3
         with:
