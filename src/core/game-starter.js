@@ -295,6 +295,8 @@ export class GameStarter {
                 this.attacksPerTurn = apLvl;
                 this.secondsPerTurn = secLvl;
                 this.secondsPerAttack = secAtkLvl;
+                // Fixed seed on level overrides the game-start seed; 0 or missing → use random seed
+                const levelSeed = (pendingLevel.mapSeed > 0) ? pendingLevel.mapSeed : mapSeed;
                 const gameConfig = {
                     humanCount: 1,
                     botCount: pendingLevel.bots ?? 1,
@@ -307,7 +309,7 @@ export class GameStarter {
                     fullBoardRule,
                     attackRule,
                     supplyRule,
-                    mapSeed,
+                    mapSeed: levelSeed,
                     attacksPerTurn: apLvl,
                     secondsPerTurn: secLvl,
                     secondsPerAttack: secAtkLvl,

@@ -195,8 +195,8 @@ export class ConfigManager {
             el.tournamentConfig.classList.toggle('hidden', parseInt(savedHumanCount, 10) !== 0);
         }
 
-        // Seed input: generate a fresh random seed on load and wire the reroll button
-        if (el.seedInput) el.seedInput.value = randomSeed();
+        // Seed input: 0 means "random at game start"; reroll fills a specific seed
+        if (el.seedInput) el.seedInput.value = 0;
         if (el.seedRerollBtn) el.seedRerollBtn.addEventListener('click', () => {
             if (el.seedInput) el.seedInput.value = randomSeed();
         });
@@ -593,9 +593,10 @@ export class ConfigManager {
     consumeGameSeed() {
         const el = this.elements;
         const val = el.seedInput ? parseInt(el.seedInput.value, 10) : NaN;
-        const seed = (Number.isFinite(val) && val >= 0) ? val >>> 0 : randomSeed();
-        // Rotate to a fresh seed so each subsequent game is different by default
-        if (el.seedInput) el.seedInput.value = randomSeed();
+        // 0 means "random at game start" — generate a live random seed
+        const seed = (Number.isFinite(val) && val > 0) ? val >>> 0 : randomSeed();
+        // Reset to 0 so the next game is also random by default
+        if (el.seedInput) el.seedInput.value = 0;
         return seed;
     }
 

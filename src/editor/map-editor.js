@@ -374,6 +374,7 @@ export class MapEditor {
             // Editor type toggle
             editorTypeMapBtn: document.getElementById('editor-type-map'),
             editorTypeScenarioBtn: document.getElementById('editor-type-scenario'),
+            editorTypeProceduralBtn: document.getElementById('editor-type-procedural'),
             mapScenarioSection: document.getElementById('editor-map-scenario-section'),
             randomDialog: document.getElementById('editor-random-dialog'),
             randomCloseBtn: document.getElementById('editor-random-close-btn'),
@@ -468,6 +469,7 @@ export class MapEditor {
         // Editor type toggle
         this.elements.editorTypeMapBtn?.addEventListener('click', () => this.setEditorType('map'));
         this.elements.editorTypeScenarioBtn?.addEventListener('click', () => this.setEditorType('scenario'));
+        this.elements.editorTypeProceduralBtn?.addEventListener('click', () => this.setEditorType('procedural'));
 
         // Random dialog toggle (button in quick-actions) and close (X)
         this.elements.randomBtn?.addEventListener('click', () => this.toggleRandomDialog());
@@ -508,7 +510,7 @@ export class MapEditor {
         this.elements.editorModsReset?.addEventListener('click', () => this.resetEditorModsToDefaults());
 
         // Seed: generate an initial value and wire the reroll button
-        if (this.elements.editorModsSeedInput) this.elements.editorModsSeedInput.value = randomSeed();
+        if (this.elements.editorModsSeedInput) this.elements.editorModsSeedInput.value = 0;
         this.elements.editorModsSeedRerollBtn?.addEventListener('click', () => {
             if (this.elements.editorModsSeedInput) this.elements.editorModsSeedInput.value = randomSeed();
         });
@@ -1340,6 +1342,7 @@ export class MapEditor {
     handleSave() {
         if (this.state.editorType === 'map') return this.saveAsMap();
         if (this.state.editorType === 'scenario') return this.saveAsScenario();
+        if (this.state.editorType === 'procedural') return this.saveAsConfig();
     }
 
     /** Log save errors to the console (campaign validation, storage, etc.). */
@@ -1489,7 +1492,8 @@ export class MapEditor {
                 this.syncConfigToUI();
             }
             this.syncConfigFromUI();
-            this.setEditorType('map');
+            // Switch to map mode if coming from scenario; procedural stays procedural
+            if (this.state.editorType === 'scenario') this.setEditorType('map');
             // Don't randomize here - only when user clicks Generate or opens new map
         } else {
             this.elements.randomDialog?.classList.add('hidden');
@@ -1804,7 +1808,7 @@ export class MapEditor {
     }
 
     /**
-     * Switch editor type (map vs scenario)
+     * Switch editor type (map / scenario / procedural)
      */
     setEditorType(type) {
         this.state.editorType = type;
@@ -1812,6 +1816,7 @@ export class MapEditor {
         // Update toggle button active states
         this.elements.editorTypeMapBtn?.classList.toggle('active', type === 'map');
         this.elements.editorTypeScenarioBtn?.classList.toggle('active', type === 'scenario');
+        this.elements.editorTypeProceduralBtn?.classList.toggle('active', type === 'procedural');
 
         // Get mode tab buttons
         const paintTab = document.querySelector('.editor-tab[data-mode="paint"]');
@@ -1835,10 +1840,35 @@ export class MapEditor {
 
             // Enable paint mode on renderer (tiles render gray)
             if (this.renderer && this.renderer.grid) {
-                this.renderer.grid.invalidate(); // Force full redraw
+                this.renderer.grid.invalidate();
                 this.renderer.grid.setPaintMode(true);
             }
+        } else if (type === 'procedural') {
+            this.elements.mapScenarioSection?.classList.remove('hidden');
+            this.elements.quickActions?.classList.remove('hidden');
+            this.stopConfigPreview();
+            // No paint/assign/dice tabs — procedural is view-only; edit by switching type
+            this.elements.bottomBar?.classList.add('hidden');
+            this.elements.sharedPlayersSection?.classList.remove('hidden');
+            this.elements.editorModsSection?.classList.remove('hidden');
+            this.elements.saveBtn?.classList.remove('hidden');
+            this.updateSaveButtonText();
+            this.rebuildPlayersFromScenarioConfig();
+            this.renderColorLegend();
+
+            // Colored rendering: show who owns what
+            if (this.renderer && this.renderer.grid) {
+                this.renderer.grid.invalidate();
+                this.renderer.grid.setPaintMode(false);
+            }
+
+            // Generate and display the procedural map
+            // Sync sliders/dropdowns from state.configData first, then read back
+            this.syncConfigToUI();
+            this.syncConfigFromUI();
+            this.regenerateConfigPreview();
         } else {
+            // scenario
             this.elements.mapScenarioSection?.classList.remove('hidden');
             this.elements.quickActions?.classList.remove('hidden');
             this.stopConfigPreview();
@@ -1858,7 +1888,7 @@ export class MapEditor {
 
             // Disable paint mode on renderer (tiles render with colors)
             if (this.renderer && this.renderer.grid) {
-                this.renderer.grid.invalidate(); // Force full redraw
+                this.renderer.grid.invalidate();
                 this.renderer.grid.setPaintMode(false);
             }
         }
@@ -1968,8 +1998,12 @@ export class MapEditor {
         const [genW, genH] = (cfg.mapSize || '6x6').split('x').map(Number);
         const seedEl = this.elements.editorModsSeedInput;
         const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
-        const mapSeed = (Number.isFinite(seedVal) && seedVal >= 0) ? seedVal >>> 0 : randomSeed();
-        if (seedEl) seedEl.value = mapSeed; // show the seed that was actually used
+        // seed=0 means "random at game start" — use a random preview seed but don't overwrite 0
+        const hasFixedSeed = Number.isFinite(seedVal) && seedVal > 0;
+        const mapSeed = hasFixedSeed ? seedVal >>> 0 : randomSeed();
+        if (seedEl && !hasFixedSeed && !Number.isFinite(parseInt(seedEl.value, 10))) {
+            seedEl.value = mapSeed; // only write back if input was blank/invalid
+        }
         const map = new MapManager();
         map.generateMap(genW, genH, players, maxDice, cfg.mapStyle || 'random', null, mulberry32(mapSeed));
 
@@ -2262,6 +2296,8 @@ export class MapEditor {
             this.showStatus('Invalid config', 'error');
             return null;
         }
+        const seedEl = this.elements.editorModsSeedInput;
+        const seedVal = seedEl ? parseInt(seedEl.value, 10) : 0;
         const configData = {
             type: 'config',
             mapSize: cfg.mapSize || '6x6',
@@ -2272,6 +2308,8 @@ export class MapEditor {
             maxDice: this.state.maxDice ?? 8,
             diceSides: this.state.diceSides ?? 6
         };
+        // seed > 0 → fixed seed (same map every game); 0 → random at game start
+        if (Number.isFinite(seedVal) && seedVal > 0) configData.mapSeed = seedVal >>> 0;
         if (this.editorOptions?.onSave) {
             try {
                 this.editorOptions.onSave(configData);
@@ -2296,12 +2334,16 @@ export class MapEditor {
         this.state = this.createEmptyState(20, 20);
 
         if (scenario.type === 'config') {
-            this.state.editorType = 'map';
+            this.state.editorType = 'procedural';
             this.state.configData = {
                 mapSize: scenario.mapSize || '6x6',
                 mapStyle: scenario.mapStyle || 'islands',
                 gameMode: scenario.gameMode || 'classic'
             };
+            // Restore the fixed seed into the input if the level has one
+            if (scenario.mapSeed > 0 && this.elements.editorModsSeedInput) {
+                this.elements.editorModsSeedInput.value = scenario.mapSeed;
+            }
         } else if (this.editorOptions?.isNew && scenario.type === 'map' && (!scenario.tiles || scenario.tiles.length === 0)) {
             this.state.editorType = 'map';
             if (!this.state.configData) {

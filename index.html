@@ -25,16 +25,16 @@
     <meta property="og:description"
         content="A super fast dice conquest game. Conquer territories, roll dice, and dominate the grid.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="assets/icons/512x512.png">
+    <meta property="og:image" content="assets/icons/icon-512x512.png">
 
 
-    <link rel="icon" type="image/x-icon" href="/assets/icons/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <link rel="stylesheet" href="/styles.css">
-    <link rel="stylesheet" href="/assets/gfx/sprites.css">
+    <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/icon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon-180x180.png">
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="assets/gfx/sprites.css">
 </head>
 
 <body class="loading-active">
@@ -214,7 +214,8 @@
                         <div class="range-row tournament-games-row">
                             <input type="number" data-mods-el="tournament-games" class="tournament-games-input" min="1"
                                 max="10000" value="100">
-                            <button type="button" data-mods-el="run-tournament-btn" class="tron-btn small">▶ Run Tournament</button>
+                            <button type="button" data-mods-el="run-tournament-btn" class="tron-btn small">▶ Run
+                                Tournament</button>
                         </div>
                     </div>
                 </div>
@@ -273,8 +274,10 @@
                     <div class="control-group">
                         <label>Seed</label>
                         <div class="seed-row">
-                            <input type="number" data-mods-el="game-seed" class="seed-input" min="0" max="4294967295" step="1">
-                            <button type="button" data-mods-el="game-seed-reroll" class="tron-btn small seed-reroll-btn" title="New random seed">⟳</button>
+                            <input type="number" data-mods-el="game-seed" class="seed-input" min="0" max="4294967295"
+                                step="1">
+                            <button type="button" data-mods-el="game-seed-reroll" class="tron-btn small seed-reroll-btn"
+                                title="New random seed">⟳</button>
                         </div>
                     </div>
                 </div>
@@ -360,7 +363,8 @@
                     </div>
                     <div id="setup-mods-summary" class="setup-mods-summary hidden"></div>
                     <div class="setup-start-row">
-                        <button id="start-game-btn" class="tron-btn large" data-no-sfx data-gamepad-autofocus>START</button>
+                        <button id="start-game-btn" class="tron-btn large" data-no-sfx
+                            data-gamepad-autofocus>START</button>
                     </div>
                 </div>
 
@@ -383,11 +387,16 @@
             <div class="main-nav">
                 <button id="main-custom-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span> Play
                     Game</button>
-                <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span> Campaign</button>
-                <button id="main-settings-btn" class="tron-btn large"><span class="sprite-icon icon-settings"></span> Settings</button>
+                <button id="main-campaign-btn" class="tron-btn large"><span class="sprite-icon icon-campaigns"></span>
+                    Campaign</button>
+                <button id="main-settings-btn" class="tron-btn large"><span class="sprite-icon icon-settings"></span>
+                    Settings</button>
                 <div class="main-nav-row">
-                    <button id="main-icons-achievements-btn" class="tron-btn large"><span class="sprite-icon icon-achievements"></span> <span class="btn-label">Achievements</span></button>
-                    <button id="main-icons-editor-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span> <span class="btn-label">Editor</span></button>
+                    <button id="main-icons-achievements-btn" class="tron-btn large"><span
+                            class="sprite-icon icon-achievements"></span> <span
+                            class="btn-label">Achievements</span></button>
+                    <button id="main-icons-editor-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span>
+                        <span class="btn-label">Editor</span></button>
                 </div>
                 <div class="main-nav-row">
                     <button id="main-howto-btn" class="tron-btn large"><span class="sprite-icon icon-help"></span> How
@@ -686,42 +695,63 @@
                     <ul class="howto-list">
                         <li><strong>Play Mode</strong>
                             <ul class="howto-list">
-                                <li><strong>Classic</strong> — Players take turns one at a time. Only the active player can attack.</li>
-                                <li><strong>Parallel</strong> — Every player (human and bot) can attack at any time simultaneously.</li>
-                                <li><strong>Parallel S</strong> — Like Parallel, but the currently active player is safe from bot attacks.</li>
+                                <li><strong>Classic</strong> — Players take turns one at a time. Only the active player
+                                    can attack.</li>
+                                <li><strong>Parallel</strong> — Every player (human and bot) can attack at any time
+                                    simultaneously.</li>
+                                <li><strong>Parallel S</strong> — Like Parallel, but the currently active player is safe
+                                    from bot attacks.</li>
                             </ul>
                         </li>
-                        <li><strong>End Game</strong> — What happens when the board is completely filled by a single player:
+                        <li><strong>End Game</strong> — What happens when the board is completely filled by a single
+                            player:
                             <ul class="howto-list">
                                 <li><strong>Default</strong> — That player wins immediately.</li>
-                                <li><strong>Territories</strong> — The player with the most territories wins instead.</li>
-                                <li><strong>Largest Region</strong> — The player with the biggest single connected region wins.</li>
+                                <li><strong>Territories</strong> — The player with the most territories wins instead.
+                                </li>
+                                <li><strong>Largest Region</strong> — The player with the biggest single connected
+                                    region wins.</li>
                                 <li><strong>Random Tile</strong> — A random tile is picked; its owner wins.</li>
-                                <li><strong>Max Dice +4</strong> — The conquering player's max dice cap is raised by 4 and the game continues.</li>
-                                <li><strong>Autoplay</strong> — Human players are switched to autoplay and the game finishes automatically.</li>
+                                <li><strong>Max Dice +4</strong> — The conquering player's max dice cap is raised by 4
+                                    and the game continues.</li>
+                                <li><strong>Autoplay</strong> — Human players are switched to autoplay and the game
+                                    finishes automatically.</li>
                             </ul>
                         </li>
-                        <li><strong>Overflow</strong> — What happens when a reinforcement die lands on a territory already at max dice:
+                        <li><strong>Overflow</strong> — What happens when a reinforcement die lands on a territory
+                            already at max dice:
                             <ul class="howto-list">
-                                <li><strong>Classic</strong> — The die is redirected to another non-full territory; if all are full it goes to the stack for next turn.</li>
-                                <li><strong>No Stack</strong> — Redirected to a non-full territory as usual, but excess dice are lost instead of stacking.</li>
-                                <li><strong>Full</strong> — Reinforcements are placed randomly across all territories. If the chosen territory is full, that die is lost.</li>
-                                <li><strong>Reborn</strong> — Like No Stack Hard, but if the chosen territory is full it resets to 1 die instead of the die being lost.</li>
+                                <li><strong>Classic</strong> — The die is redirected to another non-full territory; if
+                                    all are full it goes to the stack for next turn.</li>
+                                <li><strong>No Stack</strong> — Redirected to a non-full territory as usual, but excess
+                                    dice are lost instead of stacking.</li>
+                                <li><strong>Full</strong> — Reinforcements are placed randomly across all territories.
+                                    If the chosen territory is full, that die is lost.</li>
+                                <li><strong>Reborn</strong> — Like No Stack Hard, but if the chosen territory is full it
+                                    resets to 1 die instead of the die being lost.</li>
                             </ul>
                         </li>
                         <li><strong>Attack Rules</strong> — How ties are resolved when both sides roll the same total:
                             <ul class="howto-list">
-                                <li><strong>Classic</strong> — Attacker must roll strictly higher to win. Ties go to the defender.</li>
+                                <li><strong>Classic</strong> — Attacker must roll strictly higher to win. Ties go to the
+                                    defender.</li>
                                 <li><strong>Easy Attack</strong> — Attacker wins on a tie as well as a higher roll.</li>
-                                <li><strong>Tie Die</strong> — On a tie, both territories drop to 1 die and no territory changes hands.</li>
+                                <li><strong>Tie Die</strong> — On a tie, both territories drop to 1 die and no territory
+                                    changes hands.</li>
                             </ul>
                         </li>
-                        <li><strong>Attacks</strong> — Limits how many attacks a player can make per turn. Unlimited by default.</li>
-                        <li><strong>Turn Time</strong> — Time limit in seconds for an entire turn. Unlimited by default.</li>
-                        <li><strong>Attack Time</strong> — Time limit in seconds for each individual attack. Unlimited by default.</li>
-                        <li><strong>Max Dice per Territory</strong> — The maximum number of dice that can stack on a single tile.</li>
-                        <li><strong>Dice Sides</strong> — Sides per die. Higher sides increase variance; D1 makes all dice equal.</li>
-                        <li><strong>Map Style</strong> — Shape of the generated map (Full, Balanced, Islands, etc.).</li>
+                        <li><strong>Attacks</strong> — Limits how many attacks a player can make per turn. Unlimited by
+                            default.</li>
+                        <li><strong>Turn Time</strong> — Time limit in seconds for an entire turn. Unlimited by default.
+                        </li>
+                        <li><strong>Attack Time</strong> — Time limit in seconds for each individual attack. Unlimited
+                            by default.</li>
+                        <li><strong>Max Dice per Territory</strong> — The maximum number of dice that can stack on a
+                            single tile.</li>
+                        <li><strong>Dice Sides</strong> — Sides per die. Higher sides increase variance; D1 makes all
+                            dice equal.</li>
+                        <li><strong>Map Style</strong> — Shape of the generated map (Full, Balanced, Islands, etc.).
+                        </li>
                         <li><strong>Game Mode</strong> — Variant rules for how the map is populated at game start.</li>
                     </ul>
                 </section>
@@ -1170,6 +1200,9 @@
                         <button id="editor-type-scenario" class="toggle-btn"><span class="toggle-icon"><span
                                     class="sprite-icon icon-scenario"></span></span><span
                                 class="toggle-text">Scenario</span></button>
+                        <button id="editor-type-procedural" class="toggle-btn"><span class="toggle-icon"><span
+                                    class="sprite-icon icon-dice"></span></span><span
+                                class="toggle-text">Procedural</span></button>
                     </div>
                 </div>
 
