@@ -194,7 +194,7 @@ jobs:
 
 
       - name: Clean BuildOutput for demo deploy
-        run: rm -rf BuildOutput
+        run: sudo rm -rf BuildOutput
 
       - name: Publish Demo to Steam
         uses: game-ci/steam-deploy@v3
