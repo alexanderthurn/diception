@@ -193,18 +193,3 @@ jobs:
           depot3Path: "steam-builds/linux"
 
 
-      - name: Clean BuildOutput for demo deploy
-        run: sudo rm -rf BuildOutput
-
-      - name: Publish Demo to Steam
-        uses: game-ci/steam-deploy@v3
-        with:
-          username: ${{ secrets.STEAM_USERNAME }}
-          configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
-          appId: ${{ secrets.STEAM_DEMO_APP_ID }} # Hier muss das Secret für die Demo-ID hin!
-          buildDescription: "v${{ github.ref_name }} (Demo via Shared Depots)"
-          releaseBranch: ${{ secrets.STEAM_RELEASE_BRANCH }}
-          # WICHTIG: Die Pfade bleiben gleich, da es dieselben Daten sind
-          depot1Path: "steam-builds/win"
-          depot2Path: "steam-builds/mac"
-          depot3Path: "steam-builds/linux"
