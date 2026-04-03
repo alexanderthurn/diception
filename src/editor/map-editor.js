@@ -969,11 +969,7 @@ export class MapEditor {
             this.currentInteractionShift = e.shiftKey;
             this.lastPaintedTile = `${tile.x},${tile.y}`;
 
-            const isScenarioLeft = this.state.currentMode !== 'mapview' && e.button === 0 &&
-                (this.state.currentMode === 'assign' || this.state.currentMode === 'dice');
-            if (e.button === 2 || !isScenarioLeft) {
-                this.handleTileInteraction(tile.x, tile.y, e.button, e.shiftKey, true);
-            }
+            this.handleTileInteraction(tile.x, tile.y, e.button, e.shiftKey, e.button !== 0);
         }
     }
 
@@ -1073,14 +1069,6 @@ export class MapEditor {
         this.mouseTrackpadIsPanning = false;
         this.mouseTrackpadStartTile = null;
 
-        const _shiftActive = this._shiftHeld || this.currentInteractionShift;
-        const _clickMode = _shiftActive ? (this._getAltMode() ?? this.state.currentMode) : this.state.currentMode;
-        if (this.isPainting && this.mouseStrokeStartTile && !this.mouseStrokeMovedToOther &&
-            this.currentInteractionButton === 0 && _clickMode !== 'mapview' &&
-            (_clickMode === 'assign' || _clickMode === 'dice')) {
-            const key = `${this.mouseStrokeStartTile.x},${this.mouseStrokeStartTile.y}`;
-            this.handleTileInteraction(this.mouseStrokeStartTile.x, this.mouseStrokeStartTile.y, 0, this._shiftHeld || this.currentInteractionShift, false);
-        }
         this.isPainting = false;
         this.lastPaintedTile = null;
         this.mouseStrokeStartTile = null;
