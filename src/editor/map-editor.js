@@ -1061,9 +1061,9 @@ export class MapEditor {
     }
 
     onCanvasMouseUp() {
-        // Trackpad tap (no drag): treat as draw
+        // Trackpad tap (no drag): cycle like a regular click
         if (this.mouseTrackpadPendingTap && !this.mouseTrackpadIsPanning && this.mouseTrackpadStartTile) {
-            this.handleTileInteraction(this.mouseTrackpadStartTile.x, this.mouseTrackpadStartTile.y, 0, false, true);
+            this.handleTileInteraction(this.mouseTrackpadStartTile.x, this.mouseTrackpadStartTile.y, 0, this._shiftHeld, false);
         }
         this.mouseTrackpadPendingTap = false;
         this.mouseTrackpadIsPanning = false;
@@ -1181,7 +1181,7 @@ export class MapEditor {
         } else {
             this.elements.settingsPanel?.classList.remove('editor-settings-open');
         }
-        if (this.renderer) this.renderer.editorActive = true;
+        if (this.renderer) { this.renderer.editorActive = true; this.renderer.grid.editorActive = true; }
         this.elements.settingsToggle?.classList.remove('hidden');
 
         this.updateEditorInputHints();
@@ -1245,7 +1245,7 @@ export class MapEditor {
         }
 
         // Hide editor UI, show game UI only if a game is in progress
-        if (this.renderer) this.renderer.editorActive = false;
+        if (this.renderer) { this.renderer.editorActive = false; this.renderer.grid.editorActive = false; }
         this.elements.overlay?.classList.add('hidden');
         this.elements.settingsToggle?.classList.add('hidden');
         this.elements.settingsPanel?.classList.remove('editor-settings-open');
@@ -1281,6 +1281,8 @@ export class MapEditor {
         if (fitCamera) {
             this.renderer.autoFitCamera(0.5); // Zoom out to 50% relative to fit
         }
+
+        this.renderColorLegend();
     }
 
     /**
@@ -1874,15 +1876,43 @@ export class MapEditor {
     renderColorLegend() {
         const el = this.elements.colorLegend;
         if (!el) return;
-        el.innerHTML = '';
-        this.state.players.forEach((p, i) => {
-            const colorHex = '#' + DEFAULT_COLORS[i % DEFAULT_COLORS.length].toString(16).padStart(6, '0');
-            const label = p.isBot ? `P${i + 1} Bot` : `P${i + 1} Human`;
-            const span = document.createElement('span');
-            span.className = 'editor-legend-item';
-            span.innerHTML = `<span class="editor-legend-swatch" style="background:${colorHex}"></span> ${label}`;
-            el.appendChild(span);
+
+        // Compute per-player stats
+        const stats = this.state.players.map((p, i) => {
+            let territories = 0, totalDice = 0, maxStack = 0;
+            for (const tile of this.state.tiles.values()) {
+                if (tile.owner === i) {
+                    territories++;
+                    totalDice += tile.dice;
+                    if (tile.dice > maxStack) maxStack = tile.dice;
+                }
+            }
+            return { p, i, territories, totalDice, maxStack };
         });
+
+        const totalTerritories = stats.reduce((s, r) => s + r.territories, 0);
+
+        el.innerHTML = '';
+        const table = document.createElement('table');
+        table.className = 'editor-stats-table';
+        table.innerHTML = `<thead><tr>
+            <th></th><th>Terr</th><th>Dice</th><th>Max</th>
+        </tr></thead>`;
+        const tbody = document.createElement('tbody');
+        for (const { p, i, territories, totalDice, maxStack } of stats) {
+            const colorHex = '#' + DEFAULT_COLORS[i % DEFAULT_COLORS.length].toString(16).padStart(6, '0');
+            const label = p.isBot ? `P${i + 1}` : `P${i + 1}`;
+            const pct = totalTerritories > 0 ? Math.round(territories / totalTerritories * 100) : 0;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="editor-legend-swatch" style="background:${colorHex}"></span> ${label}</td>
+                <td>${territories} <span class="editor-stat-pct">${pct}%</span></td>
+                <td>${totalDice}</td>
+                <td>${maxStack || '—'}</td>`;
+            tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        el.appendChild(table);
     }
 
     applyGameModeToState(gameMode, maxDice) {

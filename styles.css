@@ -4594,12 +4594,37 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 }
 
 .editor-color-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 12px;
-    font-size: 11px;
-    color: #888;
     margin-top: 6px;
+}
+
+.editor-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    color: #aaa;
+}
+.editor-stats-table thead th {
+    text-align: right;
+    color: #555;
+    font-weight: normal;
+    padding: 0 4px 2px;
+}
+.editor-stats-table thead th:first-child {
+    text-align: left;
+}
+.editor-stats-table tbody td {
+    text-align: right;
+    padding: 1px 4px;
+}
+.editor-stats-table tbody td:first-child {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.editor-stat-pct {
+    color: #555;
+    font-size: 10px;
 }
 
 .editor-legend-item {

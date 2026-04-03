@@ -983,6 +983,21 @@ export class GridRenderer {
         }
 
         this.hidePools();
+
+        // In editor mode (assign/dice), always draw hover rect even on empty tiles
+        if (this.editorActive) {
+            const mouseHover = this.hoverTiles.get('mouse');
+            const editorHoverGfx = this._getHoverGfx('editor-empty');
+            if (mouseHover) {
+                editorHoverGfx.clear();
+                editorHoverGfx.rect(0, 0, this.tileSize, this.tileSize);
+                editorHoverGfx.stroke({ width: 2, color: 0xffffff, alpha: 0.5, join: 'miter', cap: 'square', alignment: 0 });
+                editorHoverGfx.x = mouseHover.x * (this.tileSize + this.gap);
+                editorHoverGfx.y = mouseHover.y * (this.tileSize + this.gap);
+                editorHoverGfx.visible = true;
+            }
+        }
+
         let neighborIdx = 0;
         let badgeIdx = 0;
 
