@@ -3,7 +3,6 @@ import { CampaignManager } from '../scenarios/campaign-manager.js';
 import { getGridDimensions } from '../scenarios/campaign-data.js';
 import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress.js';
 import { getCachedIdentity, isFullVersion } from '../scenarios/user-identity.js';
-import { MapManager } from '../core/map.js';
 import { getActiveModsSummary } from './mods-panel-helpers.js';
 
 /** Dev-only campaign tools (import/export JSON, etc.): ?dev=true or ?dev=1 */
@@ -509,9 +508,7 @@ export class ScenarioBrowser {
             // Add type icon
             const typeIcon = document.createElement('span');
             const type = level.type || 'map';
-            if (type === 'config') {
-                typeIcon.className = 'sprite-icon icon-defend tile-type-sprite';
-            } else if (type === 'scenario') {
+            if (type === 'scenario') {
                 typeIcon.className = 'sprite-icon icon-campaigns tile-type-sprite';
             } else {
                 typeIcon.className = 'sprite-icon icon-map tile-type-sprite';
@@ -544,27 +541,18 @@ export class ScenarioBrowser {
         const maxDice = level.maxDice ?? 9;
         const diceSides = level.diceSides ?? 6;
         lines.push(`Max ${maxDice} · ${diceSides}‑sided`);
-        if (level.type === 'config') {
-            const bots = level.bots ?? 1;
-            const botAI = level.botAI || 'easy';
-            const mapStyle = level.mapStyle || 'full';
-            const mapSize = level.mapSize || '6x6';
-            lines.push(`${mapSize} · ${mapStyle}`);
-            lines.push(`${bots} bot${bots !== 1 ? 's' : ''} · ${botAI}`);
-        } else {
-            const bots = (level.players || []).filter(p => p.isBot).length;
-            const aiIds = [...new Set((level.players || []).filter(p => p.isBot).map(p => p.aiId || 'easy'))];
-            const botAIStr = aiIds.length ? aiIds.join(', ') : (bots ? 'easy' : '—');
-            lines.push(`${level.width || '?'}×${level.height || '?'}`);
-            if (bots > 0) lines.push(`${bots} bot${bots !== 1 ? 's' : ''} · ${botAIStr}`);
-        }
+        const bots = (level.players || []).filter(p => p.isBot).length;
+        const aiIds = [...new Set((level.players || []).filter(p => p.isBot).map(p => p.aiId || 'easy'))];
+        const botAIStr = aiIds.length ? aiIds.join(', ') : (bots ? 'easy' : '—');
+        lines.push(`${level.width || '?'}×${level.height || '?'}`);
+        if (bots > 0) lines.push(`${bots} bot${bots !== 1 ? 's' : ''} · ${botAIStr}`);
         return lines;
     }
 
     async showHoverPreview(level, tile) {
         this.hideHoverPreview();
         const index = tile?.dataset?.index != null ? parseInt(tile.dataset.index, 10) : -1;
-        const previewLevel = await this.getLevelForPreview(level);
+        const previewLevel = level;
         const el = document.createElement('div');
         el.className = 'level-hover-preview';
         const isSolved = index >= 0 && this.selectedCampaign?.owner && getSolvedLevels(this.selectedCampaign.owner).includes(index);
@@ -589,13 +577,6 @@ export class ScenarioBrowser {
         el.style.left = Math.min(localLeft, localViewW - size - 16) + 'px';
         el.style.top = (localTop - size - 12) + 'px';
         this.hoverPreviewEl = el;
-
-        if (level.type === 'config') {
-            this.hoverPreviewInterval = setInterval(async () => {
-                const updatedLevel = await this.generateConfigPreview(level);
-                this.renderMinimap(canvas, updatedLevel);
-            }, 1000);
-        }
     }
 
     hideHoverPreview() {
@@ -617,7 +598,7 @@ export class ScenarioBrowser {
         const buildContent = async (idx) => {
             const lvl = this.campaignManager.getLevel(campaign, idx);
             if (!lvl) return null;
-            const previewLevel = await this.getLevelForPreview(lvl);
+            const previewLevel = lvl;
             const content = document.createElement('div');
             content.className = 'level-preview-dialog-content';
             const isSolved = campaign?.owner && getSolvedLevels(campaign.owner).includes(idx);
@@ -651,7 +632,7 @@ export class ScenarioBrowser {
 
             const p = document.createElement('p');
             p.className = 'level-preview-type';
-            const typeLabel = lvl.type === 'config' ? 'Procedural' : (lvl.type === 'map' ? 'Map' : 'Scenario');
+            const typeLabel = lvl.type === 'map' ? 'Map' : 'Scenario';
             p.textContent = `${typeLabel} · Level ${idx + 1}`;
             content.appendChild(p);
 
@@ -688,16 +669,7 @@ export class ScenarioBrowser {
         const body = document.createElement('div');
         body.className = 'dialog-body';
 
-        // Start dynamic update if procedural
-        const startDynamicUpdate = (lvl, canvas) => {
-            if (this.dialogPreviewInterval) clearInterval(this.dialogPreviewInterval);
-            if (lvl.type === 'config') {
-                this.dialogPreviewInterval = setInterval(async () => {
-                    const updatedLevel = await this.generateConfigPreview(lvl);
-                    this.renderMinimap(canvas, updatedLevel);
-                }, 1000);
-            }
-        };
+        const startDynamicUpdate = (_lvl, _canvas) => {};
 
         let currentIndex = index;
         const updateContent = async (idx) => {
@@ -827,45 +799,10 @@ export class ScenarioBrowser {
         this.renderLevelGrid(this.selectedCampaign);
     }
 
-    async getLevelForPreview(level) {
-        if (level.type !== 'config') return level;
-        const cacheKey = JSON.stringify({ mapSize: level.mapSize, mapStyle: level.mapStyle });
-        if (this._configPreviewCache.has(cacheKey)) {
-            return this._configPreviewCache.get(cacheKey);
-        }
-        const generated = await this.generateConfigPreview(level);
-        this._configPreviewCache.set(cacheKey, generated);
-        return generated;
-    }
-
-    async generateConfigPreview(config) {
-        const [w, h] = (config.mapSize || '6x6').split('x').map(Number);
-        const botCount = config.bots ?? 1;
-        const players = [{ id: 0, isBot: false, color: 0xaa00ff }, ...Array.from({ length: botCount }, (_, i) => ({ id: i + 1, isBot: true, color: [0xff0055, 0x55ff00, 0x5555ff, 0xffaa00][i % 4] }))];
-        const map = new MapManager();
-        map.generateMap(w, h, players, config.maxDice ?? 8, config.mapStyle || 'full');
-        const tiles = [];
-        for (let y = 0; y < map.height; y++) {
-            for (let x = 0; x < map.width; x++) {
-                const t = map.tiles[y * map.width + x];
-                if (t && !t.blocked) {
-                    tiles.push({ x, y });
-                }
-            }
-        }
-        return { width: map.width, height: map.height, tiles };
-    }
-
     renderMinimap(canvas, level) {
         const ctx = canvas.getContext('2d');
-        let w = level.width, h = level.height;
-        if ((!w || !h) && level.mapSize) {
-            const [mw, mh] = level.mapSize.split('x').map(Number);
-            w = mw || 5;
-            h = mh || 5;
-        }
-        w = w || 5;
-        h = h || 5;
+        const w = level.width || 5;
+        const h = level.height || 5;
         const gap = 1;
         const cellSize = Math.min((canvas.width - (w - 1) * gap) / w, (canvas.height - (h - 1) * gap) / h);
         const totalW = w * cellSize + (w - 1) * gap;

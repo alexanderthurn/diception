@@ -67,27 +67,9 @@ export function validateLevel(level) {
     }
 
     const type = level.type;
-    if (!type || !['config', 'scenario', 'map'].includes(type)) {
-        errors.push('Level type must be config, scenario, or map');
+    if (!type || !['scenario', 'map'].includes(type)) {
+        errors.push('Level type must be scenario or map');
         return { valid: false, errors };
-    }
-
-    if (type === 'config') {
-        if (!level.mapSize || typeof level.mapSize !== 'string') errors.push('config requires mapSize');
-        if (!level.mapStyle) errors.push('config requires mapStyle');
-        if (!level.gameMode) errors.push('config requires gameMode');
-        if (typeof level.bots !== 'number') errors.push('config requires bots');
-        if (!level.botAI) errors.push('config requires botAI');
-        if (typeof level.maxDice !== 'number') errors.push('config requires maxDice');
-        if (typeof level.diceSides !== 'number') errors.push('config requires diceSides');
-        if (level.humanStartsFirst !== undefined && typeof level.humanStartsFirst !== 'boolean') {
-            errors.push('humanStartsFirst must be a boolean');
-        }
-        if (level.startingPlayerId !== undefined && level.startingPlayerId !== null) {
-            if (typeof level.startingPlayerId !== 'number' || !Number.isInteger(level.startingPlayerId)) {
-                errors.push('startingPlayerId must be an integer');
-            }
-        }
     }
 
     if (type === 'scenario') {

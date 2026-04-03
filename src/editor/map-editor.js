@@ -19,6 +19,7 @@ import {
     setModsPanelUiOpen,
     applyModsToolbarLayout,
     normalizeAttackSecondsUi,
+    SETUP_MOD_DEFAULTS,
 } from '../ui/mods-panel-helpers.js';
 
 /** Mounted mods fields in editor settings (see shared-mods-fields.js). */
@@ -47,7 +48,7 @@ class EditorMapAdapter {
     constructor(editorState) {
         this.editorState = editorState;
         this.tiles = []; // Will be synced from editorState
-        this.maxDice = 9;
+        this.maxDice = parseInt(SETUP_MOD_DEFAULTS.maxDice, 10);
     }
 
     get width() { return this.editorState.width; }
@@ -206,9 +207,6 @@ const CONFIG_MAP_SIZE_PRESETS = [
     { width: 12, height: 12, label: '12×12' }
 ];
 
-const RANDOM_DIALOG_PREFS_KEY = 'dicy_editor_random_prefs';
-const VALID_RANDOM_MAP_STYLES = new Set(['random', 'full', 'continents', 'caves', 'islands', 'maze', 'tunnels', 'swiss']);
-const VALID_RANDOM_GAME_MODES = new Set(['classic', 'fair', 'madness', '2of2']);
 
 // Available AI difficulties
 const AVAILABLE_AIS = [
@@ -243,9 +241,6 @@ export class MapEditor {
         this.mouseTrackpadStartTile = null;
         this.mouseTrackpadStartX = 0;
         this.mouseTrackpadStartY = 0;
-
-        // Config preview rotation
-        this.configPreviewInterval = null;
 
         // Callback for when editor closes
         this.onClose = null;
@@ -292,17 +287,15 @@ export class MapEditor {
                 { id: 0, isBot: false, color: DEFAULT_COLORS[0], aiId: null },
                 { id: 1, isBot: true, color: DEFAULT_COLORS[1], aiId: 'easy' }
             ],
-            maxDice: 9,
-            diceSides: 6,
-            gameMode: 'classic',
+            maxDice: parseInt(SETUP_MOD_DEFAULTS.maxDice, 10),
+            diceSides: parseInt(SETUP_MOD_DEFAULTS.diceSides, 10),
+            gameMode: SETUP_MOD_DEFAULTS.gameMode,
             turnTimeLimit: 0,
             bots: 2,
             botAI: 'easy',
 
             // Editor-only state
-            editorType: 'map', // 'map' or 'scenario'
-            configData: { mapSize: '6x6', mapStyle: 'random', gameMode: 'classic' }, // For Random section
-            currentMode: 'paint',
+            currentMode: 'mapview',
             selectedPlayer: 0,
             paintMode: 'add', // 'add' or 'remove'
             diceBrushValue: 2,
@@ -371,17 +364,10 @@ export class MapEditor {
             settingsToggle: document.getElementById('editor-settings-toggle'),
             settingsPanel: document.querySelector('.editor-settings'),
 
-            // Editor type toggle
-            editorTypeMapBtn: document.getElementById('editor-type-map'),
-            editorTypeScenarioBtn: document.getElementById('editor-type-scenario'),
-            editorTypeProceduralBtn: document.getElementById('editor-type-procedural'),
             mapScenarioSection: document.getElementById('editor-map-scenario-section'),
-            randomDialog: document.getElementById('editor-random-dialog'),
-            randomCloseBtn: document.getElementById('editor-random-close-btn'),
             randomBtn: document.getElementById('editor-random-btn'),
             quickActions: document.getElementById('editor-quick-actions'),
             saveBtn: document.getElementById('editor-save-btn'),
-            randomizeBtn: document.getElementById('editor-randomize-btn'),
             editorMapSize: document.getElementById('editor-map-size'),
             editorMapSizeVal: document.getElementById('editor-map-size-val'),
 
@@ -466,14 +452,8 @@ export class MapEditor {
             this.elements.settingsPanel?.classList.toggle('editor-settings-open');
         });
 
-        // Editor type toggle
-        this.elements.editorTypeMapBtn?.addEventListener('click', () => this.setEditorType('map'));
-        this.elements.editorTypeScenarioBtn?.addEventListener('click', () => this.setEditorType('scenario'));
-        this.elements.editorTypeProceduralBtn?.addEventListener('click', () => this.setEditorType('procedural'));
-
-        // Random dialog toggle (button in quick-actions) and close (X)
-        this.elements.randomBtn?.addEventListener('click', () => this.toggleRandomDialog());
-        this.elements.randomCloseBtn?.addEventListener('click', () => this.setRandomDialogOpen(false));
+        // Random: directly generate
+        this.elements.randomBtn?.addEventListener('click', () => this.handleRandom());
 
         // Settings changes
 
@@ -547,16 +527,12 @@ export class MapEditor {
 
         this.elements.editorModsMapStyle?.addEventListener('change', () => {
             localStorage.setItem('dicy_mapStyle', this.elements.editorModsMapStyle.value);
-            this.syncConfigFromUI();
-            this.saveRandomDialogPrefs();
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsGameMode?.addEventListener('change', () => {
             this.state.gameMode = this.elements.editorModsGameMode?.value || 'classic';
             localStorage.setItem('dicy_gameMode', this.state.gameMode);
-            this.syncConfigFromUI();
-            this.saveRandomDialogPrefs();
             this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
@@ -615,14 +591,12 @@ export class MapEditor {
 
         // Save button (calls saveAsMap or saveAsScenario based on type)
         this.elements.saveBtn?.addEventListener('click', () => this.handleSave());
-        this.elements.randomizeBtn?.addEventListener('click', () => this.handleRandomize());
 
-        // Config inputs (Random dialog) - only update label, Generate does the rest
+        // Map size label update
         this.elements.editorMapSize?.addEventListener('input', (e) => {
             const idx = parseInt(e.target.value) - 1;
             const preset = CONFIG_MAP_SIZE_PRESETS[Math.max(0, Math.min(idx, CONFIG_MAP_SIZE_PRESETS.length - 1))];
             if (this.elements.editorMapSizeVal) this.elements.editorMapSizeVal.textContent = preset.label;
-            this.saveRandomDialogPrefs();
         });
         // Quick actions
         this.elements.clearBtn?.addEventListener('click', () => this.clearGrid());
@@ -660,7 +634,7 @@ export class MapEditor {
             if (code === 'escape') {
                 this.close();
             } else if (code === 'keyy') {
-                this.setMode('paint');
+                this.setMode('mapview');
             } else if (code === 'keyr') {
                 this.setMode('assign');
             } else if (code === 'keyf') {
@@ -770,7 +744,7 @@ export class MapEditor {
             return;
         }
 
-        const isScenarioAssignDice = this.state.editorType === 'scenario' &&
+        const isScenarioAssignDice = this.state.currentMode !== 'mapview' &&
             (this.state.currentMode === 'assign' || this.state.currentMode === 'dice');
 
         if (!isScenarioAssignDice || !this.state.hoveredTile) {
@@ -950,9 +924,6 @@ export class MapEditor {
     onCanvasMouseDown(e) {
         if (!this.isOpen) return;
 
-        // Close Random dialog when user clicks on map
-        this.setRandomDialogOpen(false);
-
         // Middle click (1) is for panning (handled by InputController)
         if (e.button === 1) return;
 
@@ -977,7 +948,7 @@ export class MapEditor {
             this.currentInteractionShift = e.shiftKey;
             this.lastPaintedTile = `${tile.x},${tile.y}`;
 
-            const isScenarioLeft = this.state.editorType === 'scenario' && e.button === 0 &&
+            const isScenarioLeft = this.state.currentMode !== 'mapview' && e.button === 0 &&
                 (this.state.currentMode === 'assign' || this.state.currentMode === 'dice');
             if (e.button === 2 || !isScenarioLeft) {
                 this.handleTileInteraction(tile.x, tile.y, e.button, e.shiftKey, true);
@@ -1053,7 +1024,7 @@ export class MapEditor {
             const key = `${tile.x},${tile.y}`;
             if (this.lastPaintedTile !== key) {
                 this.mouseStrokeMovedToOther = true;
-                if (this.state.editorType === 'scenario' && this.currentInteractionButton === 0 &&
+                if (this.state.currentMode !== 'mapview' && this.currentInteractionButton === 0 &&
                     (this.state.currentMode === 'assign' || this.state.currentMode === 'dice')) {
                     if (this.mouseBrushValue === null && this.mouseStrokeStartTile) {
                         const sk = `${this.mouseStrokeStartTile.x},${this.mouseStrokeStartTile.y}`;
@@ -1082,7 +1053,7 @@ export class MapEditor {
         this.mouseTrackpadStartTile = null;
 
         if (this.isPainting && this.mouseStrokeStartTile && !this.mouseStrokeMovedToOther &&
-            this.currentInteractionButton === 0 && this.state.editorType === 'scenario' &&
+            this.currentInteractionButton === 0 && this.state.currentMode !== 'mapview' &&
             (this.state.currentMode === 'assign' || this.state.currentMode === 'dice')) {
             const key = `${this.mouseStrokeStartTile.x},${this.mouseStrokeStartTile.y}`;
             this.handleTileInteraction(this.mouseStrokeStartTile.x, this.mouseStrokeStartTile.y, 0, false, false);
@@ -1100,7 +1071,6 @@ export class MapEditor {
         if (!this.isOpen) return;
 
         this.state.lastPointerType = 'touch';
-        this.setRandomDialogOpen(false);
 
         const touch = e.touches[0];
         this.touchStartX = touch.clientX;
@@ -1221,17 +1191,12 @@ export class MapEditor {
         this.renderPaintPalette();
         this.renderPlayerPalette();
         this.renderDicePalette();
-        this.setEditorType(this.state.editorType);
+        this.setMode(this.state.currentMode);
         this.updateSaveButtonText();
 
-        // New map: expand Random section and do 1 immediate random generation
-        const isNewEmptyMap = this.editorOptions?.isNew && this.state.editorType === 'map' && this.state.tiles.size === 0;
-        if (isNewEmptyMap) {
-            this.setRandomDialogOpen(true);
-            this.syncConfigFromUI();
-            await this.regenerateConfigPreview();
-        } else {
-            this.setRandomDialogOpen(false);
+        // New map: immediately generate a random layout
+        if (this.editorOptions?.isNew && this.state.tiles.size === 0) {
+            await this.handleRandom();
         }
 
         // Render to canvas and fit camera on initial open
@@ -1251,7 +1216,6 @@ export class MapEditor {
      * Close editor
      */
     close() {
-        this.stopConfigPreview();
         this.elements.hoverPreview?.classList.add('hidden');
         if (this.boundUpdateEditorHelp) {
             window.removeEventListener('resize', this.boundUpdateEditorHelp);
@@ -1340,9 +1304,7 @@ export class MapEditor {
     }
 
     handleSave() {
-        if (this.state.editorType === 'map') return this.saveAsMap();
-        if (this.state.editorType === 'scenario') return this.saveAsScenario();
-        if (this.state.editorType === 'procedural') return this.saveAsConfig();
+        return this.saveAsScenario();
     }
 
     /** Log save errors to the console (campaign validation, storage, etc.). */
@@ -1366,7 +1328,7 @@ export class MapEditor {
             height: bounds.height,
             bots: this.state.bots ?? 2,
             botAI: this.state.botAI ?? 'easy',
-            maxDice: this.state.maxDice ?? 9,
+            maxDice: this.state.maxDice ?? parseInt(SETUP_MOD_DEFAULTS.maxDice, 10),
             diceSides: this.state.diceSides ?? 6,
             gameMode: this.state.gameMode ?? 'classic',
             turnTimeLimit: this.state.turnTimeLimit ?? 0,
@@ -1441,71 +1403,6 @@ export class MapEditor {
         };
     }
 
-    async handleRandomize() {
-        this.syncConfigFromUI();
-        await this.regenerateConfigPreview();
-        this.renderToCanvas();
-        this.saveRandomDialogPrefs();
-    }
-
-    saveRandomDialogPrefs() {
-        try {
-            const mapSize = parseInt(this.elements.editorMapSize?.value || '4', 10);
-            const mapStyle = this.elements.editorModsMapStyle?.value || 'random';
-            const gameMode = this.elements.editorModsGameMode?.value || 'classic';
-            if (mapSize < 1 || mapSize > 10) return;
-            if (!VALID_RANDOM_MAP_STYLES.has(mapStyle) || !VALID_RANDOM_GAME_MODES.has(gameMode)) return;
-            localStorage.setItem(RANDOM_DIALOG_PREFS_KEY, JSON.stringify({ mapSize, mapStyle, gameMode }));
-        } catch (e) {
-            console.warn('Could not save random dialog prefs:', e);
-        }
-    }
-
-    applyRandomDialogPrefsFromStorage() {
-        try {
-            const raw = localStorage.getItem(RANDOM_DIALOG_PREFS_KEY);
-            if (!raw) return false;
-            const p = JSON.parse(raw);
-            const mapSize = Number(p.mapSize);
-            if (!Number.isInteger(mapSize) || mapSize < 1 || mapSize > 10) return false;
-            if (typeof p.mapStyle !== 'string' || !VALID_RANDOM_MAP_STYLES.has(p.mapStyle)) return false;
-            if (typeof p.gameMode !== 'string' || !VALID_RANDOM_GAME_MODES.has(p.gameMode)) return false;
-
-            const preset = CONFIG_MAP_SIZE_PRESETS[mapSize - 1];
-            if (!preset) return false;
-
-            if (this.elements.editorMapSize) this.elements.editorMapSize.value = String(mapSize);
-            if (this.elements.editorMapSizeVal) this.elements.editorMapSizeVal.textContent = preset.label;
-            if (this.elements.editorModsMapStyle) this.elements.editorModsMapStyle.value = p.mapStyle;
-            if (this.elements.editorModsGameMode) this.elements.editorModsGameMode.value = p.gameMode;
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    setRandomDialogOpen(open) {
-        if (open) {
-            this.elements.randomDialog?.classList.remove('hidden');
-            this.elements.randomBtn?.classList.add('active');
-            if (!this.applyRandomDialogPrefsFromStorage() && this.state.configData) {
-                this.syncConfigToUI();
-            }
-            this.syncConfigFromUI();
-            // Switch to map mode if coming from scenario; procedural stays procedural
-            if (this.state.editorType === 'scenario') this.setEditorType('map');
-            // Don't randomize here - only when user clicks Generate or opens new map
-        } else {
-            this.elements.randomDialog?.classList.add('hidden');
-            this.elements.randomBtn?.classList.remove('active');
-        }
-    }
-
-    toggleRandomDialog() {
-        const isOpen = !this.elements.randomDialog?.classList.contains('hidden');
-        this.setRandomDialogOpen(!isOpen);
-    }
-
     updateEditorHelpVisibility() {
         if (!this.isOpen) return;
         const el = this.elements.editorHelpText;
@@ -1551,9 +1448,8 @@ export class MapEditor {
 
     syncEditorModsFromStateAndStorage() {
         const el = this.elements;
-        const cfg = this.state.configData || {};
-        if (el.editorModsMapStyle) el.editorModsMapStyle.value = cfg.mapStyle || 'random';
-        if (el.editorModsGameMode) el.editorModsGameMode.value = this.state.gameMode || 'classic';
+        if (el.editorModsMapStyle) el.editorModsMapStyle.value = localStorage.getItem('dicy_mapStyle') || SETUP_MOD_DEFAULTS.mapStyle;
+        if (el.editorModsGameMode) el.editorModsGameMode.value = this.state.gameMode || SETUP_MOD_DEFAULTS.gameMode;
         if (el.editorModsMaxDice) {
             el.editorModsMaxDice.value = String(this.state.maxDice);
             if (el.editorModsMaxDiceVal) el.editorModsMaxDiceVal.textContent = String(this.state.maxDice);
@@ -1564,33 +1460,33 @@ export class MapEditor {
         }
 
         if (el.editorModsPlayMode) {
-            el.editorModsPlayMode.value = localStorage.getItem('dicy_playMode') || 'classic';
+            el.editorModsPlayMode.value = localStorage.getItem('dicy_playMode') || SETUP_MOD_DEFAULTS.playMode;
         }
         if (el.editorModsTurnLimit) {
-            el.editorModsTurnLimit.value = localStorage.getItem('dicy_attacksPerTurn') ?? '0';
+            el.editorModsTurnLimit.value = localStorage.getItem('dicy_attacksPerTurn') ?? SETUP_MOD_DEFAULTS.attacksPerTurn;
         }
 
         const ttl = this.state.turnTimeLimit ?? 0;
         const secAllowed = ['0', '10', '15', '30', '60'];
-        let secVal = secAllowed.includes(String(ttl)) ? String(ttl) : (localStorage.getItem('dicy_secondsPerTurn') || '0');
-        if (!secAllowed.includes(secVal)) secVal = '0';
+        let secVal = secAllowed.includes(String(ttl)) ? String(ttl) : (localStorage.getItem('dicy_secondsPerTurn') || SETUP_MOD_DEFAULTS.secondsPerTurn);
+        if (!secAllowed.includes(secVal)) secVal = SETUP_MOD_DEFAULTS.secondsPerTurn;
         if (el.editorModsTurnSeconds) el.editorModsTurnSeconds.value = secVal;
 
-        const atkSec = normalizeAttackSecondsUi(localStorage.getItem('dicy_secondsPerAttack') || '0');
+        const atkSec = normalizeAttackSecondsUi(localStorage.getItem('dicy_secondsPerAttack') || SETUP_MOD_DEFAULTS.secondsPerAttack);
         if (el.editorModsAttackSeconds) el.editorModsAttackSeconds.value = atkSec;
 
         if (el.editorModsFullBoard) {
-            el.editorModsFullBoard.value = localStorage.getItem('dicy_fullBoardRule') || 'nothing';
+            el.editorModsFullBoard.value = localStorage.getItem('dicy_fullBoardRule') || SETUP_MOD_DEFAULTS.fullBoardRule;
         }
         if (el.editorModsAttackRule) {
-            el.editorModsAttackRule.value = localStorage.getItem('dicy_attackRule') || 'classic';
+            el.editorModsAttackRule.value = localStorage.getItem('dicy_attackRule') || SETUP_MOD_DEFAULTS.attackRule;
         }
         if (el.editorModsSupplyRule) {
-            el.editorModsSupplyRule.value = localStorage.getItem('dicy_supplyRule') || 'classic';
+            el.editorModsSupplyRule.value = localStorage.getItem('dicy_supplyRule') || SETUP_MOD_DEFAULTS.supplyRule;
         }
 
         const tgi = document.getElementById(EDITOR_MODS_PREFIX + 'tournament-games');
-        if (tgi) tgi.value = localStorage.getItem('dicy_tournamentGames') || '100';
+        if (tgi) tgi.value = localStorage.getItem('dicy_tournamentGames') || SETUP_MOD_DEFAULTS.tournamentGames;
     }
 
     toggleEditorModsPanel() {
@@ -1608,16 +1504,14 @@ export class MapEditor {
                 this.elements.editorModsAttackSeconds.value
             );
         }
-        this.state.maxDice = parseInt(this.elements.editorModsMaxDice?.value || '9', 10);
-        this.state.diceSides = parseInt(this.elements.editorModsDiceSides?.value || '6', 10);
-        this.state.gameMode = this.elements.editorModsGameMode?.value || 'classic';
-        this.state.turnTimeLimit = parseInt(this.elements.editorModsTurnSeconds?.value || '0', 10);
-        this.syncConfigFromUI();
+        this.state.maxDice = parseInt(this.elements.editorModsMaxDice?.value || SETUP_MOD_DEFAULTS.maxDice, 10);
+        this.state.diceSides = parseInt(this.elements.editorModsDiceSides?.value || SETUP_MOD_DEFAULTS.diceSides, 10);
+        this.state.gameMode = this.elements.editorModsGameMode?.value || SETUP_MOD_DEFAULTS.gameMode;
+        this.state.turnTimeLimit = parseInt(this.elements.editorModsTurnSeconds?.value || SETUP_MOD_DEFAULTS.secondsPerTurn, 10);
         if (this.state.diceBrushValue > this.state.maxDice) this.state.diceBrushValue = this.state.maxDice;
         this.renderDicePalette();
         this.renderer?.setDiceSides(this.state.diceSides);
         this.state.isDirty = true;
-        this.saveRandomDialogPrefs();
         this.syncEditorModsExpanderFromStorage();
         this.renderToCanvas();
     }
@@ -1706,7 +1600,7 @@ export class MapEditor {
             if (isRightClick) {
                 this.state.tiles.delete(key);
                 this.state.deletedTiles.delete(key);
-            } else if (this.state.editorType === 'map') {
+            } else if (this.state.currentMode === 'mapview') {
                 this.state.tiles.set(key, { owner: 0, dice: 1 });
             } else {
                 // Scenario mode: brush - sample from first tile, apply to all (mode-specific: only copy relevant value)
@@ -1743,7 +1637,7 @@ export class MapEditor {
 
         // Touch (legacy): cycle increase/decrease
         const isDecrease = isRightClick;
-        if (this.state.editorType === 'map') {
+        if (this.state.currentMode === 'mapview') {
             if (tile) this.state.tiles.delete(key);
             else this.state.tiles.set(key, { owner: 0, dice: 1 });
         } else {
@@ -1766,9 +1660,7 @@ export class MapEditor {
                             } else tile.owner -= 1;
                         } else {
                             if (tile.owner >= playerCount - 1) {
-                                // Touch: remove tile after cycling through all players
-                                this.state.deletedTiles.set(key, { ...tile });
-                                this.state.tiles.delete(key);
+                                tile.owner = 0;
                             } else tile.owner += 1;
                         }
                     }
@@ -1790,9 +1682,7 @@ export class MapEditor {
                             } else tile.dice -= 1;
                         } else {
                             if (tile.dice >= this.state.maxDice) {
-                                // Touch: remove tile after cycling through all dice values
-                                this.state.deletedTiles.set(key, { ...tile });
-                                this.state.tiles.delete(key);
+                                tile.dice = 1;
                             } else tile.dice += 1;
                         }
                     }
@@ -1808,93 +1698,49 @@ export class MapEditor {
     }
 
     /**
-     * Switch editor type (map / scenario / procedural)
+     * Toggle Map View (grey tile rendering, hides assign/dice tabs)
      */
-    setEditorType(type) {
-        this.state.editorType = type;
+    /**
+     * Generate a random map from current map size / style / seed settings
+     */
+    async handleRandom() {
+        const sliderVal = parseInt(this.elements.editorMapSize?.value || '4', 10);
+        const preset = CONFIG_MAP_SIZE_PRESETS[Math.max(0, Math.min(sliderVal - 1, CONFIG_MAP_SIZE_PRESETS.length - 1))];
+        const [genW, genH] = [preset.width, preset.height];
+        const mapStyle = this.elements.editorModsMapStyle?.value || 'islands';
+        const seedEl = this.elements.editorModsSeedInput;
+        const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
+        const hasFixedSeed = Number.isFinite(seedVal) && seedVal > 0;
+        const mapSeed = hasFixedSeed ? seedVal >>> 0 : randomSeed();
 
-        // Update toggle button active states
-        this.elements.editorTypeMapBtn?.classList.toggle('active', type === 'map');
-        this.elements.editorTypeScenarioBtn?.classList.toggle('active', type === 'scenario');
-        this.elements.editorTypeProceduralBtn?.classList.toggle('active', type === 'procedural');
+        this.rebuildPlayersFromScenarioConfig();
+        const players = this.state.players;
+        const maxDice = this.state.maxDice;
 
-        // Get mode tab buttons
-        const paintTab = document.querySelector('.editor-tab[data-mode="paint"]');
-        const assignTab = document.querySelector('.editor-tab[data-mode="assign"]');
-        const diceTab = document.querySelector('.editor-tab[data-mode="dice"]');
+        const map = new MapManager();
+        map.generateMap(genW, genH, players, maxDice, mapStyle, null, mulberry32(mapSeed));
 
-        if (type === 'map') {
-            this.elements.mapScenarioSection?.classList.remove('hidden');
-            this.elements.quickActions?.classList.remove('hidden');
-            this.stopConfigPreview();
-            this.elements.bottomBar?.classList.add('hidden');
-            this.elements.sharedPlayersSection?.classList.remove('hidden');
-            this.elements.editorModsSection?.classList.remove('hidden');
-            this.elements.saveBtn?.classList.remove('hidden');
-            this.updateSaveButtonText();
-            this.rebuildPlayersFromScenarioConfig();
-            this.renderColorLegend();
+        const CANVAS_SIZE = 20;
+        this.state.width = CANVAS_SIZE;
+        this.state.height = CANVAS_SIZE;
+        this.state.tiles.clear();
 
-            // Switch to paint mode internally
-            this.state.currentMode = 'paint';
-
-            // Enable paint mode on renderer (tiles render gray)
-            if (this.renderer && this.renderer.grid) {
-                this.renderer.grid.invalidate();
-                this.renderer.grid.setPaintMode(true);
-            }
-        } else if (type === 'procedural') {
-            this.elements.mapScenarioSection?.classList.remove('hidden');
-            this.elements.quickActions?.classList.remove('hidden');
-            this.stopConfigPreview();
-            // No paint/assign/dice tabs — procedural is view-only; edit by switching type
-            this.elements.bottomBar?.classList.add('hidden');
-            this.elements.sharedPlayersSection?.classList.remove('hidden');
-            this.elements.editorModsSection?.classList.remove('hidden');
-            this.elements.saveBtn?.classList.remove('hidden');
-            this.updateSaveButtonText();
-            this.rebuildPlayersFromScenarioConfig();
-            this.renderColorLegend();
-
-            // Colored rendering: show who owns what
-            if (this.renderer && this.renderer.grid) {
-                this.renderer.grid.invalidate();
-                this.renderer.grid.setPaintMode(false);
-            }
-
-            // Generate and display the procedural map
-            // Sync sliders/dropdowns from state.configData first, then read back
-            this.syncConfigToUI();
-            this.syncConfigFromUI();
-            this.regenerateConfigPreview();
-        } else {
-            // scenario
-            this.elements.mapScenarioSection?.classList.remove('hidden');
-            this.elements.quickActions?.classList.remove('hidden');
-            this.stopConfigPreview();
-            this.elements.bottomBar?.classList.remove('hidden');
-            paintTab?.classList.add('hidden');
-            assignTab?.classList.remove('hidden');
-            diceTab?.classList.remove('hidden');
-            this.elements.sharedPlayersSection?.classList.remove('hidden');
-            this.elements.editorModsSection?.classList.remove('hidden');
-            this.elements.saveBtn?.classList.remove('hidden');
-            this.updateSaveButtonText();
-            this.rebuildPlayersFromScenarioConfig();
-            this.renderColorLegend();
-
-            // Switch to dice mode (default for scenario)
-            this.setMode('dice');
-
-            // Disable paint mode on renderer (tiles render with colors)
-            if (this.renderer && this.renderer.grid) {
-                this.renderer.grid.invalidate();
-                this.renderer.grid.setPaintMode(false);
+        const offsetX = Math.floor((CANVAS_SIZE - genW) / 2);
+        const offsetY = Math.floor((CANVAS_SIZE - genH) / 2);
+        for (let y = 0; y < map.height; y++) {
+            for (let x = 0; x < map.width; x++) {
+                const t = map.tiles[y * map.width + x];
+                if (t && !t.blocked) {
+                    const key = `${x + offsetX},${y + offsetY}`;
+                    this.state.tiles.set(key, { owner: t.owner, dice: t.dice || 1 });
+                }
             }
         }
 
+        this.gameAdapter.syncFromState();
+        if (this.renderer?.grid) this.renderer.grid.invalidate();
+        this.updateUIFromState();
         this.renderToCanvas();
-        this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
     }
 
     syncSharedPlayersToUI() {
@@ -1909,7 +1755,7 @@ export class MapEditor {
         this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
         this.rebuildPlayersFromScenarioConfig();
         this.renderColorLegend();
-        if (this.state.editorType === 'scenario') this.renderPlayerPalette();
+        this.renderPlayerPalette();
         this.state.isDirty = true;
         this.renderToCanvas();
     }
@@ -1958,82 +1804,6 @@ export class MapEditor {
         });
     }
 
-    syncConfigFromUI() {
-        const sliderVal = parseInt(this.elements.editorMapSize?.value || '4', 10);
-        const preset = CONFIG_MAP_SIZE_PRESETS[Math.max(0, Math.min(sliderVal - 1, CONFIG_MAP_SIZE_PRESETS.length - 1))];
-        const mapSize = `${preset.width}x${preset.height}`;
-        this.state.configData = {
-            mapSize,
-            mapStyle: this.elements.editorModsMapStyle?.value || 'islands',
-            gameMode: this.elements.editorModsGameMode?.value || 'classic'
-        };
-    }
-
-    syncConfigToUI() {
-        const cfg = this.state.configData || {};
-        const mapSize = cfg.mapSize || '6x6';
-        const [w, h] = mapSize.split('x').map(Number);
-        const presetIdx = CONFIG_MAP_SIZE_PRESETS.findIndex(p => p.width === w && p.height === h);
-        const sliderVal = presetIdx >= 0 ? presetIdx + 1 : 4;
-        if (this.elements.editorMapSize) {
-            this.elements.editorMapSize.value = sliderVal;
-            if (this.elements.editorMapSizeVal) {
-                this.elements.editorMapSizeVal.textContent = CONFIG_MAP_SIZE_PRESETS[sliderVal - 1]?.label || mapSize;
-            }
-        }
-        if (this.elements.editorModsMapStyle) this.elements.editorModsMapStyle.value = cfg.mapStyle || 'random';
-        if (this.elements.editorModsGameMode) this.elements.editorModsGameMode.value = cfg.gameMode || 'classic';
-    }
-
-    async regenerateConfigPreview() {
-        const cfg = this.state.configData;
-        if (!cfg) return;
-
-        // Use current editor players (respects Bots, Bot AI from right panel)
-        this.rebuildPlayersFromScenarioConfig();
-        const players = this.state.players;
-        const maxDice = this.state.maxDice;
-        const diceSides = this.state.diceSides;
-
-        const [genW, genH] = (cfg.mapSize || '6x6').split('x').map(Number);
-        const seedEl = this.elements.editorModsSeedInput;
-        const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
-        // seed=0 means "random at game start" — use a random preview seed but don't overwrite 0
-        const hasFixedSeed = Number.isFinite(seedVal) && seedVal > 0;
-        const mapSeed = hasFixedSeed ? seedVal >>> 0 : randomSeed();
-        if (seedEl && !hasFixedSeed && !Number.isFinite(parseInt(seedEl.value, 10))) {
-            seedEl.value = mapSeed; // only write back if input was blank/invalid
-        }
-        const map = new MapManager();
-        map.generateMap(genW, genH, players, maxDice, cfg.mapStyle || 'random', null, mulberry32(mapSeed));
-
-        // Canvas stays 20x20; place generated map centered
-        const CANVAS_SIZE = 20;
-        this.state.width = CANVAS_SIZE;
-        this.state.height = CANVAS_SIZE;
-        this.state.tiles.clear();
-
-        const offsetX = Math.floor((CANVAS_SIZE - genW) / 2);
-        const offsetY = Math.floor((CANVAS_SIZE - genH) / 2);
-        for (let y = 0; y < map.height; y++) {
-            for (let x = 0; x < map.width; x++) {
-                const t = map.tiles[y * map.width + x];
-                if (t && !t.blocked) {
-                    const key = `${x + offsetX},${y + offsetY}`;
-                    this.state.tiles.set(key, { owner: t.owner, dice: t.dice || 1 });
-                }
-            }
-        }
-
-        // Apply start mode (gameMode) from Random dialog
-        const gameMode = cfg.gameMode || 'classic';
-        this.applyGameModeToState(gameMode, maxDice);
-
-        this.gameAdapter.syncFromState();
-        if (this.renderer?.grid) this.renderer.grid.invalidate();
-        this.updateUIFromState();
-    }
-
     applyGameModeToState(gameMode, maxDice) {
         if (gameMode === 'madness') {
             for (const tile of this.state.tiles.values()) {
@@ -2068,15 +1838,8 @@ export class MapEditor {
         }
     }
 
-    stopConfigPreview() {
-        if (this.configPreviewInterval) {
-            clearInterval(this.configPreviewInterval);
-            this.configPreviewInterval = null;
-        }
-    }
-
     /**
-     * Switch editor mode (paint, assign, dice)
+     * Switch editor mode (assign, dice, mapview)
      */
     setMode(mode) {
         this.state.currentMode = mode;
@@ -2085,9 +1848,14 @@ export class MapEditor {
             tab.classList.toggle('active', tab.dataset.mode === mode);
         });
 
-        this.elements.paintToolbar?.classList.toggle('hidden', mode !== 'paint');
         this.elements.assignToolbar?.classList.toggle('hidden', mode !== 'assign');
         this.elements.diceToolbar?.classList.toggle('hidden', mode !== 'dice');
+
+        const isMapView = mode === 'mapview';
+        if (this.renderer && this.renderer.grid) {
+            this.renderer.grid.invalidate();
+            this.renderer.grid.setPaintMode(isMapView);
+        }
 
         this.renderToCanvas();
         this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
@@ -2287,82 +2055,22 @@ export class MapEditor {
     }
 
     /**
-     * Save as config (procedural level)
-     */
-    async saveAsConfig() {
-        this.syncConfigFromUI();
-        const cfg = this.state.configData;
-        if (!cfg) {
-            this.showStatus('Invalid config', 'error');
-            return null;
-        }
-        const seedEl = this.elements.editorModsSeedInput;
-        const seedVal = seedEl ? parseInt(seedEl.value, 10) : 0;
-        const configData = {
-            type: 'config',
-            mapSize: cfg.mapSize || '6x6',
-            mapStyle: cfg.mapStyle || 'islands',
-            gameMode: cfg.gameMode || 'classic',
-            bots: 2,
-            botAI: 'easy',
-            maxDice: this.state.maxDice ?? 8,
-            diceSides: this.state.diceSides ?? 6
-        };
-        // seed > 0 → fixed seed (same map every game); 0 → random at game start
-        if (Number.isFinite(seedVal) && seedVal > 0) configData.mapSeed = seedVal >>> 0;
-        if (this.editorOptions?.onSave) {
-            try {
-                this.editorOptions.onSave(configData);
-                this.state.isDirty = false;
-                this.showStatus('Saved!', 'success');
-                this.close();
-                return configData;
-            } catch (e) {
-                this._logSaveFailure('campaign config → setUserLevel', e);
-                this.showStatus('Failed to save', 'error');
-                return null;
-            }
-        }
-        this.showStatus('Config save only supported in campaign', 'error');
-        return null;
-    }
-
-    /**
-     * Import from existing scenario/map/config
+     * Import from existing scenario/map
      */
     importFromScenario(scenario) {
         this.state = this.createEmptyState(20, 20);
 
-        if (scenario.type === 'config') {
-            this.state.editorType = 'procedural';
-            this.state.configData = {
-                mapSize: scenario.mapSize || '6x6',
-                mapStyle: scenario.mapStyle || 'islands',
-                gameMode: scenario.gameMode || 'classic'
-            };
-            // Restore the fixed seed into the input if the level has one
-            if (scenario.mapSeed > 0 && this.elements.editorModsSeedInput) {
-                this.elements.editorModsSeedInput.value = scenario.mapSeed;
-            }
-        } else if (this.editorOptions?.isNew && scenario.type === 'map' && (!scenario.tiles || scenario.tiles.length === 0)) {
-            this.state.editorType = 'map';
-            if (!this.state.configData) {
-                this.state.configData = { mapSize: '6x6', mapStyle: 'islands', gameMode: 'classic' };
-            }
-        } else {
-            this.state.editorType = scenario.type === 'scenario' ? 'scenario' : 'map';
-            const botCount = (scenario.players || []).filter(p => p.isBot).length;
-            this.state.bots = scenario.bots ?? (scenario.players?.length ? botCount : 2);
-            this.state.botAI = scenario.botAI ?? 'easy';
-        }
+        const botCount = (scenario.players || []).filter(p => p.isBot).length;
+        this.state.bots = scenario.bots ?? (scenario.players?.length ? botCount : 2);
+        this.state.botAI = scenario.botAI ?? 'easy';
         if (!this.editorOptions) {
             this.state.name = scenario.isBuiltIn ? scenario.name + ' (Copy)' : (scenario.name || '');
             this.state.description = scenario.description || '';
             this.state.author = scenario.isBuiltIn ? 'User' : (scenario.author || 'User');
         }
-        this.state.maxDice = scenario.maxDice || 9;
-        this.state.diceSides = scenario.diceSides || 6;
-        this.state.gameMode = scenario.gameMode || (scenario.configData?.gameMode) || 'classic';
+        this.state.maxDice = scenario.maxDice || parseInt(SETUP_MOD_DEFAULTS.maxDice, 10);
+        this.state.diceSides = scenario.diceSides || parseInt(SETUP_MOD_DEFAULTS.diceSides, 10);
+        this.state.gameMode = scenario.gameMode || SETUP_MOD_DEFAULTS.gameMode;
         this.state.turnTimeLimit = scenario.turnTimeLimit ?? 0;
 
         if (scenario.players && scenario.players.length > 0) {

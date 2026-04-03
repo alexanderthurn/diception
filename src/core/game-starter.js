@@ -289,41 +289,7 @@ export class GameStarter {
             this.scenarioBrowser.loadPendingScenarioIfNeeded();
             const pendingLevel = this.scenarioBrowser.getPendingScenario();
 
-            if (pendingLevel?.type === 'config') {
-                const [w, h] = (pendingLevel.mapSize || '6x6').split('x').map(Number);
-                const { attacksPerTurn: apLvl, secondsPerTurn: secLvl, secondsPerAttack: secAtkLvl } = resolveTurnLimitsFromLevel(pendingLevel, config);
-                this.attacksPerTurn = apLvl;
-                this.secondsPerTurn = secLvl;
-                this.secondsPerAttack = secAtkLvl;
-                // Fixed seed on level overrides the game-start seed; 0 or missing → use random seed
-                const levelSeed = (pendingLevel.mapSeed > 0) ? pendingLevel.mapSeed : mapSeed;
-                const gameConfig = {
-                    humanCount: 1,
-                    botCount: pendingLevel.bots ?? 1,
-                    mapWidth: w,
-                    mapHeight: h,
-                    maxDice: pendingLevel.maxDice ?? 8,
-                    diceSides: pendingLevel.diceSides ?? 6,
-                    mapStyle: pendingLevel.mapStyle || 'full',
-                    gameMode: pendingLevel.gameMode || 'classic',
-                    fullBoardRule,
-                    attackRule,
-                    supplyRule,
-                    mapSeed: levelSeed,
-                    attacksPerTurn: apLvl,
-                    secondsPerTurn: secLvl,
-                    secondsPerAttack: secAtkLvl,
-                };
-                if (pendingLevel.humanStartsFirst === true) gameConfig.humanStartsFirst = true;
-                if (pendingLevel.startingPlayerId !== undefined && pendingLevel.startingPlayerId !== null) {
-                    gameConfig.startingPlayerId = pendingLevel.startingPlayerId;
-                }
-                this.game.startGame(gameConfig);
-                this.attacksPerTurn = this.game.attacksPerTurn;
-                this.secondsPerTurn = this.game.secondsPerTurn;
-                this.secondsPerAttack = this.game.secondsPerAttack;
-                this.initializePlayerAIs(pendingLevel.botAI || 'easy');
-            } else if (pendingLevel && pendingLevel.type !== 'map') {
+            if (pendingLevel && pendingLevel.type !== 'map') {
                 applyScenarioBranch(pendingLevel);
             } else {
                 const gameConfig = {

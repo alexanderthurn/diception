@@ -1157,55 +1157,22 @@
             <div class="editor-top-bar">
             </div>
 
-            <!-- Random dialog (top-left, like player-dashboard) -->
-            <div id="editor-random-dialog" class="editor-random-dialog hidden">
-                <button id="editor-random-close-btn" class="editor-random-close" type="button" title="Close"><span
-                        class="sprite-icon icon-close"></span></button>
-                <div class="editor-random-dialog-body">
-                    <h4 class="editor-random-title">Random Generate</h4>
-                    <div class="control-group">
-                        <label>Map Size</label>
-                        <div class="range-row">
-                            <input type="range" id="editor-map-size" min="1" max="10" value="4">
-                            <span id="editor-map-size-val">6×6</span>
-                        </div>
-                    </div>
-                    <button id="editor-randomize-btn" class="tron-btn primary editor-random-generate"><span
-                            class="sprite-icon icon-dice"></span>
-                        Generate</button>
-                </div>
-            </div>
-
             <!-- Bottom toolbar -->
             <div class="editor-bottom-bar">
                 <!-- Mode tabs -->
                 <div class="editor-mode-tabs">
-                    <button class="editor-tab active" data-mode="paint"><span class="sprite-icon icon-paint"></span>
-                        Paint</button>
+                    <button class="editor-tab" data-mode="assign"><span class="sprite-icon icon-assign"></span> Assign
+                        <span id="editor-assign-hint" class="input-hint keyboard">R</span></button>
                     <button class="editor-tab" data-mode="dice"><span class="dice-icon-sprite mini"
                             style="background-color: #888;"></span> Dice <span id="editor-dice-hint"
                             class="input-hint keyboard">F</span></button>
-                    <button class="editor-tab" data-mode="assign"><span class="sprite-icon icon-assign"></span> Assign
-                        <span id="editor-assign-hint" class="input-hint keyboard">R</span></button>
+                    <button class="editor-tab active" id="editor-map-view-btn" data-mode="mapview"><span class="sprite-icon icon-map"></span>
+                        Map View <span class="input-hint keyboard">Y</span></button>
                 </div>
             </div>
 
             <!-- Right settings panel -->
             <div class="editor-settings">
-                <div class="control-group editor-type-toggle">
-                    <div class="toggle-buttons toggle-buttons-stacked">
-                        <button id="editor-type-map" class="toggle-btn active"><span class="toggle-icon"><span
-                                    class="sprite-icon icon-map"></span></span><span
-                                class="toggle-text">Map</span></button>
-                        <button id="editor-type-scenario" class="toggle-btn"><span class="toggle-icon"><span
-                                    class="sprite-icon icon-scenario"></span></span><span
-                                class="toggle-text">Scenario</span></button>
-                        <button id="editor-type-procedural" class="toggle-btn"><span class="toggle-icon"><span
-                                    class="sprite-icon icon-dice"></span></span><span
-                                class="toggle-text">Procedural</span></button>
-                    </div>
-                </div>
-
                 <!-- Map/Scenario-specific -->
                 <div id="editor-map-scenario-section">
                     <div class="control-group">
@@ -1240,8 +1207,15 @@
                         </div>
                     </div>
 
-                    <!-- Map & Scenario: shared Bots, Bot AI + color legend -->
+                    <!-- Map & Scenario: shared Bots, Bot AI, Map Size + color legend -->
                     <div id="editor-shared-players-section">
+                        <div class="control-group">
+                            <label>Map Size</label>
+                            <div class="range-row">
+                                <input type="range" id="editor-map-size" min="1" max="10" value="4">
+                                <span id="editor-map-size-val">6×6</span>
+                            </div>
+                        </div>
                         <div class="control-row">
                             <div class="control-group half">
                                 <label>Bots</label>
