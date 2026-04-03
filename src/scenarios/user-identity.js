@@ -142,15 +142,33 @@ export function isDesktopContext() {
     return isSteamContext() || isTauriContext() || isAndroid();
 }
 
+const FULL_GAME_APP_ID = 4429000;
+
+let _resolvedFull = null; // null = not yet determined
+
+/**
+ * Must be awaited once at startup (in init()) before isFullVersion() is called.
+ * Resolves the Steam app ID and caches the result.
+ */
+export async function initFullVersionCheck() {
+    const param = new URLSearchParams(window.location.search).get('full');
+    if (param === 'true')  { _resolvedFull = true;  return; }
+    if (param === 'false') { _resolvedFull = false; return; }
+    if (!isSteamContext()) { _resolvedFull = false; return; }
+    try {
+        const id = await window.steam.getAppId();
+        _resolvedFull = (id === FULL_GAME_APP_ID);
+    } catch {
+        _resolvedFull = false;
+    }
+}
+
 /**
  * Whether this is the full (paid) version of the game.
- * Priority: URL param ?full=true/false > Steam (always full) > false
+ * Requires initFullVersionCheck() to have been awaited first.
  */
 export function isFullVersion() {
-    const param = new URLSearchParams(window.location.search).get('full');
-    if (param === 'true')  return true;
-    if (param === 'false') return false;
-    return isSteamContext();
+    return _resolvedFull === true;
 }
 
 /**

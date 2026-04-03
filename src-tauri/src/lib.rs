@@ -17,6 +17,7 @@ struct SteamApp {
     client: steamworks::Client,
     user_name: String,
     steam_id: u64,
+    app_id: u32,
     /// Keeps Remote Play callback registrations alive for the app lifetime.
     #[allow(dead_code)]
     _remote_play_cbs: Vec<steamworks::CallbackHandle>,
@@ -68,6 +69,15 @@ fn steam_get_steam_id(state: tauri::State<SteamState>) -> Result<u64, String> {
     let guard = state.lock().map_err(|e| e.to_string())?;
     guard.as_ref()
         .map(|s| s.steam_id)
+        .ok_or_else(|| "Steam not initialized".to_string())
+}
+
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
+fn steam_get_app_id(state: tauri::State<SteamState>) -> Result<u32, String> {
+    let guard = state.lock().map_err(|e| e.to_string())?;
+    guard.as_ref()
+        .map(|s| s.app_id)
         .ok_or_else(|| "Steam not initialized".to_string())
 }
 
@@ -340,6 +350,7 @@ const STEAM_INIT_SCRIPT: &str = r#"
     window.steam = {
         getUserName:      function()         { return ipc.invoke('steam_get_user_name'); },
         getSteamId:       function()         { return ipc.invoke('steam_get_steam_id'); },
+        getAppId:         function()         { return ipc.invoke('steam_get_app_id'); },
         isDev:            function()         { return ipc.invoke('steam_is_dev'); },
         quit:             function()         { return ipc.invoke('steam_quit'); },
         activateOverlay:  function(dialog)   { return ipc.invoke('steam_activate_overlay', { dialog: dialog || 'Friends' }); },
@@ -406,7 +417,8 @@ pub fn run() {
             Ok(client) => {
                 let user_name = client.friends().name();
                 let steam_id  = client.user().steam_id().raw();
-                eprintln!("[Steam] Initialized OK: {} (ID: {})", user_name, steam_id);
+                let app_id    = client.utils().app_id().0;
+                eprintln!("[Steam] Initialized OK: {} (ID: {}), AppId: {}", user_name, steam_id, app_id);
 
                 // Pump Steam callbacks on a background thread so the overlay
                 // can communicate, render, and respond to Shift+Tab.
@@ -422,6 +434,7 @@ pub fn run() {
                     client,
                     user_name,
                     steam_id,
+                    app_id,
                     _remote_play_cbs: Vec::new(),
                 };
                 (Some(app), true)
@@ -441,6 +454,7 @@ pub fn run() {
             .invoke_handler(tauri::generate_handler![
                 steam_get_user_name,
                 steam_get_steam_id,
+                steam_get_app_id,
                 steam_is_dev,
                 steam_quit,
                 steam_activate_overlay,

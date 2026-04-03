@@ -36,7 +36,7 @@ import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode, registerCheatContext } from './cheat.js';
 import { markLevelSolved, unmarkLevelSolved } from './scenarios/campaign-progress.js';
 import { unlockAchievement, removeAchievement, setUnlockCallback, setProgressCallback, resetAllAchievementsAndStats } from './core/achievement-manager.js';
-import { isTauriContext, isSteamContext, isDesktopContext, isAndroid, isFullVersion } from './scenarios/user-identity.js';
+import { isTauriContext, isSteamContext, isDesktopContext, isAndroid, isFullVersion, initFullVersionCheck } from './scenarios/user-identity.js';
 import { initStorage, flushStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { AchievementsPanel, TITLES as ACH_TITLES } from './ui/achievements-panel.js';
@@ -83,6 +83,8 @@ window.addEventListener('resize', updateUIScale);
 async function init() {
     // Load cloud save data into localStorage before anything else reads it
     await initStorage();
+    // Resolve full vs demo before any isFullVersion() calls
+    await initFullVersionCheck();
 
     // Sync achievement state from Steam — Steam's backend is authoritative,
     // so if the .sav file wasn't synced (e.g. first launch on a new machine),
