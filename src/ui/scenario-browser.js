@@ -514,8 +514,22 @@ export class ScenarioBrowser {
         }
 
         this.levelGridHeader.innerHTML = `<span>${ownerLabel}</span><span>${levels.length} levels</span>`;
-        this.levelGrid.style.gridTemplateColumns = `repeat(${cols}, 44px)`;
-        this.levelGrid.style.gridTemplateRows = `repeat(${rows}, 44px)`;
+
+        // Derive chapter color index (non-tutorial chapters get color by their index in the chapters list)
+        const allCampaigns = this.campaignManager.listCampaigns().filter(c => !c.isUserCampaign);
+        const chapters = allCampaigns.filter(c => c.id !== 'tutorial' && c.owner !== 'Tutorial');
+        const chapterColorIndex = chapters.findIndex(c => c.owner === campaign.owner);
+        if (chapterColorIndex >= 0) {
+            const hex = '#' + GAME.HUMAN_COLORS[chapterColorIndex % GAME.HUMAN_COLORS.length].toString(16).padStart(6, '0');
+            this.levelGrid.style.setProperty('--chapter-color', hex);
+        } else {
+            this.levelGrid.style.removeProperty('--chapter-color');
+        }
+
+        // Use 7 flexible columns
+        const COLS = 7;
+        this.levelGrid.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+        this.levelGrid.style.gridTemplateRows = '';
         this.levelGrid.innerHTML = '';
 
         for (let i = 0; i < levels.length; i++) {
@@ -535,16 +549,6 @@ export class ScenarioBrowser {
             idxSpan.className = 'tile-index';
             idxSpan.textContent = i + 1;
             tile.appendChild(idxSpan);
-
-            // Add type icon
-            const typeIcon = document.createElement('span');
-            const type = level.type || 'map';
-            if (type === 'scenario') {
-                typeIcon.className = 'sprite-icon icon-campaigns tile-type-sprite';
-            } else {
-                typeIcon.className = 'sprite-icon icon-map tile-type-sprite';
-            }
-            tile.appendChild(typeIcon);
 
             if (this.hasHoverCapability()) {
                 tile.addEventListener('mouseenter', () => { this._hoveredLevelIndex = i; this.showHoverPreview(level, tile); });

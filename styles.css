@@ -3321,92 +3321,71 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 
 #level-grid {
     display: grid;
-    gap: 3px;
+    gap: 4px;
     flex: 1;
     min-height: 0;
     align-content: start;
-    grid-auto-rows: minmax(44px, auto);
     padding: 2px;
+    width: 100%;
 }
 
 .level-grid-tile {
     position: relative;
-    width: 44px;
-    height: 44px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
     touch-action: manipulation;
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 0;
+    min-height: 0;
     /* Neutral/Unclaimed background */
     background: rgba(30, 40, 50, 0.5);
-    border: 1px solid rgba(0, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s ease;
     overflow: hidden;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    box-shadow: none;
 }
 
-.level-grid-tile::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 1;
-}
 
-/* Won Level: Conquered territory (Purple) */
+/* Won Level: uses chapter color at good opacity */
 .level-grid-tile.solved {
-    background: rgba(170, 0, 255, 0.2);
-    border-color: rgba(170, 0, 255, 0.4);
-    box-shadow: inset 0 0 12px rgba(170, 0, 255, 0.15);
+    background: color-mix(in srgb, var(--chapter-color, #AA00FF) 55%, #000);
+    border-color: color-mix(in srgb, var(--chapter-color, #AA00FF) 70%, transparent);
+    box-shadow: none;
 }
 
 .level-grid-tile:hover {
-    border-color: #0ff;
-    background: rgba(0, 255, 255, 0.1);
-    box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: none;
     z-index: 10;
+    filter: brightness(1.2);
 }
 
 .level-grid-tile.solved:hover {
-    border-color: #f0f;
-    background: rgba(170, 0, 255, 0.3);
-    box-shadow: 0 0 15px rgba(170, 0, 255, 0.4);
+    filter: brightness(1.2);
+    border-color: var(--chapter-color, #AA00FF);
 }
 
 .level-grid-tile.selected {
     border-color: #fff;
     border-width: 2px;
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: none;
     z-index: 10;
 }
 
 .level-grid-tile.solved.selected {
-    background: rgba(170, 0, 255, 0.4);
-    box-shadow: 0 0 20px rgba(170, 0, 255, 0.6);
+    background: color-mix(in srgb, var(--chapter-color, #AA00FF) 70%, #000);
+    border-color: var(--chapter-color, #AA00FF);
 }
 
-/* Redesigned Solved Indicator: Medal Ribbon */
+/* Solved ribbon removed — color fill is enough */
 .level-grid-tile.solved::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 8px;
-    width: 12px;
-    height: 18px;
-    background: #00ff00;
-    /* Elegant V-cut ribbon shape */
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
-    box-shadow: 0 2px 8px rgba(0, 255, 0, 0.6);
-    z-index: 4;
+    display: none;
 }
 
 .level-grid-tile.solved::before {
@@ -3454,34 +3433,17 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 }
 
 .level-grid-tile .tile-index {
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    font-size: 9px;
+    font-size: clamp(12px, 2.5vw, 20px);
     font-weight: 700;
-    color: rgba(170, 0, 255, 0.8);
+    color: rgba(255, 255, 255, 0.7);
     pointer-events: none;
     line-height: 1;
     z-index: 2;
+    text-align: center;
 }
 
-.tile-type-sprite {
-    font-size: 20px !important;
-    opacity: 0.25;
-    transition: all 0.3s;
-    filter: drop-shadow(0 0 5px rgba(170, 0, 255, 0.2));
-    z-index: 2;
-}
-
-.level-grid-tile:hover .tile-type-sprite {
-    opacity: 0.7;
-    transform: translateY(-0.1em) scale(1.1);
-    filter: drop-shadow(0 0 8px rgba(170, 0, 255, 0.5));
-}
-
-.level-grid-tile.selected .tile-type-sprite {
-    opacity: 1;
-    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
+.level-grid-tile.solved .tile-index {
+    color: rgba(255, 255, 255, 0.9);
 }
 
 /* Hover preview (floating) - fixed pixel size, no stretch */
@@ -3912,8 +3874,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     }
 
     #level-grid {
-        justify-content: center !important;
-        gap: 15px !important;
+        gap: 4px !important;
     }
 
     /* Hide header info on mobile to save space */
