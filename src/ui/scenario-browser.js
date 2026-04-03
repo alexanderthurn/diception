@@ -4,6 +4,7 @@ import { getGridDimensions } from '../scenarios/campaign-data.js';
 import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress.js';
 import { getCachedIdentity, isFullVersion } from '../scenarios/user-identity.js';
 import { getActiveModsSummary } from './mods-panel-helpers.js';
+import { GAME } from '../core/constants.js';
 
 /** Dev-only campaign tools (import/export JSON, etc.): ?dev=true or ?dev=1 */
 function isCampaignDevToolsEnabled() {
@@ -205,7 +206,10 @@ export class ScenarioBrowser {
         if (!this.campaignButtonList) return;
         this.campaignButtonList.innerHTML = '';
 
-        // Find first campaign that is not fully solved (for gamepad auto-focus)
+        const tutorials = campaigns.filter(c => c.id === 'tutorial' || c.owner === 'Tutorial');
+        const chapters = campaigns.filter(c => c.id !== 'tutorial' && c.owner !== 'Tutorial');
+
+        // Find first unsolved across all campaigns for gamepad autofocus
         const firstUnsolvedCampaignIdx = campaigns.findIndex(c => {
             const levelCount = c.levels?.length ?? 0;
             const solvedCount = getSolvedLevels(c.owner).length;
@@ -213,20 +217,25 @@ export class ScenarioBrowser {
         });
 
         const fullVersion = isFullVersion();
-        campaigns.forEach((c, idx) => {
+
+        const makeCampaignBtn = (c, isAutofocus, chapterColorIndex = -1) => {
             const levelCount = c.levels?.length ?? 0;
             const solvedCount = getSolvedLevels(c.owner).length;
             const allComplete = levelCount > 0 && solvedCount >= levelCount;
-            const displayName = this.getCampaignDisplayName(c);
             const isTutorial = c.id === 'tutorial' || c.owner === 'Tutorial';
             const locked = !fullVersion && !isTutorial;
+            const displayName = this.getCampaignDisplayName(c);
 
             const nodeDiv = document.createElement('div');
             nodeDiv.className = 'campaign-list-node';
 
             const btn = document.createElement('button');
             btn.className = 'tron-btn large campaign-select-btn' + (locked ? ' btn-locked' : '');
-            if (!locked && idx === firstUnsolvedCampaignIdx) btn.dataset.gamepadAutofocus = '';
+            if (!locked && isAutofocus) btn.dataset.gamepadAutofocus = '';
+            if (chapterColorIndex >= 0) {
+                const hex = '#' + GAME.HUMAN_COLORS[chapterColorIndex % GAME.HUMAN_COLORS.length].toString(16).padStart(6, '0');
+                btn.style.setProperty('--chapter-color', hex);
+            }
 
             const nameSpan = document.createElement('span');
             if (locked) {
@@ -241,9 +250,14 @@ export class ScenarioBrowser {
 
             const subSpan = document.createElement('span');
             subSpan.className = 'campaign-btn-sub';
-            subSpan.textContent = locked
-                ? 'Full version only'
-                : `${levelCount} levels${solvedCount > 0 ? ` · ${solvedCount} solved` : ''}`;
+            if (locked) {
+                subSpan.textContent = 'Full version only';
+            } else if (levelCount === 0) {
+                subSpan.textContent = '—';
+            } else {
+                const pct = Math.round(solvedCount / levelCount * 100);
+                subSpan.textContent = allComplete ? '100%' : `${pct}%`;
+            }
 
             btn.appendChild(nameSpan);
             btn.appendChild(subSpan);
@@ -256,14 +270,31 @@ export class ScenarioBrowser {
             });
 
             nodeDiv.appendChild(btn);
-            this.campaignButtonList.appendChild(nodeDiv);
+            return nodeDiv;
+        };
 
-            if (idx < campaigns.length - 1) {
-                const connector = document.createElement('div');
-                connector.className = 'campaign-list-connector';
-                this.campaignButtonList.appendChild(connector);
-            }
+        // Tutorial: standalone at top
+        tutorials.forEach(c => {
+            const isAutofocus = campaigns.indexOf(c) === firstUnsolvedCampaignIdx;
+            this.campaignButtonList.appendChild(makeCampaignBtn(c, isAutofocus));
         });
+
+        // Separator + chapters grid below
+        if (tutorials.length > 0 && chapters.length > 0) {
+            const sep = document.createElement('div');
+            sep.className = 'campaign-tutorial-separator';
+            this.campaignButtonList.appendChild(sep);
+        }
+
+        if (chapters.length > 0) {
+            const chaptersGrid = document.createElement('div');
+            chaptersGrid.className = 'campaign-chapters-grid';
+            chapters.forEach((c, i) => {
+                const isAutofocus = campaigns.indexOf(c) === firstUnsolvedCampaignIdx;
+                chaptersGrid.appendChild(makeCampaignBtn(c, isAutofocus, i));
+            });
+            this.campaignButtonList.appendChild(chaptersGrid);
+        }
     }
 
     exportUserCampaignJson() {

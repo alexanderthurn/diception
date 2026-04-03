@@ -148,7 +148,7 @@ export function sanitizeLevel(level) {
 export function getGridDimensions(levelCount, containerWidth = null) {
     if (levelCount <= 0) return { cols: 1, rows: 1 };
     const CELL_SIZE = 44;  /* Match .level-grid-tile width/height in CSS */
-    const GAP = 15;        /* Use larger gap (mobile value) so we break earlier and avoid overflow */
+    const GAP = 3;         /* Match #level-grid gap in CSS */
     const slotWidth = CELL_SIZE + GAP;
     const BUFFER = 24;  /* Reserve for padding, scrollbars, rounding */
 
