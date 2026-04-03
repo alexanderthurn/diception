@@ -366,6 +366,8 @@ export class MapEditor {
 
             mapScenarioSection: document.getElementById('editor-map-scenario-section'),
             randomBtn: document.getElementById('editor-random-btn'),
+            randomOwnersBtn: document.getElementById('editor-random-owners-btn'),
+            randomDiceBtn: document.getElementById('editor-random-dice-btn'),
             quickActions: document.getElementById('editor-quick-actions'),
             saveBtn: document.getElementById('editor-save-btn'),
             editorMapSize: document.getElementById('editor-map-size'),
@@ -454,6 +456,8 @@ export class MapEditor {
 
         // Random: directly generate
         this.elements.randomBtn?.addEventListener('click', () => this.handleRandom());
+        this.elements.randomOwnersBtn?.addEventListener('click', () => this.handleRandomOwners());
+        this.elements.randomDiceBtn?.addEventListener('click', () => this.handleRandomDice());
 
         // Settings changes
 
@@ -696,7 +700,7 @@ export class MapEditor {
                     }
                     this.state.isDirty = true;
                     this.renderToCanvas();
-                    this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
+                    this.updateHoverPreview();
                 }
                 break;
 
@@ -717,7 +721,7 @@ export class MapEditor {
                     }
                     this.state.isDirty = true;
                     this.renderToCanvas();
-                    this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
+                    this.updateHoverPreview();
                 }
                 break;
         }
@@ -727,55 +731,38 @@ export class MapEditor {
      * Update hover preview: HTML overlay showing what left-click would do (assign/dice mode)
      * Only shown on mouse hover - not on touch (worthless for touch users)
      */
-    updateHoverPreview(clientX, clientY) {
-        const el = this.elements.hoverPreview;
-        const content = this.elements.hoverPreviewContent;
-        if (!el || !content) return;
+    updateHoverPreview() {
+        const grid = this.renderer?.grid;
+        if (!grid) return;
 
-        // Only show on mouse - touch users cannot "click" the same way
-        if (this.state.lastPointerType !== 'mouse') {
-            el.classList.add('hidden');
+        // Only preview assign/dice modes on hover, not touch or while brush-dragging
+        const effectiveMode = this._shiftHeld ? (this._getAltMode() ?? this.state.currentMode) : this.state.currentMode;
+        const isTouch = this.state.lastPointerType === 'touch';
+        const canPreview = !isTouch &&
+            (effectiveMode === 'assign' || effectiveMode === 'dice') &&
+            this.state.hoveredTile &&
+            !(this.isPainting && this.mouseStrokeMovedToOther);
+
+        if (!canPreview) {
+            grid.setPreviewTile(null, null, 0, 0);
+            this.renderToCanvas();
             return;
         }
 
-        // Hide while dragging to other tiles (brush mode)
-        if (this.isPainting && this.mouseStrokeMovedToOther) {
-            el.classList.add('hidden');
-            return;
-        }
-
-        const isScenarioAssignDice = this.state.currentMode !== 'mapview' &&
-            (this.state.currentMode === 'assign' || this.state.currentMode === 'dice');
-
-        if (!isScenarioAssignDice || !this.state.hoveredTile) {
-            el.classList.add('hidden');
-            return;
-        }
-
-        const preview = this.getLeftClickPreview(this.state.hoveredTile.x, this.state.hoveredTile.y);
+        const { x, y } = this.state.hoveredTile;
+        const preview = this.getLeftClickPreview(x, y, effectiveMode);
         if (!preview) {
-            el.classList.add('hidden');
+            grid.setPreviewTile(null, null, 0, 0);
+            this.renderToCanvas();
             return;
         }
 
-        // Position offset from mouse (avoid covering cursor)
-        // clientX/clientY are physical viewport coords; body is scaled by --ui-scale
-        const scale = parseFloat(getComputedStyle(document.body).getPropertyValue('--ui-scale')) || 1;
-        const offset = 24;
-        el.style.left = `${(clientX + offset) / scale}px`;
-        el.style.top = `${(clientY + offset) / scale}px`;
-
-        // Always show both resulting color and dice in one combined preview
-        content.className = 'editor-hover-preview-content';
-        const owner = this.state.players.find(p => p.id === preview.owner);
-        const color = owner ? owner.color : 0x444444;
-        const hex = '#' + color.toString(16).padStart(6, '0');
-        content.style.background = hex;
-        content.style.borderColor = '#fff';
-        content.style.color = getContrastColor(color);
-        content.textContent = String(preview.dice ?? 1);
-
-        el.classList.remove('hidden');
+        // Mouse: position at cursor; gamepad/keyboard: position at tile grid coords
+        const isMouse = this.state.lastPointerType === 'mouse';
+        const screenX = isMouse ? this.lastMouseX : null;
+        const screenY = isMouse ? this.lastMouseY : null;
+        grid.setPreviewTile(x, y, preview.owner, preview.dice, screenX, screenY);
+        this.renderToCanvas();
     }
 
     /**
@@ -872,11 +859,11 @@ export class MapEditor {
         // onCanvasMouseOut handler for hiding cursor and clearing hover
         this.handleCanvasMouseOut = () => {
             this.elements.cursorPreview?.classList.add('hidden');
-            this.elements.hoverPreview?.classList.add('hidden');
-            // Clear hover tile highlight and state
+            // Clear hover tile highlight, preview, and state
             this.state.hoveredTile = null;
             if (this.renderer && this.renderer.grid) {
                 this.renderer.grid.setHover(null, null);
+                this.renderer.grid.setPreviewTile(null, null, 0, 0);
                 this.renderToCanvas();
             }
         };
@@ -893,6 +880,40 @@ export class MapEditor {
         canvas.addEventListener('touchstart', this.handleCanvasTouchStart, { passive: false });
         canvas.addEventListener('touchmove', this.handleCanvasTouchMove, { passive: false });
         canvas.addEventListener('touchend', this.handleCanvasTouchEnd);
+
+        // Shift key: temporarily highlight alternate mode tab
+        if (this.handleShiftKeyDown) window.removeEventListener('keydown', this.handleShiftKeyDown);
+        if (this.handleShiftKeyUp) window.removeEventListener('keyup', this.handleShiftKeyUp);
+        this.handleShiftKeyDown = (e) => {
+            if (e.key === 'Shift' && this.isOpen && !this._shiftHeld) {
+                this._shiftHeld = true;
+                this.mouseBrushValue = null; // reset brush so it samples from the new effective mode
+                this._updateTabHighlight(this._getAltMode() ?? this.state.currentMode);
+                this.updateHoverPreview();
+            }
+        };
+        this.handleShiftKeyUp = (e) => {
+            if (e.key === 'Shift' && this.isOpen) {
+                this._shiftHeld = false;
+                this.mouseBrushValue = null; // reset brush on release too
+                this._updateTabHighlight(this.state.currentMode);
+                this.updateHoverPreview();
+            }
+        };
+        window.addEventListener('keydown', this.handleShiftKeyDown);
+        window.addEventListener('keyup', this.handleShiftKeyUp);
+    }
+
+    _getAltMode() {
+        if (this.state.currentMode === 'assign') return 'dice';
+        if (this.state.currentMode === 'dice') return 'assign';
+        return null;
+    }
+
+    _updateTabHighlight(mode) {
+        this.elements.modeTabs?.forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.mode === mode);
+        });
     }
 
     /**
@@ -959,12 +980,12 @@ export class MapEditor {
     /**
      * Get what would happen on single left click (cycle increase) for assign/dice mode
      */
-    getLeftClickPreview(x, y) {
+    getLeftClickPreview(x, y, mode = this.state.currentMode) {
         const key = `${x},${y}`;
         const tile = this.state.tiles.get(key);
         const playerCount = this.state.players.length;
 
-        if (this.state.currentMode === 'assign') {
+        if (mode === 'assign') {
             if (!tile) {
                 const cached = this.state.deletedTiles.get(key);
                 return { x, y, mode: 'assign', owner: 0, dice: cached?.dice || 1 };
@@ -972,7 +993,7 @@ export class MapEditor {
             if (tile.owner >= playerCount - 1) return { x, y, mode: 'assign', owner: 0, dice: tile.dice };
             return { x, y, mode: 'assign', owner: tile.owner + 1, dice: tile.dice };
         }
-        if (this.state.currentMode === 'dice') {
+        if (mode === 'dice') {
             if (!tile) {
                 const cached = this.state.deletedTiles.get(key);
                 return { x, y, mode: 'dice', owner: cached?.owner ?? 0, dice: 1 };
@@ -1018,7 +1039,7 @@ export class MapEditor {
         }
 
         // HTML hover preview (assign/dice mode)
-        this.updateHoverPreview(e.clientX, e.clientY);
+        this.updateHoverPreview();
 
         if (this.isPainting && tile) {
             const key = `${tile.x},${tile.y}`;
@@ -1034,7 +1055,7 @@ export class MapEditor {
                             : { owner: 0, dice: 1 };
                     }
                 }
-                this.handleTileInteraction(tile.x, tile.y, this.currentInteractionButton, this.currentInteractionShift, true);
+                this.handleTileInteraction(tile.x, tile.y, this.currentInteractionButton, this._shiftHeld || this.currentInteractionShift, true);
                 this.lastPaintedTile = key;
             }
         }
@@ -1052,11 +1073,13 @@ export class MapEditor {
         this.mouseTrackpadIsPanning = false;
         this.mouseTrackpadStartTile = null;
 
+        const _shiftActive = this._shiftHeld || this.currentInteractionShift;
+        const _clickMode = _shiftActive ? (this._getAltMode() ?? this.state.currentMode) : this.state.currentMode;
         if (this.isPainting && this.mouseStrokeStartTile && !this.mouseStrokeMovedToOther &&
-            this.currentInteractionButton === 0 && this.state.currentMode !== 'mapview' &&
-            (this.state.currentMode === 'assign' || this.state.currentMode === 'dice')) {
+            this.currentInteractionButton === 0 && _clickMode !== 'mapview' &&
+            (_clickMode === 'assign' || _clickMode === 'dice')) {
             const key = `${this.mouseStrokeStartTile.x},${this.mouseStrokeStartTile.y}`;
-            this.handleTileInteraction(this.mouseStrokeStartTile.x, this.mouseStrokeStartTile.y, 0, false, false);
+            this.handleTileInteraction(this.mouseStrokeStartTile.x, this.mouseStrokeStartTile.y, 0, this._shiftHeld || this.currentInteractionShift, false);
         }
         this.isPainting = false;
         this.lastPaintedTile = null;
@@ -1216,7 +1239,7 @@ export class MapEditor {
      * Close editor
      */
     close() {
-        this.elements.hoverPreview?.classList.add('hidden');
+        this.renderer?.grid?.setPreviewTile(null, null, 0, 0);
         if (this.boundUpdateEditorHelp) {
             window.removeEventListener('resize', this.boundUpdateEditorHelp);
             this.inputManager?.off('gamepadChange', this.boundUpdateEditorHelp);
@@ -1246,6 +1269,7 @@ export class MapEditor {
         }
 
         this.isOpen = false;
+        this._shiftHeld = false;
 
         if (this.onClose) {
             this.onClose();
@@ -1604,7 +1628,9 @@ export class MapEditor {
                 this.state.tiles.set(key, { owner: 0, dice: 1 });
             } else {
                 // Scenario mode: brush - sample from first tile, apply to all (mode-specific: only copy relevant value)
-                if (this.state.currentMode === 'assign' || this.state.currentMode === 'dice') {
+                // Shift temporarily uses the alternate mode (assign↔dice)
+                const effectiveMode = shiftKey ? (this._getAltMode() ?? this.state.currentMode) : this.state.currentMode;
+                if (effectiveMode === 'assign' || effectiveMode === 'dice') {
                     if (this.mouseBrushValue === null) {
                         this.mouseBrushValue = tile
                             ? { owner: tile.owner, dice: tile.dice || 1 }
@@ -1613,7 +1639,7 @@ export class MapEditor {
                     const v = this.mouseBrushValue;
                     const existing = this.state.tiles.get(key);
                     const cached = this.state.deletedTiles.get(key);
-                    if (this.state.currentMode === 'dice') {
+                    if (effectiveMode === 'dice') {
                         // Dice mode: only copy dice, preserve target's owner
                         this.state.tiles.set(key, {
                             owner: existing?.owner ?? cached?.owner ?? 0,
@@ -1631,17 +1657,18 @@ export class MapEditor {
             }
             this.state.isDirty = true;
             this.renderToCanvas();
-            this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
+            this.updateHoverPreview();
             return;
         }
 
         // Touch (legacy): cycle increase/decrease
         const isDecrease = isRightClick;
-        if (this.state.currentMode === 'mapview') {
+        const cycleMode = shiftKey ? (this._getAltMode() ?? this.state.currentMode) : this.state.currentMode;
+        if (cycleMode === 'mapview') {
             if (tile) this.state.tiles.delete(key);
             else this.state.tiles.set(key, { owner: 0, dice: 1 });
         } else {
-            switch (this.state.currentMode) {
+            switch (cycleMode) {
                 case 'assign':
                     const playerCount = this.state.players.length;
                     if (!tile) {
@@ -1694,7 +1721,7 @@ export class MapEditor {
 
         this.state.isDirty = true;
         this.renderToCanvas();
-        this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
+        this.updateHoverPreview();
     }
 
     /**
@@ -1741,6 +1768,72 @@ export class MapEditor {
         if (this.renderer?.grid) this.renderer.grid.invalidate();
         this.updateUIFromState();
         this.renderToCanvas();
+    }
+
+    /**
+     * Randomize only the owner of each existing tile (keep dice values)
+     */
+    handleRandomOwners() {
+        const playerCount = this.state.players.length;
+        if (playerCount === 0) return;
+        const rng = mulberry32(randomSeed());
+        for (const [key, tile] of this.state.tiles) {
+            tile.owner = Math.floor(rng() * playerCount);
+        }
+        this.state.isDirty = true;
+        this.gameAdapter.syncFromState();
+        if (this.renderer?.grid) this.renderer.grid.invalidate();
+        this.renderToCanvas();
+        this.updateHoverPreview();
+    }
+
+    /**
+     * Randomize only the dice value of each existing tile (keep owners).
+     * Respects the current game mode (classic/madness/2of2/fair).
+     */
+    handleRandomDice() {
+        const maxDice = this.state.maxDice;
+        const gameMode = this.state.gameMode;
+        const rng = mulberry32(randomSeed());
+
+        if (gameMode === 'madness') {
+            for (const tile of this.state.tiles.values()) tile.dice = maxDice;
+        } else if (gameMode === '2of2') {
+            for (const tile of this.state.tiles.values()) tile.dice = 2;
+        } else {
+            // classic and fair: assign random dice first
+            for (const tile of this.state.tiles.values()) {
+                tile.dice = 1 + Math.floor(rng() * maxDice);
+            }
+            if (gameMode === 'fair') {
+                // Balance: reduce players with more total dice than the minimum
+                const playerTiles = new Map();
+                for (const [key, tile] of this.state.tiles) {
+                    if (!playerTiles.has(tile.owner)) playerTiles.set(tile.owner, []);
+                    playerTiles.get(tile.owner).push(tile);
+                }
+                const totals = [...playerTiles.entries()].map(([owner, tiles]) => ({
+                    owner, tiles, total: tiles.reduce((s, t) => s + t.dice, 0)
+                }));
+                const minTotal = Math.min(...totals.map(s => s.total));
+                for (const { tiles, total } of totals) {
+                    let excess = total - minTotal;
+                    const reducible = tiles.filter(t => t.dice > 1);
+                    while (excess > 0 && reducible.length > 0) {
+                        const i = Math.floor(rng() * reducible.length);
+                        reducible[i].dice--;
+                        excess--;
+                        if (reducible[i].dice <= 1) reducible.splice(i, 1);
+                    }
+                }
+            }
+        }
+
+        this.state.isDirty = true;
+        this.gameAdapter.syncFromState();
+        if (this.renderer?.grid) this.renderer.grid.invalidate();
+        this.renderToCanvas();
+        this.updateHoverPreview();
     }
 
     syncSharedPlayersToUI() {
@@ -1858,7 +1951,7 @@ export class MapEditor {
         }
 
         this.renderToCanvas();
-        this.updateHoverPreview(this.lastMouseX ?? 0, this.lastMouseY ?? 0);
+        this.updateHoverPreview();
     }
 
 

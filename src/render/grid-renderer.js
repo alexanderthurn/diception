@@ -28,6 +28,10 @@ export class GridRenderer {
         this.overlayContainer = new Container();
         this.stage.addChild(this.overlayContainer); // Above tiles
 
+        // Container for editor hover preview (half-size tile in top-right corner)
+        this._previewOverlayContainer = new Container();
+        this.overlayContainer.addChild(this._previewOverlayContainer);
+
         // Container for temporary animations (so they don't get cleared by drawOverlay)
         this.animationContainer = new Container();
         this.stage.addChild(this.animationContainer);
@@ -71,6 +75,8 @@ export class GridRenderer {
         this.paintMode = false;
         // Show map bounds (editor) - outline of full grid
         this.showMapBounds = false;
+        // Editor hover preview: override owner/dice for one tile
+        this._previewTile = null; // { x, y, owner, dice } | null
 
         // === PERFORMANCE: Tile caching ===
         // Pool of tile containers indexed by tile index
@@ -217,6 +223,14 @@ export class GridRenderer {
 
     setPaintMode(enabled) {
         this.paintMode = enabled;
+    }
+
+    /**
+     * Set a single-tile preview override (editor hover preview).
+     * Pass x=null to clear. Marks affected tiles dirty so next draw picks it up.
+     */
+    setPreviewTile(x, y, owner, dice, screenX = null, screenY = null) {
+        this._previewTile = (x === null) ? null : { x, y, owner, dice, screenX, screenY };
     }
 
     setShowMapBounds(enabled) {
@@ -386,7 +400,6 @@ export class GridRenderer {
                     this.container.addChild(tileContainer);
                     this.tileCache.set(tileIdx, tileContainer);
 
-                    // Save state for future dirty checking
                     this.saveTileState(tileIdx, tileRaw, isCurrentPlayer, isRegionTile, map, x, y);
                 }
 
@@ -418,7 +431,38 @@ export class GridRenderer {
             this.tileGlow.redraw(glowTiles, this.tileSize, this.gap);
         }
 
+        this._drawPreviewOverlay(map, playerRegions, currentPlayer);
         this.drawOverlay();
+    }
+
+    /**
+     * Render a half-size preview tile in the top-right corner of the hovered tile.
+     */
+    _drawPreviewOverlay(map, playerRegions, currentPlayer) {
+        for (const child of this._previewOverlayContainer.children) {
+            child.destroy({ children: true });
+        }
+        this._previewOverlayContainer.removeChildren();
+
+        const p = this._previewTile;
+        if (!p) return;
+
+        const previewRaw = { blocked: false, owner: p.owner, dice: p.dice };
+        const tileContainer = this.createTileContainer(
+            p.x, p.y, previewRaw, currentPlayer, false, false, playerRegions, map
+        );
+
+        tileContainer.scale.set(1);
+        if (p.screenX !== null && p.screenY !== null) {
+            // Convert screen (CSS pixel) coords to world (rootContainer) coords
+            tileContainer.x = (p.screenX - this.stage.x) / this.stage.scale.x;
+            tileContainer.y = (p.screenY - this.stage.y) / this.stage.scale.y;
+        } else {
+            tileContainer.x = p.x * (this.tileSize + this.gap);
+            tileContainer.y = p.y * (this.tileSize + this.gap);
+        }
+
+        this._previewOverlayContainer.addChild(tileContainer);
     }
 
     /**
