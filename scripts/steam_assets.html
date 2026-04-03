@@ -232,6 +232,13 @@
             { id: 'ost_vertical', name: 'Vertical Capsule', w: 748, h: 896, type: 'ost' },
         ];
 
+        const DEMO_STORE_ASSETS = STORE_ASSETS
+            .filter(a => a.id !== 'page_background' && a.id !== 'branding_image' && a.id !== 'header_image')
+            .map(a => ({ ...a, id: 'demo_' + a.id, demo: true }));
+        const DEMO_LIBRARY_ASSETS = LIBRARY_ASSETS
+            .filter(a => a.id !== 'library_hero' && a.id !== 'library_capsule')
+            .map(a => ({ ...a, id: 'demo_' + a.id, demo: true }));
+
         // ── Colors ──
         const TITLE_COLOR = '#00FFFF';
         const HUMAN1_COLOR = '#AA00FF';
@@ -291,6 +298,8 @@
             addSection('Broadcast Assets', BROADCAST_ASSETS);
             addSection('Community Assets', COMMUNITY_ASSETS);
             addSection('Soundtrack Assets', SOUNDTRACK_ASSETS);
+            addSection('Demo — Store Assets', DEMO_STORE_ASSETS);
+            addSection('Demo — Library Assets', DEMO_LIBRARY_ASSETS);
 
             // Load spritesheet then derive die coords and render all assets
             spriteSheet.onload = () => {
@@ -724,6 +733,7 @@ void main(void) {
 
             if (asset.type === 'branding') {
                 drawBrandingImage(canvas, asset);
+                if (asset.demo) drawDemoLabel(ctx, w, h, asset);
                 return;
             }
 
@@ -742,6 +752,7 @@ void main(void) {
                 const { titleWidth: ltw, mapAnchorY: lma } = getTitleMetrics(ctx, w, h, asset);
                 drawBattleScene(ctx, w, h, asset, lma, ltw);
                 drawTitleBlock(ctx, w, h, asset);
+                if (asset.demo) drawDemoLabel(ctx, w, h, asset);
                 return;
             }
 
@@ -785,14 +796,22 @@ void main(void) {
             const shaderTime = (asset.w * 0.003 + asset.h * 0.007) % 20;
             const shaderQuality = isTallAsset ? 1.0 : 0.0;
             drawShaderBackground(ctx, w, h, shaderTime, _titleBox, shaderQuality);
+            if (asset.demo) {
+                const og = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.75);
+                og.addColorStop(0, 'rgba(255,80,0,0)');
+                og.addColorStop(1, 'rgba(255,80,0,0.13)');
+                ctx.fillStyle = og;
+                ctx.fillRect(0, 0, w, h);
+            }
             const isPageBg = asset.id === 'page_background';
             const isLibHero = asset.id === 'library_hero';
             const isMainCapsule = asset.id === 'main_capsule';
             const isSmallCapsule = asset.id === 'small_capsule';
             const isHeaderCapsule = asset.id === 'header_capsule';
+            const isVerticalCapsule = asset.id === 'vertical_capsule' || asset.id === 'demo_vertical_capsule';
             const diceCount = isTallAsset ? 3.5 : isPageBg ? 3.5 : isLibHero ? 2.0 : isMainCapsule ? 2.5 : isSmallCapsule ? 2.0 : isHeaderCapsule ? 3.5 : 1;
             const bgMax = isPageBg ? 55 : isLibHero ? 40 : 35;
-            const titleMax = isTallAsset ? 140 : isHeaderCapsule ? 160 : 90;
+            const titleMax = isVerticalCapsule ? 90 : isTallAsset ? 140 : isHeaderCapsule ? 160 : 90;
             const alphaMult = (isLibHero || isPageBg) ? 0.35 : 1;
             drawFloatingDice(ctx, w, h, rng, diceCount, _titleBox, bgMax, titleMax, alphaMult);
 
@@ -801,7 +820,10 @@ void main(void) {
             drawParticles(ctx, w, h, particleCount, rng);
 
             // Background-only: no text or map
-            if (asset.type === 'bg_only') return;
+            if (asset.type === 'bg_only') {
+                if (asset.demo) drawDemoLabel(ctx, w, h, asset);
+                return;
+            }
 
             // ── Title glow behind text ──
             const titleGlow = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.min(w, h) * 0.5);
@@ -817,6 +839,7 @@ void main(void) {
 
             // Draw title + subtitle
             drawTitleBlock(ctx, w, h, asset);
+            if (asset.demo) drawDemoLabel(ctx, w, h, asset);
         }
 
         // ── Battle scene: scattered mini maps of sizes 2×2 … 7×7 ──
@@ -1069,17 +1092,18 @@ void main(void) {
 
         function getTitleMetrics(ctx, w, h, asset) {
             const isTall = h > w * 1.15;
+            const baseId = asset.id.replace(/^demo_/, '');
             const targetFraction =
-                asset.id === 'windows_bg_4k'  ? 0.40 :
-                asset.id === 'library_logo'   ? 0.75 :
-                asset.id === 'small_capsule'  ? 0.60 :
-                asset.id === 'header_image'   ? 0.40 :
-                asset.id === 'header_capsule'    ? 0.70 :
-                asset.id === 'cover_image'       ? 0.70 :
-                asset.id === 'main_capsule'      ? 0.70 :
-                asset.id === 'vertical_capsule'  ? 0.72 :
-                asset.id === 'library_capsule'   ? 0.72 :
-                isTall                           ? 0.88 :
+                baseId === 'windows_bg_4k'  ? 0.40 :
+                baseId === 'library_logo'   ? 0.75 :
+                baseId === 'small_capsule'  ? 0.60 :
+                baseId === 'header_image'   ? 0.40 :
+                baseId === 'header_capsule'    ? 0.70 :
+                baseId === 'cover_image'       ? 0.70 :
+                baseId === 'main_capsule'      ? 0.70 :
+                baseId === 'vertical_capsule'  ? 0.60 :
+                baseId === 'library_capsule'   ? 0.72 :
+                isTall                         ? 0.88 :
                                                 0.55;
             let titleFontSize = h * 0.35;
             ctx.font = `700 ${titleFontSize}px Rajdhani`;
@@ -1123,6 +1147,28 @@ void main(void) {
             ctx.globalAlpha = 0.5;
             drawTextWithSpacing(ctx, SUBTITLE_TEXT.toUpperCase(), w / 2, subtitleY, subtitleFontSize, 400, subLetterSpacing);
             ctx.globalAlpha = 1.0;
+        }
+
+        // ── Demo label: "DEMO" near the bottom, centered, orange (mod/demo branding color) ──
+        function drawDemoLabel(ctx, w, h, asset) {
+            const DEMO_COLOR = '#FF8800';
+            const isVertical = asset.id === 'demo_vertical_capsule';
+            const fontSize = isVertical
+                ? Math.max(56, Math.min(w * 0.18, h * 0.12, 240))
+                : Math.max(28, Math.min(w * 0.08, h * 0.14, 144));
+            const cy = isVertical ? h * 0.74 : h * 0.90;
+
+            const text = 'DEMO';
+            const letterSpacing = Math.round(fontSize * 0.35);
+
+            ctx.shadowColor = DEMO_COLOR;
+            ctx.shadowBlur = fontSize * 0.45;
+            ctx.fillStyle = DEMO_COLOR;
+            ctx.globalAlpha = 1;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic';
+            drawTextWithSpacing(ctx, text, w / 2, cy, fontSize, 700, letterSpacing);
+            ctx.shadowBlur = 0;
         }
 
         function drawTextWithSpacing(ctx, text, centerX, y, fontSize, weight, spacing, charColors) {
