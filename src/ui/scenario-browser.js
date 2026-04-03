@@ -929,6 +929,7 @@ export class ScenarioBrowser {
 
         if (opts.immediateStart) {
             localStorage.setItem('dicy_campaignMode', '1');
+            this._disconnectGridResizeObserver();
             this.scenarioBrowserModal.classList.add('hidden');
             this.setupModal.classList.add('hidden');
             if (this.effectsManager) this.effectsManager.stopIntroMode();

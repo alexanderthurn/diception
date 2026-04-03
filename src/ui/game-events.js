@@ -1186,11 +1186,16 @@ export class GameEventManager {
         let buttons = [];
         let campaignFinished = false;
 
-        if (isCampaignMode && this.scenarioBrowser && owner) {
-            const campaign = this.scenarioBrowser.campaignManager.getCampaign(owner);
+        if (isCampaignMode && this.scenarioBrowser) {
+            // Prefer localStorage values; fall back to in-memory state when localStorage is stale/missing
+            const campaign = (owner ? this.scenarioBrowser.campaignManager.getCampaign(owner) : null)
+                ?? this.scenarioBrowser.selectedCampaign;
+            const effectiveLevelIndex = levelIndex >= 0
+                ? levelIndex
+                : (this.scenarioBrowser.selectedLevelIndex ?? -1);
             const totalLevels = campaign?.levels?.length ?? 0;
-            const hasNextLevel = humanWon && levelIndex >= 0 && levelIndex < totalLevels - 1;
-            campaignFinished = humanWon && totalLevels > 0 && levelIndex === totalLevels - 1;
+            const hasNextLevel = humanWon && effectiveLevelIndex >= 0 && effectiveLevelIndex < totalLevels - 1;
+            campaignFinished = humanWon && totalLevels > 0 && effectiveLevelIndex === totalLevels - 1;
 
             if (!campaign) {
                 buttons = [{ text: 'Exit', value: 'exit', className: 'tron-btn' }];
@@ -1307,8 +1312,10 @@ export class GameEventManager {
             document.querySelectorAll('.game-ui').forEach(el => el.classList.remove('hidden'));
             this.gameStarter.startFreshSameSettings();
         } else if (choice === 'next') {
-            const campaign = owner ? this.scenarioBrowser.campaignManager.getCampaign(owner) : null;
-            const nextIndex = levelIndex + 1;
+            const campaign = (owner ? this.scenarioBrowser.campaignManager.getCampaign(owner) : null)
+                ?? this.scenarioBrowser.selectedCampaign;
+            const effectiveIdx = levelIndex >= 0 ? levelIndex : (this.scenarioBrowser.selectedLevelIndex ?? -1);
+            const nextIndex = effectiveIdx + 1;
             if (campaign && this.scenarioBrowser.campaignManager.getLevel(campaign, nextIndex)) {
                 this.scenarioBrowser.selectedCampaign = campaign;
                 this.scenarioBrowser.selectAndPlayLevel(nextIndex, { immediateStart: true });

@@ -175,7 +175,9 @@ export class GameStarter {
      * Start a new game from the setup screen (persists settings).
      */
     startGame() {
-        if (!isFullVersion() && !this.configManager.isSetupAtFreeDefaults()) {
+        const isTutorialCampaign = localStorage.getItem('dicy_campaignMode') === '1' &&
+            localStorage.getItem('dicy_loadedCampaign') === 'Tutorial';
+        if (!isFullVersion() && !isTutorialCampaign && !this.configManager.isSetupAtFreeDefaults()) {
             this.configManager.resetToFreeDefaults();
             this._onFreeVersionBlock?.();
             Dialog.showFullVersion();
