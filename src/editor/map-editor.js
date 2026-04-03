@@ -295,7 +295,7 @@ export class MapEditor {
             botAI: 'easy',
 
             // Editor-only state
-            currentMode: 'mapview',
+            currentMode: 'assign',
             selectedPlayer: 0,
             paintMode: 'add', // 'add' or 'remove'
             diceBrushValue: 2,
