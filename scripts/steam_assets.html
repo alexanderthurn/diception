@@ -346,9 +346,33 @@
             <div class="control-group">
                 <label>Border Size</label>
                 <div class="control-row">
-                    <input type="range" id="gif-frame-border-slider" min="10" max="300" value="12" step="1">
-                    <input type="number" id="gif-frame-border-input" min="10" max="600" value="12" step="1">
+                    <input type="range" id="gif-frame-border-slider" min="0" max="30" value="4" step="0.1">
+                    <input type="number" id="gif-frame-border-input" min="0" max="100" value="4" step="0.1">
                     <span class="unit">px</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Glitch Density</label>
+                <div class="control-row" title="How frequent the data corruption blocks appear">
+                    <input type="range" id="gif-frame-glitch-density-slider" min="5" max="150" value="23" step="1">
+                    <input type="number" id="gif-frame-glitch-density-input" min="5" max="150" value="23" step="1">
+                    <span class="unit"></span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Glitch Intensity</label>
+                <div class="control-row" title="How far the scanlines tear. Setting to 0 uses automatic scaling.">
+                    <input type="range" id="gif-frame-glitch-intensity-slider" min="0" max="10" value="1" step="0.1">
+                    <input type="number" id="gif-frame-glitch-intensity-input" min="0" max="100" value="1" step="0.1">
+                    <span class="unit">px</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Glitch Seed</label>
+                <div class="control-row" title="Scrambles the glitch generation to create a new layout">
+                    <input type="range" id="gif-frame-glitch-seed-slider" min="1" max="1000" value="1" step="1">
+                    <input type="number" id="gif-frame-glitch-seed-input" min="1" max="9999" value="1" step="1">
+                    <span class="unit"></span>
                 </div>
             </div>
             <div class="control-group">
@@ -2221,8 +2245,39 @@ void main(void) {
             const hInput  = document.getElementById('gif-frame-h-input');
             const bSlider = document.getElementById('gif-frame-border-slider');
             const bInput  = document.getElementById('gif-frame-border-input');
+            const glSlider = document.getElementById('gif-frame-glitch-density-slider');
+            const glInput  = document.getElementById('gif-frame-glitch-density-input');
+            const giSlider = document.getElementById('gif-frame-glitch-intensity-slider');
+            const giInput  = document.getElementById('gif-frame-glitch-intensity-input');
+            const gsSlider = document.getElementById('gif-frame-glitch-seed-slider');
+            const gsInput  = document.getElementById('gif-frame-glitch-seed-input');
             const cPicker = document.getElementById('gif-frame-color-picker');
             const cInput  = document.getElementById('gif-frame-color-input');
+
+            // ── URL Param Loading ──
+            const urlParams = new URLSearchParams(window.location.search);
+            const pMap = {
+                'w': 'gif-frame-w-input',
+                'h': 'gif-frame-h-input',
+                'border': 'gif-frame-border-input',
+                'density': 'gif-frame-glitch-density-input',
+                'intensity': 'gif-frame-glitch-intensity-input',
+                'seed': 'gif-frame-glitch-seed-input',
+                'bg': 'gif-frame-color-input'
+            };
+            for (const [key, id] of Object.entries(pMap)) {
+                if (urlParams.has(key)) document.getElementById(id).value = urlParams.get(key);
+            }
+            
+            // Sync background picker mathematically from input if URL populated it
+            if (urlParams.has('bg')) cPicker.value = urlParams.get('bg');
+
+            // Sync sliders visually from inputs before listeners are applied
+            ['w', 'h', 'border', 'glitch-density', 'glitch-intensity', 'glitch-seed'].forEach(p => {
+                const slider = document.getElementById(`gif-frame-${p}-slider`);
+                const input = document.getElementById(`gif-frame-${p}-input`);
+                if (slider && input) slider.value = input.value;
+            });
 
             function syncSliderInput(slider, input) {
                 slider.addEventListener('input', () => { input.value = slider.value; renderGifFrame(); });
@@ -2237,6 +2292,9 @@ void main(void) {
             syncSliderInput(wSlider, wInput);
             syncSliderInput(hSlider, hInput);
             syncSliderInput(bSlider, bInput);
+            syncSliderInput(glSlider, glInput);
+            syncSliderInput(giSlider, giInput);
+            syncSliderInput(gsSlider, gsInput);
 
             cPicker.addEventListener('input', () => { cInput.value = cPicker.value; renderGifFrame(); });
             cInput.addEventListener('input', () => {
@@ -2248,6 +2306,21 @@ void main(void) {
 
             // Border color swatches
             const swatches = document.querySelectorAll('#gif-frame-border-swatches .color-swatch');
+
+            if (urlParams.has('color')) {
+                const urlC = urlParams.get('color');
+                let foundMatch = false;
+                swatches.forEach(x => {
+                    x.classList.remove('active');
+                    if (x.dataset.color.toUpperCase() === urlC.toUpperCase()) {
+                        x.classList.add('active');
+                        foundMatch = true;
+                    }
+                });
+                if (!foundMatch) {
+                    document.getElementById('gif-frame-border-color-picker').value = urlC;
+                }
+            }
             swatches.forEach(s => {
                 s.addEventListener('click', () => {
                     swatches.forEach(x => x.classList.remove('active'));
@@ -2270,7 +2343,13 @@ void main(void) {
             const bgCanvas = document.getElementById('gif-frame-bg-canvas');
             const w = parseInt(document.getElementById('gif-frame-w-input').value) || 600;
             const h = parseInt(document.getElementById('gif-frame-h-input').value) || 277;
-            const borderPixels = parseInt(document.getElementById('gif-frame-border-input').value) || 12;
+            const borderPixels = parseFloat(document.getElementById('gif-frame-border-input').value) || 4;
+            const glitchDensity = parseInt(document.getElementById('gif-frame-glitch-density-input').value) || 23;
+            const glitchSeed = parseInt(document.getElementById('gif-frame-glitch-seed-input').value) || 1;
+            
+            let customIntensity = parseFloat(document.getElementById('gif-frame-glitch-intensity-input').value);
+            if (isNaN(customIntensity)) customIntensity = 1;
+            
             const bgColor = document.getElementById('gif-frame-color-input').value || '#1a2737';
 
             // Resize both canvases
@@ -2301,141 +2380,130 @@ void main(void) {
             const borderX = borderPixels;
             const borderY = borderPixels;
 
-            // ── Noise function for torn edges ──
-            function hash(x, y, seed) {
-                let n = Math.sin(x * 127.1 + y * 311.7 + seed * 43.7) * 43758.5453;
-                return n - Math.floor(n);
-            }
-            function fractalNoise(t, seed, octaves) {
-                let val = 0, amp = 1, freq = 1, maxAmp = 0;
-                for (let i = 0; i < octaves; i++) {
-                    // Interpolated noise for smooth-ish torn edges
-                    const pos = t * freq;
-                    const i0 = Math.floor(pos);
-                    const frac = pos - i0;
-                    const smooth = frac * frac * (3 - 2 * frac); // smoothstep
-                    const a = hash(i0, seed + i * 100, 0);
-                    const b = hash(i0 + 1, seed + i * 100, 0);
-                    val += (a + (b - a) * smooth - 0.5) * amp;
-                    maxAmp += amp;
-                    amp *= 0.5;
-                    freq *= 2.0;
-                }
-                return val / maxAmp;
-            }
-
-            // ── Generate torn edge path along one side ──
-            // Returns array of {x, y} points
-            function tornEdge(x0, y0, x1, y1, steps, amplitude, seed) {
-                const points = [];
-                // Direction along the edge
-                const dx = x1 - x0, dy = y1 - y0;
-                const len = Math.sqrt(dx * dx + dy * dy);
-                // Normal (perpendicular, pointing inward)
-                const nx = -dy / len, ny = dx / len;
-
-                for (let i = 0; i <= steps; i++) {
-                    const t = i / steps;
-                    const noise = fractalNoise(t * 15, seed, 5);
-                    const disp = noise * amplitude;
-                    points.push({
-                        x: x0 + dx * t + nx * disp,
-                        y: y0 + dy * t + ny * disp,
-                    });
-                }
-                return points;
-            }
-
-            const steps = Math.max(60, Math.floor(Math.max(w, h) / 4));
-
             // ── Step 1: Fill entire canvas with Steam background color ──
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, w, h);
 
-            // ── Step 2: Cut out the white border + transparent center ──
-            // The white border sits between the outer torn edge and inner torn edge.
-            // Outer torn edge: slightly inset from canvas edge (gentle irregularity)
-            // Inner torn edge: more aggressively torn
-
-            const outerInset = Math.max(6, Math.min(borderX, borderY) * 0.22);
-            const innerTear = Math.max(10, Math.min(borderX, borderY) * 0.55); // aggressive inner edge tears
-            const outerTear = Math.max(8, Math.min(borderX, borderY) * 0.25); // more irregular outer edge
-
-            // White border inner boundary (where content starts)
-            const innerLeft   = borderX;
-            const innerRight  = w - borderX;
-            const innerTop    = borderY;
-            const innerBottom = h - borderY;
-
-            // Outer boundary of white border
-            const outerLeft   = outerInset;
-            const outerRight  = w - outerInset;
-            const outerTop    = outerInset;
-            const outerBottom = h - outerInset;
-
-            // Generate torn inner edges (aggressive tearing)
-            const innerTopEdge    = tornEdge(innerLeft, innerTop, innerRight, innerTop, steps, innerTear, 1);
-            const innerRightEdge  = tornEdge(innerRight, innerTop, innerRight, innerBottom, steps, innerTear, 2);
-            const innerBottomEdge = tornEdge(innerRight, innerBottom, innerLeft, innerBottom, steps, innerTear, 3);
-            const innerLeftEdge   = tornEdge(innerLeft, innerBottom, innerLeft, innerTop, steps, innerTear, 4);
-
-            // Generate torn outer edges (gentle tearing)
-            const outerTopEdge    = tornEdge(outerLeft, outerTop, outerRight, outerTop, steps, outerTear, 5);
-            const outerRightEdge  = tornEdge(outerRight, outerTop, outerRight, outerBottom, steps, outerTear, 6);
-            const outerBottomEdge = tornEdge(outerRight, outerBottom, outerLeft, outerBottom, steps, outerTear, 7);
-            const outerLeftEdge   = tornEdge(outerLeft, outerBottom, outerLeft, outerTop, steps, outerTear, 8);
-
-            // ── Draw white border (between outer and inner torn paths) ──
-            // Use even-odd fill: outer path CW, inner path CCW → fills the ring
-            ctx.beginPath();
-
-            // Outer path (clockwise)
-            const outerPath = [...outerTopEdge, ...outerRightEdge, ...outerBottomEdge, ...outerLeftEdge];
-            ctx.moveTo(outerPath[0].x, outerPath[0].y);
-            for (let i = 1; i < outerPath.length; i++) ctx.lineTo(outerPath[i].x, outerPath[i].y);
-            ctx.closePath();
-
-            // Inner path (counter-clockwise = reversed)
-            const innerPath = [...innerTopEdge, ...innerRightEdge, ...innerBottomEdge, ...innerLeftEdge];
-            const innerReversed = [...innerPath].reverse();
-            ctx.moveTo(innerReversed[0].x, innerReversed[0].y);
-            for (let i = 1; i < innerReversed.length; i++) ctx.lineTo(innerReversed[i].x, innerReversed[i].y);
-            ctx.closePath();
-
             // Get selected border color
             const activeSwatch = document.querySelector('#gif-frame-border-swatches .color-swatch.active');
-            const borderColor = activeSwatch ? activeSwatch.dataset.color : document.getElementById('gif-frame-border-color-picker').value;
-            const br = parseInt(borderColor.slice(1, 3), 16);
-            const bg2 = parseInt(borderColor.slice(3, 5), 16);
-            const bb = parseInt(borderColor.slice(5, 7), 16);
-            ctx.fillStyle = `rgba(${br},${bg2},${bb},0.92)`;
-            ctx.fill('evenodd');
+            const borderColorHex = activeSwatch ? activeSwatch.dataset.color : document.getElementById('gif-frame-border-color-picker').value;
+            const br = parseInt(borderColorHex.slice(1, 3), 16);
+            const bg2 = parseInt(borderColorHex.slice(3, 5), 16);
+            const bb = parseInt(borderColorHex.slice(5, 7), 16);
 
-            // ── Step 3: Cut out the center to transparent ──
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.beginPath();
-            ctx.moveTo(innerPath[0].x, innerPath[0].y);
-            for (let i = 1; i < innerPath.length; i++) ctx.lineTo(innerPath[i].x, innerPath[i].y);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(0,0,0,1)';
-            ctx.fill();
-            ctx.globalCompositeOperation = 'source-over';
+            // ── Single Continuous Sine Loop Generator ──
+            // Inset from canvas bounds
+            const insetX = Math.max(20, Math.floor(w * 0.05));
+            const insetY = Math.max(20, Math.floor(h * 0.05));
+            
+            const bw = w - insetX * 2;
+            const bh = h - insetY * 2;
+            const L = 2 * bw + 2 * bh; // total perimeter length
 
-            // ── Step 4: Add subtle paper texture to the white border ──
-            // Tiny speckles for a paper-like feel
-            const speckleRng = mulberry32(w * 77 + h * 33);
-            for (let i = 0; i < Math.floor(w * h * 0.001); i++) {
-                const sx = speckleRng() * w;
-                const sy = speckleRng() * h;
-                // Only draw in the border zone
-                const dLeft = sx, dRight = w - sx, dTop = sy, dBot = h - sy;
-                const minEdgeDist = Math.min(dLeft, dRight, dTop, dBot);
-                if (minEdgeDist < Math.max(borderX, borderY) && minEdgeDist > outerInset) {
-                    const speckleAlpha = 0.03 + speckleRng() * 0.08;
-                    ctx.fillStyle = `rgba(0,0,0,${speckleAlpha})`;
-                    ctx.fillRect(sx, sy, 1, 1);
+            // ── Single Continuous Glitch Edge Generator ──
+            const numBlocks = Math.max(10, Math.floor(L / glitchDensity));
+            const blockSize = L / numBlocks; // perfectly divides L so it seamlessly loops
+            
+            // If custom intensity is 0 (auto), scale gently with thickness. Minimum 1 to keep it visible.
+            const intensity = customIntensity > 0 ? customIntensity : Math.max(4, borderPixels * 0.6);
+
+            function hash(n) {
+                return (Math.sin((n + glitchSeed * 999.99) * 12.9898 + 4.1414) * 43758.5453) % 1;
+            }
+
+            function getDisp(d) {
+                // Ensure pure corners by preventing glitches from wrapping around or touching the vertices.
+                const distToCorner = Math.min(
+                    d, 
+                    Math.abs(d - bw), 
+                    Math.abs(d - (bw + bh)), 
+                    Math.abs(d - (2 * bw + bh)), 
+                    L - d
+                );
+                
+                // Lock corner zones to 0 displacement
+                if (distToCorner < Math.max(8, borderPixels)) {
+                    return 0;
+                }
+
+                const blockIndex = Math.floor((d % L) / blockSize);
+                const h1 = Math.abs(hash(blockIndex + 1)); // random seed
+                
+                // 25% chance for a data block to be corrupted/shifted
+                if (h1 < 0.25) {
+                    const h2 = hash(blockIndex * 13);
+                    return Math.round((h2 - 0.5) * 2 * intensity);
+                }
+                return 0;
+            }
+
+            // Map distance d on perimeter to [x, y, normalX, normalY]
+            function getTrackPoint(d) {
+                if (d < bw) { // top edge
+                    return { x: d, y: 0, nx: 0, ny: -1 };
+                } else if (d < bw + bh) { // right edge
+                    return { x: bw, y: d - bw, nx: 1, ny: 0 };
+                } else if (d < 2 * bw + bh) { // bottom edge
+                    return { x: bw - (d - bw - bh), y: bh, nx: 0, ny: 1 };
+                } else { // left edge
+                    return { x: 0, y: bh - (d - 2 * bw - bh), nx: -1, ny: 0 };
                 }
             }
+
+            const points = [];
+            const steps = Math.floor(L); // 1 point per pixel
+
+            for (let i = 0; i < steps; i++) {
+                const d = (i / steps) * L;
+                const pt = getTrackPoint(d);
+                const disp = getDisp(d);
+
+                points.push({
+                    x: insetX + pt.x + pt.nx * disp,
+                    y: insetY + pt.y + pt.ny * disp
+                });
+            }
+
+            // Generate Path
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
+
+            // ── Step 2: Cut out the center to transparent ──
+            // The path represents the direct center of the wavy line.
+            // By filling it with destination-out, everything precisely contained within the wavy wall becomes a transparent window.
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = 'rgba(0,0,0,1)';
+            ctx.fill();
+            
+            // ── Step 3: Draw the wavy colored border (thickness) ──
+            // Stroke expands symmetrically OUTward and INward from the path center, making exact parallel edges.
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = `rgba(${br},${bg2},${bb},0.95)`;
+            ctx.lineWidth = borderPixels;
+            ctx.lineJoin = 'miter'; 
+            ctx.miterLimit = 2; // softens extremely sharp peaks if they kink
+            ctx.stroke();
+
+            // Optional subtle internal neon line for extreme clarity
+            ctx.strokeStyle = `rgba(${br},${bg2},${bb},0.4)`;
+            ctx.lineWidth = Math.max(1, Math.floor(borderPixels * 0.15));
+            ctx.stroke();
+
+            // ── Update URL Parameters ──
+            const url = new URL(window.location);
+            url.searchParams.set('w', w);
+            url.searchParams.set('h', h);
+            url.searchParams.set('border', borderPixels);
+            url.searchParams.set('density', glitchDensity);
+            url.searchParams.set('intensity', customIntensity);
+            url.searchParams.set('seed', glitchSeed);
+            url.searchParams.set('bg', bgColor);
+            url.searchParams.set('color', borderColorHex);
+            window.history.replaceState(null, '', url);
         }
 
         function downloadGifFrame() {
