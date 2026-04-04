@@ -382,6 +382,14 @@
                 </div>
             </div>
             <div class="control-group">
+                <label>Title Font Size</label>
+                <div class="control-row">
+                    <input type="range" id="gif-frame-title-fs-slider" min="10" max="100" value="36" step="1">
+                    <input type="number" id="gif-frame-title-fs-input" min="10" max="300" value="36" step="1">
+                    <span class="unit">px</span>
+                </div>
+            </div>
+            <div class="control-group">
                 <label>Background Color</label>
                 <div class="control-row">
                     <input type="color" id="gif-frame-color-picker" value="#1a2737">
@@ -768,8 +776,8 @@ void main(void) {
             ctx.drawImage(_glCanvas, 0, 0, w, h);
         }
 
-        // ── Per-page-load random base seed ──
         const PAGE_SEED = Math.floor(Math.random() * 0xFFFFFF);
+        function getSeedOffset(assetArg) { return (assetArg && assetArg.seedOffset) ? assetArg.seedOffset * 99991 : 0; }
 
         // ── Seeded random for deterministic rendering ──
         function mulberry32(seed) {
@@ -2279,6 +2287,8 @@ void main(void) {
             const giInput  = document.getElementById('gif-frame-glitch-intensity-input');
             const gsSlider = document.getElementById('gif-frame-glitch-seed-slider');
             const gsInput  = document.getElementById('gif-frame-glitch-seed-input');
+            const tfsSlider = document.getElementById('gif-frame-title-fs-slider');
+            const tfsInput  = document.getElementById('gif-frame-title-fs-input');
             const cPicker = document.getElementById('gif-frame-color-picker');
             const cInput  = document.getElementById('gif-frame-color-input');
 
@@ -2292,7 +2302,8 @@ void main(void) {
                 'intensity': 'gif-frame-glitch-intensity-input',
                 'seed': 'gif-frame-glitch-seed-input',
                 'bg': 'gif-frame-color-input',
-                'title': 'gif-frame-title-input'
+                'title': 'gif-frame-title-input',
+                'tfs': 'gif-frame-title-fs-input'
             };
             for (const [key, id] of Object.entries(pMap)) {
                 if (urlParams.has(key)) document.getElementById(id).value = urlParams.get(key);
@@ -2302,7 +2313,7 @@ void main(void) {
             if (urlParams.has('bg')) cPicker.value = urlParams.get('bg');
 
             // Sync sliders visually from inputs before listeners are applied
-            ['w', 'h', 'border', 'glitch-density', 'glitch-intensity', 'glitch-seed'].forEach(p => {
+            ['w', 'h', 'border', 'glitch-density', 'glitch-intensity', 'glitch-seed', 'title-fs'].forEach(p => {
                 const slider = document.getElementById(`gif-frame-${p}-slider`);
                 const input = document.getElementById(`gif-frame-${p}-input`);
                 if (slider && input) slider.value = input.value;
@@ -2324,6 +2335,7 @@ void main(void) {
             syncSliderInput(glSlider, glInput);
             syncSliderInput(giSlider, giInput);
             syncSliderInput(gsSlider, gsInput);
+            syncSliderInput(tfsSlider, tfsInput);
 
             cPicker.addEventListener('input', () => { cInput.value = cPicker.value; renderGifFrame(); });
             cInput.addEventListener('input', () => {
@@ -2535,6 +2547,7 @@ void main(void) {
             url.searchParams.set('bg', bgColor);
             url.searchParams.set('color', borderColorHex);
             url.searchParams.set('title', document.getElementById('gif-frame-title-input').value);
+            url.searchParams.set('tfs', document.getElementById('gif-frame-title-fs-input').value);
             window.history.replaceState(null, '', url);
 
             // Render Title independently
@@ -2572,7 +2585,7 @@ void main(void) {
 
             if (!text) return;
 
-            const fontSize = h * 0.6;
+            const fontSize = parseInt(document.getElementById('gif-frame-title-fs-input').value) || 36;
             const letterSpacing = Math.round(fontSize * 0.2);
             ctx.font = `700 ${fontSize}px Rajdhani`;
 
