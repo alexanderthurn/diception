@@ -628,8 +628,10 @@ export class ScenarioBrowser {
         const localLeft = rect.left / uiScale;
         const localTop = rect.top / uiScale;
         const localViewW = window.innerWidth / uiScale;
-        el.style.left = Math.min(localLeft, localViewW - size - 16) + 'px';
-        el.style.top = (localTop - size - 12) + 'px';
+        const previewW = el.offsetWidth;
+        const previewH = el.offsetHeight;
+        el.style.left = Math.min(localLeft, localViewW - previewW - 8) + 'px';
+        el.style.top = Math.max(4, localTop - previewH - 20) + 'px';
         this.hoverPreviewEl = el;
     }
 
@@ -915,7 +917,7 @@ export class ScenarioBrowser {
                 }
                 this.justSavedLevelIndex = levelIndex;
                 this.scenarioBrowserModal.classList.remove('hidden');
-                this.renderLevelGrid(this.selectedCampaign);
+                this.showLevelGridView(this.selectedCampaign);
                 setTimeout(() => {
                     this.justSavedLevelIndex = null;
                     this.renderLevelGrid(this.selectedCampaign);
@@ -924,7 +926,7 @@ export class ScenarioBrowser {
             onClose: () => {
                 if (this.effectsManager) this.effectsManager.startIntroMode();
                 this.scenarioBrowserModal.classList.remove('hidden');
-                this.renderLevelGrid(this.selectedCampaign);
+                this.showLevelGridView(this.selectedCampaign);
             }
         };
     }
@@ -966,6 +968,8 @@ export class ScenarioBrowser {
         const level = this.campaignManager.getLevel(this.selectedCampaign, index);
         if (!level) return;
 
+        this.campaignDetailView?.classList.add('hidden');
+        this.campaignSelectView?.classList.add('hidden');
         this.scenarioBrowserModal.classList.add('hidden');
         if (this.effectsManager) this.effectsManager.stopIntroMode();
         const { onSave, onClose } = this.mapEditorCallbacksForCampaignLevel(index);
@@ -985,6 +989,8 @@ export class ScenarioBrowser {
         }
 
         const actualIndex = index === null || index < 0 ? campaign.levels.length : index;
+        this.campaignDetailView?.classList.add('hidden');
+        this.campaignSelectView?.classList.add('hidden');
         this.scenarioBrowserModal.classList.add('hidden');
 
         const template = {
@@ -1004,14 +1010,14 @@ export class ScenarioBrowser {
                 this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
                 this.justSavedLevelIndex = actualIndex;
                 this.scenarioBrowserModal.classList.remove('hidden');
-                this.renderLevelGrid(this.selectedCampaign);
+                this.showLevelGridView(this.selectedCampaign);
                 setTimeout(() => { this.justSavedLevelIndex = null; this.renderLevelGrid(this.selectedCampaign); }, 2000);
             },
             onClose: () => {
                 if (this.effectsManager) this.effectsManager.startIntroMode();
                 this.scenarioBrowserModal.classList.remove('hidden');
                 if (this.selectedCampaign?.levels?.length) {
-                    this.renderLevelGrid(this.selectedCampaign);
+                    this.showLevelGridView(this.selectedCampaign);
                 } else {
                     this.showCampaignView();
                 }

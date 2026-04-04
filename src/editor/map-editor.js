@@ -1537,12 +1537,6 @@ export class MapEditor {
         this.isOpen = false;
         this._shiftHeld = false;
 
-        // Clean up gamepad event handlers
-        if (this.boundMoveHandler) this.inputManager?.off('move', this.boundMoveHandler);
-        if (this.boundConfirmHandler) this.inputManager?.off('confirm', this.boundConfirmHandler);
-        if (this.boundCancelHandler) this.inputManager?.off('cancel', this.boundCancelHandler);
-        if (this.boundEndTurnHandler) this.inputManager?.off('endTurn', this.boundEndTurnHandler);
-
         // Clean up gamepad cursor/focus state and remove any lingering focus highlights
         for (const [sourceId, focusState] of this._editorUIFocusStates) {
             const buttons = this._editorGetUIButtons(focusState.side);
