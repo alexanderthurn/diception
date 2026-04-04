@@ -1298,10 +1298,10 @@ export class GameEventManager {
         });
 
         if (choice === 'exit') {
-            if (campaignFinished && this.scenarioBrowser) {
+            if (localStorage.getItem('dicy_editorTest')) {
+                await this.sessionManager.quitToEditor();
+            } else if (campaignFinished && this.scenarioBrowser) {
                 this.scenarioBrowser.clearPendingScenario();
-            }
-            if (campaignFinished) {
                 await this.sessionManager.quitToMainMenu();
             } else if (isCampaignMode && this.scenarioBrowser) {
                 await this.sessionManager.quitToCampaignScreen();

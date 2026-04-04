@@ -142,6 +142,20 @@ export class SessionManager {
     }
 
     /**
+     * Quit back to map editor (after an editor test game)
+     */
+    async quitToEditor() {
+        this.resetGameSession();
+        if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
+        localStorage.removeItem('dicy_editorTest');
+        localStorage.removeItem('dicy_campaignMode');
+        document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
+        if (this.mapEditor?._openScenario !== undefined) {
+            await this.mapEditor.open(this.mapEditor._openScenario, this.mapEditor._openOptions || {});
+        }
+    }
+
+    /**
      * Quit to campaign screen (when in campaign mode)
      */
     async quitToCampaignScreen() {

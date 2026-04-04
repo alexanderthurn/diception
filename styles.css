@@ -3416,11 +3416,22 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     box-shadow: none;
 }
 
+.level-grid-tile.add-tile .sprite-icon {
+    width: 40%;
+    height: 40%;
+    opacity: 0.5;
+    filter: hue-rotate(200deg) brightness(1.2);
+}
+
 .level-grid-tile.add-tile:hover {
     border-color: #AA00FF;
     border-style: solid;
     background: rgba(170, 0, 255, 0.1);
     box-shadow: 0 0 10px rgba(170, 0, 255, 0.3);
+}
+
+.level-grid-tile.add-tile:hover .sprite-icon {
+    opacity: 1;
 }
 
 .level-grid-tile.add-tile .tile-add {

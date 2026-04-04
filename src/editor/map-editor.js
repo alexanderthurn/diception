@@ -245,8 +245,15 @@ export class MapEditor {
         // Callback for when editor closes
         this.onClose = null;
 
+        // Callback for when "Test" is clicked — set by main.js
+        this.onTest = null;
+
         // Campaign context (when editing level in campaign)
         this.editorOptions = null;
+
+        // Saved open args so we can re-open after a test game
+        this._openScenario = null;
+        this._openOptions = {};
 
         // Store original game reference to restore
         this.originalGame = null;
@@ -373,6 +380,7 @@ export class MapEditor {
             randomOwnersBtn: document.getElementById('editor-random-owners-btn'),
             randomDiceBtn: document.getElementById('editor-random-dice-btn'),
             quickActions: document.getElementById('editor-quick-actions'),
+            testBtn: document.getElementById('editor-test-btn'),
             saveBtn: document.getElementById('editor-save-btn'),
             editorMapSize: document.getElementById('editor-map-size'),
             editorMapSizeVal: document.getElementById('editor-map-size-val'),
@@ -758,6 +766,9 @@ export class MapEditor {
         // Shared players (Map & Scenario)
         this.elements.editorSharedBots?.addEventListener('change', () => this.onSharedPlayersChange());
         this.elements.editorSharedBotAI?.addEventListener('change', () => this.onSharedPlayersChange());
+
+        // Test button — starts a game with the current map and returns to editor on exit
+        this.elements.testBtn?.addEventListener('click', () => this.testGame());
 
         // Save button (calls saveAsMap or saveAsScenario based on type)
         this.elements.saveBtn?.addEventListener('click', () => this.handleSave());
@@ -1375,6 +1386,8 @@ export class MapEditor {
      * @param {Object} options - { campaign, levelIndex, onSave, onClose, isNew }
      */
     async open(scenario = null, options = {}) {
+        this._openScenario = scenario;
+        this._openOptions = options;
         this.editorOptions = options?.campaign ? options : null;
         this.onClose = options.onClose || null;
 
@@ -1506,9 +1519,10 @@ export class MapEditor {
         this._editorCursorStates.clear();
         this._editorUIFocusStates.clear();
 
-        if (this.onClose) {
+        if (this.onClose && !this._suppressOnClose) {
             this.onClose();
         }
+        this._suppressOnClose = false;
     }
 
     /**
@@ -2410,6 +2424,30 @@ export class MapEditor {
             this.showStatus('Failed to save', 'error');
             return null;
         }
+    }
+
+    /**
+     * Test the current map/scenario — start a game and return to editor when done.
+     */
+    testGame() {
+        if (!this.onTest) return;
+        const snapshot = this.state.currentMode === 'assign'
+            ? (this._buildScenarioSnapshot() ?? this._buildMapSnapshot())
+            : (this._buildMapSnapshot() ?? this._buildScenarioSnapshot());
+        if (!snapshot) return;
+        // Save to campaign if in campaign context (without closing)
+        if (this.editorOptions?.onSave) {
+            try {
+                this.editorOptions.onSave(snapshot);
+                this.state.isDirty = false;
+                this.showStatus('Saved!', 'success');
+            } catch (e) {
+                this._logSaveFailure('test → save', e);
+            }
+        }
+        // Suppress onClose so that the campaign browser doesn't reappear mid-test
+        this._suppressOnClose = true;
+        this.onTest(snapshot);
     }
 
     /**

@@ -562,7 +562,7 @@ export class ScenarioBrowser {
             const addTile = document.createElement('div');
             addTile.className = 'level-grid-tile add-tile';
             addTile.tabIndex = 0;
-            addTile.innerHTML = ''; // No icon at all
+            addTile.innerHTML = '<span class="sprite-icon icon-zoom-in"></span>';
             addTile.addEventListener('click', () => this.openEditorForNewLevel(levels.length));
             this.levelGrid.appendChild(addTile);
         }

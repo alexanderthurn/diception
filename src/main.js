@@ -692,6 +692,7 @@ async function init() {
         updateStartBtnModsLock();
     };
     gameStarter.setMapEditor(mapEditor);
+    mapEditor.onTest = (snapshot) => gameStarter.startEditorTest(snapshot);
     scenarioBrowser.setOnStartGame(() => gameStarter.startGame());
     scenarioBrowserOpen = () => scenarioBrowser.open();
     scenarioBrowserOpenUserCampaign = () => scenarioBrowser.openUserCampaign();
@@ -2106,7 +2107,9 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
     document.getElementById('pause-mainmenu-btn')?.addEventListener('click', async () => {
         pauseModal.classList.add('hidden');
-        if (localStorage.getItem('dicy_campaignMode')) {
+        if (localStorage.getItem('dicy_editorTest')) {
+            await sessionManagerRef.quitToEditor();
+        } else if (localStorage.getItem('dicy_campaignMode')) {
             await sessionManagerRef.quitToCampaignScreen();
         } else {
             sessionManagerRef.quitToCustomGame();

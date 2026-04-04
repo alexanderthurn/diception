@@ -388,6 +388,21 @@ export class GameStarter {
         this.mapEditor = editor;
     }
 
+    /**
+     * Start a test game from the map editor.
+     * Sets dicy_editorTest so exit routing returns to the editor.
+     */
+    startEditorTest(snapshot) {
+        localStorage.setItem('dicy_editorTest', '1');
+        localStorage.setItem('dicy_campaignMode', '1');
+        localStorage.removeItem('dicy_loadedCampaign');
+        localStorage.removeItem('dicy_loadedLevelIndex');
+        this.scenarioBrowser.pendingLevel = snapshot;
+        this.configManager.updateConfigFromLevel(snapshot);
+        const config = this.configManager.getGameConfig();
+        this.prepareAndBegin(config, {});
+    }
+
     /** Background attack timers for bots in parallel mode. */
     _startParallelBotTimers() {
         this._stopParallelBotTimers();
