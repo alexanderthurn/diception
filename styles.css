@@ -877,7 +877,7 @@ body.fx-off .player-tile.rumble-lose {
     background: color-mix(in srgb, var(--chapter-color) 55%, #000);
     color: #fff;
     box-shadow: none;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .campaign-select-btn[style*="--chapter-color"]:hover {
@@ -7604,9 +7604,8 @@ details.settings-group[open]>summary.settings-group-header::after {
 
 /* Gamepad D-pad UI button focus highlight */
 .gamepad-focused {
-    outline: 2px solid #00ffff;
-    outline-offset: 3px;
-    box-shadow: 0 0 12px rgba(0, 255, 255, 0.55), inset 0 0 0 1px rgba(0, 255, 255, 0.15);
+    outline: 0px solid #ffffff;
+    outline-offset: 0px;
 }
 
 /* Gamepad slider edit mode — brighter glow + animated pulse to show active editing */
