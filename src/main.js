@@ -415,10 +415,11 @@ async function init() {
     // Initialize Managers
     const scenarioManager = new ScenarioManager();
     const turnHistory = new TurnHistory();
-    mountSharedModsFields(document.getElementById('setup-mods-panel'), { idPrefix: '', hideTournamentRow: false });
+    mountSharedModsFields(document.getElementById('setup-mods-panel'), { idPrefix: '', hideTournamentRow: false, hideSeedGroup: true });
     mountSharedModsFields(document.getElementById('editor-mods-panel'), {
         idPrefix: 'editor-mods-',
         hideTournamentRow: true,
+        hideSeedGroup: true,
     });
     const mapEditor = new MapEditor(scenarioManager);
     mapEditor.setRenderer(renderer);

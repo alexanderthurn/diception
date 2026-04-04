@@ -4512,6 +4512,50 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     margin-bottom: 0;
 }
 
+.editor-type-segmented {
+    margin-bottom: 10px;
+}
+
+.editor-seed-row {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+    align-items: center;
+}
+
+.editor-seed-label {
+    font-size: 11px;
+    color: #aaa;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.editor-seed-row .seed-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.editor-seed-reroll-btn {
+    flex-shrink: 0;
+    font-size: 13px;
+    padding: 2px 6px;
+    min-height: 24px;
+    line-height: 1;
+}
+
+.editor-quick-actions-row,
+.editor-actions-row {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+}
+
+.editor-quick-actions-row .tron-btn,
+.editor-actions-row .tron-btn {
+    flex: 1;
+    min-width: 0;
+}
+
 .editor-settings label {
     font-size: 12px;
     color: #aaa;
@@ -4692,6 +4736,10 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     width: 100%;
     padding: 10px 15px;
     font-size: 13px;
+}
+
+.editor-actions .editor-actions-row .tron-btn {
+    width: auto;
 }
 
 .editor-quick-actions {

@@ -197,6 +197,8 @@ export function getActiveModsSummary(config) {
         parts.push(SUPPLY_RULE_LABELS[sr] || sr);
     if (config.playMode && config.playMode !== d.playMode)
         parts.push(PLAY_MODE_LABELS[config.playMode] || config.playMode);
+    if (config.seed != null && Number(config.seed) > 0)
+        parts.push('Fixed Luck');
 
     return parts.join(' · ');
 }
@@ -204,8 +206,11 @@ export function getActiveModsSummary(config) {
 /**
  * Read current mod values from the DOM and return their summary string.
  * @param {string} idPrefix  e.g. '' for setup panel, 'editor-mods-' for editor
+ * @param {string} [seedInputId]  optional element id for the seed input (e.g. 'game-seed', 'editor-seed-input')
  */
-export function getActiveModsSummaryFromDom(idPrefix) {
+export function getActiveModsSummaryFromDom(idPrefix, seedInputId) {
+    const seedEl = seedInputId ? document.getElementById(seedInputId) : null;
+    const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
     return getActiveModsSummary({
         mapStyle:       el(idPrefix, 'map-style')?.value,
         gameMode:       el(idPrefix, 'game-mode')?.value,
@@ -218,6 +223,7 @@ export function getActiveModsSummaryFromDom(idPrefix) {
         attackRule:     el(idPrefix, 'attack-rule')?.value,
         supplyRule:     el(idPrefix, 'supply-rule')?.value,
         playMode:       el(idPrefix, 'play-mode')?.value ?? localStorage.getItem('dicy_playMode'),
+        seed:           Number.isFinite(seedVal) && seedVal > 0 ? seedVal : undefined,
     });
 }
 

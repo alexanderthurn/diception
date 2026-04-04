@@ -199,6 +199,10 @@ export class ConfigManager {
         if (el.seedInput) el.seedInput.value = 0;
         if (el.seedRerollBtn) el.seedRerollBtn.addEventListener('click', () => {
             if (el.seedInput) el.seedInput.value = randomSeed();
+            this._syncModsSummary(!this.areModsAtDefaults());
+        });
+        if (el.seedInput) el.seedInput.addEventListener('input', () => {
+            this._syncModsSummary(!this.areModsAtDefaults());
         });
 
         // Initial map size display
@@ -255,7 +259,10 @@ export class ConfigManager {
     _syncModsSummary(nonDefault) {
         const summary = document.getElementById('setup-mods-summary');
         if (!summary) return;
-        if (!nonDefault) {
+        const seedEl = this.elements.seedInput;
+        const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
+        const hasFixedSeed = Number.isFinite(seedVal) && seedVal > 0;
+        if (!nonDefault && !hasFixedSeed) {
             summary.classList.add('hidden');
             summary.textContent = '';
             return;
@@ -263,7 +270,7 @@ export class ConfigManager {
         const panel = document.getElementById('setup-mods-panel');
         const panelOpen = panel && !panel.classList.contains('hidden');
         summary.classList.toggle('hidden', panelOpen);
-        summary.textContent = getActiveModsSummaryFromDom('');
+        summary.textContent = getActiveModsSummaryFromDom('', 'game-seed');
     }
 
     syncSetupModsExpanderFromStorage() {

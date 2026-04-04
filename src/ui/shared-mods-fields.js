@@ -9,7 +9,7 @@ const TEMPLATE_ID = 'shared-mods-fields-template';
  * @param {HTMLElement | null} container
  * @param {{ idPrefix?: string, hideTournamentRow?: boolean }} [options]
  */
-export function mountSharedModsFields(container, { idPrefix = '', hideTournamentRow = false } = {}) {
+export function mountSharedModsFields(container, { idPrefix = '', hideTournamentRow = false, hideSeedGroup = false } = {}) {
     if (!container) return;
     const tpl = document.getElementById(TEMPLATE_ID);
     if (!tpl) {
@@ -33,6 +33,11 @@ export function mountSharedModsFields(container, { idPrefix = '', hideTournament
     const tournamentRow = mountRoot.querySelector('[data-mods-tournament-row]');
     if (tournamentRow && hideTournamentRow) {
         tournamentRow.classList.add('hidden');
+    }
+
+    const seedGroup = mountRoot.querySelector('[data-mods-group="setup-seed-group"]');
+    if (seedGroup && hideSeedGroup) {
+        seedGroup.classList.add('hidden');
     }
 
     container.appendChild(mountRoot);

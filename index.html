@@ -1159,54 +1159,26 @@
 
             <!-- Bottom toolbar -->
             <div class="editor-bottom-bar">
-                <!-- Mode tabs -->
-                <div class="editor-mode-tabs">
+                <!-- Assign / Dice tabs — only visible in Scenario mode -->
+                <div class="editor-mode-tabs" id="editor-scenario-tabs">
                     <button class="editor-tab active" data-mode="assign"><span class="sprite-icon icon-assign"></span> Assign
                         <span id="editor-assign-hint" class="input-hint keyboard">R</span></button>
                     <button class="editor-tab" data-mode="dice"><span class="dice-icon-sprite mini"
                             style="background-color: #888;"></span> Dice <span id="editor-dice-hint"
                             class="input-hint keyboard">F</span></button>
-                    <button class="editor-tab" id="editor-map-view-btn" data-mode="mapview"><span class="sprite-icon icon-map"></span>
-                        Map View <span class="input-hint keyboard">Z</span></button>
                 </div>
             </div>
 
             <!-- Right settings panel -->
             <div class="editor-settings">
+                <!-- Map / Scenario type selector -->
+                <div class="segmented-btn editor-type-segmented" id="editor-type-segmented">
+                    <button class="segmented-option" data-type="map">Map</button>
+                    <button class="segmented-option" data-type="scenario">Scenario</button>
+                </div>
+
                 <!-- Map/Scenario-specific -->
                 <div id="editor-map-scenario-section">
-                    <div class="control-group">
-                        <label>Name</label>
-                        <input type="text" id="editor-name" placeholder="My Map" maxlength="40">
-                    </div>
-
-                    <div class="control-group">
-                        <label>Description</label>
-                        <input type="text" id="editor-description" placeholder="Optional description" maxlength="100">
-                    </div>
-
-                    <div class="control-group">
-                        <label>Author</label>
-                        <input type="text" id="editor-author" placeholder="Author name" maxlength="40">
-                    </div>
-
-                    <div class="control-row">
-                        <div class="control-group half">
-                            <label>Width</label>
-                            <div class="range-row">
-                                <input type="range" id="editor-width" min="3" max="20" value="7">
-                                <span id="editor-width-val">7</span>
-                            </div>
-                        </div>
-                        <div class="control-group half">
-                            <label>Height</label>
-                            <div class="range-row">
-                                <input type="range" id="editor-height" min="3" max="20" value="7">
-                                <span id="editor-height-val">7</span>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Map & Scenario: shared Bots, Bot AI, Map Size + color legend -->
                     <div id="editor-shared-players-section">
                         <div class="control-group">
@@ -1240,7 +1212,6 @@
                                 </select>
                             </div>
                         </div>
-                        <div id="editor-color-legend" class="editor-color-legend"></div>
                     </div>
 
                     <div id="editor-mods-section">
@@ -1254,6 +1225,7 @@
                             <button type="button" id="editor-mods-reset" class="tron-btn small setup-mods-reset hidden"
                                 title="Reset all Mods to defaults">Reset Mods</button>
                         </div>
+                        <div id="editor-mods-summary" class="setup-mods-summary hidden"></div>
                         <div id="editor-mods-panel" class="setup-mods-panel hidden" data-editor-mods-panel></div>
                     </div>
                 </div>
@@ -1263,21 +1235,31 @@
                     <button id="editor-fill-btn" class="tron-btn small">Fill</button>
                     <button id="editor-random-btn" class="tron-btn small"><span class="sprite-icon icon-dice"></span>
                         Random</button>
-                    <button id="editor-random-owners-btn" class="tron-btn small">Random Owners</button>
-                    <button id="editor-random-dice-btn" class="tron-btn small">Random Dice</button>
+                    <div class="editor-seed-row">
+                        <label class="editor-seed-label">Seed</label>
+                        <input type="number" id="editor-seed-input" class="seed-input" min="0" max="4294967295" step="1" placeholder="0">
+                        <button type="button" id="editor-seed-reroll" class="tron-btn editor-seed-reroll-btn" title="New random seed">⟳</button>
+                    </div>
+                    <div class="editor-quick-actions-row editor-scenario-only">
+                        <button id="editor-random-owners-btn" class="tron-btn small">Random Owners</button>
+                        <button id="editor-random-dice-btn" class="tron-btn small">Random Dice</button>
+                    </div>
                 </div>
 
                 <div class="editor-actions">
-                    <button id="editor-test-btn" class="tron-btn"><span class="sprite-icon icon-play"></span>
-                        Test</button>
-                    <button id="editor-save-btn" class="tron-btn primary"><span class="sprite-icon icon-save"></span>
-                        Save</button>
+                    <div class="editor-actions-row">
+                        <button id="editor-test-btn" class="tron-btn"><span class="sprite-icon icon-play"></span>
+                            Test</button>
+                        <button id="editor-save-btn" class="tron-btn primary"><span class="sprite-icon icon-save"></span>
+                            Save</button>
+                    </div>
                 </div>
                 <div id="editor-help-text" class="editor-help-text hidden">
                     WASD/Arrows: pan · R: Assign · F: Dice · Y: Paint
                     <span id="editor-help-gamepad" class="hidden"> · D-pad: Assign/Dice · Stick: pan</span>
                     — See ? in main menu for full controls
                 </div>
+                <div id="editor-color-legend" class="editor-color-legend editor-scenario-only"></div>
             </div>
 
             <!-- Cursor Preview -->

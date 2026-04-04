@@ -312,6 +312,7 @@ export class GameStarter {
                     gameConfig.predefinedMap = pendingLevel;
                     gameConfig.mapWidth = pendingLevel.width;
                     gameConfig.mapHeight = pendingLevel.height;
+                    if (pendingLevel.seed) gameConfig.mapSeed = pendingLevel.seed >>> 0;
                     if (pendingLevel.bots != null) gameConfig.botCount = pendingLevel.bots;
                     if (pendingLevel.maxDice != null) gameConfig.maxDice = pendingLevel.maxDice;
                     if (pendingLevel.diceSides != null) gameConfig.diceSides = pendingLevel.diceSides;
@@ -398,9 +399,14 @@ export class GameStarter {
         localStorage.removeItem('dicy_loadedCampaign');
         localStorage.removeItem('dicy_loadedLevelIndex');
         this.scenarioBrowser.pendingLevel = snapshot;
+        sessionStorage.setItem('dicy_editorTestSnapshot', JSON.stringify(snapshot));
         this.configManager.updateConfigFromLevel(snapshot);
         const config = this.configManager.getGameConfig();
         this.prepareAndBegin(config, {});
+        // onSave may have un-hidden the campaign browser — ensure it stays hidden
+        if (this.scenarioBrowser?.scenarioBrowserModal) {
+            this.scenarioBrowser.scenarioBrowserModal.classList.add('hidden');
+        }
     }
 
     /** Background attack timers for bots in parallel mode. */

@@ -17,8 +17,8 @@ import {
     areModsAtDefaultsForPrefix,
     syncModsFieldHighlightsForPrefix,
     setModsPanelUiOpen,
-    applyModsToolbarLayout,
     normalizeAttackSecondsUi,
+    getActiveModsSummaryFromDom,
     SETUP_MOD_DEFAULTS,
 } from '../ui/mods-panel-helpers.js';
 
@@ -286,7 +286,7 @@ export class MapEditor {
         };
     }
 
-    createEmptyState(width = 20, height = 20) {
+    createEmptyState(width = 16, height = 16) {
         return {
             name: 'New Map',
             description: '',
@@ -306,7 +306,7 @@ export class MapEditor {
             botAI: 'easy',
 
             // Editor-only state
-            currentMode: 'assign',
+            currentMode: 'mapview',
             selectedPlayer: 0,
             paintMode: 'add', // 'add' or 'remove'
             diceBrushValue: 2,
@@ -385,19 +385,15 @@ export class MapEditor {
             editorMapSize: document.getElementById('editor-map-size'),
             editorMapSizeVal: document.getElementById('editor-map-size-val'),
 
-            // Settings
-            nameInput: document.getElementById('editor-name'),
-            descriptionInput: document.getElementById('editor-description'),
-            authorInput: document.getElementById('editor-author'),
-            widthSlider: document.getElementById('editor-width'),
-            widthVal: document.getElementById('editor-width-val'),
-            heightSlider: document.getElementById('editor-height'),
-            heightVal: document.getElementById('editor-height-val'),
+            // Type segmented control (Map / Scenario)
+            typeSegmented: document.getElementById('editor-type-segmented'),
+            scenarioTabs: document.getElementById('editor-scenario-tabs'),
             editorModsSection: document.getElementById('editor-mods-section'),
             editorModsToggle: document.getElementById('editor-mods-toggle'),
             editorModsReset: document.getElementById('editor-mods-reset'),
             editorModsPanel: document.getElementById('editor-mods-panel'),
             editorModsBadge: document.getElementById('editor-mods-active-badge'),
+            editorModsSummary: document.getElementById('editor-mods-summary'),
             editorModsMaxDice: document.getElementById('editor-mods-max-dice'),
             editorModsMaxDiceVal: document.getElementById('editor-mods-max-dice-val'),
             editorModsDiceSides: document.getElementById('editor-mods-dice-sides'),
@@ -411,8 +407,8 @@ export class MapEditor {
             editorModsFullBoard: document.getElementById('editor-mods-full-board-rule'),
             editorModsAttackRule: document.getElementById('editor-mods-attack-rule'),
             editorModsSupplyRule: document.getElementById('editor-mods-supply-rule'),
-            editorModsSeedInput: document.getElementById('editor-mods-game-seed'),
-            editorModsSeedRerollBtn: document.getElementById('editor-mods-game-seed-reroll'),
+            editorModsSeedInput: document.getElementById('editor-seed-input'),
+            editorModsSeedRerollBtn: document.getElementById('editor-seed-reroll'),
 
             // Mode tabs and bottom bar
             bottomBar: document.querySelector('.editor-bottom-bar'),
@@ -633,34 +629,16 @@ export class MapEditor {
         this.elements.randomOwnersBtn?.addEventListener('click', () => this.handleRandomOwners());
         this.elements.randomDiceBtn?.addEventListener('click', () => this.handleRandomDice());
 
-        // Settings changes
-
-        this.elements.nameInput?.addEventListener('input', (e) => {
-            this.state.name = e.target.value;
-            this.state.isDirty = true;
-        });
-
-        this.elements.descriptionInput?.addEventListener('input', (e) => {
-            this.state.description = e.target.value;
-            this.state.isDirty = true;
-        });
-
-        this.elements.authorInput?.addEventListener('input', (e) => {
-            this.state.author = e.target.value;
-            this.state.isDirty = true;
-        });
-
-        // Size sliders
-        this.elements.widthSlider?.addEventListener('input', (e) => {
-            const newWidth = parseInt(e.target.value);
-            this.elements.widthVal.textContent = newWidth;
-            this.resizeGrid(newWidth, this.state.height);
-        });
-
-        this.elements.heightSlider?.addEventListener('input', (e) => {
-            const newHeight = parseInt(e.target.value);
-            this.elements.heightVal.textContent = newHeight;
-            this.resizeGrid(this.state.width, newHeight);
+        // Type segmented: Map / Scenario
+        this.elements.typeSegmented?.querySelectorAll('.segmented-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const type = btn.dataset.type;
+                if (type === 'map') {
+                    this.setMode('mapview');
+                } else {
+                    this.setMode('assign');
+                }
+            });
         });
 
         // Mods panel (shared field set with Custom Game)
@@ -671,6 +649,10 @@ export class MapEditor {
         if (this.elements.editorModsSeedInput) this.elements.editorModsSeedInput.value = 0;
         this.elements.editorModsSeedRerollBtn?.addEventListener('click', () => {
             if (this.elements.editorModsSeedInput) this.elements.editorModsSeedInput.value = randomSeed();
+            this._syncEditorModsSummary(!areModsAtDefaultsForPrefix(EDITOR_MODS_PREFIX));
+        });
+        this.elements.editorModsSeedInput?.addEventListener('input', () => {
+            this._syncEditorModsSummary(!areModsAtDefaultsForPrefix(EDITOR_MODS_PREFIX));
         });
 
         this.elements.editorModsMaxDice?.addEventListener('input', (e) => {
@@ -1540,7 +1522,7 @@ export class MapEditor {
 
         // Only auto-fit camera when explicitly requested (e.g., on open or resize)
         if (fitCamera) {
-            this.renderer.autoFitCamera(0.85); // Zoom to ~85% relative to fit
+            this.renderer.autoFitCamera(1.0); // Fit canvas exactly, zoom close
         }
 
         this.renderColorLegend();
@@ -1579,7 +1561,7 @@ export class MapEditor {
     }
 
     handleSave() {
-        return this.saveAsScenario();
+        return this.state.currentMode === 'mapview' ? this.saveAsMap() : this.saveAsScenario();
     }
 
     /** Log save errors to the console (campaign validation, storage, etc.). */
@@ -1597,6 +1579,9 @@ export class MapEditor {
         }
         const bounds = this.computeMinimalBounds();
         if (!bounds) return null;
+        const seedEl = this.elements.editorModsSeedInput;
+        const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
+        const hasFixedSeed = Number.isFinite(seedVal) && seedVal > 0;
         return {
             type: 'map',
             width: bounds.width,
@@ -1607,6 +1592,7 @@ export class MapEditor {
             diceSides: this.state.diceSides ?? 6,
             gameMode: this.state.gameMode ?? 'classic',
             turnTimeLimit: this.state.turnTimeLimit ?? 0,
+            ...(hasFixedSeed ? { seed: seedVal >>> 0 } : {}),
             tiles: Array.from(this.state.tiles.entries()).map(([key]) => {
                 const [x, y] = key.split(',').map(Number);
                 return { x: x - bounds.minX, y: y - bounds.minY };
@@ -1696,28 +1682,13 @@ export class MapEditor {
     }
 
     updateCampaignModeUI() {
-        const inCampaign = !!this.editorOptions;
-        const row = (id) => this.elements[id]?.closest('.control-group');
-        const hideInCampaign = [row('nameInput'), row('descriptionInput'), row('authorInput')];
-        const sizeRow = this.elements.widthSlider?.closest('.control-row');
-        if (sizeRow) hideInCampaign.push(sizeRow);
-        hideInCampaign.forEach(el => {
-            if (el) el.style.display = inCampaign ? 'none' : '';
-        });
+        // Name/description/author/size inputs removed from UI — nothing to hide
     }
 
     /**
      * Update UI elements from state
      */
     updateUIFromState() {
-        if (this.elements.idInput) this.elements.idInput.value = this.state.id || '';
-        if (this.elements.nameInput) this.elements.nameInput.value = this.state.name;
-        if (this.elements.descriptionInput) this.elements.descriptionInput.value = this.state.description;
-        if (this.elements.authorInput) this.elements.authorInput.value = this.state.author || '';
-        if (this.elements.widthSlider) this.elements.widthSlider.value = this.state.width;
-        if (this.elements.widthVal) this.elements.widthVal.textContent = this.state.width;
-        if (this.elements.heightSlider) this.elements.heightSlider.value = this.state.height;
-        if (this.elements.heightVal) this.elements.heightVal.textContent = this.state.height;
         this.syncEditorModsFromStateAndStorage();
     }
 
@@ -1770,6 +1741,7 @@ export class MapEditor {
         if (!panel || !toggle) return;
         const isOpen = !panel.classList.contains('hidden');
         setModsPanelUiOpen(!isOpen, 'editor-mods-panel', 'editor-mods-toggle');
+        this._syncEditorModsSummary(!areModsAtDefaultsForPrefix(EDITOR_MODS_PREFIX));
     }
 
     resetEditorModsToDefaults() {
@@ -1792,21 +1764,37 @@ export class MapEditor {
     }
 
     syncEditorModsExpanderFromStorage() {
-        const badge = this.elements.editorModsBadge;
         const nonDefault = !areModsAtDefaultsForPrefix(EDITOR_MODS_PREFIX);
-        if (badge) badge.classList.toggle('hidden', !nonDefault);
-        applyModsToolbarLayout(nonDefault, 'editor-mods-reset', 'editor-mods-toggle');
+        if (this.elements.editorModsBadge) this.elements.editorModsBadge.classList.toggle('hidden', !nonDefault);
+        if (this.elements.editorModsReset) this.elements.editorModsReset.classList.toggle('hidden', !nonDefault);
         syncModsFieldHighlightsForPrefix(EDITOR_MODS_PREFIX);
         setModsPanelUiOpen(nonDefault, 'editor-mods-panel', 'editor-mods-toggle');
+        this._syncEditorModsSummary(nonDefault);
     }
 
     syncEditorModsExpanderLive() {
-        const badge = this.elements.editorModsBadge;
         const nonDefault = !areModsAtDefaultsForPrefix(EDITOR_MODS_PREFIX);
-        if (badge) badge.classList.toggle('hidden', !nonDefault);
-        applyModsToolbarLayout(nonDefault, 'editor-mods-reset', 'editor-mods-toggle');
+        if (this.elements.editorModsBadge) this.elements.editorModsBadge.classList.toggle('hidden', !nonDefault);
+        if (this.elements.editorModsReset) this.elements.editorModsReset.classList.toggle('hidden', !nonDefault);
         syncModsFieldHighlightsForPrefix(EDITOR_MODS_PREFIX);
         if (nonDefault) setModsPanelUiOpen(true, 'editor-mods-panel', 'editor-mods-toggle');
+        this._syncEditorModsSummary(nonDefault);
+    }
+
+    _syncEditorModsSummary(nonDefault) {
+        const summary = this.elements.editorModsSummary;
+        if (!summary) return;
+        const seedEl = this.elements.editorModsSeedInput;
+        const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
+        const hasFixedSeed = Number.isFinite(seedVal) && seedVal > 0;
+        if (!nonDefault && !hasFixedSeed) {
+            summary.classList.add('hidden');
+            summary.textContent = '';
+            return;
+        }
+        const panelOpen = this.elements.editorModsPanel && !this.elements.editorModsPanel.classList.contains('hidden');
+        summary.classList.toggle('hidden', panelOpen);
+        summary.textContent = getActiveModsSummaryFromDom(EDITOR_MODS_PREFIX, 'editor-seed-input');
     }
 
     /**
@@ -1998,7 +1986,7 @@ export class MapEditor {
         const map = new MapManager();
         map.generateMap(genW, genH, players, maxDice, mapStyle, null, mulberry32(mapSeed));
 
-        const CANVAS_SIZE = 20;
+        const CANVAS_SIZE = 16;
         this.state.width = CANVAS_SIZE;
         this.state.height = CANVAS_SIZE;
         this.state.tiles.clear();
@@ -2216,17 +2204,32 @@ export class MapEditor {
     setMode(mode) {
         this.state.currentMode = mode;
 
-        this.elements.modeTabs?.forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.mode === mode);
+        const isMap = mode === 'mapview';
+
+        // Sync Map/Scenario segmented button
+        this.elements.typeSegmented?.querySelectorAll('.segmented-option').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.type === (isMap ? 'map' : 'scenario'));
+        });
+
+        // Show assign/dice tabs only in scenario mode; highlight the active one
+        if (this.elements.scenarioTabs) {
+            this.elements.scenarioTabs.classList.toggle('hidden', isMap);
+            this.elements.scenarioTabs.querySelectorAll('.editor-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.mode === mode);
+            });
+        }
+
+        // Show/hide scenario-only elements (color legend, random owners/dice)
+        this.elements.settingsPanel?.querySelectorAll('.editor-scenario-only').forEach(el => {
+            el.classList.toggle('hidden', isMap);
         });
 
         this.elements.assignToolbar?.classList.toggle('hidden', mode !== 'assign');
         this.elements.diceToolbar?.classList.toggle('hidden', mode !== 'dice');
 
-        const isMapView = mode === 'mapview';
         if (this.renderer && this.renderer.grid) {
             this.renderer.grid.invalidate();
-            this.renderer.grid.setPaintMode(isMapView);
+            this.renderer.grid.setPaintMode(isMap);
         }
 
         this.renderToCanvas();
@@ -2283,13 +2286,22 @@ export class MapEditor {
      * Fill entire grid with tiles
      */
     fillGrid() {
-        const { width, height, players } = this.state;
-        const playerCount = players.length;
+        const sliderVal = parseInt(this.elements.editorMapSize?.value || '4', 10);
+        const preset = CONFIG_MAP_SIZE_PRESETS[Math.max(0, Math.min(sliderVal - 1, CONFIG_MAP_SIZE_PRESETS.length - 1))];
+        const fillW = preset.width;
+        const fillH = preset.height;
 
+        const CANVAS_SIZE = this.state.width;
+        const offsetX = Math.floor((CANVAS_SIZE - fillW) / 2);
+        const offsetY = Math.floor((CANVAS_SIZE - fillH) / 2);
+
+        const { players } = this.state;
+        const playerCount = players.length;
         let playerIndex = 0;
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                const key = `${x},${y}`;
+
+        for (let y = 0; y < fillH; y++) {
+            for (let x = 0; x < fillW; x++) {
+                const key = `${x + offsetX},${y + offsetY}`;
                 this.state.tiles.set(key, {
                     owner: players[playerIndex % playerCount].id,
                     dice: this.state.diceBrushValue
@@ -2353,9 +2365,8 @@ export class MapEditor {
             }
         }
 
-        let name = this.state.name.trim() || 'Untitled Map';
+        const name = this.state.name.trim() || 'Untitled Map';
         this.state.name = name;
-        if (this.elements.nameInput) this.elements.nameInput.value = name;
         mapData.name = name;
         mapData.description = this.state.description;
         mapData.isBuiltIn = false;
@@ -2400,9 +2411,8 @@ export class MapEditor {
             }
         }
 
-        let name = this.state.name.trim() || 'Untitled Scenario';
+        const name = this.state.name.trim() || 'Untitled Scenario';
         this.state.name = name;
-        if (this.elements.nameInput) this.elements.nameInput.value = name;
         scenarioData.name = name;
         scenarioData.description = this.state.description;
         scenarioData.isBuiltIn = false;
@@ -2454,7 +2464,7 @@ export class MapEditor {
      * Import from existing scenario/map
      */
     importFromScenario(scenario) {
-        this.state = this.createEmptyState(20, 20);
+        this.state = this.createEmptyState(16, 16);
 
         const botCount = (scenario.players || []).filter(p => p.isBot).length;
         this.state.bots = scenario.bots ?? (scenario.players?.length ? botCount : 2);
@@ -2504,6 +2514,7 @@ export class MapEditor {
             }
         }
 
+        this.state.currentMode = scenario.type === 'scenario' ? 'assign' : 'mapview';
         this.state.isDirty = false;
     }
 }

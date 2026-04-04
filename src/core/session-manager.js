@@ -118,6 +118,8 @@ export class SessionManager {
         this.resetGameSession();
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
         localStorage.removeItem('dicy_campaignMode');
+        localStorage.removeItem('dicy_editorTest');
+        sessionStorage.removeItem('dicy_editorTestSnapshot');
 
         // Clear any pending scenario/level in memory
         if (this.scenarioBrowser) {
@@ -150,8 +152,21 @@ export class SessionManager {
         localStorage.removeItem('dicy_editorTest');
         localStorage.removeItem('dicy_campaignMode');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
-        if (this.mapEditor?._openScenario !== undefined) {
-            await this.mapEditor.open(this.mapEditor._openScenario, this.mapEditor._openOptions || {});
+
+        let scenario = this.mapEditor?._openScenario ?? null;
+        let options = this.mapEditor?._openOptions || {};
+        if (!scenario) {
+            // In-memory state lost (e.g. browser reload) — restore from sessionStorage
+            const stored = sessionStorage.getItem('dicy_editorTestSnapshot');
+            if (stored) {
+                try { scenario = JSON.parse(stored); } catch (_) {}
+            }
+            options = {}; // callbacks can't survive a reload
+        }
+        sessionStorage.removeItem('dicy_editorTestSnapshot');
+
+        if (this.mapEditor) {
+            await this.mapEditor.open(scenario, options);
         }
     }
 
