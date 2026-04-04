@@ -526,6 +526,25 @@
                     wrapper.appendChild(canvas);
                     section.appendChild(wrapper);
 
+                    // --- Seed Slider ---
+                    const controls = document.createElement('div');
+                    controls.className = 'asset-controls';
+                    controls.innerHTML = `
+                        <label style="font-size:11px; color:#aaa; margin-right:6px; cursor:pointer;" title="Adjust the random layout">Layout Seed:</label>
+                        <input type="range" class="asset-seed-slider" min="0" max="1000" value="0" style="vertical-align:middle; flex:1; height:4px; max-width:120px;">
+                    `;
+                    controls.style.display = 'flex';
+                    controls.style.alignItems = 'center';
+                    controls.style.marginTop = '6px';
+                    controls.style.visibility = (asset.type === 'logo_transparent' || asset.type === 'game_map' || asset.type === 'bg_only') ? 'hidden' : 'visible';
+                    section.appendChild(controls);
+
+                    const slider = controls.querySelector('input');
+                    slider.addEventListener('input', (e) => {
+                        asset.seedOffset = parseInt(e.target.value);
+                        renderAsset(canvas, asset);
+                    });
+
                     grid.appendChild(section);
                     pendingRenders.push({ canvas, asset });
                 });
@@ -963,7 +982,7 @@ void main(void) {
             const ctx = canvas.getContext('2d');
             const w = asset.w;
             const h = asset.h;
-            const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED);
+            const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED + getSeedOffset(asset));
             const scale = Math.max(w, h) / 1080;
 
             if (asset.type === 'ost') {
@@ -1434,7 +1453,7 @@ void main(void) {
         function drawBrandingImage(canvas, asset) {
             const ctx = canvas.getContext('2d');
             const w = asset.w, h = asset.h;
-            const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED);
+            const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED + getSeedOffset(asset));
             const scale = Math.max(w, h) / 1080;
 
             // Split point: artwork lives left of this, neutral space right of it
@@ -1447,8 +1466,7 @@ void main(void) {
             ctx.save();
             ctx.beginPath();
             ctx.rect(0, 0, splitX + h * 0.3, h); // slight bleed past split
-            ctx.clip();
-            const diceRng = mulberry32(asset.w * 53 + asset.h * 29 + PAGE_SEED);
+            const diceRng = mulberry32(asset.w * 53 + asset.h * 29 + PAGE_SEED + getSeedOffset(asset));
             drawFloatingDice(ctx, w, h, diceRng, 1.5, null, 30, 60, 1);
             ctx.restore();
 
@@ -1524,7 +1542,7 @@ void main(void) {
             const ctx = canvas.getContext('2d');
             const w = asset.w, h = asset.h;
             const isLeft = asset.side === 'left';
-            const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED + (isLeft ? 0 : 999));
+            const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED + getSeedOffset(asset) + (isLeft ? 0 : 999));
 
             // Stars background
             drawShaderBackground(ctx, w, h, isLeft ? 6.0 : 9.5, null, 0.0);
@@ -1687,7 +1705,7 @@ void main(void) {
         function drawBigTerritoryMap(canvas, asset) {
             const ctx = canvas.getContext('2d');
             const w = asset.w, h = asset.h;
-            const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED);
+            const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED + getSeedOffset(asset));
             const scale = Math.max(w, h) / 1080;
 
             // ── Letter definitions (5 wide × 7 tall pixel art) ──
@@ -1723,7 +1741,7 @@ void main(void) {
             drawParticles(ctx, w, h, Math.floor(40 + scale * 20), rng);
 
             // Scatter territory clusters in the outer area only
-            const clusterRng = mulberry32(asset.w * 42 + PAGE_SEED);
+            const clusterRng = mulberry32(asset.w * 42 + PAGE_SEED + getSeedOffset(asset));
             const clusterCount = Math.floor(6 + scale * 2);
             const clusterTileSize = Math.floor(40 * scale);
             for (let i = 0; i < clusterCount; i++) {
@@ -1800,7 +1818,7 @@ void main(void) {
         function drawDiceptionLetterMap(canvas, asset) {
             const ctx = canvas.getContext('2d');
             const w = asset.w, h = asset.h;
-            const rng = mulberry32(w * 77 + h * 13 + PAGE_SEED);
+            const rng = mulberry32(w * 77 + h * 13 + PAGE_SEED + getSeedOffset(asset));
 
             // Background: stars + tron grid + nebula
             drawShaderBackground(ctx, w, h, 10.0, null, 2.0);
