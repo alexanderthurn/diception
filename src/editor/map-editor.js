@@ -533,34 +533,68 @@ export class MapEditor {
         const elements = this._editorGetUIButtons(side);
         if (!elements.length) return;
 
-        const el = elements[focusState.buttonIndex];
+        const currentEl = elements[focusState.buttonIndex];
 
-        // Exit focus: left from right panel (unless on a range/select where left changes value), or down from top bar
-        if (side === 'top' && dy === 1) {
-            this._editorExitUIFocus(gpIndex, sourceId);
+        // Top bar: left/right navigates linearly, down exits
+        if (side === 'top') {
+            if (dy === 1) { this._editorExitUIFocus(gpIndex, sourceId); return; }
+            const delta = dx;
+            if (delta === 0) return;
+            const newIdx = Math.max(0, Math.min(elements.length - 1, focusState.buttonIndex + delta));
+            if (newIdx !== focusState.buttonIndex) this._editorMoveFocusTo(focusState, elements, newIdx, gpIndex);
             return;
         }
-        if (side === 'right' && dx === -1) {
-            // For ranges/selects, left/right changes value
-            if (el && (el.tagName === 'SELECT' || el.type === 'range')) {
-                this._editorChangeElementValue(el, -1);
-            } else {
+
+        // Right panel: build spatial row grid (same approach as navigateModal)
+        const withPos = elements.map((el, idx) => {
+            const r = el.getBoundingClientRect();
+            return { el, idx, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+        });
+        withPos.sort((a, b) => a.cy - b.cy || a.cx - b.cx);
+        const rows = [];
+        for (const item of withPos) {
+            const last = rows[rows.length - 1];
+            if (last && Math.abs(item.cy - last[0].cy) < 20) last.push(item);
+            else rows.push([item]);
+        }
+        for (const row of rows) row.sort((a, b) => a.cx - b.cx);
+
+        let rowIdx = -1, colIdx = -1;
+        for (let r = 0; r < rows.length; r++) {
+            const c = rows[r].findIndex(item => item.el === currentEl);
+            if (c !== -1) { rowIdx = r; colIdx = c; break; }
+        }
+        if (rowIdx === -1) return;
+
+        if (dx !== 0) {
+            // Range/select: change value in place
+            if (currentEl.tagName === 'SELECT' || currentEl.type === 'range') {
+                this._editorChangeElementValue(currentEl, dx);
+                return;
+            }
+            // Button/other: navigate within row
+            const nextCol = colIdx + dx;
+            if (nextCol >= 0 && nextCol < rows[rowIdx].length) {
+                this._editorMoveFocusTo(focusState, elements, rows[rowIdx][nextCol].idx, gpIndex);
+            } else if (dx === -1) {
                 this._editorExitUIFocus(gpIndex, sourceId);
             }
             return;
         }
-        if (side === 'right' && dx === 1) {
-            if (el && (el.tagName === 'SELECT' || el.type === 'range')) {
-                this._editorChangeElementValue(el, 1);
-            }
-            return;
-        }
 
-        // Up/down: navigate between elements (right panel), left/right: navigate (top bar)
-        const delta = (side === 'right') ? dy : dx;
-        if (delta === 0) return;
-        const newIdx = Math.max(0, Math.min(elements.length - 1, focusState.buttonIndex + delta));
-        if (newIdx === focusState.buttonIndex) return;
+        if (dy !== 0) {
+            const nextRowIdx = rowIdx + dy;
+            if (nextRowIdx < 0) { this._editorExitUIFocus(gpIndex, sourceId); return; }
+            if (nextRowIdx >= rows.length) return;
+            const currentCx = rows[rowIdx][colIdx].cx;
+            const target = rows[nextRowIdx].reduce((best, item) =>
+                Math.abs(item.cx - currentCx) < Math.abs(best.cx - currentCx) ? item : best
+            );
+            this._editorMoveFocusTo(focusState, elements, target.idx, gpIndex);
+        }
+    }
+
+    _editorMoveFocusTo(focusState, elements, newIdx, gpIndex) {
         elements[focusState.buttonIndex].classList.remove('gamepad-focused');
         focusState.buttonIndex = newIdx;
         elements[newIdx].classList.add('gamepad-focused');

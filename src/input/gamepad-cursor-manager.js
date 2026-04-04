@@ -288,8 +288,8 @@ export class GamepadCursorManager {
                 if (isAssignedTurn && !this._inUIFocus.has(index) && !isEditorOpen) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
             } else if (button === b.endTurn) {
                 if (isEditorOpen) {
-                    // In editor: Y button cycles modes — handled by map-editor.js boundEndTurnHandler via inputManager
-                    this.inputManager.emit('endTurn');
+                    // In editor: Y button cycles modes — InputManager.processGamepadButtons already emits 'endTurn',
+                    // which map-editor.js boundEndTurnHandler receives. Do not emit again here.
                 } else {
                     // In game: End Turn — use assignment-aware check
                     if (currentPlayer && !currentPlayer.isBot &&
