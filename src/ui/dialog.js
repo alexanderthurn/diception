@@ -151,19 +151,19 @@ export class Dialog {
                 <span>Full Version</span>
             </a>
             <ul class="full-version-features">
-                <li>A handcrafted campaign with 84 levels</li>
-                <li>34 Achievements</li>
-                <li>Map Editor and custom scenarios</li>
-                <li>Steam Cloud Save to not lose your progress</li>
+                <li>The complete 84-level Campaign</li>
+                <li>Expanded Maps and more difficult Bots</li>
+                <li>Local Multiplayer for up to 8 players</li>
+                <li>Mods: Parallel turns, special attack rules…</li>
+                <li>Map Editor, Cloud Saves, Achievements</li>
                 <li>Remote Play Together</li>
-            </ul>
-            <p class="full-version-support">Your purchase directly supports an indie developer — thank you!</p>`;
+            </ul>`;
         content.querySelector('.steam-store-link').addEventListener('click', e => {
             e.preventDefault();
             window.open(STEAM_URL, '_blank');
         });
         return this.show({
-            title: 'DEMO VERSION',
+            title: 'GET IT NOW',
             content,
             closeButton: true,
             buttons: [

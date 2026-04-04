@@ -215,7 +215,13 @@ async function init() {
         window.steam.getUserName().then(name => {
             console.log('Steam User:', name);
             const el = document.getElementById('main-menu-credits');
-            if (el) el.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">Hi, ${name}</span>`;
+            if (isFullVersion()) {
+                if (el) el.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">Hi, ${name}</span>`;
+            } else {
+                if (el) { el.textContent = 'Demo Version'; el.classList.add('demo-version-label'); }
+                const loadingCredits = document.querySelector('#loading-screen .credits');
+                if (loadingCredits) { loadingCredits.textContent = 'Demo Version'; loadingCredits.classList.add('demo-version-label'); }
+            }
         });
     } else {
         const versionLabel = isFullVersion() ? 'by Alexander Thurn' : 'Demo Version';
