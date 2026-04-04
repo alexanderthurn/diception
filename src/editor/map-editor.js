@@ -250,6 +250,10 @@ export class MapEditor {
 
         // Store original game reference to restore
         this.originalGame = null;
+
+        // Gamepad cursor state per source
+        this._editorCursorStates = new Map(); // sourceId → { x, y }
+        this._editorUIFocusStates = new Map(); // sourceId → { side, buttonIndex }
     }
 
     /**
@@ -444,6 +448,168 @@ export class MapEditor {
 
         this.bindEvents();
     }
+
+    // ── Gamepad cursor helpers ─────────────────────────────────────────────
+
+    _editorGetCursorState(sourceId) {
+        if (!this._editorCursorStates.has(sourceId)) {
+            this._editorCursorStates.set(sourceId, { x: null, y: null });
+        }
+        return this._editorCursorStates.get(sourceId);
+    }
+
+    _editorInitCursor(gpIndex, sourceId) {
+        const cx = Math.floor((this.state.width ?? 10) / 2);
+        const cy = Math.floor((this.state.height ?? 10) / 2);
+        const cur = this._editorGetCursorState(sourceId);
+        cur.x = cx;
+        cur.y = cy;
+        this.state.hoveredTile = { x: cx, y: cy };
+        this.renderer?.grid?.setHover?.(cx, cy, sourceId);
+        this._editorSyncCursor(gpIndex, sourceId);
+    }
+
+    _editorSyncCursor(gpIndex, sourceId) {
+        if (gpIndex < 0 || !this.renderer) return;
+        const cur = this._editorGetCursorState(sourceId);
+        if (cur.x === null) return;
+        const pos = this.renderer.getTileScreenPosition?.(cur.x, cur.y);
+        if (pos) this.inputManager?.emit?.('gamepadCursorMoveRequest', { x: pos.x, y: pos.y, index: gpIndex });
+    }
+
+    _editorGetUIButtons(side) {
+        if (side === 'right') {
+            const panel = document.querySelector('.editor-settings');
+            if (!panel) return [];
+            return Array.from(panel.querySelectorAll(
+                'button:not([disabled]), input[type="range"], input[type="text"], select'
+            )).filter(el => !el.disabled && el.offsetParent !== null);
+        }
+        if (side === 'top') {
+            return ['global-back-btn', 'zoom-out-btn', 'zoom-in-btn', 'editor-settings-toggle']
+                .map(id => document.getElementById(id))
+                .filter(el => el && el.offsetParent !== null);
+        }
+        return [];
+    }
+
+    _editorEnterUIFocus(gpIndex, sourceId, side) {
+        const buttons = this._editorGetUIButtons(side);
+        if (!buttons.length) return;
+        this._editorUIFocusStates.set(sourceId, { side, buttonIndex: 0 });
+        document.querySelectorAll('.gamepad-focused').forEach(el => el.classList.remove('gamepad-focused'));
+        buttons[0].classList.add('gamepad-focused');
+        const rect = buttons[0].getBoundingClientRect();
+        if (gpIndex >= 0) {
+            this.inputManager?.emit?.('gamepadCursorMoveRequest', {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2,
+                index: gpIndex
+            });
+        }
+    }
+
+    _editorExitUIFocus(gpIndex, sourceId) {
+        const focusState = this._editorUIFocusStates.get(sourceId);
+        if (!focusState) return;
+        const buttons = this._editorGetUIButtons(focusState.side);
+        buttons.forEach(b => b.classList.remove('gamepad-focused'));
+        this._editorUIFocusStates.delete(sourceId);
+        const cur = this._editorGetCursorState(sourceId);
+        if (cur.x !== null) {
+            this.renderer?.grid?.setHover?.(cur.x, cur.y, sourceId);
+            this._editorSyncCursor(gpIndex, sourceId);
+        }
+    }
+
+    _editorNavigateUIFocus(dx, dy, gpIndex, sourceId) {
+        const focusState = this._editorUIFocusStates.get(sourceId);
+        if (!focusState) return;
+        const { side } = focusState;
+        const elements = this._editorGetUIButtons(side);
+        if (!elements.length) return;
+
+        const el = elements[focusState.buttonIndex];
+
+        // Exit focus: left from right panel (unless on a range/select where left changes value), or down from top bar
+        if (side === 'top' && dy === 1) {
+            this._editorExitUIFocus(gpIndex, sourceId);
+            return;
+        }
+        if (side === 'right' && dx === -1) {
+            // For ranges/selects, left/right changes value
+            if (el && (el.tagName === 'SELECT' || el.type === 'range')) {
+                this._editorChangeElementValue(el, -1);
+            } else {
+                this._editorExitUIFocus(gpIndex, sourceId);
+            }
+            return;
+        }
+        if (side === 'right' && dx === 1) {
+            if (el && (el.tagName === 'SELECT' || el.type === 'range')) {
+                this._editorChangeElementValue(el, 1);
+            }
+            return;
+        }
+
+        // Up/down: navigate between elements (right panel), left/right: navigate (top bar)
+        const delta = (side === 'right') ? dy : dx;
+        if (delta === 0) return;
+        const newIdx = Math.max(0, Math.min(elements.length - 1, focusState.buttonIndex + delta));
+        if (newIdx === focusState.buttonIndex) return;
+        elements[focusState.buttonIndex].classList.remove('gamepad-focused');
+        focusState.buttonIndex = newIdx;
+        elements[newIdx].classList.add('gamepad-focused');
+        const rect = elements[newIdx].getBoundingClientRect();
+        if (gpIndex >= 0) {
+            this.inputManager?.emit?.('gamepadCursorMoveRequest', {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2,
+                index: gpIndex
+            });
+        }
+    }
+
+    _editorChangeElementValue(el, direction) {
+        if (el.type === 'range') {
+            const step = parseFloat(el.step) || 1;
+            el.value = Math.max(parseFloat(el.min) || 0,
+                Math.min(parseFloat(el.max) || 100, parseFloat(el.value) + direction * step));
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        } else if (el.tagName === 'SELECT') {
+            const newIdx = Math.max(0, Math.min(el.options.length - 1, el.selectedIndex + direction));
+            el.selectedIndex = newIdx;
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    _editorMoveCursor(dx, dy, gpIndex, sourceId) {
+        const cur = this._editorGetCursorState(sourceId);
+        const w = this.state.width ?? 10;
+        const h = this.state.height ?? 10;
+        const newX = Math.max(0, Math.min(w - 1, cur.x + dx));
+        const newY = Math.max(0, Math.min(h - 1, cur.y + dy));
+
+        // Right edge → enter right panel focus
+        if (dx === 1 && newX === cur.x) {
+            this._editorEnterUIFocus(gpIndex, sourceId, 'right');
+            return;
+        }
+        // Top edge → enter top toolbar focus
+        if (dy === -1 && newY === cur.y) {
+            this._editorEnterUIFocus(gpIndex, sourceId, 'top');
+            return;
+        }
+
+        cur.x = newX;
+        cur.y = newY;
+        this.state.hoveredTile = { x: newX, y: newY };
+        this.renderer?.grid?.setHover?.(newX, newY, sourceId);
+        this._editorSyncCursor(gpIndex, sourceId);
+    }
+
+    // ── End gamepad cursor helpers ─────────────────────────────────────────
 
     /**
      * Bind all event handlers
@@ -657,19 +823,86 @@ export class MapEditor {
             }
         }, true); // capture: true so we run before InputManager for move keys
 
-        // Gamepad: move event for pan and D-pad Left/Right for Assign/Dice
+        // Gamepad: move event — D-pad navigates tile cursor; analog stick still pans
         this.boundMoveHandler = (data) => {
             if (!this.isOpen || !this.renderer) return;
-            const { x: dx, y: dy } = data;
-            const panSpeed = 15;
-            if (dx !== 0 && dy === 0) {
-                if (dx === -1) this.setMode('dice');
-                else if (dx === 1) this.setMode('assign');
-            } else if (dx !== 0 || dy !== 0) {
-                this.renderer.pan(-dx * panSpeed, -dy * panSpeed);
+            const { x: dx, y: dy, index } = data;
+            const gpIndex = (typeof index === 'number' && index >= 0) ? index : -1;
+            const sourceId = gpIndex >= 0 ? 'gamepad-' + gpIndex : 'keyboard';
+
+            // If in UI focus mode, navigate within that panel
+            if (this._editorUIFocusStates.has(sourceId)) {
+                this._editorNavigateUIFocus(dx, dy, gpIndex, sourceId);
+                return;
             }
+
+            const cur = this._editorGetCursorState(sourceId);
+
+            // First move: initialise cursor at map centre
+            if (cur.x === null) {
+                this._editorInitCursor(gpIndex, sourceId);
+                return;
+            }
+
+            this._editorMoveCursor(dx, dy, gpIndex, sourceId);
         };
         this.inputManager?.on('move', this.boundMoveHandler);
+
+        this.boundConfirmHandler = (data) => {
+            if (!this.isOpen) return;
+            const gpIndex = (data?.source === 'gamepad' && typeof data.index === 'number') ? data.index : -1;
+            if (gpIndex < 0) return;
+            const sourceId = 'gamepad-' + gpIndex;
+
+            if (this._editorUIFocusStates.has(sourceId)) {
+                const focusState = this._editorUIFocusStates.get(sourceId);
+                const els = this._editorGetUIButtons(focusState.side);
+                const el = els[focusState.buttonIndex];
+                if (el) {
+                    if (el.tagName === 'INPUT' && el.type === 'text') {
+                        el.focus();
+                    } else if (el.type === 'range' || el.tagName === 'SELECT') {
+                        // Already interactive via left/right — confirm just clicks if button
+                    } else {
+                        el.click();
+                    }
+                }
+                return;
+            }
+
+            const cur = this._editorGetCursorState(sourceId);
+            if (cur.x === null) return;
+            this.handleTileInteraction(cur.x, cur.y, 0, false, false);
+        };
+        this.inputManager?.on('confirm', this.boundConfirmHandler);
+
+        this.boundCancelHandler = (data) => {
+            if (!this.isOpen) return;
+            const gpIndex = (data?.source === 'gamepad' && typeof data.index === 'number') ? data.index : -1;
+            if (gpIndex < 0) return;
+            const sourceId = 'gamepad-' + gpIndex;
+
+            if (this._editorUIFocusStates.has(sourceId)) {
+                this._editorExitUIFocus(gpIndex, sourceId);
+                return;
+            }
+
+            const cur = this._editorGetCursorState(sourceId);
+            if (cur.x === null) return;
+            // Remove tile (right-click / cycle-decrease path)
+            this.handleTileInteraction(cur.x, cur.y, 2, false, false);
+        };
+        this.inputManager?.on('cancel', this.boundCancelHandler);
+
+        this.boundEndTurnHandler = () => {
+            if (!this.isOpen) return;
+            const modes = ['assign', 'dice', 'mapview'];
+            const current = this.state.currentMode || 'assign';
+            const idx = modes.indexOf(current);
+            const next = modes[(idx + 1) % modes.length];
+            this.setMode(next);
+        };
+        this.inputManager?.on('endTurn', this.boundEndTurnHandler);
     }
 
     /**
@@ -1259,6 +1492,20 @@ export class MapEditor {
         this.isOpen = false;
         this._shiftHeld = false;
 
+        // Clean up gamepad event handlers
+        if (this.boundMoveHandler) this.inputManager?.off('move', this.boundMoveHandler);
+        if (this.boundConfirmHandler) this.inputManager?.off('confirm', this.boundConfirmHandler);
+        if (this.boundCancelHandler) this.inputManager?.off('cancel', this.boundCancelHandler);
+        if (this.boundEndTurnHandler) this.inputManager?.off('endTurn', this.boundEndTurnHandler);
+
+        // Clean up gamepad cursor/focus state and remove any lingering focus highlights
+        for (const [sourceId, focusState] of this._editorUIFocusStates) {
+            const buttons = this._editorGetUIButtons(focusState.side);
+            buttons.forEach(b => b.classList.remove('gamepad-focused'));
+        }
+        this._editorCursorStates.clear();
+        this._editorUIFocusStates.clear();
+
         if (this.onClose) {
             this.onClose();
         }
@@ -1279,7 +1526,7 @@ export class MapEditor {
 
         // Only auto-fit camera when explicitly requested (e.g., on open or resize)
         if (fitCamera) {
-            this.renderer.autoFitCamera(0.5); // Zoom out to 50% relative to fit
+            this.renderer.autoFitCamera(0.85); // Zoom to ~85% relative to fit
         }
 
         this.renderColorLegend();

@@ -283,14 +283,13 @@ export class GamepadCursorManager {
                 this.inputManager.canGamepadControlPlayer(index, currentPlayer.id);
 
             if (b.confirmButtons.includes(button)) {
-                if (isAssignedTurn && !this._inUIFocus.has(index)) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
+                if (isAssignedTurn && !this._inUIFocus.has(index) && !isEditorOpen) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
             } else if (b.cancelButtons.includes(button)) {
-                if (isAssignedTurn && !this._inUIFocus.has(index)) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
+                if (isAssignedTurn && !this._inUIFocus.has(index) && !isEditorOpen) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
             } else if (button === b.endTurn) {
                 if (isEditorOpen) {
-                    // In editor: end_turn button = Paint mode
-                    const paintTab = document.querySelector('.editor-tab[data-mode="paint"]');
-                    if (paintTab) paintTab.click();
+                    // In editor: Y button cycles modes — handled by map-editor.js boundEndTurnHandler via inputManager
+                    this.inputManager.emit('endTurn');
                 } else {
                     // In game: End Turn — use assignment-aware check
                     if (currentPlayer && !currentPlayer.isBot &&
@@ -322,6 +321,7 @@ export class GamepadCursorManager {
             if (!cursor) return;
 
             const b = this._gb();
+            const isEditorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
             if (isMenuOpen && !b.confirmButtons.includes(button) && !b.cancelButtons.includes(button)) return;
 
@@ -346,14 +346,14 @@ export class GamepadCursorManager {
                     const btn = this._pendingUIClick.get(index);
                     this._pendingUIClick.delete(index);
                     btn.click();
-                } else if (!onRangeSlider && isAssignedTurnUp && !swallow && !this._inUIFocus.has(index)) {
+                } else if (!onRangeSlider && isAssignedTurnUp && !swallow && !this._inUIFocus.has(index) && !isEditorOpen) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = index;
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = null;
                 }
             } else if (b.cancelButtons.includes(button)) {
-                if (!onRangeSlider && isAssignedTurnUp && !swallow && !this._inUIFocus.has(index)) {
+                if (!onRangeSlider && isAssignedTurnUp && !swallow && !this._inUIFocus.has(index) && !isEditorOpen) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
                 }
