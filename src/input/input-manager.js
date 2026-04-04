@@ -576,7 +576,7 @@ export class InputManager {
                     if (action === 'menu' && this.isGamepadAllowedGlobalAction(gp.index)) this.emit('menu');
                     // move_up/down/left/right handled by processGamepadMovement
                     const zoomDir = this._zoomDirections[action];
-                    if (zoomDir !== undefined && this.isGamepadAllowedGlobalAction(gp.index)) this.emit('zoom', { direction: zoomDir });
+                    if (zoomDir !== undefined && this.isGamepadAllowedGlobalAction(gp.index)) this.emit('zoom', { direction: zoomDir, index: gp.index });
                 }
             } else if (!pressed && wasPressed) {
                 this.emit('gamepadButtonUp', { index: gp.index, button: i });

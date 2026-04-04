@@ -115,6 +115,25 @@ export class ScenarioBrowser {
             this.scenarioBrowserCloseBtn.addEventListener('click', () => this.handleBack());
         }
 
+        // Show hover preview when a level tile receives keyboard/gamepad focus
+        if (this.levelGrid) {
+            this.levelGrid.addEventListener('focusin', (e) => {
+                const tile = e.target.closest('.level-grid-tile:not(.add-tile)');
+                if (!tile) return;
+                const idx = parseInt(tile.dataset.index, 10);
+                if (isNaN(idx)) return;
+                const level = this.selectedCampaign?.levels?.[idx];
+                if (!level) return;
+                this._hoveredLevelIndex = idx;
+                this.showHoverPreview(level, tile);
+            });
+            this.levelGrid.addEventListener('focusout', (e) => {
+                if (!e.relatedTarget?.closest?.('.level-grid-tile')) {
+                    this._hoveredLevelIndex = null;
+                    this.hideHoverPreview();
+                }
+            });
+        }
     }
 
     _disconnectGridResizeObserver() {
@@ -739,6 +758,7 @@ export class ScenarioBrowser {
             const playBtn = document.createElement('button');
             playBtn.className = 'tron-btn primary';
             playBtn.dataset.noSfx = '';
+            playBtn.dataset.gamepadAutofocus = '';
             playBtn.textContent = 'Play';
             playBtn.onclick = () => finish('play');
             primaryRow.appendChild(playBtn);

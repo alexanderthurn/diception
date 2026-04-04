@@ -8,7 +8,7 @@
 // No longer using generateScenarioId
 import { Dialog } from '../ui/dialog.js';
 import { GAME } from '../core/constants.js';
-import { getInputHint, ACTION_ASSIGN, ACTION_DICE } from '../ui/input-hints.js';
+import { getInputHint, ACTION_ASSIGN, ACTION_DICE, ACTION_END_TURN } from '../ui/input-hints.js';
 import { MapManager } from '../core/map.js';
 import { mulberry32, randomSeed } from '../core/rng.js';
 import { loadBindings } from '../input/key-bindings.js';
@@ -327,17 +327,34 @@ export class MapEditor {
 
     updateEditorInputHints() {
         if (!this.inputManager) return;
-        const assignHint = getInputHint(ACTION_ASSIGN, this.inputManager);
-        const diceHint = getInputHint(ACTION_DICE, this.inputManager);
         const assignEl = document.getElementById('editor-assign-hint');
         const diceEl = document.getElementById('editor-dice-hint');
-        if (assignHint && assignEl) {
-            assignEl.textContent = assignHint.label;
-            assignEl.className = 'input-hint ' + assignHint.style;
-        }
-        if (diceHint && diceEl) {
-            diceEl.textContent = diceHint.label;
-            diceEl.className = 'input-hint ' + diceHint.style;
+        if (!assignEl || !diceEl) return;
+
+        const endTurnHint = getInputHint(ACTION_END_TURN, this.inputManager);
+        const isGamepad = endTurnHint?.type === 'gamepad';
+
+        if (isGamepad) {
+            // Show Y button on whichever tab Y will activate next; clear the other
+            const mode = this.state?.currentMode;
+            const applyHint = (el, show) => {
+                if (show && endTurnHint) {
+                    if (endTurnHint.html) el.innerHTML = endTurnHint.html;
+                    else el.textContent = endTurnHint.label;
+                    el.className = 'input-hint ' + endTurnHint.style;
+                } else {
+                    el.textContent = '';
+                    el.className = 'input-hint';
+                }
+            };
+            applyHint(assignEl, mode === 'dice');   // Y in dice → assign
+            applyHint(diceEl,   mode === 'assign'); // Y in assign → dice
+        } else {
+            // Keyboard: static R / F shortcuts
+            const assignHint = getInputHint(ACTION_ASSIGN, this.inputManager);
+            const diceHint   = getInputHint(ACTION_DICE, this.inputManager);
+            if (assignHint) { assignEl.textContent = assignHint.label; assignEl.className = 'input-hint ' + assignHint.style; }
+            if (diceHint)   { diceEl.textContent   = diceHint.label;   diceEl.className   = 'input-hint ' + diceHint.style; }
         }
     }
 
@@ -830,8 +847,6 @@ export class MapEditor {
 
             if (code === 'escape') {
                 this.close();
-            } else if (code === 'keyy') {
-                this.setMode('mapview');
             } else if (code === 'keyr') {
                 this.setMode('assign');
             } else if (code === 'keyf') {
@@ -853,6 +868,8 @@ export class MapEditor {
         // Gamepad: move event — D-pad navigates tile cursor; analog stick still pans
         this.boundMoveHandler = (data) => {
             if (!this.isOpen || !this.renderer) return;
+            // Yield to modal navigation when a .modal is open on top of the editor
+            if (document.querySelector('.modal:not(.hidden)')) return;
             const { x: dx, y: dy, index } = data;
             const gpIndex = (typeof index === 'number' && index >= 0) ? index : -1;
             const sourceId = gpIndex >= 0 ? 'gamepad-' + gpIndex : 'keyboard';
@@ -877,6 +894,7 @@ export class MapEditor {
 
         this.boundConfirmHandler = (data) => {
             if (!this.isOpen) return;
+            if (document.querySelector('.modal:not(.hidden)')) return;
             const gpIndex = (data?.source === 'gamepad' && typeof data.index === 'number') ? data.index : -1;
             if (gpIndex < 0) return;
             const sourceId = 'gamepad-' + gpIndex;
@@ -905,6 +923,7 @@ export class MapEditor {
 
         this.boundCancelHandler = (data) => {
             if (!this.isOpen) return;
+            if (document.querySelector('.modal:not(.hidden)')) return;
             const gpIndex = (data?.source === 'gamepad' && typeof data.index === 'number') ? data.index : -1;
             if (gpIndex < 0) return;
             const sourceId = 'gamepad-' + gpIndex;
@@ -923,11 +942,8 @@ export class MapEditor {
 
         this.boundEndTurnHandler = () => {
             if (!this.isOpen) return;
-            const modes = ['assign', 'dice', 'mapview'];
-            const current = this.state.currentMode || 'assign';
-            const idx = modes.indexOf(current);
-            const next = modes[(idx + 1) % modes.length];
-            this.setMode(next);
+            if (this.state.currentMode === 'mapview') return; // Y does nothing in map mode
+            this.setMode(this.state.currentMode === 'assign' ? 'dice' : 'assign');
         };
         this.inputManager?.on('endTurn', this.boundEndTurnHandler);
     }
@@ -1479,7 +1495,7 @@ export class MapEditor {
         this.setupCanvasEvents();
 
         this.isOpen = true;
-        this.boundUpdateEditorHelp = () => this.updateEditorHelpVisibility();
+        this.boundUpdateEditorHelp = () => { this.updateEditorHelpVisibility(); this.updateEditorInputHints(); };
         this.updateEditorHelpVisibility();
         window.addEventListener('resize', this.boundUpdateEditorHelp);
         this.inputManager?.on('gamepadChange', this.boundUpdateEditorHelp);
@@ -2268,6 +2284,7 @@ export class MapEditor {
 
         this.renderToCanvas();
         this.updateHoverPreview();
+        this.updateEditorInputHints();
     }
 
 

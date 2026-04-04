@@ -351,7 +351,13 @@ export class InputController {
     }
 
     onZoom(data) {
-        this.renderer.zoom(data.direction, window.innerWidth / 2, window.innerHeight / 2);
+        let cx = window.innerWidth / 2;
+        let cy = window.innerHeight / 2;
+        if (data.index != null) {
+            const cursor = this.inputManager.gamepadCursorManager?.cursors?.get(data.index);
+            if (cursor) { cx = cursor.x; cy = cursor.y; }
+        }
+        this.renderer.zoom(data.direction, cx, cy);
         this._syncAllGamepadCursors();
     }
 

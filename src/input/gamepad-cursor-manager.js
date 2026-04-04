@@ -110,7 +110,8 @@ export class GamepadCursorManager {
                 const b = this._gb();
                 const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
                 const isEditorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
-                if (isMenuOpen && !isEditorOpen && [b.moveUp, b.moveDown, b.moveLeft, b.moveRight].includes(button)) {
+                const isEditorEffectiveVirt = isEditorOpen && !document.querySelector('.modal:not(.hidden)');
+                if (isMenuOpen && !isEditorEffectiveVirt && [b.moveUp, b.moveDown, b.moveLeft, b.moveRight].includes(button)) {
                     if (this.inputManager.isGamepadAllowedGlobalAction(index)) {
                         if (this._sliderEditMode.has(index)) {
                             if (button === b.moveLeft || button === b.moveRight) {
@@ -142,6 +143,8 @@ export class GamepadCursorManager {
             // Read current bindings so labels and actions follow remapping
             const b = this._gb();
             const isEditorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
+            // A regular modal on top of the editor (e.g. campaign-detail-view) overrides editor mode
+            const isEditorEffective = isEditorOpen && !document.querySelector('.modal:not(.hidden)');
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
 
             // Track which buttons were pressed while no modal was open (for swallowing spurious button-up clicks)
@@ -191,7 +194,7 @@ export class GamepadCursorManager {
                 [b.zoomIn]: 'Zoom in',
             };
 
-            const buttonLabels = isEditorOpen ? editorLabels : gameLabels;
+            const buttonLabels = isEditorEffective ? editorLabels : gameLabels;
             const label = buttonLabels[button];
             if (label && document.querySelector('#main-menu:not(.hidden)') && !this.inputManager.isGamepadAllowedGlobalAction(index)) {
                 this.showFeedback(index, label, button);
@@ -205,12 +208,12 @@ export class GamepadCursorManager {
 
             // In menu mode, only allow cursor/zoom/confirm/cancel buttons
             if (isMenuOpen) {
-                const allowedInMenu = isEditorOpen
+                const allowedInMenu = isEditorEffective
                     ? [...b.confirmButtons, ...b.cancelButtons, b.endTurn, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight]
                     : [...b.confirmButtons, ...b.cancelButtons, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight];
                 if (!allowedInMenu.includes(button)) return;
 
-                if (!isEditorOpen) {
+                if (!isEditorEffective) {
                     // D-pad → master navigates menu; non-master nudges cursor
                     if ([b.moveUp, b.moveDown, b.moveLeft, b.moveRight].includes(button)) {
                         if (this.inputManager.isGamepadAllowedGlobalAction(index)) {
@@ -283,11 +286,11 @@ export class GamepadCursorManager {
                 this.inputManager.canGamepadControlPlayer(index, currentPlayer.id);
 
             if (b.confirmButtons.includes(button)) {
-                if (isAssignedTurn && !this._inUIFocus.has(index) && !isEditorOpen) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
+                if (isAssignedTurn && !this._inUIFocus.has(index) && !isEditorEffective) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 0, index);
             } else if (b.cancelButtons.includes(button)) {
-                if (isAssignedTurn && !this._inUIFocus.has(index) && !isEditorOpen) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
+                if (isAssignedTurn && !this._inUIFocus.has(index) && !isEditorEffective) this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 2, index);
             } else if (button === b.endTurn) {
-                if (isEditorOpen) {
+                if (isEditorEffective) {
                     // In editor: Y button cycles modes — InputManager.processGamepadButtons already emits 'endTurn',
                     // which map-editor.js boundEndTurnHandler receives. Do not emit again here.
                 } else {
@@ -322,6 +325,7 @@ export class GamepadCursorManager {
 
             const b = this._gb();
             const isEditorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
+            const isEditorEffectiveUp = isEditorOpen && !document.querySelector('.modal:not(.hidden)');
             const isMenuOpen = !!document.querySelector('.modal:not(.hidden), .editor-overlay:not(.hidden)');
             if (isMenuOpen && !b.confirmButtons.includes(button) && !b.cancelButtons.includes(button)) return;
 
@@ -346,14 +350,14 @@ export class GamepadCursorManager {
                     const btn = this._pendingUIClick.get(index);
                     this._pendingUIClick.delete(index);
                     btn.click();
-                } else if (!onRangeSlider && isAssignedTurnUp && !swallow && !this._inUIFocus.has(index) && !isEditorOpen) {
+                } else if (!onRangeSlider && isAssignedTurnUp && !swallow && !this._inUIFocus.has(index) && !isEditorEffectiveUp) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = index;
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 0, index);
                     this.inputManager.lastClickingGamepad = null;
                 }
             } else if (b.cancelButtons.includes(button)) {
-                if (!onRangeSlider && isAssignedTurnUp && !swallow && !this._inUIFocus.has(index) && !isEditorOpen) {
+                if (!onRangeSlider && isAssignedTurnUp && !swallow && !this._inUIFocus.has(index) && !isEditorEffectiveUp) {
                     this.simulateMouseEvent('mouseup', cursor.x, cursor.y, 2, index);
                     this.simulateMouseEvent('click', cursor.x, cursor.y, 2, index);
                 }
@@ -1054,12 +1058,15 @@ export class GamepadCursorManager {
             if (c !== -1) { rowIdx = r; colIdx = c; break; }
         }
 
-        // Nothing focused yet — direction-aware: Up → last element, otherwise → first
+        // Nothing focused yet — prefer [data-gamepad-autofocus], then direction-aware first/last
         if (rowIdx === -1) {
             const lastRow = rows[rows.length - 1];
-            const t = isUp
-                ? lastRow[lastRow.length - 1].el
-                : rows[0][0].el;
+            const flat = rows.flat();
+            const autofocusEl = activeContainer.querySelector('[data-gamepad-autofocus]');
+            const autofocusItem = autofocusEl ? flat.find(item => item.el === autofocusEl) : null;
+            const t = autofocusItem
+                ? autofocusItem.el
+                : isUp ? lastRow[lastRow.length - 1].el : rows[0][0].el;
             if (current) current.classList.remove('gamepad-focused');
             t.focus({ preventScroll: true });
             t.classList.add('gamepad-focused');
