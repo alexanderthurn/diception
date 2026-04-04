@@ -158,9 +158,13 @@ export class Dialog {
                 <li>Map Editor, Cloud Saves, Achievements</li>
                 <li>Remote Play Together</li>
             </ul>`;
+        const openStore = () => {
+            if (window.steam) window.steam.openStore().catch(() => window.open(STEAM_URL, '_blank'));
+            else window.open(STEAM_URL, '_blank');
+        };
         content.querySelector('.steam-store-link').addEventListener('click', e => {
             e.preventDefault();
-            window.open(STEAM_URL, '_blank');
+            openStore();
         });
         return this.show({
             title: 'GET IT NOW',
@@ -169,7 +173,7 @@ export class Dialog {
             buttons: [
                 { text: 'GET ON STEAM', value: 'steam', className: 'tron-btn' },
             ],
-        }).then(val => { if (val === 'steam') window.open(STEAM_URL, '_blank'); });
+        }).then(val => { if (val === 'steam') openStore(); });
     }
 
     /**

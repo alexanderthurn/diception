@@ -104,6 +104,20 @@ fn steam_activate_overlay(state: tauri::State<SteamState>, dialog: String) -> Re
 
 #[cfg(not(target_os = "android"))]
 #[tauri::command]
+fn steam_activate_overlay_to_store(state: tauri::State<SteamState>) -> Result<(), String> {
+    let guard = state.lock().map_err(|e| e.to_string())?;
+    guard.as_ref()
+        .map(|s| {
+            s.client.friends().activate_game_overlay_to_store(
+                steamworks::AppId(4429000),
+                steamworks::OverlayToStoreFlag::None,
+            );
+        })
+        .ok_or_else(|| "Steam not initialized".to_string())
+}
+
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
 fn steam_unlock_achievement(state: tauri::State<SteamState>, achievement_id: String) -> Result<(), String> {
     let guard = state.lock().map_err(|e| e.to_string())?;
     guard.as_ref()
@@ -354,6 +368,7 @@ const STEAM_INIT_SCRIPT: &str = r#"
         isDev:            function()         { return ipc.invoke('steam_is_dev'); },
         quit:             function()         { return ipc.invoke('steam_quit'); },
         activateOverlay:  function(dialog)   { return ipc.invoke('steam_activate_overlay', { dialog: dialog || 'Friends' }); },
+        openStore:        function()         { return ipc.invoke('steam_activate_overlay_to_store'); },
         unlockAchievement:       function(id)    { return ipc.invoke('steam_unlock_achievement', { achievementId: id }); },
         getUnlockedAchievements: function(ids)    { return ipc.invoke('steam_get_unlocked_achievements', { ids: ids }); },
         getStatI32:              function(name)   { return ipc.invoke('steam_get_stat_i32', { statName: name }); },
@@ -458,6 +473,7 @@ pub fn run() {
                 steam_is_dev,
                 steam_quit,
                 steam_activate_overlay,
+                steam_activate_overlay_to_store,
                 open_devtools,
                 steam_unlock_achievement,
                 steam_get_unlocked_achievements,
