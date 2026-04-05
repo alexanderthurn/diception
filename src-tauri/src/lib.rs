@@ -131,8 +131,6 @@ fn steam_unlock_achievement(state: tauri::State<SteamState>, achievement_id: Str
 #[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn open_devtools(window: tauri::WebviewWindow) {
-    // No-op in release builds; only active when debug_assertions are on.
-    #[cfg(debug_assertions)]
     window.open_devtools();
 }
 
@@ -388,7 +386,7 @@ const STEAM_INIT_SCRIPT: &str = r#"
             e.preventDefault();
             e.stopImmediatePropagation();
         }
-        if (e.key === 'F8') {
+        if (e.key === 'F8' && localStorage.getItem('dicy_gfx_fps') === 'on') {
             ipc.invoke('open_devtools').catch(function() {});
         }
     }, true);
