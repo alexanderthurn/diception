@@ -2560,7 +2560,8 @@ void main(void) {
             const ctx = canvas.getContext('2d');
             
             const w = parseInt(document.getElementById('gif-frame-w-input').value) || 600;
-            const h = 60; // Fixed aesthetic height requested
+            const fontSize = parseInt(document.getElementById('gif-frame-title-fs-input').value) || 36;
+            const h = Math.max(60, fontSize + 24); // Dynamically wrap vertically
             const borderPixels = parseFloat(document.getElementById('gif-frame-border-input').value) || 4;
             const text = document.getElementById('gif-frame-title-input').value;
             const bgColor = document.getElementById('gif-frame-color-input').value || '#1a2737';
@@ -2585,7 +2586,6 @@ void main(void) {
 
             if (!text) return;
 
-            const fontSize = parseInt(document.getElementById('gif-frame-title-fs-input').value) || 36;
             const letterSpacing = Math.round(fontSize * 0.2);
             ctx.font = `700 ${fontSize}px Rajdhani`;
 
