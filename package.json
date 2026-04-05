@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
+    "tauri:dev:demo": "tauri dev --config '{\"build\":{\"devUrl\":\"http://localhost:5173?full=false\"}}'",
     "tauri:build:assets": "node scripts/bundle-steam-assets.js",
     "tauri:dev:android": "npm run android:sync-version && tauri android dev",
     "fetch-steam-sdk": "node scripts/fetch-steam-sdk.js",

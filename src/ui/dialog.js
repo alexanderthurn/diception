@@ -159,8 +159,16 @@ export class Dialog {
                 <li>Remote Play Together</li>
             </ul>`;
         const openStore = () => {
-            if (window.steam) window.steam.openStore().catch(() => window.open(STEAM_URL, '_blank'));
-            else window.open(STEAM_URL, '_blank');
+            if (window.steam) {
+                window.steam.openStore().catch(() => {
+                    if (window.openUrl) window.openUrl(STEAM_URL);
+                    else window.open(STEAM_URL, '_blank');
+                });
+            } else if (window.openUrl) {
+                window.openUrl(STEAM_URL);
+            } else {
+                window.open(STEAM_URL, '_blank');
+            }
         };
         content.querySelector('.steam-store-link').addEventListener('click', e => {
             e.preventDefault();
