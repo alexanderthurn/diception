@@ -1,4 +1,5 @@
 import { Assets, Container, Sprite, Text, TextStyle } from 'pixi.js';
+import './ui/pointer-shield.js';
 import { FWNetwork } from './fwnetwork/fwnetwork.js';
 import { Game } from './core/game.js';
 import { Renderer } from './render/renderer.js';
