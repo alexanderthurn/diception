@@ -1,6 +1,8 @@
 /**
  * Reusable TRON-themed Dialog system to replace native alert/confirm
  */
+import { shieldFromPassthrough } from './pointer-shield.js';
+
 export class Dialog {
     static activeOverlay = null;
 
@@ -100,6 +102,7 @@ export class Dialog {
             overlay.appendChild(dialog);
             document.body.appendChild(overlay);
             this.activeOverlay = overlay;
+            shieldFromPassthrough(overlay);
 
             // Accessibility: Focus first button or the OK button
             const firstBtn = actions.querySelector('button');
