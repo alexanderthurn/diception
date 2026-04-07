@@ -1,262 +1,265 @@
 {
-    "id": "tutorial",
-    "owner": "Tutorial",
-    "levels": [
+  "id": "tutorial",
+  "owner": "Tutorial",
+  "levels": [
+    {
+      "type": "scenario",
+      "width": 3,
+      "height": 1,
+      "maxDice": 8,
+      "diceSides": 6,
+      "gameMode": "classic",
+      "turnTimeLimit": 0,
+      "players": [
         {
-            "type": "scenario",
-            "width": 3,
-            "height": 3,
-            "maxDice": 8,
-            "diceSides": 6,
-            "players": [
-                {
-                    "id": 0,
-                    "isBot": false,
-                    "color": 11141375,
-                    "storedDice": 0,
-                    "ai": "easy"
-                },
-                {
-                    "id": 1,
-                    "isBot": true,
-                    "color": 16711765,
-                    "storedDice": 0,
-                    "ai": "easy"
-                }
-            ],
-            "tiles": [
-                {
-                    "x": 0,
-                    "y": 1,
-                    "owner": 0,
-                    "dice": 4
-                },
-                {
-                    "x": 1,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 2,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 1
-                }
-            ]
+          "id": 0,
+          "isBot": false,
+          "color": 11141375,
+          "storedDice": 0,
+          "aiId": null
         },
         {
-            "type": "scenario",
-            "width": 5,
-            "height": 3,
-            "maxDice": 8,
-            "diceSides": 6,
-            "players": [
-                {
-                    "id": 0,
-                    "isBot": false,
-                    "color": 11141375,
-                    "storedDice": 0,
-                    "ai": "easy"
-                },
-                {
-                    "id": 1,
-                    "isBot": true,
-                    "color": 16711765,
-                    "storedDice": 0,
-                    "ai": "easy"
-                }
-            ],
-            "tiles": [
-                {
-                    "x": 0,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 1,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 2,
-                    "y": 1,
-                    "owner": 0,
-                    "dice": 6
-                },
-                {
-                    "x": 3,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 4,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 1
-                }
-            ]
-        },
-        {
-            "type": "scenario",
-            "width": 3,
-            "height": 3,
-            "maxDice": 8,
-            "diceSides": 6,
-            "players": [
-                {
-                    "id": 0,
-                    "isBot": false,
-                    "color": 11141375,
-                    "storedDice": 0,
-                    "ai": "easy"
-                },
-                {
-                    "id": 1,
-                    "isBot": true,
-                    "color": 16711765,
-                    "storedDice": 0,
-                    "ai": "easy"
-                }
-            ],
-            "tiles": [
-                {
-                    "x": 0,
-                    "y": 0,
-                    "owner": 0,
-                    "dice": 6
-                },
-                {
-                    "x": 1,
-                    "y": 0,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 2,
-                    "y": 0,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 0,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 1,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 2,
-                    "y": 1,
-                    "owner": 0,
-                    "dice": 1
-                },
-                {
-                    "x": 0,
-                    "y": 2,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 1,
-                    "y": 2,
-                    "owner": 0,
-                    "dice": 1
-                },
-                {
-                    "x": 2,
-                    "y": 2,
-                    "owner": 0,
-                    "dice": 1
-                }
-            ]
-        },
-        {
-            "type": "scenario",
-            "width": 3,
-            "height": 3,
-            "maxDice": 8,
-            "diceSides": 6,
-            "players": [
-                {
-                    "id": 0,
-                    "isBot": false,
-                    "color": 11141375,
-                    "storedDice": 0,
-                    "ai": "easy"
-                },
-                {
-                    "id": 1,
-                    "isBot": true,
-                    "color": 16711765,
-                    "storedDice": 0,
-                    "ai": "easy"
-                }
-            ],
-            "tiles": [
-                {
-                    "x": 0,
-                    "y": 0,
-                    "owner": 0,
-                    "dice": 6
-                },
-                {
-                    "x": 1,
-                    "y": 0,
-                    "owner": 1,
-                    "dice": 3
-                },
-                {
-                    "x": 2,
-                    "y": 0,
-                    "owner": 1,
-                    "dice": 3
-                },
-                {
-                    "x": 0,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 6
-                },
-                {
-                    "x": 1,
-                    "y": 1,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 2,
-                    "y": 1,
-                    "owner": 0,
-                    "dice": 1
-                },
-                {
-                    "x": 0,
-                    "y": 2,
-                    "owner": 1,
-                    "dice": 1
-                },
-                {
-                    "x": 1,
-                    "y": 2,
-                    "owner": 0,
-                    "dice": 1
-                },
-                {
-                    "x": 2,
-                    "y": 2,
-                    "owner": 0,
-                    "dice": 6
-                }
-            ]
+          "id": 1,
+          "isBot": true,
+          "color": 35071,
+          "storedDice": 0,
+          "aiId": "easy"
         }
-    ]
+      ],
+      "tiles": [
+        {
+          "x": 0,
+          "y": 0,
+          "owner": 0,
+          "dice": 6
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "owner": 1,
+          "dice": 1
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "owner": 1,
+          "dice": 1
+        }
+      ]
+    },
+    {
+      "type": "scenario",
+      "width": 3,
+      "height": 1,
+      "maxDice": 8,
+      "diceSides": 6,
+      "gameMode": "classic",
+      "turnTimeLimit": 0,
+      "players": [
+        {
+          "id": 0,
+          "isBot": false,
+          "color": 11141375,
+          "storedDice": 0,
+          "aiId": null
+        },
+        {
+          "id": 1,
+          "isBot": true,
+          "color": 35071,
+          "storedDice": 0,
+          "aiId": "easy"
+        }
+      ],
+      "tiles": [
+        {
+          "x": 0,
+          "y": 0,
+          "owner": 1,
+          "dice": 4
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "owner": 0,
+          "dice": 8
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "owner": 1,
+          "dice": 4
+        }
+      ]
+    },
+    {
+      "type": "scenario",
+      "width": 3,
+      "height": 3,
+      "maxDice": 8,
+      "diceSides": 6,
+      "gameMode": "classic",
+      "turnTimeLimit": 0,
+      "players": [
+        {
+          "id": 0,
+          "isBot": false,
+          "color": 11141375,
+          "storedDice": 0,
+          "aiId": null
+        },
+        {
+          "id": 1,
+          "isBot": true,
+          "color": 35071,
+          "storedDice": 0,
+          "aiId": "easy"
+        }
+      ],
+      "tiles": [
+        {
+          "x": 1,
+          "y": 0,
+          "owner": 1,
+          "dice": 3
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "owner": 1,
+          "dice": 3
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "owner": 1,
+          "dice": 6
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "owner": 0,
+          "dice": 1
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "owner": 0,
+          "dice": 1
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "owner": 0,
+          "dice": 8
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "owner": 0,
+          "dice": 8
+        }
+      ]
+    },
+    {
+      "type": "scenario",
+      "width": 3,
+      "height": 3,
+      "maxDice": 8,
+      "diceSides": 6,
+      "gameMode": "classic",
+      "turnTimeLimit": 0,
+      "players": [
+        {
+          "id": 0,
+          "isBot": false,
+          "color": 11141375,
+          "storedDice": 0,
+          "aiId": null
+        },
+        {
+          "id": 1,
+          "isBot": true,
+          "color": 35071,
+          "storedDice": 0,
+          "aiId": "easy"
+        },
+        {
+          "id": 2,
+          "isBot": true,
+          "color": 16763904,
+          "storedDice": 0,
+          "aiId": "easy"
+        }
+      ],
+      "tiles": [
+        {
+          "x": 1,
+          "y": 0,
+          "owner": 1,
+          "dice": 3
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "owner": 2,
+          "dice": 3
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "owner": 0,
+          "dice": 6
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "owner": 1,
+          "dice": 3
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "owner": 2,
+          "dice": 3
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "owner": 0,
+          "dice": 6
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "owner": 2,
+          "dice": 3
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "owner": 0,
+          "dice": 6
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "owner": 1,
+          "dice": 3
+        }
+      ]
+    }
+  ]
 }
