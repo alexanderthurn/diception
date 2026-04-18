@@ -173,14 +173,20 @@ export class ScenarioBrowser {
 
     restoreLastSelectedCampaign() {
         const last = localStorage.getItem('dicy_lastCampaign');
+        const lastIsUser = localStorage.getItem('dicy_lastCampaignIsUser') === '1';
         const campaigns = this.campaignManager.listCampaigns();
         let campaign = null;
 
-        if (last) {
-            campaign = this.campaignManager.getCampaign(last);
-            if (!campaign && last === 'Your Campaign') {
+        if (lastIsUser) {
+            // Came from "Your Campaign" — restore directly, never fall through to a builtin
+            const uc = this.campaignManager.userCampaign;
+            if (uc) {
+                campaign = { ...uc, isUserCampaign: true };
+            } else {
                 campaign = { owner: 'Your Campaign', levels: [], isEmpty: true, isUserCampaign: true };
             }
+        } else if (last) {
+            campaign = this.campaignManager.getCampaign(last);
         }
 
         if (!campaign && campaigns.length > 0) {
@@ -198,6 +204,11 @@ export class ScenarioBrowser {
     showLevelGridView(campaign) {
         this.selectedCampaign = campaign;
         if (campaign?.owner) localStorage.setItem('dicy_lastCampaign', campaign.owner);
+        if (campaign?.isUserCampaign) {
+            localStorage.setItem('dicy_lastCampaignIsUser', '1');
+        } else {
+            localStorage.removeItem('dicy_lastCampaignIsUser');
+        }
         if (this.campaignSelectView) this.campaignSelectView.classList.add('hidden');
         if (this.campaignDetailView) this.campaignDetailView.classList.remove('hidden');
         this._connectGridResizeObserver();
@@ -550,8 +561,8 @@ export class ScenarioBrowser {
             this.levelGrid.style.removeProperty('--chapter-color');
         }
 
-        // Use 7 flexible columns
-        const COLS = 7;
+        // Use 6 flexible columns
+        const COLS = 6;
         this.levelGrid.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
         this.levelGrid.style.gridTemplateRows = '';
         this.levelGrid.innerHTML = '';
