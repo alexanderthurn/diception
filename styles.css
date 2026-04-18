@@ -7575,6 +7575,22 @@ details.settings-group[open]>summary.settings-group-header::after {
     transform: scale(0.98);
 }
 
+.tron-btn.btn-coming-soon {
+    opacity: 0.45;
+    cursor: default;
+    pointer-events: auto;
+}
+
+.tron-btn.btn-coming-soon:hover {
+    filter: none;
+    box-shadow: none;
+}
+
+.tron-btn.btn-coming-soon .campaign-btn-sub {
+    font-style: italic;
+    font-weight: normal;
+}
+
 /* Supply animation: all-full fallback — flash the end-turn button */
 @keyframes supply-flash-pulse {
     0% {

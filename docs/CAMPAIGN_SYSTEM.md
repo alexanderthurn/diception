@@ -45,11 +45,11 @@ This document describes the campaign-based map system that replaces individual m
 
 Built-in campaigns in `src/scenarios/` have no `ownerId`, `ownerIdType`, or `pin`. They are read-only.
 
-| File | owner |
-|------|-------|
-| `builtin-campaign.json` | `prebuilt-campaign` |
-| `builtin-maps.json` → campaign | `prebuilt-maps` |
-| `builtin-scenarios.json` → campaign | `prebuilt-scenarios` |
+| File | id / owner |
+|------|------------|
+| `builtin-tutorial.json` | `tutorial` / `Tutorial` |
+| `builtin-chapter1.json` | `chapter1` / `chapter1` |
+| `builtin-chapter4.json` | `chapter4` / `chapter4` (empty placeholder) |
 
 ### 2.3 Level Types
 
@@ -228,11 +228,12 @@ Levels have **no** `name` or `description` fields. Identification is by index (0
 
 ### 8.1 Built-in Conversion
 
-| Source | Target |
-|--------|--------|
-| `builtin-campaign.json` | Keep structure, remove name/description from levels, set owner = "prebuilt-campaign" |
-| `builtin-maps.json` | New campaign, owner = "prebuilt-maps", each map becomes a level (type "map") |
-| `builtin-scenarios.json` | New campaign, owner = "prebuilt-scenarios", each scenario becomes a level (type "scenario") |
+Built-in campaigns have been converted. Levels have no `name`/`description`. Current files:
+
+| File | Contents |
+|------|----------|
+| `builtin-tutorial.json` | 4 scenario levels (intro/tutorial) |
+| `builtin-chapter1.json` | 23 levels merged from original ch1 (2 scenario) + ch2 (17 map) + ch3 (4 scenario) |
 
 ### 8.2 Existing User Data
 
@@ -266,16 +267,15 @@ Levels have **no** `name` or `description` fields. Identification is by index (0
 
 | Path | Purpose |
 |------|---------|
-| `src/scenarios/builtin-campaign.json` | Classic campaign (prebuilt-campaign) |
-| `src/scenarios/builtin-maps.json` | Convert to campaign (prebuilt-maps) |
-| `src/scenarios/builtin-scenarios.json` | Convert to campaign (prebuilt-scenarios) |
-| `src/scenarios/campaign-manager.js` | New: campaign load/save/list |
-| `src/scenarios/user-identity.js` | New: ownerId, ownerIdType, owner |
-| `src/ui/scenario-browser.js` | Refactor: campaign list + level grid |
-| `src/ui/level-grid.js` | New: flexible level grid component |
-| `src/ui/pin-entry.js` | New: 4×4 PIN grid |
-| `src/editor/map-editor.js` | Refactor: remove name/description, campaign context |
-| `backend/list_campaigns.php` | New |
-| `backend/get_campaign.php` | New |
-| `backend/upload_campaign.php` | New |
-| `backend/delete_campaign.php` | New |
+| `src/scenarios/builtin-tutorial.json` | Tutorial campaign (4 scenario levels) |
+| `src/scenarios/builtin-chapter1.json` | Chapter 1 campaign (scenario + map levels, merged from ch1/ch2/ch3) |
+| `src/scenarios/builtin-chapter4.json` | Chapter 4 campaign (empty placeholder) |
+| `src/scenarios/campaign-data.js` | Campaign format validation + grid layout helpers |
+| `src/scenarios/campaign-manager.js` | Campaign load/save/list (built-in + user) |
+| `src/scenarios/user-identity.js` | ownerId, ownerIdType, owner |
+| `src/ui/scenario-browser.js` | Campaign list + level grid UI |
+| `src/editor/map-editor.js` | Map editor (campaign context, no name/description) |
+| `backend/list_campaigns.php` | (planned) |
+| `backend/get_campaign.php` | (planned) |
+| `backend/upload_campaign.php` | (planned) |
+| `backend/delete_campaign.php` | (planned) |

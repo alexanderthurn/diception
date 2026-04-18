@@ -226,7 +226,7 @@ export class ScenarioBrowser {
         this.campaignButtonList.innerHTML = '';
 
         const tutorials = campaigns.filter(c => c.id === 'tutorial' || c.owner === 'Tutorial');
-        const chapters = campaigns.filter(c => c.id !== 'tutorial' && c.owner !== 'Tutorial');
+        const chapters = campaigns.filter(c => c.id !== 'tutorial' && c.owner !== 'Tutorial' && !(c.isBuiltIn && (c.levels?.length ?? 0) === 0));
 
         // Find first unsolved across all campaigns for gamepad autofocus
         const firstUnsolvedCampaignIdx = campaigns.findIndex(c => {
@@ -248,8 +248,10 @@ export class ScenarioBrowser {
             const nodeDiv = document.createElement('div');
             nodeDiv.className = 'campaign-list-node';
 
+            const comingSoon = c.isBuiltIn && levelCount === 0;
+
             const btn = document.createElement('button');
-            btn.className = 'tron-btn large campaign-select-btn' + (locked ? ' btn-locked' : '');
+            btn.className = 'tron-btn large campaign-select-btn' + (locked ? ' btn-locked' : '') + (comingSoon ? ' btn-coming-soon' : '');
             if (!locked && isAutofocus) btn.dataset.gamepadAutofocus = '';
             if (chapterColorIndex >= 0) {
                 const hex = '#' + GAME.HUMAN_COLORS[chapterColorIndex % GAME.HUMAN_COLORS.length].toString(16).padStart(6, '0');
@@ -271,6 +273,8 @@ export class ScenarioBrowser {
             subSpan.className = 'campaign-btn-sub';
             if (locked) {
                 subSpan.textContent = 'Full version only';
+            } else if (comingSoon) {
+                subSpan.textContent = 'Coming soon';
             } else if (levelCount === 0) {
                 subSpan.textContent = '—';
             } else {
@@ -283,6 +287,7 @@ export class ScenarioBrowser {
 
             btn.addEventListener('click', () => {
                 if (locked) { Dialog.showFullVersion(); return; }
+                if (comingSoon) return;
                 const target = (c.isEmpty || (c.levels && c.levels.length === 0 && c.isUserCampaign))
                     ? { ...c, isEmpty: true } : c;
                 this.showLevelGridView(target);
