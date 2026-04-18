@@ -5,11 +5,11 @@
 
 import { validateCampaign, validateLevel, getGridDimensions, sanitizeLevel } from './campaign-data.js';
 import { getCachedIdentity } from './user-identity.js';
-import builtinChapter1 from './builtin-chapter1.json';
-import builtinChapter2 from './builtin-chapter2.json';
-import builtinChapter3 from './builtin-chapter3.json';
-import builtinChapter4 from './builtin-chapter4.json';
-import builtinTutorial from './builtin-tutorial.json';
+import builtinChapter1 from './chapter1.json';
+import builtinChapter2 from './chapter2.json';
+import builtinChapter3 from './chapter3.json';
+import builtinChapter4 from './chapter4.json';
+import builtinTutorial from './tutorial.json';
 
 const STORAGE_KEY = 'dicy_userCampaign';
 
@@ -193,7 +193,7 @@ export class CampaignManager {
     }
 
     /**
-     * Portable campaign JSON (same shape as src/scenarios/builtin-*.json): id, owner, levels only.
+     * Portable campaign JSON (same shape as src/scenarios/chapter*.json): id, owner, levels only.
      * Omits ownerId / ownerIdType. Levels are deep-cloned with name/description stripped.
      */
     getExportPayload() {
