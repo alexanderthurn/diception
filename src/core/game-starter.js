@@ -62,6 +62,47 @@ function resolveTurnLimitsFromLevel(level, config) {
 }
 
 /**
+ * Build a complete gameConfig object from a map/config-type level.
+ * All level fields take precedence over baseConfig. Pass isCampaign=true to lock humanCount to 1.
+ * @param {Object} level
+ * @param {Object} baseConfig - from ConfigManager.getGameConfig()
+ * @param {Object} [opts]
+ * @param {boolean} [opts.isCampaign]
+ * @param {number} [opts.mapSeed]
+ */
+function buildGameConfigFromLevel(level, baseConfig, { isCampaign = false, mapSeed } = {}) {
+    const { attacksPerTurn, secondsPerTurn, secondsPerAttack } = resolveTurnLimitsFromLevel(level, baseConfig);
+    const gameConfig = {
+        humanCount: isCampaign ? 1 : (baseConfig.humanCount ?? 1),
+        botCount: level?.bots ?? baseConfig.botCount,
+        mapWidth: level?.width ?? baseConfig.mapWidth,
+        mapHeight: level?.height ?? baseConfig.mapHeight,
+        maxDice: level?.maxDice ?? baseConfig.maxDice,
+        diceSides: level?.diceSides ?? baseConfig.diceSides,
+        mapStyle: level?.mapStyle ?? baseConfig.mapStyle,
+        gameMode: level?.gameMode ?? baseConfig.gameMode,
+        botAI: level?.botAI ?? baseConfig.botAI,
+        attacksPerTurn,
+        secondsPerTurn,
+        secondsPerAttack,
+        fullBoardRule: baseConfig.fullBoardRule,
+        attackRule: baseConfig.attackRule,
+        supplyRule: baseConfig.supplyRule,
+        playMode: baseConfig.playMode,
+        gameSpeed: baseConfig.gameSpeed,
+        effectsQuality: baseConfig.effectsQuality,
+        mapSeed,
+    };
+    if (level?.type === 'map') {
+        gameConfig.predefinedMap = level;
+        if (level.seed) gameConfig.mapSeed = level.seed >>> 0;
+        if (level.humanStartsFirst === true) gameConfig.humanStartsFirst = true;
+        if (level.startingPlayerId != null) gameConfig.startingPlayerId = level.startingPlayerId;
+    }
+    return gameConfig;
+}
+
+/**
  * GameStarter - Handles game initialization and start logic
  */
 export class GameStarter {
@@ -294,53 +335,12 @@ export class GameStarter {
             if (pendingLevel && pendingLevel.type !== 'map') {
                 applyScenarioBranch(pendingLevel);
             } else {
-                const gameConfig = {
-                    humanCount: config.humanCount,
-                    botCount: config.botCount,
-                    mapWidth: config.mapWidth,
-                    mapHeight: config.mapHeight,
-                    maxDice: config.maxDice,
-                    diceSides: config.diceSides,
-                    mapStyle: config.mapStyle,
-                    gameMode: config.gameMode,
-                    fullBoardRule,
-                    attackRule,
-                    supplyRule,
-                    mapSeed
-                };
-                if (pendingLevel?.type === 'map') {
-                    gameConfig.predefinedMap = pendingLevel;
-                    gameConfig.mapWidth = pendingLevel.width;
-                    gameConfig.mapHeight = pendingLevel.height;
-                    if (pendingLevel.seed) gameConfig.mapSeed = pendingLevel.seed >>> 0;
-                    if (pendingLevel.bots != null) gameConfig.botCount = pendingLevel.bots;
-                    if (pendingLevel.maxDice != null) gameConfig.maxDice = pendingLevel.maxDice;
-                    if (pendingLevel.diceSides != null) gameConfig.diceSides = pendingLevel.diceSides;
-                    const { attacksPerTurn: apMap, secondsPerTurn: secMap, secondsPerAttack: secAtkMap } = resolveTurnLimitsFromLevel(pendingLevel, config);
-                    gameConfig.attacksPerTurn = apMap;
-                    gameConfig.secondsPerTurn = secMap;
-                    gameConfig.secondsPerAttack = secAtkMap;
-                    if (pendingLevel.humanStartsFirst === true) gameConfig.humanStartsFirst = true;
-                    if (pendingLevel.startingPlayerId !== undefined && pendingLevel.startingPlayerId !== null) {
-                        gameConfig.startingPlayerId = pendingLevel.startingPlayerId;
-                    }
-                    this.attacksPerTurn = apMap;
-                    this.secondsPerTurn = secMap;
-                    this.secondsPerAttack = secAtkMap;
-                } else {
-                    gameConfig.attacksPerTurn = config.attacksPerTurn ?? 0;
-                    gameConfig.secondsPerTurn = config.secondsPerTurn ?? 0;
-                    gameConfig.secondsPerAttack = config.secondsPerAttack ?? 0;
-                    this.attacksPerTurn = gameConfig.attacksPerTurn;
-                    this.secondsPerTurn = gameConfig.secondsPerTurn;
-                    this.secondsPerAttack = gameConfig.secondsPerAttack;
-                }
+                const gameConfig = buildGameConfigFromLevel(pendingLevel, config, { isCampaign: true, mapSeed });
                 this.game.startGame(gameConfig);
                 this.attacksPerTurn = this.game.attacksPerTurn;
                 this.secondsPerTurn = this.game.secondsPerTurn;
                 this.secondsPerAttack = this.game.secondsPerAttack;
-                const botAI = (pendingLevel?.type === 'map' && pendingLevel?.botAI) || config.botAI;
-                this.initializePlayerAIs(botAI);
+                this.initializePlayerAIs(gameConfig.botAI);
             }
         } else {
             const gameConfig = {

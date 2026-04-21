@@ -545,8 +545,14 @@ export class ConfigManager {
             el.gameModeInput.value = scenario.gameMode;
         }
 
-        // Update player counts ONLY for Scenarios/Replays, NOT for Maps
-        if (scenario.type !== 'map' && scenario.players && Array.isArray(scenario.players)) {
+        if (scenario.type === 'map') {
+            // Map levels store bots/botAI directly (no players array)
+            if (scenario.bots != null && el.botCountInput) el.botCountInput.value = String(scenario.bots);
+            if (scenario.botAI && el.botAISelect && ['easy', 'medium', 'hard', 'custom'].includes(scenario.botAI)) {
+                el.botAISelect.value = scenario.botAI;
+                this.selectedBotAI = scenario.botAI;
+            }
+        } else if (scenario.players && Array.isArray(scenario.players)) {
             let humans = 0;
             let bots = 0;
             const botAIs = new Set();
