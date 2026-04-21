@@ -20,6 +20,7 @@ import {
     normalizeAttackSecondsUi,
     getActiveModsSummaryFromDom,
     SETUP_MOD_DEFAULTS,
+    SETUP_DEFAULTS,
 } from '../ui/mods-panel-helpers.js';
 
 /** Mounted mods fields in editor settings (see shared-mods-fields.js). */
@@ -415,7 +416,7 @@ export class MapEditor {
             editorModsMaxDiceVal: document.getElementById('editor-mods-max-dice-val'),
             editorModsDiceSides: document.getElementById('editor-mods-dice-sides'),
             editorModsDiceSidesVal: document.getElementById('editor-mods-dice-sides-val'),
-            editorModsMapStyle: document.getElementById('editor-mods-map-style'),
+            editorModsMapStyle: document.getElementById('editor-map-style'),
             editorModsGameMode: document.getElementById('editor-mods-game-mode'),
             editorModsPlayMode: document.getElementById('editor-mods-play-mode'),
             editorModsTurnLimit: document.getElementById('editor-mods-turn-time-limit'),
@@ -1738,7 +1739,7 @@ export class MapEditor {
 
     syncEditorModsFromStateAndStorage() {
         const el = this.elements;
-        if (el.editorModsMapStyle) el.editorModsMapStyle.value = localStorage.getItem('dicy_mapStyle') || SETUP_MOD_DEFAULTS.mapStyle;
+        if (el.editorModsMapStyle) el.editorModsMapStyle.value = localStorage.getItem('dicy_mapStyle') || SETUP_DEFAULTS.mapStyle;
         if (el.editorModsGameMode) el.editorModsGameMode.value = this.state.gameMode || SETUP_MOD_DEFAULTS.gameMode;
         if (el.editorModsMaxDice) {
             el.editorModsMaxDice.value = String(this.state.maxDice);

@@ -225,6 +225,7 @@ export class ConfigManager {
         const el = this.elements;
         return (
             String(el.mapSizeInput?.value)    === SETUP_DEFAULTS.mapSize     &&
+            (el.mapStyleInput?.value || SETUP_DEFAULTS.mapStyle) === SETUP_DEFAULTS.mapStyle &&
             String(el.humanCountInput?.value) === SETUP_DEFAULTS.humanCount  &&
             String(el.botCountInput?.value)   === SETUP_DEFAULTS.botCount    &&
             (el.botAISelect?.value || SETUP_DEFAULTS.botAI) === SETUP_DEFAULTS.botAI
@@ -304,6 +305,7 @@ export class ConfigManager {
         applyModsDefaultsForPrefix('');
         const el = this.elements;
         if (el.mapSizeInput)    { el.mapSizeInput.value = SETUP_DEFAULTS.mapSize; this.updateMapSizeDisplay(); }
+        if (el.mapStyleInput)   { el.mapStyleInput.value = SETUP_DEFAULTS.mapStyle; localStorage.setItem('dicy_mapStyle', SETUP_DEFAULTS.mapStyle); }
         if (el.humanCountInput) { el.humanCountInput.value = SETUP_DEFAULTS.humanCount; }
         if (el.botCountInput)   { el.botCountInput.value = SETUP_DEFAULTS.botCount; }
         if (el.botAISelect)     { el.botAISelect.value = SETUP_DEFAULTS.botAI; this.selectedBotAI = SETUP_DEFAULTS.botAI; }

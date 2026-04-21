@@ -139,29 +139,14 @@
 
         <template id="shared-mods-fields-template">
             <div class="shared-mods-fields-root">
-                <div class="control-row style-mode-row">
-                    <div class="control-group half" data-mods-group="map-style-group">
-                        <label>Map Style</label>
-                        <select data-mods-el="map-style">
-                            <option value="random" selected>Random</option>
-                            <option value="full">Full Grid</option>
-                            <option value="continents">Continents</option>
-                            <option value="caves">Caves</option>
-                            <option value="islands">Islands</option>
-                            <option value="maze">Maze</option>
-                            <option value="tunnels">Tunnels</option>
-                            <option value="swiss">Swiss Cheese</option>
-                        </select>
-                    </div>
-                    <div class="control-group half" data-mods-group="setup-game-mode-group">
-                        <label>Start Mode</label>
-                        <select data-mods-el="game-mode">
-                            <option value="classic" selected>Classic</option>
-                            <option value="fair">Fair Start</option>
-                            <option value="madness">Full Madness</option>
-                            <option value="2of2">2 of 2</option>
-                        </select>
-                    </div>
+                <div class="control-group" data-mods-group="setup-game-mode-group">
+                    <label>Start Mode</label>
+                    <select data-mods-el="game-mode">
+                        <option value="classic" selected>Classic</option>
+                        <option value="fair">Fair Start</option>
+                        <option value="madness">Full Madness</option>
+                        <option value="2of2">2 of 2</option>
+                    </select>
                 </div>
 
                 <div class="control-row">
@@ -294,11 +279,26 @@
             </div>
             <div class="setup-columns">
                 <div class="setup-main-col">
-                    <div class="control-group" id="setup-map-size-group">
-                        <label>Map Size</label>
-                        <div class="map-size-row">
-                            <input type="range" id="map-size" min="1" max="10" value="2">
-                            <span id="map-size-val">4x4</span>
+                    <div class="control-row">
+                        <div class="control-group half" id="setup-map-size-group">
+                            <label>Map Size</label>
+                            <div class="map-size-row">
+                                <input type="range" id="map-size" min="1" max="10" value="2">
+                                <span id="map-size-val">4x4</span>
+                            </div>
+                        </div>
+                        <div class="control-group quarter" id="map-style-group">
+                            <label>Style</label>
+                            <select id="map-style">
+                                <option value="random" selected>Random</option>
+                                <option value="full">Full Grid</option>
+                                <option value="continents">Continents</option>
+                                <option value="caves">Caves</option>
+                                <option value="islands">Islands</option>
+                                <option value="maze">Maze</option>
+                                <option value="tunnels">Tunnels</option>
+                                <option value="swiss">Swiss Cheese</option>
+                            </select>
                         </div>
                     </div>
 
@@ -1161,7 +1161,8 @@
             <div class="editor-bottom-bar">
                 <!-- Assign / Dice tabs — only visible in Scenario mode -->
                 <div class="editor-mode-tabs" id="editor-scenario-tabs">
-                    <button class="editor-tab active" data-mode="assign"><span class="sprite-icon icon-assign"></span> Assign
+                    <button class="editor-tab active" data-mode="assign"><span class="sprite-icon icon-assign"></span>
+                        Assign
                         <span id="editor-assign-hint" class="input-hint keyboard">R</span></button>
                     <button class="editor-tab" data-mode="dice"><span class="dice-icon-sprite mini"
                             style="background-color: #888;"></span> Dice <span id="editor-dice-hint"
@@ -1181,11 +1182,26 @@
                 <div id="editor-map-scenario-section">
                     <!-- Map & Scenario: shared Bots, Bot AI, Map Size + color legend -->
                     <div id="editor-shared-players-section">
-                        <div class="control-group">
-                            <label>Map Size</label>
-                            <div class="range-row">
-                                <input type="range" id="editor-map-size" min="1" max="10" value="4">
-                                <span id="editor-map-size-val">6×6</span>
+                        <div class="control-row">
+                            <div class="control-group">
+                                <label>Map Size</label>
+                                <div class="range-row">
+                                    <input type="range" id="editor-map-size" min="1" max="10" value="4">
+                                    <span id="editor-map-size-val">6×6</span>
+                                </div>
+                            </div>
+                            <div class="control-group" id="editor-map-style-group">
+                                <label>Map Style</label>
+                                <select id="editor-map-style">
+                                    <option value="random" selected>Random</option>
+                                    <option value="full">Full Grid</option>
+                                    <option value="continents">Continents</option>
+                                    <option value="caves">Caves</option>
+                                    <option value="islands">Islands</option>
+                                    <option value="maze">Maze</option>
+                                    <option value="tunnels">Tunnels</option>
+                                    <option value="swiss">Swiss Cheese</option>
+                                </select>
                             </div>
                         </div>
                         <div class="control-row">
@@ -1237,8 +1253,10 @@
                         Random</button>
                     <div class="editor-seed-row">
                         <label class="editor-seed-label">Seed</label>
-                        <input type="number" id="editor-seed-input" class="seed-input" min="0" max="4294967295" step="1" placeholder="0">
-                        <button type="button" id="editor-seed-reroll" class="tron-btn editor-seed-reroll-btn" title="New random seed">⟳</button>
+                        <input type="number" id="editor-seed-input" class="seed-input" min="0" max="4294967295" step="1"
+                            placeholder="0">
+                        <button type="button" id="editor-seed-reroll" class="tron-btn editor-seed-reroll-btn"
+                            title="New random seed">⟳</button>
                     </div>
                     <div class="editor-quick-actions-row editor-scenario-only">
                         <button id="editor-random-owners-btn" class="tron-btn small">Random Owners</button>
@@ -1250,7 +1268,8 @@
                     <div class="editor-actions-row">
                         <button id="editor-test-btn" class="tron-btn"><span class="sprite-icon icon-play"></span>
                             Test</button>
-                        <button id="editor-save-btn" class="tron-btn primary"><span class="sprite-icon icon-save"></span>
+                        <button id="editor-save-btn" class="tron-btn primary"><span
+                                class="sprite-icon icon-save"></span>
                             Save</button>
                     </div>
                 </div>

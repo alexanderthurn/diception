@@ -653,6 +653,7 @@ async function init() {
         const toggle = (groupId, differs) =>
             document.getElementById(groupId)?.classList.toggle('setup-mod-nondefault', differs);
         toggle('setup-map-size-group', document.getElementById('map-size')?.value       !== SETUP_DEFAULTS.mapSize);
+        toggle('map-style-group',      document.getElementById('map-style')?.value      !== SETUP_DEFAULTS.mapStyle);
         toggle('setup-humans-group',   document.getElementById('human-count')?.value    !== SETUP_DEFAULTS.humanCount);
         toggle('setup-bots-group',     document.getElementById('bot-count')?.value      !== SETUP_DEFAULTS.botCount);
         toggle('setup-bot-ai-group',   document.getElementById('bot-ai-select')?.value  !== SETUP_DEFAULTS.botAI);
@@ -1821,6 +1822,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         const mkLock = () => Object.assign(document.createElement('span'), { className: 'sprite-icon icon-lock demo-field-lock' });
         [
             document.querySelector('#setup-map-size-group > label'),
+            document.querySelector('#map-style-group > label'),
             document.querySelector('#setup-humans-group > label'),
             document.querySelector('#setup-bots-group > label'),
             document.querySelector('#setup-bot-ai-group > label'),

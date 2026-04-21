@@ -1117,7 +1117,8 @@ input[type="range"] {
     padding: 0px;
     font-family: inherit;
     border-radius: 0;
-    height: 40px;
+    height: 32px;
+    margin: 0px;
     /* Larger hitbox */
     cursor: pointer;
 }
@@ -2557,6 +2558,14 @@ select {
     right: 0;
     top: 50%;
     transform: translateY(-50%);
+}
+
+.close-btn.modal-reset-btn {
+    color: #ff8800;
+}
+
+.close-btn.modal-reset-btn:hover {
+    color: #ffaa44;
 }
 
 .global-back-btn {

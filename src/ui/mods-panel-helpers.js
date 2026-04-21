@@ -37,7 +37,6 @@ export const SETUP_DEFAULTS = {
 
 /** Alias for the mods subset — used by reset/highlight helpers. */
 export const SETUP_MOD_DEFAULTS = {
-    mapStyle:       SETUP_DEFAULTS.mapStyle,
     gameMode:       SETUP_DEFAULTS.gameMode,
     maxDice:        SETUP_DEFAULTS.maxDice,
     diceSides:      SETUP_DEFAULTS.diceSides,
@@ -76,7 +75,6 @@ export function areModsAtDefaultsForPrefix(idPrefix) {
     const secAtk = normalizeAttackSecondsUi(el(idPrefix, 'attack-seconds-limit')?.value ?? '0');
     const pm = el(idPrefix, 'play-mode')?.value ?? localStorage.getItem('dicy_playMode') ?? d.playMode;
     return (
-        el(idPrefix, 'map-style')?.value === d.mapStyle &&
         el(idPrefix, 'game-mode')?.value === d.gameMode &&
         String(el(idPrefix, 'max-dice')?.value) === d.maxDice &&
         String(el(idPrefix, 'dice-sides')?.value) === d.diceSides &&
@@ -101,7 +99,6 @@ export function syncModsFieldHighlightsForPrefix(idPrefix) {
 
     /** @type {Array<[string, () => boolean]>} */
     const rows = [
-        ['map-style-group', () => el(idPrefix, 'map-style')?.value !== d.mapStyle],
         ['setup-game-mode-group', () => el(idPrefix, 'game-mode')?.value !== d.gameMode],
         ['setup-tournament-games-group', () => String(el(idPrefix, 'tournament-games')?.value) !== d.tournamentGames],
         ['setup-max-dice-group', () => String(el(idPrefix, 'max-dice')?.value) !== d.maxDice],
@@ -132,7 +129,6 @@ export function applyModsDefaultsForPrefix(idPrefix) {
         if (storageKey) localStorage.setItem(storageKey, value);
     };
 
-    setSelect('map-style', d.mapStyle, 'dicy_mapStyle');
     setSelect('game-mode', d.gameMode, 'dicy_gameMode');
 
     const maxDiceEl = el(idPrefix, 'max-dice');
@@ -172,8 +168,6 @@ export function getActiveModsSummary(config) {
     const d = SETUP_MOD_DEFAULTS;
     const parts = [];
 
-    if (config.mapStyle && config.mapStyle !== d.mapStyle)
-        parts.push(MAP_STYLE_LABELS[config.mapStyle] || config.mapStyle);
     if (config.gameMode && config.gameMode !== d.gameMode)
         parts.push(GAME_MODE_LABELS[config.gameMode] || config.gameMode);
     if (config.maxDice != null && String(config.maxDice) !== d.maxDice)
@@ -212,7 +206,6 @@ export function getActiveModsSummaryFromDom(idPrefix, seedInputId) {
     const seedEl = seedInputId ? document.getElementById(seedInputId) : null;
     const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
     return getActiveModsSummary({
-        mapStyle:       el(idPrefix, 'map-style')?.value,
         gameMode:       el(idPrefix, 'game-mode')?.value,
         maxDice:        el(idPrefix, 'max-dice')?.value,
         diceSides:      el(idPrefix, 'dice-sides')?.value,
