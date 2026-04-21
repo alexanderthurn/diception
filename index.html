@@ -1182,7 +1182,7 @@
                 <div id="editor-map-scenario-section">
                     <!-- Map & Scenario: shared Bots, Bot AI, Map Size + color legend -->
                     <div id="editor-shared-players-section">
-                        <div class="control-row">
+                        <div class="control-row hidden">
                             <div class="control-group">
                                 <label>Map Size</label>
                                 <div class="range-row">
@@ -1247,11 +1247,11 @@
                 </div>
 
                 <div class="editor-quick-actions" id="editor-quick-actions">
-                    <button id="editor-clear-btn" class="tron-btn small">Clear</button>
-                    <button id="editor-fill-btn" class="tron-btn small">Fill</button>
-                    <button id="editor-random-btn" class="tron-btn small"><span class="sprite-icon icon-dice"></span>
+                    <button id="editor-clear-btn" class="tron-btn small hidden">Clear</button>
+                    <button id="editor-fill-btn" class="tron-btn small hidden">Fill</button>
+                    <button id="editor-random-btn" class="tron-btn small hidden"><span class="sprite-icon icon-dice"></span>
                         Random</button>
-                    <div class="editor-seed-row">
+                    <div class="editor-seed-row hidden">
                         <label class="editor-seed-label">Seed</label>
                         <input type="number" id="editor-seed-input" class="seed-input" min="0" max="4294967295" step="1"
                             placeholder="0">
