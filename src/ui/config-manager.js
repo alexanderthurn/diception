@@ -3,6 +3,7 @@
  * Manages localStorage settings, map size presets, and config sliders
  */
 import { GAME } from '../core/constants.js';
+import { isFullVersion } from '../scenarios/user-identity.js';
 import {
     normalizeAttackSecondsUi,
     areModsAtDefaultsForPrefix,
@@ -239,7 +240,10 @@ export class ConfigManager {
     /** Show/hide the header reset button based on whether ANY setting differs from defaults. */
     syncSetupResetBtn() {
         const resetBtn = document.getElementById('setup-reset-all-btn');
-        if (resetBtn) resetBtn.classList.toggle('hidden', this.isSetupAtFreeDefaults());
+        if (!resetBtn) return;
+        resetBtn.classList.toggle('hidden', this.isSetupAtFreeDefaults());
+        const orange = !isFullVersion() || !this.areModsAtDefaults();
+        resetBtn.classList.toggle('modal-reset-btn--orange', orange);
     }
 
     /** Highlight each Mods control that differs from SETUP_MOD_DEFAULTS. */
