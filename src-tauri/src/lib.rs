@@ -5,9 +5,6 @@ use std::sync::Mutex;
 
 use tauri::Manager;
 
-#[cfg(not(target_os = "android"))]
-use serde::Serialize;
-
 // ─── Steam state (desktop only) ───────────────────────────────────────────────
 
 /// Steam state kept alive for the lifetime of the app (identity, achievements, etc.).
@@ -25,32 +22,6 @@ struct SteamApp {
 
 #[cfg(not(target_os = "android"))]
 type SteamState = Mutex<Option<SteamApp>>;
-
-// ─── Gilrs state (desktop only) ───────────────────────────────────────────────
-
-/// gilrs gamepad polling state.  Initialised lazily on first poll.
-#[cfg(not(target_os = "android"))]
-struct GilrsState {
-    gilrs: Mutex<Option<gilrs::Gilrs>>,
-}
-
-/// Serialisable per-gamepad snapshot returned to JS.
-#[cfg(not(target_os = "android"))]
-#[derive(Serialize)]
-struct GamepadSnapshot {
-    /// Opaque numeric id (gilrs GamepadId as usize)
-    id: usize,
-    /// Human-readable name from the driver
-    name: String,
-    /// 16 bools in W3C Standard Gamepad order (indices 0-15)
-    buttons: Vec<bool>,
-    /// 4 floats: LeftStickX, LeftStickY, RightStickX, RightStickY
-    axes: [f32; 4],
-    /// W3C button indices that fired a ButtonPressed event since the last poll.
-    /// Guarantees detection of brief presses even if the button was already
-    /// released by the time this snapshot is read.
-    pressed_events: Vec<usize>,
-}
 
 // ─── Steam commands (desktop only) ────────────────────────────────────────────
 
@@ -192,127 +163,6 @@ fn steam_clear_achievement(state: tauri::State<SteamState>, achievement_id: Stri
         .ok_or_else(|| "Steam not initialized".to_string())
 }
 
-// ─── Gilrs commands (desktop only) ────────────────────────────────────────────
-
-/// Map a gilrs Button to W3C Standard Gamepad button index (0-15).
-#[cfg(not(target_os = "android"))]
-fn gilrs_button_to_w3c(btn: gilrs::Button) -> Option<usize> {
-    use gilrs::Button::*;
-    match btn {
-        South        => Some(0),
-        East         => Some(1),
-        West         => Some(2),
-        North        => Some(3),
-        LeftTrigger  => Some(4),
-        RightTrigger => Some(5),
-        LeftTrigger2 => Some(6),
-        RightTrigger2=> Some(7),
-        Select       => Some(8),
-        Start        => Some(9),
-        LeftThumb    => Some(10),
-        RightThumb   => Some(11),
-        DPadUp       => Some(12),
-        DPadDown     => Some(13),
-        DPadLeft     => Some(14),
-        DPadRight    => Some(15),
-        _            => None,
-    }
-}
-
-/// All gilrs buttons we care about, in probe order.
-#[cfg(not(target_os = "android"))]
-const GILRS_BUTTONS: [gilrs::Button; 16] = [
-    gilrs::Button::South,
-    gilrs::Button::East,
-    gilrs::Button::West,
-    gilrs::Button::North,
-    gilrs::Button::LeftTrigger,
-    gilrs::Button::RightTrigger,
-    gilrs::Button::LeftTrigger2,
-    gilrs::Button::RightTrigger2,
-    gilrs::Button::Select,
-    gilrs::Button::Start,
-    gilrs::Button::LeftThumb,
-    gilrs::Button::RightThumb,
-    gilrs::Button::DPadUp,
-    gilrs::Button::DPadDown,
-    gilrs::Button::DPadLeft,
-    gilrs::Button::DPadRight,
-];
-
-/// Poll all connected gamepads via gilrs.
-/// Returns an array of GamepadSnapshot objects compatible with W3C Standard Gamepad layout.
-#[cfg(not(target_os = "android"))]
-#[tauri::command]
-fn gilrs_poll(state: tauri::State<GilrsState>) -> Result<Vec<GamepadSnapshot>, String> {
-    let mut guard = state.gilrs.lock().map_err(|e| e.to_string())?;
-
-    // Lazy-init gilrs on first call
-    if guard.is_none() {
-        match gilrs::Gilrs::new() {
-            Ok(g) => {
-                eprintln!("[gilrs] Initialized");
-                *guard = Some(g);
-            }
-            Err(e) => return Err(format!("gilrs init failed: {:?}", e)),
-        }
-    }
-
-    let gilrs = guard.as_mut().unwrap();
-
-    // Drain events, collecting ButtonPressed events so brief taps are never lost.
-    // If we only drained and then read is_pressed(), a button pressed-and-released
-    // between two polls would be completely invisible to JS.
-    let mut pressed_events_map: std::collections::HashMap<usize, Vec<usize>> =
-        std::collections::HashMap::new();
-    while let Some(event) = gilrs.next_event() {
-        if let gilrs::EventType::ButtonPressed(btn, _) = event.event {
-            if let Some(idx) = gilrs_button_to_w3c(btn) {
-                let pad_id: usize = event.id.into();
-                pressed_events_map.entry(pad_id).or_default().push(idx);
-            }
-        }
-    }
-
-    let mut result = Vec::new();
-
-    for (id, gamepad) in gilrs.gamepads() {
-        if !gamepad.is_connected() {
-            continue;
-        }
-
-        // Build 16-element button array in W3C order
-        let mut buttons = vec![false; 16];
-        for &btn in &GILRS_BUTTONS {
-            if let Some(idx) = gilrs_button_to_w3c(btn) {
-                buttons[idx] = gamepad.is_pressed(btn);
-            }
-        }
-
-        // Read stick axes
-        use gilrs::Axis;
-        let axes = [
-            gamepad.value(Axis::LeftStickX),
-            -gamepad.value(Axis::LeftStickY),   // gilrs: +up, W3C: +down
-            gamepad.value(Axis::RightStickX),
-            -gamepad.value(Axis::RightStickY),  // gilrs: +up, W3C: +down
-        ];
-
-        let pad_id: usize = id.into();
-        let pressed_events = pressed_events_map.remove(&pad_id).unwrap_or_default();
-
-        result.push(GamepadSnapshot {
-            id: pad_id,
-            name: gamepad.name().to_string(),
-            buttons,
-            axes,
-            pressed_events,
-        });
-    }
-
-    Ok(result)
-}
-
 // ─── Storage helpers (all platforms) ─────────────────────────────────────────
 
 const SAVE_FILENAME: &str = "diception_save.sav";
@@ -405,17 +255,6 @@ const STEAM_INIT_SCRIPT: &str = r#"
 })();
 "#;
 
-#[cfg(not(target_os = "android"))]
-const GILRS_INIT_SCRIPT: &str = r#"
-(function() {
-    var ipc = window.__TAURI_INTERNALS__;
-    if (!ipc) return;
-    window.gilrs = {
-        poll: function() { return ipc.invoke('gilrs_poll'); },
-    };
-})();
-"#;
-
 const COMMON_INIT_SCRIPT: &str = r#"
 (function() {
     var ipc = window.__TAURI_INTERNALS__;
@@ -479,11 +318,9 @@ pub fn run() {
         };
 
         let steam_state: SteamState = Mutex::new(steam_app);
-        let gilrs_state = GilrsState { gilrs: Mutex::new(None) };
 
         builder = builder
             .manage(steam_state)
-            .manage(gilrs_state)
             .invoke_handler(tauri::generate_handler![
                 steam_get_user_name,
                 steam_get_steam_id,
@@ -498,7 +335,6 @@ pub fn run() {
                 steam_get_stat_i32,
                 steam_set_stat,
                 steam_clear_achievement,
-                gilrs_poll,
                 storage_read_all,
                 storage_write_all,
                 storage_get_path,
@@ -514,13 +350,6 @@ pub fn run() {
                     .build(),
             );
         }
-
-        // gilrs is always available on desktop (independent of Steam)
-        builder = builder.plugin(
-            tauri::plugin::Builder::<tauri::Wry, ()>::new("gilrs-bridge")
-                .js_init_script(GILRS_INIT_SCRIPT.to_string())
-                .build(),
-        );
 
         // Common init: always inject window.openUrl
         builder = builder.plugin(

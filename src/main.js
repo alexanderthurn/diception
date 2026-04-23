@@ -1667,10 +1667,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
         {
             const BACKEND_LABELS = {
-                'auto':            'GAMEPAD: NATIVE',
-                'navigator':       'GAMEPAD: BROWSER',
-                'fwnetwork':       'GAMEPAD: FW-NETWORK',
-                'gilrs+fwnetwork': 'GAMEPAD: NATIVE+FW',
+                'navigator': 'GAMEPAD: BROWSER',
+                'fwnetwork': 'GAMEPAD: FW-NETWORK',
             };
             const currentBackend = inputManager.backend || 'auto';
             const label = BACKEND_LABELS[currentBackend] ?? 'GAMEPAD: BROWSER';

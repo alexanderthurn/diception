@@ -111,8 +111,7 @@ jobs:
             libxdo-dev \
             libssl-dev \
             libayatana-appindicator3-dev \
-            librsvg2-dev \
-            libudev-dev
+            librsvg2-dev
 
       - run: npm ci
 
