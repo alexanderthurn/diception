@@ -92,7 +92,7 @@ jobs:
 
   # ─── Deploy Linux to Steam (manual only) ─────────────────────────────────────
   deploy-steam:
-    needs: [build-linux]
+    needs: [build-win, build-mac, build-linux]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -101,12 +101,14 @@ jobs:
         with:
           path: steam-builds
 
-      - name: Publish Linux to Steam
+      - name: Publish to Steam (electron branch)
         uses: game-ci/steam-deploy@v3
         with:
           username: ${{ secrets.STEAM_USERNAME }}
           configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
           appId: ${{ secrets.STEAM_APP_ID }}
-          buildDescription: "Electron Linux (GitHub Action)"
-          releaseBranch: ${{ secrets.STEAM_RELEASE_BRANCH }}
+          buildDescription: "Electron Version (GitHub Action)"
+          releaseBranch: "electron"
+          depot1Path: "steam-builds/win-electron"
+          depot2Path: "steam-builds/mac-electron"
           depot3Path: "steam-builds/linux-electron"
