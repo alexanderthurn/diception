@@ -41,6 +41,7 @@ function createWindow() {
         width: 800,
         height: 600,
         frame: true,
+        icon: path.join(__dirname, '../src-tauri/icons/128x128.png'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -55,7 +56,13 @@ function createWindow() {
     mainWin.on('closed', () => { mainWin = null; });
 }
 
-app.whenReady().then(() => { initSteam(); createWindow(); });
+app.whenReady().then(() => {
+    if (process.platform === 'darwin') {
+        app.dock.setIcon(path.join(__dirname, '../src-tauri/icons/icon.png'));
+    }
+    initSteam();
+    createWindow();
+});
 app.on('window-all-closed', () => app.quit());
 
 // ── IPC: Steam ────────────────────────────────────────────────────────────────

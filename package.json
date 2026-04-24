@@ -30,6 +30,7 @@
   "build": {
     "appId": "com.feuerware.diception",
     "productName": "DICEPTION",
+    "icon": "src-tauri/icons/icon",
     "files": [
       "dist/**",
       "electron/**",
