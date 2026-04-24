@@ -23,9 +23,9 @@
     "android:sync-version": "node -e \"const fs=require('fs');const v=require('./package.json').version;const p='src-tauri/gen/android/app/build.gradle.kts';fs.writeFileSync(p,fs.readFileSync(p,'utf8').replace(/versionName = \\\"[^\\\"]+\\\"/,'versionName = \\\"'+v+'\\\"'))\"",
     "generate-icons": "node scripts/generate-web-icons.js && npm run tauri icon ./scripts/gfx/icons/icon.png",
     "electron:dev": "npm run build && electron electron/main.js",
-    "electron:build:mac": "npm run build && electron-builder --mac dir --config.directories.output=dist-tauri/electron-mac",
-    "electron:build:win": "npm run build && electron-builder --win dir --config.directories.output=dist-tauri/electron-win",
-    "electron:build:linux": "npm run build && electron-builder --linux dir --config.directories.output=dist-tauri/electron-linux"
+    "electron:build:mac": "npm run build && electron-builder --mac dir --config.directories.output=dist-tauri/electron-mac && node scripts/electron-postbuild.js mac",
+    "electron:build:win": "npm run build && electron-builder --win dir --config.directories.output=dist-tauri/electron-win && node scripts/electron-postbuild.js win",
+    "electron:build:linux": "npm run build && electron-builder --linux dir --config.directories.output=dist-tauri/electron-linux && node scripts/electron-postbuild.js linux"
   },
   "build": {
     "appId": "com.feuerware.diception",
@@ -39,11 +39,21 @@
     "asarUnpack": [
       "node_modules/steamworks.js/**"
     ],
-    "extraFiles": [
-      { "from": "src-tauri/resources/libsteam_api.dylib", "to": ".", "filter": ["**/*"] },
-      { "from": "src-tauri/resources/libsteam_api.so",    "to": ".", "filter": ["**/*"] },
-      { "from": "src-tauri/resources/steam_api64.dll",    "to": ".", "filter": ["**/*"] }
-    ]
+    "mac": {
+      "extraFiles": [
+        { "from": "src-tauri/resources/libsteam_api.dylib", "to": "." }
+      ]
+    },
+    "linux": {
+      "extraFiles": [
+        { "from": "src-tauri/resources/libsteam_api.so", "to": "." }
+      ]
+    },
+    "win": {
+      "extraFiles": [
+        { "from": "src-tauri/resources/steam_api64.dll", "to": "." }
+      ]
+    }
   },
   "keywords": [],
   "author": "",
