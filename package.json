@@ -3,6 +3,7 @@
   "version": "1.9.18",
   "description": "A fast-paced, neon-styled dice strategy game. Inspired by the tactical depth of DiceWars and Kdice, Diception delivers quick turns and intense territory conquest.",
   "type": "module",
+  "main": "electron/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite --host",
@@ -20,7 +21,28 @@
     "tauri:build:android": "npm run android:sync-version && tauri android build && mkdir -p dist-tauri/android && cp src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk dist-tauri/android/DICEPTION.apk",
     "android:init": "tauri android init && tauri icon ./scripts/gfx/icons/icon.png",
     "android:sync-version": "node -e \"const fs=require('fs');const v=require('./package.json').version;const p='src-tauri/gen/android/app/build.gradle.kts';fs.writeFileSync(p,fs.readFileSync(p,'utf8').replace(/versionName = \\\"[^\\\"]+\\\"/,'versionName = \\\"'+v+'\\\"'))\"",
-    "generate-icons": "node scripts/generate-web-icons.js && npm run tauri icon ./scripts/gfx/icons/icon.png"
+    "generate-icons": "node scripts/generate-web-icons.js && npm run tauri icon ./scripts/gfx/icons/icon.png",
+    "electron:dev": "npm run build && electron electron/main.js",
+    "electron:build:mac": "npm run build && electron-builder --mac dir --config.directories.output=dist-tauri/electron-mac",
+    "electron:build:win": "npm run build && electron-builder --win dir --config.directories.output=dist-tauri/electron-win",
+    "electron:build:linux": "npm run build && electron-builder --linux dir --config.directories.output=dist-tauri/electron-linux"
+  },
+  "build": {
+    "appId": "com.feuerware.diception",
+    "productName": "DICEPTION",
+    "files": [
+      "dist/**",
+      "electron/**",
+      "steam/game_actions_X.vdf"
+    ],
+    "asarUnpack": [
+      "node_modules/steamworks.js/**"
+    ],
+    "extraFiles": [
+      { "from": "src-tauri/resources/libsteam_api.dylib", "to": ".", "filter": ["**/*"] },
+      { "from": "src-tauri/resources/libsteam_api.so",    "to": ".", "filter": ["**/*"] },
+      { "from": "src-tauri/resources/steam_api64.dll",    "to": ".", "filter": ["**/*"] }
+    ]
   },
   "keywords": [],
   "author": "",
@@ -31,11 +53,14 @@
     "jsqr": "^1.4.0",
     "peerjs": "^1.5.5",
     "pixi.js": "^8.17.0",
-    "qrious": "^4.0.2"
+    "qrious": "^4.0.2",
+    "steamworks.js": "^0.4.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.10.0",
     "archiver": "^7.0.1",
+    "electron": "^41.3.0",
+    "electron-builder": "^26.8.1",
     "png-to-ico": "^3.0.1",
     "sharp": "^0.34.5",
     "vite": "^6.4.1"

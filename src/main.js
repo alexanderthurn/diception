@@ -181,8 +181,8 @@ async function init() {
     };
     wrapLetters('.tron-title');
 
-    // App Integration (Tauri)
-    if (isTauriContext()) {
+    // App Integration (desktop)
+    if (isDesktopContext()) {
         // Show and wire all quit buttons
         const handleQuit = async () => {
             if (await Dialog.confirm('Are you sure you want to exit the game?', 'EXIT GAME?')) {
@@ -193,8 +193,8 @@ async function init() {
                     window.android.quit();
                 } else if (isTauriContext()) {
                     try {
-                        const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                        await getCurrentWindow().close();
+                        const { getWindow } = await import('./native/win.js');
+                        await (await getWindow()).close();
                     } catch (e) {
                         console.error('Tauri exit failed:', e);
                         window.close();
@@ -881,11 +881,8 @@ async function init() {
     gameLog.setPlayerNameGetter(getPlayerName);
     gameLog.setDiceDataURL(TileRenderer.diceDataURL);
 
-    if (isTauriContext() && isSteamContext()) {
-        import('@tauri-apps/api/event')
-            .then(({ listen }) =>
-                listen('steam-remote-play', (e) => {
-                    const p = e.payload;
+    if (isSteamContext()) {
+        const remotePlayHandler = (p) => {
                     if (!p || typeof p.sessionId !== 'number') return;
                     if (p.kind === 'connected') {
                         const name = p.clientName || `Session ${p.sessionId}`;
@@ -900,9 +897,14 @@ async function init() {
                         gameLog.addNotice(`Remote Play: ${name} disconnected`, 'remote-play');
                     }
                     renderGamepadAssignments();
-                }),
-            )
+        };
+        if (window.electronEvents?.onRemotePlay) {
+            window.electronEvents.onRemotePlay(remotePlayHandler);
+        } else if (isTauriContext()) {
+        import('@tauri-apps/api/event')
+            .then(({ listen }) => listen('steam-remote-play', (e) => remotePlayHandler(e.payload)))
             .catch(() => {});
+        }
     }
 
     // Wrapper functions
@@ -1001,54 +1003,46 @@ async function init() {
                 return;
             }
             const mon = monitors[monitorIndex];
-            const { PhysicalPosition } = await import('@tauri-apps/api/dpi');
-            // Place the window at the top-left of the target monitor with a small offset
-            // (avoids issues with centering when window is larger than monitor)
+            const { makePosition } = await import('./native/win.js');
             const x = mon.position.x + 60;
             const y = mon.position.y + 60;
             console.log(`[monitor] moving to monitor ${monitorIndex} "${mon.name}" at physical (${x}, ${y})`);
-            await win.setPosition(new PhysicalPosition(x, y));
+            await win.setPosition(await makePosition(x, y));
         };
 
         const applyDesktopGraphics = async (modeVal, scaleVal, monitorIndex) => {
             try {
-                const { getCurrentWindow, availableMonitors } = await import('@tauri-apps/api/window');
-                const win = getCurrentWindow();
-                const monitors = await availableMonitors();
+                const { getWindow, getMonitors, makeSize, makePosition } = await import('./native/win.js');
+                const win = await getWindow();
+                const monitors = await getMonitors();
 
                 console.log(`[monitor] applyDesktopGraphics mode=${modeVal} monitorIndex=${monitorIndex} monitors=${monitors.length}`);
 
-                // Must exit fullscreen before setPosition works — the OS ignores
-                // position changes while the window is in fullscreen mode.
                 const isFS = await win.isFullscreen();
                 if (isFS) {
                     await win.setFullscreen(false);
-                    // Wait for the OS to finish restoring the windowed frame
                     await new Promise(r => setTimeout(r, 400));
                 }
 
-                // Move to target monitor
                 await applyMonitor(win, monitors, monitorIndex);
+                // Wait for OS to finish the move before re-entering fullscreen
+                await new Promise(r => setTimeout(r, 400));
 
-                // Apply desired display mode
                 if (modeVal === 'fullscreen') {
                     await win.setFullscreen(true);
                     await win.setDecorations(true);
                 } else {
                     await win.setDecorations(true);
                     await win.unmaximize();
-                    // Restore saved window size and position
                     const savedW = parseInt(localStorage.getItem('dicy_win_w'), 10);
                     const savedH = parseInt(localStorage.getItem('dicy_win_h'), 10);
                     const savedWinX = parseInt(localStorage.getItem('dicy_win_x'), 10);
                     const savedWinY = parseInt(localStorage.getItem('dicy_win_y'), 10);
                     if (!isNaN(savedW) && savedW > 100 && !isNaN(savedH) && savedH > 100) {
-                        const { PhysicalSize } = await import('@tauri-apps/api/dpi');
-                        await win.setSize(new PhysicalSize(savedW, savedH));
+                        await win.setSize(await makeSize(savedW, savedH));
                     }
                     if (!isNaN(savedWinX) && !isNaN(savedWinY)) {
-                        const { PhysicalPosition: PP } = await import('@tauri-apps/api/dpi');
-                        await win.setPosition(new PP(savedWinX, savedWinY));
+                        await win.setPosition(await makePosition(savedWinX, savedWinY));
                     }
                 }
 
@@ -1064,7 +1058,7 @@ async function init() {
                     window.dispatchEvent(new Event('resize'));
                 }
             } catch (err) {
-                console.warn("Failed to apply Tauri window settings:", err);
+                console.warn("Failed to apply window settings:", err);
             }
         };
 
@@ -1072,9 +1066,9 @@ async function init() {
         if (gfxMonitor) {
             (async () => {
                 try {
-                    const { availableMonitors, currentMonitor } = await import('@tauri-apps/api/window');
-                    const monitors = await availableMonitors();
-                    const current = await currentMonitor();
+                    const { getWindow, getMonitors, getCurrentMonitor } = await import('./native/win.js');
+                    const monitors = await getMonitors();
+                    const current = await getCurrentMonitor();
 
                     gfxMonitor.innerHTML = '';
                     monitors.forEach((mon, i) => {
@@ -1085,7 +1079,6 @@ async function init() {
                         gfxMonitor.appendChild(opt);
                     });
 
-                    // Select saved, otherwise default to current monitor
                     if (savedMonitorIndex >= 0 && savedMonitorIndex < monitors.length) {
                         gfxMonitor.value = String(savedMonitorIndex);
                     } else {
@@ -1093,29 +1086,25 @@ async function init() {
                         gfxMonitor.value = String(currentIdx >= 0 ? currentIdx : 0);
                     }
 
-                    // Auto-save monitor when the user drags the window to another screen
-                    const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                    const win = getCurrentWindow();
+                    const win = await getWindow();
                     let lastMonitorName = current?.name;
                     win.onMoved(async () => {
                         try {
-                            // Save window position (only in windowed mode)
                             const isFS = await win.isFullscreen();
                             if (!isFS) {
                                 const pos = await win.outerPosition();
                                 localStorage.setItem('dicy_win_x', String(pos.x));
                                 localStorage.setItem('dicy_win_y', String(pos.y));
                             }
-                            const { currentMonitor: getCurrent, availableMonitors: getMonitors } = await import('@tauri-apps/api/window');
-                            const nowMonitor = await getCurrent();
+                            const { getMonitors: gm, getCurrentMonitor: gcm } = await import('./native/win.js');
+                            const nowMonitor = await gcm();
                             if (!nowMonitor || nowMonitor.name === lastMonitorName) return;
                             lastMonitorName = nowMonitor.name;
-                            const allMonitors = await getMonitors();
+                            const allMonitors = await gm();
                             const idx = allMonitors.findIndex(m => m.name === nowMonitor.name);
                             if (idx < 0) return;
                             localStorage.setItem('dicy_gfx_monitor', String(idx));
                             if (gfxMonitor) gfxMonitor.value = String(idx);
-                            // Flush immediately so the save survives an OS-level close
                             await flushStorage();
                         } catch (_) {}
                     });
@@ -1473,15 +1462,15 @@ function setupInputEvents(game, inputManager, sessionManager) {
 
         // global-back-btn is hidden → on main menu or loading screen
         // On Tauri with no game running → offer quit to desktop
-        if (isTauriContext() && game.players.length === 0) {
+        if (isDesktopContext() && game.players.length === 0) {
             Dialog.confirm('Are you sure you want to exit to desktop?', 'QUIT GAME?').then(async choice => {
                 if (choice) {
                     if (window.steam) {
                         window.steam.quit();
                     } else if (isTauriContext()) {
                         try {
-                            const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                            await getCurrentWindow().close();
+                            const { getWindow } = await import('./native/win.js');
+                            await (await getWindow()).close();
                         } catch (e) {
                             console.error('Tauri exit failed:', e);
                             window.close();

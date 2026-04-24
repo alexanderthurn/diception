@@ -78,50 +78,6 @@ jobs:
           name: win
           path: dist-tauri/win/
 
-  # ─── Linux / Steam Deck ───────────────────────────────────────────────────────
-  build-linux:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-
-      - name: Fetch Steam SDK
-        run: |
-          mkdir -p src-tauri/resources
-          curl -fsSL "${{ secrets.STEAM_SDK_ZIP_URL }}" -o steam_sdk.zip
-          unzip -o steam_sdk.zip -d steam_sdk_tmp
-          find steam_sdk_tmp -path "*/linux64/libsteam_api.so" -exec cp {} src-tauri/resources/libsteam_api.so \;
-
-      - name: Install Linux dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            build-essential \
-            libxdo-dev \
-            libssl-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev
-
-      - run: npm ci
-
-      - run: npm run tauri:build:linux
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: linux
-          path: dist-tauri/linux/
-
   # ─── Android ──────────────────────────────────────────────────────────────────
   build-android:
     runs-on: ubuntu-latest
@@ -167,31 +123,24 @@ jobs:
           name: android
           path: dist-tauri/android/DICEPTION.apk
 
+  # ─── Deploy to Steam (Mac + Win only — Linux handled by electron.yml) ──────────
   deploy-steam:
-    needs: [build-mac, build-win, build-linux] 
+    needs: [build-mac, build-win]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
- 
       - uses: actions/download-artifact@v4
         with:
           path: steam-builds
 
-    
       - name: Publish to Steam
         uses: game-ci/steam-deploy@v3
         with:
           username: ${{ secrets.STEAM_USERNAME }}
-          # Das Secret aus Schritt 1
           configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
           appId: ${{ secrets.STEAM_APP_ID }}
-          buildDescription: "v${{ github.ref_name }} (GitHub Action)"
-          
-          # Hier legst du fest, welcher Branch bespielt wird
-          releaseBranch:  ${{ secrets.STEAM_RELEASE_BRANCH }}
+          buildDescription: "v${{ github.ref_name }} Tauri (GitHub Action)"
+          releaseBranch: ${{ secrets.STEAM_RELEASE_BRANCH }}
           depot1Path: "steam-builds/win"
           depot2Path: "steam-builds/mac"
-          depot3Path: "steam-builds/linux"
-
-

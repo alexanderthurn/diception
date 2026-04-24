@@ -135,11 +135,15 @@ export function isTauriContext() {
     return !!(window.__TAURI_INTERNALS__);
 }
 
+export function isElectronContext() {
+    return !!(window.electronWin);
+}
+
 /**
- * Check if we're in any desktop or app context (Steam/Electron, Tauri, or Android)
+ * Check if we're in any desktop or app context (Tauri, Electron, Steam, or Android)
  */
 export function isDesktopContext() {
-    return isSteamContext() || isTauriContext() || isAndroid();
+    return isTauriContext() || isElectronContext() || isSteamContext() || isAndroid();
 }
 
 const FULL_GAME_APP_ID = 4429000;

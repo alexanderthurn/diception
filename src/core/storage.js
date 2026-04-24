@@ -11,6 +11,20 @@
 
 import { isTauriContext } from '../scenarios/user-identity.js';
 
+// Unified storage invoke — works under Tauri or Electron
+function _invoke(cmd, args) {
+    if (window.electronStorage) {
+        if (cmd === 'storage_read_all')  return window.electronStorage.readAll();
+        if (cmd === 'storage_write_all') return window.electronStorage.writeAll(args.data);
+        if (cmd === 'storage_get_path')  return window.electronStorage.getPath();
+    }
+    return window.__TAURI_INTERNALS__.invoke(cmd, args);
+}
+
+function _isFileBackedContext() {
+    return !!window.electronStorage || isTauriContext();
+}
+
 export const SAVE_FILENAME = 'diception_save.sav';
 
 const DEBOUNCE_MS = 100; // flush shortly after each write
@@ -24,15 +38,15 @@ let _debounceTimer = null;
  * Merges the on-disk save into localStorage (Steam Cloud data wins).
  */
 export async function initStorage() {
-    if (!isTauriContext()) {
+    if (!_isFileBackedContext()) {
         console.log('[storage] Web/Android — localStorage only');
         return;
     }
 
-    console.log('[storage] Tauri — file-backed storage initialising');
+    console.log('[storage] File-backed storage initialising');
 
     try {
-        const json = await window.__TAURI_INTERNALS__.invoke('storage_read_all');
+        const json = await _invoke('storage_read_all');
         const data = JSON.parse(json || '{}');
         for (const [key, value] of Object.entries(data)) {
             localStorage.setItem(key, value);
@@ -44,7 +58,7 @@ export async function initStorage() {
 
     // Log the exact save path so Steam Cloud config can be verified
     try {
-        const path = await window.__TAURI_INTERNALS__.invoke('storage_get_path');
+        const path = await _invoke('storage_get_path');
         console.log('[storage] Save path:', path);
     } catch (_) { /* optional helper command */ }
 
@@ -63,7 +77,7 @@ export async function initStorage() {
  * Ensures the save file is written before the process exits.
  */
 export async function flushStorage() {
-    if (!isTauriContext()) return;
+    if (!_isFileBackedContext()) return;
     if (_debounceTimer) {
         clearTimeout(_debounceTimer);
         _debounceTimer = null;
@@ -80,7 +94,7 @@ function _scheduleFlush() {
 
 async function _flush() {
     _debounceTimer = null;
-    if (!isTauriContext()) return;
+    if (!_isFileBackedContext()) return;
     try {
         await _invokeWrite();
     } catch (e) {
@@ -106,9 +120,7 @@ function _invokeWrite() {
         const key = localStorage.key(i);
         data[key] = localStorage.getItem(key);
     }
-    return window.__TAURI_INTERNALS__.invoke('storage_write_all', {
-        data: JSON.stringify(data),
-    });
+    return _invoke('storage_write_all', { data: JSON.stringify(data) });
 }
 
 let _patched = false;
