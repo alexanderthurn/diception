@@ -48,6 +48,7 @@
       ]
     },
     "linux": {
+      "executableName": "diception",
       "extraFiles": [
         {
           "from": "src-tauri/resources/libsteam_api.so",

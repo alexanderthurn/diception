@@ -2,7 +2,7 @@
 // Normalises electron-builder dir output to match the Tauri build layout:
 //   Mac:   dist-tauri/electron-mac/DICEPTION.app/Contents/MacOS/  + Steam files next to .app
 //   Win:   dist-tauri/electron-win/DICEPTION.exe  + Steam DLL + VDF
-//   Linux: dist-tauri/electron-linux/DICEPTION + Steam .so + VDF
+//   Linux: dist-tauri/electron-linux/diception + Steam .so + VDF  (executableName="diception")
 //
 // Usage: node scripts/electron-postbuild.js <mac|win|linux>
 
@@ -98,15 +98,13 @@ if (platform === 'linux') {
     cp(join(RES, 'libsteam_api.so'), join(OUT, 'libsteam_api.so'));
     cp(VDF, join(OUT, 'game_actions_X.vdf'));
 
-    // Rename main binary to DICEPTION (electron-builder names it after productName lowercased)
-    const binName = readdirSync(OUT).find(n => {
-        const full = join(OUT, n);
-        return statSync(full).isFile() && !n.includes('.') && n !== 'DICEPTION';
-    });
-    if (binName) {
-        renameSync(join(OUT, binName), join(OUT, 'DICEPTION'));
-        console.log(`  renamed: ${binName} → DICEPTION`);
+    // executableName is set to "diception" in package.json — no rename needed.
+    // Verify it exists so CI fails loudly if electron-builder changes the name.
+    if (!existsSync(join(OUT, 'diception'))) {
+        console.error('  ERROR: expected binary "diception" not found in', OUT);
+        process.exit(1);
     }
+    console.log('  verified: diception binary present');
 }
 
 // ── All platforms ─────────────────────────────────────────────────────────────
