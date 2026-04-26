@@ -14,11 +14,12 @@ if (process.platform === 'linux') {
     const existing = process.env.LD_LIBRARY_PATH || '';
     process.env.LD_LIBRARY_PATH = [swLibDir, appDir, existing].filter(Boolean).join(':');
 
-    // GPU process fails with error_code=1002 (sandbox init) in Steam Linux environments.
-    // --in-process-gpu runs GPU in the browser process (no separate sandbox needed).
+    // Required for Steam Linux runtime: sandbox and zygote process model fail there.
     app.commandLine.appendSwitch('no-sandbox');
     app.commandLine.appendSwitch('disable-gpu-sandbox');
     app.commandLine.appendSwitch('in-process-gpu');
+    app.commandLine.appendSwitch('disable-dev-shm-usage'); // use /tmp instead of /dev/shm
+    app.commandLine.appendSwitch('no-zygote');             // prevents ESRCH zygote failures
 }
 
 // ── Steam ─────────────────────────────────────────────────────────────────────
