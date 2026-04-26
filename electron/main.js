@@ -14,8 +14,11 @@ if (process.platform === 'linux') {
     const existing = process.env.LD_LIBRARY_PATH || '';
     process.env.LD_LIBRARY_PATH = [swLibDir, appDir, existing].filter(Boolean).join(':');
 
-    // Disable GPU sandbox — fails with error_code=1002 in Steam Linux environments
+    // GPU process fails with error_code=1002 (sandbox init) in Steam Linux environments.
+    // --in-process-gpu runs GPU in the browser process (no separate sandbox needed).
     app.commandLine.appendSwitch('no-sandbox');
+    app.commandLine.appendSwitch('disable-gpu-sandbox');
+    app.commandLine.appendSwitch('in-process-gpu');
 }
 
 // ── Steam ─────────────────────────────────────────────────────────────────────
@@ -68,8 +71,9 @@ function createWindow() {
 
     mainWin.loadFile(path.join(__dirname, '../dist/index.html'));
 
-    mainWin.on('move',   () => mainWin.webContents.send('win:moved'));
-    mainWin.on('resize', () => mainWin.webContents.send('win:resized'));
+    const safeSend = (ch) => { if (!mainWin?.isDestroyed()) mainWin.webContents.send(ch); };
+    mainWin.on('move',   () => safeSend('win:moved'));
+    mainWin.on('resize', () => safeSend('win:resized'));
     mainWin.on('closed', () => { mainWin = null; });
 }
 
