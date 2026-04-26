@@ -120,14 +120,14 @@ async function init() {
     // with lower values, so we take the max of local and Steam.
     if (window.steam?.getStatI32) {
         const STEAM_STATS = [
-            { localKey: 'gamesPlayed',  steamName: 'STAT_GAMES_PLAYED'  },
-            { localKey: 'gamesWon',     steamName: 'STAT_GAMES_WON'     },
+            { localKey: 'gamesPlayed', steamName: 'STAT_GAMES_PLAYED' },
+            { localKey: 'gamesWon', steamName: 'STAT_GAMES_WON' },
             { localKey: 'underdogWins', steamName: 'STAT_UNDERDOG_WINS' },
-            { localKey: 'streak3',      steamName: 'STAT_STREAK_3'      },
-            { localKey: 'streak4',      steamName: 'STAT_STREAK_4'      },
-            { localKey: 'streak5',      steamName: 'STAT_STREAK_5'      },
-            { localKey: 'streak6',      steamName: 'STAT_STREAK_6'      },
-            { localKey: 'streak7',      steamName: 'STAT_STREAK_7'      },
+            { localKey: 'streak3', steamName: 'STAT_STREAK_3' },
+            { localKey: 'streak4', steamName: 'STAT_STREAK_4' },
+            { localKey: 'streak5', steamName: 'STAT_STREAK_5' },
+            { localKey: 'streak6', steamName: 'STAT_STREAK_6' },
+            { localKey: 'streak7', steamName: 'STAT_STREAK_7' },
         ];
         try {
             const localStats = JSON.parse(localStorage.getItem('dicy_ach_stats') || '{}');
@@ -386,9 +386,9 @@ async function init() {
 
     // Initialize Gamepad Cursors
     const gamepadCursors = new GamepadCursorManager(game, inputManager);
-    gamepadCursors.onIntroSpawn  = (playerIndex, x, y) => { sfxManager.coin();                                    effectsManager.spawnPlayerDie(playerIndex, x, y); };
-    gamepadCursors.onIntroRemove = (x, y)              => { sfxManager.reinforce(0.85 + Math.random() * 0.30);   effectsManager.removePlayerDie(x, y); };
-    gamepadCursors.onIntroMutate = (x, y)              => { sfxManager.turnStart(0.85 + Math.random() * 0.30);   effectsManager.mutatePlayerDie(x, y); };
+    gamepadCursors.onIntroSpawn = (playerIndex, x, y) => { sfxManager.coin(); effectsManager.spawnPlayerDie(playerIndex, x, y); };
+    gamepadCursors.onIntroRemove = (x, y) => { sfxManager.reinforce(0.85 + Math.random() * 0.30); effectsManager.removePlayerDie(x, y); };
+    gamepadCursors.onIntroMutate = (x, y) => { sfxManager.turnStart(0.85 + Math.random() * 0.30); effectsManager.mutatePlayerDie(x, y); };
     inputManager.gamepadCursorManager = gamepadCursors;
     gamepadCursors.getTileScreenSize = () => renderer.getTileScreenSize();
 
@@ -607,7 +607,7 @@ async function init() {
             inputManager.setGamepadAssignment(index, 'master');
         } else {
             const humanCount = Math.max(1, parseInt(document.getElementById('human-count')?.value ?? '0') ||
-                                           game.players.filter(p => !p.isBot).length || 1);
+                game.players.filter(p => !p.isBot).length || 1);
             const taken = new Set(others.map(i => inputManager.getGamepadAssignment(i)).filter(a => typeof a === 'number'));
             let slot = 'master';
             for (let i = 0; i < humanCount; i++) {
@@ -652,11 +652,11 @@ async function init() {
         if (isFullVersion()) return;
         const toggle = (groupId, differs) =>
             document.getElementById(groupId)?.classList.toggle('setup-mod-nondefault', differs);
-        toggle('setup-map-size-group', document.getElementById('map-size')?.value       !== SETUP_DEFAULTS.mapSize);
-        toggle('map-style-group',      document.getElementById('map-style')?.value      !== SETUP_DEFAULTS.mapStyle);
-        toggle('setup-humans-group',   document.getElementById('human-count')?.value    !== SETUP_DEFAULTS.humanCount);
-        toggle('setup-bots-group',     document.getElementById('bot-count')?.value      !== SETUP_DEFAULTS.botCount);
-        toggle('setup-bot-ai-group',   document.getElementById('bot-ai-select')?.value  !== SETUP_DEFAULTS.botAI);
+        toggle('setup-map-size-group', document.getElementById('map-size')?.value !== SETUP_DEFAULTS.mapSize);
+        toggle('map-style-group', document.getElementById('map-style')?.value !== SETUP_DEFAULTS.mapStyle);
+        toggle('setup-humans-group', document.getElementById('human-count')?.value !== SETUP_DEFAULTS.humanCount);
+        toggle('setup-bots-group', document.getElementById('bot-count')?.value !== SETUP_DEFAULTS.botCount);
+        toggle('setup-bot-ai-group', document.getElementById('bot-ai-select')?.value !== SETUP_DEFAULTS.botAI);
     };
 
     const startBtn = document.getElementById('start-game-btn');
@@ -752,8 +752,8 @@ async function init() {
         try {
             const fwSting = new Audio('./assets/sfx/feuerware.ogg');
             fwSting.volume = parseFloat(localStorage.getItem('dicy_sfxVolume') ?? '0.3');
-            fwSting.play().catch(() => {}); // silently ignored if browser blocks autoplay
-        } catch (e) {}
+            fwSting.play().catch(() => { }); // silently ignored if browser blocks autoplay
+        } catch (e) { }
     }
     const audioController = new AudioController(sfxManager);
     audioController.init();
@@ -768,7 +768,7 @@ async function init() {
 
     // Achievement toast notification
     {
-        const toast     = document.getElementById('achievement-toast');
+        const toast = document.getElementById('achievement-toast');
         const toastIcon = document.getElementById('achievement-toast-icon');
         const toastName = document.getElementById('achievement-toast-name');
         const ACHIEVEMENTS_MAP = Object.fromEntries(ACHIEVEMENTS.map(a => [a.id, a]));
@@ -799,20 +799,20 @@ async function init() {
             if (!a) return id;
             if (a.type === 'campaign') return a.campaign.replace(/^./, c => c.toUpperCase()) + ' Complete';
             if (a.type === 'stat') {
-                if (a.stat === 'gamesPlayed')  return `${a.threshold.toLocaleString()} Games Played`;
-                if (a.stat === 'gamesWon')     return 'First Win';
+                if (a.stat === 'gamesPlayed') return `${a.threshold.toLocaleString()} Games Played`;
+                if (a.stat === 'gamesWon') return 'First Win';
                 if (a.stat === 'underdogWins') return `${a.threshold.toLocaleString()} Underdog Wins`;
             }
             if (a.type === 'event') {
-                if (a.event === 'won4vs6')       return 'David vs. Goliath';
+                if (a.event === 'won4vs6') return 'David vs. Goliath';
                 if (a.event === 'attackStreak3') return '3 Attack Streak';
                 if (a.event === 'attackStreak4') return '4 Attack Streak';
                 if (a.event === 'attackStreak5') return '5 Attack Streak';
                 if (a.event === 'attackStreak6') return '6 Attack Streak';
                 if (a.event === 'attackStreak7') return '7 Attack Streak';
                 if (a.event === 'won8PlayerGame') return 'Last Standing';
-                if (a.event === 'pureBots')      return 'Bot Tournament';
-                if (a.event === 'pureHumans')    return 'Human Only';
+                if (a.event === 'pureBots') return 'Bot Tournament';
+                if (a.event === 'pureHumans') return 'Human Only';
             }
             return id;
         };
@@ -830,13 +830,13 @@ async function init() {
         let progressToastTimer = null;
 
         const PROGRESS_PITCH = {
-            gamesWon:     0.80,
+            gamesWon: 0.80,
             underdogWins: 1.10,
-            streak3:      0.85,
-            streak4:      1.00,
-            streak5:      1.20,
-            streak6:      1.45,
-            streak7:      1.70,
+            streak3: 0.85,
+            streak4: 1.00,
+            streak5: 1.20,
+            streak6: 1.45,
+            streak7: 1.70,
         };
 
         setProgressCallback((stat, newValue) => {
@@ -883,27 +883,27 @@ async function init() {
 
     if (isSteamContext()) {
         const remotePlayHandler = (p) => {
-                    if (!p || typeof p.sessionId !== 'number') return;
-                    if (p.kind === 'connected') {
-                        const name = p.clientName || `Session ${p.sessionId}`;
-                        steamRemotePlaySessions.set(p.sessionId, name);
-                        gameLog.addNotice(`Remote Play: ${name} connected`, 'remote-play');
-                    } else if (p.kind === 'disconnected') {
-                        const name =
-                            steamRemotePlaySessions.get(p.sessionId) ||
-                            p.clientName ||
-                            `Session ${p.sessionId}`;
-                        steamRemotePlaySessions.delete(p.sessionId);
-                        gameLog.addNotice(`Remote Play: ${name} disconnected`, 'remote-play');
-                    }
-                    renderGamepadAssignments();
+            if (!p || typeof p.sessionId !== 'number') return;
+            if (p.kind === 'connected') {
+                const name = p.clientName || `Session ${p.sessionId}`;
+                steamRemotePlaySessions.set(p.sessionId, name);
+                gameLog.addNotice(`Remote Play: ${name} connected`, 'remote-play');
+            } else if (p.kind === 'disconnected') {
+                const name =
+                    steamRemotePlaySessions.get(p.sessionId) ||
+                    p.clientName ||
+                    `Session ${p.sessionId}`;
+                steamRemotePlaySessions.delete(p.sessionId);
+                gameLog.addNotice(`Remote Play: ${name} disconnected`, 'remote-play');
+            }
+            renderGamepadAssignments();
         };
         if (window.electronEvents?.onRemotePlay) {
             window.electronEvents.onRemotePlay(remotePlayHandler);
         } else if (isTauriContext()) {
-        import('@tauri-apps/api/event')
-            .then(({ listen }) => listen('steam-remote-play', (e) => remotePlayHandler(e.payload)))
-            .catch(() => {});
+            import('@tauri-apps/api/event')
+                .then(({ listen }) => listen('steam-remote-play', (e) => remotePlayHandler(e.payload)))
+                .catch(() => { });
         }
     }
 
@@ -1024,7 +1024,11 @@ async function init() {
                     await new Promise(r => setTimeout(r, 400));
                 }
 
-                await applyMonitor(win, monitors, monitorIndex);
+                // When no monitor preference saved, fall back to monitor 0 so the
+                // window is guaranteed to land on a real display before fullscreen.
+                const effectiveMonitorIndex = (monitorIndex >= 0 && monitorIndex < monitors.length)
+                    ? monitorIndex : 0;
+                await applyMonitor(win, monitors, effectiveMonitorIndex);
                 // Wait for OS to finish the move before re-entering fullscreen
                 await new Promise(r => setTimeout(r, 400));
 
@@ -1041,8 +1045,20 @@ async function init() {
                     if (!isNaN(savedW) && savedW > 100 && !isNaN(savedH) && savedH > 100) {
                         await win.setSize(await makeSize(savedW, savedH));
                     }
+                    // Only restore position if it's within a known monitor's bounds;
+                    // otherwise the window ends up off-screen on display-config changes.
                     if (!isNaN(savedWinX) && !isNaN(savedWinY)) {
-                        await win.setPosition(await makePosition(savedWinX, savedWinY));
+                        const onScreen = monitors.some(m =>
+                            savedWinX >= m.position.x - 50 &&
+                            savedWinX < m.position.x + m.size.width &&
+                            savedWinY >= m.position.y - 50 &&
+                            savedWinY < m.position.y + m.size.height
+                        );
+                        if (onScreen) {
+                            await win.setPosition(await makePosition(savedWinX, savedWinY));
+                        } else {
+                            console.warn('[monitor] saved position off-screen, ignoring');
+                        }
                     }
                 }
 
@@ -1106,7 +1122,7 @@ async function init() {
                             localStorage.setItem('dicy_gfx_monitor', String(idx));
                             if (gfxMonitor) gfxMonitor.value = String(idx);
                             await flushStorage();
-                        } catch (_) {}
+                        } catch (_) { }
                     });
                     win.onResized(async () => {
                         try {
@@ -1116,7 +1132,7 @@ async function init() {
                                 localStorage.setItem('dicy_win_w', String(size.width));
                                 localStorage.setItem('dicy_win_h', String(size.height));
                             }
-                        } catch (_) {}
+                        } catch (_) { }
                     });
                 } catch (err) {
                     console.warn('[monitor] Could not list monitors:', err);
@@ -1162,7 +1178,7 @@ async function init() {
             if (e.altKey && e.key === 'Enter') {
                 e.preventDefault();
                 const current = localStorage.getItem('dicy_gfx_display_mode') || 'fullscreen';
-                const next    = current === 'fullscreen' ? 'window' : 'fullscreen';
+                const next = current === 'fullscreen' ? 'window' : 'fullscreen';
                 localStorage.setItem('dicy_gfx_display_mode', next);
                 if (gfxDisplayMode) gfxDisplayMode.value = next;
                 await flushStorage();
@@ -1495,23 +1511,23 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const mainMenu = document.getElementById('main-menu');
 
     // Update stats display whenever the main menu becomes visible
-    const _achBtnProgress  = document.getElementById('ach-btn-progress');
-    const _achStatPlayed   = document.getElementById('ach-stat-played');
-    const _achStatWon      = document.getElementById('ach-stat-won');
-    const _achStatWinrate  = document.getElementById('ach-stat-winrate');
+    const _achBtnProgress = document.getElementById('ach-btn-progress');
+    const _achStatPlayed = document.getElementById('ach-stat-played');
+    const _achStatWon = document.getElementById('ach-stat-won');
+    const _achStatWinrate = document.getElementById('ach-stat-winrate');
     const _refreshMenuStats = () => {
-        const stats    = JSON.parse(localStorage.getItem('dicy_ach_stats') || '{}');
+        const stats = JSON.parse(localStorage.getItem('dicy_ach_stats') || '{}');
         const unlocked = JSON.parse(localStorage.getItem('dicy_ach_unlocked') || '[]');
-        const played   = stats.gamesPlayed || 0;
-        const won      = stats.gamesWon    || 0;
-        const pct      = played > 0 ? Math.round((won / played) * 100) : 0;
+        const played = stats.gamesPlayed || 0;
+        const won = stats.gamesWon || 0;
+        const pct = played > 0 ? Math.round((won / played) * 100) : 0;
 
         // Achievement button: unlocked / total
         if (_achBtnProgress) _achBtnProgress.textContent = `${unlocked.length} / ${ACHIEVEMENTS.length}`;
 
         // Achievements modal stats
-        if (_achStatPlayed)  _achStatPlayed.textContent  = played.toLocaleString();
-        if (_achStatWon)     _achStatWon.textContent     = won.toLocaleString();
+        if (_achStatPlayed) _achStatPlayed.textContent = played.toLocaleString();
+        if (_achStatWon) _achStatWon.textContent = won.toLocaleString();
         if (_achStatWinrate) _achStatWinrate.textContent = played > 0 ? `${pct}%` : '—';
     };
     new MutationObserver(() => {
@@ -1680,8 +1696,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
                 const color = GAME.HUMAN_COLORS[humanIdx % GAME.HUMAN_COLORS.length];
                 const colorHex = '#' + color.toString(16).padStart(6, '0');
 
-                // Read saved deadzone or default to 0.15
-                const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + rawIdx);
+                const gpId = inputManager.getGamepads().find(g => g.index === rawIdx)?.id ?? rawIdx;
+                const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gpId);
                 const currentDeadzone = savedDeadzone ? parseFloat(savedDeadzone) : 0.15;
                 const displayPct = Math.round(currentDeadzone * 100);
 
@@ -1690,7 +1706,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
                     <span class="gce-label" style="color:${colorHex}">${humanIdx + 1}</span>
                     <button class="tron-btn small gamepad-configure-btn" data-gamepad-index="${rawIdx}" style="border-color:${colorHex};color:${colorHex}">BINDINGS</button>
                     <label class="gce-dz-label">DZ</label>
-                    <input type="range" class="gamepad-deadzone-slider" data-gamepad-index="${rawIdx}" min="0.0" max="0.5" step="0.01" value="${currentDeadzone}">
+                    <input type="range" class="gamepad-deadzone-slider" data-gamepad-index="${rawIdx}" data-gamepad-id="${gpId}" min="0.0" max="0.5" step="0.01" value="${currentDeadzone}">
                     <span class="deadzone-value" id="deadzone-val-${rawIdx}">${displayPct}%</span>
                 </div>`;
             });
@@ -1708,7 +1724,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
         // Gamepad Type toggle button — cycles through available backends
         document.getElementById('gamepad-type-toggle-btn')?.addEventListener('click', () => {
-            // Native backends deactivated for now (previously used isDesktopContext() to add 'auto' and 'gilrs+fwnetwork')
             const backends = ['navigator', 'fwnetwork'];
             const current = inputManager.backend || 'navigator';
             const idx = backends.indexOf(current);
@@ -1730,12 +1745,13 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         configArea.querySelectorAll('.gamepad-deadzone-slider').forEach(slider => {
             slider.addEventListener('input', (e) => {
                 const rawIdx = e.target.getAttribute('data-gamepad-index');
+                const gpId  = e.target.getAttribute('data-gamepad-id') ?? rawIdx;
                 const val = parseFloat(e.target.value);
                 const displaySpan = document.getElementById('deadzone-val-' + rawIdx);
                 if (displaySpan) {
                     displaySpan.textContent = Math.round(val * 100) + '%';
                 }
-                localStorage.setItem('dicy_gamepad_deadzone_' + rawIdx, val.toString());
+                localStorage.setItem('dicy_gamepad_deadzone_' + gpId, val.toString());
             });
         });
     }
@@ -1794,9 +1810,9 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     function showFullVersionOnlyDialog() { Dialog.showFullVersion(); }
 
     if (!isFullVersion()) {
-        const achBtn      = document.getElementById('main-icons-achievements-btn');
-        const editorBtn   = document.getElementById('main-icons-editor-btn');
-        const saveBtn     = document.getElementById('pause-save-btn');
+        const achBtn = document.getElementById('main-icons-achievements-btn');
+        const editorBtn = document.getElementById('main-icons-editor-btn');
+        const saveBtn = document.getElementById('pause-save-btn');
         [achBtn, editorBtn, saveBtn].forEach(btn => {
             if (!btn) return;
             btn.classList.add('btn-locked');
@@ -2134,8 +2150,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 }
 
 // scenarioBrowserOpen / sessionManagerRef set by caller via module-level vars
-let scenarioBrowserOpen = () => {};
-let scenarioBrowserOpenUserCampaign = () => {};
+let scenarioBrowserOpen = () => { };
+let scenarioBrowserOpenUserCampaign = () => { };
 let sessionManagerRef = null;
 
 // --- Benchmark Tool (console only) ---

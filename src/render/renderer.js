@@ -28,7 +28,7 @@ export class Renderer {
 
     async init() {
         // Check user graphics preferences
-        const savedAA = localStorage.getItem('dicy_gfx_antialias') === 'on';
+        const savedAA = (localStorage.getItem('dicy_gfx_antialias') || 'off') === 'on';
 
         // Cap resolution to 1.5 to avoid extreme overhead on Retina/4K displays while keeping it crisp
         const realRes = Math.min(window.devicePixelRatio || 1, 1.5);

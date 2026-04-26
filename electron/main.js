@@ -40,6 +40,7 @@ function createWindow() {
     mainWin = new BrowserWindow({
         width: 800,
         height: 600,
+        center: true,
         frame: true,
         icon: path.join(__dirname, '../src-tauri/icons/128x128.png'),
         webPreferences: {

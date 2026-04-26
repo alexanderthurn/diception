@@ -27,6 +27,14 @@ function _isFileBackedContext() {
 
 export const SAVE_FILENAME = 'diception_save.sav';
 
+// Keys with these prefixes are machine-local and must never be written to or
+// read from the save file (so Steam Cloud never overwrites them on other devices).
+const LOCAL_ONLY_PREFIXES = ['dicy_gfx_', 'dicy_win_', 'dicy_debug_', 'dicy_music', 'dicy_sfx'];
+
+function _isLocalOnly(key) {
+    return LOCAL_ONLY_PREFIXES.some(p => key.startsWith(p));
+}
+
 const DEBOUNCE_MS = 100; // flush shortly after each write
 
 let _debounceTimer = null;
@@ -49,6 +57,7 @@ export async function initStorage() {
         const json = await _invoke('storage_read_all');
         const data = JSON.parse(json || '{}');
         for (const [key, value] of Object.entries(data)) {
+            if (_isLocalOnly(key)) continue;
             localStorage.setItem(key, value);
         }
         console.log(`[storage] Loaded ${Object.keys(data).length} keys from ${SAVE_FILENAME}`);
@@ -118,6 +127,7 @@ function _invokeWrite() {
     const data = {};
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
+        if (_isLocalOnly(key)) continue;
         data[key] = localStorage.getItem(key);
     }
     return _invoke('storage_write_all', { data: JSON.stringify(data) });

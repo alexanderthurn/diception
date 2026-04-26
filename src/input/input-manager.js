@@ -47,8 +47,7 @@ export class InputManager {
 
         // Gamepad backend: 'navigator' | 'fwnetwork'
         const saved = localStorage.getItem('dicy_gamepad_backend') || 'navigator';
-        const gilrsBased = saved === 'auto' || saved === 'gilrs' || saved === 'gilrs+fwnetwork';
-        this._backend = gilrsBased ? 'navigator' : saved;
+        this._backend = (saved === 'navigator' || saved === 'fwnetwork') ? saved : 'navigator';
         // Start FWNetwork hosting if the resolved backend uses it
         if (this._useFwNetwork) {
             FWNetwork.getInstance().hostRoom();
@@ -123,12 +122,12 @@ export class InputManager {
     }
 
     get _useFwNetwork() {
-        return this._backend === 'fwnetwork' || this._backend === 'gilrs+fwnetwork';
+        return this._backend === 'fwnetwork';
     }
 
     /**
      * Switch gamepad backend at runtime.
-     * @param {'auto'|'gilrs'|'navigator'|'fwnetwork'|'gilrs+fwnetwork'} mode
+     * @param {'navigator'|'fwnetwork'} mode
      */
     setBackend(mode) {
         this._backend = mode;
@@ -149,9 +148,6 @@ export class InputManager {
     /**
      * Return a normalised array of connected gamepads from the active backend.
      * Each entry has: { index, id, buttons: [{pressed}], axes: number[] }
-     * Other code should use this instead of navigator.getGamepads() directly
-     * to avoid duplicate gamepads when gilrs and the browser see different
-     * views of the same physical controller.
      */
     getGamepads() {
         if (this._backend === 'fwnetwork') {
@@ -531,7 +527,7 @@ export class InputManager {
 
         // Left analog stick → same tile movement as D-pad
         {
-            const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.index);
+            const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.id);
             const dz = savedDeadzone ? parseFloat(savedDeadzone) : 0.40;
             let lx = gp.axes[0] ?? 0;
             let ly = gp.axes[1] ?? 0;
@@ -615,7 +611,7 @@ export class InputManager {
         let rx = gp.axes[2] ?? 0;
         let ry = gp.axes[3] ?? 0;
 
-        const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.index);
+        const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.id);
         const currentDeadZone = savedDeadzone ? parseFloat(savedDeadzone) : 0.40;
 
         if (Math.abs(rx) < currentDeadZone) rx = 0;
