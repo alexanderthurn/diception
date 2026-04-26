@@ -57,7 +57,12 @@ export async function initStorage() {
         const json = await _invoke('storage_read_all');
         const data = JSON.parse(json || '{}');
         for (const [key, value] of Object.entries(data)) {
-            if (_isLocalOnly(key)) continue;
+            if (_isLocalOnly(key)) {
+                // Stale local-only key in save file (synced before the fix) —
+                // remove it so this device falls back to its own default.
+                localStorage.removeItem(key);
+                continue;
+            }
             localStorage.setItem(key, value);
         }
         console.log(`[storage] Loaded ${Object.keys(data).length} keys from ${SAVE_FILENAME}`);
