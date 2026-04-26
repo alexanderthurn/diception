@@ -39,14 +39,7 @@
     "asarUnpack": [
       "node_modules/steamworks.js/**"
     ],
-    "mac": {
-      "extraFiles": [
-        {
-          "from": "src-tauri/resources/libsteam_api.dylib",
-          "to": "."
-        }
-      ]
-    },
+    "mac": {},
     "linux": {
       "executableName": "diception",
       "extraFiles": [

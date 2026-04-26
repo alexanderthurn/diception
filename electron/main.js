@@ -2,6 +2,22 @@ const { app, BrowserWindow, ipcMain, shell, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+// ── Linux: fix library search path before any native modules load ─────────────
+// Steam sets LD_LIBRARY_PATH to its own dirs, which contain an older
+// libsteam_api.so that may be missing symbols steamworks.js@0.4 requires.
+// glibc re-reads LD_LIBRARY_PATH on each dlopen(), so prepending here (before
+// require('steamworks.js') below) ensures the bundled version wins.
+if (process.platform === 'linux') {
+    const swLibDir = path.join(process.resourcesPath, 'app.asar.unpacked',
+        'node_modules', 'steamworks.js', 'dist', 'linux64');
+    const appDir = path.dirname(process.execPath);
+    const existing = process.env.LD_LIBRARY_PATH || '';
+    process.env.LD_LIBRARY_PATH = [swLibDir, appDir, existing].filter(Boolean).join(':');
+
+    // Disable GPU sandbox — fails with error_code=1002 in Steam Linux environments
+    app.commandLine.appendSwitch('no-sandbox');
+}
+
 // ── Steam ─────────────────────────────────────────────────────────────────────
 
 let steam = null;  // steamworks.js client
