@@ -1,6 +1,6 @@
 {
   "name": "dicy",
-  "version": "1.9.18",
+  "version": "1.9.19",
   "description": "A fast-paced, neon-styled dice strategy game. Inspired by the tactical depth of DiceWars and Kdice, Diception delivers quick turns and intense territory conquest.",
   "type": "module",
   "main": "electron/main.js",
@@ -41,17 +41,26 @@
     ],
     "mac": {
       "extraFiles": [
-        { "from": "src-tauri/resources/libsteam_api.dylib", "to": "." }
+        {
+          "from": "src-tauri/resources/libsteam_api.dylib",
+          "to": "."
+        }
       ]
     },
     "linux": {
       "extraFiles": [
-        { "from": "src-tauri/resources/libsteam_api.so", "to": "." }
+        {
+          "from": "src-tauri/resources/libsteam_api.so",
+          "to": "."
+        }
       ]
     },
     "win": {
       "extraFiles": [
-        { "from": "src-tauri/resources/steam_api64.dll", "to": "." }
+        {
+          "from": "src-tauri/resources/steam_api64.dll",
+          "to": "."
+        }
       ]
     }
   },
