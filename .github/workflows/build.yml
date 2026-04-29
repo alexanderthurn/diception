@@ -1,0 +1,276 @@
+name: Build & Deploy to Steam
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+
+  # ─── Windows / Tauri ── ACTIVE ────────────────────────────────────────────
+  build-win-tauri:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Fetch Steam SDK
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path src-tauri/resources | Out-Null
+          Invoke-WebRequest -Uri "${{ secrets.STEAM_SDK_ZIP_URL }}" -OutFile steam_sdk.zip
+          Expand-Archive -Path steam_sdk.zip -DestinationPath steam_sdk_tmp -Force
+          Get-ChildItem -Recurse steam_sdk_tmp -Filter steam_api64.dll | Where-Object { $_.Directory.Name -eq 'win64' } | Copy-Item -Destination src-tauri/resources/steam_api64.dll
+
+      - run: npm ci
+
+      - run: npm run tauri:build:win
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win-tauri
+          path: dist-tauri/win/
+
+  # ─── Windows / Electron ── inactive ───────────────────────────────────────
+  build-win-electron:
+    if: false
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Fetch Steam SDK
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path src-tauri/resources | Out-Null
+          Invoke-WebRequest -Uri "${{ secrets.STEAM_SDK_ZIP_URL }}" -OutFile steam_sdk.zip
+          Expand-Archive -Path steam_sdk.zip -DestinationPath steam_sdk_tmp -Force
+          Get-ChildItem -Recurse steam_sdk_tmp -Filter steam_api64.dll | Where-Object { $_.Directory.Name -eq 'win64' } | Copy-Item -Destination src-tauri/resources/steam_api64.dll
+
+      - run: npm ci
+
+      - run: npm run electron:build:win
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win-electron
+          path: dist-tauri/electron-win/
+
+  # ─── Mac / Tauri ── ACTIVE ────────────────────────────────────────────────
+  build-mac-tauri:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Fetch Steam SDK
+        run: |
+          mkdir -p src-tauri/resources
+          curl -fsSL "${{ secrets.STEAM_SDK_ZIP_URL }}" -o steam_sdk.zip
+          unzip -o steam_sdk.zip -d steam_sdk_tmp
+          find steam_sdk_tmp -path "*/osx/libsteam_api.dylib" -exec cp {} src-tauri/resources/libsteam_api.dylib \;
+
+      - run: npm ci
+
+      - run: npm run tauri:build:mac
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-tauri
+          path: dist-tauri/mac/
+
+  # ─── Mac / Electron ── inactive ───────────────────────────────────────────
+  build-mac-electron:
+    if: false
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Fetch Steam SDK
+        run: |
+          mkdir -p src-tauri/resources
+          curl -fsSL "${{ secrets.STEAM_SDK_ZIP_URL }}" -o steam_sdk.zip
+          unzip -o steam_sdk.zip -d steam_sdk_tmp
+          find steam_sdk_tmp -path "*/osx/libsteam_api.dylib" -exec cp {} src-tauri/resources/libsteam_api.dylib \;
+
+      - run: npm ci
+
+      - run: npm run electron:build:mac
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac-electron
+          path: dist-tauri/electron-mac/
+
+  # ─── Linux / Tauri ── inactive ────────────────────────────────────────────
+  build-linux-tauri:
+    if: false
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Fetch Steam SDK
+        run: |
+          mkdir -p src-tauri/resources
+          curl -fsSL "${{ secrets.STEAM_SDK_ZIP_URL }}" -o steam_sdk.zip
+          unzip -o steam_sdk.zip -d steam_sdk_tmp
+          find steam_sdk_tmp -path "*/linux64/libsteam_api.so" -exec cp {} src-tauri/resources/libsteam_api.so \;
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - run: npm ci
+
+      - run: npm run tauri:build:linux
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-tauri
+          path: dist-tauri/linux/
+
+  # ─── Linux / Electron ── ACTIVE ───────────────────────────────────────────
+  build-linux-electron:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Fetch Steam SDK
+        run: |
+          mkdir -p src-tauri/resources
+          curl -fsSL "${{ secrets.STEAM_SDK_ZIP_URL }}" -o steam_sdk.zip
+          unzip -o steam_sdk.zip -d steam_sdk_tmp
+          find steam_sdk_tmp -path "*/linux64/libsteam_api.so" -exec cp {} src-tauri/resources/libsteam_api.so \;
+
+      - run: npm ci
+
+      - run: npm run electron:build:linux
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-electron
+          path: dist-tauri/electron-linux/
+
+  # ─── Android / Tauri ── ACTIVE ────────────────────────────────────────────
+  build-android-tauri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK 25
+        run: sdkmanager "ndk;25.2.9519653"
+
+      - run: npm ci
+
+      - name: Init Android project
+        run: npm run android:init
+
+      - name: Build Android
+        run: npm run tauri:build:android
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/25.2.9519653
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: dist-tauri/android/DICEPTION.apk
+
+  # ─── Deploy to Steam ──────────────────────────────────────────────────────
+  deploy-steam:
+    needs: [build-win-tauri, build-mac-tauri, build-linux-electron]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: steam-builds
+
+      - name: Publish to Steam
+        uses: game-ci/steam-deploy@v3
+        with:
+          username: ${{ secrets.STEAM_USERNAME }}
+          configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
+          appId: ${{ secrets.STEAM_APP_ID }}
+          buildDescription: "${{ github.ref_name }} (GitHub Action)"
+          releaseBranch: ${{ secrets.STEAM_RELEASE_BRANCH }}
+          depot1Path: "steam-builds/win-tauri"
+          depot2Path: "steam-builds/mac-tauri"
+          depot3Path: "steam-builds/linux-electron"

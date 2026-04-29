@@ -100,7 +100,12 @@ app.whenReady().then(() => {
     initSteam();
     createWindow();
 });
-app.on('window-all-closed', () => app.quit());
+app.on('window-all-closed', () => {
+    app.quit();
+    // On Linux, Electron leaves crashpad_handler and other subprocesses running,
+    // which prevents Steam from detecting the game as exited. Force a clean exit.
+    if (process.platform === 'linux') setTimeout(() => process.exit(0), 300);
+});
 
 // ── IPC: Steam ────────────────────────────────────────────────────────────────
 
