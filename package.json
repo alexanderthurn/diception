@@ -42,6 +42,12 @@
     "mac": {},
     "linux": {
       "executableName": "diception",
+      "extraResources": [
+        {
+          "from": "src-tauri/icons/128x128.png",
+          "to": "icon.png"
+        }
+      ],
       "extraFiles": [
         {
           "from": "src-tauri/resources/libsteam_api.so",

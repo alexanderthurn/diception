@@ -62,7 +62,9 @@ function createWindow() {
         height: 600,
         center: true,
         frame: true,
-        icon: path.join(__dirname, '../src-tauri/icons/128x128.png'),
+        icon: app.isPackaged
+            ? path.join(process.resourcesPath, 'icon.png')
+            : path.join(__dirname, '../src-tauri/icons/128x128.png'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
