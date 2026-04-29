@@ -29,11 +29,24 @@ let sw    = null;  // steamworks.js module
 
 function initSteam() {
     try {
-        sw     = require('steamworks.js');
+        sw = require('steamworks.js');
+    } catch (e) {
+        console.warn('[Steam] Load failed:', e.message);
+        return;
+    }
+
+    // Overlay hook is non-critical — never let it block Steam init.
+    // On Linux the Steam overlay is injected by Steam itself; this call
+    // only matters on Windows/Mac and may throw in some packaged environments.
+    try {
         sw.electronEnableSteamOverlay();
-        steam  = sw.init();
+    } catch (e) {
+        console.warn('[Steam] Overlay hook failed (non-fatal):', e.message);
+    }
+
+    try {
+        steam = sw.init();
         console.log('[Steam] Initialized:', steam.localplayer.getName());
-        // steamworks.js runs callbacks automatically via Node event loop — no setInterval needed
     } catch (e) {
         console.warn('[Steam] Init failed:', e.message);
     }
