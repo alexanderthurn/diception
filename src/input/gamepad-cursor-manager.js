@@ -653,7 +653,6 @@ export class GamepadCursorManager {
     }
 
     updateCursorColor(cursor, index) {
-        const isMenuOpen = !!document.querySelector('.modal:not(.hidden)');
         // Non-game screens: use sequential humanIndex color (same as settings dialog)
         const isNonGameScreen = !!(
             document.querySelector('#main-menu:not(.hidden)') ||
@@ -664,13 +663,14 @@ export class GamepadCursorManager {
         );
         let colorHex;
 
-        if (isNonGameScreen || !isMenuOpen) {
-            // Non-game menus or no menu: use auto-sequential color
+        if (isNonGameScreen) {
+            // Non-game screens (main menu, settings, help): sequential humanIndex color
             const humanIndex = this.inputManager.getHumanIndex(index);
             const color = GAME.HUMAN_COLORS[humanIndex % GAME.HUMAN_COLORS.length];
             colorHex = '#' + color.toString(16).padStart(6, '0');
         } else {
-            // Game context (setup, in-game, pause): use assignment color
+            // Game context (setup, in-game, pause) or no menu: use assignment color so
+            // cursor always matches the player color shown in the setup panel and on the map.
             const assignment = this.inputManager.getGamepadAssignment(index);
             if (assignment === 'master') {
                 colorHex = '#FFFFFF';
