@@ -469,6 +469,17 @@ export class GamepadCursorManager {
             // Periodically check if player info changed (e.g. game started)
             this.updateCursorColor(cursor, idx);
 
+            // Keep the active player's cursor on top so it's always visible
+            {
+                const isMenuOpen = !!document.querySelector('.modal:not(.hidden)');
+                const inGame = !isMenuOpen && this.game.players.length > 0 && !this.game.gameOver;
+                const currentPlayer = inGame ? this.game.currentPlayer : null;
+                const isActive = currentPlayer && !currentPlayer.isBot &&
+                    this.inputManager.canGamepadControlPlayer(idx, currentPlayer.id);
+                const zIdx = isActive ? '2' : '1';
+                if (cursor.element.style.zIndex !== zIdx) cursor.element.style.zIndex = zIdx;
+            }
+
             cursor.element.style.opacity = '1.0';
         }
 
