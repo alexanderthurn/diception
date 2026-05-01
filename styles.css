@@ -5047,6 +5047,25 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     height: 100%;
 }
 
+.cursor-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+@keyframes cursor-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.22); }
+}
+
+.gamepad-cursor.cursor-active {
+    z-index: 100051;
+}
+
+.gamepad-cursor.cursor-active .cursor-inner {
+    animation: cursor-pulse 1.4s ease-in-out infinite;
+}
+
 #gamepad-cursors-container {
     pointer-events: none;
 }

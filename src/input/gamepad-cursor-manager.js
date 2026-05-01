@@ -469,15 +469,14 @@ export class GamepadCursorManager {
             // Periodically check if player info changed (e.g. game started)
             this.updateCursorColor(cursor, idx);
 
-            // Keep the active player's cursor on top so it's always visible
+            // Pulse + z-index boost for the cursor whose turn it is
             {
                 const isMenuOpen = !!document.querySelector('.modal:not(.hidden)');
                 const inGame = !isMenuOpen && this.game.players.length > 0 && !this.game.gameOver;
                 const currentPlayer = inGame ? this.game.currentPlayer : null;
-                const isActive = currentPlayer && !currentPlayer.isBot &&
-                    this.inputManager.canGamepadControlPlayer(idx, currentPlayer.id);
-                const zIdx = isActive ? '2' : '1';
-                if (cursor.element.style.zIndex !== zIdx) cursor.element.style.zIndex = zIdx;
+                const isActive = !!(currentPlayer && !currentPlayer.isBot &&
+                    this.inputManager.canGamepadControlPlayer(idx, currentPlayer.id));
+                cursor.element.classList.toggle('cursor-active', isActive);
             }
 
             cursor.element.style.opacity = '1.0';
@@ -576,14 +575,18 @@ export class GamepadCursorManager {
 
         // Corner-bracket crosshair — open centre keeps tile text readable,
         // square geometry fits the rectangular game aesthetic.
+        // .cursor-inner wraps SVG+label so scale animation doesn't conflict with the
+        // outer element's translate transform used for positioning.
         el.innerHTML = `
-            <svg viewBox="0 0 64 64">
-                <path d="M 0 20 L 0 0 L 20 0"  fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
-                <path d="M 44 0 L 64 0 L 64 20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
-                <path d="M 0 44 L 0 64 L 20 64"  fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
-                <path d="M 44 64 L 64 64 L 64 44" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
-            </svg>
-            <span class="gp-cursor-label">${index + 1}</span>
+            <div class="cursor-inner">
+                <svg viewBox="0 0 64 64">
+                    <path d="M 0 20 L 0 0 L 20 0"  fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
+                    <path d="M 44 0 L 64 0 L 64 20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
+                    <path d="M 0 44 L 0 64 L 20 64"  fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
+                    <path d="M 44 64 L 64 64 L 64 44" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
+                </svg>
+                <span class="gp-cursor-label">${index + 1}</span>
+            </div>
         `;
 
         // Restore last known position, or place at player corner on first appearance.
