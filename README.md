@@ -107,6 +107,13 @@ npm run tauri:build:android  # → dist-tauri/android/DICEPTION.apk (unsigned)
 > **First-time Android setup:** run `npm run android:init` once to generate the
 > `src-tauri/gen/android/` project files.
 
+> **Android env vars:** Android Studio installs the SDK to `~/Library/Android/sdk` on macOS. Set these before running any Android command:
+> ```bash
+> export ANDROID_HOME="$HOME/Library/Android/sdk"
+> export NDK_HOME="$HOME/Library/Android/sdk/ndk/$(ls $HOME/Library/Android/sdk/ndk | tail -1)"
+> export PATH="$ANDROID_HOME/platform-tools:$PATH"
+> ```
+
 ### CI Builds (GitHub Actions)
 
 All four platforms are built automatically on every `v*` tag push or via manual
