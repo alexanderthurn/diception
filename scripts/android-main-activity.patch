@@ -1,0 +1,27 @@
+--- a/src-tauri/gen/android/app/src/main/java/com/feuerware/diception/MainActivity.kt
++++ b/src-tauri/gen/android/app/src/main/java/com/feuerware/diception/MainActivity.kt
+@@ -2,10 +2,24 @@
+
+ import android.os.Bundle
+ import androidx.activity.enableEdgeToEdge
++import androidx.core.view.WindowInsetsCompat
++import androidx.core.view.WindowInsetsControllerCompat
+
+ class MainActivity : TauriActivity() {
+   override fun onCreate(savedInstanceState: Bundle?) {
+     enableEdgeToEdge()
+     super.onCreate(savedInstanceState)
++    hideSystemBars()
++  }
++
++  override fun onWindowFocusChanged(hasFocus: Boolean) {
++    super.onWindowFocusChanged(hasFocus)
++    if (hasFocus) hideSystemBars()
++  }
++
++  private fun hideSystemBars() {
++    val controller = WindowInsetsControllerCompat(window, window.decorView)
++    controller.hide(WindowInsetsCompat.Type.systemBars())
++    controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+   }
+ }
