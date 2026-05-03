@@ -247,10 +247,22 @@ jobs:
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/25.2.9519653
 
+      - name: Sign APK
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > diception.keystore
+          BUILD_TOOLS=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
+          $BUILD_TOOLS/apksigner sign \
+            --ks diception.keystore \
+            --ks-key-alias diception \
+            --ks-pass pass:${{ secrets.ANDROID_STORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.ANDROID_STORE_PASSWORD }} \
+            --out dist-tauri/android/DICEPTION-signed.apk \
+            dist-tauri/android/DICEPTION.apk
+
       - uses: actions/upload-artifact@v4
         with:
           name: android
-          path: dist-tauri/android/DICEPTION.apk
+          path: dist-tauri/android/DICEPTION-signed.apk
 
   # ─── Deploy to Steam ──────────────────────────────────────────────────────
   deploy-steam:
