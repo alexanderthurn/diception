@@ -1,12 +1,12 @@
 --- a/src-tauri/gen/android/app/src/main/java/com/feuerware/diception/MainActivity.kt
 +++ b/src-tauri/gen/android/app/src/main/java/com/feuerware/diception/MainActivity.kt
 @@ -2,10 +2,24 @@
-
+ 
  import android.os.Bundle
  import androidx.activity.enableEdgeToEdge
 +import androidx.core.view.WindowInsetsCompat
 +import androidx.core.view.WindowInsetsControllerCompat
-
+ 
  class MainActivity : TauriActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
      enableEdgeToEdge()
@@ -25,3 +25,23 @@
 +    controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
    }
  }
+--- a/src-tauri/gen/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
++++ b/src-tauri/gen/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+@@ -1,5 +1,7 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+-  <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
++  <foreground>
++    <inset android:drawable="@mipmap/ic_launcher_foreground" android:inset="18%"/>
++  </foreground>
+   <background android:drawable="@color/ic_launcher_background"/>
+ </adaptive-icon>
+--- a/src-tauri/gen/android/app/src/main/res/values/ic_launcher_background.xml
++++ b/src-tauri/gen/android/app/src/main/res/values/ic_launcher_background.xml
+@@ -1,4 +1,4 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <resources>
+-  <color name="ic_launcher_background">#fff</color>
++  <color name="ic_launcher_background">#080820</color>
+ </resources>
+\ No newline at end of file
