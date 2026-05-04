@@ -1,0 +1,80 @@
+name: Build Android
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+
+  # ─── Android / Tauri ── ACTIVE ────────────────────────────────────────────
+  build-android-tauri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK 25
+        run: sdkmanager "ndk;25.2.9519653"
+
+      - run: npm ci
+
+      - name: Init Android project
+        run: npm run android:init
+
+      - name: Build Android
+        run: npm run tauri:build:android
+        env:
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/25.2.9519653
+
+      - name: Sign APK and AAB
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > diception.keystore
+          BUILD_TOOLS=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
+          $BUILD_TOOLS/apksigner sign \
+            --ks diception.keystore \
+            --ks-key-alias diception \
+            --ks-pass pass:${{ secrets.ANDROID_STORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.ANDROID_STORE_PASSWORD }} \
+            --out dist-tauri/android/DICEPTION-signed.apk \
+            dist-tauri/android/DICEPTION.apk
+          cp src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab dist-tauri/android/DICEPTION.aab
+          jarsigner -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore diception.keystore \
+            -storepass ${{ secrets.ANDROID_STORE_PASSWORD }} \
+            -keypass ${{ secrets.ANDROID_STORE_PASSWORD }} \
+            dist-tauri/android/DICEPTION.aab diception
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: dist-tauri/android/DICEPTION-signed.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: dist-tauri/android/DICEPTION.aab
