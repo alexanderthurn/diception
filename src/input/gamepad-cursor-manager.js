@@ -1058,6 +1058,44 @@ export class GamepadCursorManager {
             return rws;
         };
 
+        // Prefer true spatial navigation inside the active container first.
+        // This avoids "wrong panel" jumps when rows are not perfectly aligned.
+        const findDirectionalNeighbor = (container, fromEl, direction) => {
+            if (!fromEl) return null;
+            const fromRect = fromEl.getBoundingClientRect();
+            const fromCx = fromRect.left + fromRect.width / 2;
+            const fromCy = fromRect.top + fromRect.height / 2;
+            const candidates = [...container.querySelectorAll(GamepadCursorManager.FOCUSABLE)]
+                .filter(el => el !== fromEl && el.offsetParent !== null)
+                .map(el => {
+                    const r = el.getBoundingClientRect();
+                    return { el, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+                });
+            let best = null;
+            let bestScore = Infinity;
+            for (const c of candidates) {
+                const dx = c.cx - fromCx;
+                const dy = c.cy - fromCy;
+                const primary = (direction === 'right' || direction === 'left') ? dx : dy;
+                const perp = (direction === 'right' || direction === 'left') ? dy : dx;
+                if (
+                    (direction === 'right' && primary <= 0) ||
+                    (direction === 'left' && primary >= 0) ||
+                    (direction === 'down' && primary <= 0) ||
+                    (direction === 'up' && primary >= 0)
+                ) {
+                    continue;
+                }
+                // Favor progress in the requested axis; penalize perpendicular drift.
+                const score = Math.abs(primary) + Math.abs(perp) * 1.75;
+                if (score < bestScore) {
+                    bestScore = score;
+                    best = c.el;
+                }
+            }
+            return best;
+        };
+
         // Determine which container currently holds focus
         const inSidePanel = sidePanelActive && sidePanel.contains(current);
         const activeContainer = inSidePanel ? sidePanel : modal;
@@ -1096,7 +1134,12 @@ export class GamepadCursorManager {
             if (nextCol >= 0 && nextCol < rows[rowIdx].length) {
                 // Normal within-row move
                 target = rows[rowIdx][nextCol].el;
-            } else if (isRight && !inSidePanel && sidePanelActive) {
+            } else {
+                // First try nearest element in this direction inside the same container.
+                target = findDirectionalNeighbor(activeContainer, current, isRight ? 'right' : 'left');
+            }
+
+            if (!target && isRight && !inSidePanel && sidePanelActive) {
                 // At right edge of modal → cross into side panel
                 const spRows = buildGrid(sidePanel);
                 if (spRows.length) {
@@ -1107,7 +1150,7 @@ export class GamepadCursorManager {
                     );
                     target = closest[0].el;
                 }
-            } else if (isLeft && inSidePanel) {
+            } else if (!target && isLeft && inSidePanel) {
                 // At left edge of side panel → cross back into modal
                 const mRows = buildGrid(modal);
                 if (mRows.length) {
