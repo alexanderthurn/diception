@@ -707,8 +707,22 @@ export class InputController {
         const targetX = selTile.x + dx;
         const targetY = selTile.y + dy;
 
+        const fromTile = this.game.map.getTile(selTile.x, selTile.y);
         const targetTile = this.game.map.getTile(targetX, targetY);
         if (!targetTile) return;
+
+        // D-pad/WASD "walk through own territory" should exit attack-chaining mode.
+        // Keep cursor on the walked-to tile so movement can continue normally.
+        if (fromTile && targetTile.owner === fromTile.owner) {
+            this.deselect(sourceId);
+            const cursorState = this._getCursorState(sourceId);
+            cursorState.visible = true;
+            cursorState.x = targetX;
+            cursorState.y = targetY;
+            this.renderer.setCursor(targetX, targetY, sourceId);
+            if (gamepadIndex !== -1) this.syncGamepadCursor(gamepadIndex, sourceId);
+            return;
+        }
 
         this.handleTileClick(targetTile, targetX, targetY, sourceId);
 
