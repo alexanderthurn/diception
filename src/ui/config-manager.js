@@ -242,6 +242,11 @@ export class ConfigManager {
         setModsPanelUiOpen(open, 'setup-mods-panel', 'setup-mods-toggle');
     }
 
+    /** Reusable active-mods summary text for the setup configuration. */
+    getSetupActiveModsSummary() {
+        return getActiveModsSummaryFromDom('', 'game-seed');
+    }
+
     /** Show/hide the header reset button based on whether ANY setting differs from defaults. */
     syncSetupResetBtn() {
         const resetBtn = document.getElementById('setup-reset-all-btn');
@@ -281,7 +286,7 @@ export class ConfigManager {
         const panel = document.getElementById('setup-mods-panel');
         const panelOpen = panel && !panel.classList.contains('hidden');
         summary.classList.toggle('hidden', panelOpen);
-        summary.textContent = getActiveModsSummaryFromDom('', 'game-seed');
+        summary.textContent = this.getSetupActiveModsSummary();
     }
 
     syncSetupModsExpanderFromStorage() {

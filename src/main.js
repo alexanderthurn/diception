@@ -1311,7 +1311,7 @@ async function init() {
     setupInputEvents(game, inputManager, sessionManager);
 
     // Menu Navigation
-    setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor);
+    setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, configManager);
 
 
     // Check for auto-resume
@@ -1523,7 +1523,7 @@ function setupInputEvents(game, inputManager, sessionManager) {
 }
 
 // Helper: Setup all menu navigation (main menu, settings, howto, about, pause)
-function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor) {
+function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, configManager) {
     const mainMenu = document.getElementById('main-menu');
 
     // Update stats display whenever the main menu becomes visible
@@ -1943,6 +1943,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         }
         // In-game (no modal open) → open pause menu
         if (sessionManagerRef && sessionManagerRef.isGameInProgress()) {
+            syncPauseModsSummary();
             pauseModal.classList.remove('hidden');
             initGameSpeedSegmented();
             syncPauseAudioBtns();
@@ -2067,6 +2068,19 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         const mainSfxVol = document.getElementById('sfx-volume');
         if (pauseMusicVol && mainMusicVol) pauseMusicVol.value = mainMusicVol.value;
         if (pauseSfxVol && mainSfxVol) pauseSfxVol.value = mainSfxVol.value;
+    }
+
+    function syncPauseModsSummary() {
+        const summaryEl = document.getElementById('pause-mods-summary');
+        if (!summaryEl) return;
+        if (!(sessionManagerRef && sessionManagerRef.isGameInProgress())) {
+            summaryEl.classList.add('hidden');
+            summaryEl.textContent = '';
+            return;
+        }
+        const summary = configManager.getSetupActiveModsSummary();
+        summaryEl.textContent = summary || '';
+        summaryEl.classList.toggle('hidden', !summary);
     }
 
     // Toggles delegate to the main buttons so AudioController handles everything
