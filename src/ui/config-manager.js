@@ -66,6 +66,9 @@ export class ConfigManager {
         this.elements = {
             mapSizeInput: document.getElementById('map-size'),
             mapSizeVal: document.getElementById('map-size-val'),
+            mapSizeGroup: document.getElementById('setup-map-size-group'),
+            mapSourceRow: document.getElementById('setup-map-source-row'),
+            mapSourceBtn: document.getElementById('setup-map-source-btn'),
             mapStyleGroup: document.getElementById('map-style-group'),
             humanCountInput: document.getElementById('human-count'),
             botCountInput: document.getElementById('bot-count'),
@@ -93,6 +96,8 @@ export class ConfigManager {
 
         // Current selected bot AI
         this.selectedBotAI = localStorage.getItem('dicy_botAI') || 'easy';
+        this.customMapSource = null;
+        this.onCustomMapSourceCleared = null;
     }
 
     /**
@@ -241,7 +246,8 @@ export class ConfigManager {
     syncSetupResetBtn() {
         const resetBtn = document.getElementById('setup-reset-all-btn');
         if (!resetBtn) return;
-        resetBtn.classList.toggle('hidden', this.isSetupAtFreeDefaults());
+        const hasCustomMapSource = !!this.customMapSource;
+        resetBtn.classList.toggle('hidden', this.isSetupAtFreeDefaults() && !hasCustomMapSource);
         const orange = !isFullVersion() || !this.areModsAtDefaults();
         resetBtn.classList.toggle('modal-reset-btn--orange', orange);
     }
@@ -306,6 +312,7 @@ export class ConfigManager {
 
     /** Reset mods + basic fields (map size, humans, bots, bot AI) to free-version defaults. */
     resetToFreeDefaults() {
+        if (this.customMapSource) this.clearCustomMapSource();
         applyModsDefaultsForPrefix('');
         const el = this.elements;
         if (el.mapSizeInput)    { el.mapSizeInput.value = SETUP_DEFAULTS.mapSize; this.updateMapSizeDisplay(); }
@@ -335,6 +342,11 @@ export class ConfigManager {
             this.updateMapSizeDisplay();
             const sizePreset = this.getMapSize(parseInt(el.mapSizeInput.value));
             localStorage.setItem('dicy_mapSize', `${sizePreset.width}x${sizePreset.height}`);
+            handleChange();
+        });
+
+        el.mapSourceBtn?.addEventListener('click', () => {
+            this.clearCustomMapSource();
             handleChange();
         });
 
@@ -603,6 +615,47 @@ export class ConfigManager {
         }
 
         this.syncSetupModsExpanderLive();
+    }
+
+    setCustomMapSource(level, label) {
+        const el = this.elements;
+        if (!level || !el.mapSourceBtn) return;
+        if (!this.customMapSource) {
+            this.customMapSource = {
+                mapSize: el.mapSizeInput?.value ?? '2',
+                mapStyle: el.mapStyleInput?.value ?? 'random',
+                level,
+            };
+        } else {
+            this.customMapSource.level = level;
+        }
+        this.updateConfigFromLevel(level);
+        el.mapSourceBtn.textContent = label || 'Campaign Level';
+        el.mapSourceRow?.classList.remove('hidden');
+        el.mapSizeGroup?.classList.add('hidden');
+        el.mapStyleGroup?.classList.add('hidden');
+    }
+
+    clearCustomMapSource() {
+        const el = this.elements;
+        if (!this.customMapSource) return;
+        if (el.mapSizeInput) {
+            el.mapSizeInput.value = this.customMapSource.mapSize;
+            this.updateMapSizeDisplay();
+        }
+        if (el.mapStyleInput) {
+            el.mapStyleInput.value = this.customMapSource.mapStyle;
+        }
+        el.mapSourceRow?.classList.add('hidden');
+        el.mapSizeGroup?.classList.remove('hidden');
+        el.mapStyleGroup?.classList.remove('hidden');
+        this.customMapSource = null;
+        if (this.onCustomMapSourceCleared) this.onCustomMapSourceCleared();
+        this.syncSetupModsExpanderLive();
+    }
+
+    getCustomMapSourceLevel() {
+        return this.customMapSource?.level || null;
     }
 
     /**

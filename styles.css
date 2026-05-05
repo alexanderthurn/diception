@@ -3074,6 +3074,18 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     font-weight: bold;
 }
 
+#setup-map-source-group {
+    width: 100%;
+}
+
+#setup-map-source-btn {
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 
 /* Scenario Browser Modal */
 .scenario-browser-content {

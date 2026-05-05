@@ -648,6 +648,15 @@ async function init() {
     sessionManager.setConfigManager(configManager);
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
+    configManager.onCustomMapSourceCleared = () => {
+        scenarioBrowser.setCustomSetupLevelActive(false);
+    };
+    scenarioBrowser.setOnOpenCustomFromLevel((level, label) => {
+        configManager.setCustomMapSource(level, label);
+        syncBasicFieldHighlights();
+        updateStartBtnModsLock();
+        configManager.syncSetupResetBtn();
+    });
     const syncBasicFieldHighlights = () => {
         if (isFullVersion()) return;
         const toggle = (groupId, differs) =>

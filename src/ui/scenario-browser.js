@@ -29,6 +29,8 @@ export class ScenarioBrowser {
         this.selectedCampaign = null;
         this.selectedLevelIndex = null;
         this.isOwner = false;
+        this.customSetupLevelActive = false;
+        this.customSetupLevel = null;
 
         this.scenarioBrowserModal = document.getElementById('scenario-browser-modal');
         this.scenarioBrowserCloseBtn = document.getElementById('scenario-browser-close-btn');
@@ -48,6 +50,7 @@ export class ScenarioBrowser {
 
         this.onScenarioLoaded = null;
         this.onStartGame = null;
+        this.onOpenCustomFromLevel = null;
         this.effectsManager = null;
 
         this.BACKEND_URL = '';
@@ -82,6 +85,10 @@ export class ScenarioBrowser {
 
     setOnStartGame(fn) {
         this.onStartGame = fn;
+    }
+
+    setOnOpenCustomFromLevel(fn) {
+        this.onOpenCustomFromLevel = fn;
     }
 
     async open() {
@@ -525,10 +532,6 @@ export class ScenarioBrowser {
             this.pendingCampaign = campaign;
             this.selectedLevelIndex = firstUnsolvedIndex;
 
-            if (this.configManager) {
-                this.configManager.updateConfigFromLevel(level);
-            }
-
             localStorage.setItem('dicy_loadedCampaign', campaign.owner);
             localStorage.setItem('dicy_loadedLevelIndex', String(firstUnsolvedIndex));
             if (campaign.ownerId) {
@@ -781,6 +784,15 @@ export class ScenarioBrowser {
             playBtn.onclick = () => finish('play');
             primaryRow.appendChild(playBtn);
 
+            const solved = campaign?.owner && getSolvedLevels(campaign.owner).includes(idx);
+            if (solved) {
+                const customBtn = document.createElement('button');
+                customBtn.className = 'tron-btn';
+                customBtn.textContent = 'Custom';
+                customBtn.onclick = () => finish('custom');
+                primaryRow.appendChild(customBtn);
+            }
+
 
             if (this.isOwner) {
                 const editBtn = document.createElement('button');
@@ -857,6 +869,7 @@ export class ScenarioBrowser {
         }).then(result => {
             const idx = currentIndex;
             if (result === 'play') this.selectAndPlayLevel(idx, { immediateStart: true });
+            else if (result === 'custom') this.selectLevelForCustomGame(idx);
             else if (result === 'edit') this.openEditorForLevel(idx);
             else if (result === 'delete') this.deleteLevel(idx);
         });
@@ -954,8 +967,8 @@ export class ScenarioBrowser {
         this.pendingLevel = level;
         this.pendingCampaign = this.selectedCampaign;
         this.selectedLevelIndex = index;
-
-        this.configManager.updateConfigFromLevel(level);
+        this.customSetupLevelActive = false;
+        this.customSetupLevel = null;
 
         localStorage.setItem('dicy_loadedCampaign', this.selectedCampaign.owner);
         localStorage.setItem('dicy_loadedLevelIndex', String(index));
@@ -977,6 +990,25 @@ export class ScenarioBrowser {
             this.scenarioBrowserModal.classList.add('hidden');
             this.setupModal.classList.remove('hidden');
             if (this.effectsManager) this.effectsManager.startIntroMode();
+        }
+    }
+
+    selectLevelForCustomGame(index) {
+        const level = this.campaignManager.getLevel(this.selectedCampaign, index);
+        if (!level) return;
+        this.pendingLevel = level;
+        this.pendingCampaign = this.selectedCampaign;
+        this.selectedLevelIndex = index;
+        this.customSetupLevelActive = true;
+        this.customSetupLevel = level;
+        localStorage.removeItem('dicy_campaignMode');
+        this.scenarioBrowserModal.classList.add('hidden');
+        this.setupModal.classList.remove('hidden');
+        if (this.effectsManager) this.effectsManager.startIntroMode();
+        if (this.onOpenCustomFromLevel) {
+            const campaignName = this.getCampaignDisplayName(this.selectedCampaign);
+            const label = `${campaignName} - Level ${index + 1}`;
+            this.onOpenCustomFromLevel(level, label);
         }
     }
 
@@ -1069,9 +1101,23 @@ export class ScenarioBrowser {
         this.pendingLevel = null;
         this.pendingCampaign = null;
         this.selectedLevelIndex = null;
+        this.customSetupLevelActive = false;
+        this.customSetupLevel = null;
         localStorage.removeItem('dicy_loadedCampaign');
         localStorage.removeItem('dicy_loadedLevelIndex');
         localStorage.removeItem('dicy_loadedCampaignId');
+    }
+
+    setCustomSetupLevelActive(active) {
+        this.customSetupLevelActive = !!active;
+        if (!this.customSetupLevelActive) {
+            this.customSetupLevel = null;
+            localStorage.removeItem('dicy_campaignMode');
+        }
+    }
+
+    getCustomSetupLevel() {
+        return this.customSetupLevel;
     }
 
     loadPendingScenarioIfNeeded() {

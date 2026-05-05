@@ -216,6 +216,10 @@ export class GameStarter {
      * Start a new game from the setup screen (persists settings).
      */
     startGame() {
+        if (this.configManager?.customMapSource) {
+            // Custom map source should always launch via custom-game logic, never campaign mode.
+            localStorage.removeItem('dicy_campaignMode');
+        }
         const isTutorialCampaign = localStorage.getItem('dicy_campaignMode') === '1' &&
             localStorage.getItem('dicy_loadedCampaign') === 'Tutorial';
         if (!isFullVersion() && !isTutorialCampaign && !this.configManager.isSetupAtFreeDefaults()) {
@@ -307,7 +311,7 @@ export class GameStarter {
         const attackRule = config.attackRule || 'classic';
         const supplyRule = config.supplyRule || 'classic';
 
-        const applyScenarioBranch = (pendingLevel) => {
+        const applyScenarioBranch = (pendingLevel, { initializeAI = true } = {}) => {
             this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);
             const { attacksPerTurn: ap, secondsPerTurn: secLim, secondsPerAttack: secAtkLim } = resolveTurnLimitsFromLevel(pendingLevel, config);
             this.game.fullBoardRule = fullBoardRule;
@@ -323,10 +327,17 @@ export class GameStarter {
             this.secondsPerAttack = secAtkLim;
             this.game.emit('gameStart', { players: this.game.players, map: this.game.map });
             this.game.startTurn();
-            this.initializePlayerAIs(config.botAI);
+            if (initializeAI) this.initializePlayerAIs(config.botAI);
         };
 
-        const isCampaignMode = localStorage.getItem('dicy_campaignMode');
+        const isCampaignMode = this.configManager?.customMapSource
+            ? null
+            : localStorage.getItem('dicy_campaignMode');
+        const customSetupLevel = this.configManager?.getCustomMapSourceLevel?.()
+            || this.scenarioBrowser?.getCustomSetupLevel?.();
+        const hasCustomSetupLevel = !isCampaignMode &&
+            !!this.configManager?.customMapSource &&
+            !!customSetupLevel;
 
         if (isCampaignMode) {
             this.scenarioBrowser.loadPendingScenarioIfNeeded();
@@ -336,6 +347,64 @@ export class GameStarter {
                 applyScenarioBranch(pendingLevel);
             } else {
                 const gameConfig = buildGameConfigFromLevel(pendingLevel, config, { isCampaign: true, mapSeed });
+                this.game.startGame(gameConfig);
+                this.attacksPerTurn = this.game.attacksPerTurn;
+                this.secondsPerTurn = this.game.secondsPerTurn;
+                this.secondsPerAttack = this.game.secondsPerAttack;
+                this.initializePlayerAIs(gameConfig.botAI);
+            }
+        } else if (hasCustomSetupLevel) {
+            const pendingLevel = customSetupLevel;
+            if (pendingLevel && pendingLevel.type !== 'map') {
+                let scenarioHumans = 1;
+                let scenarioBots = Math.max(0, Number(pendingLevel.bots ?? 1));
+                if (Array.isArray(pendingLevel.players) && pendingLevel.players.length > 0) {
+                    scenarioHumans = pendingLevel.players.filter(p => !p.isBot).length;
+                    scenarioBots = pendingLevel.players.filter(p => p.isBot).length;
+                }
+                const customHumans = Math.max(0, Number(config.humanCount || 0));
+                const customBots = Math.max(0, Number(config.botCount || 0));
+                const keepScenarioPlayers = customHumans === scenarioHumans && customBots === scenarioBots;
+                if (keepScenarioPlayers) {
+                    applyScenarioBranch(pendingLevel);
+                } else {
+                    const gameConfig = {
+                        humanCount: customHumans,
+                        botCount: customBots,
+                        mapWidth: pendingLevel.width ?? config.mapWidth,
+                        mapHeight: pendingLevel.height ?? config.mapHeight,
+                        maxDice: pendingLevel.maxDice ?? config.maxDice,
+                        diceSides: pendingLevel.diceSides ?? config.diceSides,
+                        mapStyle: 'preset',
+                        gameMode: pendingLevel.gameMode ?? config.gameMode,
+                        botAI: config.botAI,
+                        attacksPerTurn: config.attacksPerTurn ?? 0,
+                        secondsPerTurn: config.secondsPerTurn ?? 0,
+                        secondsPerAttack: config.secondsPerAttack ?? 0,
+                        fullBoardRule,
+                        attackRule,
+                        supplyRule,
+                        playMode: config.playMode,
+                        gameSpeed: config.gameSpeed,
+                        effectsQuality: config.effectsQuality,
+                        predefinedMap: { tiles: pendingLevel.tiles || [] },
+                        mapSeed,
+                        resolveStartingPlayer: (players, rng) => resolveStartingPlayerByDifficulty(players, config.botAI, rng),
+                    };
+                    this.attacksPerTurn = gameConfig.attacksPerTurn;
+                    this.secondsPerTurn = gameConfig.secondsPerTurn;
+                    this.secondsPerAttack = gameConfig.secondsPerAttack;
+                    this.game.startGame(gameConfig);
+                    this.attacksPerTurn = this.game.attacksPerTurn;
+                    this.secondsPerTurn = this.game.secondsPerTurn;
+                    this.secondsPerAttack = this.game.secondsPerAttack;
+                    this.initializePlayerAIs(gameConfig.botAI);
+                }
+            } else {
+                const gameConfig = buildGameConfigFromLevel(pendingLevel, config, { isCampaign: false, mapSeed });
+                this.attacksPerTurn = gameConfig.attacksPerTurn;
+                this.secondsPerTurn = gameConfig.secondsPerTurn;
+                this.secondsPerAttack = gameConfig.secondsPerAttack;
                 this.game.startGame(gameConfig);
                 this.attacksPerTurn = this.game.attacksPerTurn;
                 this.secondsPerTurn = this.game.secondsPerTurn;
