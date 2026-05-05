@@ -7365,7 +7365,7 @@ details.settings-group[open]>summary.settings-group-header::after {
 /* Modal shifts -100px, wide modal is 840px (420px half-width), so panel goes at 50% + 420px - 100px + gap */
 @media (min-width: 1260px) {
     #setup-modal:has(#setup-mods-panel:not(.hidden))~#gamepad-side-panel.gp-panel-active {
-        left: calc(50% + 332px);
+        left: calc(50% + 132px);
     }
 }
 
