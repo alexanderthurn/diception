@@ -26,7 +26,7 @@ export class EffectsManager {
         // Initialize subsystems
         const app = options.renderer?.app ?? null;
         this.background = new BackgroundRenderer(stage, { app });
-        this.particles = new ParticleSystem(this.container, { zIndex: 10 });
+        this.particles = new ParticleSystem(this.container, { zIndex: 10, initialPoolSize: 350 });
 
         // Tile size for position calculations (matches grid-renderer)
         this.tileSize = options.tileSize || 60;
@@ -36,7 +36,9 @@ export class EffectsManager {
         this.worldTransform = null;
 
         // Screen-space particle system for UI effects (fireworks, confetti)
-        this.screenParticles = new ParticleSystem(stage, { zIndex: 200 });
+        this.screenParticles = new ParticleSystem(stage, { zIndex: 200, initialPoolSize: 700 });
+        this.particles.prewarm(150);
+        this.screenParticles.prewarm(300);
 
         // Load saved quality
         this.loadQuality();

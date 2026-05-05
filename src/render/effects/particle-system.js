@@ -39,6 +39,12 @@ class ParticlePool {
         }
         this.active.clear();
     }
+
+    prewarm(count) {
+        for (let i = 0; i < count; i++) {
+            this.pool.push(this.createFn());
+        }
+    }
 }
 
 // Particle data structure (separate from graphics)
@@ -229,7 +235,9 @@ export class ParticleSystem {
 
         // Particle management
         this.particles = [];
-        this.pool = new ParticlePool(() => this.createParticleGraphics(), 200);
+        const initialPoolSize = Math.max(0, options.initialPoolSize ?? 300);
+        this.pool = new ParticlePool(() => this.createParticleGraphics(), initialPoolSize);
+        this.dataPool = [];
 
         // Quality settings
         this.quality = 'high'; // 'off', 'medium', 'high'
@@ -238,6 +246,15 @@ export class ParticleSystem {
         // Start update loop
         this.tickerCallback = this.update.bind(this);
         Ticker.shared.add(this.tickerCallback);
+    }
+
+    prewarm(count = 0) {
+        const amount = Math.max(0, count | 0);
+        if (amount <= 0) return;
+        this.pool.prewarm(amount);
+        for (let i = 0; i < amount; i++) {
+            this.dataPool.push(new ParticleData());
+        }
     }
 
     createParticleGraphics() {
@@ -315,7 +332,8 @@ export class ParticleSystem {
     }
 
     spawnParticle(x, y, config, options = {}) {
-        const data = new ParticleData();
+        const data = this.dataPool.pop() || new ParticleData();
+        data.reset();
         const graphics = this.pool.acquire();
 
         // Position
@@ -411,7 +429,14 @@ export class ParticleSystem {
             // Remove dead particles
             if (p.life <= 0) {
                 this.pool.release(p.graphics);
-                this.particles.splice(i, 1);
+                p.graphics = null;
+                p.delay = undefined;
+                this.dataPool.push(p);
+                const lastIndex = this.particles.length - 1;
+                if (i !== lastIndex) {
+                    this.particles[i] = this.particles[lastIndex];
+                }
+                this.particles.pop();
             }
         }
     }
@@ -423,6 +448,9 @@ export class ParticleSystem {
     clear() {
         for (const p of this.particles) {
             this.pool.release(p.graphics);
+            p.graphics = null;
+            p.delay = undefined;
+            this.dataPool.push(p);
         }
         this.particles = [];
     }
