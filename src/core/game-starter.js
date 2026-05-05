@@ -1,6 +1,7 @@
 import { createAI } from './ai/index.js';
 import { Dialog } from '../ui/dialog.js';
 import { isFullVersion } from '../scenarios/user-identity.js';
+import { showUnlockDialog } from '../ui/show-unlock-dialog.js';
 
 /**
  * After shuffle, pick the starting player index based on bot difficulty.
@@ -221,7 +222,7 @@ export class GameStarter {
         if (!isFullVersion() && !isTutorialCampaign && !this.configManager.isSetupAtFreeDefaults()) {
             this.configManager.resetToFreeDefaults();
             this._onFreeVersionBlock?.();
-            Dialog.showFullVersion();
+            showUnlockDialog();
             return;
         }
 

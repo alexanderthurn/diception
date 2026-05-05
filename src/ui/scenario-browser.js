@@ -1,4 +1,5 @@
 import { Dialog } from './dialog.js';
+import { showUnlockDialog } from './show-unlock-dialog.js';
 import { CampaignManager } from '../scenarios/campaign-manager.js';
 import { getGridDimensions } from '../scenarios/campaign-data.js';
 import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress.js';
@@ -297,7 +298,7 @@ export class ScenarioBrowser {
             btn.appendChild(subSpan);
 
             btn.addEventListener('click', () => {
-                if (locked) { Dialog.showFullVersion(); return; }
+                if (locked) { showUnlockDialog(); return; }
                 if (comingSoon) return;
                 const target = (c.isEmpty || (c.levels && c.levels.length === 0 && c.isUserCampaign))
                     ? { ...c, isEmpty: true } : c;

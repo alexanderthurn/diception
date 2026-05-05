@@ -1,3 +1,5 @@
+import { isTimedUnlockActive } from '../core/timed-unlock.js';
+
 /**
  * User Identity - ownerId, ownerIdType, owner
  * Used for campaign ownership and backend auth.
@@ -106,9 +108,15 @@ export function isSteamContext() {
 }
 
 /**
- * Check if we're on Android
+ * Check if we're on Android.
+ * Add ?android=true to the URL to simulate Android in a browser (persists via localStorage).
+ * Add ?android=false to clear the simulation.
  */
 export function isAndroid() {
+    const param = new URLSearchParams(window.location.search).get('android');
+    if (param === 'true')  { localStorage.setItem('dicy_sim_android', '1'); return true; }
+    if (param === 'false') { localStorage.removeItem('dicy_sim_android'); return false; }
+    if (localStorage.getItem('dicy_sim_android')) return true;
     return /Android/i.test(navigator.userAgent);
 }
 
@@ -172,7 +180,15 @@ export async function initFullVersionCheck() {
  * Requires initFullVersionCheck() to have been awaited first.
  */
 export function isFullVersion() {
-    return _resolvedFull === true;
+    if (_resolvedFull === true) return true;
+    return isTimedUnlockActive();
+}
+
+/**
+ * Activate full version in-memory (e.g. after successful IAP).
+ */
+export function activateFullVersion() {
+    _resolvedFull = true;
 }
 
 /**

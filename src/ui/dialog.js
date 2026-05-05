@@ -154,7 +154,7 @@ export class Dialog {
                 <span>Full Version</span>
             </a>
             <ul class="full-version-features">
-                <li>The complete 84-level Campaign</li>
+                <li>Full Campaign</li>
                 <li>Expanded Maps and more difficult Bots</li>
                 <li>Local Multiplayer for up to 8 players</li>
                 <li>Mods: Parallel turns, special attack rules…</li>

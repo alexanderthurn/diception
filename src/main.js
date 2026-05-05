@@ -38,6 +38,8 @@ import { initCheatCode, registerCheatContext } from './cheat.js';
 import { markLevelSolved, unmarkLevelSolved } from './scenarios/campaign-progress.js';
 import { unlockAchievement, removeAchievement, setUnlockCallback, setProgressCallback, resetAllAchievementsAndStats } from './core/achievement-manager.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid, isFullVersion, initFullVersionCheck } from './scenarios/user-identity.js';
+import { showUnlockDialog } from './ui/show-unlock-dialog.js';
+import { isTimedUnlockActive, getTimedUnlockRemainingMs, setTimedUnlock } from './core/timed-unlock.js';
 import { initStorage, flushStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { AchievementsPanel, TITLES as ACH_TITLES } from './ui/achievements-panel.js';
@@ -86,6 +88,15 @@ async function init() {
     await initStorage();
     // Resolve full vs demo before any isFullVersion() calls
     await initFullVersionCheck();
+
+    // Stub window.android when simulating Android in a browser
+    if (isAndroid() && !window.android) {
+        window.android = {
+            quit:          () => Promise.resolve(),
+            isDev:         () => Promise.resolve(true),
+            storeProvider: 'mock',
+        };
+    }
 
     // Sync achievement state from Steam — Steam's backend is authoritative,
     // so if the .sav file wasn't synced (e.g. first launch on a new machine),
@@ -211,7 +222,66 @@ async function init() {
         }
     }
 
-    // Credits line: "Hi, name" on Steam, "by Alexander Thurn" or "Demo Version" elsewhere
+    // Credits line: "Hi, name" on Steam, countdown/label on Android, "by Alexander Thurn" or "Demo Version" elsewhere
+    const demoLabel = isAndroid() ? 'LITE VERSION' : 'Demo Version';
+    let _creditsCountdownInterval = null;
+    let _creditsClickCount = 0;
+    let _creditsClickTimer = null;
+    let _onTimerExpiry = null; // wired up after setupMenuNavigation runs
+
+    function refreshCreditsLabel() {
+        const el = document.getElementById('main-menu-credits');
+        const loadingCredits = document.querySelector('#loading-screen .credits');
+
+        clearInterval(_creditsCountdownInterval);
+        _creditsCountdownInterval = null;
+
+        if (window.steam) return; // Steam path handled separately below
+
+        if (isAndroid() && isTimedUnlockActive()) {
+            const update = () => {
+                const ms = getTimedUnlockRemainingMs();
+                if (ms <= 0) {
+                    clearInterval(_creditsCountdownInterval);
+                    _creditsCountdownInterval = null;
+                    _onTimerExpiry?.();
+                    return;
+                }
+                const totalSec = Math.ceil(ms / 1000);
+                const m = Math.floor(totalSec / 60);
+                const s = totalSec % 60;
+                const label = `${m}:${String(s).padStart(2, '0')} LEFT`;
+                if (el) { el.textContent = label; el.classList.remove('demo-version-label'); }
+            };
+            update();
+            _creditsCountdownInterval = setInterval(update, 1000);
+
+            if (el && !el._timerClickBound) {
+                el._timerClickBound = true;
+                el.addEventListener('click', () => {
+                    if (!isTimedUnlockActive()) return;
+                    _creditsClickCount++;
+                    clearTimeout(_creditsClickTimer);
+                    _creditsClickTimer = setTimeout(() => { _creditsClickCount = 0; }, 1500);
+                    if (_creditsClickCount >= 5) {
+                        _creditsClickCount = 0;
+                        setTimedUnlock(3 / 60);
+                        refreshCreditsLabel();
+                    }
+                });
+            }
+            return;
+        }
+
+        const full = isFullVersion();
+        const versionLabel = full ? 'by Alexander Thurn' : demoLabel;
+        if (el) { el.textContent = versionLabel; el.classList.toggle('demo-version-label', !full); }
+        if (loadingCredits) {
+            if (!full) { loadingCredits.textContent = demoLabel; loadingCredits.classList.add('demo-version-label'); }
+            else { loadingCredits.classList.remove('demo-version-label'); }
+        }
+    }
+
     if (window.steam) {
         window.steam.getUserName().then(name => {
             console.log('Steam User:', name);
@@ -219,17 +289,13 @@ async function init() {
             if (isFullVersion()) {
                 if (el) el.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">Hi, ${name}</span>`;
             } else {
-                if (el) { el.textContent = 'Demo Version'; el.classList.add('demo-version-label'); }
+                if (el) { el.textContent = demoLabel; el.classList.add('demo-version-label'); }
                 const loadingCredits = document.querySelector('#loading-screen .credits');
-                if (loadingCredits) { loadingCredits.textContent = 'Demo Version'; loadingCredits.classList.add('demo-version-label'); }
+                if (loadingCredits) { loadingCredits.textContent = demoLabel; loadingCredits.classList.add('demo-version-label'); }
             }
         });
     } else {
-        const versionLabel = isFullVersion() ? 'by Alexander Thurn' : 'Demo Version';
-        const el = document.getElementById('main-menu-credits');
-        if (el) { el.textContent = versionLabel; el.classList.toggle('demo-version-label', !isFullVersion()); }
-        const loadingCredits = document.querySelector('#loading-screen .credits');
-        if (loadingCredits && !isFullVersion()) { loadingCredits.textContent = 'Demo Version'; loadingCredits.classList.add('demo-version-label'); }
+        refreshCreditsLabel();
     }
 
     // Initialize Input System (create before renderer needs it)
@@ -676,6 +742,63 @@ async function init() {
     syncBasicFieldHighlights();
     updateStartBtnModsLock();
     configManager.syncSetupResetBtn();
+
+    function applyVersionUI() {
+        const full = isFullVersion();
+
+        const achBtn = document.getElementById('main-icons-achievements-btn');
+        const editorBtn = document.getElementById('main-icons-editor-btn');
+        if (achBtn) {
+            achBtn.classList.toggle('btn-locked', !full);
+            const icon = achBtn.querySelector('.sprite-icon');
+            if (icon) icon.className = `sprite-icon ${full ? 'icon-achievements' : 'icon-lock'}`;
+        }
+        if (editorBtn) {
+            editorBtn.classList.toggle('btn-locked', !full);
+            const icon = editorBtn.querySelector('.sprite-icon');
+            if (icon) icon.className = `sprite-icon ${full ? 'icon-map' : 'icon-lock'}`;
+        }
+
+        const saveBtn = document.getElementById('pause-save-btn');
+        if (saveBtn) {
+            saveBtn.classList.toggle('btn-locked', !full);
+            const existingIcon = saveBtn.querySelector('.sprite-icon');
+            if (!full && !existingIcon) {
+                saveBtn.prepend(Object.assign(document.createElement('span'), { className: 'sprite-icon icon-lock' }));
+            } else if (full && existingIcon) {
+                existingIcon.remove();
+            }
+        }
+
+        const lockLabels = [
+            document.querySelector('#setup-map-size-group > label'),
+            document.querySelector('#map-style-group > label'),
+            document.querySelector('#setup-humans-group > label'),
+            document.querySelector('#setup-bots-group > label'),
+            document.querySelector('#setup-bot-ai-group > label'),
+            ...document.querySelectorAll('#setup-mods-panel .control-group > label'),
+        ];
+        lockLabels.forEach(lbl => {
+            if (!lbl) return;
+            if (full) {
+                lbl.querySelectorAll('.demo-field-lock').forEach(el => el.remove());
+            } else if (!lbl.querySelector('.demo-field-lock')) {
+                lbl.append(Object.assign(document.createElement('span'), { className: 'sprite-icon icon-lock demo-field-lock' }));
+            }
+        });
+
+        if (full) {
+            ['setup-map-size-group', 'map-style-group', 'setup-humans-group', 'setup-bots-group', 'setup-bot-ai-group']
+                .forEach(id => document.getElementById(id)?.classList.remove('setup-mod-nondefault'));
+            const sb = document.getElementById('start-game-btn');
+            if (sb) { sb.classList.remove('btn-locked'); sb.querySelector('.sprite-icon')?.remove(); }
+        } else {
+            syncBasicFieldHighlights();
+            updateStartBtnModsLock();
+        }
+
+        refreshCreditsLabel();
+    }
 
     configManager.setupInputListeners(effectsManager, renderer, () => {
         syncBasicFieldHighlights();
@@ -1295,7 +1418,8 @@ async function init() {
     setupInputEvents(game, inputManager, sessionManager);
 
     // Menu Navigation
-    setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor);
+    const { showFullVersionOnlyDialog } = setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI);
+    _onTimerExpiry = () => { applyVersionUI(); showFullVersionOnlyDialog(); };
 
 
     // Check for auto-resume
@@ -1507,7 +1631,7 @@ function setupInputEvents(game, inputManager, sessionManager) {
 }
 
 // Helper: Setup all menu navigation (main menu, settings, howto, about, pause)
-function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor) {
+function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI) {
     const mainMenu = document.getElementById('main-menu');
 
     // Update stats display whenever the main menu becomes visible
@@ -1807,32 +1931,11 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     // --- Main Menu button wiring ---
     const achievementsPanel = new AchievementsPanel(achievementsModal);
 
-    function showFullVersionOnlyDialog() { Dialog.showFullVersion(); }
-
-    if (!isFullVersion()) {
-        const achBtn = document.getElementById('main-icons-achievements-btn');
-        const editorBtn = document.getElementById('main-icons-editor-btn');
-        const saveBtn = document.getElementById('pause-save-btn');
-        [achBtn, editorBtn, saveBtn].forEach(btn => {
-            if (!btn) return;
-            btn.classList.add('btn-locked');
-            const icon = btn.querySelector('.sprite-icon');
-            if (icon) icon.className = 'sprite-icon icon-lock';
-            else btn.prepend(Object.assign(document.createElement('span'), { className: 'sprite-icon icon-lock' }));
-        });
-
-        // Add a small lock icon next to the labels of demo-restricted setup fields
-        const mkLock = () => Object.assign(document.createElement('span'), { className: 'sprite-icon icon-lock demo-field-lock' });
-        [
-            document.querySelector('#setup-map-size-group > label'),
-            document.querySelector('#map-style-group > label'),
-            document.querySelector('#setup-humans-group > label'),
-            document.querySelector('#setup-bots-group > label'),
-            document.querySelector('#setup-bot-ai-group > label'),
-            ...document.querySelectorAll('#setup-mods-panel .control-group > label'),
-        ].forEach(lbl => { if (lbl) lbl.append(mkLock()); });
-
+    function showFullVersionOnlyDialog() {
+        showUnlockDialog().then(result => { if (result !== 'close') applyVersionUI(); });
     }
+
+    applyVersionUI();
 
     document.getElementById('main-icons-achievements-btn')?.addEventListener('click', () => {
         if (!isFullVersion()) { showFullVersionOnlyDialog(); return; }
@@ -2147,6 +2250,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             window.location.reload();
         }
     });
+
+    return { showFullVersionOnlyDialog };
 }
 
 // scenarioBrowserOpen / sessionManagerRef set by caller via module-level vars
