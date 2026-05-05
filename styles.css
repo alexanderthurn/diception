@@ -3489,15 +3489,16 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     pointer-events: none;
 }
 
-.level-hover-preview.level-hover-preview-solved::before {
-    content: '✓';
+.level-solved-icon {
     position: absolute;
+    z-index: 2;
+}
+
+.level-solved-icon-hover {
     top: 6px;
     left: 6px;
-    font-size: 12px;
-    color: #0f0;
-    font-weight: bold;
-    z-index: 2;
+    width: 12px;
+    height: 12px;
 }
 
 /* Override global canvas 100vw/100vh - preview uses --preview-size set in JS */
@@ -3576,15 +3577,11 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     }
 }
 
-.level-preview-dialog-content.level-preview-solved::before {
-    content: '✓';
-    position: absolute;
+.level-solved-icon-dialog {
     top: 12px;
     left: 12px;
-    font-size: 18px;
-    color: #0f0;
-    font-weight: bold;
-    z-index: 2;
+    width: 18px;
+    height: 18px;
 }
 
 .level-preview-dialog .dialog-body {

@@ -629,7 +629,12 @@ export class ScenarioBrowser {
         const el = document.createElement('div');
         el.className = 'level-hover-preview';
         const isSolved = index >= 0 && this.selectedCampaign?.owner && getSolvedLevels(this.selectedCampaign.owner).includes(index);
-        if (isSolved) el.classList.add('level-hover-preview-solved');
+        if (isSolved) {
+            el.classList.add('level-hover-preview-solved');
+            const solvedIcon = document.createElement('span');
+            solvedIcon.className = 'sprite-icon icon-check level-solved-icon level-solved-icon-hover';
+            el.appendChild(solvedIcon);
+        }
         const size = Math.min(80, Math.floor(window.innerWidth * 0.3), 128);
         const canvas = document.createElement('canvas');
         canvas.width = size;
@@ -677,7 +682,12 @@ export class ScenarioBrowser {
             const content = document.createElement('div');
             content.className = 'level-preview-dialog-content';
             const isSolved = campaign?.owner && getSolvedLevels(campaign.owner).includes(idx);
-            if (isSolved) content.classList.add('level-preview-solved');
+            if (isSolved) {
+                content.classList.add('level-preview-solved');
+                const solvedIcon = document.createElement('span');
+                solvedIcon.className = 'sprite-icon icon-check level-solved-icon level-solved-icon-dialog';
+                content.appendChild(solvedIcon);
+            }
             const size = Math.min(160, Math.floor(window.innerWidth * 0.5), 256);
 
             const navRow = document.createElement('div');
