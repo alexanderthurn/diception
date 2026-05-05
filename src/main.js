@@ -695,7 +695,14 @@ async function init() {
         configManager.toggleSetupModsPanel();
     });
     document.getElementById('setup-reset-all-btn')?.addEventListener('click', () => {
-        configManager.resetToFreeDefaults();
+        // Full version + orange state means "mods differ from defaults":
+        // reset only mods and keep core setup values (humans/bots/map/etc.).
+        if (isFullVersion() && !configManager.areModsAtDefaults()) {
+            configManager.resetModsToDefaults();
+        } else {
+            // Existing behavior for teal/default state and demo/free version.
+            configManager.resetToFreeDefaults();
+        }
         syncBasicFieldHighlights();
         updateStartBtnModsLock();
         renderGamepadAssignments();
