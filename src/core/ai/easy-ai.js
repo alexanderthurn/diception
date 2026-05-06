@@ -3,6 +3,7 @@
  * 
  * Strategy:
  * - Prefers bot targets over human targets
+ * - Intentionally grows smaller islands instead of the largest connected region
  * - Targets territories with the smallest number of dice
  * - Only attacks if own dice > defender dice
  * - Fallback: Same dice attacks (>=) only allowed if no attacks made yet this turn
@@ -18,8 +19,11 @@ export class EasyAI extends BaseAI {
     async takeTurn(gameSpeed = 'normal') {
         let safety = 0;
         let hasAttacked = false; // Track if any attack has been made
+        let successfulAttacks = 0;
         const delay = this.getAttackDelay(gameSpeed);
         const rampageMode = this.shouldRampageThisTurn();
+        const largestRegionTiles = this.game.map.findLargestConnectedRegionTiles(this.playerId);
+        const largestRegionSet = new Set(largestRegionTiles.map(t => `${t.x},${t.y}`));
 
         while (safety < 500) {
             safety++;
@@ -38,7 +42,8 @@ export class EasyAI extends BaseAI {
                             from: tile,
                             to: target,
                             defenderDice: target.dice,
-                            isHuman: isHuman
+                            isHuman: isHuman,
+                            fromInLargestRegion: largestRegionSet.has(`${tile.x},${tile.y}`),
                         });
                     }
                 }
@@ -46,11 +51,27 @@ export class EasyAI extends BaseAI {
 
             if (attackOptions.length === 0) break;
 
-            // Sort by target type first (bots before humans), then smallest dice
+            // Easy intentionally plays suboptimal macro: grow islands and avoid consolidating the biggest region.
             attackOptions.sort((a, b) => {
                 // Prefer attacking bots over humans
                 if (a.isHuman !== b.isHuman) {
                     return a.isHuman ? 1 : -1;
+                }
+
+                // Prefer attacks launched from smaller islands (outside largest connected region)
+                if (a.fromInLargestRegion !== b.fromInLargestRegion) {
+                    return a.fromInLargestRegion ? 1 : -1;
+                }
+
+                // Prefer not connecting back into the largest region
+                const aTouchesLargest = this.getAdjacentTiles(a.to.x, a.to.y).some(n =>
+                    largestRegionSet.has(`${n.x},${n.y}`) && (n.x !== a.from.x || n.y !== a.from.y)
+                );
+                const bTouchesLargest = this.getAdjacentTiles(b.to.x, b.to.y).some(n =>
+                    largestRegionSet.has(`${n.x},${n.y}`) && (n.x !== b.from.x || n.y !== b.from.y)
+                );
+                if (aTouchesLargest !== bTouchesLargest) {
+                    return aTouchesLargest ? 1 : -1;
                 }
 
                 if (a.defenderDice !== b.defenderDice) {
@@ -97,6 +118,11 @@ export class EasyAI extends BaseAI {
 
             if (res.success) {
                 hasAttacked = true; // Mark that we've attacked
+                successfulAttacks++;
+                // Easy sometimes stops pressing after already attacking at least twice.
+                if (successfulAttacks >= 2 && Math.random() < 0.2) {
+                    break;
+                }
                 if (delay > 0) {
                     await new Promise(r => setTimeout(r, delay));
                 }
