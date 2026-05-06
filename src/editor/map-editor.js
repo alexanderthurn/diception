@@ -303,6 +303,13 @@ export class MapEditor {
             diceSides: parseInt(SETUP_MOD_DEFAULTS.diceSides, 10),
             gameMode: SETUP_MOD_DEFAULTS.gameMode,
             turnTimeLimit: 0,
+            attacksPerTurn: parseInt(SETUP_MOD_DEFAULTS.attacksPerTurn, 10),
+            secondsPerTurn: parseInt(SETUP_MOD_DEFAULTS.secondsPerTurn, 10),
+            secondsPerAttack: parseInt(SETUP_MOD_DEFAULTS.secondsPerAttack, 10),
+            fullBoardRule: SETUP_MOD_DEFAULTS.fullBoardRule,
+            attackRule: SETUP_MOD_DEFAULTS.attackRule,
+            supplyRule: SETUP_MOD_DEFAULTS.supplyRule,
+            playMode: SETUP_MOD_DEFAULTS.playMode,
             bots: 2,
             botAI: 'easy',
 
@@ -750,19 +757,25 @@ export class MapEditor {
         });
 
         this.elements.editorModsPlayMode?.addEventListener('change', () => {
-            localStorage.setItem('dicy_playMode', this.elements.editorModsPlayMode.value);
+            this.state.playMode = this.elements.editorModsPlayMode.value || SETUP_MOD_DEFAULTS.playMode;
+            localStorage.setItem('dicy_playMode', this.state.playMode);
+            this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsTurnLimit?.addEventListener('change', () => {
-            localStorage.setItem('dicy_attacksPerTurn', this.elements.editorModsTurnLimit.value);
+            const v = parseInt(this.elements.editorModsTurnLimit.value, 10);
+            this.state.attacksPerTurn = Number.isFinite(v) ? Math.max(0, v) : 0;
+            localStorage.setItem('dicy_attacksPerTurn', String(this.state.attacksPerTurn));
+            this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsTurnSeconds?.addEventListener('change', () => {
             const v = parseInt(this.elements.editorModsTurnSeconds.value, 10);
             this.state.turnTimeLimit = Number.isFinite(v) ? v : 0;
-            localStorage.setItem('dicy_secondsPerTurn', this.elements.editorModsTurnSeconds.value);
+            this.state.secondsPerTurn = this.state.turnTimeLimit;
+            localStorage.setItem('dicy_secondsPerTurn', String(this.state.secondsPerTurn));
             this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
@@ -770,22 +783,31 @@ export class MapEditor {
         this.elements.editorModsAttackSeconds?.addEventListener('change', () => {
             const norm = normalizeAttackSecondsUi(this.elements.editorModsAttackSeconds.value);
             if (this.elements.editorModsAttackSeconds) this.elements.editorModsAttackSeconds.value = norm;
-            localStorage.setItem('dicy_secondsPerAttack', norm);
+            const v = parseInt(norm, 10);
+            this.state.secondsPerAttack = Number.isFinite(v) ? Math.max(0, v) : 0;
+            localStorage.setItem('dicy_secondsPerAttack', String(this.state.secondsPerAttack));
+            this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsFullBoard?.addEventListener('change', () => {
-            localStorage.setItem('dicy_fullBoardRule', this.elements.editorModsFullBoard.value);
+            this.state.fullBoardRule = this.elements.editorModsFullBoard.value || SETUP_MOD_DEFAULTS.fullBoardRule;
+            localStorage.setItem('dicy_fullBoardRule', this.state.fullBoardRule);
+            this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsAttackRule?.addEventListener('change', () => {
-            localStorage.setItem('dicy_attackRule', this.elements.editorModsAttackRule.value);
+            this.state.attackRule = this.elements.editorModsAttackRule.value || SETUP_MOD_DEFAULTS.attackRule;
+            localStorage.setItem('dicy_attackRule', this.state.attackRule);
+            this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsSupplyRule?.addEventListener('change', () => {
-            localStorage.setItem('dicy_supplyRule', this.elements.editorModsSupplyRule.value);
+            this.state.supplyRule = this.elements.editorModsSupplyRule.value || SETUP_MOD_DEFAULTS.supplyRule;
+            localStorage.setItem('dicy_supplyRule', this.state.supplyRule);
+            this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
 
@@ -1637,6 +1659,13 @@ export class MapEditor {
             diceSides: this.state.diceSides ?? 6,
             gameMode: this.state.gameMode ?? 'classic',
             turnTimeLimit: this.state.turnTimeLimit ?? 0,
+            attacksPerTurn: this.state.attacksPerTurn ?? 0,
+            secondsPerTurn: this.state.secondsPerTurn ?? 0,
+            secondsPerAttack: this.state.secondsPerAttack ?? 0,
+            fullBoardRule: this.state.fullBoardRule ?? SETUP_MOD_DEFAULTS.fullBoardRule,
+            attackRule: this.state.attackRule ?? SETUP_MOD_DEFAULTS.attackRule,
+            supplyRule: this.state.supplyRule ?? SETUP_MOD_DEFAULTS.supplyRule,
+            playMode: this.state.playMode ?? SETUP_MOD_DEFAULTS.playMode,
             ...(hasFixedSeed ? { seed: seedVal >>> 0 } : {}),
             tiles: Array.from(this.state.tiles.entries()).map(([key]) => {
                 const [x, y] = key.split(',').map(Number);
@@ -1695,6 +1724,13 @@ export class MapEditor {
             diceSides: this.state.diceSides,
             gameMode: this.state.gameMode ?? 'classic',
             turnTimeLimit: this.state.turnTimeLimit ?? 0,
+            attacksPerTurn: this.state.attacksPerTurn ?? 0,
+            secondsPerTurn: this.state.secondsPerTurn ?? 0,
+            secondsPerAttack: this.state.secondsPerAttack ?? 0,
+            fullBoardRule: this.state.fullBoardRule ?? SETUP_MOD_DEFAULTS.fullBoardRule,
+            attackRule: this.state.attackRule ?? SETUP_MOD_DEFAULTS.attackRule,
+            supplyRule: this.state.supplyRule ?? SETUP_MOD_DEFAULTS.supplyRule,
+            playMode: this.state.playMode ?? SETUP_MOD_DEFAULTS.playMode,
             players: this.state.players.map(p => ({
                 id: p.id,
                 isBot: p.isBot,
@@ -1751,10 +1787,10 @@ export class MapEditor {
         }
 
         if (el.editorModsPlayMode) {
-            el.editorModsPlayMode.value = localStorage.getItem('dicy_playMode') || SETUP_MOD_DEFAULTS.playMode;
+            el.editorModsPlayMode.value = this.state.playMode ?? (localStorage.getItem('dicy_playMode') || SETUP_MOD_DEFAULTS.playMode);
         }
         if (el.editorModsTurnLimit) {
-            el.editorModsTurnLimit.value = localStorage.getItem('dicy_attacksPerTurn') ?? SETUP_MOD_DEFAULTS.attacksPerTurn;
+            el.editorModsTurnLimit.value = String(this.state.attacksPerTurn ?? localStorage.getItem('dicy_attacksPerTurn') ?? SETUP_MOD_DEFAULTS.attacksPerTurn);
         }
 
         const ttl = this.state.turnTimeLimit ?? 0;
@@ -1763,17 +1799,17 @@ export class MapEditor {
         if (!secAllowed.includes(secVal)) secVal = SETUP_MOD_DEFAULTS.secondsPerTurn;
         if (el.editorModsTurnSeconds) el.editorModsTurnSeconds.value = secVal;
 
-        const atkSec = normalizeAttackSecondsUi(localStorage.getItem('dicy_secondsPerAttack') || SETUP_MOD_DEFAULTS.secondsPerAttack);
+        const atkSec = normalizeAttackSecondsUi(String(this.state.secondsPerAttack ?? (localStorage.getItem('dicy_secondsPerAttack') || SETUP_MOD_DEFAULTS.secondsPerAttack)));
         if (el.editorModsAttackSeconds) el.editorModsAttackSeconds.value = atkSec;
 
         if (el.editorModsFullBoard) {
-            el.editorModsFullBoard.value = localStorage.getItem('dicy_fullBoardRule') || SETUP_MOD_DEFAULTS.fullBoardRule;
+            el.editorModsFullBoard.value = this.state.fullBoardRule ?? (localStorage.getItem('dicy_fullBoardRule') || SETUP_MOD_DEFAULTS.fullBoardRule);
         }
         if (el.editorModsAttackRule) {
-            el.editorModsAttackRule.value = localStorage.getItem('dicy_attackRule') || SETUP_MOD_DEFAULTS.attackRule;
+            el.editorModsAttackRule.value = this.state.attackRule ?? (localStorage.getItem('dicy_attackRule') || SETUP_MOD_DEFAULTS.attackRule);
         }
         if (el.editorModsSupplyRule) {
-            el.editorModsSupplyRule.value = localStorage.getItem('dicy_supplyRule') || SETUP_MOD_DEFAULTS.supplyRule;
+            el.editorModsSupplyRule.value = this.state.supplyRule ?? (localStorage.getItem('dicy_supplyRule') || SETUP_MOD_DEFAULTS.supplyRule);
         }
 
         const tgi = document.getElementById(EDITOR_MODS_PREFIX + 'tournament-games');
@@ -1800,6 +1836,13 @@ export class MapEditor {
         this.state.diceSides = parseInt(this.elements.editorModsDiceSides?.value || SETUP_MOD_DEFAULTS.diceSides, 10);
         this.state.gameMode = this.elements.editorModsGameMode?.value || SETUP_MOD_DEFAULTS.gameMode;
         this.state.turnTimeLimit = parseInt(this.elements.editorModsTurnSeconds?.value || SETUP_MOD_DEFAULTS.secondsPerTurn, 10);
+        this.state.attacksPerTurn = parseInt(this.elements.editorModsTurnLimit?.value || SETUP_MOD_DEFAULTS.attacksPerTurn, 10);
+        this.state.secondsPerTurn = this.state.turnTimeLimit;
+        this.state.secondsPerAttack = parseInt(normalizeAttackSecondsUi(this.elements.editorModsAttackSeconds?.value || SETUP_MOD_DEFAULTS.secondsPerAttack), 10);
+        this.state.fullBoardRule = this.elements.editorModsFullBoard?.value || SETUP_MOD_DEFAULTS.fullBoardRule;
+        this.state.attackRule = this.elements.editorModsAttackRule?.value || SETUP_MOD_DEFAULTS.attackRule;
+        this.state.supplyRule = this.elements.editorModsSupplyRule?.value || SETUP_MOD_DEFAULTS.supplyRule;
+        this.state.playMode = this.elements.editorModsPlayMode?.value || SETUP_MOD_DEFAULTS.playMode;
         if (this.state.diceBrushValue > this.state.maxDice) this.state.diceBrushValue = this.state.maxDice;
         this.renderDicePalette();
         this.renderer?.setDiceSides(this.state.diceSides);
@@ -2524,6 +2567,13 @@ export class MapEditor {
         this.state.diceSides = scenario.diceSides || parseInt(SETUP_MOD_DEFAULTS.diceSides, 10);
         this.state.gameMode = scenario.gameMode || SETUP_MOD_DEFAULTS.gameMode;
         this.state.turnTimeLimit = scenario.turnTimeLimit ?? 0;
+        this.state.attacksPerTurn = scenario.attacksPerTurn ?? parseInt(SETUP_MOD_DEFAULTS.attacksPerTurn, 10);
+        this.state.secondsPerTurn = scenario.secondsPerTurn ?? this.state.turnTimeLimit ?? parseInt(SETUP_MOD_DEFAULTS.secondsPerTurn, 10);
+        this.state.secondsPerAttack = scenario.secondsPerAttack ?? parseInt(SETUP_MOD_DEFAULTS.secondsPerAttack, 10);
+        this.state.fullBoardRule = scenario.fullBoardRule || SETUP_MOD_DEFAULTS.fullBoardRule;
+        this.state.attackRule = scenario.attackRule || SETUP_MOD_DEFAULTS.attackRule;
+        this.state.supplyRule = scenario.supplyRule || SETUP_MOD_DEFAULTS.supplyRule;
+        this.state.playMode = scenario.playMode || SETUP_MOD_DEFAULTS.playMode;
 
         if (scenario.players && scenario.players.length > 0) {
             this.state.players = scenario.players.map(p => ({
