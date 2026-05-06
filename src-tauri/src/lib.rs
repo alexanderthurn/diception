@@ -380,6 +380,14 @@ pub fn run() {
                 tauri::plugin::Builder::<tauri::Wry, ()>::new("android-bridge")
                     .js_init_script(ANDROID_INIT_SCRIPT.to_string())
                     .build(),
+            )
+            .plugin(
+                tauri::plugin::Builder::<tauri::Wry, ()>::new("store")
+                    .setup(|_app, api| {
+                        api.register_android_plugin("com.feuerware.diception", "StorePlugin")?;
+                        Ok(())
+                    })
+                    .build(),
             );
     }
 

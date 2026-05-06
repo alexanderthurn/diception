@@ -1,6 +1,6 @@
 --- a/src-tauri/gen/android/app/src/main/java/com/feuerware/diception/MainActivity.kt
 +++ b/src-tauri/gen/android/app/src/main/java/com/feuerware/diception/MainActivity.kt
-@@ -2,10 +2,27 @@
+@@ -2,10 +2,28 @@
 
  import android.os.Bundle
  import androidx.activity.enableEdgeToEdge
@@ -9,7 +9,7 @@
 
  class MainActivity : TauriActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
-+    registerPlugin(StorePlugin::class.java)
++    StorePlugin.registerAmazonIap(applicationContext)
      enableEdgeToEdge()
      super.onCreate(savedInstanceState)
 +    hideSystemBars()
@@ -48,11 +48,14 @@
 \ No newline at end of file
 --- a/src-tauri/gen/android/app/build.gradle.kts
 +++ b/src-tauri/gen/android/app/build.gradle.kts
-@@ -53,6 +53,8 @@ dependencies {
+@@ -53,6 +53,10 @@ dependencies {
      androidTestImplementation("androidx.test.ext:junit:1.1.4")
      androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
 +    implementation("com.android.billingclient:billing-ktx:7.1.1")
 +    implementation("com.google.android.gms:play-services-ads:23.6.0")
++    // Amazon IAP: download SDK from https://developer.amazon.com/apps-and-games/sdk-download
++    // and place the JAR in src-tauri/gen/android/app/libs/
++    implementation(fileTree(dir = "libs", include = ["*.jar", "*.aar"]))
  }
 
  apply(from = "tauri.build.gradle.kts")
