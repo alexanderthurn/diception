@@ -179,6 +179,7 @@ Replace these placeholders in the codebase:
 
 Also:
 - Create an in-app product with ID `full_version` in Google Play Console → **Monetize → In-app products**
+- In Google Play Console → **Policy → App content → Advertising ID**, declare that your app uses advertising IDs (AdMob requires this). The `AD_ID` permission is already added to the manifest by the patch.
 - IAP and real ads only work when installed from the Play Store (internal testing track works, sideloaded APKs do not)
 
 ### Before publishing to Amazon Appstore
