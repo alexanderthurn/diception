@@ -2355,5 +2355,69 @@ window.benchmarkAI = async () => {
     console.table(tableData);
 };
 
+// Free-for-all benchmark: Easy vs Medium vs Hard in one game (console only)
+window.benchmarkAIFreeForAll = async (gameCount = 100) => {
+    const totalGames = Math.max(1, Number(gameCount) || 100);
+    const aiTypes = ['easy', 'medium', 'hard'];
+    const wins = { easy: 0, medium: 0, hard: 0, draws: 0 };
+
+    console.log(`%c🤖 AI FFA Benchmark: ${totalGames} games (easy vs medium vs hard)`, "font-weight:bold; font-size:16px; color:#0ff");
+
+    const runOneGame = async () => {
+        const game = new Game();
+        game.startGame({
+            humanCount: 0,
+            botCount: 3,
+            mapWidth: 5,
+            mapHeight: 5,
+            maxDice: 9,
+            diceSides: 6,
+            mapStyle: 'random',
+            gameMode: 'classic',
+            attacksPerTurn: 0,
+            secondsPerTurn: 0,
+            secondsPerAttack: 0,
+        });
+
+        const aiInstances = new Map();
+        for (let i = 0; i < game.players.length; i++) {
+            const player = game.players[i];
+            const aiId = aiTypes[i % aiTypes.length];
+            aiInstances.set(player.id, createAI(aiId, game, player.id));
+            player.aiId = aiId;
+            player.name = aiId;
+        }
+
+        let turns = 0;
+        const maxTurns = 2000;
+        while (!game.gameOver && turns < maxTurns) {
+            const ai = aiInstances.get(game.currentPlayer.id);
+            if (ai) await ai.takeTurn('fast');
+            game.endTurn();
+            turns++;
+        }
+
+        if (!game.winner) return 'draws';
+        return game.winner.aiId || 'draws';
+    };
+
+    for (let i = 0; i < totalGames; i++) {
+        const winner = await runOneGame();
+        wins[winner] = (wins[winner] || 0) + 1;
+        if ((i + 1) % 10 === 0 || i + 1 === totalGames) {
+            console.log(`Progress: ${i + 1}/${totalGames}`);
+        }
+        await new Promise(r => setTimeout(r, 0));
+    }
+
+    const summary = Object.fromEntries(
+        Object.entries(wins).map(([k, v]) => [k, `${v} (${(v / totalGames * 100).toFixed(1)}%)`])
+    );
+
+    console.log("✅ FFA Benchmark Complete");
+    console.table(summary);
+    return wins;
+};
+
 
 init();
