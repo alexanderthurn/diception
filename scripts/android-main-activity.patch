@@ -1,14 +1,15 @@
 --- a/src-tauri/gen/android/app/src/main/java/com/feuerware/diception/MainActivity.kt
 +++ b/src-tauri/gen/android/app/src/main/java/com/feuerware/diception/MainActivity.kt
-@@ -2,10 +2,24 @@
- 
+@@ -2,10 +2,27 @@
+
  import android.os.Bundle
  import androidx.activity.enableEdgeToEdge
 +import androidx.core.view.WindowInsetsCompat
 +import androidx.core.view.WindowInsetsControllerCompat
- 
+
  class MainActivity : TauriActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
++    registerPlugin(StorePlugin::class.java)
      enableEdgeToEdge()
      super.onCreate(savedInstanceState)
 +    hideSystemBars()
@@ -45,3 +46,25 @@
 +  <color name="ic_launcher_background">#080820</color>
  </resources>
 \ No newline at end of file
+--- a/src-tauri/gen/android/app/build.gradle.kts
++++ b/src-tauri/gen/android/app/build.gradle.kts
+@@ -53,6 +53,8 @@ dependencies {
+     androidTestImplementation("androidx.test.ext:junit:1.1.4")
+     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
++    implementation("com.android.billingclient:billing-ktx:7.1.1")
++    implementation("com.google.android.gms:play-services-ads:23.6.0")
+ }
+
+ apply(from = "tauri.build.gradle.kts")
+--- a/src-tauri/gen/android/app/src/main/AndroidManifest.xml
++++ b/src-tauri/gen/android/app/src/main/AndroidManifest.xml
+@@ -8,6 +8,11 @@
+         android:theme="@style/Theme.diception"
+         android:usesCleartextTraffic="${usesCleartextTraffic}">
++        <!-- Replace with your AdMob App ID from the AdMob console -->
++        <meta-data
++            android:name="com.google.android.gms.ads.APPLICATION_ID"
++            android:value="ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX"/>
+         <activity
+             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+             android:launchMode="singleTask"
