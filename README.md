@@ -126,6 +126,15 @@ npm run android:init
 
 This deletes any existing `gen/android/`, runs `tauri android init`, applies the app icon, copies `scripts/StorePlugin.kt` into the project, and applies `scripts/android-main-activity.patch` (fullscreen mode, billing/ads dependencies, AdMob meta-data).
 
+**Amazon IAP SDK** (required for Amazon Appstore builds): The SDK is fetched automatically if `AMAZON_IAP_SDK_URL` is set. Run after `android:init`:
+
+```bash
+export AMAZON_IAP_SDK_URL=https://your-host/amazon-appstore-sdk.zip
+npm run fetch-amazon-sdk
+```
+
+For local dev without Amazon support, skip this step — the `libs/` directory will be empty and the build still works (the Google Play path is used on non-Amazon devices).
+
 ### Development
 
 ```bash
@@ -147,20 +156,36 @@ adb install dist-tauri/android/DICEPTION-debug.apk
 npm run tauri:build:android  # → dist-tauri/android/DICEPTION.apk (unsigned universal)
 ```
 
-The CI workflow (`.github/workflows/android.yml`) signs both the APK and AAB automatically using the `ANDROID_KEYSTORE` (base64) and `ANDROID_STORE_PASSWORD` repository secrets.
+The CI workflow (`.github/workflows/android.yml`) is **currently disabled** (manual trigger only). Re-enable by restoring the `push.tags` trigger in the workflow file.
+
+### CI Secrets (GitHub → Settings → Secrets → Actions)
+
+Set these before re-enabling the CI workflow:
+
+| Secret | Required | Description |
+|---|---|---|
+| `ANDROID_KEYSTORE` | ✅ | Base64-encoded `.keystore` file. Generate: `keytool -genkey -v -keystore diception.keystore -alias diception -keyalg RSA -keysize 2048 -validity 10000` then `base64 -i diception.keystore` |
+| `ANDROID_STORE_PASSWORD` | ✅ | Password used when generating the keystore |
+| `AMAZON_IAP_SDK_URL` | Optional | URL to Amazon IAP SDK ZIP/JAR (your own hosted copy from Amazon Developer Portal). If omitted, the Amazon IAP path compiles but has no SDK JAR — Google Play path still works. |
 
 ### Before publishing to Google Play
 
-Two placeholders in the codebase must be replaced with real values:
+Replace these placeholders in the codebase:
 
 | File | Placeholder | Where to get it |
 |---|---|---|
 | `scripts/android-main-activity.patch` | `ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX` | AdMob console → App → App ID |
 | `scripts/StorePlugin.kt` | `YOUR_ADMOB_REWARDED_AD_UNIT_ID` | AdMob console → Ad units → Rewarded |
 
-Also create an in-app product with ID `full_version` in the Google Play Console under your app's **Monetize → In-app products**.
+Also:
+- Create an in-app product with ID `full_version` in Google Play Console → **Monetize → In-app products**
+- IAP and real ads only work when installed from the Play Store (internal testing track works, sideloaded APKs do not)
 
-> IAP and real ads only work when the app is installed from the Play Store (internal testing track works). They will not function on sideloaded APKs.
+### Before publishing to Amazon Appstore
+
+- Create an in-app item with SKU `full_version` in Amazon Developer Console → **In-App Items**
+- Download the Amazon IAP SDK JAR from https://developer.amazon.com/apps-and-games/sdk-download and host it somewhere (`AMAZON_IAP_SDK_URL`)
+- Ads are not implemented for Amazon — the "Watch Ad" button returns failure on Amazon devices; only the "Buy" (IAP) path works
 
 ### Simulating Android in the browser
 
@@ -168,18 +193,19 @@ Append `?android=true` to the dev server URL to enable Android mode (persists vi
 
 ### Store abstraction
 
-The native store is implemented in `scripts/StorePlugin.kt` (Kotlin Tauri plugin, `@TauriPlugin(name = "store")`). The JS side in `src/native/android-store.js` selects the provider via `window.android.storeProvider`:
+`scripts/StorePlugin.kt` is a Tauri Android plugin (`@TauriPlugin`) registered from Rust via `register_android_plugin`. It detects the device at runtime (`Build.MANUFACTURER`) and routes to Google Play or Amazon internally. The JS side in `src/native/android-store.js` selects a JS wrapper class via `window.android.storeProvider`:
 
 | `storeProvider` | JS class | Kotlin backend |
 |---|---|---|
-| `google_play` | `GooglePlayStore` | `StorePlugin.kt` via `plugin:store\|*` |
-| `amazon` | `AmazonStore` | *(future)* |
-| `mock` | `MockStore` | *(browser simulation)* |
+| `google_play` | `GooglePlayStore` | `StorePlugin` → Google Play Billing + AdMob |
+| `amazon` | `AmazonStore` | `StorePlugin` → Amazon IAP (no ads) |
+| `mock` | `MockStore` | Browser simulation only |
+
+`storeProvider` is set to `'google_play'` by the Rust init script and overridden to `'amazon'` at runtime via `webView.evaluateJavascript` if the device is Amazon.
 
 ### CI Builds (GitHub Actions)
 
-All four platforms are built automatically on every `v*` tag push or via manual
-workflow dispatch. Artifacts are available for download from the Actions run.
+The Android workflow (`.github/workflows/android.yml`) is currently set to manual trigger only. When re-enabled it runs on every `v*` tag push and produces signed APK + AAB artifacts.
 
 The `STEAM_SDK_ZIP_URL` repository secret must be set in GitHub →
 Settings → Secrets → Actions for the Steam API libraries to be included.

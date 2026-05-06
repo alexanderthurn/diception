@@ -1,17 +1,17 @@
+# TEMPORARILY DISABLED — Android build paused while Steam work is in progress.
+# Re-enable by restoring the push.tags trigger below, or trigger manually via
+# GitHub → Actions → Build Android → Run workflow.
 name: Build Android
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 jobs:
 
-  # ─── Android / Tauri ── ACTIVE ────────────────────────────────────────────
+  # ─── Android / Tauri ─────────────────────────────────────────────────────
   build-android-tauri:
     runs-on: ubuntu-latest
     steps:
@@ -45,6 +45,12 @@ jobs:
 
       - name: Init Android project
         run: npm run android:init
+
+      - name: Fetch Amazon IAP SDK
+        run: npm run fetch-amazon-sdk
+        env:
+          AMAZON_IAP_SDK_URL: ${{ secrets.AMAZON_IAP_SDK_URL }}
+        continue-on-error: true
 
       - name: Build Android
         run: npm run tauri:build:android
