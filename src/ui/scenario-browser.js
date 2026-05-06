@@ -412,9 +412,21 @@ export class ScenarioBrowser {
         exportBtn.setAttribute('aria-label', 'Download your campaign as JSON');
         exportBtn.addEventListener('click', () => this.exportUserCampaignJson());
 
+        const resetBtn = document.createElement('button');
+        resetBtn.type = 'button';
+        resetBtn.className = 'tron-btn small campaign-dev-btn';
+        resetBtn.textContent = 'Reset';
+        resetBtn.setAttribute('aria-label', 'Reset your campaign to zero levels');
+        resetBtn.addEventListener('click', () => this.resetUserCampaign());
+
+        const exportActions = document.createElement('div');
+        exportActions.className = 'campaign-dev-import-row';
+        exportActions.appendChild(exportBtn);
+        exportActions.appendChild(resetBtn);
+
         this.campaignUserActions.appendChild(copyRow);
         this.campaignUserActions.appendChild(importBtn);
-        this.campaignUserActions.appendChild(exportBtn);
+        this.campaignUserActions.appendChild(exportActions);
     }
 
     async importUserCampaignFromExisting(sourceSelect) {
@@ -425,8 +437,8 @@ export class ScenarioBrowser {
             return;
         }
         const source = this._devImportableCampaigns?.[idx];
-        if (!source?.levels?.length) {
-            await Dialog.alert('That campaign has no levels.', 'Copy campaign');
+        if (!source?.levels || !Array.isArray(source.levels)) {
+            await Dialog.alert('That campaign is invalid.', 'Copy campaign');
             return;
         }
 
@@ -440,6 +452,23 @@ export class ScenarioBrowser {
         const imp = await this.campaignManager.importFromExistingCampaign(source);
         if (!imp.ok) {
             await Dialog.alert(imp.errors.join('\n'), 'Copy failed');
+            return;
+        }
+        this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
+        await this.renderLevelGrid(this.selectedCampaign);
+    }
+
+    async resetUserCampaign() {
+        if (!isCampaignDevToolsEnabled()) return;
+        const proceed = await Dialog.confirm(
+            'Reset your campaign and remove all levels?',
+            'Reset campaign'
+        );
+        if (!proceed) return;
+
+        const result = await this.campaignManager.resetUserCampaign();
+        if (!result.ok) {
+            await Dialog.alert('Failed to reset campaign.', 'Reset campaign');
             return;
         }
         this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };

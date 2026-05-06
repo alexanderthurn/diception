@@ -4,7 +4,8 @@
  * Strategy:
  * - Priority 1: Attacks where own dice - defender dice >= 2 (strong advantage)
  * - Priority 2: Attacks where own dice - defender dice == 1 (moderate advantage)
- * - Priority 3: Same dice attacks only allowed if no attacks made yet this turn
+ * - Priority 3: Same dice attacks allowed for the first attack, then only while
+ *   it can still refill to max at end of turn
  * - No human/bot preference
  */
 import { BaseAI } from './base-ai.js';
@@ -19,10 +20,12 @@ export class MediumAI extends BaseAI {
         let safety = 0;
         let hasAttacked = false; // Track if any attack has been made
         const delay = this.getAttackDelay(gameSpeed);
+        const rampageMode = this.shouldRampageThisTurn();
 
         while (safety < 500) {
             safety++;
             if (!this.hasAttackBudget()) break;
+            const canSustainPressure = this.canFullyRefillAfterTurn();
 
             // Get all attackable territories
             const attackers = this.getMyTiles().filter(t => t.dice > 1);
@@ -44,17 +47,25 @@ export class MediumAI extends BaseAI {
 
             if (attackOptions.length === 0) break;
 
-            // Try to find an attack with dice advantage >= 2 (highest priority)
             let selectedMove = null;
-            for (const option of attackOptions) {
-                if (option.diceDiff >= 2) {
-                    selectedMove = option;
-                    break;
+
+            // Rampage: attack continuously, even equal or stronger enemies.
+            if (rampageMode) {
+                selectedMove = attackOptions[0] || null;
+            }
+
+            // Normal mode: try to find an attack with dice advantage >= 2 (highest priority)
+            if (!selectedMove) {
+                for (const option of attackOptions) {
+                    if (option.diceDiff >= 2) {
+                        selectedMove = option;
+                        break;
+                    }
                 }
             }
 
             // If no -2+ advantage, try dice advantage == 1
-            if (!selectedMove) {
+            if (!selectedMove && !rampageMode) {
                 for (const option of attackOptions) {
                     if (option.diceDiff === 1) {
                         selectedMove = option;
@@ -63,8 +74,9 @@ export class MediumAI extends BaseAI {
                 }
             }
 
-            // If no -1 advantage and no attacks made yet, allow same dice (>= 0) as fallback
-            if (!selectedMove && !hasAttacked) {
+            // If no -1 advantage, allow same dice fallback for first attack.
+            // After that, only continue same-dice pressure if we can still refill to max.
+            if (!selectedMove && !rampageMode && (!hasAttacked || canSustainPressure)) {
                 for (const option of attackOptions) {
                     if (option.diceDiff >= 0) {
                         selectedMove = option;

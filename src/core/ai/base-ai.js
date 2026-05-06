@@ -73,6 +73,85 @@ export class BaseAI {
     }
 
     /**
+     * Total missing dice on our tiles to bring all of them back to max.
+     */
+    getOwnDeficitToMax() {
+        const maxDice = this.game.maxDice || 0;
+        let deficit = 0;
+        for (const tile of this.game.map.tiles) {
+            if (tile.blocked || tile.owner !== this.playerId) continue;
+            deficit += Math.max(0, maxDice - tile.dice);
+        }
+        return deficit;
+    }
+
+    /**
+     * Expected reinforcement budget at end of turn: largest connected region + stored dice.
+     */
+    getOwnReinforcementBudget() {
+        const largestRegion = this.game.map.findLargestConnectedRegion(this.playerId) || 0;
+        const player = this.game.players.find(p => p.id === this.playerId);
+        const storedDice = player?.storedDice || 0;
+        return largestRegion + storedDice;
+    }
+
+    /**
+     * True if current board state suggests we can refill all owned tiles to max after ending turn.
+     */
+    canFullyRefillAfterTurn() {
+        return this.getOwnReinforcementBudget() >= this.getOwnDeficitToMax();
+    }
+
+    /**
+     * Snapshot of current board strength for one player.
+     */
+    getPlayerStrength(playerId) {
+        const tiles = this.game.map.getTilesByOwner(playerId);
+        const territoryCount = tiles.length;
+        const territoryDice = tiles.reduce((sum, t) => sum + t.dice, 0);
+        const player = this.game.players.find(p => p.id === playerId);
+        const storedDice = player?.storedDice || 0;
+        return {
+            playerId,
+            territoryCount,
+            totalDice: territoryDice + storedDice,
+        };
+    }
+
+    /**
+     * Strongest alive opponent by total dice, then territories.
+     */
+    getStrongestOpponentStrength() {
+        let best = null;
+        for (const p of this.game.players) {
+            if (!p.alive || p.id === this.playerId) continue;
+            const s = this.getPlayerStrength(p.id);
+            if (!best || s.totalDice > best.totalDice || (s.totalDice === best.totalDice && s.territoryCount > best.territoryCount)) {
+                best = s;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Turn-level rampage mode based on relative strength against the strongest opponent.
+     * Dominant rampage: self is massively ahead.
+     * Desperation rampage: self is massively behind.
+     */
+    shouldRampageThisTurn() {
+        const self = this.getPlayerStrength(this.playerId);
+        const leader = this.getStrongestOpponentStrength();
+        if (!leader || leader.totalDice <= 0 || leader.territoryCount <= 0) return false;
+
+        const diceRatio = self.totalDice / leader.totalDice;
+        const terrRatio = self.territoryCount / leader.territoryCount;
+
+        const dominantRampage = diceRatio >= 3.0 && terrRatio >= 3.0;
+        const desperationRampage = diceRatio <= 0.25 && terrRatio <= 0.25;
+        return dominantRampage || desperationRampage;
+    }
+
+    /**
      * Choose the single best attack, used by parallel-mode background timers.
      * Prefers highest dice advantage. Returns null if no valid attack.
      * @param {*|null} excludeTargetOwnerId - skip tiles owned by this player (Parallel-S)
