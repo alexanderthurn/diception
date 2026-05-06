@@ -255,6 +255,16 @@ export class CampaignManager {
     }
 
     /**
+     * Reset user campaign to an empty level list, preserving identity metadata.
+     */
+    async resetUserCampaign() {
+        await this.ensureUserCampaign();
+        this.userCampaign.levels = [];
+        this.saveUserCampaign();
+        return { ok: true, levelCount: 0 };
+    }
+
+    /**
      * Get grid dimensions for level count
      */
     static getGridDimensions(levelCount) {
