@@ -1,6 +1,6 @@
 --- a/src-tauri/gen/android/app/src/main/java/com/feuerware/diception/MainActivity.kt
 +++ b/src-tauri/gen/android/app/src/main/java/com/feuerware/diception/MainActivity.kt
-@@ -2,10 +2,27 @@
+@@ -2,10 +2,26 @@
 
  import android.os.Bundle
  import androidx.activity.enableEdgeToEdge
@@ -9,7 +9,6 @@
 
  class MainActivity : TauriActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
-+    registerPlugin(StorePlugin::class.java)
      enableEdgeToEdge()
      super.onCreate(savedInstanceState)
 +    hideSystemBars()

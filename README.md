@@ -98,21 +98,83 @@ Output lands in `dist-tauri/<platform>/`, ready for Steam upload.
 npm run tauri:build:mac      # → dist-tauri/mac/DICEPTION.app
 npm run tauri:build:win      # → dist-tauri/win/DICEPTION.exe + steam_api64.dll
 npm run tauri:build:linux    # → dist-tauri/linux/diception + libsteam_api.so
-npm run tauri:build:android  # → dist-tauri/android/DICEPTION.apk (unsigned)
 ```
 
-> **Android:** the APK is unsigned. Download it from the CI artifacts and sign it
-> manually with your keystore before distributing.
+---
 
-> **First-time Android setup:** run `npm run android:init` once to generate the
-> `src-tauri/gen/android/` project files.
+## Android
 
-> **Android env vars:** Android Studio installs the SDK to `~/Library/Android/sdk` on macOS. Set these before running any Android command:
-> ```bash
-> export ANDROID_HOME="$HOME/Library/Android/sdk"
-> export NDK_HOME="$HOME/Library/Android/sdk/ndk/$(ls $HOME/Library/Android/sdk/ndk | tail -1)"
-> export PATH="$ANDROID_HOME/platform-tools:$PATH"
-> ```
+The Android build uses Tauri and a native Kotlin store plugin for Google Play Billing and AdMob rewarded ads.
+
+### Environment
+
+Android Studio installs the SDK to `~/Library/Android/sdk` on macOS. Set these before running any Android command:
+
+```bash
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export NDK_HOME="$HOME/Library/Android/sdk/ndk/$(ls $HOME/Library/Android/sdk/ndk | tail -1)"
+export PATH="$ANDROID_HOME/platform-tools:$PATH"
+```
+
+### First-time setup
+
+`src-tauri/gen/android/` is gitignored. Run this once (and again after any Tauri upgrade) to regenerate it with all customisations applied:
+
+```bash
+npm run android:init
+```
+
+This deletes any existing `gen/android/`, runs `tauri android init`, applies the app icon, copies `scripts/StorePlugin.kt` into the project, and applies `scripts/android-main-activity.patch` (fullscreen mode, billing/ads dependencies, AdMob meta-data).
+
+### Development
+
+```bash
+npm run tauri:dev:android    # live-reload dev build on connected device
+```
+
+### Debug APK (sideload for testing)
+
+Builds a signed debug APK for `arm64` only — small enough to sideload without Play Store:
+
+```bash
+npm run android:build:debug  # → dist-tauri/android/DICEPTION-debug.apk
+adb install dist-tauri/android/DICEPTION-debug.apk
+```
+
+### Release APK / AAB (CI)
+
+```bash
+npm run tauri:build:android  # → dist-tauri/android/DICEPTION.apk (unsigned universal)
+```
+
+The CI workflow (`.github/workflows/android.yml`) signs both the APK and AAB automatically using the `ANDROID_KEYSTORE` (base64) and `ANDROID_STORE_PASSWORD` repository secrets.
+
+### Before publishing to Google Play
+
+Two placeholders in the codebase must be replaced with real values:
+
+| File | Placeholder | Where to get it |
+|---|---|---|
+| `scripts/android-main-activity.patch` | `ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX` | AdMob console → App → App ID |
+| `scripts/StorePlugin.kt` | `YOUR_ADMOB_REWARDED_AD_UNIT_ID` | AdMob console → Ad units → Rewarded |
+
+Also create an in-app product with ID `full_version` in the Google Play Console under your app's **Monetize → In-app products**.
+
+> IAP and real ads only work when the app is installed from the Play Store (internal testing track works). They will not function on sideloaded APKs.
+
+### Simulating Android in the browser
+
+Append `?android=true` to the dev server URL to enable Android mode (persists via `localStorage`). This shows the Lite Version UI, unlock dialog with mock store, and countdown timer. Clear with `?android=false`.
+
+### Store abstraction
+
+The native store is implemented in `scripts/StorePlugin.kt` (Kotlin Tauri plugin, `@TauriPlugin(name = "store")`). The JS side in `src/native/android-store.js` selects the provider via `window.android.storeProvider`:
+
+| `storeProvider` | JS class | Kotlin backend |
+|---|---|---|
+| `google_play` | `GooglePlayStore` | `StorePlugin.kt` via `plugin:store\|*` |
+| `amazon` | `AmazonStore` | *(future)* |
+| `mock` | `MockStore` | *(browser simulation)* |
 
 ### CI Builds (GitHub Actions)
 

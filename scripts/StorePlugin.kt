@@ -26,6 +26,8 @@ import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 
 // Product ID as configured in Google Play Console
 private const val PRODUCT_FULL_VERSION = "full_version"
@@ -35,7 +37,7 @@ private const val PRODUCT_FULL_VERSION = "full_version"
 private const val AD_UNIT_TEST = "ca-app-pub-3940256099942544/5224354917"
 private const val AD_UNIT_PROD = "YOUR_ADMOB_REWARDED_AD_UNIT_ID"
 
-@TauriPlugin(name = "store")
+@TauriPlugin
 class StorePlugin(activity: Activity) : Plugin(activity) {
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -43,13 +45,18 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
     private var pendingPurchaseInvoke: Invoke? = null
     private var rewardedAd: RewardedAd? = null
     private var pendingAdInvoke: Invoke? = null
+    private var gmsAvailable = false
 
     override fun load(webView: WebView) {
         super.load(webView)
         setupBilling()
-        mainHandler.post {
-            MobileAds.initialize(activity) {}
-            loadRewardedAd()
+        gmsAvailable = GoogleApiAvailability.getInstance()
+            .isGooglePlayServicesAvailable(activity) == ConnectionResult.SUCCESS
+        if (gmsAvailable) {
+            mainHandler.post {
+                MobileAds.initialize(activity) {}
+                loadRewardedAd()
+            }
         }
     }
 
@@ -156,6 +163,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
     private fun adUnitId() = if (BuildConfig.DEBUG) AD_UNIT_TEST else AD_UNIT_PROD
 
     private fun loadRewardedAd() {
+        if (!gmsAvailable) return
         RewardedAd.load(
             activity, adUnitId(), AdRequest.Builder().build(),
             object : RewardedAdLoadCallback() {
@@ -167,6 +175,10 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
 
     @Command
     fun showRewardedAd(invoke: Invoke) {
+        if (!gmsAvailable) {
+            invoke.resolve(JSObject().put("success", false).put("error", "Google Play Services not available"))
+            return
+        }
         val ad = rewardedAd
         if (ad == null) {
             invoke.resolve(JSObject().put("success", false).put("error", "Ad not ready"))
