@@ -1035,6 +1035,7 @@ export class GamepadCursorManager {
         const isUp = button === b.moveUp;
         const isDown = button === b.moveDown;
         const current = document.activeElement;
+        const isElementFocusableVisible = (el) => !!(el && el.offsetParent !== null && !el.disabled);
 
         const sidePanel = document.getElementById('gamepad-side-panel');
         const sidePanelActive = sidePanel?.classList.contains('gp-panel-active');
@@ -1058,9 +1059,20 @@ export class GamepadCursorManager {
             return rws;
         };
 
+
         // Determine which container currently holds focus
         const inSidePanel = sidePanelActive && sidePanel.contains(current);
-        const activeContainer = inSidePanel ? sidePanel : modal;
+        let activeContainer = inSidePanel ? sidePanel : modal;
+
+        // Setup modal has a split layout: scrollable .setup-columns + fixed START row.
+        // When focus is inside .setup-columns, keep navigation scoped there so
+        // vertical movement doesn't jump to START before traversing remaining rows.
+        if (!inSidePanel && modal?.id === 'setup-modal') {
+            const setupColumns = modal.querySelector('.setup-columns');
+            if (setupColumns && current && setupColumns.contains(current)) {
+                activeContainer = setupColumns;
+            }
+        }
 
         const rows = buildGrid(activeContainer);
         if (!rows.length) return;
@@ -1090,16 +1102,48 @@ export class GamepadCursorManager {
         }
 
         let target = null;
+        const isSetupModal = modal?.id === 'setup-modal';
+        if (isSetupModal && current) {
+            const startBtn = modal.querySelector('#start-game-btn');
+            const modsToggle = modal.querySelector('#setup-mods-toggle');
+            const modsPanel = modal.querySelector('#setup-mods-panel');
+            const closeBtn = modal.querySelector('.modal-close-btn');
+            const resetBtn = modal.querySelector('#setup-reset-all-btn');
+            const isModsClosed = !!(modsPanel && modsPanel.classList.contains('hidden'));
+            const isVisible = (el) => !!(el && el.offsetParent !== null && !el.disabled);
 
-        if (isLeft || isRight) {
+            // Setup-specific shortcuts to match expected menu flow.
+            // Mods closed: Down from "Mods" should jump directly to START.
+            if (!target && isDown && current === modsToggle && isModsClosed && isVisible(startBtn)) {
+                target = startBtn;
+            }
+            // Top row mapping: Up from map size / map source goes to close (top-left).
+            if (!target && isUp && (current.id === 'map-size' || current.id === 'setup-map-source-btn') && isVisible(closeBtn)) {
+                target = closeBtn;
+            }
+            // Top row mapping: Up from style goes to reset (top-right), if visible.
+            if (!target && isUp && current.id === 'map-style' && isVisible(resetBtn)) {
+                target = resetBtn;
+            }
+            // From top header buttons, pressing Up again returns to START.
+            if (!target && isUp && (current === closeBtn || current === resetBtn) && isVisible(startBtn)) {
+                target = startBtn;
+            }
+        }
+
+        if (!target && (isLeft || isRight)) {
             const nextCol = colIdx + (isRight ? 1 : -1);
             if (nextCol >= 0 && nextCol < rows[rowIdx].length) {
                 // Normal within-row move
                 target = rows[rowIdx][nextCol].el;
-            } else if (isRight && !inSidePanel && sidePanelActive) {
+            }
+
+            if (!target && isRight && !inSidePanel && sidePanelActive) {
                 // At right edge of modal → cross into side panel
                 const spRows = buildGrid(sidePanel);
                 if (spRows.length) {
+                    // Remember where we came from so Left from side-panel edge can return here.
+                    cursor._modalReturnFocusEl = current;
                     const currentCy = rows[rowIdx][colIdx].cy;
                     // Pick the side-panel row whose centre-Y is closest
                     const closest = spRows.reduce((best, row) =>
@@ -1107,8 +1151,18 @@ export class GamepadCursorManager {
                     );
                     target = closest[0].el;
                 }
-            } else if (isLeft && inSidePanel) {
+            } else if (!target && isLeft && inSidePanel) {
                 // At left edge of side panel → cross back into modal
+                const remembered = cursor._modalReturnFocusEl;
+                if (isElementFocusableVisible(remembered) && modal.contains(remembered)) {
+                    target = remembered;
+                }
+                // One-shot memory: if the user crosses again, we capture the latest origin.
+                cursor._modalReturnFocusEl = null;
+            }
+
+            if (!target && isLeft && inSidePanel) {
+                // Fallback when there is no remembered return target.
                 const mRows = buildGrid(modal);
                 if (mRows.length) {
                     const currentCy = rows[rowIdx][colIdx].cy;
@@ -1118,7 +1172,7 @@ export class GamepadCursorManager {
                     target = closest[closest.length - 1].el; // rightmost = closest to side panel
                 }
             }
-        } else {
+        } else if (!target) {
             // Navigate between rows; pick the element in the next row closest by X
             const nextRowIdx = rowIdx + (isDown ? 1 : -1);
             if (nextRowIdx >= 0 && nextRowIdx < rows.length) {
@@ -1135,7 +1189,14 @@ export class GamepadCursorManager {
                     sc.scrollBy({ top: 160, behavior: 'instant' });
                     return;
                 }
-                target = rows[0][0].el;
+                // Setup modal special-case: from last row in setup-columns, Down goes to START.
+                const setupStartBtn = modal?.id === 'setup-modal' ? modal.querySelector('#start-game-btn') : null;
+                const inSetupColumns = modal?.id === 'setup-modal' && activeContainer.classList?.contains('setup-columns');
+                if (inSetupColumns && setupStartBtn && setupStartBtn.offsetParent !== null && !setupStartBtn.disabled) {
+                    target = setupStartBtn;
+                } else {
+                    target = rows[0][0].el;
+                }
             } else if (isUp && nextRowIdx < 0) {
                 // Scroll up first; wrap only when already at the top
                 const sc = activeContainer.querySelector('.howto-content') || activeContainer;

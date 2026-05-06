@@ -2503,15 +2503,17 @@ select {
     box-sizing: border-box;
     text-align: left;
     max-height: calc(var(--body-h) - 40px);
-    overflow-y: auto;
+    overflow: hidden;
     overflow-x: hidden;
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 255, 255, 0.35) rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
 }
 
 #setup-modal::-webkit-scrollbar {
-    display: block;
+    display: none;
     width: 10px;
 }
 
@@ -2522,6 +2524,14 @@ select {
 #setup-modal::-webkit-scrollbar-thumb {
     background: rgba(0, 255, 255, 0.3);
     border-radius: 5px;
+}
+
+#setup-modal .setup-columns {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    padding-right: 4px;
 }
 
 #howto-modal {
@@ -3074,6 +3084,18 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     font-weight: bold;
 }
 
+#setup-map-source-group {
+    width: 100%;
+}
+
+#setup-map-source-btn {
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 
 /* Scenario Browser Modal */
 .scenario-browser-content {
@@ -3477,15 +3499,16 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     pointer-events: none;
 }
 
-.level-hover-preview.level-hover-preview-solved::before {
-    content: '✓';
+.level-solved-icon {
     position: absolute;
+    z-index: 2;
+}
+
+.level-solved-icon-hover {
     top: 6px;
     left: 6px;
-    font-size: 12px;
-    color: #0f0;
-    font-weight: bold;
-    z-index: 2;
+    width: 12px;
+    height: 12px;
 }
 
 /* Override global canvas 100vw/100vh - preview uses --preview-size set in JS */
@@ -3564,15 +3587,11 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     }
 }
 
-.level-preview-dialog-content.level-preview-solved::before {
-    content: '✓';
-    position: absolute;
+.level-solved-icon-dialog {
     top: 12px;
     left: 12px;
-    font-size: 18px;
-    color: #0f0;
-    font-weight: bold;
-    z-index: 2;
+    width: 18px;
+    height: 18px;
 }
 
 .level-preview-dialog .dialog-body {
@@ -6756,74 +6775,22 @@ canvas {
     letter-spacing: 4px;
 }
 
-/* ── Setup modal two-column layout on wide screens (only when mods panel is open) ── */
-
-/* No gamepad panel active → two-column at 900px */
-@media (min-width: 900px) {
-    #setup-modal:has(#setup-mods-panel:not(.hidden)):not(:has(~ #gamepad-side-panel.gp-panel-active)) {
-        width: min(840px, calc(100% - 40px));
-        max-width: min(840px, calc(100% - 40px));
-    }
-
-    #setup-modal:has(#setup-mods-panel:not(.hidden)):not(:has(~ #gamepad-side-panel.gp-panel-active)) .setup-columns {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0 36px;
-        align-items: start;
-    }
-
-    #setup-modal:has(#setup-mods-panel:not(.hidden)):not(:has(~ #gamepad-side-panel.gp-panel-active)) .setup-main-col {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-
-    #setup-modal:has(#setup-mods-panel:not(.hidden)):not(:has(~ #gamepad-side-panel.gp-panel-active)) .setup-main-col .setup-start-row {
-        margin-top: auto;
-        padding-top: 16px;
-    }
-
-    #setup-modal:has(#setup-mods-panel:not(.hidden)):not(:has(~ #gamepad-side-panel.gp-panel-active)) .setup-mods-col {
-        background: rgba(0, 255, 255, 0.03);
-        border: 1px solid rgba(0, 255, 255, 0.12);
-        border-radius: 4px;
-        padding: 12px 14px;
-        align-self: start;
-    }
+/* ── Setup modal mods section (single stacked layout on all screen sizes) ── */
+#setup-modal:has(#setup-mods-panel:not(.hidden)) .setup-main-col {
+    display: flex;
+    flex-direction: column;
 }
 
-/* Gamepad panel active → two-column only at 1260px (enough room for both) */
-@media (min-width: 1260px) {
-    #setup-modal:has(#setup-mods-panel:not(.hidden)):has(~ #gamepad-side-panel.gp-panel-active) {
-        width: min(840px, calc(100% - 40px));
-        max-width: min(840px, calc(100% - 40px));
-    }
+#setup-modal:has(#setup-mods-panel:not(.hidden)) .setup-start-row {
+    margin-top: 10px;
+}
 
-    #setup-modal:has(#setup-mods-panel:not(.hidden)):has(~ #gamepad-side-panel.gp-panel-active) .setup-columns {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0 36px;
-        align-items: start;
-    }
-
-    #setup-modal:has(#setup-mods-panel:not(.hidden)):has(~ #gamepad-side-panel.gp-panel-active) .setup-main-col {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-
-    #setup-modal:has(#setup-mods-panel:not(.hidden)):has(~ #gamepad-side-panel.gp-panel-active) .setup-main-col .setup-start-row {
-        margin-top: auto;
-        padding-top: 16px;
-    }
-
-    #setup-modal:has(#setup-mods-panel:not(.hidden)):has(~ #gamepad-side-panel.gp-panel-active) .setup-mods-col {
-        background: rgba(0, 255, 255, 0.03);
-        border: 1px solid rgba(0, 255, 255, 0.12);
-        border-radius: 4px;
-        padding: 12px 14px;
-        align-self: start;
-    }
+#setup-modal:has(#setup-mods-panel:not(.hidden)) .setup-mods-col {
+    background: rgba(0, 255, 255, 0.03);
+    border: 1px solid rgba(0, 255, 255, 0.12);
+    border-radius: 4px;
+    padding: 12px 14px;
+    margin-top: 10px;
 }
 
 /* ── Pause Modal ── */
@@ -7398,7 +7365,7 @@ details.settings-group[open]>summary.settings-group-header::after {
 /* Modal shifts -100px, wide modal is 840px (420px half-width), so panel goes at 50% + 420px - 100px + gap */
 @media (min-width: 1260px) {
     #setup-modal:has(#setup-mods-panel:not(.hidden))~#gamepad-side-panel.gp-panel-active {
-        left: calc(50% + 332px);
+        left: calc(50% + 132px);
     }
 }
 

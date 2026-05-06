@@ -714,6 +714,15 @@ async function init() {
     sessionManager.setConfigManager(configManager);
     scenarioBrowser.setEffectsManager(effectsManager);
     await scenarioBrowser.init();
+    configManager.onCustomMapSourceCleared = () => {
+        scenarioBrowser.setCustomSetupLevelActive(false);
+    };
+    scenarioBrowser.setOnOpenCustomFromLevel((level, label) => {
+        configManager.setCustomMapSource(level, label);
+        syncBasicFieldHighlights();
+        updateStartBtnModsLock();
+        configManager.syncSetupResetBtn();
+    });
     const syncBasicFieldHighlights = () => {
         if (isFullVersion()) return;
         const toggle = (groupId, differs) =>
@@ -809,7 +818,14 @@ async function init() {
         configManager.toggleSetupModsPanel();
     });
     document.getElementById('setup-reset-all-btn')?.addEventListener('click', () => {
-        configManager.resetToFreeDefaults();
+        // Full version + orange state means "mods differ from defaults":
+        // reset only mods and keep core setup values (humans/bots/map/etc.).
+        if (isFullVersion() && !configManager.areModsAtDefaults()) {
+            configManager.resetModsToDefaults();
+        } else {
+            // Existing behavior for teal/default state and demo/free version.
+            configManager.resetToFreeDefaults();
+        }
         syncBasicFieldHighlights();
         updateStartBtnModsLock();
         renderGamepadAssignments();
@@ -1418,7 +1434,7 @@ async function init() {
     setupInputEvents(game, inputManager, sessionManager);
 
     // Menu Navigation
-    const { showFullVersionOnlyDialog } = setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI);
+    const { showFullVersionOnlyDialog } = setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI, configManager);
     _onTimerExpiry = () => { applyVersionUI(); showFullVersionOnlyDialog(); };
 
 
@@ -1631,7 +1647,7 @@ function setupInputEvents(game, inputManager, sessionManager) {
 }
 
 // Helper: Setup all menu navigation (main menu, settings, howto, about, pause)
-function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI) {
+function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI, configManager) {
     const mainMenu = document.getElementById('main-menu');
 
     // Update stats display whenever the main menu becomes visible
@@ -2030,6 +2046,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         }
         // In-game (no modal open) → open pause menu
         if (sessionManagerRef && sessionManagerRef.isGameInProgress()) {
+            syncPauseModsSummary();
             pauseModal.classList.remove('hidden');
             initGameSpeedSegmented();
             syncPauseAudioBtns();
@@ -2154,6 +2171,19 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         const mainSfxVol = document.getElementById('sfx-volume');
         if (pauseMusicVol && mainMusicVol) pauseMusicVol.value = mainMusicVol.value;
         if (pauseSfxVol && mainSfxVol) pauseSfxVol.value = mainSfxVol.value;
+    }
+
+    function syncPauseModsSummary() {
+        const summaryEl = document.getElementById('pause-mods-summary');
+        if (!summaryEl) return;
+        if (!(sessionManagerRef && sessionManagerRef.isGameInProgress())) {
+            summaryEl.classList.add('hidden');
+            summaryEl.textContent = '';
+            return;
+        }
+        const summary = configManager.getSetupActiveModsSummary();
+        summaryEl.textContent = summary || '';
+        summaryEl.classList.toggle('hidden', !summary);
     }
 
     // Toggles delegate to the main buttons so AudioController handles everything
