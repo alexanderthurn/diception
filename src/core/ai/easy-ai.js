@@ -19,6 +19,7 @@ export class EasyAI extends BaseAI {
         let safety = 0;
         let hasAttacked = false; // Track if any attack has been made
         const delay = this.getAttackDelay(gameSpeed);
+        const rampageMode = this.shouldRampageThisTurn();
 
         while (safety < 500) {
             safety++;
@@ -58,17 +59,24 @@ export class EasyAI extends BaseAI {
                 return 0;
             });
 
-            // Try to find an attack with own dice > defender dice
+            // Rampage: attack continuously, even equal or stronger enemies.
             let selectedMove = null;
-            for (const option of attackOptions) {
-                if (option.from.dice > option.defenderDice) {
-                    selectedMove = option;
-                    break;
+            if (rampageMode) {
+                selectedMove = attackOptions[0] || null;
+            }
+
+            // Normal mode: try to find an attack with own dice > defender dice
+            if (!selectedMove) {
+                for (const option of attackOptions) {
+                    if (option.from.dice > option.defenderDice) {
+                        selectedMove = option;
+                        break;
+                    }
                 }
             }
 
-            // If no attack found with > and no attacks made yet, allow same dice (>=)
-            if (!selectedMove && !hasAttacked) {
+            // Normal mode fallback: if no attack found with > and no attacks made yet, allow same dice (>=)
+            if (!selectedMove && !rampageMode && !hasAttacked) {
                 for (const option of attackOptions) {
                     if (option.from.dice >= option.defenderDice) {
                         selectedMove = option;

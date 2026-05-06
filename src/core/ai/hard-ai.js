@@ -4,7 +4,8 @@
  * Strategy:
  * - Priority 1: Dice advantage >= 2
  * - Priority 2: Dice advantage == 1
- * - Priority 3: Same dice only if no attacks made yet
+ * - Priority 3: Same dice allowed for the first attack, then only while
+ *   it can still refill to max at end of turn
  * 
  * Within each priority, scores attacks by:
  * - Targets stronger players (more territories)
@@ -63,10 +64,12 @@ export class HardAI extends BaseAI {
         let safety = 0;
         let hasAttacked = false;
         const delay = this.getAttackDelay(gameSpeed);
+        const rampageMode = this.shouldRampageThisTurn();
 
         while (safety < 500) {
             safety++;
             if (!this.hasAttackBudget()) break;
+            const canSustainPressure = this.canFullyRefillAfterTurn();
 
             // Get territory counts for strategic targeting
             const territoryCounts = this.countTerritories();
@@ -108,12 +111,15 @@ export class HardAI extends BaseAI {
                 let priority = 0;
 
                 // Determine priority tier
-                if (option.diceDiff >= 2) {
+                if (rampageMode) {
+                    // Rampage: allow any legal attack (even against stronger stacks)
+                    priority = 1;
+                } else if (option.diceDiff >= 2) {
                     priority = 3; // Highest priority
                 } else if (option.diceDiff === 1) {
                     priority = 2; // Medium priority
-                } else if (option.diceDiff >= 0 && !hasAttacked) {
-                    priority = 1; // Lowest priority, only if no attacks yet
+                } else if (option.diceDiff >= 0 && (!hasAttacked || canSustainPressure)) {
+                    priority = 1; // Lowest priority, sustained only with enough refill budget
                 } else {
                     continue; // Skip this option
                 }
