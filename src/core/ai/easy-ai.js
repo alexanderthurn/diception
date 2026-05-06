@@ -2,10 +2,10 @@
  * EasyAI - Simple AI that attacks the weakest neighbors
  * 
  * Strategy:
+ * - Prefers bot targets over human targets
  * - Targets territories with the smallest number of dice
  * - Only attacks if own dice > defender dice
  * - Fallback: Same dice attacks (>=) only allowed if no attacks made yet this turn
- * - Prefers non-human targets when dice counts are equal
  */
 import { BaseAI } from './base-ai.js';
 
@@ -45,14 +45,15 @@ export class EasyAI extends BaseAI {
 
             if (attackOptions.length === 0) break;
 
-            // Sort by smallest dice first
+            // Sort by target type first (bots before humans), then smallest dice
             attackOptions.sort((a, b) => {
-                if (a.defenderDice !== b.defenderDice) {
-                    return a.defenderDice - b.defenderDice;
-                }
-                // If same dice, prefer non-human targets
+                // Prefer attacking bots over humans
                 if (a.isHuman !== b.isHuman) {
                     return a.isHuman ? 1 : -1;
+                }
+
+                if (a.defenderDice !== b.defenderDice) {
+                    return a.defenderDice - b.defenderDice;
                 }
                 return 0;
             });
