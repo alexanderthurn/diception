@@ -6026,6 +6026,141 @@ canvas {
     flex: 0 0 36px !important;
 }
 
+/* Top HUD micro buttons: align with tile-button language */
+#global-back-btn,
+#new-game-btn,
+#zoom-in-btn,
+#zoom-out-btn,
+#toolbar-music-toggle,
+#toolbar-sfx-toggle,
+#editor-settings-toggle {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    animation: none !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: rgba(0, 255, 255, 0.82) !important;
+    background: rgba(0, 30, 36, 0.98) !important;
+}
+
+#global-back-btn::before,
+#new-game-btn::before,
+#zoom-in-btn::before,
+#zoom-out-btn::before,
+#toolbar-music-toggle::before,
+#toolbar-sfx-toggle::before,
+#editor-settings-toggle::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.34);
+    opacity: 0;
+}
+
+#global-back-btn:hover,
+#new-game-btn:hover,
+#zoom-in-btn:hover,
+#zoom-out-btn:hover,
+#toolbar-music-toggle:hover,
+#toolbar-sfx-toggle:hover,
+#editor-settings-toggle:hover,
+#global-back-btn.gamepad-focused,
+#new-game-btn.gamepad-focused,
+#zoom-in-btn.gamepad-focused,
+#zoom-out-btn.gamepad-focused,
+#toolbar-music-toggle.gamepad-focused,
+#toolbar-sfx-toggle.gamepad-focused,
+#editor-settings-toggle.gamepad-focused {
+    border-color: #fff !important;
+    transform: translateY(-1px);
+}
+
+#global-back-btn:hover::before,
+#new-game-btn:hover::before,
+#zoom-in-btn:hover::before,
+#zoom-out-btn:hover::before,
+#toolbar-music-toggle:hover::before,
+#toolbar-sfx-toggle:hover::before,
+#editor-settings-toggle:hover::before,
+#global-back-btn.gamepad-focused::before,
+#new-game-btn.gamepad-focused::before,
+#zoom-in-btn.gamepad-focused::before,
+#zoom-out-btn.gamepad-focused::before,
+#toolbar-music-toggle.gamepad-focused::before,
+#toolbar-sfx-toggle.gamepad-focused::before,
+#editor-settings-toggle.gamepad-focused::before {
+    opacity: 1;
+    animation: main-menu-white-pulse 1.05s ease-in-out infinite;
+}
+
+#global-back-btn:active,
+#new-game-btn:active,
+#zoom-in-btn:active,
+#zoom-out-btn:active,
+#toolbar-music-toggle:active,
+#toolbar-sfx-toggle:active,
+#editor-settings-toggle:active {
+    transform: translateY(0) scale(0.985);
+    border-color: #fff !important;
+}
+
+/* Modal close buttons: same tile style language */
+:is(.modal .close-btn, .dialog-box .dialog-close-btn) {
+    overflow: hidden;
+    isolation: isolate;
+    animation: none !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+    border-color: rgba(0, 255, 255, 0.82) !important;
+    background: rgba(0, 30, 36, 0.98) !important;
+    color: #fff !important;
+}
+
+/* Preserve modal header close/reset positioning */
+.modal-close-btn {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.modal-reset-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+:is(.modal .close-btn, .dialog-box .dialog-close-btn)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.34);
+    opacity: 0;
+}
+
+:is(.modal .close-btn, .dialog-box .dialog-close-btn):hover,
+:is(.modal .close-btn, .dialog-box .dialog-close-btn).gamepad-focused {
+    border-color: #fff !important;
+}
+
+:is(.modal .close-btn, .dialog-box .dialog-close-btn):hover::before,
+:is(.modal .close-btn, .dialog-box .dialog-close-btn).gamepad-focused::before {
+    opacity: 1;
+    animation: main-menu-white-pulse 1.05s ease-in-out infinite;
+}
+
+:is(.modal .close-btn, .dialog-box .dialog-close-btn):active {
+    border-color: #fff !important;
+}
+
 /* Minus is wide, so constrain width */
 #zoom-out-btn .sprite-icon {
     width: 60% !important;
@@ -6235,7 +6370,7 @@ canvas {
     background: rgba(0, 0, 5, 0.90);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(0, 255, 255, 0.35);
+    border: 2px solid rgba(0, 255, 255, 0.55);
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), var(--panel-glow);
 }
 
@@ -6244,7 +6379,7 @@ canvas {
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    border-top: none;
+    border: none;
     box-shadow: none;
 }
 
@@ -6253,7 +6388,7 @@ canvas {
     background: rgba(0, 0, 5, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(0, 255, 255, 0.35);
+    border: 2px solid rgba(0, 255, 255, 0.55);
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), var(--panel-glow);
 }
 
@@ -6732,6 +6867,228 @@ canvas {
     box-shadow: 0 0 12px rgba(255, 60, 60, 0.2);
 }
 
+/* ── Shared Menu Button System ── */
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    animation: none !important;
+    text-shadow: none;
+    box-shadow: none !important;
+    border-width: 2px;
+    border-style: solid;
+    border-color: rgba(0, 255, 255, 0.78);
+    background: rgba(0, 8, 12, 0.96);
+    transition:
+        transform 0.16s ease,
+        border-color 0.16s ease,
+        color 0.16s ease,
+        background 0.16s ease;
+}
+
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.34);
+    opacity: 0;
+}
+
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn:hover,
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn.gamepad-focused {
+    color: #fff;
+    border-color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn:hover::before,
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn.gamepad-focused::before {
+    opacity: 1;
+    animation: main-menu-white-pulse 1.05s ease-in-out infinite;
+}
+
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn:active {
+    transform: translateY(0) scale(0.985);
+    border-color: #ffffff !important;
+}
+
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn:active::before {
+    opacity: 1;
+    animation: none;
+    background: rgba(255, 255, 255, 0.46);
+}
+
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn>* {
+    position: relative;
+    z-index: 2;
+}
+
+/* Role helpers for phased rollout */
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn.menu-btn-primary {
+    border-color: rgba(0, 255, 255, 0.9);
+    background: rgba(0, 54, 54, 0.98);
+}
+
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn.menu-btn-utility {
+    border-color: rgba(0, 136, 255, 0.9);
+    background: rgba(0, 34, 72, 0.98);
+}
+
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn.menu-btn-neutral {
+    border-color: rgba(255, 204, 0, 0.9);
+    background: rgba(74, 58, 0, 0.98);
+}
+
+:is(#main-menu,
+    #setup-modal,
+    #pause-modal,
+    #settings-modal,
+    #howto-modal,
+    #about-modal,
+    #achievements-modal,
+    #tournament-results-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
+    #editor-overlay,
+    .dialog-box) .tron-btn.menu-btn-danger {
+    border-color: rgba(204, 0, 0, 0.9);
+    background: rgba(62, 0, 0, 0.98);
+}
+
 /* ── Main Menu ── */
 .main-nav {
     display: flex;
@@ -6772,7 +7129,7 @@ canvas {
     inset: 0;
     pointer-events: none;
     z-index: 1;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.46) 0%, rgba(255, 255, 255, 0.16) 100%);
+    background: rgba(255, 255, 255, 0.34);
     opacity: 0;
 }
 
@@ -6809,7 +7166,7 @@ canvas {
 #main-menu .main-nav .tron-btn:active::before {
     opacity: 1;
     animation: none;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.24) 100%);
+    background: rgba(255, 255, 255, 0.46);
 }
 
 #main-menu .main-nav > .tron-btn.large {

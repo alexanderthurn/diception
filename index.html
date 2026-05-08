@@ -261,7 +261,7 @@
                         <div class="seed-row">
                             <input type="number" data-mods-el="game-seed" class="seed-input" min="0" max="4294967295"
                                 step="1">
-                            <button type="button" data-mods-el="game-seed-reroll" class="tron-btn small seed-reroll-btn"
+                            <button type="button" data-mods-el="game-seed-reroll" class="tron-btn small seed-reroll-btn menu-btn-utility"
                                 title="New random seed">⟳</button>
                         </div>
                     </div>
@@ -305,7 +305,7 @@
                     <div class="control-row hidden" id="setup-map-source-row">
                         <div class="control-group" id="setup-map-source-group">
                             <label>Map</label>
-                            <button type="button" class="tron-btn" id="setup-map-source-btn"
+                            <button type="button" class="tron-btn menu-btn-utility" id="setup-map-source-btn"
                                 title="Use random size + style instead">
                                 Campaign Level
                             </button>
@@ -364,7 +364,7 @@
                     </div>
 
                     <div class="setup-mods-toolbar" id="setup-mods-toolbar">
-                        <button type="button" class="tron-btn small setup-mods-toggle" id="setup-mods-toggle"
+                        <button type="button" class="tron-btn small setup-mods-toggle menu-btn-utility" id="setup-mods-toggle"
                             aria-expanded="false" aria-controls="setup-mods-panel">
                             <span class="setup-mods-chevron" aria-hidden="true"></span>
                             <span class="setup-mods-toggle-label">Mods</span>
@@ -379,7 +379,7 @@
                 </div>
             </div>
             <div class="setup-start-row">
-                <button id="start-game-btn" class="tron-btn large" data-no-sfx
+                <button id="start-game-btn" class="tron-btn large menu-btn-primary" data-no-sfx
                     data-gamepad-autofocus>START</button>
             </div>
         </div>
@@ -396,26 +396,26 @@
             <div class="credits" id="main-menu-credits">by Alexander Thurn</div>
             <div class="main-nav">
                 <div class="main-nav-primary">
-                    <button id="main-custom-btn" class="tron-btn large"><span class="sprite-icon icon-map"></span>
+                    <button id="main-custom-btn" class="tron-btn large menu-btn-primary"><span class="sprite-icon icon-map"></span>
                         Custom
                         Game</button>
-                    <button id="main-campaign-btn" class="tron-btn large"><span
+                    <button id="main-campaign-btn" class="tron-btn large menu-btn-utility"><span
                             class="sprite-icon icon-campaigns"></span>
                         Campaign</button>
                 </div>
                 <div class="main-nav-utility">
-                    <button id="main-settings-btn" class="tron-btn small"><span class="sprite-icon icon-settings"></span>
+                    <button id="main-settings-btn" class="tron-btn small menu-btn-utility"><span class="sprite-icon icon-settings"></span>
                         Settings</button>
-                    <button id="main-icons-editor-btn" class="tron-btn small"><span class="sprite-icon icon-paint"></span>
+                    <button id="main-icons-editor-btn" class="tron-btn small menu-btn-neutral"><span class="sprite-icon icon-paint"></span>
                         <span class="btn-label">Editor</span></button>
-                    <button id="main-howto-btn" class="tron-btn small"><span class="sprite-icon icon-help"></span> How
+                    <button id="main-howto-btn" class="tron-btn small menu-btn-neutral"><span class="sprite-icon icon-help"></span> How
                         To</button>
-                    <button id="main-icons-achievements-btn" class="tron-btn small"><span
+                    <button id="main-icons-achievements-btn" class="tron-btn small menu-btn-danger"><span
                         class="sprite-icon icon-achievements"></span> <span
                         class="btn-label">Achievements</span></button>
-                    <button id="main-about-btn" class="tron-btn small"><span class="sprite-icon icon-scenario"></span>
+                    <button id="main-about-btn" class="tron-btn small menu-btn-neutral"><span class="sprite-icon icon-scenario"></span>
                         About</button>
-                    <button id="main-quit-btn" class="tron-btn small hidden"><span class="sprite-icon icon-close"></span>
+                    <button id="main-quit-btn" class="tron-btn small menu-btn-danger hidden"><span class="sprite-icon icon-close"></span>
                         Quit</button>
                 </div>
             </div>
@@ -444,13 +444,13 @@
                     <span class="pause-module-label">Audio</span>
                     <div class="pause-audio-row">
                         <div class="pause-audio-track">
-                            <button id="pause-music-toggle" class="tron-btn small" title="Music"><span
+                            <button id="pause-music-toggle" class="tron-btn small menu-btn-utility" title="Music"><span
                                     class="sprite-icon icon-music-on"></span></button>
                             <input type="range" id="pause-music-volume" min="0" max="100" value="30"
                                 title="Music Volume">
                         </div>
                         <div class="pause-audio-track">
-                            <button id="pause-sfx-toggle" class="tron-btn small active" title="Sound Effects"><span
+                            <button id="pause-sfx-toggle" class="tron-btn small active menu-btn-utility" title="Sound Effects"><span
                                     class="sprite-icon icon-sfx-on"></span></button>
                             <input type="range" id="pause-sfx-volume" min="0" max="100" value="30" title="SFX Volume">
                         </div>
@@ -458,13 +458,13 @@
                 </div>
 
                 <div class="pause-btn-row">
-                    <button id="pause-retry-btn" class="tron-btn large">Rematch</button>
-                    <button id="pause-save-btn" class="tron-btn large">Save</button>
+                    <button id="pause-retry-btn" class="tron-btn large menu-btn-primary">Rematch</button>
+                    <button id="pause-save-btn" class="tron-btn large menu-btn-utility">Save</button>
                 </div>
 
                 <div class="pause-btn-row">
-                    <button id="pause-mainmenu-btn" class="tron-btn large pause-exit-btn">Exit</button>
-                    <button id="pause-topmenu-btn" class="tron-btn large pause-topmenu-btn">Main Menu</button>
+                    <button id="pause-mainmenu-btn" class="tron-btn large pause-exit-btn menu-btn-danger">Exit</button>
+                    <button id="pause-topmenu-btn" class="tron-btn large pause-topmenu-btn menu-btn-neutral">Main Menu</button>
                 </div>
 
             </div>
@@ -804,7 +804,7 @@
                             <div class="control-group half">
                                 <label>Music</label>
                                 <div class="range-row">
-                                    <button id="music-toggle" class="tron-btn small" title="Music"><span
+                                    <button id="music-toggle" class="tron-btn small menu-btn-utility" title="Music"><span
                                             class="sprite-icon icon-music-on"></span></button>
                                     <input type="range" id="music-volume" min="0" max="100" value="30"
                                         title="Music Volume">
@@ -813,7 +813,7 @@
                             <div class="control-group half">
                                 <label>Sound Effects</label>
                                 <div class="range-row">
-                                    <button id="sfx-toggle" class="tron-btn small active" title="Sound Effects"><span
+                                    <button id="sfx-toggle" class="tron-btn small active menu-btn-utility" title="Sound Effects"><span
                                             class="sprite-icon icon-sfx-on"></span></button>
                                     <input type="range" id="sfx-volume" min="0" max="100" value="30" title="SFX Volume">
                                 </div>
@@ -976,7 +976,7 @@
                                     Keep my campaigns (<code>dicy_userCampaign</code>)
                                 </label>
                             </div>
-                            <button id="howto-clear-storage-btn" class="tron-btn small">Clear All Storage</button>
+                            <button id="howto-clear-storage-btn" class="tron-btn small menu-btn-danger">Clear All Storage</button>
                         </div>
                     </div>
                 </details>
@@ -1119,8 +1119,8 @@
             </div>
             <div id="tournament-results"></div>
             <div class="tournament-actions">
-                <button id="tournament-again-btn" class="tron-btn">Run Again</button>
-                <button id="tournament-done-btn" class="tron-btn">Done</button>
+                <button id="tournament-again-btn" class="tron-btn menu-btn-primary">Run Again</button>
+                <button id="tournament-done-btn" class="tron-btn menu-btn-neutral">Done</button>
             </div>
         </div>
 

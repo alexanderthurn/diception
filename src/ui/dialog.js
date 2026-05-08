@@ -26,7 +26,7 @@ export class Dialog {
                 title,
                 message = '',
                 content = null,
-                buttons = [{ text: 'OK', value: true, className: 'tron-btn' }],
+                buttons = [{ text: 'OK', value: true, className: 'tron-btn menu-btn-primary' }],
                 closeButton = false
             } = options;
 
@@ -119,7 +119,7 @@ export class Dialog {
         return this.show({
             title,
             message,
-            buttons: [{ text: 'OK', value: true, className: 'tron-btn' }]
+            buttons: [{ text: 'OK', value: true, className: 'tron-btn menu-btn-primary' }]
         });
     }
 
@@ -134,8 +134,8 @@ export class Dialog {
             title,
             message,
             buttons: [
-                { text: 'OK', value: true, className: 'tron-btn' },
-                { text: 'CANCEL', value: false, className: 'tron-btn small' }
+                { text: 'OK', value: true, className: 'tron-btn menu-btn-primary' },
+                { text: 'CANCEL', value: false, className: 'tron-btn small menu-btn-neutral' }
             ]
         });
     }
@@ -182,7 +182,7 @@ export class Dialog {
             content,
             closeButton: true,
             buttons: [
-                { text: 'GET ON STEAM', value: 'steam', className: 'tron-btn' },
+                { text: 'GET ON STEAM', value: 'steam', className: 'tron-btn menu-btn-primary' },
             ],
         }).then(val => { if (val === 'steam') openStore(); });
     }

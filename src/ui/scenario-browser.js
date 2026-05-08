@@ -270,7 +270,7 @@ export class ScenarioBrowser {
             const comingSoon = c.isBuiltIn && levelCount === 0;
 
             const btn = document.createElement('button');
-            btn.className = 'tron-btn large campaign-select-btn' + (locked ? ' btn-locked' : '') + (comingSoon ? ' btn-coming-soon' : '');
+            btn.className = 'tron-btn large campaign-select-btn menu-btn-utility' + (locked ? ' btn-locked' : '') + (comingSoon ? ' btn-coming-soon' : '');
             if (!locked && isAutofocus) btn.dataset.gamepadAutofocus = '';
             if (chapterColorIndex >= 0) {
                 const hex = '#' + GAME.HUMAN_COLORS[chapterColorIndex % GAME.HUMAN_COLORS.length].toString(16).padStart(6, '0');
@@ -390,7 +390,7 @@ export class ScenarioBrowser {
 
         const copyBtn = document.createElement('button');
         copyBtn.type = 'button';
-        copyBtn.className = 'tron-btn small campaign-dev-btn';
+        copyBtn.className = 'tron-btn small campaign-dev-btn menu-btn-neutral';
         copyBtn.textContent = 'Copy';
         copyBtn.setAttribute('aria-label', 'Copy the selected campaign into your campaign');
         copyBtn.addEventListener('click', () => this.importUserCampaignFromExisting(sourceSelect));
@@ -400,21 +400,21 @@ export class ScenarioBrowser {
 
         const importBtn = document.createElement('button');
         importBtn.type = 'button';
-        importBtn.className = 'tron-btn small campaign-dev-btn';
+        importBtn.className = 'tron-btn small campaign-dev-btn menu-btn-utility';
         importBtn.textContent = 'Import JSON';
         importBtn.setAttribute('aria-label', 'Import campaign from a JSON file');
         importBtn.addEventListener('click', () => this.importUserCampaignJson());
 
         const exportBtn = document.createElement('button');
         exportBtn.type = 'button';
-        exportBtn.className = 'tron-btn small campaign-dev-btn';
+        exportBtn.className = 'tron-btn small campaign-dev-btn menu-btn-utility';
         exportBtn.textContent = 'Export JSON';
         exportBtn.setAttribute('aria-label', 'Download your campaign as JSON');
         exportBtn.addEventListener('click', () => this.exportUserCampaignJson());
 
         const resetBtn = document.createElement('button');
         resetBtn.type = 'button';
-        resetBtn.className = 'tron-btn small campaign-dev-btn';
+        resetBtn.className = 'tron-btn small campaign-dev-btn menu-btn-danger';
         resetBtn.textContent = 'Reset';
         resetBtn.setAttribute('aria-label', 'Reset your campaign to zero levels');
         resetBtn.addEventListener('click', () => this.resetUserCampaign());
@@ -817,7 +817,7 @@ export class ScenarioBrowser {
             secondaryRow.className = 'dialog-actions-row dialog-actions-row-secondary';
 
             const playBtn = document.createElement('button');
-            playBtn.className = 'tron-btn primary';
+            playBtn.className = 'tron-btn primary menu-btn-primary';
             playBtn.dataset.noSfx = '';
             playBtn.dataset.gamepadAutofocus = '';
             playBtn.textContent = 'Play';
@@ -827,7 +827,7 @@ export class ScenarioBrowser {
             const solved = campaign?.owner && getSolvedLevels(campaign.owner).includes(idx);
             if (solved) {
                 const customBtn = document.createElement('button');
-                customBtn.className = 'tron-btn';
+                customBtn.className = 'tron-btn menu-btn-utility';
                 customBtn.textContent = 'Custom';
                 customBtn.onclick = () => finish('custom');
                 primaryRow.appendChild(customBtn);
@@ -836,19 +836,19 @@ export class ScenarioBrowser {
 
             if (this.isOwner) {
                 const editBtn = document.createElement('button');
-                editBtn.className = 'tron-btn small';
+                editBtn.className = 'tron-btn small menu-btn-neutral';
                 editBtn.textContent = 'Edit';
                 editBtn.onclick = () => finish('edit');
                 secondaryRow.appendChild(editBtn);
 
                 const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'tron-btn small danger';
+                deleteBtn.className = 'tron-btn small danger menu-btn-danger';
                 deleteBtn.textContent = 'Delete';
                 deleteBtn.onclick = () => finish('delete');
                 secondaryRow.appendChild(deleteBtn);
 
                 const moveLeftBtn = document.createElement('button');
-                moveLeftBtn.className = 'tron-btn small move-btn';
+                moveLeftBtn.className = 'tron-btn small move-btn menu-btn-utility';
                 moveLeftBtn.textContent = '← Move';
                 moveLeftBtn.disabled = idx <= 0;
                 moveLeftBtn.onclick = async () => {
@@ -862,7 +862,7 @@ export class ScenarioBrowser {
                 secondaryRow.appendChild(moveLeftBtn);
 
                 const moveRightBtn = document.createElement('button');
-                moveRightBtn.className = 'tron-btn small move-btn';
+                moveRightBtn.className = 'tron-btn small move-btn menu-btn-utility';
                 moveRightBtn.textContent = 'Move →';
                 moveRightBtn.disabled = idx >= totalLevels - 1;
                 moveRightBtn.onclick = async () => {
