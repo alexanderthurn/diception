@@ -6741,21 +6741,53 @@ canvas {
     min-width: 220px;
 }
 
-.main-nav-row {
+/* Main menu: normalize button heights across large/small variants */
+#main-menu .main-nav > .tron-btn {
+    height: 72px;
+    min-height: 72px;
+}
+
+.main-nav-utility {
     display: flex;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 6px;
 }
 
-.main-nav-row .tron-btn {
-    flex: 1;
-    min-width: 0;
+.main-nav-utility .tron-btn.small {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    font-size: 0.62em;
+    line-height: 1.05;
+    padding: 4px 2px;
+    width: 72px;
+    min-width: 72px;
+    aspect-ratio: 1 / 1;
+    height: 72px;
+    min-height: 72px;
+    text-align: center;
+    white-space: normal;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
-#main-quit-btn {
-    margin-top: auto;
+.main-nav-utility .tron-btn.small .sprite-icon {
+    width: 2.3em;
+    height: 2.3em;
+    margin: 0;
+}
+
+@media (max-width: 519px) {
+    .main-nav-utility {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        justify-content: unset;
+    }
+
+    .main-nav-utility .tron-btn.small {
+        width: 100%;
+        min-width: 0;
+    }
 }
 
 /* ── Setup Modal ── */
@@ -8155,15 +8187,6 @@ input[type="range"].gamepad-slider-editing {
     }
 }
 
-
-/* On phones: shrink main-nav-row font so long labels like "Achievements" fit at 50% */
-@media (max-width: 599px) {
-    .main-nav-row .tron-btn {
-        font-size: 0.85em;
-        padding-left: 10px;
-        padding-right: 10px;
-    }
-}
 
 /* On tablets and desktop: give the main menu more room so nav-row buttons are comfortably 50% */
 @media (min-width: 600px) {
