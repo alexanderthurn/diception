@@ -7805,6 +7805,11 @@ canvas {
         display: flex;
         flex-direction: column;
         overflow-y: auto;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: none;
+        box-shadow: none;
     }
 
     #setup-modal .setup-columns {
@@ -8506,7 +8511,7 @@ canvas {
     }
 
     #gamepad-side-panel.gp-panel-active {
-        left: calc(50% + 132px);
+        left: calc(50% + 148px);
     }
 }
 
@@ -8514,7 +8519,7 @@ canvas {
 /* Modal shifts -100px, wide modal is 840px (420px half-width), so panel goes at 50% + 420px - 100px + gap */
 @media (min-width: 1260px) {
     #setup-modal:has(#setup-mods-panel:not(.hidden))~#gamepad-side-panel.gp-panel-active {
-        left: calc(50% + 132px);
+        left: calc(50% + 148px);
     }
 }
 

@@ -1956,9 +1956,22 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         scenarioBrowserOpen();
     });
 
+    const isCompactMobileLayout = () => window.matchMedia('(max-width: 768px), (max-height: 600px)').matches;
+    const syncSetupIntroVisualState = () => {
+        if (!effectsManager) return;
+        const setupOpen = setupModal && !setupModal.classList.contains('hidden');
+        if (setupOpen && isCompactMobileLayout()) {
+            // Mobile setup stays transparent; suppress intro floating dice for readability.
+            effectsManager.stopIntroMode();
+            return;
+        }
+        if (!sessionManagerRef || !sessionManagerRef.isGameInProgress()) effectsManager.startIntroMode();
+    };
+
     document.getElementById('main-custom-btn')?.addEventListener('click', () => {
         mainMenu.classList.add('hidden');
         setupModal.classList.remove('hidden');
+        syncSetupIntroVisualState();
     });
 
     document.getElementById('main-howto-btn')?.addEventListener('click', () => {
@@ -2012,6 +2025,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         if (setupModal && !setupModal.classList.contains('hidden')) {
             setupModal.classList.add('hidden');
             mainMenu.classList.remove('hidden');
+            syncSetupIntroVisualState();
             return;
         }
         const scenarioBrowserModal = document.getElementById('scenario-browser-modal');
@@ -2040,6 +2054,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             if (exitBtn) exitBtn.textContent = 'Exit';
         }
     });
+
+    window.addEventListener('resize', syncSetupIntroVisualState);
 
     // Auto-hide global back btn when on main menu or pause modal; switch icon based on context
     const globalBackBtn = document.getElementById('global-back-btn');
