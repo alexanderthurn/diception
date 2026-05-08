@@ -1,4 +1,4 @@
-import { sound, Sound } from '@pixi/sound';
+import { sound } from '@pixi/sound';
 
 const STORAGE_KEY_INACTIVE = 'dicy_musicInactiveTracks';
 
@@ -35,6 +35,7 @@ export class AudioController {
         this._musicInstance = null;
         // Set synchronously on pause so resume guard doesn't rely on async _musicInstance
         this._musicPaused = false;
+        this._musicAlias = null;
 
         // Timeouts for mobile slider auto-hide
         this.musicTimeout = null;
@@ -102,37 +103,53 @@ export class AudioController {
     /**
      * Load a song by index using @pixi/sound.
      */
+    _aliasForSong(index) {
+        return `music-${index}`;
+    }
+
+    _currentMusicAlias() {
+        return this._musicAlias;
+    }
+
     _loadSong(index) {
-        // Stop and remove previous music sound
-        if (sound.exists('music')) {
-            sound.stop('music');
-            sound.remove('music');
+        const prevAlias = this._currentMusicAlias();
+        if (prevAlias && sound.exists(prevAlias)) {
+            sound.stop(prevAlias);
         }
         this._musicInstance = null;
         this._musicPaused = false;
 
+        const alias = this._aliasForSong(index);
         const songPath = './assets/music/' + encodeURIComponent(this.availableSongs[index]);
         console.log('Loading music:', songPath);
 
-        this._musicSound = sound.add('music', {
-            url: songPath,
-            preload: true,
-            volume: this.musicVolume_value,
-        });
+        this._musicAlias = alias;
+        if (!sound.exists(alias)) {
+            this._musicSound = sound.add(alias, {
+                url: songPath,
+                preload: true,
+                volume: this.musicVolume_value,
+                singleInstance: true,
+            });
+        } else {
+            this._musicSound = null;
+            sound.volume(alias, this.musicVolume_value);
+        }
     }
 
     /**
      * Play the currently loaded song.
      */
     _playCurrent() {
-        if (!sound.exists('music')) return;
+        const alias = this._currentMusicAlias();
+        if (!alias || !sound.exists(alias)) return;
         this._musicPaused = false;
 
         // Stop any existing playback
-        sound.stop('music');
+        sound.stop(alias);
 
-        sound.volume('music', this.musicVolume_value);
-        const instance = sound.play('music', {
+        sound.volume(alias, this.musicVolume_value);
+        const instance = sound.play(alias, {
             loop: false,
             complete: () => this.loadNextSong(),
         });
@@ -152,8 +169,9 @@ export class AudioController {
         // Music volume
         this.musicVolume.addEventListener('input', (e) => {
             this.musicVolume_value = e.target.value / 100;
-            if (sound.exists('music')) {
-                sound.volume('music', this.musicVolume_value);
+            const alias = this._currentMusicAlias();
+            if (alias && sound.exists(alias)) {
+                sound.volume(alias, this.musicVolume_value);
             }
             localStorage.setItem('dicy_musicVolume', this.musicVolume_value.toString());
             this.resetSliderTimeout(this.musicVolume, 'musicTimeout');
@@ -303,8 +321,9 @@ export class AudioController {
                     this.isFirstRunEver = false;
                     this._playCurrent();
                 } else {
-                    if (this._musicPaused && sound.exists('music')) {
-                        sound.resume('music');
+                    const alias = this._currentMusicAlias();
+                    if (this._musicPaused && alias && sound.exists(alias)) {
+                        sound.resume(alias);
                         this._musicPaused = false;
                     } else {
                         this._playCurrent();
@@ -328,8 +347,9 @@ export class AudioController {
         if (action === 'pause-hide') {
             clearTimeout(this.musicTimeout);
             this.musicVolume.classList.remove('visible');
-            if (sound.exists('music')) {
-                sound.pause('music');
+            const alias = this._currentMusicAlias();
+            if (alias && sound.exists(alias)) {
+                sound.pause(alias);
                 this._musicPaused = true;
             }
             this.musicPlaying = false;
@@ -342,8 +362,9 @@ export class AudioController {
         // Desktop toggle
         if (this.musicPlaying) {
             // Pause music
-            if (sound.exists('music')) {
-                sound.pause('music');
+            const alias = this._currentMusicAlias();
+            if (alias && sound.exists(alias)) {
+                sound.pause(alias);
                 this._musicPaused = true;
             }
             this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-off"></span>';
@@ -355,8 +376,9 @@ export class AudioController {
                 this._playCurrent();
             } else {
                 // Resume if paused, otherwise play from start
-                if (this._musicPaused && sound.exists('music')) {
-                    sound.resume('music');
+                const alias = this._currentMusicAlias();
+                if (this._musicPaused && alias && sound.exists(alias)) {
+                    sound.resume(alias);
                     this._musicPaused = false;
                 } else {
                     this._playCurrent();

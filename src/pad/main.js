@@ -101,7 +101,7 @@ async function init() {
     }
 
 
-    sound.add('padButton', { url: './assets/sfx/button.ogg', preload: true });
+    sound.add('padButton', { url: './assets/sfx/button.ogg', preload: true, singleInstance: false });
 
     app.finishLoading();
 

@@ -64,6 +64,19 @@ function getPixelPerCentimeter() {
     return px;
 }
 
+function playPadButton(index) {
+    if (!sound.exists('padButton')) return;
+    const speed = BUTTON_PITCH[index] ?? 1;
+    try {
+        sound.play('padButton', { volume: 0.4, speed });
+    } catch (err) {
+        try {
+            sound.play('padButton', { volume: 0.4 });
+        } catch {}
+        console.warn('padButton play fallback', err);
+    }
+}
+
 class FWTouchControl extends PIXI.Container {
     constructor(app, options) {
         super(options);
@@ -137,7 +150,7 @@ class FWTouchControl extends PIXI.Container {
                 handleEvent: function(event) {
                     buttonContainer.pressed = true;
                     buttonContainer.pointerdown = event;
-                    if (sound.exists('padButton')) sound.play('padButton', { volume: 0.4, speed: BUTTON_PITCH[i] });
+                    playPadButton(i);
                 }
             });
 
@@ -170,7 +183,7 @@ class FWTouchControl extends PIXI.Container {
                             self.buttonContainers[14].pointerdown ||
                             self.buttonContainers[15].pointerdown) {
                             buttonContainer.pressed = true;
-                            if (sound.exists('padButton')) sound.play('padButton', { volume: 0.4, speed: BUTTON_PITCH[i] });
+                            playPadButton(i);
                         }
                     }
                 }); 
@@ -257,7 +270,7 @@ class FWTouchControl extends PIXI.Container {
                 handleEvent: function(event) {
                     if (axisContainer.lastTimeClicked && (Date.now() - axisContainer.lastTimeClicked < 500)) {
                         self.buttonContainers[axisContainer.clickIndex].pressed = true;
-                        if (sound.exists('padButton')) sound.play('padButton', { volume: 0.4, speed: BUTTON_PITCH[axisContainer.clickIndex] });
+                        playPadButton(axisContainer.clickIndex);
                     }
                     axisContainer.lastTimeClicked = Date.now();
                     axisContainer.pointerdown = event;

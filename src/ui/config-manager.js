@@ -291,8 +291,10 @@ export class ConfigManager {
 
     syncSetupModsExpanderFromStorage() {
         const badge = document.getElementById('setup-mods-active-badge');
+        const toggle = document.getElementById('setup-mods-toggle');
         const nonDefault = !this.areModsAtDefaults();
         if (badge) badge.classList.toggle('hidden', !nonDefault);
+        if (toggle) toggle.classList.toggle('setup-mods-toggle--active-mods', nonDefault);
         this._syncModsSummary(nonDefault);
         this.syncSetupModsFieldHighlights();
         this.syncSetupResetBtn();
@@ -302,8 +304,10 @@ export class ConfigManager {
     /** After user tweaks a mod: keep badge + reset btn accurate. Panel stays as-is. */
     syncSetupModsExpanderLive() {
         const badge = document.getElementById('setup-mods-active-badge');
+        const toggle = document.getElementById('setup-mods-toggle');
         const nonDefault = !this.areModsAtDefaults();
         if (badge) badge.classList.toggle('hidden', !nonDefault);
+        if (toggle) toggle.classList.toggle('setup-mods-toggle--active-mods', nonDefault);
         this._syncModsSummary(nonDefault);
         this.syncSetupModsFieldHighlights();
         this.syncSetupResetBtn();

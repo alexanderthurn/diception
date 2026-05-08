@@ -40,6 +40,7 @@ export class SoundManager {
             sound.add(alias, {
                 url: SFX_PATH + file,
                 preload: true,
+                singleInstance: false,
             });
         }
         this.isPreloaded = true;
@@ -59,10 +60,23 @@ export class SoundManager {
         if (!this.enabled) return;
         if (document.hidden) return;
         if (!sound.exists(alias)) return;
-        sound.play(alias, {
+        const playOptions = {
             volume: this.volume,
             ...options,
-        });
+        };
+        try {
+            sound.play(alias, playOptions);
+        } catch (err) {
+            // Defensive fallback for sporadic WebAudio source/buffer race in rapid speed-shifted plays.
+            if (playOptions.speed !== undefined) {
+                try {
+                    const { speed, ...withoutSpeed } = playOptions;
+                    sound.play(alias, withoutSpeed);
+                    return;
+                } catch {}
+            }
+            console.warn('SFX play failed:', alias, err);
+        }
     }
 
     setEnabled(enabled) {

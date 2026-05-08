@@ -2471,7 +2471,7 @@ select {
     width: 1024px;
     max-width: 100%;
     text-align: left;
-    padding: 30px;
+    padding: 20px;
     background: rgba(0, 0, 5, 0.90);
 }
 
@@ -2497,8 +2497,8 @@ select {
 
 /* Custom game: wider than default shrink-to-fit modal, scroll when Mods + panels exceed viewport */
 #setup-modal {
-    width: min(420px, calc(100% - 40px));
-    max-width: min(420px, calc(100% - 40px));
+    width: min(520px, calc(100% - 40px));
+    max-width: min(520px, calc(100% - 40px));
     box-sizing: border-box;
     text-align: left;
     max-height: calc(var(--body-h) - 40px);
@@ -2530,7 +2530,7 @@ select {
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
-    padding-right: 4px;
+    padding-right: 0;
 }
 
 #howto-modal {
@@ -2649,7 +2649,8 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 .howto-content {
     max-height: calc(var(--body-h) - 200px);
     overflow-y: auto;
-    padding-right: 10px;
+    padding: 0 4px 0 0;
+    scrollbar-gutter: stable;
 }
 
 .howto-content section {
@@ -2760,7 +2761,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 
 /* Custom Scrollbar for modal content */
 .howto-content::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 .howto-content::-webkit-scrollbar-track {
@@ -2832,16 +2833,31 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 
 .howto-music-toggle {
     flex: 0 0 auto;
-    min-width: 36px;
-    padding: 4px 10px;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0;
+    aspect-ratio: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
 }
 
 .howto-music-toggle.active {
     opacity: 1;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.45);
 }
 
 .howto-music-toggle:not(.active) {
     opacity: 0.6;
+    color: rgba(190, 235, 245, 0.85);
 }
 
 /* Credits on Setup Screen */
@@ -2865,6 +2881,10 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 
     #settings-modal,
     #setup-modal,
+    #howto-modal,
+    #achievements-modal,
+    #campaign-select-view,
+    #campaign-detail-view,
     #about-modal,
     #pause-modal {
         inset: 0;
@@ -5236,8 +5256,14 @@ body.multi-gamepad:has(#setup-modal:not(.hidden)) .gp-cursor-label {
     font-family: 'Rajdhani', monospace;
     font-size: 12px;
     letter-spacing: 1px;
-    z-index: 1000;
+    z-index: 20;
     pointer-events: none;
+}
+
+/* Version label should never overlay dialogs/buttons */
+body:has(.modal:not(.hidden)) .game-version-display,
+body:has(.dialog-box:not(.hidden)) .game-version-display {
+    opacity: 0;
 }
 
 /* Collapsible settings groups */
@@ -5404,6 +5430,78 @@ canvas {
     border-radius: 5px;
 }
 
+/* Mobile dialogs: use full-screen layout with safe-area spacing */
+@media (max-width: 768px), (max-height: 600px) {
+    :root {
+        /* Set to 1 to re-enable fullscreen mobile outer borders for testing. */
+        --mobile-fullscreen-border-enabled: 0;
+    }
+
+    .dialog-overlay {
+        align-items: stretch;
+        padding: 0;
+    }
+
+    .dialog-box {
+        width: 100vw;
+        max-width: 100vw;
+        min-width: 0;
+        height: var(--body-h);
+        max-height: var(--body-h);
+        margin: 0;
+        border-radius: 0;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .dialog-body {
+        padding-left: 0;
+        padding-right: 0;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    .dialog-actions {
+        padding-left: 0;
+        padding-right: 0;
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+
+    :is(#settings-modal,
+        #setup-modal,
+        #howto-modal,
+        #achievements-modal,
+        #campaign-select-view,
+        #campaign-detail-view,
+        #about-modal,
+        #pause-modal,
+        .dialog-box) {
+        border-width: calc(var(--mobile-fullscreen-border-enabled) * 2px) !important;
+    }
+}
+
+/* Vertically center dialog/custom-game content when there is enough room */
+@media (min-height: 700px) {
+    .dialog-box {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    #setup-modal:not(:has(#setup-mods-panel:not(.hidden))) {
+        justify-content: center;
+    }
+
+    #setup-modal:not(:has(#setup-mods-panel:not(.hidden))) .setup-columns {
+        flex: 0 0 auto;
+    }
+
+    #setup-modal:has(#setup-mods-panel:not(.hidden)) {
+        justify-content: flex-start;
+    }
+}
+
 .dialog-body {
     margin: 20px 0;
     padding: 0 20px;
@@ -5452,7 +5550,7 @@ canvas {
     }
 
     .dialog-overlay:has(.game-over-content) .dialog-box {
-        max-width: calc(100vw - 20px);
+        max-width: 100vw;
     }
 
     .dialog-body {
@@ -6182,6 +6280,44 @@ canvas {
     border-color: #fff !important;
 }
 
+/* Keep setup reset button orange while "mods differ" marker class is active */
+.modal .close-btn.modal-reset-btn--orange {
+    color: #ffcc77 !important;
+    border-color: rgba(255, 190, 110, 0.9) !important;
+    background: rgba(64, 28, 0, 0.98) !important;
+}
+
+.modal .close-btn.modal-reset-btn--orange::before {
+    background: rgba(255, 200, 120, 0.28);
+}
+
+.modal .close-btn.modal-reset-btn--orange:hover,
+.modal .close-btn.modal-reset-btn--orange.gamepad-focused {
+    color: #ffe9c8 !important;
+    border-color: #ffffff !important;
+}
+
+/* Custom Game mods entry: default teal, orange only when mods differ */
+#setup-modal #setup-mods-toggle {
+    border-color: rgba(0, 255, 255, 0.82) !important;
+    background: rgba(0, 30, 36, 0.98) !important;
+    color: #ffffff !important;
+}
+
+#setup-modal #setup-mods-toggle .setup-mods-chevron {
+    border-left-color: #9deaff;
+}
+
+#setup-modal #setup-mods-toggle.setup-mods-toggle--active-mods {
+    border-color: rgba(255, 190, 110, 0.9) !important;
+    background: rgba(64, 28, 0, 0.98) !important;
+    color: #ffcc77 !important;
+}
+
+#setup-modal #setup-mods-toggle.setup-mods-toggle--active-mods .setup-mods-chevron {
+    border-left-color: #ffcc77;
+}
+
 /* Minus is wide, so constrain width */
 #zoom-out-btn .sprite-icon {
     width: 60% !important;
@@ -6460,10 +6596,10 @@ canvas {
     justify-content: flex-end;
     align-items: center;
     gap: 12px;
-    margin-top: 18px;
+    margin-top: 8px;
     margin-bottom: 6px;
     border-top: 1px solid rgba(0, 255, 255, 0.12);
-    padding-top: 14px;
+    padding-top: 8px;
 }
 
 .setup-mods-toggle {
@@ -6627,11 +6763,18 @@ canvas {
     font-size: 11px;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: rgba(190, 245, 255, 0.88);
-    padding: 6px 8px 4px;
-    border: 2px solid rgba(0, 255, 255, 0.35);
-    background: rgba(0, 30, 38, 0.92);
-    margin-bottom: 2px;
+    color: var(--border-color);
+    padding: 6px 0 4px;
+    border: none;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+    background: transparent;
+    margin-bottom: 6px;
+}
+
+@media (max-width: 768px), (max-height: 600px) {
+    #achievements-modal .ach-stats-table {
+        max-width: none;
+    }
 }
 
 .ach-card {
@@ -7625,6 +7768,65 @@ canvas {
     }
 }
 
+/* Mobile: keep Custom Game START button in normal document flow */
+@media (max-width: 768px), (max-height: 600px) {
+    #setup-modal {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+    }
+
+    #setup-modal .setup-columns {
+        flex: 0 0 auto;
+        overflow: visible;
+        padding-right: 0;
+    }
+
+    #setup-modal:not(:has(#setup-mods-panel:not(.hidden))) {
+        justify-content: center;
+    }
+
+    #setup-modal:has(#setup-mods-panel:not(.hidden)) {
+        justify-content: flex-start;
+    }
+
+    #setup-modal .setup-start-row {
+        position: static;
+    }
+
+    #pause-modal {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    #pause-modal .pause-content {
+        flex: 0 0 auto;
+        max-height: calc(var(--body-h) - 140px);
+        overflow-y: auto;
+    }
+
+    #campaign-select-view,
+    #campaign-detail-view {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    #campaign-select-view .howto-content,
+    #campaign-detail-view .howto-content {
+        flex: 0 0 auto;
+        max-height: calc(var(--body-h) - 140px);
+    }
+
+    #campaign-detail-view #level-grid-container {
+        width: 100%;
+        max-width: min(520px, calc(100vw - 20px));
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
 /* ── Setup Modal ── */
 .setup-modules {
     display: flex;
@@ -7668,11 +7870,10 @@ canvas {
 }
 
 #setup-modal:has(#setup-mods-panel:not(.hidden)) .setup-mods-col {
-    background: rgba(0, 255, 255, 0.03);
-    border: 1px solid rgba(0, 255, 255, 0.12);
-    border-radius: 4px;
-    padding: 12px 14px;
-    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 0;
+    margin-top: 4px;
 }
 
 /* ── Pause Modal ── */
@@ -7937,7 +8138,7 @@ canvas {
     }
 
     .modal.large-modal {
-        padding: 40px 50px;
+        padding: 20px;
     }
 }
 

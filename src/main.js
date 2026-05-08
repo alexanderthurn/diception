@@ -192,29 +192,31 @@ async function init() {
     };
     wrapLetters('.tron-title');
 
+    // Shared desktop quit flow (used by quit button and fallback cancel path)
+    const handleQuit = async () => {
+        if (await Dialog.confirm('Are you sure you want to exit the game?', 'EXIT GAME?')) {
+            await flushStorage();
+            if (window.steam) {
+                window.steam.quit();
+            } else if (window.android) {
+                window.android.quit();
+            } else if (isTauriContext()) {
+                try {
+                    const { getWindow } = await import('./native/win.js');
+                    await (await getWindow()).close();
+                } catch (e) {
+                    console.error('Tauri exit failed:', e);
+                    window.close();
+                }
+            } else {
+                window.close();
+            }
+        }
+    };
+
     // App Integration (desktop)
     if (isDesktopContext()) {
         // Show and wire all quit buttons
-        const handleQuit = async () => {
-            if (await Dialog.confirm('Are you sure you want to exit the game?', 'EXIT GAME?')) {
-                await flushStorage();
-                if (window.steam) {
-                    window.steam.quit();
-                } else if (window.android) {
-                    window.android.quit();
-                } else if (isTauriContext()) {
-                    try {
-                        const { getWindow } = await import('./native/win.js');
-                        await (await getWindow()).close();
-                    } catch (e) {
-                        console.error('Tauri exit failed:', e);
-                        window.close();
-                    }
-                } else {
-                    window.close();
-                }
-            }
-        };
         const mainQuitBtn = document.getElementById('main-quit-btn');
         if (mainQuitBtn) {
             mainQuitBtn.classList.remove('hidden');
@@ -1616,26 +1618,10 @@ function setupInputEvents(game, inputManager, sessionManager) {
             return;
         }
 
-        // global-back-btn is hidden → on main menu or loading screen
-        // On Tauri with no game running → offer quit to desktop
+        // global-back-btn is hidden -> on main menu or loading screen
+        // On desktop with no game running -> offer the same quit confirmation as quit button
         if (isDesktopContext() && game.players.length === 0) {
-            Dialog.confirm('Are you sure you want to exit to desktop?', 'QUIT GAME?').then(async choice => {
-                if (choice) {
-                    if (window.steam) {
-                        window.steam.quit();
-                    } else if (isTauriContext()) {
-                        try {
-                            const { getWindow } = await import('./native/win.js');
-                            await (await getWindow()).close();
-                        } catch (e) {
-                            console.error('Tauri exit failed:', e);
-                            window.close();
-                        }
-                    } else if (isAndroid()) {
-                        window.close();
-                    }
-                }
-            });
+            void handleQuit();
         }
     });
 
