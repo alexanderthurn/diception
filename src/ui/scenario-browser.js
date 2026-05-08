@@ -256,6 +256,7 @@ export class ScenarioBrowser {
 
         const fullVersion = isFullVersion();
 
+        const tutorialColor = '#00cccc';
         const makeCampaignBtn = (c, isAutofocus, chapterColorIndex = -1) => {
             const levelCount = c.levels?.length ?? 0;
             const solvedCount = getSolvedLevels(c.owner).length;
@@ -270,11 +271,13 @@ export class ScenarioBrowser {
             const comingSoon = c.isBuiltIn && levelCount === 0;
 
             const btn = document.createElement('button');
-            btn.className = 'tron-btn large campaign-select-btn menu-btn-utility' + (locked ? ' btn-locked' : '') + (comingSoon ? ' btn-coming-soon' : '');
+            btn.className = 'tron-btn large campaign-select-btn' + (locked ? ' btn-locked' : '') + (comingSoon ? ' btn-coming-soon' : '');
             if (!locked && isAutofocus) btn.dataset.gamepadAutofocus = '';
             if (chapterColorIndex >= 0) {
                 const hex = '#' + GAME.HUMAN_COLORS[chapterColorIndex % GAME.HUMAN_COLORS.length].toString(16).padStart(6, '0');
                 btn.style.setProperty('--chapter-color', hex);
+            } else if (isTutorial) {
+                btn.style.setProperty('--chapter-color', tutorialColor);
             }
 
             const nameSpan = document.createElement('span');
@@ -587,9 +590,13 @@ export class ScenarioBrowser {
         const allCampaigns = this.campaignManager.listCampaigns().filter(c => !c.isUserCampaign);
         const chapters = allCampaigns.filter(c => c.id !== 'tutorial' && c.owner !== 'Tutorial');
         const chapterColorIndex = chapters.findIndex(c => c.owner === campaign.owner);
+        const tutorialColor = '#00cccc';
+        const isTutorialCampaign = campaign.id === 'tutorial' || campaign.owner === 'Tutorial';
         if (chapterColorIndex >= 0) {
             const hex = '#' + GAME.HUMAN_COLORS[chapterColorIndex % GAME.HUMAN_COLORS.length].toString(16).padStart(6, '0');
             this.levelGrid.style.setProperty('--chapter-color', hex);
+        } else if (isTutorialCampaign) {
+            this.levelGrid.style.setProperty('--chapter-color', tutorialColor);
         } else {
             this.levelGrid.style.removeProperty('--chapter-color');
         }
