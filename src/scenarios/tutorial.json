@@ -121,25 +121,25 @@
           "x": 1,
           "y": 0,
           "owner": 1,
-          "dice": 3
+          "dice": 2
         },
         {
           "x": 2,
           "y": 0,
           "owner": 1,
-          "dice": 3
+          "dice": 2
         },
         {
           "x": 0,
           "y": 1,
           "owner": 1,
-          "dice": 6
+          "dice": 4
         },
         {
           "x": 1,
           "y": 1,
           "owner": 1,
-          "dice": 2
+          "dice": 3
         },
         {
           "x": 2,

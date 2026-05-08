@@ -6584,6 +6584,22 @@ canvas {
     background: transparent;
 }
 
+.beginner-speed-reminder {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.beginner-speed-reminder-text {
+    margin: 0;
+    text-align: center;
+    color: rgba(220, 255, 255, 0.95);
+}
+
+.beginner-speed-reminder-segmented {
+    margin-top: 4px;
+}
+
 .modal-header {
     border-bottom: 1px solid rgba(0, 255, 255, 0.12);
     padding-top: 16px;

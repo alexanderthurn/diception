@@ -131,6 +131,19 @@ export class GameEventManager {
         this._attackTimerPaused = false;
         /** Wall-clock second (floor(Date.now()/1000)) when we last played `time.ogg` */
         this._timerSfxLastBeatSec = null;
+
+        // Beginner-speed reminder cadence:
+        // first reminder at turn 8, then every 5 turns.
+        this._beginnerReminderFirstTurn = 8;
+        this._beginnerReminderRepeatTurns = 5;
+        this._beginnerReminderStorageKey = 'dicy_beginnerReminderHumanTurns';
+        this._beginnerReminderDisabledKey = 'dicy_beginnerReminderDisabled';
+        this._humanTurnCounter = parseInt(localStorage.getItem(this._beginnerReminderStorageKey) || '0', 10);
+        if (!Number.isFinite(this._humanTurnCounter) || this._humanTurnCounter < 0) {
+            this._humanTurnCounter = 0;
+        }
+        this._beginnerReminderDisabled = localStorage.getItem(this._beginnerReminderDisabledKey) === '1';
+        this._beginnerReminderOpen = false;
     }
 
     setScenarioBrowser(scenarioBrowser) {
@@ -213,6 +226,12 @@ export class GameEventManager {
 
         // Check if this player should be automated
         const shouldAutomate = data.player.isBot || autoplayPlayers.has(data.player.id);
+
+        if (!data.player.isBot && !shouldAutomate) {
+            this._humanTurnCounter += 1;
+            localStorage.setItem(this._beginnerReminderStorageKey, String(this._humanTurnCounter));
+            void this._maybeShowBeginnerSpeedReminder(gameSpeed);
+        }
 
         // Update turn indicator (bots only)
         if (data.player.isBot) {
@@ -443,6 +462,78 @@ export class GameEventManager {
 
         this._armWallClockForHumanTurn();
         this._armAttackClockForHumanTurn();
+    }
+
+    async _maybeShowBeginnerSpeedReminder(gameSpeed) {
+        if (gameSpeed !== 'beginner') return;
+        if (this._beginnerReminderDisabled) return;
+        if (this._beginnerReminderOpen || this.game.gameOver) return;
+        if (this._humanTurnCounter <= 0) return;
+        const first = this._beginnerReminderFirstTurn;
+        const repeat = this._beginnerReminderRepeatTurns;
+        const isReminderTurn = this._humanTurnCounter === first ||
+            (this._humanTurnCounter > first && ((this._humanTurnCounter - first) % repeat === 0));
+        if (!isReminderTurn) return;
+
+        // Don't stack with existing modals/dialogs.
+        if (document.querySelector('.dialog-overlay, .modal:not(.hidden), .editor-overlay:not(.hidden)')) return;
+
+        const content = document.createElement('div');
+        content.className = 'beginner-speed-reminder';
+        content.innerHTML = `
+            <p class="beginner-speed-reminder-text">You are playing on Beginner speed. Would you like to speed up?</p>
+            <p class="beginner-speed-reminder-text">Can be changed anytime in the Pause or Settings menu.</p>
+        `;
+
+        const segmented = document.createElement('div');
+        segmented.className = 'segmented-btn game-speed-segmented beginner-speed-reminder-segmented';
+        segmented.innerHTML = `
+            <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
+            <button type="button" class="segmented-option" data-value="normal">Normal</button>
+            <button type="button" class="segmented-option" data-value="expert">Expert</button>
+        `;
+        content.appendChild(segmented);
+
+        const applySpeed = (val) => {
+            localStorage.setItem('dicy_gameSpeed', val);
+            const sel = document.getElementById('game-speed');
+            if (sel) {
+                sel.value = val;
+                sel.dispatchEvent(new Event('change'));
+            }
+            if (this.gameStarter) this.gameStarter.gameSpeed = val;
+            if (this.renderer) this.renderer.setGameSpeed(val);
+            document.querySelectorAll('.game-speed-segmented .segmented-option').forEach((btn) => {
+                btn.classList.toggle('active', btn.dataset.value === val);
+            });
+        };
+
+        segmented.querySelectorAll('.segmented-option').forEach((btn) => {
+            btn.classList.toggle('active', btn.dataset.value === gameSpeed);
+            btn.addEventListener('click', () => applySpeed(btn.dataset.value));
+        });
+
+        this._beginnerReminderOpen = true;
+        this.pauseTurnTimer();
+        this.renderer.inputManager?.setSuspended(true);
+        try {
+            const choice = await Dialog.show({
+                title: 'SPEED UP?',
+                content,
+                buttons: [
+                    { text: 'Continue', value: 'continue', className: 'tron-btn menu-btn-primary' },
+                    { text: 'Do not show again', value: 'disable', className: 'tron-btn menu-btn-neutral' }
+                ]
+            });
+            if (choice === 'disable') {
+                this._beginnerReminderDisabled = true;
+                localStorage.setItem(this._beginnerReminderDisabledKey, '1');
+            }
+        } finally {
+            this._beginnerReminderOpen = false;
+            this.renderer.inputManager?.setSuspended(false);
+            this.resumeTurnTimer();
+        }
     }
 
     _clearWallInterval() {
@@ -1342,5 +1433,6 @@ export class GameEventManager {
 
         this._endAllHumanClocks();
         this.hideAttackLimitDisplay();
+        this._beginnerReminderOpen = false;
     }
 }
