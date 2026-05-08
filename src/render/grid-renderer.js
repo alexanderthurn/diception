@@ -583,6 +583,33 @@ export class GridRenderer {
             }
         }
 
+        // Fill concave (inside) corner notch:
+        // diagonal is outside/enemy, while both orthogonal neighbors are friendly.
+        const insideCornerByQuadrant = {
+            tl: false,
+            tr: false,
+            bl: false,
+            br: false,
+        };
+        const diagonalDefs = [
+            { ddx: 1, ddy: 1, key: 'br' },
+            { ddx: 1, ddy: -1, key: 'tr' },
+            { ddx: -1, ddy: 1, key: 'bl' },
+            { ddx: -1, ddy: -1, key: 'tl' },
+        ];
+        for (const { ddx, ddy, key } of diagonalDefs) {
+            const diag = map.getTileRaw(x + ddx, y + ddy);
+            const isMissingDiag = !diag || diag.blocked;
+            if (!isMissingDiag) continue;
+
+            const hNeighbor = map.getTileRaw(x + ddx, y);
+            const vNeighbor = map.getTileRaw(x, y + ddy);
+            const hFriendly = hNeighbor && !hNeighbor.blocked && hNeighbor.owner === tileRaw.owner;
+            const vFriendly = vNeighbor && !vNeighbor.blocked && vNeighbor.owner === tileRaw.owner;
+            if (!hFriendly || !vFriendly) continue;
+            insideCornerByQuadrant[key] = true;
+        }
+
         for (const pass of drawPasses.values()) {
             for (const edge of pass.edges) {
                 // Directional drawing to assist 'inner' (alignment: 0) detection
@@ -605,6 +632,22 @@ export class GridRenderer {
                 cap: 'butt',
                 alignment: 0 // Inner
             });
+            if (insideCornerByQuadrant.tl) {
+                tileGfx.rect(0, 0, pass.width, pass.width);
+                tileGfx.fill({ color: pass.color, alpha: pass.alpha });
+            }
+            if (insideCornerByQuadrant.tr) {
+                tileGfx.rect(this.tileSize - pass.width, 0, pass.width, pass.width);
+                tileGfx.fill({ color: pass.color, alpha: pass.alpha });
+            }
+            if (insideCornerByQuadrant.bl) {
+                tileGfx.rect(0, this.tileSize - pass.width, pass.width, pass.width);
+                tileGfx.fill({ color: pass.color, alpha: pass.alpha });
+            }
+            if (insideCornerByQuadrant.br) {
+                tileGfx.rect(this.tileSize - pass.width, this.tileSize - pass.width, pass.width, pass.width);
+                tileGfx.fill({ color: pass.color, alpha: pass.alpha });
+            }
         }
     }
 
