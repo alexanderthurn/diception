@@ -1235,20 +1235,15 @@ export class GameEventManager {
         }
 
         for (const b of buttons) {
-            b.className = 'tron-btn';
-        }
-        if (campaignFinished) {
-            const ex = buttons.find((b) => b.value === 'exit');
-            if (ex) ex.className = 'tron-btn primary';
-        } else if (buttons.some((b) => b.value === 'next')) {
-            const nx = buttons.find((b) => b.value === 'next');
-            if (nx) nx.className = 'tron-btn primary';
-        } else if (buttons.some((b) => b.value === 'rematch')) {
-            const rm = buttons.find((b) => b.value === 'rematch');
-            if (rm) rm.className = 'tron-btn primary';
-        } else {
-            const ex = buttons.find((b) => b.value === 'exit');
-            if (ex) ex.className = 'tron-btn primary';
+            if (b.value === 'exit') {
+                b.className = 'tron-btn menu-btn-danger';
+            } else if (b.value === 'next') {
+                b.className = 'tron-btn menu-btn-primary';
+            } else if (b.value === 'rematch') {
+                b.className = 'tron-btn menu-btn-utility';
+            } else {
+                b.className = 'tron-btn menu-btn-neutral';
+            }
         }
 
         // Put primary first in DOM order → first focus for Dialog + gamepad D-pad navigation
