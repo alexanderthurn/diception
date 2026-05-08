@@ -295,6 +295,14 @@ export class InputController {
 
         if (!this.selectedTiles.has(sourceId)) {
             const isParallelConfirm = ['parallel', 'parallel-s'].includes(this.game.playMode);
+            // Expert direct-attack via confirm (D-pad gamepad path):
+            // when pointing at an enemy tile, delegate to handleTileClick so the
+            // same shortcut logic used by pointer clicks is applied.
+            if (!isParallelConfirm && this.renderer.gameSpeed === 'expert' &&
+                !tile.blocked && tile.owner !== this.game.currentPlayer.id) {
+                this.handleTileClick(tile, cursorState.x, cursorState.y, sourceId);
+                return;
+            }
             const owner = this.game.players.find(p => p.id === tile.owner);
             const canSelect = isParallelConfirm
                 ? (owner && !owner.isBot && this._sourceCanControlPlayer(sourceId, tile.owner))
@@ -576,9 +584,8 @@ export class InputController {
         const owner = tile ? this.game.players.find(p => p.id === tile.owner) : null;
 
         // Expert-mode direct-attack shortcut (classic only — parallel handles selection differently)
-        const gamepadsConnected = this.inputManager?.connectedGamepadIndices?.size > 0;
         if (!isParallel && owner && owner.id !== this.game.currentPlayer.id &&
-                this.renderer.gameSpeed === 'expert' && tile && !tile.blocked && !gamepadsConnected) {
+                this.renderer.gameSpeed === 'expert' && tile && !tile.blocked) {
             let attacker = null;
             let selectedWasAttacker = false;
 
