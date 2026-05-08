@@ -110,7 +110,7 @@ export class ScenarioBrowser {
     }
 
     hasHoverCapability() {
-        return window.matchMedia('(hover: hover)').matches;
+        return window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 901px) and (min-height: 601px)').matches;
     }
 
     setupEventListeners() {
@@ -126,6 +126,7 @@ export class ScenarioBrowser {
         // Show hover preview when a level tile receives keyboard/gamepad focus
         if (this.levelGrid) {
             this.levelGrid.addEventListener('focusin', (e) => {
+                if (!this.hasHoverCapability()) return;
                 const tile = e.target.closest('.level-grid-tile:not(.add-tile)');
                 if (!tile) return;
                 const idx = parseInt(tile.dataset.index, 10);
