@@ -7822,8 +7822,26 @@ canvas {
     #campaign-detail-view #level-grid-container {
         width: 100%;
         max-width: min(520px, calc(100vw - 20px));
+        min-width: 0;
+        overflow-x: hidden;
+        padding-right: 2px;
+        box-sizing: border-box;
         margin-left: auto;
         margin-right: auto;
+    }
+
+    #campaign-detail-view #level-grid {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0 1px 0 0;
+        column-gap: 2px !important;
+        row-gap: 0 !important;
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    }
+
+    #campaign-detail-view,
+    #campaign-detail-view .howto-content {
+        overflow-x: hidden !important;
     }
 }
 
