@@ -583,32 +583,36 @@ export class GridRenderer {
             }
         }
 
-        // Fill concave (inside) corner notch:
-        // diagonal is outside/enemy, while both orthogonal neighbors are friendly.
-        const insideCornerByQuadrant = {
-            tl: false,
-            tr: false,
-            bl: false,
-            br: false,
-        };
-        const diagonalDefs = [
-            { ddx: 1, ddy: 1, key: 'br' },
-            { ddx: 1, ddy: -1, key: 'tr' },
-            { ddx: -1, ddy: 1, key: 'bl' },
-            { ddx: -1, ddy: -1, key: 'tl' },
-        ];
-        for (const { ddx, ddy, key } of diagonalDefs) {
-            const diag = map.getTileRaw(x + ddx, y + ddy);
-            const isMissingDiag = !diag || diag.blocked;
-            if (!isMissingDiag) continue;
+        const getSmartBorderSideStyle = (tx, ty, side) => {
+            const t = map.getTileRaw(tx, ty);
+            if (!t || t.blocked) return null;
 
-            const hNeighbor = map.getTileRaw(x + ddx, y);
-            const vNeighbor = map.getTileRaw(x, y + ddy);
-            const hFriendly = hNeighbor && !hNeighbor.blocked && hNeighbor.owner === tileRaw.owner;
-            const vFriendly = vNeighbor && !vNeighbor.blocked && vNeighbor.owner === tileRaw.owner;
-            if (!hFriendly || !vFriendly) continue;
-            insideCornerByQuadrant[key] = true;
-        }
+            let edge;
+            if (side === 'top') edge = { dx: 0, dy: -1 };
+            else if (side === 'bottom') edge = { dx: 0, dy: 1 };
+            else if (side === 'left') edge = { dx: -1, dy: 0 };
+            else edge = { dx: 1, dy: 0 }; // right
+
+            const nx = tx + edge.dx;
+            const ny = ty + edge.dy;
+            const neighbor = map.getTileRaw(nx, ny);
+
+            let shouldDraw = !neighbor || neighbor.blocked || neighbor.owner !== t.owner;
+            if (shouldDraw && isHumanActive && neighbor && neighbor.owner === humanId) {
+                shouldDraw = false;
+            }
+            if (!shouldDraw) return null;
+
+            const isMapEdgeOrBlocked = !neighbor || neighbor.blocked;
+            if (!isMapEdgeOrBlocked) {
+                const isPlayerInvolved = isHumanActive && (t.owner === humanId || (neighbor && neighbor.owner === humanId));
+                if (!isPlayerInvolved) return null;
+            }
+
+            const owner = this.game.players.find(p => p.id === t.owner);
+            const color = owner ? owner.color : 0xffffff;
+            return { color, alpha: 1.0, width: 2 };
+        };
 
         for (const pass of drawPasses.values()) {
             for (const edge of pass.edges) {
@@ -632,22 +636,83 @@ export class GridRenderer {
                 cap: 'butt',
                 alignment: 0 // Inner
             });
-            if (insideCornerByQuadrant.tl) {
-                tileGfx.rect(0, 0, pass.width, pass.width);
-                tileGfx.fill({ color: pass.color, alpha: pass.alpha });
+        }
+
+        const tileOwnerForCorner = this.game.players.find(p => p.id === tileRaw.owner);
+        const tileColorForCorner = tileOwnerForCorner ? tileOwnerForCorner.color : 0xffffff;
+
+        // Corner dots: same-color approaches → that color. Different colors → only if this tile's
+        // color matches one of the two segments, then fill using this tile's color.
+        const cornerDefs = [
+            {
+                rectX: 0,
+                rectY: 0,
+                hCandidates: [[x, y, 'top'], [x - 1, y, 'top']],
+                vCandidates: [[x, y, 'left'], [x, y - 1, 'left']],
+            },
+            {
+                rectX: this.tileSize - 2,
+                rectY: 0,
+                hCandidates: [[x, y, 'top'], [x + 1, y, 'top']],
+                vCandidates: [[x, y, 'right'], [x, y - 1, 'right']],
+            },
+            {
+                rectX: 0,
+                rectY: this.tileSize - 2,
+                hCandidates: [[x, y, 'bottom'], [x - 1, y, 'bottom']],
+                vCandidates: [[x, y, 'left'], [x, y + 1, 'left']],
+            },
+            {
+                rectX: this.tileSize - 2,
+                rectY: this.tileSize - 2,
+                hCandidates: [[x, y, 'bottom'], [x + 1, y, 'bottom']],
+                vCandidates: [[x, y, 'right'], [x, y + 1, 'right']],
+            },
+        ];
+
+        for (const corner of cornerDefs) {
+            const hStyles = corner.hCandidates
+                .map(([tx, ty, side]) => getSmartBorderSideStyle(tx, ty, side))
+                .filter(Boolean);
+            const vStyles = corner.vCandidates
+                .map(([tx, ty, side]) => getSmartBorderSideStyle(tx, ty, side))
+                .filter(Boolean);
+            if (!hStyles.length || !vStyles.length) continue;
+
+            let chosen = null;
+            for (const hs of hStyles) {
+                for (const vs of vStyles) {
+                    if (hs.color === vs.color) {
+                        chosen = {
+                            color: hs.color,
+                            alpha: (hs.alpha + vs.alpha) / 2,
+                            width: Math.min(hs.width, vs.width),
+                        };
+                        break;
+                    }
+                }
+                if (chosen) break;
             }
-            if (insideCornerByQuadrant.tr) {
-                tileGfx.rect(this.tileSize - pass.width, 0, pass.width, pass.width);
-                tileGfx.fill({ color: pass.color, alpha: pass.alpha });
+            if (!chosen) {
+                for (const hs of hStyles) {
+                    for (const vs of vStyles) {
+                        if (hs.color === vs.color) continue;
+                        if (tileColorForCorner === hs.color || tileColorForCorner === vs.color) {
+                            chosen = {
+                                color: tileColorForCorner,
+                                alpha: 1.0,
+                                width: Math.min(hs.width, vs.width),
+                            };
+                            break;
+                        }
+                    }
+                    if (chosen) break;
+                }
             }
-            if (insideCornerByQuadrant.bl) {
-                tileGfx.rect(0, this.tileSize - pass.width, pass.width, pass.width);
-                tileGfx.fill({ color: pass.color, alpha: pass.alpha });
-            }
-            if (insideCornerByQuadrant.br) {
-                tileGfx.rect(this.tileSize - pass.width, this.tileSize - pass.width, pass.width, pass.width);
-                tileGfx.fill({ color: pass.color, alpha: pass.alpha });
-            }
+            if (!chosen) continue;
+
+            tileGfx.rect(corner.rectX, corner.rectY, chosen.width, chosen.width);
+            tileGfx.fill({ color: chosen.color, alpha: chosen.alpha });
         }
     }
 
