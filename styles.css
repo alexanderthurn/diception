@@ -3312,6 +3312,12 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     padding-top: 10px;
 }
 
+/* Prevent right-edge clipping of last level column in campaign detail view */
+#campaign-detail-view #level-grid-container {
+    padding-right: 2px;
+    box-sizing: border-box;
+}
+
 /* Dev-only toolbar (?dev=true) above Your Campaign level grid */
 .campaign-dev-toolbar {
     display: flex;
@@ -3347,6 +3353,21 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     color: #fff;
     font-size: 12px;
     font-family: inherit;
+}
+
+#campaign-detail-view .campaign-dev-toolbar,
+#campaign-detail-view .campaign-dev-import-row {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#campaign-detail-view .campaign-dev-import-select {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .campaign-dev-import-select:focus {
@@ -6540,6 +6561,16 @@ canvas {
     box-shadow: none;
 }
 
+/* Campaign views: transparent backdrop so board/background stays visible */
+#campaign-select-view,
+#campaign-detail-view {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: none;
+}
+
 /* dialog-box (JS-created dialogs) shares the same visual language as .modal */
 .dialog-box {
     background: rgba(0, 0, 5, 0.95);
@@ -7823,7 +7854,6 @@ canvas {
         width: 100%;
         max-width: min(520px, calc(100vw - 20px));
         min-width: 0;
-        overflow-x: hidden;
         padding-right: 2px;
         box-sizing: border-box;
         margin-left: auto;
@@ -7839,9 +7869,20 @@ canvas {
         grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
     }
 
-    #campaign-detail-view,
-    #campaign-detail-view .howto-content {
-        overflow-x: hidden !important;
+    /* Your Campaign dev/import toolbar must not widen the mobile layout */
+    #campaign-detail-view .campaign-dev-toolbar,
+    #campaign-detail-view .campaign-dev-import-row {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    #campaign-detail-view .campaign-dev-import-select {
+        min-width: 0;
+        max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
     }
 }
 
