@@ -6741,6 +6741,12 @@ canvas {
     min-width: 220px;
 }
 
+.main-nav-primary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
 /* Arcade-tech main menu button treatment (scoped to main menu only) */
 #main-menu .main-nav .tron-btn {
     position: relative;
@@ -6749,8 +6755,7 @@ canvas {
     animation: none !important;
     text-shadow: none;
     border: 2px solid rgba(0, 255, 255, 0.78);
-    background:
-        linear-gradient(180deg, rgba(0, 18, 22, 0.94) 0%, rgba(0, 6, 10, 0.96) 100%);
+    background: rgba(0, 8, 12, 0.96);
     box-shadow: none !important;
     letter-spacing: 2.4px;
     transition:
@@ -6759,6 +6764,16 @@ canvas {
         border-color 0.16s ease,
         color 0.16s ease,
         background 0.16s ease;
+}
+
+#main-menu .main-nav .tron-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.46) 0%, rgba(255, 255, 255, 0.16) 100%);
+    opacity: 0;
 }
 
 #main-menu .main-nav .tron-btn::after {
@@ -6770,18 +6785,31 @@ canvas {
     z-index: 2;
 }
 
-#main-menu .main-nav .tron-btn:hover {
+#main-menu .main-nav .tron-btn:hover,
+#main-menu .main-nav .tron-btn.gamepad-focused {
     color: #fff;
-    border-color: rgba(180, 255, 255, 0.95);
-    background:
-        linear-gradient(180deg, rgba(0, 48, 58, 0.96) 0%, rgba(0, 10, 16, 0.98) 100%);
+    border-color: #ffffff !important;
+    background: inherit;
     box-shadow: none !important;
     transform: translateY(-1px);
 }
 
+#main-menu .main-nav .tron-btn:hover::before,
+#main-menu .main-nav .tron-btn.gamepad-focused::before {
+    opacity: 1;
+    animation: main-menu-white-pulse 1.05s ease-in-out infinite;
+}
+
 #main-menu .main-nav .tron-btn:active {
     transform: translateY(0) scale(0.985);
+    border-color: #ffffff !important;
     box-shadow: none !important;
+}
+
+#main-menu .main-nav .tron-btn:active::before {
+    opacity: 1;
+    animation: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.24) 100%);
 }
 
 #main-menu .main-nav > .tron-btn.large {
@@ -6789,10 +6817,24 @@ canvas {
     letter-spacing: 3.2px;
 }
 
-/* Main menu: normalize button heights across large/small variants */
-#main-menu .main-nav > .tron-btn {
-    height: 72px;
-    min-height: 72px;
+#main-menu .main-nav-primary > .tron-btn.large {
+    width: 100%;
+    min-width: 0;
+    aspect-ratio: 1 / 1;
+    min-height: 140px;
+    height: auto;
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+}
+
+#main-menu .main-nav-primary > .tron-btn.large .sprite-icon {
+    width: 4em;
+    height: 4em;
 }
 
 .main-nav-utility {
@@ -6837,42 +6879,42 @@ canvas {
 
 #main-settings-btn {
     border-color: rgba(0, 136, 255, 0.9) !important;
-    background: linear-gradient(180deg, rgba(0, 44, 84, 0.96) 0%, rgba(0, 14, 32, 0.98) 100%) !important;
+    background: rgba(0, 34, 72, 0.98) !important;
 }
 
 #main-custom-btn {
     border-color: rgba(0, 255, 255, 0.9) !important;
-    background: linear-gradient(180deg, rgba(0, 68, 68, 0.96) 0%, rgba(0, 24, 24, 0.98) 100%) !important;
+    background: rgba(0, 54, 54, 0.98) !important;
 }
 
 #main-campaign-btn {
     border-color: rgba(170, 0, 255, 0.9) !important;
-    background: linear-gradient(180deg, rgba(56, 0, 84, 0.96) 0%, rgba(20, 0, 32, 0.98) 100%) !important;
+    background: rgba(42, 0, 72, 0.98) !important;
 }
 
 #main-icons-editor-btn {
     border-color: rgba(255, 204, 0, 0.9) !important;
-    background: linear-gradient(180deg, rgba(86, 68, 0, 0.96) 0%, rgba(32, 24, 0, 0.98) 100%) !important;
+    background: rgba(74, 58, 0, 0.98) !important;
 }
 
 #main-howto-btn {
     border-color: rgba(0, 170, 68, 0.9) !important;
-    background: linear-gradient(180deg, rgba(0, 60, 24, 0.96) 0%, rgba(0, 24, 10, 0.98) 100%) !important;
+    background: rgba(0, 50, 20, 0.98) !important;
 }
 
 #main-icons-achievements-btn {
     border-color: rgba(204, 0, 0, 0.9) !important;
-    background: linear-gradient(180deg, rgba(72, 0, 0, 0.96) 0%, rgba(28, 0, 0, 0.98) 100%) !important;
+    background: rgba(62, 0, 0, 0.98) !important;
 }
 
 #main-about-btn {
     border-color: rgba(51, 0, 204, 0.9) !important;
-    background: linear-gradient(180deg, rgba(20, 0, 76, 0.96) 0%, rgba(8, 0, 30, 0.98) 100%) !important;
+    background: rgba(16, 0, 66, 0.98) !important;
 }
 
 #main-quit-btn {
     border-color: rgba(204, 102, 0, 0.9) !important;
-    background: linear-gradient(180deg, rgba(74, 34, 0, 0.96) 0%, rgba(30, 12, 0, 0.98) 100%) !important;
+    background: rgba(64, 28, 0, 0.98) !important;
 }
 
 @keyframes main-menu-btn-scan {
@@ -6882,6 +6924,17 @@ canvas {
 
     100% {
         transform: translateY(42%);
+    }
+}
+
+@keyframes main-menu-white-pulse {
+    0%,
+    100% {
+        opacity: 0.74;
+    }
+
+    50% {
+        opacity: 0.36;
     }
 }
 
