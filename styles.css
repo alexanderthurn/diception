@@ -3598,6 +3598,13 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     background: none;
 }
 
+/* Ensure level preview remains scrollable on narrow mobile viewports */
+.level-preview-dialog {
+    max-height: calc(var(--body-h) - 24px) !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 /* Override global canvas 100vw/100vh - preview uses --preview-size set in JS */
 .level-preview-canvas {
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -4909,9 +4916,17 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
         display: none !important;
     }
 
-    /* When settings panel is open on mobile, hide all top-right icons (music, sfx, zoom, settings) */
-    body:has(.editor-settings.editor-settings-open) #music-controls {
+    /* When settings panel is open on mobile, keep only the settings toggle visible for closing */
+    body:has(.editor-settings.editor-settings-open) #music-controls .main-menu-control,
+    body:has(.editor-settings.editor-settings-open) #music-controls .zoom-control,
+    body:has(.editor-settings.editor-settings-open) #music-controls #global-back-btn {
         display: none !important;
+    }
+
+    body:has(.editor-settings.editor-settings-open) #music-controls #editor-settings-toggle {
+        display: inline-flex !important;
+        position: relative;
+        z-index: 260;
     }
 
 }
