@@ -2902,6 +2902,10 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
         box-sizing: border-box;
     }
 
+    #pause-modal {
+        padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    }
+
     .howto-content {
         max-height: none;
     }
@@ -7876,6 +7880,7 @@ canvas {
         display: flex;
         flex-direction: column;
         justify-content: center;
+        overflow-x: hidden;
     }
 
     #pause-modal .pause-content {
@@ -7989,6 +7994,7 @@ canvas {
     gap: 10px;
     width: 100%;
     min-width: 240px;
+    overflow-x: hidden;
     position: relative;
 }
 
