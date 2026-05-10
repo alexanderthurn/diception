@@ -1976,6 +1976,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
     document.getElementById('main-howto-btn')?.addEventListener('click', () => {
         mainMenu.classList.add('hidden');
+        refreshControlsSection();
         howtoModal.classList.remove('hidden');
         if (!probabilityCalculator) {
             probabilityCalculator = new ProbabilityCalculator();

@@ -251,6 +251,7 @@ body.loading-active #ui-overlay {
     border: 1px solid var(--border-color);
     box-shadow: var(--button-glow);
     width: 100%;
+    box-sizing: border-box;
 }
 
 .segmented-option {
