@@ -516,22 +516,13 @@ export class GameStarter {
     initializePlayerAIs(botAI) {
         this.clearPlayerAIs();
 
-        const aiCycle = ['easy', 'medium', 'hard'];
-        let botIndex = 0;
-
         for (const player of this.game.players) {
             if (!player.isBot) {
                 player.name = this.getPlayerName ? this.getPlayerName(player) : `Human ${player.id + 1}`;
                 continue;
             }
 
-            let aiId;
-            if (botAI === 'custom') {
-                aiId = aiCycle[botIndex % aiCycle.length];
-                botIndex++;
-            } else {
-                aiId = botAI || 'easy';
-            }
+            const aiId = botAI || 'easy';
 
             this.playerAIs.set(player.id, createAI(aiId, this.game, player.id));
             player.aiId = aiId;
