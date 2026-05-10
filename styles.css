@@ -7890,6 +7890,11 @@ canvas {
         overflow-y: auto;
     }
 
+    #pause-modal .pause-content::before,
+    #pause-modal .pause-content::after {
+        display: none;
+    }
+
     #campaign-select-view,
     #campaign-detail-view {
         display: flex;
