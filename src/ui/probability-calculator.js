@@ -81,7 +81,7 @@ export class ProbabilityCalculator {
         }
 
         // Generate rows
-        for (let attacker = 1; attacker <= this.maxDice; attacker++) {
+        for (let attacker = 2; attacker <= this.maxDice; attacker++) {
             const row = document.createElement('tr');
 
             // Attacker dice count (sticky column)
