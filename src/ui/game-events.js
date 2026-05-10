@@ -5,6 +5,7 @@ import { shouldShowInputHints, getInputHint, ACTION_END_TURN, ACTION_MENU } from
 import { markLevelSolved } from '../scenarios/campaign-progress.js';
 import { getWinProbability } from '../core/probability.js';
 import { incrementStat, fireAchievementEvent, checkCampaignAchievement } from '../core/achievement-manager.js';
+import { createSpeedDescription, updateSpeedDescription } from './speed-descriptions.js';
 
 function showVictoryCard(humanWon, winnerColorHex, quality, campaignFinished = false) {
     return new Promise(resolve => {
@@ -228,8 +229,12 @@ export class GameEventManager {
         const shouldAutomate = data.player.isBot || autoplayPlayers.has(data.player.id);
 
         if (!data.player.isBot && !shouldAutomate) {
-            this._humanTurnCounter += 1;
-            localStorage.setItem(this._beginnerReminderStorageKey, String(this._humanTurnCounter));
+            // Don't count tutorial turns toward the beginner speed reminder cadence
+            const isTutorialGame = localStorage.getItem('dicy_loadedCampaign') === 'Tutorial';
+            if (!isTutorialGame) {
+                this._humanTurnCounter += 1;
+                localStorage.setItem(this._beginnerReminderStorageKey, String(this._humanTurnCounter));
+            }
             void this._maybeShowBeginnerSpeedReminder(gameSpeed);
         }
 
@@ -464,16 +469,18 @@ export class GameEventManager {
         this._armAttackClockForHumanTurn();
     }
 
-    async _maybeShowBeginnerSpeedReminder(gameSpeed) {
+    async _maybeShowBeginnerSpeedReminder(gameSpeed, { force = false } = {}) {
         if (gameSpeed !== 'beginner') return;
         if (this._beginnerReminderDisabled) return;
         if (this._beginnerReminderOpen || this.game.gameOver) return;
-        if (this._humanTurnCounter <= 0) return;
-        const first = this._beginnerReminderFirstTurn;
-        const repeat = this._beginnerReminderRepeatTurns;
-        const isReminderTurn = this._humanTurnCounter === first ||
-            (this._humanTurnCounter > first && ((this._humanTurnCounter - first) % repeat === 0));
-        if (!isReminderTurn) return;
+        if (!force) {
+            if (this._humanTurnCounter <= 0) return;
+            const first = this._beginnerReminderFirstTurn;
+            const repeat = this._beginnerReminderRepeatTurns;
+            const isReminderTurn = this._humanTurnCounter === first ||
+                (this._humanTurnCounter > first && ((this._humanTurnCounter - first) % repeat === 0));
+            if (!isReminderTurn) return;
+        }
 
         // Don't stack with existing modals/dialogs.
         if (document.querySelector('.dialog-overlay, .modal:not(.hidden), .editor-overlay:not(.hidden)')) return;
@@ -481,8 +488,7 @@ export class GameEventManager {
         const content = document.createElement('div');
         content.className = 'beginner-speed-reminder';
         content.innerHTML = `
-            <p class="beginner-speed-reminder-text">You are playing on Beginner speed. Would you like to speed up?</p>
-            <p class="beginner-speed-reminder-text">Can be changed anytime in the Pause or Settings menu.</p>
+            <p class="beginner-speed-reminder-text">On bigger maps, animations can take a while. Once you're comfortable with the basics, we recommend Normal or Expert speed. You can change this anytime in Pause or Settings.</p>
         `;
 
         const segmented = document.createElement('div');
@@ -493,6 +499,9 @@ export class GameEventManager {
             <button type="button" class="segmented-option" data-value="expert">Expert</button>
         `;
         content.appendChild(segmented);
+
+        const descList = createSpeedDescription(gameSpeed);
+        content.appendChild(descList);
 
         const applySpeed = (val) => {
             localStorage.setItem('dicy_gameSpeed', val);
@@ -506,6 +515,7 @@ export class GameEventManager {
             document.querySelectorAll('.game-speed-segmented .segmented-option').forEach((btn) => {
                 btn.classList.toggle('active', btn.dataset.value === val);
             });
+            updateSpeedDescription(descList, val);
         };
 
         segmented.querySelectorAll('.segmented-option').forEach((btn) => {

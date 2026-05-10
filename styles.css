@@ -6588,6 +6588,7 @@ canvas {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    max-width: 340px;
 }
 
 .beginner-speed-reminder-text {
@@ -6598,6 +6599,30 @@ canvas {
 
 .beginner-speed-reminder-segmented {
     margin-top: 4px;
+}
+
+.speed-description {
+    margin: 0;
+    padding: 8px 12px;
+    min-height: 56px;
+    list-style: none;
+    background: rgba(0, 20, 30, 0.6);
+    border: 1px solid rgba(0, 255, 255, 0.12);
+    transition: opacity 0.15s ease;
+}
+
+.speed-description li {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85em;
+    color: rgba(200, 240, 245, 0.85);
+    padding: 2px 0;
+    letter-spacing: 0.3px;
+}
+
+.speed-description li::before {
+    content: '·';
+    margin-right: 6px;
+    color: rgba(0, 255, 255, 0.6);
 }
 
 .modal-header {

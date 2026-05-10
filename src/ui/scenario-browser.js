@@ -6,6 +6,7 @@ import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress
 import { getCachedIdentity, isFullVersion } from '../scenarios/user-identity.js';
 import { getActiveModsSummary } from './mods-panel-helpers.js';
 import { GAME } from '../core/constants.js';
+import { createSpeedDescription, updateSpeedDescription } from './speed-descriptions.js';
 
 /** Dev-only campaign tools (import/export JSON, etc.): ?dev=true or ?dev=1 */
 function isCampaignDevToolsEnabled() {
@@ -1008,7 +1009,7 @@ export class ScenarioBrowser {
         };
     }
 
-    selectAndPlayLevel(index, opts = {}) {
+    async selectAndPlayLevel(index, opts = {}) {
         const level = this.campaignManager.getLevel(this.selectedCampaign, index);
         if (!level) return;
 
@@ -1027,6 +1028,12 @@ export class ScenarioBrowser {
         }
 
         if (opts.immediateStart) {
+            // Show speed-up reminder on the last tutorial level (index 3)
+            const isTutorial = this.selectedCampaign.owner === 'Tutorial' || this.selectedCampaign.id === 'tutorial';
+            if (isTutorial && index === 3) {
+                await this._showSpeedUpDialog();
+            }
+
             localStorage.setItem('dicy_campaignMode', '1');
             this._disconnectGridResizeObserver();
             this.scenarioBrowserModal.classList.add('hidden');
@@ -1039,6 +1046,53 @@ export class ScenarioBrowser {
             this.setupModal.classList.remove('hidden');
             if (this.effectsManager) this.effectsManager.startIntroMode();
         }
+    }
+
+    /**
+     * Speed-up dialog shown before starting the last tutorial level.
+     */
+    async _showSpeedUpDialog() {
+        const content = document.createElement('div');
+        content.className = 'beginner-speed-reminder';
+        content.innerHTML = `
+            <p class="beginner-speed-reminder-text">On bigger maps, animations can take a while. Once you're comfortable with the basics, we recommend Normal or Expert speed. You can change this anytime in Pause or Settings.</p>
+        `;
+
+        const segmented = document.createElement('div');
+        segmented.className = 'segmented-btn game-speed-segmented beginner-speed-reminder-segmented';
+        segmented.innerHTML = `
+            <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
+            <button type="button" class="segmented-option" data-value="normal">Normal</button>
+            <button type="button" class="segmented-option" data-value="expert">Expert</button>
+        `;
+        content.appendChild(segmented);
+
+        const currentSpeed = localStorage.getItem('dicy_gameSpeed') || 'beginner';
+        const descList = createSpeedDescription(currentSpeed);
+        content.appendChild(descList);
+
+        const applySpeed = (val) => {
+            localStorage.setItem('dicy_gameSpeed', val);
+            const sel = document.getElementById('game-speed');
+            if (sel) { sel.value = val; sel.dispatchEvent(new Event('change')); }
+            document.querySelectorAll('.game-speed-segmented .segmented-option').forEach((btn) => {
+                btn.classList.toggle('active', btn.dataset.value === val);
+            });
+            updateSpeedDescription(descList, val);
+        };
+
+        segmented.querySelectorAll('.segmented-option').forEach((btn) => {
+            btn.classList.toggle('active', btn.dataset.value === currentSpeed);
+            btn.addEventListener('click', () => applySpeed(btn.dataset.value));
+        });
+
+        await Dialog.show({
+            title: 'SPEED UP?',
+            content,
+            buttons: [
+                { text: 'Continue', value: 'continue', className: 'tron-btn menu-btn-primary' }
+            ]
+        });
     }
 
     selectLevelForCustomGame(index) {
