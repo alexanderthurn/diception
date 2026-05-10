@@ -49,16 +49,15 @@ export class ProbabilityCalculator {
     generateTableHeader() {
         if (!this.tableHead) return;
 
-        // Clear existing headers
         this.tableHead.innerHTML = '';
 
-        // Add corner cell
+        // Corner: rows = attacker, cols = defender
         const cornerTh = document.createElement('th');
         cornerTh.className = 'sticky-col';
         cornerTh.innerHTML = '<span class="sprite-icon icon-attack"></span> \\ <span class="sprite-icon icon-defend"></span>';
         this.tableHead.appendChild(cornerTh);
 
-        // Add column headers for each defender dice count
+        // Column headers = defender dice counts (1..maxDice)
         for (let i = 1; i <= this.maxDice; i++) {
             const th = document.createElement('th');
             th.textContent = i;
@@ -71,26 +70,23 @@ export class ProbabilityCalculator {
         const attackRule = this.attackRuleSelect?.value || 'classic';
         const probTable = getProbabilityTable(diceSides, attackRule);
 
-        // Clear existing rows
         this.tableBody.innerHTML = '';
 
-        // Check if table exists
         if (!probTable || probTable.length === 0) {
             console.warn(`No probability table for ${diceSides}-sided dice`);
             return;
         }
 
-        // Generate rows
+        // Rows = attacker dice counts (2..maxDice)
         for (let attacker = 2; attacker <= this.maxDice; attacker++) {
             const row = document.createElement('tr');
 
-            // Attacker dice count (sticky column)
             const attackerCell = document.createElement('td');
             attackerCell.className = 'sticky-col';
             attackerCell.textContent = attacker;
             row.appendChild(attackerCell);
 
-            // Probability cells for each defender count
+            // Columns = defender dice counts (1..maxDice)
             for (let defender = 1; defender <= this.maxDice; defender++) {
                 const cell = document.createElement('td');
                 const probability = probTable[attacker - 1][defender - 1];
