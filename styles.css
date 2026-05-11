@@ -5167,8 +5167,15 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 }
 
 @keyframes cursor-pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.22); }
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.22);
+    }
 }
 
 .gamepad-cursor.cursor-active {
@@ -5469,7 +5476,8 @@ canvas {
 }
 
 /* Mobile dialogs: use full-screen layout with safe-area spacing */
-@media (max-width: 768px), (max-height: 600px) {
+@media (max-width: 768px),
+(max-height: 600px) {
     :root {
         /* Set to 1 to re-enable fullscreen mobile outer borders for testing. */
         --mobile-fullscreen-border-enabled: 0;
@@ -6869,7 +6877,9 @@ canvas {
     margin-bottom: 6px;
 }
 
-@media (max-width: 768px), (max-height: 600px) {
+@media (max-width: 768px),
+(max-height: 600px) {
+
     #achievements-modal .ach-stats-table,
     #achievements-modal .achievements-reset-stats-row {
         max-width: none;
@@ -7696,7 +7706,7 @@ canvas {
     content: none;
 }
 
-#main-menu .main-nav .tron-btn > * {
+#main-menu .main-nav .tron-btn>* {
     position: relative;
     z-index: 2;
 }
@@ -7728,12 +7738,12 @@ canvas {
     background: rgba(255, 255, 255, 0.46);
 }
 
-#main-menu .main-nav > .tron-btn.large {
+#main-menu .main-nav>.tron-btn.large {
     font-size: 1.16em;
     letter-spacing: 3.2px;
 }
 
-#main-menu .main-nav-primary > .tron-btn.large {
+#main-menu .main-nav-primary>.tron-btn.large {
     width: 100%;
     min-width: 0;
     aspect-ratio: 1 / 1;
@@ -7748,7 +7758,7 @@ canvas {
     text-align: center;
 }
 
-#main-menu .main-nav-primary > .tron-btn.large .sprite-icon {
+#main-menu .main-nav-primary>.tron-btn.large .sprite-icon {
     width: 4em;
     height: 4em;
 }
@@ -7845,6 +7855,7 @@ canvas {
 }
 
 @keyframes main-menu-white-pulse {
+
     0%,
     100% {
         opacity: 0.74;
@@ -7869,7 +7880,8 @@ canvas {
 }
 
 /* Mobile: keep Custom Game START button in normal document flow */
-@media (max-width: 768px), (max-height: 600px) {
+@media (max-width: 768px),
+(max-height: 600px) {
     #setup-modal {
         display: flex;
         flex-direction: column;
@@ -8022,7 +8034,7 @@ canvas {
     gap: 10px;
     width: 100%;
     min-width: 240px;
-    overflow-x: hidden;
+    overflow-x: visible;
     position: relative;
 }
 
@@ -9484,4 +9496,3 @@ input[type="range"].gamepad-slider-editing {
     border-color: var(--border-color);
     color: var(--border-color);
 }
-
