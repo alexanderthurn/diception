@@ -2185,8 +2185,11 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             return;
         }
         const summary = configManager.getSetupActiveModsSummary();
+        const seedVal = parseInt(document.getElementById('game-seed')?.value ?? '0', 10);
+        const modsActive = !configManager.areModsAtDefaults() || (Number.isFinite(seedVal) && seedVal > 0);
         summaryEl.textContent = summary || '';
         summaryEl.classList.toggle('hidden', !summary);
+        summaryEl.classList.toggle('has-active-mods', modsActive);
     }
 
     // Toggles delegate to the main buttons so AudioController handles everything

@@ -168,6 +168,17 @@ export function getActiveModsSummary(config) {
     const d = SETUP_MOD_DEFAULTS;
     const parts = [];
 
+    // Bot/player context — always shown first
+    const botCount = parseInt(config.botCount, 10);
+    if (!Number.isNaN(botCount) && botCount > 0) {
+        const humanCount = parseInt(config.humanCount, 10) || 1;
+        const ai = config.botAI || null;
+        const botLabel = ai
+            ? `${botCount} ${ai} bot${botCount !== 1 ? 's' : ''}`
+            : `${botCount} bot${botCount !== 1 ? 's' : ''}`;
+        parts.push(humanCount > 1 ? `${humanCount} humans, ${botLabel}` : botLabel);
+    }
+
     if (config.gameMode && config.gameMode !== d.gameMode)
         parts.push(GAME_MODE_LABELS[config.gameMode] || config.gameMode);
     if (config.maxDice != null && String(config.maxDice) !== d.maxDice)
@@ -198,13 +209,36 @@ export function getActiveModsSummary(config) {
 }
 
 /**
+ * Returns true if any mod in config differs from defaults (including fixed seed).
+ * Does not consider player/bot info.
+ */
+export function hasActiveMods(config) {
+    const d = SETUP_MOD_DEFAULTS;
+    if (config.gameMode && config.gameMode !== d.gameMode) return true;
+    if (config.maxDice != null && String(config.maxDice) !== d.maxDice) return true;
+    if (config.diceSides != null && String(config.diceSides) !== d.diceSides) return true;
+    if (config.attacksPerTurn != null && String(config.attacksPerTurn) !== d.attacksPerTurn) return true;
+    if (config.secondsPerTurn != null && String(config.secondsPerTurn) !== d.secondsPerTurn) return true;
+    if (config.secondsPerAttack != null && String(config.secondsPerAttack) !== d.secondsPerAttack) return true;
+    if ((config.fullBoardRule || 'nothing') !== d.fullBoardRule) return true;
+    if ((config.attackRule || 'classic') !== d.attackRule) return true;
+    if ((config.supplyRule || 'classic') !== d.supplyRule) return true;
+    if (config.playMode && config.playMode !== d.playMode) return true;
+    if (config.seed != null && Number(config.seed) > 0) return true;
+    return false;
+}
+
+/**
  * Read current mod values from the DOM and return their summary string.
  * @param {string} idPrefix  e.g. '' for setup panel, 'editor-mods-' for editor
  * @param {string} [seedInputId]  optional element id for the seed input (e.g. 'game-seed', 'editor-seed-input')
  */
-export function getActiveModsSummaryFromDom(idPrefix, seedInputId) {
+export function getActiveModsSummaryFromDom(idPrefix, seedInputId, playerConfig = null) {
     const seedEl = seedInputId ? document.getElementById(seedInputId) : null;
     const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
+    const humanCount = playerConfig?.humanCount ?? parseInt(document.getElementById('human-count')?.value ?? '1', 10);
+    const botCount   = playerConfig?.botCount   ?? parseInt(document.getElementById('bot-count')?.value   ?? '0', 10);
+    const botAI      = playerConfig?.botAI      ?? document.getElementById('bot-ai-select')?.value ?? 'easy';
     return getActiveModsSummary({
         gameMode:       el(idPrefix, 'game-mode')?.value,
         maxDice:        el(idPrefix, 'max-dice')?.value,
@@ -217,6 +251,7 @@ export function getActiveModsSummaryFromDom(idPrefix, seedInputId) {
         supplyRule:     el(idPrefix, 'supply-rule')?.value,
         playMode:       el(idPrefix, 'play-mode')?.value ?? localStorage.getItem('dicy_playMode'),
         seed:           Number.isFinite(seedVal) && seedVal > 0 ? seedVal : undefined,
+        humanCount, botCount, botAI,
     });
 }
 

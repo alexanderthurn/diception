@@ -3689,9 +3689,13 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 .level-preview-mods {
     margin: 4px 0 0;
     font-size: 0.75em;
-    color: #ffcc77;
+    color: var(--border-color);
     opacity: 0.85;
     letter-spacing: 0.03em;
+}
+
+.level-preview-mods.has-active-mods {
+    color: #ffcc77;
 }
 
 .level-grid-tile .tile-add {
@@ -6720,11 +6724,15 @@ canvas {
 
 .setup-mods-summary {
     font-size: 0.72rem;
-    color: #ffcc77;
+    color: var(--border-color);
     opacity: 0.85;
     text-align: center;
     padding: 10px 8px 2px;
     letter-spacing: 0.03em;
+}
+
+.setup-mods-summary.has-active-mods {
+    color: #ffcc77;
 }
 
 .setup-mods-reset.tron-btn {

@@ -1882,7 +1882,11 @@ export class MapEditor {
         }
         const panelOpen = this.elements.editorModsPanel && !this.elements.editorModsPanel.classList.contains('hidden');
         summary.classList.toggle('hidden', panelOpen);
-        summary.textContent = getActiveModsSummaryFromDom(EDITOR_MODS_PREFIX, 'editor-seed-input');
+        summary.textContent = getActiveModsSummaryFromDom(EDITOR_MODS_PREFIX, 'editor-seed-input', {
+            humanCount: 1,
+            botCount: parseInt(document.getElementById('editor-shared-bots')?.value ?? '2', 10),
+            botAI: document.getElementById('editor-shared-bot-ai')?.value ?? 'easy',
+        });
     }
 
     /**

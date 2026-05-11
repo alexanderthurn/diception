@@ -4,7 +4,7 @@ import { CampaignManager } from '../scenarios/campaign-manager.js';
 import { getGridDimensions } from '../scenarios/campaign-data.js';
 import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress.js';
 import { getCachedIdentity, isFullVersion } from '../scenarios/user-identity.js';
-import { getActiveModsSummary } from './mods-panel-helpers.js';
+import { getActiveModsSummary, hasActiveMods } from './mods-panel-helpers.js';
 import { GAME } from '../core/constants.js';
 import { createSpeedDescription, updateSpeedDescription } from './speed-descriptions.js';
 
@@ -760,10 +760,29 @@ export class ScenarioBrowser {
             p.textContent = `${typeLabel} · Level ${idx + 1}`;
             content.appendChild(p);
 
-            const modSummary = getActiveModsSummary(lvl);
+            const playerList = lvl.players || [];
+            let botCount, humanCount, botAI;
+            if (playerList.length > 0) {
+                const botPlayers = playerList.filter(p => p.isBot);
+                const aiIds = [...new Set(botPlayers.map(p => p.aiId || 'easy'))];
+                botCount  = botPlayers.length;
+                humanCount = playerList.length - botCount;
+                botAI     = aiIds.length === 1 ? aiIds[0] : null;
+            } else {
+                botCount   = lvl.bots ?? 0;
+                humanCount = 1;
+                botAI      = lvl.botAI ?? null;
+            }
+            const modSummary = getActiveModsSummary({
+                ...lvl,
+                humanCount,
+                botCount,
+                botAI,
+            });
             if (modSummary) {
                 const modP = document.createElement('p');
                 modP.className = 'level-preview-mods';
+                if (hasActiveMods(lvl)) modP.classList.add('has-active-mods');
                 modP.textContent = modSummary;
                 content.appendChild(modP);
             }

@@ -272,21 +272,17 @@ export class ConfigManager {
     }
 
     /** Sync badge + reset btn on initial load; panel always starts collapsed. */
-    _syncModsSummary(nonDefault) {
+    _syncModsSummary(_nonDefault) {
         const summary = document.getElementById('setup-mods-summary');
         if (!summary) return;
-        const seedEl = this.elements.seedInput;
-        const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
-        const hasFixedSeed = Number.isFinite(seedVal) && seedVal > 0;
-        if (!nonDefault && !hasFixedSeed) {
-            summary.classList.add('hidden');
-            summary.textContent = '';
-            return;
-        }
         const panel = document.getElementById('setup-mods-panel');
         const panelOpen = panel && !panel.classList.contains('hidden');
-        summary.classList.toggle('hidden', panelOpen);
-        summary.textContent = this.getSetupActiveModsSummary();
+        const text = this.getSetupActiveModsSummary();
+        const seedVal = parseInt(this.elements.seedInput?.value ?? '0', 10);
+        const modsActive = !this.areModsAtDefaults() || (Number.isFinite(seedVal) && seedVal > 0);
+        summary.textContent = text;
+        summary.classList.toggle('hidden', !text || panelOpen);
+        summary.classList.toggle('has-active-mods', modsActive);
     }
 
     syncSetupModsExpanderFromStorage() {
@@ -381,11 +377,13 @@ export class ConfigManager {
             }
             handleChange();
             this.syncSetupModsFieldHighlights();
+            this.syncSetupModsExpanderLive();
         });
 
         el.botCountInput.addEventListener('change', () => {
             localStorage.setItem('dicy_botCount', el.botCountInput.value);
             handleChange();
+            this.syncSetupModsExpanderLive();
         });
 
         el.gameSpeedInput.addEventListener('change', () => {
@@ -419,6 +417,7 @@ export class ConfigManager {
             this.selectedBotAI = el.botAISelect.value;
             localStorage.setItem('dicy_botAI', this.selectedBotAI);
             handleChange();
+            this.syncSetupModsExpanderLive();
         });
 
         if (el.turnTimeLimitInput) {
