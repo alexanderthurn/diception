@@ -163,6 +163,22 @@ fn steam_clear_achievement(state: tauri::State<SteamState>, achievement_id: Stri
         .ok_or_else(|| "Steam not initialized".to_string())
 }
 
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
+fn steam_reset_all_stats(state: tauri::State<SteamState>, achievements_too: bool) -> Result<(), String> {
+    let guard = state.lock().map_err(|e| e.to_string())?;
+    let app = guard.as_ref().ok_or_else(|| "Steam not initialized".to_string())?;
+    app.client
+        .user_stats()
+        .reset_all_stats(achievements_too)
+        .map_err(|_| "Steam ResetAllStats failed".to_string())?;
+    app.client
+        .user_stats()
+        .store_stats()
+        .map_err(|_| "Steam store_stats failed after reset".to_string())?;
+    Ok(())
+}
+
 // ─── Storage helpers (all platforms) ─────────────────────────────────────────
 
 const SAVE_FILENAME: &str = "diception_save.sav";
@@ -234,6 +250,7 @@ const STEAM_INIT_SCRIPT: &str = r#"
         getStatI32:              function(name)   { return ipc.invoke('steam_get_stat_i32', { statName: name }); },
         setStat:                 function(name, val){ return ipc.invoke('steam_set_stat', { statName: name, value: val }); },
         clearAchievement:        function(id)        { return ipc.invoke('steam_clear_achievement', { achievementId: id }); },
+        resetAllStats:           function(achievementsToo) { return ipc.invoke('steam_reset_all_stats', { achievementsToo: !!achievementsToo }); },
     };
     // Shift+Tab: prevent browser focus cycling and open overlay manually.
     // On macOS, Steam cannot inject into WKWebView's Metal surface, so we
@@ -341,6 +358,7 @@ pub fn run() {
                 steam_get_stat_i32,
                 steam_set_stat,
                 steam_clear_achievement,
+                steam_reset_all_stats,
                 storage_read_all,
                 storage_write_all,
                 storage_get_path,

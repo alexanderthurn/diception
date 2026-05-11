@@ -760,7 +760,22 @@
         };
 
         // Read live progress from localStorage (game runs on same origin)
-        const lsStats = (() => { try { return JSON.parse(localStorage.getItem('dicy_ach_stats')) || {}; } catch { return {}; } })();
+        const lsStats = (() => {
+            try {
+                const hs = JSON.parse(localStorage.getItem('dicy_highscores')) || {};
+                const lt = hs.lifetime && typeof hs.lifetime === 'object' ? hs.lifetime : {};
+                return {
+                    gamesPlayed: lt.gamesPlayed || 0,
+                    gamesWon: lt.gamesWon || 0,
+                    underdogWins: lt.underdogWins || 0,
+                    streak3: lt.streak3 || 0,
+                    streak4: lt.streak4 || 0,
+                    streak5: lt.streak5 || 0,
+                    streak6: lt.streak6 || 0,
+                    streak7: lt.streak7 || 0,
+                };
+            } catch { return {}; }
+        })();
         const lsStatMap = {
             STAT_GAMES_PLAYED:  lsStats.gamesPlayed  || 0,
             STAT_GAMES_WON:     lsStats.gamesWon     || 0,

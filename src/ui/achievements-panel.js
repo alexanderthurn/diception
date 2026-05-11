@@ -5,10 +5,9 @@
  */
 
 import { ACHIEVEMENTS } from '../core/achievements.js';
-import { unlockAchievement, removeAchievement, setStatValue } from '../core/achievement-manager.js';
+import { unlockAchievement, removeAchievement } from '../core/achievement-manager.js';
 import { registerCheatContext } from '../cheat.js';
 
-const STATS_KEY    = 'dicy_ach_stats';
 const UNLOCKED_KEY = 'dicy_ach_unlocked';
 
 export const TITLES = {
@@ -83,27 +82,27 @@ function getDescription(ach) {
     return '';
 }
 
-function loadStats()    { try { return JSON.parse(localStorage.getItem(STATS_KEY))    || {}; } catch { return {}; } }
 function loadUnlocked() { try { return JSON.parse(localStorage.getItem(UNLOCKED_KEY)) || []; } catch { return []; } }
 
 export class AchievementsPanel {
-    constructor(modalEl) {
-        this._modal    = modalEl;
+    constructor(modalEl, highscoreManager) {
+        this._modal = modalEl;
+        this._highscoreManager = highscoreManager;
         this._subtitle = modalEl?.querySelector('#ach-subtitle');
         this._grid     = modalEl?.querySelector('#ach-grid');
         this._hoveredId = null;
 
-        if (window.location.hostname === 'localhost') {
+        if (window.location.hostname === 'localhost' && this._highscoreManager) {
             registerCheatContext({
                 isActive: () => !this._modal?.classList.contains('hidden'),
                 onCCC: () => {
                     if (!this._hoveredId) return;
                     const ach = ACHIEVEMENTS.find(a => a.id === this._hoveredId);
                     if (ach?.type === 'stat') {
-                        const stats = loadStats();
+                        const stats = this._highscoreManager.getLifetimeStats();
                         const delta = Math.ceil(ach.threshold * 0.5);
                         const next  = (stats[ach.stat] || 0) + delta;
-                        setStatValue(ach.stat, next);
+                        this._highscoreManager.setLifetimeStat(ach.stat, next);
                         console.log(`🎮 CHEAT: ${ach.stat} +${delta} → ${next}`);
                     } else {
                         unlockAchievement(this._hoveredId);
@@ -115,10 +114,10 @@ export class AchievementsPanel {
                     if (!this._hoveredId) return;
                     const ach = ACHIEVEMENTS.find(a => a.id === this._hoveredId);
                     if (ach?.type === 'stat') {
-                        const stats = loadStats();
+                        const stats = this._highscoreManager.getLifetimeStats();
                         const delta = Math.ceil(ach.threshold * 0.5);
                         const next  = Math.max(0, (stats[ach.stat] || 0) - delta);
-                        setStatValue(ach.stat, next);
+                        this._highscoreManager.setLifetimeStat(ach.stat, next);
                         console.log(`🎮 CHEAT: ${ach.stat} -${delta} → ${next}`);
                     } else {
                         removeAchievement(this._hoveredId);
@@ -141,7 +140,7 @@ export class AchievementsPanel {
 
     _refresh() {
         if (!this._grid) return;
-        const stats    = loadStats();
+        const stats    = this._highscoreManager ? this._highscoreManager.getLifetimeStats() : {};
         const unlocked = loadUnlocked();
 
         if (this._subtitle) {

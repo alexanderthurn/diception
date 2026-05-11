@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('steam', {
     getStatI32:              (name) => ipcRenderer.invoke('steam:getStatI32', name),
     setStat:                 (name, value) => ipcRenderer.invoke('steam:setStat', name, value),
     clearAchievement:        (id) => ipcRenderer.invoke('steam:clearAchievement', id),
+    resetAllStats:           (achievementsToo) => ipcRenderer.invoke('steam:resetAllStats', achievementsToo),
 });
 
 // ── Window management ─────────────────────────────────────────────────────────

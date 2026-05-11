@@ -164,6 +164,13 @@ ipcMain.handle('steam:clearAchievement', (_e, id) => {
     steam.stats.store();
 });
 
+ipcMain.handle('steam:resetAllStats', (_e, achievementsToo) => {
+    if (!steam || !sw) return false;
+    const ok = sw.stats.resetAll(!!achievementsToo);
+    if (ok) steam.stats.store();
+    return ok;
+});
+
 // ── IPC: Storage ──────────────────────────────────────────────────────────────
 
 ipcMain.handle('storage:readAll', () => {

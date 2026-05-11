@@ -36,7 +36,15 @@ import { LoadingScreen } from './ui/loading-screen.js';
 import { initializeProbabilityTables } from './core/probability.js';
 import { initCheatCode, registerCheatContext } from './cheat.js';
 import { markLevelSolved, unmarkLevelSolved } from './scenarios/campaign-progress.js';
-import { unlockAchievement, removeAchievement, setUnlockCallback, setProgressCallback, resetAllAchievementsAndStats } from './core/achievement-manager.js';
+import {
+    unlockAchievement,
+    removeAchievement,
+    setUnlockCallback,
+    setProgressCallback,
+    resetAllAchievementsAndStats,
+    resetPersistedStatsAndSteam,
+} from './core/achievement-manager.js';
+import { reconcileLifetimeWithSteam } from './core/steam-player-stats-sync.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid, isFullVersion, initFullVersionCheck } from './scenarios/user-identity.js';
 import { showUnlockDialog } from './ui/show-unlock-dialog.js';
 import { isTimedUnlockActive, getTimedUnlockRemainingMs, setTimedUnlock } from './core/timed-unlock.js';
@@ -89,6 +97,8 @@ async function init() {
     // Resolve full vs demo before any isFullVersion() calls
     await initFullVersionCheck();
 
+    const highscoreManager = new HighscoreManager();
+
     // Stub window.android when simulating Android in a browser
     if (isAndroid() && !window.android) {
         window.android = {
@@ -126,38 +136,11 @@ async function init() {
         }
     }
 
-    // Sync stats from Steam — Steam's stat backend is always authoritative.
-    // Whichever device was used most recently may have overwritten the .sav
-    // with lower values, so we take the max of local and Steam.
-    if (window.steam?.getStatI32) {
-        const STEAM_STATS = [
-            { localKey: 'gamesPlayed', steamName: 'STAT_GAMES_PLAYED' },
-            { localKey: 'gamesWon', steamName: 'STAT_GAMES_WON' },
-            { localKey: 'underdogWins', steamName: 'STAT_UNDERDOG_WINS' },
-            { localKey: 'streak3', steamName: 'STAT_STREAK_3' },
-            { localKey: 'streak4', steamName: 'STAT_STREAK_4' },
-            { localKey: 'streak5', steamName: 'STAT_STREAK_5' },
-            { localKey: 'streak6', steamName: 'STAT_STREAK_6' },
-            { localKey: 'streak7', steamName: 'STAT_STREAK_7' },
-        ];
-        try {
-            const localStats = JSON.parse(localStorage.getItem('dicy_ach_stats') || '{}');
-            let changed = false;
-            for (const { localKey, steamName } of STEAM_STATS) {
-                const steamVal = await window.steam.getStatI32(steamName);
-                const localVal = localStats[localKey] || 0;
-                if (steamVal > localVal) {
-                    localStats[localKey] = steamVal;
-                    changed = true;
-                    console.log(`[stats] Synced ${localKey} from Steam: ${localVal} → ${steamVal}`);
-                }
-            }
-            if (changed) {
-                localStorage.setItem('dicy_ach_stats', JSON.stringify(localStats));
-            }
-        } catch (e) {
-            console.warn('[stats] Steam sync failed:', e);
-        }
+    // Merge lifetime counters with Steam (max each way); requires HighscoreManager loaded first.
+    try {
+        await reconcileLifetimeWithSteam(highscoreManager);
+    } catch (e) {
+        console.warn('[stats] Steam reconcile failed:', e);
     }
 
     // Load spritesheet
@@ -1009,7 +992,6 @@ async function init() {
     }
 
     // Initialize UI Components
-    const highscoreManager = new HighscoreManager();
     const gameStatsTracker = new GameStatsTracker(game);
     const diceHUD = new DiceHUD();
     diceHUD.setDiceDataURL(TileRenderer.diceDataURL);
@@ -1436,7 +1418,7 @@ async function init() {
     setupInputEvents(game, inputManager, sessionManager);
 
     // Menu Navigation
-    const { showFullVersionOnlyDialog } = setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI, configManager);
+    const { showFullVersionOnlyDialog } = setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI, configManager, highscoreManager);
     _onTimerExpiry = () => { applyVersionUI(); showFullVersionOnlyDialog(); };
 
 
@@ -1633,7 +1615,7 @@ function setupInputEvents(game, inputManager, sessionManager) {
 }
 
 // Helper: Setup all menu navigation (main menu, settings, howto, about, pause)
-function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI, configManager) {
+function setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI, configManager, highscoreManager) {
     const mainMenu = document.getElementById('main-menu');
 
     // Update stats display whenever the main menu becomes visible
@@ -1642,7 +1624,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const _achStatWon = document.getElementById('ach-stat-won');
     const _achStatWinrate = document.getElementById('ach-stat-winrate');
     const _refreshMenuStats = () => {
-        const stats = JSON.parse(localStorage.getItem('dicy_ach_stats') || '{}');
+        const stats = highscoreManager.getLifetimeStats();
         const unlocked = JSON.parse(localStorage.getItem('dicy_ach_unlocked') || '[]');
         const played = stats.gamesPlayed || 0;
         const won = stats.gamesWon || 0;
@@ -1669,6 +1651,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const keepCampaignsRow = document.getElementById('howto-keep-campaigns-row');
     const keepCampaignsCheck = document.getElementById('howto-keep-campaigns');
     const clearStorageBtn = document.getElementById('howto-clear-storage-btn');
+    const resetStatsBtn = document.getElementById('achievements-reset-stats-btn');
     const musicListEl = document.getElementById('howto-music-list');
 
     // Initialize probability calculator (once)
@@ -1931,7 +1914,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     }
 
     // --- Main Menu button wiring ---
-    const achievementsPanel = new AchievementsPanel(achievementsModal);
+    const achievementsPanel = new AchievementsPanel(achievementsModal, highscoreManager);
 
     function showFullVersionOnlyDialog() {
         showUnlockDialog().then(result => { if (result !== 'close') applyVersionUI(); });
@@ -2282,9 +2265,58 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         if (ok) {
             clearAllStorage();
             await resetAllAchievementsAndStats();
+            await flushStorage();
             Dialog.alert('Storage cleared. The page will reload.');
             window.location.reload();
         }
+    });
+
+    resetStatsBtn?.addEventListener('click', async () => {
+        const wrap = document.createElement('div');
+        wrap.className = 'dialog-reset-stats-wrap';
+        const help = document.createElement('p');
+        help.className = 'dialog-reset-stats-help';
+        help.textContent =
+            'This deletes lifetime game counters (games played, wins, streaks, underdog wins, and related totals). '
+            + 'Campaign progress, settings, and maps are not removed. '
+            + 'If your counters are synced to a profile or cloud save, those copies are cleared as well.';
+        wrap.appendChild(help);
+        const label = document.createElement('label');
+        label.className = 'howto-checkbox-label dialog-reset-stats-ach-option';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.id = 'dialog-reset-stats-ach-cb';
+        const span = document.createElement('span');
+        span.textContent = 'Also reset achievements';
+        label.appendChild(cb);
+        label.appendChild(span);
+        wrap.appendChild(label);
+
+        const choice = await Dialog.show({
+            title: 'RESET STATISTICS?',
+            message: '',
+            content: wrap,
+            buttons: [
+                { text: 'RESET', value: 'reset', className: 'tron-btn small menu-btn-danger' },
+                { text: 'CANCEL', value: 'cancel', className: 'tron-btn small menu-btn-neutral' },
+            ],
+        });
+        if (choice !== 'reset') return;
+
+        const achievementsToo = cb.checked;
+        await resetPersistedStatsAndSteam({ achievementsToo, highscoreManager });
+        await flushStorage();
+        highscoreManager.reload();
+        _refreshMenuStats();
+        if (achievementsModal && !achievementsModal.classList.contains('hidden')) {
+            achievementsPanel.open();
+        }
+        await Dialog.alert(
+            achievementsToo
+                ? 'Statistics and achievements were reset.'
+                : 'Statistics were reset. Achievements were left unchanged.',
+            'DONE'
+        );
     });
 
     return { showFullVersionOnlyDialog };

@@ -4,7 +4,7 @@ import { GAME } from '../core/constants.js';
 import { shouldShowInputHints, getInputHint, ACTION_END_TURN, ACTION_MENU } from './input-hints.js';
 import { markLevelSolved } from '../scenarios/campaign-progress.js';
 import { getWinProbability } from '../core/probability.js';
-import { incrementStat, fireAchievementEvent, checkCampaignAchievement } from '../core/achievement-manager.js';
+import { fireAchievementEvent, checkCampaignAchievement } from '../core/achievement-manager.js';
 import { createSpeedDescription, updateSpeedDescription } from './speed-descriptions.js';
 
 function showVictoryCard(humanWon, winnerColorHex, quality, campaignFinished = false) {
@@ -879,7 +879,7 @@ export class GameEventManager {
         this._streakTimer = null;
         if (this._pendingStreakCount) {
             // Increment only the exact peak streak stat (streak of 5 → streak5 only)
-            incrementStat(`streak${this._pendingStreakCount}`);
+            this.highscoreManager?.incrementLifetime(`streak${this._pendingStreakCount}`, 1);
             this._pendingStreakCount = null;
         }
     }
@@ -907,7 +907,7 @@ export class GameEventManager {
             if (result.won) {
                 // 🏆 ACHIEVEMENT: ACH_UNDERDOG_5/10/50/100/500
                 const winChance = getWinProbability(attackerDice, defenderDice, this.game.diceSides);
-                if (winChance < 1 / 3) incrementStat('underdogWins');
+                if (winChance < 1 / 3) this.highscoreManager?.incrementLifetime('underdogWins', 1);
 
                 // 🏆 ACHIEVEMENT: ACH_DAVID
                 if (attackerDice === 4 && defenderDice === 6) fireAchievementEvent('won4vs6');
@@ -1140,8 +1140,7 @@ export class GameEventManager {
         const allBots   = this.game.players.every(p => p.isBot);
         const allHumans = this.game.players.every(p => !p.isBot);
 
-        // 🏆 ACHIEVEMENT: ACH_GAMES_10 / 50 / 100 / 150 / 200 / 300 / 400 / 500 / 1000 / 10000
-        if (humanPlayed) incrementStat('gamesPlayed');
+        // 🏆 ACH_GAMES_* / ACH_FIRST_WIN: gamesPlayed & gamesWon via HighscoreManager.recordWin above
 
         // 🏆 ACHIEVEMENT: ACH_PURE_BOTS
         if (allBots) fireAchievementEvent('pureBots');
@@ -1150,10 +1149,7 @@ export class GameEventManager {
         if (allHumans && this.game.players.length >= 2) fireAchievementEvent('pureHumans');
 
         if (humanWon && data.winner) {
-            // 🏆 ACHIEVEMENT: ACH_FIRST_WIN
-            incrementStat('gamesWon');
-
-            // 🏆 ACHIEVEMENT: ACH_SURVIVOR
+            // 🏆 ACH_SURVIVOR
             if (this.game.players.length >= 8) fireAchievementEvent('won8PlayerGame');
         }
 

@@ -21,6 +21,8 @@ The campaign (`builtin-campaign.json`, 16 levels) splits into 4 chapter files:
 
 ## All 22 Achievements
 
+Authoritative definitions, thresholds, and event names live in **`src/core/achievements.js`**. The tables below are a design summary; if they drift, trust the source file.
+
 ### 🎓 Campaign (5)
 
 | # | API Name | Display Name | Description |
@@ -86,258 +88,60 @@ All generated via `scripts/steam_achievements.html`.
 
 ---
 
-## Implementation Plan
+## Current implementation (codebase)
 
-### Step 1 — Split Campaign File
+### Persistence — one place for lifetime numbers
 
-Split `src/scenarios/builtin-campaign.json` by level index:
+| Key | Contents |
+|-----|----------|
+| **`localStorage` `dicy_highscores`** | JSON blob: **`lifetime`** (all stat-based counters), **`wins`** (per winner name), **`totalGames`**, **`campaigns`**, and a mirrored **`humanStats`** object (same totals as `lifetime` for any legacy reader) |
+| **`localStorage` `dicy_ach_unlocked`** | JSON array of unlocked achievement API ids |
 
-```
-builtin-chapter1.json  →  levels[0..3]   (indices 0–3)
-builtin-chapter2.json  →  levels[4..7]   (indices 4–7)
-builtin-chapter3.json  →  levels[8..11]  (indices 8–11)
-builtin-chapter4.json  →  levels[12..15] (indices 12–15)
-```
+**`lifetime`** fields that map to Steam stats: `gamesPlayed`, `gamesWon`, `underdogWins`, `streak3` … `streak7` (see `STEAM_STAT_NAMES` in `steam-player-stats-sync.js`).
 
-Update `campaign-manager.js` to load `chapter1` → `chapter2` → `chapter3` → `chapter4` in sequence.
+### Modules
 
----
+| File | Role |
+|------|------|
+| **`src/core/achievements.js`** | `ACHIEVEMENTS` definitions (`stat` \| `event` \| `campaign`) |
+| **`src/ui/highscore-manager.js`** | Single writer for **`dicy_highscores`**: **`recordWin`**, **`incrementLifetime`**, **`setLifetimeStat`** (cheats), **`getLifetimeStats`** / **`getHumanStats`** (WON dialog and achievements modal use the same source) |
+| **`src/core/steam-player-stats-sync.js`** | Steam **`STAT_*`**: **`reconcileLifetimeWithSteam(manager)`** at startup (max local/Steam, push if local ahead), **`pushLifetimeStatToSteam`**, **`resetSteamStatsOrFallback`** |
+| **`src/core/achievement-manager.js`** | **`unlockAchievement`**, **`fireAchievementEvent`**, **`checkCampaignAchievement`**, **`notifyLifetimeStatChanged`** (threshold checks + progress toast after a counter changes), reset helpers |
+| **`src/ui/game-events.js`** | Hooks: underdog / streak → **`highscoreManager.incrementLifetime`**; game over → **`recordWin`** (updates `gamesPlayed` / `gamesWon`) + events / campaign checks |
+| **`src/ui/achievements-panel.js`** | Renders modal; localhost cheats call **`highscoreManager.setLifetimeStat`** |
+| **`scripts/steam_achievements.html`** | Icon generator; reads live **`dicy_highscores.lifetime`** for stat-based previews |
 
-### Step 2 — Achievement Definitions
+### Startup order (`src/main.js`)
 
-**`src/core/achievements.js`** — single source of truth:
+1. **`initStorage()`** (file-backed / cloud → `localStorage`)
+2. **`new HighscoreManager()`** (loads blob, normalizes `lifetime`)
+3. Steam merge for **`dicy_ach_unlocked`**
+4. **`reconcileLifetimeWithSteam(highscoreManager)`**
 
-```js
-export const ACHIEVEMENTS = [
-  // ── Campaign ──────────────────────────────────────────────
-  { id: 'ACH_TUTORIAL',      type: 'campaign', campaign: 'tutorial', totalLevels: 4  },
-  { id: 'ACH_CHAPTER1',      type: 'campaign', campaign: 'chapter1', totalLevels: 4  },
-  { id: 'ACH_CHAPTER2',      type: 'campaign', campaign: 'chapter2', totalLevels: 4  },
-  { id: 'ACH_CHAPTER3',      type: 'campaign', campaign: 'chapter3', totalLevels: 4  },
-  { id: 'ACH_CHAPTER4',      type: 'campaign', campaign: 'chapter4', totalLevels: 4  },
+### Adding a new stat-based achievement
 
-  // ── Games Played ──────────────────────────────────────────
-  { id: 'ACH_GAMES_10',      type: 'stat', stat: 'gamesPlayed', threshold: 10    },
-  { id: 'ACH_GAMES_50',      type: 'stat', stat: 'gamesPlayed', threshold: 50    },
-  { id: 'ACH_GAMES_100',     type: 'stat', stat: 'gamesPlayed', threshold: 100   },
-  { id: 'ACH_GAMES_150',     type: 'stat', stat: 'gamesPlayed', threshold: 150   },
-  { id: 'ACH_GAMES_200',     type: 'stat', stat: 'gamesPlayed', threshold: 200   },
-  { id: 'ACH_GAMES_300',     type: 'stat', stat: 'gamesPlayed', threshold: 300   },
-  { id: 'ACH_GAMES_400',     type: 'stat', stat: 'gamesPlayed', threshold: 400   },
-  { id: 'ACH_GAMES_500',     type: 'stat', stat: 'gamesPlayed', threshold: 500   },
-  { id: 'ACH_GAMES_1000',    type: 'stat', stat: 'gamesPlayed', threshold: 1000  },
-  { id: 'ACH_GAMES_10000',   type: 'stat', stat: 'gamesPlayed', threshold: 10000 },
+1. Add the achievement row in **`achievements.js`** (`type: 'stat'`, `stat`, `threshold`).
+2. If it maps to a new Steam counter: add the field to **`LIFETIME_KEYS`** in **`highscore-manager.js`**, add **`STEAM_STAT_NAMES`** in **`steam-player-stats-sync.js`**, and register the stat in Steamworks.
+3. From gameplay code, call **`highscoreManager.incrementLifetime('yourStat', amount)`** (or **`setLifetimeStat`** for cheats). **`notifyLifetimeStatChanged`** runs after each update so thresholds and the progress toast stay correct.
 
-  // ── Special Combat ────────────────────────────────────────
-  { id: 'ACH_FIRST_WIN',     type: 'stat', stat: 'gamesWon',      threshold: 1   },
-  { id: 'ACH_UNDERDOG_5',    type: 'stat', stat: 'underdogWins',  threshold: 5   },
-  { id: 'ACH_UNDERDOG_10',   type: 'stat', stat: 'underdogWins',  threshold: 10  },
-  { id: 'ACH_UNDERDOG_100',  type: 'stat', stat: 'underdogWins',  threshold: 100 },
-  { id: 'ACH_DAVID',         type: 'event', event: 'won4vs6'                     },
-  { id: 'ACH_STREAK_5',      type: 'event', event: 'attackStreak5'               },
-  { id: 'ACH_SURVIVOR',      type: 'event', event: 'won8PlayerGame'              },
-];
-```
+### Planned vs shipped — campaign JSON split
+
+The **“Campaign Structure (File Rename Plan)”** section at the top describes splitting the built-in campaign into multiple JSON files. Until that refactor lands, the game may still ship a single campaign file; the achievement **hooks** already live in **`game-events.js`** + **`campaign-progress.js`** / scenario flow.
 
 ---
 
-### Step 3 — Achievement Manager
+## Quick reference — where achievements fire
 
-**`src/core/achievement-manager.js`**:
-
-```js
-import { invoke } from '@tauri-apps/api/core';
-import { ACHIEVEMENTS } from './achievements.js';
-
-const STORAGE_KEY = 'dicy_achievements';
-
-// ── Unlock a single achievement ──────────────────────────────
-export function unlockAchievement(id) {
-  const data = _load();
-  if (data.unlocked.includes(id)) return;
-  data.unlocked.push(id);
-  _save(data);
-  invoke('unlock_achievement', { achievementId: id }).catch(console.warn);
-  console.log(`🏆 ACHIEVEMENT UNLOCKED: ${id}`);
-}
-
-// ── Increment a persistent stat and check thresholds ─────────
-export function incrementStat(stat, amount = 1) {
-  const data = _load();
-  data.stats[stat] = (data.stats[stat] || 0) + amount;
-  _save(data);
-
-  for (const ach of ACHIEVEMENTS) {
-    if (ach.type === 'stat' && ach.stat === stat) {
-      if (data.stats[stat] >= ach.threshold) unlockAchievement(ach.id);
-    }
-  }
-}
-
-// ── Fire an event-based achievement ──────────────────────────
-export function fireAchievementEvent(event) {
-  for (const ach of ACHIEVEMENTS) {
-    if (ach.type === 'event' && ach.event === event) unlockAchievement(ach.id);
-  }
-}
-
-function _load() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { unlocked: [], stats: {} }; }
-  catch { return { unlocked: [], stats: {} }; }
-}
-function _save(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-```
+| Group | Actual location |
+|-------|-----------------|
+| Campaign chapter achievements | **`checkCampaignAchievement`** from **`game-events.js`** after **`markLevelSolved`**, using `campaign-progress` data |
+| `ACH_GAMES_*`, `ACH_FIRST_WIN` (counters) | **`HighscoreManager.recordWin`** → **`incrementLifetime('gamesPlayed' \| 'gamesWon')`** → **`notifyLifetimeStatChanged`** |
+| `ACH_UNDERDOG_*`, `ACH_STREAK_*` | **`game-events.js`** → **`highscoreManager.incrementLifetime('underdogWins' \| 'streakN')`** |
+| `ACH_DAVID`, `ACH_PURE_*`, `ACH_SURVIVOR` | **`game-events.js`** → **`fireAchievementEvent(...)`** |
 
 ---
 
-### Step 4 — Hook Into `game.js`
+## Icon generator (`scripts/steam_achievements.html`)
 
-The three achievement hooks go into `game.js`. Each one has a clear comment so they are immediately visible:
-
-```js
-// At top of game.js, add:
-import { getWinProbability } from './probability.js';
-import { incrementStat, fireAchievementEvent } from './achievement-manager.js';
-
-// ── In attack() — before resolveAttack ────────────────────────────────────
-attack(fromX, fromY, toX, toY) {
-    const attackerDice = this.map.getTile(fromX, fromY).dice;
-    const defenderDice = this.map.getTile(toX, toY).dice;
-    const winChance = getWinProbability(attackerDice, defenderDice, this.diceSides);
-
-    const result = this.combat.resolveAttack(...);
-
-    // 🏆 ACHIEVEMENT: ACH_UNDERDOG_5 / ACH_UNDERDOG_10 / ACH_UNDERDOG_100
-    if (result.won && winChance < 1/3) {
-        incrementStat('underdogWins');
-    }
-
-    // 🏆 ACHIEVEMENT: ACH_DAVID
-    if (result.won && attackerDice === 4 && defenderDice === 6) {
-        fireAchievementEvent('won4vs6');
-    }
-
-    // 🏆 ACHIEVEMENT: ACH_STREAK_5
-    if (result.won) {
-        this._attackStreak = (this._attackStreak || 0) + 1;
-        if (this._attackStreak >= 5) fireAchievementEvent('attackStreak5');
-    } else {
-        this._attackStreak = 0;
-    }
-
-    this.checkWinCondition();
-    this.emit('attackResult', result);
-    return result;
-}
-
-// ── In endTurn() — reset streak counter ──────────────────────────────────
-endTurn() {
-    // 🏆 ACHIEVEMENT: ACH_STREAK_5 — reset streak on turn end
-    this._attackStreak = 0;
-    // ... rest of endTurn
-}
-
-// ── In checkWinCondition() — on game over ─────────────────────────────────
-// After: this.emit('gameOver', { winner: this.winner })
-
-// 🏆 ACHIEVEMENT: ACH_GAMES_10 / 50 / 100 / ... / 10000
-incrementStat('gamesPlayed');
-
-if (this.winner?.id === HUMAN_PLAYER_ID) {
-    // 🏆 ACHIEVEMENT: ACH_FIRST_WIN / ACH_GAMES_PLAYED (wins)
-    incrementStat('gamesWon');
-
-    // 🏆 ACHIEVEMENT: ACH_SURVIVOR
-    if (this.players.length >= 8) fireAchievementEvent('won8PlayerGame');
-}
-```
-
----
-
-### Step 5 — Campaign Achievements Hook
-
-In `campaign-manager.js`, after a chapter is fully solved:
-
-```js
-import { unlockAchievement } from '../core/achievement-manager.js';
-
-// After marking a level solved and checking if chapter is complete:
-
-// 🏆 ACHIEVEMENT: ACH_TUTORIAL / ACH_CHAPTER1 / ACH_CHAPTER2 / ACH_CHAPTER3 / ACH_CHAPTER4
-if (allLevelsSolvedInChapter(campaignId)) {
-    const achId = {
-        tutorial: 'ACH_TUTORIAL',
-        chapter1: 'ACH_CHAPTER1',
-        chapter2: 'ACH_CHAPTER2',
-        chapter3: 'ACH_CHAPTER3',
-        chapter4: 'ACH_CHAPTER4',
-    }[campaignId];
-    if (achId) unlockAchievement(achId);
-}
-```
-
----
-
-### Step 6 — Tauri Rust Command
-
-In `src-tauri/src/main.rs`, expose a Tauri command that calls steamworks:
-
-```rust
-#[tauri::command]
-fn unlock_achievement(achievement_id: String) -> Result<(), String> {
-    // steamworks-rs: set + store
-    if let Some(client) = STEAM_CLIENT.get() {
-        client.user_stats().set_achievement(&achievement_id)
-            .map_err(|e| e.to_string())?;
-        client.user_stats().store_stats()
-            .map_err(|e| e.to_string())?;
-    }
-    Ok(())
-}
-```
-
----
-
-### Step 7 — Icon Generator
-
-Create `scripts/steam_achievements.html` — same canvas/font stack as `steam_assets.html`.
-
-- Renders all 22 icons at 512×512
-- Shows unlocked (color) + locked (greyscale) side by side
-- Download All exports 44 PNGs ready for Steamworks upload
-
----
-
-## Full File Summary
-
-```
-Files to CREATE:
-├── src/scenarios/builtin-chapter1.json      split from builtin-campaign.json
-├── src/scenarios/builtin-chapter2.json
-├── src/scenarios/builtin-chapter3.json
-├── src/scenarios/builtin-chapter4.json
-├── src/core/achievements.js                 achievement definitions
-├── src/core/achievement-manager.js          unlock + stat logic
-└── scripts/steam_achievements.html          icon generator (44 PNGs)
-
-Files to MODIFY:
-├── src/core/game.js                         3 hook sites (attack, endTurn, checkWin)
-├── src/scenarios/campaign-manager.js        chapter complete → unlock achievement
-└── src-tauri/src/main.rs                    Tauri command: unlock_achievement
-```
-
----
-
-## Quick Reference — Where Each Achievement Fires
-
-| Achievement | File | Hook |
-|---|---|---|
-| `ACH_TUTORIAL` … `ACH_CHAPTER4` | `campaign-manager.js` | after chapter fully solved |
-| `ACH_GAMES_*` | `game.js` → `checkWinCondition` | `incrementStat('gamesPlayed')` |
-| `ACH_FIRST_WIN` | `game.js` → `checkWinCondition` | `incrementStat('gamesWon')` |
-| `ACH_UNDERDOG_*` | `game.js` → `attack()` | `incrementStat('underdogWins')` |
-| `ACH_DAVID` | `game.js` → `attack()` | `fireAchievementEvent('won4vs6')` |
-| `ACH_STREAK_5` | `game.js` → `attack()` | `fireAchievementEvent('attackStreak5')` |
-| `ACH_SURVIVOR` | `game.js` → `checkWinCondition` | `fireAchievementEvent('won8PlayerGame')` |
+- Renders Steam-sized icons and supports bulk export for partner upload.
+- Uses **`dicy_highscores.lifetime`** (and related maps in that script) for live stat previews when run on the same origin as the game.

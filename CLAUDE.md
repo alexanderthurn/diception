@@ -47,23 +47,25 @@
 
 ### Files
 - `src/core/achievements.js` — single source of truth for all achievement definitions
-- `src/core/achievement-manager.js` — stat tracking, unlock logic, Steam API bridge
+- `src/core/achievement-manager.js` — achievement unlock state + threshold checks
+- `src/ui/highscore-manager.js` — lifetime counters (`dicy_highscores.lifetime`), rollups, campaign table in blob
+- `src/core/steam-player-stats-sync.js` — Steam `STAT_*` reconcile + push (no game rules)
 - `src/ui/achievements-panel.js` — renders the achievements modal
 - `scripts/steam_achievements.html` — generates Steam achievement icons (open in browser)
 
 ### Adding a new achievement
 1. Add definition to `achievements.js` (type: `stat` | `event` | `campaign`)
-2. Add Steam stat to `STEAM_STAT_NAMES` in `achievement-manager.js` if stat-based
+2. If stat-based: add the counter key to `LIFETIME_KEYS` in `highscore-manager.js`, add Steam mapping in `STEAM_STAT_NAMES` in `steam-player-stats-sync.js`, and bump it from gameplay (usually `HighscoreManager.incrementLifetime` from `game-events.js` or `recordWin`)
 3. Add title/description to `TITLES` and `DESCRIPTIONS` in `achievements-panel.js`
 4. Add to `ACH_MIN`, `ACH_MAX`, `ACH_STAT_API` in `steam_achievements.html`
 5. Add a renderer function and entry in `RENDERERS` in `steam_achievements.html`
 6. Register stat + achievement in Steamworks partner portal
 
 ### Stat-based achievements
-- Progress is tracked in `localStorage` key `dicy_ach_stats`
+- Progress is tracked in `localStorage` under `dicy_highscores` → `lifetime` (via `HighscoreManager`)
 - Unlocked set is in `localStorage` key `dicy_ach_unlocked`
 - Steam stats are synced bidirectionally on startup (local ↔ Steam API, taking the max)
-- Stat names map: `gamesPlayed → STAT_GAMES_PLAYED`, `streak3 → STAT_STREAK_3`, etc.
+- Stat names map (`gamesPlayed` → `STAT_GAMES_PLAYED`, etc.): `STEAM_STAT_NAMES` in `steam-player-stats-sync.js`
 
 ### Streak detection (src/ui/game-events.js)
 - Only counts if the next attack originates FROM the last conquered tile (`_streakTile`)

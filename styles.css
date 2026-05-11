@@ -2804,6 +2804,14 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     color: var(--border-color);
 }
 
+.dialog-reset-stats-help {
+    margin: 0 0 14px;
+}
+
+.dialog-reset-stats-ach-option {
+    align-items: flex-start;
+}
+
 /* Music section */
 .howto-music-list {
     list-style: none;
@@ -6804,9 +6812,14 @@ canvas {
     max-width: 320px;
     font-family: Rajdhani, sans-serif;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     background: rgba(0, 22, 28, 0.96);
     border: 2px solid rgba(0, 255, 255, 0.52);
+}
+
+.achievements-reset-stats-row {
+    max-width: 320px;
+    margin-bottom: 20px;
 }
 
 .ach-stats-table tr {
@@ -6857,7 +6870,8 @@ canvas {
 }
 
 @media (max-width: 768px), (max-height: 600px) {
-    #achievements-modal .ach-stats-table {
+    #achievements-modal .ach-stats-table,
+    #achievements-modal .achievements-reset-stats-row {
         max-width: none;
     }
 }
