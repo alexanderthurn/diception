@@ -90,11 +90,12 @@ All generated via `scripts/steam_achievements.html`.
 
 ## Current implementation (codebase)
 
-### Persistence — one place for lifetime numbers
+### Persistence — `HighscoreManager` owns local numeric blobs
 
 | Key | Contents |
 |-----|----------|
 | **`localStorage` `dicy_highscores`** | JSON blob: **`lifetime`** (all stat-based counters), **`wins`** (per winner name), **`totalGames`**, **`campaigns`**, and a mirrored **`humanStats`** object (same totals as `lifetime` for any legacy reader) |
+| **`localStorage` `dicy_solo_stats`** | Solo (exactly one human): **`buckets`**. **`g`** = canonical **games played / wins** for UI + Steam (mirrored into **`dicy_highscores.lifetime`** on every **`save()`**). Other keys = per-difficulty / map / level / combos + min turns & min win ms. |
 | **`localStorage` `dicy_ach_unlocked`** | JSON array of unlocked achievement API ids |
 
 **`lifetime`** fields that map to Steam stats: `gamesPlayed`, `gamesWon`, `underdogWins`, `streak3` … `streak7` (see `STEAM_STAT_NAMES` in `steam-player-stats-sync.js`).
@@ -104,17 +105,18 @@ All generated via `scripts/steam_achievements.html`.
 | File | Role |
 |------|------|
 | **`src/core/achievements.js`** | `ACHIEVEMENTS` definitions (`stat` \| `event` \| `campaign`) |
-| **`src/ui/highscore-manager.js`** | Single writer for **`dicy_highscores`**: **`recordWin`**, **`incrementLifetime`**, **`setLifetimeStat`** (cheats), **`getLifetimeStats`** / **`getHumanStats`** (WON dialog and achievements modal use the same source) |
+| **`src/ui/highscore-manager.js`** | **`dicy_highscores`**: `recordWin`, `incrementLifetime`, `getHumanStats`, … · **`dicy_solo_stats`**: `recordSoloHumanSessionEnd`, `exportSoloHumanStatsPayload`, `getSoloHumanStatsBlob` |
 | **`src/core/steam-player-stats-sync.js`** | Steam **`STAT_*`**: **`reconcileLifetimeWithSteam(manager)`** at startup (max local/Steam, push if local ahead), **`pushLifetimeStatToSteam`**, **`resetSteamStatsOrFallback`** |
+| **`src/core/solo-human-stats.js`** | Bucket ids + **`SoloHumanStatsStore`** (used only inside **`HighscoreManager`**) |
 | **`src/core/achievement-manager.js`** | **`unlockAchievement`**, **`fireAchievementEvent`**, **`checkCampaignAchievement`**, **`notifyLifetimeStatChanged`** (threshold checks + progress toast after a counter changes), reset helpers |
-| **`src/ui/game-events.js`** | Hooks: underdog / streak → **`highscoreManager.incrementLifetime`**; game over → **`recordWin`** (updates `gamesPlayed` / `gamesWon`) + events / campaign checks |
+| **`src/ui/game-events.js`** | Hooks: underdog / streak → **`incrementLifetime`**; game over → **`recordWin`**, **`recordSoloHumanSessionEnd`** (solo timing + turns), events / campaign |
 | **`src/ui/achievements-panel.js`** | Renders modal; localhost cheats call **`highscoreManager.setLifetimeStat`** |
 | **`scripts/steam_achievements.html`** | Icon generator; reads live **`dicy_highscores.lifetime`** for stat-based previews |
 
 ### Startup order (`src/main.js`)
 
 1. **`initStorage()`** (file-backed / cloud → `localStorage`)
-2. **`new HighscoreManager()`** (loads blob, normalizes `lifetime`)
+2. **`new HighscoreManager()`** (loads **`dicy_highscores`**, **`dicy_solo_stats`**)
 3. Steam merge for **`dicy_ach_unlocked`**
 4. **`reconcileLifetimeWithSteam(highscoreManager)`**
 
@@ -135,7 +137,7 @@ The **“Campaign Structure (File Rename Plan)”** section at the top describes
 | Group | Actual location |
 |-------|-----------------|
 | Campaign chapter achievements | **`checkCampaignAchievement`** from **`game-events.js`** after **`markLevelSolved`**, using `campaign-progress` data |
-| `ACH_GAMES_*`, `ACH_FIRST_WIN` (counters) | **`HighscoreManager.recordWin`** → **`incrementLifetime('gamesPlayed' \| 'gamesWon')`** → **`notifyLifetimeStatChanged`** |
+| `ACH_GAMES_*`, `ACH_FIRST_WIN` (counters) | **`recordSoloHumanSessionEnd`** (solo bucket `g`) → **`save()`** mirrors to `lifetime` → **`notifyLifetimeStatChanged`** + Steam push |
 | `ACH_UNDERDOG_*`, `ACH_STREAK_*` | **`game-events.js`** → **`highscoreManager.incrementLifetime('underdogWins' \| 'streakN')`** |
 | `ACH_DAVID`, `ACH_PURE_*`, `ACH_SURVIVOR` | **`game-events.js`** → **`fireAchievementEvent(...)`** |
 

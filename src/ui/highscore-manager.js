@@ -1,10 +1,18 @@
 /**
- * HighscoreManager — single persistence for lifetime game counters, rollups,
- * and embedded campaign table rows. Steam / other stores are notified via hooks.
+ * HighscoreManager — single persistence entry point: lifetime counters, rollups,
+ * embedded campaign table rows, and solo-human analytics (`dicy_solo_stats`).
+ * Steam / other stores are notified via hooks where applicable.
+ *
+ * **Adding more persisted slices (e.g. Android 1–2 flags):** add a small module or class
+ * (own `localStorage` key or Tauri bridge), keep it as a `HighscoreManager` private field,
+ * and expose only narrow methods (`getX`, `setX`, `reload`, `clear` on reset). UI and
+ * gameplay should call the manager — not the store or `localStorage` directly — so
+ * mirroring (like solo `g` → `lifetime` on `save()`) stays in one place.
  */
 
 import { notifyLifetimeStatChanged } from '../core/achievement-manager.js';
 import { pushLifetimeStatToSteam } from '../core/steam-player-stats-sync.js';
+import { SoloHumanStatsStore, emptySoloStatsBlob, SOLO_HUMAN_STATS_KEY } from '../core/solo-human-stats.js';
 
 export const HIGHSCORE_STORAGE_KEY = 'dicy_highscores';
 
@@ -51,6 +59,12 @@ export function resetHighscoreLifetimeTallyPreserveCampaigns() {
             campaigns: data?.campaigns && typeof data.campaigns === 'object' ? data.campaigns : {},
         };
         localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(next));
+        try {
+            localStorage.setItem(SOLO_HUMAN_STATS_KEY, JSON.stringify(emptySoloStatsBlob()));
+            localStorage.removeItem('dicy_dim_stats');
+        } catch (e2) {
+            console.warn('[highscores] reset solo stats failed:', e2);
+        }
     } catch (e) {
         console.warn('[highscores] reset lifetime tally failed:', e);
     }
@@ -59,6 +73,9 @@ export function resetHighscoreLifetimeTallyPreserveCampaigns() {
 export class HighscoreManager {
     constructor() {
         this.data = this._readBlob();
+        /** @private Solo stats (`dicy_solo_stats`). Bucket `g` is canonical for human games played / won; copied into `lifetime` on every `save()` for Steam + tools. */
+        this._soloHumanStats = new SoloHumanStatsStore();
+        this.save();
     }
 
     _ensureLifetime() {
@@ -106,22 +123,68 @@ export class HighscoreManager {
     }
 
     save() {
+        const row = this._soloHumanStats.getGlobalRow();
+        this._ensureLifetime();
+        this.data.lifetime.gamesPlayed = row[0] | 0;
+        this.data.lifetime.gamesWon = row[1] | 0;
         this._mirrorHumanStatsForLegacyReaders();
         localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(this.data));
     }
 
     reload() {
         this.data = this._readBlob();
+        this._soloHumanStats.reload();
+        this.save();
+    }
+
+    /**
+     * Solo games only (exactly one human). Updates global, per-difficulty, per map-size, per level,
+     * and all relevant combinations (see `solo-human-stats.js`).
+     * @param {{ map?: { width: number, height: number }, players: { isBot?: boolean, aiId?: string|null }[] }} game
+     * @param {{ humanWon: boolean, turns: number, durationMs: number|null, levelKey: string|null }} ctx
+     */
+    recordSoloHumanSessionEnd(game, ctx) {
+        const before = this._soloHumanStats.getGlobalRow();
+        this._soloHumanStats.recordSoloSession(game, ctx);
+        const after = this._soloHumanStats.getGlobalRow();
+        this.save();
+        if (after[0] !== before[0]) {
+            notifyLifetimeStatChanged('gamesPlayed', after[0]);
+            pushLifetimeStatToSteam('gamesPlayed', after[0]);
+        }
+        if (after[1] !== before[1]) {
+            notifyLifetimeStatChanged('gamesWon', after[1]);
+            pushLifetimeStatToSteam('gamesWon', after[1]);
+        }
+    }
+
+    /** Minified JSON of `dicy_solo_stats` for a future server upload. */
+    exportSoloHumanStatsPayload() {
+        return this._soloHumanStats.exportPayloadString();
+    }
+
+    /** @returns {{ v: number, buckets: Record<string, [number, number, number|null, number|null]> }} */
+    getSoloHumanStatsBlob() {
+        return this._soloHumanStats.getBlob();
     }
 
     getLifetimeStat(stat) {
+        if (stat === 'gamesPlayed' || stat === 'gamesWon') {
+            const row = this._soloHumanStats.getGlobalRow();
+            return stat === 'gamesPlayed' ? row[0] | 0 : row[1] | 0;
+        }
         this._ensureLifetime();
         return this.data.lifetime[stat] || 0;
     }
 
     getLifetimeStats() {
         this._ensureLifetime();
-        return { ...this.data.lifetime };
+        const row = this._soloHumanStats.getGlobalRow();
+        return {
+            ...this.data.lifetime,
+            gamesPlayed: row[0] | 0,
+            gamesWon: row[1] | 0,
+        };
     }
 
     /**
@@ -130,6 +193,14 @@ export class HighscoreManager {
     setLifetimeStatMerged(stat, value) {
         this._ensureLifetime();
         const v = Math.max(0, Math.floor(Number(value) || 0));
+        if (stat === 'gamesPlayed' || stat === 'gamesWon') {
+            const cur = stat === 'gamesPlayed' ? this._soloHumanStats.getGlobalRow()[0] : this._soloHumanStats.getGlobalRow()[1];
+            if (cur === v) return;
+            this._soloHumanStats.setGlobalPlaysOrWins(stat, v);
+            this.save();
+            notifyLifetimeStatChanged(stat, v);
+            return;
+        }
         if (this.data.lifetime[stat] === v) return;
         this.data.lifetime[stat] = v;
         this.save();
@@ -137,6 +208,18 @@ export class HighscoreManager {
     }
 
     incrementLifetime(stat, amount = 1) {
+        if (stat === 'gamesPlayed' || stat === 'gamesWon') {
+            const n = Math.max(0, Math.floor(Number(amount) || 0));
+            if (n === 0) return;
+            const row = this._soloHumanStats.getGlobalRow();
+            const idx = stat === 'gamesPlayed' ? 0 : 1;
+            const nv = (row[idx] | 0) + n;
+            this._soloHumanStats.setGlobalPlaysOrWins(stat, nv);
+            this.save();
+            notifyLifetimeStatChanged(stat, nv);
+            pushLifetimeStatToSteam(stat, nv);
+            return;
+        }
         this._ensureLifetime();
         const n = Math.max(0, Math.floor(Number(amount) || 0));
         if (n === 0) return;
@@ -149,8 +232,15 @@ export class HighscoreManager {
 
     /** Cheat / dev: set absolute value for a lifetime counter. */
     setLifetimeStat(stat, value) {
-        this._ensureLifetime();
         const v = Math.max(0, Math.floor(Number(value) || 0));
+        if (stat === 'gamesPlayed' || stat === 'gamesWon') {
+            this._soloHumanStats.setGlobalPlaysOrWins(stat, v);
+            this.save();
+            notifyLifetimeStatChanged(stat, v);
+            pushLifetimeStatToSteam(stat, v);
+            return;
+        }
+        this._ensureLifetime();
         this.data.lifetime[stat] = v;
         this.save();
         pushLifetimeStatToSteam(stat, v);
@@ -158,20 +248,13 @@ export class HighscoreManager {
     }
 
     /**
-     * Record a game result (per-winner table + totalGames + lifetime human games/wins).
+     * Record a game result (per-winner table + totalGames). Human games played / won come only from
+     * solo matches via `recordSoloHumanSessionEnd` (bucket `g`), then mirrored into `lifetime` on `save()`.
      */
     recordWin(winnerName, humanPlayed = false, humanWon = false) {
         this.data.wins[winnerName] = (this.data.wins[winnerName] || 0) + 1;
         this.data.totalGames = (this.data.totalGames || 0) + 1;
-
-        if (humanPlayed) {
-            this.incrementLifetime('gamesPlayed', 1);
-            if (humanWon) {
-                this.incrementLifetime('gamesWon', 1);
-            }
-        } else {
-            this.save();
-        }
+        this.save();
         return this.data;
     }
 
@@ -200,11 +283,11 @@ export class HighscoreManager {
         return Math.round((wins / gamesPlayed) * 100);
     }
 
-    /** Human TOTAL row — same source as achievements (`lifetime`). */
+    /** Human TOTAL row — same source as achievements: solo global `g` for played / won. */
     getHumanStats() {
-        this._ensureLifetime();
-        const gamesPlayed = this.data.lifetime.gamesPlayed || 0;
-        const wins = this.data.lifetime.gamesWon || 0;
+        const row = this._soloHumanStats.getGlobalRow();
+        const gamesPlayed = row[0] | 0;
+        const wins = row[1] | 0;
         return {
             gamesPlayed,
             wins,
@@ -212,12 +295,12 @@ export class HighscoreManager {
         };
     }
 
-    /** Clears `wins`, `totalGames`, and all `lifetime` counters; keeps `campaigns`. */
+    /** Clears `wins`, `totalGames`, solo stats, then `lifetime` (rebuilt from empty solo `g` on `save()`); keeps `campaigns`. */
     resetLifetimeRollupsPreserveCampaigns() {
         this.data.wins = {};
         this.data.totalGames = 0;
+        this._soloHumanStats.clear();
         this.data.lifetime = emptyLifetime();
-        this._mirrorHumanStatsForLegacyReaders();
         this.save();
     }
 
