@@ -1139,7 +1139,7 @@ export class GameEventManager {
         const gameStats = this.gameStatsTracker?.getGameStats();
 
         let soloDiff = null, soloSizeGroup = null, soloLevelKey = null;
-        let prevBestTurns = null, soloDurationMs = null;
+        let prevBestTurns = null, prevBestDuration = null, soloDurationMs = null;
         if (soloHumans === 1) {
             soloDurationMs = this._soloGameStartedAtMs != null ? (Date.now() - this._soloGameStartedAtMs) : null;
             soloDiff = dominantBotDifficulty(this.game);
@@ -1155,6 +1155,7 @@ export class GameEventManager {
                     ? `d:${soloDiff}|s:${soloSizeGroup}|l:${soloLevelKey}`
                     : (soloDiff && soloSizeGroup ? `d:${soloDiff}|s:${soloSizeGroup}` : 'g');
                 prevBestTurns = prevB[bestKey]?.[2] ?? null;
+                prevBestDuration = prevB[bestKey]?.[3] ?? null;
             }
         }
 
@@ -1215,8 +1216,11 @@ export class GameEventManager {
         const turnCount = gameStats
             ? (soloHumans === 1 ? (gameStats.humanTurns || gameStats.gameDuration) : gameStats.gameDuration)
             : Math.max(1, this.game.turn | 0);
-        const isNewBest = humanWon && soloHumans === 1
-            && (prevBestTurns === null || turnCount < prevBestTurns);
+        const isNewBest = humanWon && soloHumans === 1 && (
+            prevBestTurns === null ||
+            turnCount < prevBestTurns ||
+            (turnCount === prevBestTurns && soloDurationMs != null && prevBestDuration != null && soloDurationMs < prevBestDuration)
+        );
         const fmtDuration = ms => {
             if (ms == null) return null;
             const totalS = Math.round(ms / 1000);
@@ -1296,26 +1300,31 @@ export class GameEventManager {
             const winPct = (plays, wins) => plays > 0 ? `${Math.round(wins / plays * 100)}%` : '—';
 
             const rows = [];
-            const g = b['g'];
-            if (g) rows.push(['Global', g]);
-            const d = soloDiff ? b[`d:${soloDiff}`] : null;
-            if (d && d[0] > 0) rows.push([cap(soloDiff), d]);
-            const ds = (soloDiff && soloSizeGroup) ? b[`d:${soloDiff}|s:${soloSizeGroup}`] : null;
-            if (ds && ds[0] > 0) rows.push([`${cap(soloDiff)} + ${sizeLabel(soloSizeGroup)}`, ds]);
-            const lk = (soloDiff && soloSizeGroup && soloLevelKey) ? b[`d:${soloDiff}|s:${soloSizeGroup}|l:${soloLevelKey}`] : null;
-            if (lk && lk[0] > 0) rows.push(['This Level', lk]);
+            if (soloLevelKey) {
+                const lk = (soloDiff && soloSizeGroup) ? b[`d:${soloDiff}|s:${soloSizeGroup}|l:${soloLevelKey}`] : null;
+                if (lk && lk[0] > 0) rows.push(['This Level', lk]);
+            } else {
+                const g = b['g'];
+                if (g) rows.push(['Global', g]);
+                const d = soloDiff ? b[`d:${soloDiff}`] : null;
+                if (d && d[0] > 0) rows.push([cap(soloDiff), d]);
+                const ds = (soloDiff && soloSizeGroup) ? b[`d:${soloDiff}|s:${soloSizeGroup}`] : null;
+                if (ds && ds[0] > 0) rows.push([`${cap(soloDiff)} + ${sizeLabel(soloSizeGroup)}`, ds]);
+            }
 
-            const humanSection = document.createElement('div');
-            humanSection.className = 'human-stats-section';
-            humanSection.innerHTML = `
-                <table class="solo-stats-table">
-                    <thead><tr><th></th><th>Games</th><th>Wins</th><th>Win%</th></tr></thead>
-                    <tbody>${rows.map(([label, r]) => `
-                        <tr><td class="sst-label">${label}</td><td>${r[0]}</td><td>${r[1]}</td><td>${winPct(r[0], r[1])}</td></tr>
-                    `).join('')}</tbody>
-                </table>
-            `;
-            content.appendChild(humanSection);
+            if (rows.length > 0) {
+                const humanSection = document.createElement('div');
+                humanSection.className = 'human-stats-section';
+                humanSection.innerHTML = `
+                    <table class="solo-stats-table">
+                        <thead><tr><th></th><th>Games</th><th>Wins</th><th>Win%</th></tr></thead>
+                        <tbody>${rows.map(([label, r]) => `
+                            <tr><td class="sst-label">${label}</td><td>${r[0]}</td><td>${r[1]}</td><td>${winPct(r[0], r[1])}</td></tr>
+                        `).join('')}</tbody>
+                    </table>
+                `;
+                content.appendChild(humanSection);
+            }
         }
 
         const isCampaignMode = localStorage.getItem('campaignMode');

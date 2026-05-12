@@ -25,6 +25,7 @@ export class ScenarioBrowser {
         this.configManager = configManager;
         this.mapEditor = mapEditor;
         this.campaignManager = new CampaignManager();
+        this.highscoreManager = null;
 
         this.pendingLevel = null;
         this.pendingCampaign = null;
@@ -83,6 +84,10 @@ export class ScenarioBrowser {
 
     setEffectsManager(effectsManager) {
         this.effectsManager = effectsManager;
+    }
+
+    setHighscoreManager(highscoreManager) {
+        this.highscoreManager = highscoreManager;
     }
 
     setOnStartGame(fn) {
@@ -726,6 +731,22 @@ export class ScenarioBrowser {
                 const solvedIcon = document.createElement('span');
                 solvedIcon.className = 'sprite-icon icon-check level-solved-icon level-solved-icon-dialog';
                 content.appendChild(solvedIcon);
+
+                if (this.highscoreManager && campaign?.owner) {
+                    const buckets = this.highscoreManager.getSoloHumanStatsBlob().buckets;
+                    const levelKey = `${campaign.owner}:${idx}`;
+                    const best = Object.entries(buckets)
+                        .filter(([k]) => k.includes(`l:${levelKey}`))
+                        .map(([, r]) => r[2])
+                        .filter(v => v != null)
+                        .reduce((a, b) => Math.min(a, b), Infinity);
+                    if (Number.isFinite(best)) {
+                        const bestEl = document.createElement('div');
+                        bestEl.className = 'level-preview-best';
+                        bestEl.textContent = `${best} turns`;
+                        content.appendChild(bestEl);
+                    }
+                }
             }
             const size = Math.min(160, Math.floor(window.innerWidth * 0.5), 256);
 

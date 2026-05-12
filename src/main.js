@@ -700,6 +700,7 @@ async function init() {
     sessionManager.setScenarioBrowser(scenarioBrowser);
     sessionManager.setConfigManager(configManager);
     scenarioBrowser.setEffectsManager(effectsManager);
+    scenarioBrowser.setHighscoreManager(highscoreManager);
     await scenarioBrowser.init();
     configManager.onCustomMapSourceCleared = () => {
         scenarioBrowser.setCustomSetupLevelActive(false);
