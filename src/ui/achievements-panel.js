@@ -8,6 +8,13 @@ import { ACHIEVEMENTS } from '../core/achievements.js';
 import { unlockAchievement, removeAchievement } from '../core/achievement-manager.js';
 import { registerCheatContext } from '../cheat.js';
 
+const DIFFS = ['easy', 'medium', 'hard'];
+const SIZES = [
+    { key: 'small',  label: 'Small',    hint: '≤4'  },
+    { key: 'medium', label: 'Mid',      hint: '5–7' },
+    { key: 'big',    label: 'Big',      hint: '8+'  },
+];
+
 const UNLOCKED_KEY = 'ach_unlocked';
 
 export const TITLES = {
@@ -88,8 +95,9 @@ export class AchievementsPanel {
     constructor(modalEl, highscoreManager) {
         this._modal = modalEl;
         this._highscoreManager = highscoreManager;
-        this._subtitle = modalEl?.querySelector('#ach-subtitle');
-        this._grid     = modalEl?.querySelector('#ach-grid');
+        this._subtitle    = modalEl?.querySelector('#ach-subtitle');
+        this._grid        = modalEl?.querySelector('#ach-grid');
+        this._bucketStats = modalEl?.querySelector('#ach-bucket-stats');
         this._hoveredId = null;
 
         if (window.location.hostname === 'localhost' && this._highscoreManager) {
@@ -157,6 +165,34 @@ export class AchievementsPanel {
         if (statPlayed)  statPlayed.textContent  = played.toLocaleString();
         if (statWon)     statWon.textContent      = won.toLocaleString();
         if (statWinrate) statWinrate.textContent  = played > 0 ? `${pct}%` : '—';
+
+        if (this._bucketStats && this._highscoreManager) {
+            const b = this._highscoreManager.getSoloHumanStatsBlob().buckets;
+            const winPct = (p, w) => p > 0 ? `${Math.round(w / p * 100)}%` : '—';
+            const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+            const boxes = DIFFS.map(diff => {
+                const diffRow = b[`d:${diff}`] ?? [0, 0, null, null];
+                const rows = [['All sizes', diffRow]];
+                for (const { key, label, hint } of SIZES) {
+                    const r = b[`d:${diff}|s:${key}`] ?? [0, 0, null, null];
+                    rows.push([`+ ${label} (${hint})`, r]);
+                }
+                return { diff, rows };
+            });
+
+            this._bucketStats.innerHTML = boxes.map(({ diff, rows }) => `
+                <div class="ach-diff-box">
+                    <div class="ach-diff-box-title">${cap(diff)}</div>
+                    <table class="solo-stats-table">
+                        <thead><tr><th></th><th>Games</th><th>Wins</th><th>Win%</th></tr></thead>
+                        <tbody>${rows.map(([label, r]) => `
+                            <tr><td class="sst-label">${label}</td><td>${r[0]}</td><td>${r[1]}</td><td>${winPct(r[0], r[1])}</td></tr>
+                        `).join('')}</tbody>
+                    </table>
+                </div>
+            `).join('');
+        }
 
         this._grid.innerHTML = '';
 

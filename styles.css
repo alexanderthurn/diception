@@ -1367,6 +1367,70 @@ select {
     color: #AA00FF;
 }
 
+#ach-bucket-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.ach-diff-box {
+    flex: 1 1 200px;
+    padding: 12px 15px;
+    background: rgba(0, 22, 28, 0.96);
+    border: 2px solid rgba(0, 255, 255, 0.52);
+    box-sizing: border-box;
+}
+
+.ach-diff-box-title {
+    color: rgba(190, 245, 255, 0.8);
+    font-size: 13px;
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    margin-bottom: 0;
+}
+
+.ach-diff-box .solo-stats-table {
+    max-width: none;
+    margin: 0;
+}
+
+.ach-diff-box .solo-stats-table thead th {
+    color: rgba(190, 245, 255, 0.8);
+    font-size: 13px;
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 9px 10px;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.ach-diff-box .solo-stats-table tr {
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.ach-diff-box .solo-stats-table tr:last-child {
+    border-bottom: none;
+}
+
+.ach-diff-box .solo-stats-table td {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 9px 10px;
+}
+
+.ach-diff-box .solo-stats-table .sst-label {
+    color: rgba(190, 245, 255, 0.8);
+    font-size: 13px;
+    font-weight: normal;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
 .solo-stats-table {
     width: 100%;
     max-width: 320px;
