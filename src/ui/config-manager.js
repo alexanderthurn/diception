@@ -14,6 +14,7 @@ import {
     SETUP_DEFAULTS,
 } from './mods-panel-helpers.js';
 import { randomSeed } from '../core/rng.js';
+import { normalizeUserMapStyle } from '../core/map.js';
 
 export { SETUP_MOD_DEFAULTS, SETUP_DEFAULTS } from './mods-panel-helpers.js';
 
@@ -147,7 +148,11 @@ export class ConfigManager {
         else if (legacyFastMode === 'false') defaultSpeed = 'beginner';
         const savedGameSpeed = localStorage.getItem('dicy_gameSpeed') || defaultSpeed;
 
-        const savedMapStyle       = localStorage.getItem('dicy_mapStyle')        || SETUP_DEFAULTS.mapStyle;
+        const savedMapStyleRaw = localStorage.getItem('dicy_mapStyle') || SETUP_DEFAULTS.mapStyle;
+        const savedMapStyle = normalizeUserMapStyle(savedMapStyleRaw);
+        if (savedMapStyle !== savedMapStyleRaw) {
+            localStorage.setItem('dicy_mapStyle', savedMapStyle);
+        }
         const savedGameMode       = localStorage.getItem('dicy_gameMode')        || SETUP_DEFAULTS.gameMode;
         const savedPlayMode       = localStorage.getItem('dicy_playMode')        || SETUP_DEFAULTS.playMode;
         const savedTournamentGames = localStorage.getItem('dicy_tournamentGames') || SETUP_DEFAULTS.tournamentGames;

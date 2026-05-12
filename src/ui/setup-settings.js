@@ -2,6 +2,8 @@
  * SetupSettings - Handles loading and saving of game setup settings
  */
 
+import { normalizeUserMapStyle } from '../core/map.js';
+
 // Map size presets
 export const MAP_SIZE_PRESETS = [
     { width: 3, height: 3, label: '3x3' },
@@ -52,7 +54,7 @@ export class SetupSettings {
             maxDice: localStorage.getItem('dicy_maxDice') || '8',
             diceSides: localStorage.getItem('dicy_diceSides') || '6',
             gameSpeed: localStorage.getItem('dicy_gameSpeed') || defaultSpeed,
-            mapStyle: localStorage.getItem('dicy_mapStyle') || 'full',
+            mapStyle: normalizeUserMapStyle(localStorage.getItem('dicy_mapStyle') || 'random'),
             gameMode: localStorage.getItem('dicy_gameMode') || 'classic',
             tournamentGames: localStorage.getItem('dicy_tournamentGames') || '100',
             effectsQuality: localStorage.getItem('effectsQuality') || 'high',

@@ -7,4 +7,4 @@
  * - ./map/map-generators.js (generation algorithms)
  * - ./map/map-queries.js (query utilities)
  */
-export { MapManager, generators, queries } from './map/index.js';
+export { MapManager, generators, queries, normalizeUserMapStyle } from './map/index.js';

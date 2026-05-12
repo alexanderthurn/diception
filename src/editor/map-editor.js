@@ -9,7 +9,7 @@
 import { Dialog } from '../ui/dialog.js';
 import { GAME } from '../core/constants.js';
 import { getInputHint, ACTION_ASSIGN, ACTION_DICE, ACTION_END_TURN } from '../ui/input-hints.js';
-import { MapManager } from '../core/map.js';
+import { MapManager, normalizeUserMapStyle } from '../core/map.js';
 import { mulberry32, randomSeed } from '../core/rng.js';
 import { loadBindings } from '../input/key-bindings.js';
 import {
@@ -1775,7 +1775,7 @@ export class MapEditor {
 
     syncEditorModsFromStateAndStorage() {
         const el = this.elements;
-        if (el.editorModsMapStyle) el.editorModsMapStyle.value = localStorage.getItem('dicy_mapStyle') || SETUP_DEFAULTS.mapStyle;
+        if (el.editorModsMapStyle) el.editorModsMapStyle.value = normalizeUserMapStyle(localStorage.getItem('dicy_mapStyle') || SETUP_DEFAULTS.mapStyle);
         if (el.editorModsGameMode) el.editorModsGameMode.value = this.state.gameMode || SETUP_MOD_DEFAULTS.gameMode;
         if (el.editorModsMaxDice) {
             el.editorModsMaxDice.value = String(this.state.maxDice);
@@ -2065,7 +2065,7 @@ export class MapEditor {
         const sliderVal = parseInt(this.elements.editorMapSize?.value || '4', 10);
         const preset = CONFIG_MAP_SIZE_PRESETS[Math.max(0, Math.min(sliderVal - 1, CONFIG_MAP_SIZE_PRESETS.length - 1))];
         const [genW, genH] = [preset.width, preset.height];
-        const mapStyle = this.elements.editorModsMapStyle?.value || 'islands';
+        const mapStyle = normalizeUserMapStyle(this.elements.editorModsMapStyle?.value || SETUP_DEFAULTS.mapStyle);
         const seedEl = this.elements.editorModsSeedInput;
         const seedVal = seedEl ? parseInt(seedEl.value, 10) : NaN;
         const hasFixedSeed = Number.isFinite(seedVal) && seedVal > 0;
