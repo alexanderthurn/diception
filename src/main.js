@@ -1417,7 +1417,7 @@ async function init() {
     setupUIButtons(game, input, sessionManager, gameStarter, playerDashboard, toggleAutoplay, inputManager);
 
     // Input Manager Events
-    setupInputEvents(game, inputManager, sessionManager);
+    setupInputEvents(game, inputManager, sessionManager, handleQuit);
 
     // Menu Navigation
     const { showFullVersionOnlyDialog } = setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI, configManager, highscoreManager);
@@ -1589,7 +1589,7 @@ function setupUIButtons(game, input, sessionManager, gameStarter, playerDashboar
 }
 
 // Helper: Setup Input Events
-function setupInputEvents(game, inputManager, sessionManager) {
+function setupInputEvents(game, inputManager, sessionManager, handleQuit) {
     inputManager.on('menu', () => {
         if (Dialog.activeOverlay) {
             Dialog.close(Dialog.activeOverlay);
