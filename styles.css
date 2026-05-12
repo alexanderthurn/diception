@@ -1294,9 +1294,7 @@ select {
 }
 
 .timeline-section-horizontal {
-    margin-top: 20px;
     padding-top: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .timeline-title {
@@ -1369,11 +1367,52 @@ select {
     color: #AA00FF;
 }
 
+.solo-stats-table {
+    width: 100%;
+    max-width: 320px;
+    border-collapse: collapse;
+    margin: 0 auto;
+    font-size: 0.95em;
+}
+
+.solo-stats-table th {
+    color: #666;
+    font-weight: normal;
+    padding: 2px 8px;
+    text-align: right;
+}
+
+.solo-stats-table th:first-child {
+    text-align: left;
+}
+
+.solo-stats-table td {
+    padding: 3px 8px;
+    text-align: right;
+    color: #AA00FF;
+}
+
+.solo-stats-table .sst-label {
+    text-align: left;
+    color: #ccc;
+    font-weight: 600;
+}
+
 .game-over-turns {
     margin: 10px 0 0 0;
     font-size: 1.1em;
     font-weight: 600;
     color: #00ffcc;
+}
+
+.game-over-duration {
+    margin-left: 8px;
+}
+
+.game-over-newbest {
+    color: #FFD700;
+    font-weight: 700;
+    margin-left: 8px;
 }
 
 #game-log {
@@ -5591,7 +5630,7 @@ canvas {
         align-items: stretch;
         gap: 12px;
         padding: 0 15px;
-        /* Add side padding for buttons */
+        margin-top: 0;
     }
 
     .dialog-actions .tron-btn {

@@ -18,10 +18,12 @@ export class GameStatsTracker {
         this.totalTerritoryChanges = 0;
         this.eliminationOrder = []; // { playerId, turn, eliminatedBy }
         this.startTurn = 1;
+        this.humanTurns = 0;
     }
 
     setupListeners() {
         this.game.on('gameStart', () => this.onGameStart());
+        this.game.on('turnStart', (data) => this.onTurnStart(data));
         this.game.on('attackResult', (result) => this.onAttackResult(result));
         this.game.on('playerEliminated', (player) => this.onPlayerEliminated(player));
         this.game.on('reinforcements', (data) => this.onReinforcements(data));
@@ -48,6 +50,10 @@ export class GameStatsTracker {
                 name: player.name || (player.isBot ? `Bot ${player.id}` : `Player ${player.id}`)
             });
         });
+    }
+
+    onTurnStart(data) {
+        if (!data.player.isBot) this.humanTurns++;
     }
 
     onAttackResult(result) {
@@ -176,6 +182,7 @@ export class GameStatsTracker {
 
         return {
             gameDuration,
+            humanTurns: this.humanTurns,
             totalAttacks: this.totalAttacks,
             totalTerritoryChanges: this.totalTerritoryChanges,
             eliminationOrder: this.eliminationOrder,

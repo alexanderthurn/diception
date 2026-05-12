@@ -45,7 +45,7 @@ function ensureLifetimeOnData(dataObj) {
 }
 
 /**
- * Zero lifetime tallies + per-name wins + totalGames. Keeps `campaigns` and `lifetime` keys at zero.
+ * Zero lifetime tallies. Keeps `campaigns` intact; resets `lifetime` to zero.
  * Call `highscoreManager.reload()` if an instance is already in memory.
  */
 export function resetHighscoreLifetimeTallyPreserveCampaigns() {
@@ -53,8 +53,6 @@ export function resetHighscoreLifetimeTallyPreserveCampaigns() {
         const raw = localStorage.getItem(HIGHSCORE_STORAGE_KEY);
         const data = raw ? JSON.parse(raw) : {};
         const next = {
-            wins: {},
-            totalGames: 0,
             lifetime: emptyLifetime(),
             campaigns: data?.campaigns && typeof data.campaigns === 'object' ? data.campaigns : {},
         };
@@ -106,8 +104,6 @@ export class HighscoreManager {
         }
 
         const base = {
-            wins: data.wins && typeof data.wins === 'object' ? data.wins : {},
-            totalGames: typeof data.totalGames === 'number' ? data.totalGames : 0,
             campaigns: data.campaigns && typeof data.campaigns === 'object' ? data.campaigns : {},
             lifetime: { ...emptyLifetime(), ...(data.lifetime && typeof data.lifetime === 'object' ? data.lifetime : {}) },
         };
@@ -240,17 +236,6 @@ export class HighscoreManager {
         notifyLifetimeStatChanged(stat, v);
     }
 
-    /**
-     * Record a game result (per-winner table + totalGames). Human games played / won come only from
-     * solo matches via `recordSoloHumanSessionEnd` (bucket `g`), then mirrored into `lifetime` on `save()`.
-     */
-    recordWin(winnerName, humanPlayed = false, humanWon = false) {
-        this.data.wins[winnerName] = (this.data.wins[winnerName] || 0) + 1;
-        this.data.totalGames = (this.data.totalGames || 0) + 1;
-        this.save();
-        return this.data;
-    }
-
     markCampaignLevelComplete(campaignId, levelIndex) {
         if (!this.data.campaigns[campaignId]) {
             this.data.campaigns[campaignId] = [];
@@ -288,38 +273,10 @@ export class HighscoreManager {
         };
     }
 
-    /** Clears `wins`, `totalGames`, solo stats, then `lifetime` (rebuilt from empty solo `g` on `save()`); keeps `campaigns`. */
+    /** Clears solo stats and lifetime counters (rebuilt from empty solo `g` on `save()`); keeps `campaigns`. */
     resetLifetimeRollupsPreserveCampaigns() {
-        this.data.wins = {};
-        this.data.totalGames = 0;
         this._soloHumanStats.clear();
         this.data.lifetime = emptyLifetime();
         this.save();
-    }
-
-    display(currentWinnerName) {
-        const highscoreList = document.getElementById('highscore-list');
-        const totalGamesEl = document.getElementById('total-games-played');
-
-        const sortedWins = Object.entries(this.data.wins)
-            .sort((a, b) => b[1] - a[1]);
-
-        if (!highscoreList || !totalGamesEl) return;
-
-        if (sortedWins.length === 0) {
-            highscoreList.innerHTML = '<div class="highscore-item"><span class="highscore-player-name">No stats yet</span></div>';
-        } else {
-            highscoreList.innerHTML = sortedWins.map(([name, wins]) => {
-                const isHighlighted = name === currentWinnerName ? 'highlighted' : '';
-                return `
-                    <div class="highscore-item ${isHighlighted}">
-                        <span class="highscore-player-name">${name}</span>
-                        <span class="highscore-wins">${wins} <span class="sprite-icon icon-achievements"></span></span>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        totalGamesEl.textContent = `Total Games Played: ${this.data.totalGames || 0}`;
     }
 }

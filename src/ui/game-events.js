@@ -6,6 +6,7 @@ import { markLevelSolved } from '../scenarios/campaign-progress.js';
 import { getWinProbability } from '../core/probability.js';
 import { fireAchievementEvent, checkCampaignAchievement } from '../core/achievement-manager.js';
 import { createSpeedDescription, updateSpeedDescription } from './speed-descriptions.js';
+import { dominantBotDifficulty, mapSizeGroupFromDims } from '../core/solo-human-stats.js';
 
 function showVictoryCard(humanWon, winnerColorHex, quality, campaignFinished = false) {
     return new Promise(resolve => {
@@ -899,9 +900,11 @@ export class GameEventManager {
             this.gameLog.recordAttack(result.won);
         }
 
-        // ── Achievement hooks (human attacks only) ───────────────────────────
+        // ── Achievement hooks (solo human attacks only) ──────────────────────
         const attackerPlayer = this.game.players.find(p => p.id === result.attackerId);
-        if (attackerPlayer && !attackerPlayer.isBot) {
+        const isSoloHuman = attackerPlayer && !attackerPlayer.isBot
+            && this.game.players.filter(p => !p.isBot).length === 1;
+        if (isSoloHuman) {
             const attackerDice = result.attackerRolls.length;
             const defenderDice = result.defenderRolls.length;
 
@@ -1135,24 +1138,33 @@ export class GameEventManager {
         const soloHumans = this.game.players.filter((p) => !p.isBot).length;
         const gameStats = this.gameStatsTracker?.getGameStats();
 
-        // Record the win with human stats
-        if (this.highscoreManager && data.winner) {
-            this.highscoreManager.recordWin(name, humanPlayed, humanWon);
+        let soloDiff = null, soloSizeGroup = null, soloLevelKey = null;
+        let prevBestTurns = null, soloDurationMs = null;
+        if (soloHumans === 1) {
+            soloDurationMs = this._soloGameStartedAtMs != null ? (Date.now() - this._soloGameStartedAtMs) : null;
+            soloDiff = dominantBotDifficulty(this.game);
+            soloSizeGroup = this.game.map ? mapSizeGroupFromDims(this.game.map.width, this.game.map.height) : null;
+            const campaignActive = localStorage.getItem('campaignMode') === '1';
+            const soloOwner = campaignActive ? localStorage.getItem('loadedCampaign') : null;
+            const soloIdxStr = campaignActive ? localStorage.getItem('loadedLevelIndex') : null;
+            const soloLevelIdx = soloIdxStr != null ? parseInt(soloIdxStr, 10) : NaN;
+            soloLevelKey = soloOwner && Number.isFinite(soloLevelIdx) && soloLevelIdx >= 0 ? `${soloOwner}:${soloLevelIdx}` : null;
+            if (this.highscoreManager) {
+                const prevB = this.highscoreManager.getSoloHumanStatsBlob().buckets;
+                const bestKey = (soloDiff && soloSizeGroup && soloLevelKey)
+                    ? `d:${soloDiff}|s:${soloSizeGroup}|l:${soloLevelKey}`
+                    : (soloDiff && soloSizeGroup ? `d:${soloDiff}|s:${soloSizeGroup}` : 'g');
+                prevBestTurns = prevB[bestKey]?.[2] ?? null;
+            }
         }
 
         if (this.highscoreManager && data.winner && soloHumans === 1) {
-            const turns = gameStats?.gameDuration ?? Math.max(1, this.game.turn | 0);
-            const durationMs = this._soloGameStartedAtMs != null ? (Date.now() - this._soloGameStartedAtMs) : null;
-            const campaignActive = localStorage.getItem('campaignMode') === '1';
-            const owner = campaignActive ? localStorage.getItem('loadedCampaign') : null;
-            const idxStr = campaignActive ? localStorage.getItem('loadedLevelIndex') : null;
-            const levelIdx = idxStr != null ? parseInt(idxStr, 10) : NaN;
-            const levelKey = owner && Number.isFinite(levelIdx) && levelIdx >= 0 ? `${owner}:${levelIdx}` : null;
+            const turns = gameStats?.humanTurns || Math.max(1, this.game.turn | 0);
             this.highscoreManager.recordSoloHumanSessionEnd(this.game, {
                 humanWon,
                 turns,
-                durationMs,
-                levelKey,
+                durationMs: soloDurationMs,
+                levelKey: soloLevelKey,
             });
         }
 
@@ -1199,19 +1211,28 @@ export class GameEventManager {
         content.className = 'game-over-content';
 
         const humanCount = this.game.players.filter(p => !p.isBot).length;
-        const summaryP = document.createElement('p');
-        summaryP.className = 'game-over-summary';
-        summaryP.textContent = humanCount === 1
-            ? (humanWon ? "You've won the game." : "You've lost.")
-            : 'Game over.';
-        content.appendChild(summaryP);
 
         const turnCount = gameStats
-            ? gameStats.gameDuration
+            ? (soloHumans === 1 ? (gameStats.humanTurns || gameStats.gameDuration) : gameStats.gameDuration)
             : Math.max(1, this.game.turn | 0);
+        const isNewBest = humanWon && soloHumans === 1
+            && (prevBestTurns === null || turnCount < prevBestTurns);
+        const fmtDuration = ms => {
+            if (ms == null) return null;
+            const totalS = Math.round(ms / 1000);
+            const h = Math.floor(totalS / 3600);
+            const m = Math.floor((totalS % 3600) / 60);
+            const s = totalS % 60;
+            if (h > 0) return `${h}h ${m}m`;
+            if (m > 0) return `${m}m ${s}s`;
+            return `${s}s`;
+        };
         const turnsP = document.createElement('p');
         turnsP.className = 'game-over-turns';
-        turnsP.textContent = `Turns: ${turnCount}`;
+        const durationStr = soloHumans === 1 ? fmtDuration(soloDurationMs) : null;
+        turnsP.innerHTML = `Turns: ${turnCount}`
+            + (durationStr ? `  <span class="game-over-duration">Time: ${durationStr}</span>` : '')
+            + (isNewBest ? `  <span class="game-over-newbest">★ New best</span>` : '');
         content.appendChild(turnsP);
 
         // === TIMELINE (when tracker ran for this session) ===
@@ -1267,28 +1288,32 @@ export class GameEventManager {
             content.appendChild(lastGameSection);
         }
 
-        // === HUMAN STATS SECTION (only if human played) ===
-        if (humanPlayed && this.highscoreManager) {
-            const humanStats = this.highscoreManager.getHumanStats();
+        // === SOLO STATS TABLE (only in solo human vs bots) ===
+        if (soloHumans === 1 && this.highscoreManager) {
+            const b = this.highscoreManager.getSoloHumanStatsBlob().buckets;
+            const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+            const sizeLabel = s => s === 'medium' ? 'Mid size' : cap(s);
+            const winPct = (plays, wins) => plays > 0 ? `${Math.round(wins / plays * 100)}%` : '—';
+
+            const rows = [];
+            const g = b['g'];
+            if (g) rows.push(['Global', g]);
+            const d = soloDiff ? b[`d:${soloDiff}`] : null;
+            if (d && d[0] > 0) rows.push([cap(soloDiff), d]);
+            const ds = (soloDiff && soloSizeGroup) ? b[`d:${soloDiff}|s:${soloSizeGroup}`] : null;
+            if (ds && ds[0] > 0) rows.push([`${cap(soloDiff)} + ${sizeLabel(soloSizeGroup)}`, ds]);
+            const lk = (soloDiff && soloSizeGroup && soloLevelKey) ? b[`d:${soloDiff}|s:${soloSizeGroup}|l:${soloLevelKey}`] : null;
+            if (lk && lk[0] > 0) rows.push(['This Level', lk]);
 
             const humanSection = document.createElement('div');
             humanSection.className = 'human-stats-section';
             humanSection.innerHTML = `
-                <h3 class="highscore-title">Career</h3>
-                <div class="human-stats-row">
-                    <span class="human-stat">
-                        <span class="stat-label">Games</span>
-                        <span class="stat-value">${humanStats.gamesPlayed}</span>
-                    </span>
-                    <span class="human-stat">
-                        <span class="stat-label">Wins</span>
-                        <span class="stat-value">${humanStats.wins}</span>
-                    </span>
-                    <span class="human-stat">
-                        <span class="stat-label">Win Rate</span>
-                        <span class="stat-value">${humanStats.winRate}%</span>
-                    </span>
-                </div>
+                <table class="solo-stats-table">
+                    <thead><tr><th></th><th>Games</th><th>Wins</th><th>Win%</th></tr></thead>
+                    <tbody>${rows.map(([label, r]) => `
+                        <tr><td class="sst-label">${label}</td><td>${r[0]}</td><td>${r[1]}</td><td>${winPct(r[0], r[1])}</td></tr>
+                    `).join('')}</tbody>
+                </table>
             `;
             content.appendChild(humanSection);
         }
