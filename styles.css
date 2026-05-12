@@ -1473,6 +1473,26 @@ select {
     margin-left: 8px;
 }
 
+.game-over-best-bracket {
+    color: #888;
+    font-size: 0.85em;
+    margin-left: 6px;
+}
+
+.game-over-campaign-row {
+    display: block;
+    font-size: 0.85em;
+    font-weight: normal;
+    color: #888;
+    margin-top: 4px;
+}
+
+@media (max-width: 480px), (max-height: 600px) {
+    .human-stats-section {
+        display: none;
+    }
+}
+
 .game-over-newbest {
     color: #FFD700;
     font-weight: 700;

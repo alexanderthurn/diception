@@ -81,11 +81,12 @@ function normalizeBuckets(raw) {
     if (!raw || typeof raw.buckets !== 'object') return out;
     for (const [id, row] of Object.entries(raw.buckets)) {
         if (!Array.isArray(row) || row.length < 4) continue;
-        const plays = Math.max(0, row[0] | 0);
-        const wins = Math.max(0, row[1] | 0);
-        const minT = row[2] == null || row[2] === '' ? null : Math.max(0, row[2] | 0);
-        const minMs = row[3] == null || row[3] === '' ? null : Math.max(0, row[3] | 0);
-        out.buckets[id] = [plays, wins, minT, minMs];
+        const plays  = Math.max(0, row[0] | 0);
+        const wins   = Math.max(0, row[1] | 0);
+        const minT   = row[2] == null || row[2] === '' ? null : Math.max(0, row[2] | 0);
+        const minMs  = row[3] == null || row[3] === '' ? null : Math.max(0, row[3] | 0);
+        const minAtt = row[4] == null || row[4] === '' ? null : Math.max(0, row[4] | 0);
+        out.buckets[id] = [plays, wins, minT, minMs, minAtt];
     }
     return out;
 }
@@ -166,7 +167,7 @@ export class SoloHumanStatsStore {
 
     /**
      * @param {{ map?: { width: number, height: number }, players: { isBot?: boolean, aiId?: string|null }[] }} game
-     * @param {{ humanWon: boolean, turns: number, durationMs: number|null, levelKey: string|null }} ctx
+     * @param {{ humanWon: boolean, turns: number, durationMs: number|null, levelKey: string|null, attacks: number|null }} ctx
      */
     recordSoloSession(game, ctx) {
         if (!game?.map || !game.players) return;
@@ -182,15 +183,17 @@ export class SoloHumanStatsStore {
         const turns = Math.max(1, Math.floor(Number(ctx.turns)) || 1);
         const won = !!ctx.humanWon;
         const durationMs = ctx.durationMs != null && Number.isFinite(ctx.durationMs) ? Math.max(0, ctx.durationMs | 0) : null;
+        const attacks = ctx.attacks != null && Number.isFinite(ctx.attacks) ? Math.max(0, ctx.attacks | 0) : null;
 
         for (const id of ids) {
             let row = this._data.buckets[id];
-            if (!row) row = [0, 0, null, null];
+            if (!row) row = [0, 0, null, null, null];
             row[0]++;
             if (won) {
                 row[1]++;
                 if (row[2] == null || turns < row[2]) row[2] = turns;
                 if (durationMs != null && (row[3] == null || durationMs < row[3])) row[3] = durationMs;
+                if (attacks != null && (row[4] == null || attacks < row[4])) row[4] = attacks;
             }
             this._data.buckets[id] = row;
         }

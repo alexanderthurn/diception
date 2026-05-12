@@ -41,11 +41,12 @@ export class GameStatsTracker {
                 attackLosses: 0,
                 territoriesConquered: 0,
                 territoriesLost: 0,
-                totalRolled: 0,      // Sum of all dice rolled
-                expectedRoll: 0,     // Expected sum based on dice count
-                rollCount: 0,        // Number of roll events
+                totalRolled: 0,
+                expectedRoll: 0,
+                rollCount: 0,
                 diceProduced: 0,
                 diceLost: 0,
+                diceKilled: 0,
                 isBot: player.isBot,
                 name: player.name || (player.isBot ? `Bot ${player.id}` : `Player ${player.id}`)
             });
@@ -81,8 +82,8 @@ export class GameStatsTracker {
         // Track defender stats
         if (result.won) {
             defenderStats.territoriesLost++;
-            // Defender lost all dice on the captured tile
             defenderStats.diceLost += result.defenderRolls.length;
+            attackerStats.diceKilled += result.defenderRolls.length;
         }
 
         // Track luck (actual roll vs expected)
@@ -180,9 +181,21 @@ export class GameStatsTracker {
             }
         });
 
+        let humanAttacks = 0, humanDiceKilled = 0, humanDiceLost = 0;
+        this.playerStats.forEach(stats => {
+            if (!stats.isBot) {
+                humanAttacks   += stats.attacks;
+                humanDiceKilled += stats.diceKilled;
+                humanDiceLost  += stats.diceLost;
+            }
+        });
+
         return {
             gameDuration,
             humanTurns: this.humanTurns,
+            humanAttacks,
+            humanDiceKilled,
+            humanDiceLost,
             totalAttacks: this.totalAttacks,
             totalTerritoryChanges: this.totalTerritoryChanges,
             eliminationOrder: this.eliminationOrder,

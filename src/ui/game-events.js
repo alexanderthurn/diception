@@ -1139,7 +1139,7 @@ export class GameEventManager {
         const gameStats = this.gameStatsTracker?.getGameStats();
 
         let soloDiff = null, soloSizeGroup = null, soloLevelKey = null;
-        let prevBestTurns = null, prevBestDuration = null, soloDurationMs = null;
+        let prevBestTurns = null, prevBestDuration = null, prevBestAttacks = null, soloDurationMs = null;
         if (soloHumans === 1) {
             soloDurationMs = this._soloGameStartedAtMs != null ? (Date.now() - this._soloGameStartedAtMs) : null;
             soloDiff = dominantBotDifficulty(this.game);
@@ -1154,18 +1154,21 @@ export class GameEventManager {
                 const bestKey = (soloDiff && soloSizeGroup && soloLevelKey)
                     ? `d:${soloDiff}|s:${soloSizeGroup}|l:${soloLevelKey}`
                     : (soloDiff && soloSizeGroup ? `d:${soloDiff}|s:${soloSizeGroup}` : 'g');
-                prevBestTurns = prevB[bestKey]?.[2] ?? null;
+                prevBestTurns    = prevB[bestKey]?.[2] ?? null;
                 prevBestDuration = prevB[bestKey]?.[3] ?? null;
+                prevBestAttacks  = prevB[bestKey]?.[4] ?? null;
             }
         }
 
         if (this.highscoreManager && data.winner && soloHumans === 1) {
             const turns = gameStats?.humanTurns || Math.max(1, this.game.turn | 0);
+            const attacks = soloLevelKey ? (gameStats?.humanAttacks ?? null) : null;
             this.highscoreManager.recordSoloHumanSessionEnd(this.game, {
                 humanWon,
                 turns,
                 durationMs: soloDurationMs,
                 levelKey: soloLevelKey,
+                attacks,
             });
         }
 
@@ -1216,11 +1219,15 @@ export class GameEventManager {
         const turnCount = gameStats
             ? (soloHumans === 1 ? (gameStats.humanTurns || gameStats.gameDuration) : gameStats.gameDuration)
             : Math.max(1, this.game.turn | 0);
-        const isNewBest = humanWon && soloHumans === 1 && (
-            prevBestTurns === null ||
-            turnCount < prevBestTurns ||
-            (turnCount === prevBestTurns && soloDurationMs != null && prevBestDuration != null && soloDurationMs < prevBestDuration)
-        );
+        const soloAttacks = soloLevelKey ? (gameStats?.humanAttacks ?? null) : null;
+        const isNewBest = humanWon && soloHumans === 1 && (() => {
+            if (prevBestTurns === null) return true; // first win
+            const t = turnCount, pt = prevBestTurns ?? Infinity;
+            if (t !== pt) return t < pt;
+            const a = soloAttacks ?? Infinity, pa = prevBestAttacks ?? Infinity;
+            if (a !== pa) return a < pa;
+            return soloDurationMs != null && prevBestDuration != null && soloDurationMs < prevBestDuration;
+        })();
         const fmtDuration = ms => {
             if (ms == null) return null;
             const totalS = Math.round(ms / 1000);
@@ -1234,9 +1241,31 @@ export class GameEventManager {
         const turnsP = document.createElement('p');
         turnsP.className = 'game-over-turns';
         const durationStr = soloHumans === 1 ? fmtDuration(soloDurationMs) : null;
-        turnsP.innerHTML = `Turns: ${turnCount}`
-            + (durationStr ? `  <span class="game-over-duration">Time: ${durationStr}</span>` : '')
-            + (isNewBest ? `  <span class="game-over-newbest">★ New best</span>` : '');
+        const diceKilled = soloLevelKey ? (gameStats?.humanDiceKilled ?? null) : null;
+        const diceLost   = soloLevelKey ? (gameStats?.humanDiceLost   ?? null) : null;
+
+        const showBest = humanWon && !isNewBest && prevBestTurns !== null && soloHumans === 1;
+        const bracket = v => `<span class="game-over-best-bracket">(Best: ${v})</span>`;
+
+        let turnsHtml = `Turns: ${turnCount}`;
+        let timeHtml  = durationStr ? `  <span class="game-over-duration">Time: ${durationStr}</span>` : '';
+        if (showBest) {
+            if (turnCount > prevBestTurns) {
+                turnsHtml += `  ${bracket(prevBestTurns)}`;
+            } else if (turnCount === prevBestTurns && durationStr && prevBestDuration != null && soloDurationMs != null && soloDurationMs > prevBestDuration) {
+                timeHtml = `  <span class="game-over-duration">Time: ${durationStr}  ${bracket(fmtDuration(prevBestDuration))}</span>`;
+            }
+        }
+
+        const hasCampaignRow = soloAttacks != null || diceKilled != null || diceLost != null;
+        turnsP.innerHTML = turnsHtml
+            + timeHtml
+            + (isNewBest ? `  <span class="game-over-newbest">★ New best</span>` : '')
+            + (hasCampaignRow ? `<br><span class="game-over-campaign-row">`
+                + (soloAttacks != null ? `Attacks: ${soloAttacks}` : '')
+                + (diceKilled  != null ? `  Defeated dice: ${diceKilled}` : '')
+                + (diceLost    != null ? `  Lost dice: ${diceLost}` : '')
+                + `</span>` : '');
         content.appendChild(turnsP);
 
         // === TIMELINE (when tracker ran for this session) ===
@@ -1317,9 +1346,9 @@ export class GameEventManager {
                 humanSection.className = 'human-stats-section';
                 humanSection.innerHTML = `
                     <table class="solo-stats-table">
-                        <thead><tr><th></th><th>Games</th><th>Wins</th><th>Win%</th></tr></thead>
+                        <thead><tr><th></th><th>Games</th><th>Wins</th><th>Win%</th><th>Best Att.</th></tr></thead>
                         <tbody>${rows.map(([label, r]) => `
-                            <tr><td class="sst-label">${label}</td><td>${r[0]}</td><td>${r[1]}</td><td>${winPct(r[0], r[1])}</td></tr>
+                            <tr><td class="sst-label">${label}</td><td>${r[0]}</td><td>${r[1]}</td><td>${winPct(r[0], r[1])}</td><td>${r[4] != null ? r[4] : '—'}</td></tr>
                         `).join('')}</tbody>
                     </table>
                 `;
