@@ -48,7 +48,8 @@
 ### Files
 - `src/core/achievements.js` — single source of truth for all achievement definitions
 - `src/core/achievement-manager.js` — achievement unlock state + threshold checks
-- `src/ui/highscore-manager.js` — lifetime counters (`dicy_highscores.lifetime`), rollups, campaign table in blob
+- `src/ui/highscore-manager.js` — `dicy_highscores` + `dicy_solo_stats`; **`g`** drives `gamesPlayed` / `gamesWon` (UI + Steam mirror on `save()`)
+- `src/core/solo-human-stats.js` — `dicy_solo_stats` encoding + `SoloHumanStatsStore` (internal; use `HighscoreManager`)
 - `src/core/steam-player-stats-sync.js` — Steam `STAT_*` reconcile + push (no game rules)
 - `src/ui/achievements-panel.js` — renders the achievements modal
 - `scripts/steam_achievements.html` — generates Steam achievement icons (open in browser)

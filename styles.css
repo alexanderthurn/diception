@@ -1369,6 +1369,13 @@ select {
     color: #AA00FF;
 }
 
+.game-over-turns {
+    margin: 10px 0 0 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #00ffcc;
+}
+
 #game-log {
     position: absolute;
     bottom: 20px;
@@ -5623,6 +5630,11 @@ canvas {
     .human-stats-section {
         margin-top: 8px;
         padding: 8px;
+    }
+
+    .game-over-turns {
+        font-size: 1em;
+        margin-top: 6px;
     }
 
     .human-stats-section .highscore-title {

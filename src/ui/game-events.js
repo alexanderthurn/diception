@@ -97,6 +97,7 @@ export class GameEventManager {
         this.sfx = null;
         this.effectsManager = null;
         this.gameStatsTracker = null;
+        this._soloGameStartedAtMs = null;
 
         // DOM elements
         this.playerText = document.getElementById('player-turn');
@@ -1131,16 +1132,34 @@ export class GameEventManager {
         // Determine if human played and won
         const humanPlayed = this.game.players.some(p => !p.isBot);
         const humanWon = data.winner && !data.winner.isBot;
+        const soloHumans = this.game.players.filter((p) => !p.isBot).length;
+        const gameStats = this.gameStatsTracker?.getGameStats();
 
         // Record the win with human stats
         if (this.highscoreManager && data.winner) {
             this.highscoreManager.recordWin(name, humanPlayed, humanWon);
         }
 
+        if (this.highscoreManager && data.winner && soloHumans === 1) {
+            const turns = gameStats?.gameDuration ?? Math.max(1, this.game.turn | 0);
+            const durationMs = this._soloGameStartedAtMs != null ? (Date.now() - this._soloGameStartedAtMs) : null;
+            const campaignActive = localStorage.getItem('dicy_campaignMode') === '1';
+            const owner = campaignActive ? localStorage.getItem('dicy_loadedCampaign') : null;
+            const idxStr = campaignActive ? localStorage.getItem('dicy_loadedLevelIndex') : null;
+            const levelIdx = idxStr != null ? parseInt(idxStr, 10) : NaN;
+            const levelKey = owner && Number.isFinite(levelIdx) && levelIdx >= 0 ? `${owner}:${levelIdx}` : null;
+            this.highscoreManager.recordSoloHumanSessionEnd(this.game, {
+                humanWon,
+                turns,
+                durationMs,
+                levelKey,
+            });
+        }
+
         const allBots   = this.game.players.every(p => p.isBot);
         const allHumans = this.game.players.every(p => !p.isBot);
 
-        // 🏆 ACH_GAMES_* / ACH_FIRST_WIN: gamesPlayed & gamesWon via HighscoreManager.recordWin above
+        // 🏆 ACH_GAMES_* / ACH_FIRST_WIN: gamesPlayed & gamesWon via recordSoloHumanSessionEnd → solo `g` → save / notify
 
         // 🏆 ACHIEVEMENT: ACH_PURE_BOTS
         if (allBots) fireAchievementEvent('pureBots');
@@ -1175,9 +1194,6 @@ export class GameEventManager {
             }
         }
 
-        // Get game stats
-        const gameStats = this.gameStatsTracker?.getGameStats();
-
         // Prepare content for Dialog
         const content = document.createElement('div');
         content.className = 'game-over-content';
@@ -1190,7 +1206,15 @@ export class GameEventManager {
             : 'Game over.';
         content.appendChild(summaryP);
 
-        // === LAST GAME STATS (always shown) ===
+        const turnCount = gameStats
+            ? gameStats.gameDuration
+            : Math.max(1, this.game.turn | 0);
+        const turnsP = document.createElement('p');
+        turnsP.className = 'game-over-turns';
+        turnsP.textContent = `Turns: ${turnCount}`;
+        content.appendChild(turnsP);
+
+        // === TIMELINE (when tracker ran for this session) ===
         if (gameStats) {
             const lastGameSection = document.createElement('div');
             lastGameSection.className = 'last-game-section';
@@ -1250,7 +1274,7 @@ export class GameEventManager {
             const humanSection = document.createElement('div');
             humanSection.className = 'human-stats-section';
             humanSection.innerHTML = `
-                <h3 class="highscore-title">TOTAL</h3>
+                <h3 class="highscore-title">Career</h3>
                 <div class="human-stats-row">
                     <span class="human-stat">
                         <span class="stat-label">Games</span>
@@ -1418,6 +1442,8 @@ export class GameEventManager {
     handleGameStart() {
         // Invalidate any pending bot-turn callbacks from the previous game
         this._gameGeneration++;
+
+        this._soloGameStartedAtMs = Date.now();
 
         // Reset per-session HUD preferences
         this.diceHUD?.resetSession();
