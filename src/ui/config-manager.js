@@ -124,7 +124,7 @@ export class ConfigManager {
             savedMapSizeString = savedMapSizeRaw;
         } else {
             // Old format (index), convert to widthxheight
-            const index = parseInt(savedMapSizeRaw) - 1;
+            const index = parseInt(savedMapSizeRaw, 10) - 1;
             const preset = this.mapSizePresets[Math.max(0, Math.min(index, this.mapSizePresets.length - 1))];
             savedMapSizeString = `${preset.width}x${preset.height}`;
         }
@@ -345,7 +345,7 @@ export class ConfigManager {
 
         el.mapSizeInput.addEventListener('input', () => {
             this.updateMapSizeDisplay();
-            const sizePreset = this.getMapSize(parseInt(el.mapSizeInput.value));
+            const sizePreset = this.getMapSize(parseInt(el.mapSizeInput.value, 10));
             localStorage.setItem('mapSize', `${sizePreset.width}x${sizePreset.height}`);
             handleChange();
         });
@@ -490,7 +490,7 @@ export class ConfigManager {
      * Update map size display text
      */
     updateMapSizeDisplay() {
-        const size = this.getMapSize(parseInt(this.elements.mapSizeInput.value));
+        const size = this.getMapSize(parseInt(this.elements.mapSizeInput.value, 10));
         this.elements.mapSizeVal.textContent = size.label;
     }
 
@@ -685,18 +685,18 @@ export class ConfigManager {
      */
     getGameConfig() {
         const el = this.elements;
-        const sizePreset = this.getMapSize(parseInt(el.mapSizeInput.value));
+        const sizePreset = this.getMapSize(parseInt(el.mapSizeInput.value, 10));
         const ap = parseInt(el.turnTimeLimitInput?.value ?? '0', 10);
         const sec = parseInt(el.turnSecondsLimitInput?.value ?? '0', 10);
         const secAtk = parseInt(el.attackSecondsLimitInput?.value ?? '0', 10);
 
         return {
-            humanCount: parseInt(el.humanCountInput.value),
-            botCount: parseInt(el.botCountInput.value),
+            humanCount: parseInt(el.humanCountInput.value, 10),
+            botCount: parseInt(el.botCountInput.value, 10),
             mapWidth: sizePreset.width,
             mapHeight: sizePreset.height,
-            maxDice: parseInt(el.maxDiceInput.value),
-            diceSides: parseInt(el.diceSidesInput.value),
+            maxDice: parseInt(el.maxDiceInput.value, 10),
+            diceSides: parseInt(el.diceSidesInput.value, 10),
             mapStyle: el.mapStyleInput.value,
             gameMode: el.gameModeInput.value,
             playMode: localStorage.getItem('playMode') ?? 'classic',
