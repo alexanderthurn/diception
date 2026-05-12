@@ -6,6 +6,25 @@
 import * as generators from './map-generators.js';
 import * as queries from './map-queries.js';
 
+/** Values allowed in setup / localStorage (not `preset`, which is scenario-only). */
+const USER_MAP_STYLES = new Set(['random', 'full', 'continents', 'simple']);
+
+const LEGACY_MAP_STYLE = {
+    islands: 'simple',
+    sparse: 'simple',
+    caves: 'simple',
+    maze: 'simple',
+    tunnels: 'simple',
+    swiss: 'simple',
+};
+
+export function normalizeUserMapStyle(style) {
+    if (style == null || style === '') return 'random';
+    const mapped = LEGACY_MAP_STYLE[style] ?? style;
+    if (USER_MAP_STYLES.has(mapped)) return mapped;
+    return 'random';
+}
+
 export class MapManager {
     constructor() {
         this.width = 0;
@@ -25,9 +44,9 @@ export class MapManager {
         this.tiles = new Array(totalTiles).fill(null).map(() => ({ owner: null, dice: 0, blocked: true }));
 
         // Determine which style to use
-        let style = mapStyle;
-        if (mapStyle === 'random') {
-            const styles = ['continents', 'caves', 'islands', 'maze'];
+        let style = mapStyle === 'preset' ? 'preset' : normalizeUserMapStyle(mapStyle);
+        if (style === 'random') {
+            const styles = ['continents', 'simple', 'full'];
             style = styles[Math.floor(this._rng() * styles.length)];
         }
 
@@ -36,7 +55,6 @@ export class MapManager {
         if (style === 'preset' && presetLayout) {
             this.applyPresetLayout(presetLayout);
         } else {
-            // Use the generator functions
             switch (style) {
                 case 'full':
                     generators.generateFull(this);
@@ -44,26 +62,13 @@ export class MapManager {
                 case 'continents':
                     generators.generateContinents(this);
                     break;
-                case 'caves':
-                    generators.generateCaves(this);
-                    break;
-                case 'islands':
-                    generators.generateIslands(this);
-                    break;
-                case 'maze':
-                    generators.generateMaze(this);
-                    break;
-                case 'tunnels':
-                    generators.generateTunnels(this);
-                    break;
-                case 'swiss':
-                    generators.generateSwissCheese(this);
+                case 'simple':
+                    generators.generateSimpleMap(this);
                     break;
                 default:
-                    generators.generateContinents(this);
+                    generators.generateSimpleMap(this);
             }
 
-            // Ensure connectivity (except for full grid)
             if (style !== 'full') {
                 this.ensureConnectivity();
             }
@@ -75,10 +80,9 @@ export class MapManager {
             if (!tile.blocked) playableIndices.push(idx);
         });
 
-        // Need minimum tiles for players
-        const minTiles = players.length * 4;
+        const minTiles = Math.min(players.length * 3, totalTiles);
         if (playableIndices.length < minTiles && style !== 'full') {
-            generators.generateSimple(this, 0.2);
+            generators.expandPlayableUntilMin(this, minTiles);
         }
 
         // Re-gather playable indices

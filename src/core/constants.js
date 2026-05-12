@@ -40,47 +40,9 @@ export const GAME = {
 
 // === MAP GENERATION ===
 export const MAP_GENERATION = {
-    // Cellular automata (caves)
-    CAVES_INITIAL_BLOCK_CHANCE: 0.45,
-    CAVES_ITERATIONS: 5,
-    CAVES_BLOCK_THRESHOLD: 5,  // Become blocked if >= this many neighbors blocked
-    CAVES_UNBLOCK_THRESHOLD: 3, // Become unblocked if <= this many neighbors blocked
-
-    // Swiss cheese
-    SWISS_MIN_HOLE_PERCENTAGE: 0.3,
-    SWISS_MAX_HOLE_PERCENTAGE: 0.4,
-    SWISS_MAX_ATTEMPTS_MULTIPLIER: 20,
-
-    // Tunnels
-    TUNNELS_MIN_PATHS: 3,
-    TUNNELS_MAX_ADDITIONAL_PATHS: 3,
-    TUNNELS_PATH_LENGTH_FACTOR: 0.4,
-    TUNNELS_DIRECTION_CHANGE_CHANCE: 0.3,
-    TUNNELS_WIDEN_CHANCE: 0.2,
-
-    // Continents
-    CONTINENTS_MIN_DISTANCE_FACTOR: 0.4,
-    CONTINENTS_MAX_RADIUS_FACTOR: 0.6,
-    CONTINENTS_NOISE_FACTOR: 0.6,
-    CONTINENTS_MAX_PLACEMENT_ATTEMPTS: 50,
-
-    // Islands
-    ISLANDS_MAIN_RADIUS_FACTOR: 1 / 3,
-    ISLANDS_LAKE_RADIUS_FACTOR: 1 / 3,
-    ISLANDS_MIN_SMALL_ISLANDS: 3,
-    ISLANDS_MAX_ADDITIONAL_ISLANDS: 4,
-    ISLANDS_SMALL_MIN_RADIUS: 2,
-    ISLANDS_SMALL_MAX_ADDITIONAL_RADIUS: 2,
-
-    // Maze
-    MAZE_WIDEN_CHANCE: 0.3,
-
-    // Simple fallback
-    SIMPLE_HOLE_PERCENTAGE: 0.2,
+    /** Simple style: fraction of cells punched as voids (while keeping one connected landmass). */
+    SIMPLE_HOLE_PERCENTAGE: 0.16,
     SIMPLE_MAX_ATTEMPTS_MULTIPLIER: 10,
-
-    // Circle carving noise
-    CIRCLE_NOISE_FACTOR: 0.3,
 };
 
 // === RENDERING ===

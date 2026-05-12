@@ -10,6 +10,20 @@ function rand(map) {
     return r();
 }
 
+function unblock(map, x, y) {
+    if (x >= 0 && x < map.width && y >= 0 && y < map.height) {
+        map.tiles[y * map.width + x].blocked = false;
+    }
+}
+
+function countPlayable(map) {
+    let n = 0;
+    for (let i = 0; i < map.tiles.length; i++) {
+        if (!map.tiles[i].blocked) n++;
+    }
+    return n;
+}
+
 /**
  * Generate a full grid with no holes
  */
@@ -20,78 +34,29 @@ export function generateFull(map) {
 }
 
 /**
- * Generate narrow winding corridors with choke points
+ * "Simple" setup style: start full, remove some random voids while keeping one playable component.
  */
-export function generateTunnels(map) {
-    const numPaths = CONFIG.TUNNELS_MIN_PATHS + Math.floor(rand(map) * CONFIG.TUNNELS_MAX_ADDITIONAL_PATHS);
-
-    for (let p = 0; p < numPaths; p++) {
-        let x = Math.floor(rand(map) * map.width);
-        let y = Math.floor(rand(map) * map.height);
-
-        const pathLength = Math.floor(map.width * map.height * CONFIG.TUNNELS_PATH_LENGTH_FACTOR);
-        let direction = Math.floor(rand(map) * 4);
-        const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-
-        for (let i = 0; i < pathLength; i++) {
-            if (x >= 0 && x < map.width && y >= 0 && y < map.height) {
-                map.tiles[y * map.width + x].blocked = false;
-            }
-
-            if (rand(map) < CONFIG.TUNNELS_DIRECTION_CHANGE_CHANCE) {
-                direction = Math.floor(rand(map) * 4);
-            }
-
-            const [dx, dy] = directions[direction];
-            x += dx;
-            y += dy;
-
-            if (x < 0) x = 0;
-            if (x >= map.width) x = map.width - 1;
-            if (y < 0) y = 0;
-            if (y >= map.height) y = map.height - 1;
-        }
-    }
-
-    // Occasionally widen some path sections
-    const tempTiles = [...map.tiles.map(t => ({ ...t }))];
-    for (let i = 0; i < map.tiles.length; i++) {
-        if (!tempTiles[i].blocked && rand(map) < CONFIG.TUNNELS_WIDEN_CHANCE) {
-            const x = i % map.width;
-            const y = Math.floor(i / map.width);
-            const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-            const [dx, dy] = directions[Math.floor(rand(map) * 4)];
-            const nx = x + dx;
-            const ny = y + dy;
-            if (nx >= 0 && nx < map.width && ny >= 0 && ny < map.height) {
-                map.tiles[ny * map.width + nx].blocked = false;
-            }
-        }
-    }
+export function generateSimpleMap(map) {
+    punchRandomHoles(map, CONFIG.SIMPLE_HOLE_PERCENTAGE);
 }
 
 /**
- * Generate a full grid with many small random holes (swiss cheese pattern)
+ * Punch random holes; each hole is kept only if the playable region stays connected.
  */
-export function generateSwissCheese(map) {
-    // Start with all tiles unblocked
+export function punchRandomHoles(map, holePercentage) {
     for (let i = 0; i < map.tiles.length; i++) {
         map.tiles[i].blocked = false;
     }
 
-    const holeRange = CONFIG.SWISS_MAX_HOLE_PERCENTAGE - CONFIG.SWISS_MIN_HOLE_PERCENTAGE;
-    const holePercentage = CONFIG.SWISS_MIN_HOLE_PERCENTAGE + rand(map) * holeRange;
     const targetHoles = Math.floor(map.width * map.height * holePercentage);
     let holesCreated = 0;
     let attempts = 0;
-    const maxAttempts = targetHoles * CONFIG.SWISS_MAX_ATTEMPTS_MULTIPLIER;
+    const maxAttempts = targetHoles * CONFIG.SIMPLE_MAX_ATTEMPTS_MULTIPLIER;
 
     while (holesCreated < targetHoles && attempts < maxAttempts) {
         const idx = Math.floor(rand(map) * map.tiles.length);
-
         if (!map.tiles[idx].blocked) {
             map.tiles[idx].blocked = true;
-
             if (arePlayableTilesConnected(map)) {
                 holesCreated++;
             } else {
@@ -103,305 +68,204 @@ export function generateSwissCheese(map) {
 }
 
 /**
- * Generate 2-4 landmasses using noise-like patterns
+ * Unblock blocked tiles that touch the playable region until at least `minPlayable` cells are playable.
  */
-export function generateContinents(map) {
-    const isSmallMap = map.width * map.height < 25;
-    const numContinents = isSmallMap ? 2 : (2 + Math.floor(rand(map) * 3));
+export function expandPlayableUntilMin(map, minPlayable) {
+    const cap = Math.min(minPlayable, map.width * map.height);
+    const rnd = map._rng || Math.random;
 
-    const centers = [];
-    const avgDim = (map.width + map.height) / 2;
-    const minDistance = avgDim * 0.4;
-
-    let attempts = 0;
-    while (centers.length < numContinents && attempts < 50) {
-        const cx = Math.floor(rand(map) * map.width);
-        const cy = Math.floor(rand(map) * map.height);
-
-        let tooClose = false;
-        for (const center of centers) {
-            const dist = Math.sqrt((cx - center.x) ** 2 + (cy - center.y) ** 2);
-            if (dist < minDistance) {
-                tooClose = true;
-                break;
-            }
-        }
-
-        if (!tooClose) {
-            const maxRadius = minDistance * 0.6;
-            const radius = (maxRadius * 0.6) + rand(map) * (maxRadius * 0.4);
-            centers.push({ x: cx, y: cy, radius });
-        }
-        attempts++;
-    }
-
-    if (centers.length === 0) {
-        centers.push({
-            x: Math.floor(map.width / 2),
-            y: Math.floor(map.height / 2),
-            radius: avgDim / 3
-        });
-    }
-
-    for (let y = 0; y < map.height; y++) {
-        for (let x = 0; x < map.width; x++) {
-            const idx = y * map.width + x;
-
-            for (const center of centers) {
-                const dist = Math.sqrt((x - center.x) ** 2 + (y - center.y) ** 2);
-                const noise = (rand(map) - 0.5) * center.radius * 0.6;
-
-                if (dist + noise < center.radius) {
-                    map.tiles[idx].blocked = false;
-                    break;
-                }
-            }
-        }
-    }
-
-    // Add bridges between continents
-    if (centers.length > 1) {
-        for (let i = 0; i < centers.length - 1; i++) {
-            createBridge(map, centers[i], centers[i + 1]);
-        }
-    }
-}
-
-/**
- * Generate caves using cellular automata
- */
-export function generateCaves(map) {
-    // Start with random fill
-    for (let i = 0; i < map.tiles.length; i++) {
-        map.tiles[i].blocked = rand(map) < CONFIG.CAVES_INITIAL_BLOCK_CHANCE;
-    }
-
-    // Run cellular automata iterations
-    for (let iter = 0; iter < CONFIG.CAVES_ITERATIONS; iter++) {
-        const newTiles = map.tiles.map((t, idx) => {
+    while (countPlayable(map) < cap) {
+        const frontier = [];
+        for (let idx = 0; idx < map.tiles.length; idx++) {
+            if (!map.tiles[idx].blocked) continue;
             const x = idx % map.width;
             const y = Math.floor(idx / map.width);
-            const neighbors = countBlockedNeighbors(map, x, y);
-
-            if (neighbors >= CONFIG.CAVES_BLOCK_THRESHOLD) return { ...t, blocked: true };
-            if (neighbors <= CONFIG.CAVES_UNBLOCK_THRESHOLD) return { ...t, blocked: false };
-            return { ...t };
-        });
-        map.tiles = newTiles;
-    }
-
-    // Carve border
-    for (let x = 0; x < map.width; x++) {
-        map.tiles[x].blocked = true;
-        map.tiles[(map.height - 1) * map.width + x].blocked = true;
-    }
-    for (let y = 0; y < map.height; y++) {
-        map.tiles[y * map.width].blocked = true;
-        map.tiles[y * map.width + map.width - 1].blocked = true;
-    }
-}
-
-/**
- * Generate archipelago with central island and smaller ones around
- */
-export function generateIslands(map) {
-    const centerX = Math.floor(map.width / 2);
-    const centerY = Math.floor(map.height / 2);
-    const avgSize = (map.width + map.height) / 2;
-    const mainRadius = avgSize / 3;
-
-    // Main island
-    carveCircle(map, centerX, centerY, mainRadius);
-
-    // Carve lake in center
-    fillCircle(map, centerX, centerY, mainRadius / 3);
-
-    // Smaller islands around
-    const numSmallIslands = 3 + Math.floor(rand(map) * 4);
-    for (let i = 0; i < numSmallIslands; i++) {
-        const angle = (i / numSmallIslands) * Math.PI * 2;
-        const dist = mainRadius + 2 + rand(map) * 3;
-        const ix = Math.floor(centerX + Math.cos(angle) * dist);
-        const iy = Math.floor(centerY + Math.sin(angle) * dist);
-        const radius = 2 + rand(map) * 2;
-        carveCircle(map, ix, iy, radius);
-
-        // Bridge to main
-        createBridge(map, { x: centerX, y: centerY }, { x: ix, y: iy });
-    }
-}
-
-/**
- * Generate maze using recursive backtracker algorithm
- */
-export function generateMaze(map) {
-    const visited = new Set();
-    const stack = [];
-
-    const startX = Math.floor(map.width / 2);
-    const startY = Math.floor(map.height / 2);
-
-    stack.push({ x: startX, y: startY });
-    visited.add(`${startX},${startY}`);
-    map.tiles[startY * map.width + startX].blocked = false;
-
-    while (stack.length > 0) {
-        const current = stack[stack.length - 1];
-        const neighbors = getUnvisitedNeighbors(map, current.x, current.y, visited);
-
-        if (neighbors.length === 0) {
-            stack.pop();
-        } else {
-            const next = neighbors[Math.floor(rand(map) * neighbors.length)];
-            visited.add(`${next.x},${next.y}`);
-            map.tiles[next.y * map.width + next.x].blocked = false;
-
-            const midX = Math.floor((current.x + next.x) / 2);
-            const midY = Math.floor((current.y + next.y) / 2);
-            if (midX >= 0 && midX < map.width && midY >= 0 && midY < map.height) {
-                map.tiles[midY * map.width + midX].blocked = false;
-            }
-
-            stack.push(next);
-        }
-    }
-
-    // Widen corridors randomly
-    for (let i = 0; i < map.tiles.length; i++) {
-        if (!map.tiles[i].blocked && rand(map) < 0.3) {
-            const x = i % map.width;
-            const y = Math.floor(i / map.width);
-            const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-            for (const [dx, dy] of directions) {
+            for (const [dx, dy] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
                 const nx = x + dx;
                 const ny = y + dy;
                 if (nx >= 0 && nx < map.width && ny >= 0 && ny < map.height) {
-                    map.tiles[ny * map.width + nx].blocked = false;
+                    const ni = ny * map.width + nx;
+                    if (!map.tiles[ni].blocked) {
+                        frontier.push(idx);
+                        break;
+                    }
                 }
             }
         }
+        if (frontier.length === 0) break;
+        const pick = frontier[Math.floor(rnd() * frontier.length)];
+        map.tiles[pick].blocked = false;
     }
 }
 
+function unblockRect(map, x0, y0, x1, y1) {
+    const xa = Math.max(0, Math.min(x0, x1));
+    const xb = Math.min(map.width - 1, Math.max(x0, x1));
+    const ya = Math.max(0, Math.min(y0, y1));
+    const yb = Math.min(map.height - 1, Math.max(y0, y1));
+    for (let y = ya; y <= yb; y++) {
+        for (let x = xa; x <= xb; x++) {
+            map.tiles[y * map.width + x].blocked = false;
+        }
+    }
+}
+
+/** Anchor inside a corner s×s block, biased toward map centre (for 2×2 bridges). */
+function cornerAnchor(w, h, s, corner) {
+    switch (corner) {
+        case 'tl':
+            return { x: Math.min(w - 1, Math.max(0, s - 1)), y: Math.min(h - 1, Math.max(0, s - 1)) };
+        case 'tr':
+            return { x: Math.min(w - 1, Math.max(0, w - s)), y: Math.min(h - 1, Math.max(0, s - 1)) };
+        case 'bl':
+            return { x: Math.min(w - 1, Math.max(0, s - 1)), y: Math.min(h - 1, Math.max(0, h - s)) };
+        case 'br':
+            return { x: Math.min(w - 1, Math.max(0, w - s)), y: Math.min(h - 1, Math.max(0, h - s)) };
+        default:
+            return { x: 0, y: 0 };
+    }
+}
+
+function continentCornerSizeTwo(w, h) {
+    const minDim = Math.min(w, h);
+    // 5×5 (or any board with both sides ≥5): two opposite 3×3 corners; they may meet at one cell diagonally.
+    if (minDim >= 5 && w >= 5 && h >= 5) {
+        return Math.min(3, w, h);
+    }
+    let s = Math.min(3, Math.max(1, Math.floor(minDim / 2)));
+    while (s > 1 && (s > w || s > h)) s--;
+    return s;
+}
+
+function continentCornerSizeFour(map, w, h, minDim) {
+    let s = minDim >= 14
+        ? Math.min(8, Math.max(4, Math.floor(minDim * (0.23 + rand(map) * 0.05))))
+        : Math.min(6, Math.max(3, Math.floor(minDim * (0.2 + rand(map) * 0.04))));
+    while (s > 1 && (2 * s > w || 2 * s > h)) {
+        s--;
+    }
+    return Math.max(2, s);
+}
+
+function ensureContinentHalfCoverage(map) {
+    const total = map.width * map.height;
+    const need = Math.ceil(total * 0.5);
+    if (countPlayable(map) < need) {
+        expandPlayableUntilMin(map, need);
+    }
+}
+
+/** Two diagonal corner blocks (≤6×6 style), linked with 2×2 L-bridge. */
+function generateContinentsTwoCorners(map) {
+    const w = map.width;
+    const h = map.height;
+    const rnd = () => rand(map);
+    const s = continentCornerSizeTwo(w, h);
+    const tlBr = rnd() < 0.5;
+    if (tlBr) {
+        unblockRect(map, 0, 0, s - 1, s - 1);
+        unblockRect(map, w - s, h - s, w - 1, h - 1);
+        createBridge2x2(map, cornerAnchor(w, h, s, 'tl'), cornerAnchor(w, h, s, 'br'));
+    } else {
+        unblockRect(map, 0, h - s, s - 1, h - 1);
+        unblockRect(map, w - s, 0, w - 1, s - 1);
+        createBridge2x2(map, cornerAnchor(w, h, s, 'bl'), cornerAnchor(w, h, s, 'tr'));
+    }
+}
+
+/** Four corner continents + ring chain (TL→TR→BR→BL) with 2×2 corridors. */
+function generateContinentsFourCorners(map) {
+    const w = map.width;
+    const h = map.height;
+    const minDim = Math.min(w, h);
+    const s = continentCornerSizeFour(map, w, h, minDim);
+
+    unblockRect(map, 0, 0, s - 1, s - 1);
+    unblockRect(map, w - s, 0, w - 1, s - 1);
+    unblockRect(map, 0, h - s, s - 1, h - 1);
+    unblockRect(map, w - s, h - s, w - 1, h - 1);
+
+    const tl = cornerAnchor(w, h, s, 'tl');
+    const tr = cornerAnchor(w, h, s, 'tr');
+    const br = cornerAnchor(w, h, s, 'br');
+    const bl = cornerAnchor(w, h, s, 'bl');
+
+    createBridge2x2(map, tl, tr);
+    createBridge2x2(map, tr, br);
+    createBridge2x2(map, br, bl);
+}
+
 /**
- * Simple random holes fallback
+ * Corner “continent” layouts: two diagonals on small boards (≤6 min side), four corners + ring paths
+ * when larger. Guarantees ≥50% playable by growing from the land frontier if needed.
  */
-export function generateSimple(map, holePercentage = 0.2) {
-    for (let i = 0; i < map.tiles.length; i++) {
-        map.tiles[i].blocked = false;
+export function generateContinents(map) {
+    const w = map.width;
+    const h = map.height;
+    const minDim = Math.min(w, h);
+
+    if (minDim <= 1 && w * h <= 1) {
+        unblock(map, 0, 0);
+    } else if (minDim <= 6) {
+        generateContinentsTwoCorners(map);
+    } else {
+        generateContinentsFourCorners(map);
     }
 
-    const targetHoles = Math.floor(map.width * map.height * holePercentage);
-    let holesCreated = 0;
-    let attempts = 0;
+    ensureContinentHalfCoverage(map);
+}
 
-    while (holesCreated < targetHoles && attempts < targetHoles * 10) {
-        const idx = Math.floor(rand(map) * map.tiles.length);
-        if (!map.tiles[idx].blocked) {
-            map.tiles[idx].blocked = true;
-            if (arePlayableTilesConnected(map)) {
-                holesCreated++;
-            } else {
-                map.tiles[idx].blocked = false;
+/**
+ * L-shaped link with a **2×2** cross-section (each leg is two cells thick in both axes along that leg).
+ * Used between continent cores; auto-repair in `ensureConnectivity` still uses `createBridge`.
+ */
+export function createBridge2x2(map, from, to) {
+    const xa = Math.min(from.x, to.x);
+    const xb = Math.max(from.x, to.x);
+    const y0 = from.y;
+    for (let x = xa; x <= xb; x++) {
+        for (let dx = 0; dx < 2; dx++) {
+            for (let oy = 0; oy < 2; oy++) {
+                unblock(map, x + dx, y0 + oy);
             }
         }
-        attempts++;
+    }
+
+    const ya = Math.min(from.y, to.y);
+    const yb = Math.max(from.y, to.y);
+    const x0 = to.x;
+    for (let y = ya; y <= yb; y++) {
+        for (let dy = 0; dy < 2; dy++) {
+            for (let ox = 0; ox < 2; ox++) {
+                unblock(map, x0 + ox, y + dy);
+            }
+        }
     }
 }
 
-// === HELPER FUNCTIONS ===
-
 /**
- * Create an L-shaped bridge between two points
+ * L-shaped link between two points, carved **two cells wide** on the perpendicular axis.
  */
 export function createBridge(map, from, to) {
     const xStart = Math.min(from.x, to.x);
     const xEnd = Math.max(from.x, to.x);
     const yMid = from.y;
 
+    const horizOff = yMid + 1 < map.height ? 1 : (yMid - 1 >= 0 ? -1 : 0);
     for (let x = xStart; x <= xEnd; x++) {
-        if (x >= 0 && x < map.width && yMid >= 0 && yMid < map.height) {
-            map.tiles[yMid * map.width + x].blocked = false;
-        }
+        unblock(map, x, yMid);
+        if (horizOff !== 0) unblock(map, x, yMid + horizOff);
     }
 
     const yStart = Math.min(from.y, to.y);
     const yEnd = Math.max(from.y, to.y);
     const xMid = to.x;
 
+    const vertOff = xMid + 1 < map.width ? 1 : (xMid - 1 >= 0 ? -1 : 0);
     for (let y = yStart; y <= yEnd; y++) {
-        if (xMid >= 0 && xMid < map.width && y >= 0 && y < map.height) {
-            map.tiles[y * map.width + xMid].blocked = false;
-        }
+        unblock(map, xMid, y);
+        if (vertOff !== 0) unblock(map, xMid + vertOff, y);
     }
-}
-
-/**
- * Carve a circle (unblock tiles within radius)
- */
-export function carveCircle(map, cx, cy, radius) {
-    for (let y = 0; y < map.height; y++) {
-        for (let x = 0; x < map.width; x++) {
-            const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-            const noise = (rand(map) - 0.5) * radius * 0.3;
-            if (dist + noise < radius) {
-                map.tiles[y * map.width + x].blocked = false;
-            }
-        }
-    }
-}
-
-/**
- * Fill a circle (block tiles within radius)
- */
-export function fillCircle(map, cx, cy, radius) {
-    for (let y = 0; y < map.height; y++) {
-        for (let x = 0; x < map.width; x++) {
-            const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-            if (dist < radius) {
-                map.tiles[y * map.width + x].blocked = true;
-            }
-        }
-    }
-}
-
-/**
- * Count blocked neighbors (including out-of-bounds as blocked)
- */
-export function countBlockedNeighbors(map, x, y) {
-    let count = 0;
-    for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-            if (dx === 0 && dy === 0) continue;
-            const nx = x + dx;
-            const ny = y + dy;
-            if (nx < 0 || nx >= map.width || ny < 0 || ny >= map.height) {
-                count++;
-            } else if (map.tiles[ny * map.width + nx].blocked) {
-                count++;
-            }
-        }
-    }
-    return count;
-}
-
-/**
- * Get unvisited neighbors for maze generation
- */
-export function getUnvisitedNeighbors(map, x, y, visited) {
-    const neighbors = [];
-    const directions = [[0, 2], [2, 0], [0, -2], [-2, 0]];
-
-    for (const [dx, dy] of directions) {
-        const nx = x + dx;
-        const ny = y + dy;
-        if (nx >= 1 && nx < map.width - 1 && ny >= 1 && ny < map.height - 1) {
-            if (!visited.has(`${nx},${ny}`)) {
-                neighbors.push({ x: nx, y: ny });
-            }
-        }
-    }
-    return neighbors;
 }
 
 /**
