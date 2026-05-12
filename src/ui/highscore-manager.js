@@ -61,7 +61,6 @@ export function resetHighscoreLifetimeTallyPreserveCampaigns() {
         localStorage.setItem(HIGHSCORE_STORAGE_KEY, JSON.stringify(next));
         try {
             localStorage.setItem(SOLO_HUMAN_STATS_KEY, JSON.stringify(emptySoloStatsBlob()));
-            localStorage.removeItem('dicy_dim_stats');
         } catch (e2) {
             console.warn('[highscores] reset solo stats failed:', e2);
         }
@@ -113,12 +112,6 @@ export class HighscoreManager {
             lifetime: { ...emptyLifetime(), ...(data.lifetime && typeof data.lifetime === 'object' ? data.lifetime : {}) },
         };
         ensureLifetimeOnData(base);
-
-        base.humanStats = {
-            gamesPlayed: base.lifetime.gamesPlayed || 0,
-            wins: base.lifetime.gamesWon || 0,
-        };
-
         return base;
     }
 

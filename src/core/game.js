@@ -259,9 +259,6 @@ export class Game {
 
             this.checkWinCondition();
             this.emit('attackResult', result);
-            if (result.won) {
-                // this.checkRowColumnCompletion(result.to.x, result.to.y, result.attackerId);
-            }
 
             if (!this.gameOver) {
                 this.tryFullBoardRule(true);

@@ -115,9 +115,6 @@ export class SoloHumanStatsStore {
     clear() {
         this._data = emptySoloStatsBlob();
         this._persist();
-        try {
-            localStorage.removeItem('dicy_dim_stats');
-        } catch { /* ignore */ }
     }
 
     exportPayloadString() {
