@@ -44,7 +44,7 @@ export class SessionManager {
     updateNewGameBtnLabel() {
         // Button now opens pause menu — label stays "Menu"
         if (!this.newGameBtn) return;
-        const isCampaignMode = localStorage.getItem('dicy_campaignMode');
+        const isCampaignMode = localStorage.getItem('campaignMode');
         const mainMenuBtn = document.getElementById('pause-mainmenu-btn');
         if (mainMenuBtn) {
             mainMenuBtn.textContent = 'Exit to Menu';
@@ -117,9 +117,9 @@ export class SessionManager {
     quitToMainMenu() {
         this.resetGameSession();
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
-        localStorage.removeItem('dicy_campaignMode');
-        localStorage.removeItem('dicy_editorTest');
-        sessionStorage.removeItem('dicy_editorTestSnapshot');
+        localStorage.removeItem('campaignMode');
+        localStorage.removeItem('editorTest');
+        sessionStorage.removeItem('editorTestSnapshot');
 
         // Clear any pending scenario/level in memory
         if (this.scenarioBrowser) {
@@ -137,7 +137,7 @@ export class SessionManager {
     quitToCustomGame() {
         this.resetGameSession();
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
-        localStorage.removeItem('dicy_campaignMode');
+        localStorage.removeItem('campaignMode');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
         this.setupModal.classList.remove('hidden');
         if (this.effectsManager) this.effectsManager.startIntroMode();
@@ -149,21 +149,21 @@ export class SessionManager {
     async quitToEditor() {
         this.resetGameSession();
         if (this.endTurnBtn) this.endTurnBtn.classList.add('hidden');
-        localStorage.removeItem('dicy_editorTest');
-        localStorage.removeItem('dicy_campaignMode');
+        localStorage.removeItem('editorTest');
+        localStorage.removeItem('campaignMode');
         document.querySelectorAll('.game-ui').forEach(el => el.classList.add('hidden'));
 
         let scenario = this.mapEditor?._openScenario ?? null;
         let options = this.mapEditor?._openOptions || {};
         if (!scenario) {
             // In-memory state lost (e.g. browser reload) — restore from sessionStorage
-            const stored = sessionStorage.getItem('dicy_editorTestSnapshot');
+            const stored = sessionStorage.getItem('editorTestSnapshot');
             if (stored) {
                 try { scenario = JSON.parse(stored); } catch (_) {}
             }
             options = {}; // callbacks can't survive a reload
         }
-        sessionStorage.removeItem('dicy_editorTestSnapshot');
+        sessionStorage.removeItem('editorTestSnapshot');
 
         if (this.mapEditor) {
             await this.mapEditor.open(scenario, options);

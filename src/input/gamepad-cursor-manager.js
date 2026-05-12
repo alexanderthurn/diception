@@ -310,12 +310,12 @@ export class GamepadCursorManager {
             } else if (button === b.cursorSpeedDown) {
                 cursor.speedMultiplier = Math.max(0.25, parseFloat((cursor.speedMultiplier - 0.25).toFixed(2)));
                 const gpIdDown = this.inputManager.getGamepads().find(g => g.index === index)?.id ?? index;
-                localStorage.setItem('dicy_gamepad_speed_' + gpIdDown, cursor.speedMultiplier);
+                localStorage.setItem('gamepad_speed_' + gpIdDown, cursor.speedMultiplier);
                 this.showFeedback(index, `Speed ×${cursor.speedMultiplier}`, button);
             } else if (button === b.cursorSpeedUp) {
                 cursor.speedMultiplier = Math.min(3, parseFloat((cursor.speedMultiplier + 0.25).toFixed(2)));
                 const gpIdUp = this.inputManager.getGamepads().find(g => g.index === index)?.id ?? index;
-                localStorage.setItem('dicy_gamepad_speed_' + gpIdUp, cursor.speedMultiplier);
+                localStorage.setItem('gamepad_speed_' + gpIdUp, cursor.speedMultiplier);
             }
             // zoom_in / zoom_out are handled by InputManager → input-controller via 'zoom' event
         };
@@ -410,7 +410,7 @@ export class GamepadCursorManager {
         // Hide all cursors when fullscreen attack overlay or beginner dice HUD is shown
         const attackVisible = this._attackOverlay && !this._attackOverlay.classList.contains('hidden');
         const diceVisible = this._diceResultHud && !this._diceResultHud.classList.contains('hidden') &&
-            (localStorage.getItem('dicy_gameSpeed') || 'beginner') === 'beginner';
+            (localStorage.getItem('gameSpeed') || 'beginner') === 'beginner';
         this.container.style.visibility = (attackVisible || diceVisible) ? 'hidden' : '';
 
         const gamepads = this.inputManager.getGamepads();
@@ -433,7 +433,7 @@ export class GamepadCursorManager {
                 const b = this._gb();
                 let lx = gp.axes[0] || 0;
                 let ly = gp.axes[1] || 0;
-                const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.id);
+                const savedDeadzone = localStorage.getItem('gamepad_deadzone_' + gp.id);
                 const dz = savedDeadzone ? parseFloat(savedDeadzone) : 0.40;
                 if (Math.abs(lx) < dz) lx = 0;
                 if (Math.abs(ly) < dz) ly = 0;
@@ -447,7 +447,7 @@ export class GamepadCursorManager {
             // axes[2] is scroll horizontal, axes[3] is scroll vertical
             let sx = gp.axes[2] || 0;
             let sy = gp.axes[3] || 0;
-            const savedDeadzoneScroll = localStorage.getItem('dicy_gamepad_deadzone_' + gp.id);
+            const savedDeadzoneScroll = localStorage.getItem('gamepad_deadzone_' + gp.id);
             const currentDeadZone = savedDeadzoneScroll ? parseFloat(savedDeadzoneScroll) : 0.40;
 
             if (Math.abs(sx) < currentDeadZone) sx = 0;
@@ -614,7 +614,7 @@ export class GamepadCursorManager {
             controllerType: gamepad ? detectControllerType(gamepad) : 'xbox',
             lastPlayerId: -1,
             lastColor: '',
-            speedMultiplier: parseFloat(localStorage.getItem('dicy_gamepad_speed_' + (gamepad?.id ?? index))) || 1.0,
+            speedMultiplier: parseFloat(localStorage.getItem('gamepad_speed_' + (gamepad?.id ?? index))) || 1.0,
             dragTarget: null,
             mode: 'dpad',
         };

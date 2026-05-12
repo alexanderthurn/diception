@@ -73,7 +73,7 @@ export function areModsAtDefaultsForPrefix(idPrefix) {
     const ap = el(idPrefix, 'turn-time-limit')?.value ?? '0';
     const sec = el(idPrefix, 'turn-seconds-limit')?.value ?? '0';
     const secAtk = normalizeAttackSecondsUi(el(idPrefix, 'attack-seconds-limit')?.value ?? '0');
-    const pm = el(idPrefix, 'play-mode')?.value ?? localStorage.getItem('dicy_playMode') ?? d.playMode;
+    const pm = el(idPrefix, 'play-mode')?.value ?? localStorage.getItem('playMode') ?? d.playMode;
     return (
         el(idPrefix, 'game-mode')?.value === d.gameMode &&
         String(el(idPrefix, 'max-dice')?.value) === d.maxDice &&
@@ -95,7 +95,7 @@ export function areModsAtDefaultsForPrefix(idPrefix) {
 export function syncModsFieldHighlightsForPrefix(idPrefix) {
     const d = SETUP_MOD_DEFAULTS;
     const pm =
-        el(idPrefix, 'play-mode')?.value ?? localStorage.getItem('dicy_playMode') ?? d.playMode;
+        el(idPrefix, 'play-mode')?.value ?? localStorage.getItem('playMode') ?? d.playMode;
 
     /** @type {Array<[string, () => boolean]>} */
     const rows = [
@@ -129,32 +129,32 @@ export function applyModsDefaultsForPrefix(idPrefix) {
         if (storageKey) localStorage.setItem(storageKey, value);
     };
 
-    setSelect('game-mode', d.gameMode, 'dicy_gameMode');
+    setSelect('game-mode', d.gameMode, 'gameMode');
 
     const maxDiceEl = el(idPrefix, 'max-dice');
     const maxDiceVal = el(idPrefix, 'max-dice-val');
     if (maxDiceEl) maxDiceEl.value = d.maxDice;
     if (maxDiceVal) maxDiceVal.textContent = d.maxDice;
-    localStorage.setItem('dicy_maxDice', d.maxDice);
+    localStorage.setItem('maxDice', d.maxDice);
 
     const diceSidesEl = el(idPrefix, 'dice-sides');
     const diceSidesVal = el(idPrefix, 'dice-sides-val');
     if (diceSidesEl) diceSidesEl.value = d.diceSides;
     if (diceSidesVal) diceSidesVal.textContent = d.diceSides;
-    localStorage.setItem('dicy_diceSides', d.diceSides);
+    localStorage.setItem('diceSides', d.diceSides);
 
-    setSelect('turn-time-limit', d.attacksPerTurn, 'dicy_attacksPerTurn');
-    setSelect('turn-seconds-limit', d.secondsPerTurn, 'dicy_secondsPerTurn');
-    setSelect('attack-seconds-limit', d.secondsPerAttack, 'dicy_secondsPerAttack');
-    setSelect('full-board-rule', d.fullBoardRule, 'dicy_fullBoardRule');
-    setSelect('attack-rule', d.attackRule, 'dicy_attackRule');
-    setSelect('supply-rule', d.supplyRule, 'dicy_supplyRule');
+    setSelect('turn-time-limit', d.attacksPerTurn, 'attacksPerTurn');
+    setSelect('turn-seconds-limit', d.secondsPerTurn, 'secondsPerTurn');
+    setSelect('attack-seconds-limit', d.secondsPerAttack, 'secondsPerAttack');
+    setSelect('full-board-rule', d.fullBoardRule, 'fullBoardRule');
+    setSelect('attack-rule', d.attackRule, 'attackRule');
+    setSelect('supply-rule', d.supplyRule, 'supplyRule');
 
     const tg = el(idPrefix, 'tournament-games');
     if (tg) tg.value = d.tournamentGames;
-    localStorage.setItem('dicy_tournamentGames', d.tournamentGames);
+    localStorage.setItem('tournamentGames', d.tournamentGames);
 
-    localStorage.setItem('dicy_playMode', d.playMode);
+    localStorage.setItem('playMode', d.playMode);
     const playModeEl = el(idPrefix, 'play-mode');
     if (playModeEl) playModeEl.value = d.playMode;
 }
@@ -249,7 +249,7 @@ export function getActiveModsSummaryFromDom(idPrefix, seedInputId, playerConfig 
         fullBoardRule:  el(idPrefix, 'full-board-rule')?.value,
         attackRule:     el(idPrefix, 'attack-rule')?.value,
         supplyRule:     el(idPrefix, 'supply-rule')?.value,
-        playMode:       el(idPrefix, 'play-mode')?.value ?? localStorage.getItem('dicy_playMode'),
+        playMode:       el(idPrefix, 'play-mode')?.value ?? localStorage.getItem('playMode'),
         seed:           Number.isFinite(seedVal) && seedVal > 0 ? seedVal : undefined,
         humanCount, botCount, botAI,
     });

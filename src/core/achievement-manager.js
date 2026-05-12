@@ -1,13 +1,13 @@
 /**
  * Achievement Manager — unlock state + threshold checks.
- * Lifetime numeric counters live in HighscoreManager (`dicy_highscores.lifetime`).
+ * Lifetime numeric counters live in HighscoreManager (`highscores.lifetime`).
  */
 
 import { ACHIEVEMENTS } from './achievements.js';
 import { getSolvedLevels } from '../scenarios/campaign-progress.js';
 import { resetSteamStatsOrFallback } from './steam-player-stats-sync.js';
 
-const UNLOCKED_KEY = 'dicy_ach_unlocked';
+const UNLOCKED_KEY = 'ach_unlocked';
 
 function loadUnlocked() {
     try { return JSON.parse(localStorage.getItem(UNLOCKED_KEY)) || []; } catch { return []; }

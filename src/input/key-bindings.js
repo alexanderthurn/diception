@@ -1,6 +1,6 @@
 /**
  * Key Bindings - Configurable input bindings for keyboard and gamepad.
- * Stored in localStorage as 'dicy_key_bindings' (single JSON object).
+ * Stored in localStorage as 'key_bindings' (single JSON object).
  *
  * Keys use e.code.toLowerCase() values (e.g. 'keyw', 'arrowup', 'space').
  * Gamepad bindings use button index numbers.
@@ -9,7 +9,7 @@
  * this system and emit semantic events directly.
  */
 
-const STORAGE_KEY = 'dicy_key_bindings';
+const STORAGE_KEY = 'key_bindings';
 
 /**
  * Configurable game actions.

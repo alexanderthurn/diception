@@ -1,4 +1,4 @@
-const KEY = 'dicy_timed_unlock_expiry';
+const KEY = 'timed_unlock_expiry';
 export const TIMED_UNLOCK_MINUTES = 60;
 
 export function setTimedUnlock(minutes = TIMED_UNLOCK_MINUTES) {

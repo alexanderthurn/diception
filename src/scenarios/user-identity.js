@@ -5,8 +5,8 @@ import { isTimedUnlockActive } from '../core/timed-unlock.js';
  * Used for campaign ownership and backend auth.
  */
 
-const STORAGE_KEY = 'dicy_userIdentity';
-const WEB_ID_KEY = 'dicy_webUserId';
+const STORAGE_KEY = 'userIdentity';
+const WEB_ID_KEY = 'webUserId';
 
 /**
  * Hash a string with SHA256, return hex
@@ -79,10 +79,10 @@ export async function getUserIdentity() {
     // Web or Android fallback
     const webId = getOrCreateWebId();
     const ownerId = await sha256Hex(webId);
-    let owner = localStorage.getItem('dicy_displayName');
+    let owner = localStorage.getItem('displayName');
     if (!owner) {
         owner = randomShortId();
-        localStorage.setItem('dicy_displayName', owner);
+        localStorage.setItem('displayName', owner);
     }
 
     if (isAndroid()) {
@@ -114,9 +114,9 @@ export function isSteamContext() {
  */
 export function isAndroid() {
     const param = new URLSearchParams(window.location.search).get('android');
-    if (param === 'true')  { localStorage.setItem('dicy_sim_android', '1'); return true; }
-    if (param === 'false') { localStorage.removeItem('dicy_sim_android'); return false; }
-    if (localStorage.getItem('dicy_sim_android')) return true;
+    if (param === 'true')  { localStorage.setItem('sim_android', '1'); return true; }
+    if (param === 'false') { localStorage.removeItem('sim_android'); return false; }
+    if (localStorage.getItem('sim_android')) return true;
     return /Android/i.test(navigator.userAgent);
 }
 

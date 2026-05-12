@@ -48,7 +48,7 @@ import { reconcileLifetimeWithSteam } from './core/steam-player-stats-sync.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid, isFullVersion, initFullVersionCheck } from './scenarios/user-identity.js';
 import { showUnlockDialog } from './ui/show-unlock-dialog.js';
 import { isTimedUnlockActive, getTimedUnlockRemainingMs, setTimedUnlock } from './core/timed-unlock.js';
-import { initStorage, flushStorage } from './core/storage.js';
+import { initStorage, flushStorage, migrateLegacyStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { AchievementsPanel, TITLES as ACH_TITLES } from './ui/achievements-panel.js';
 import { ACHIEVEMENTS } from './core/achievements.js';
@@ -94,6 +94,8 @@ window.addEventListener('resize', updateUIScale);
 async function init() {
     // Load cloud save data into localStorage before anything else reads it
     await initStorage();
+    // Rename any legacy dicy_* keys left from older builds
+    migrateLegacyStorage();
     // Resolve full vs demo before any isFullVersion() calls
     await initFullVersionCheck();
 
@@ -115,12 +117,12 @@ async function init() {
         try {
             const allIds = ACHIEVEMENTS.map(a => a.id);
             const steamUnlocked = await window.steam.getUnlockedAchievements(allIds);
-            const local = JSON.parse(localStorage.getItem('dicy_ach_unlocked') || '[]');
+            const local = JSON.parse(localStorage.getItem('ach_unlocked') || '[]');
             const merged = [...new Set([...local, ...steamUnlocked])];
 
             // Steam → localStorage: pull any Steam achievements missing locally
             if (merged.length > local.length) {
-                localStorage.setItem('dicy_ach_unlocked', JSON.stringify(merged));
+                localStorage.setItem('ach_unlocked', JSON.stringify(merged));
                 console.log(`[achievements] Pulled ${merged.length - local.length} achievement(s) from Steam`);
             }
 
@@ -832,9 +834,9 @@ async function init() {
     sessionManagerRef = sessionManager;
 
     const showStartupDialogs = async () => {
-        if (!localStorage.getItem('dicy_steam_welcome_shown')) {
-            localStorage.setItem('dicy_steam_welcome_shown', '1');
-            localStorage.setItem('dicy_gameSpeed', 'beginner');
+        if (!localStorage.getItem('steam_welcome_shown')) {
+            localStorage.setItem('steam_welcome_shown', '1');
+            localStorage.setItem('gameSpeed', 'beginner');
             if (configManager.elements?.gameSpeedInput) {
                 configManager.elements.gameSpeedInput.value = 'beginner';
             }
@@ -857,7 +859,7 @@ async function init() {
             return;
         }
         // startIntroMode() already called in onDismissStart for the fade-in effect
-        if (localStorage.getItem('dicy_campaignMode')) {
+        if (localStorage.getItem('campaignMode')) {
             await scenarioBrowser.showCampaignView();
             scenarioBrowser.restoreLastSelectedCampaign();
             scenarioBrowser.scenarioBrowserModal.classList.remove('hidden');
@@ -872,10 +874,10 @@ async function init() {
     sfxManager.preloadAll().catch(e => console.warn('Sound preload failed:', e));
 
     // Play feuerware logo sting immediately on startup (native Audio avoids pixi/sound race)
-    if (localStorage.getItem('dicy_musicEnabled') !== 'false' && localStorage.getItem('dicy_sfxEnabled') !== 'false') {
+    if (localStorage.getItem('musicEnabled') !== 'false' && localStorage.getItem('sfxEnabled') !== 'false') {
         try {
             const fwSting = new Audio('./assets/sfx/feuerware.ogg');
-            fwSting.volume = parseFloat(localStorage.getItem('dicy_sfxVolume') ?? '0.3');
+            fwSting.volume = parseFloat(localStorage.getItem('sfxVolume') ?? '0.3');
             fwSting.play().catch(() => { }); // silently ignored if browser blocks autoplay
         } catch (e) { }
     }
@@ -1061,10 +1063,10 @@ async function init() {
     const gfxFps = document.getElementById('gfx-fps');
 
     // 1. Initialize Values from Storage
-    const savedAA = localStorage.getItem('dicy_gfx_antialias') || 'off';
+    const savedAA = localStorage.getItem('gfx_antialias') || 'off';
     if (gfxAntialias) gfxAntialias.value = savedAA;
 
-    const savedFPS = localStorage.getItem('dicy_gfx_framerate') || 'vsync';
+    const savedFPS = localStorage.getItem('gfx_framerate') || 'vsync';
     if (gfxFramerate) gfxFramerate.value = savedFPS;
 
     // Wait until renderer exists to apply framerate
@@ -1079,7 +1081,7 @@ async function init() {
 
     if (gfxAntialias) {
         gfxAntialias.addEventListener('change', async (e) => {
-            localStorage.setItem('dicy_gfx_antialias', e.target.value);
+            localStorage.setItem('gfx_antialias', e.target.value);
             const ok = await Dialog.confirm('Changing Anti-Aliasing requires a restart. Reload now?', 'RESTART REQUIRED');
             if (ok) { await flushStorage(); window.location.reload(); }
         });
@@ -1088,7 +1090,7 @@ async function init() {
     if (gfxFramerate) {
         gfxFramerate.addEventListener('change', (e) => {
             const val = e.target.value;
-            localStorage.setItem('dicy_gfx_framerate', val);
+            localStorage.setItem('gfx_framerate', val);
             applyFramerate(val);
         });
 
@@ -1096,11 +1098,11 @@ async function init() {
         applyFramerate(savedFPS);
     }
 
-    const savedFPSDisplay = localStorage.getItem('dicy_gfx_fps') || 'off';
+    const savedFPSDisplay = localStorage.getItem('gfx_fps') || 'off';
     if (gfxFps) {
         gfxFps.value = savedFPSDisplay;
         gfxFps.addEventListener('change', (e) => {
-            localStorage.setItem('dicy_gfx_fps', e.target.value);
+            localStorage.setItem('gfx_fps', e.target.value);
             const fpsCounter = document.getElementById('fps-counter');
             if (fpsCounter) fpsCounter.classList.toggle('hidden', e.target.value !== 'on');
         });
@@ -1110,15 +1112,15 @@ async function init() {
     if (isDesktopContext()) {
         if (desktopDisplayGroup) desktopDisplayGroup.classList.remove('hidden');
 
-        const savedMode = localStorage.getItem('dicy_gfx_display_mode') || 'fullscreen';
+        const savedMode = localStorage.getItem('gfx_display_mode') || 'fullscreen';
         if (gfxDisplayMode) gfxDisplayMode.value = savedMode;
 
-        const savedRes = localStorage.getItem('dicy_gfx_resolution') || '1.0';
+        const savedRes = localStorage.getItem('gfx_resolution') || '1.0';
         if (gfxResolution) gfxResolution.value = savedRes;
 
         // Monitor selection — populate dropdown and apply saved monitor
         const gfxMonitor = document.getElementById('gfx-monitor');
-        const savedMonitorIndex = parseInt(localStorage.getItem('dicy_gfx_monitor') ?? '-1', 10);
+        const savedMonitorIndex = parseInt(localStorage.getItem('gfx_monitor') ?? '-1', 10);
 
         const applyMonitor = async (win, monitors, monitorIndex) => {
             if (monitorIndex < 0 || monitorIndex >= monitors.length) {
@@ -1161,10 +1163,10 @@ async function init() {
                 } else {
                     await win.setDecorations(true);
                     await win.unmaximize();
-                    const savedW = parseInt(localStorage.getItem('dicy_win_w'), 10);
-                    const savedH = parseInt(localStorage.getItem('dicy_win_h'), 10);
-                    const savedWinX = parseInt(localStorage.getItem('dicy_win_x'), 10);
-                    const savedWinY = parseInt(localStorage.getItem('dicy_win_y'), 10);
+                    const savedW = parseInt(localStorage.getItem('win_w'), 10);
+                    const savedH = parseInt(localStorage.getItem('win_h'), 10);
+                    const savedWinX = parseInt(localStorage.getItem('win_x'), 10);
+                    const savedWinY = parseInt(localStorage.getItem('win_y'), 10);
                     if (!isNaN(savedW) && savedW > 100 && !isNaN(savedH) && savedH > 100) {
                         await win.setSize(await makeSize(savedW, savedH));
                     }
@@ -1232,8 +1234,8 @@ async function init() {
                             const isFS = await win.isFullscreen();
                             if (!isFS) {
                                 const pos = await win.outerPosition();
-                                localStorage.setItem('dicy_win_x', String(pos.x));
-                                localStorage.setItem('dicy_win_y', String(pos.y));
+                                localStorage.setItem('win_x', String(pos.x));
+                                localStorage.setItem('win_y', String(pos.y));
                             }
                             const { getMonitors: gm, getCurrentMonitor: gcm } = await import('./native/win.js');
                             const nowMonitor = await gcm();
@@ -1242,7 +1244,7 @@ async function init() {
                             const allMonitors = await gm();
                             const idx = allMonitors.findIndex(m => m.name === nowMonitor.name);
                             if (idx < 0) return;
-                            localStorage.setItem('dicy_gfx_monitor', String(idx));
+                            localStorage.setItem('gfx_monitor', String(idx));
                             if (gfxMonitor) gfxMonitor.value = String(idx);
                             await flushStorage();
                         } catch (_) { }
@@ -1252,8 +1254,8 @@ async function init() {
                             const isFS = await win.isFullscreen();
                             if (!isFS) {
                                 const size = await win.outerSize();
-                                localStorage.setItem('dicy_win_w', String(size.width));
-                                localStorage.setItem('dicy_win_h', String(size.height));
+                                localStorage.setItem('win_w', String(size.width));
+                                localStorage.setItem('win_h', String(size.height));
                             }
                         } catch (_) { }
                     });
@@ -1265,11 +1267,11 @@ async function init() {
 
             gfxMonitor.addEventListener('change', async (e) => {
                 const idx = parseInt(e.target.value, 10);
-                localStorage.setItem('dicy_gfx_monitor', e.target.value);
+                localStorage.setItem('gfx_monitor', e.target.value);
                 await flushStorage();
                 await applyDesktopGraphics(
-                    localStorage.getItem('dicy_gfx_display_mode') || 'fullscreen',
-                    localStorage.getItem('dicy_gfx_resolution') || '1.0',
+                    localStorage.getItem('gfx_display_mode') || 'fullscreen',
+                    localStorage.getItem('gfx_resolution') || '1.0',
                     idx
                 );
             });
@@ -1282,7 +1284,7 @@ async function init() {
         if (gfxDisplayMode) {
             gfxDisplayMode.addEventListener('change', async (e) => {
                 const val = e.target.value;
-                localStorage.setItem('dicy_gfx_display_mode', val);
+                localStorage.setItem('gfx_display_mode', val);
                 await flushStorage();
                 window.location.reload();
             });
@@ -1291,7 +1293,7 @@ async function init() {
         if (gfxResolution) {
             gfxResolution.addEventListener('change', async (e) => {
                 const val = e.target.value;
-                localStorage.setItem('dicy_gfx_resolution', val);
+                localStorage.setItem('gfx_resolution', val);
                 await flushStorage();
                 window.location.reload();
             });
@@ -1300,15 +1302,15 @@ async function init() {
         window.addEventListener('keydown', async (e) => {
             if (e.altKey && e.key === 'Enter') {
                 e.preventDefault();
-                const current = localStorage.getItem('dicy_gfx_display_mode') || 'fullscreen';
+                const current = localStorage.getItem('gfx_display_mode') || 'fullscreen';
                 const next = current === 'fullscreen' ? 'window' : 'fullscreen';
-                localStorage.setItem('dicy_gfx_display_mode', next);
+                localStorage.setItem('gfx_display_mode', next);
                 if (gfxDisplayMode) gfxDisplayMode.value = next;
                 await flushStorage();
                 await applyDesktopGraphics(
                     next,
-                    localStorage.getItem('dicy_gfx_resolution') || '1.0',
-                    parseInt(localStorage.getItem('dicy_gfx_monitor') ?? '-1', 10)
+                    localStorage.getItem('gfx_resolution') || '1.0',
+                    parseInt(localStorage.getItem('gfx_monitor') ?? '-1', 10)
                 );
             }
         });
@@ -1491,7 +1493,7 @@ function setupFPSCounter(renderer, game) {
     if (!fpsCounter || !renderer.app) return;
 
     const urlParams = new URLSearchParams(window.location.search);
-    const showFPS = urlParams.get('fps') === 'true' || localStorage.getItem('dicy_gfx_fps') === 'on';
+    const showFPS = urlParams.get('fps') === 'true' || localStorage.getItem('gfx_fps') === 'on';
     if (showFPS) fpsCounter.classList.remove('hidden');
 
     let frameCount = 0;
@@ -1625,7 +1627,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const _achStatWinrate = document.getElementById('ach-stat-winrate');
     const _refreshMenuStats = () => {
         const stats = highscoreManager.getLifetimeStats();
-        const unlocked = JSON.parse(localStorage.getItem('dicy_ach_unlocked') || '[]');
+        const unlocked = JSON.parse(localStorage.getItem('ach_unlocked') || '[]');
         const played = stats.gamesPlayed || 0;
         const won = stats.gamesWon || 0;
         const pct = played > 0 ? Math.round((won / played) * 100) : 0;
@@ -1659,7 +1661,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
     function refreshHowtoSections() {
         // Show "Keep campaigns" only if user has a campaign
-        const userCampaign = localStorage.getItem('dicy_userCampaign');
+        const userCampaign = localStorage.getItem('userCampaign');
         const hasUserCampaign = userCampaign && userCampaign !== '[]' && userCampaign !== '{}';
         keepCampaignsRow.classList.toggle('hidden', !hasUserCampaign);
         if (hasUserCampaign) keepCampaignsCheck.checked = true;
@@ -1717,14 +1719,14 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         const keepCampaigns = keepCampaignsCheck.checked && keepCampaignsRow && !keepCampaignsRow.classList.contains('hidden');
         let savedCampaign = null;
         if (keepCampaigns) {
-            savedCampaign = localStorage.getItem('dicy_userCampaign');
+            savedCampaign = localStorage.getItem('userCampaign');
         }
         for (let i = localStorage.length - 1; i >= 0; i--) {
             const key = localStorage.key(i);
             if (key) localStorage.removeItem(key);
         }
         if (savedCampaign !== null) {
-            localStorage.setItem('dicy_userCampaign', savedCampaign);
+            localStorage.setItem('userCampaign', savedCampaign);
         }
     }
 
@@ -1806,7 +1808,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
                 const colorHex = '#' + color.toString(16).padStart(6, '0');
 
                 const gpId = inputManager.getGamepads().find(g => g.index === rawIdx)?.id ?? rawIdx;
-                const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gpId);
+                const savedDeadzone = localStorage.getItem('gamepad_deadzone_' + gpId);
                 const currentDeadzone = savedDeadzone ? parseFloat(savedDeadzone) : 0.15;
                 const displayPct = Math.round(currentDeadzone * 100);
 
@@ -1860,7 +1862,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
                 if (displaySpan) {
                     displaySpan.textContent = Math.round(val * 100) + '%';
                 }
-                localStorage.setItem('dicy_gamepad_deadzone_' + gpId, val.toString());
+                localStorage.setItem('gamepad_deadzone_' + gpId, val.toString());
             });
         });
     }
@@ -1884,12 +1886,12 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
     // Segmented game speed buttons — synced across all instances, immediate effect in-game
     function initGameSpeedSegmented() {
-        const current = localStorage.getItem('dicy_gameSpeed') || 'beginner';
+        const current = localStorage.getItem('gameSpeed') || 'beginner';
         document.querySelectorAll('.game-speed-segmented .segmented-option').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.value === current);
             btn.addEventListener('click', () => {
                 const val = btn.dataset.value;
-                localStorage.setItem('dicy_gameSpeed', val);
+                localStorage.setItem('gameSpeed', val);
                 // Sync hidden select so configManager.getGameConfig() stays accurate
                 const sel = document.getElementById('game-speed');
                 if (sel) { sel.value = val; sel.dispatchEvent(new Event('change')); }
@@ -2242,9 +2244,9 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
     document.getElementById('pause-mainmenu-btn')?.addEventListener('click', async () => {
         pauseModal.classList.add('hidden');
-        if (localStorage.getItem('dicy_editorTest')) {
+        if (localStorage.getItem('editorTest')) {
             await sessionManagerRef.quitToEditor();
-        } else if (localStorage.getItem('dicy_campaignMode')) {
+        } else if (localStorage.getItem('campaignMode')) {
             await sessionManagerRef.quitToCampaignScreen();
         } else {
             sessionManagerRef.quitToCustomGame();

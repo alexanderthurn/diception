@@ -3,7 +3,7 @@
  * Stored in localStorage as { campaignOwner: [index, ...] }
  */
 
-const STORAGE_KEY = 'dicy_campaignProgress';
+const STORAGE_KEY = 'campaignProgress';
 
 export function getSolvedLevels(campaignOwner) {
     try {

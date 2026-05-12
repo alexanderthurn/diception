@@ -11,7 +11,7 @@ import builtinChapter3 from './chapter3.json';
 import builtinChapter4 from './chapter4.json';
 import builtinTutorial from './tutorial.json';
 
-const STORAGE_KEY = 'dicy_userCampaign';
+const STORAGE_KEY = 'userCampaign';
 
 export class CampaignManager {
     constructor() {

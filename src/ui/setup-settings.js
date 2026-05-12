@@ -23,7 +23,7 @@ export class SetupSettings {
 
     loadAll() {
         // Convert old map size format if needed
-        const savedMapSizeRaw = localStorage.getItem('dicy_mapSize');
+        const savedMapSizeRaw = localStorage.getItem('mapSize');
         let savedMapSizeString;
         if (!savedMapSizeRaw) {
             savedMapSizeString = '4x4';
@@ -40,25 +40,25 @@ export class SetupSettings {
         const sliderValue = presetIndex !== -1 ? presetIndex + 1 : 2;
 
         // Map legacy fastMode to new speeds
-        const legacyFastMode = localStorage.getItem('dicy_fastMode');
+        const legacyFastMode = localStorage.getItem('fastMode');
         let defaultSpeed = 'beginner';
         if (legacyFastMode === 'true') defaultSpeed = 'expert';
         else if (legacyFastMode === 'false') defaultSpeed = 'beginner';
 
         return {
             mapSize: sliderValue,
-            humanCount: localStorage.getItem('dicy_humanCount') || '1',
-            botCount: localStorage.getItem('dicy_botCount') || '3',
-            maxDice: localStorage.getItem('dicy_maxDice') || '8',
-            diceSides: localStorage.getItem('dicy_diceSides') || '6',
-            gameSpeed: localStorage.getItem('dicy_gameSpeed') || defaultSpeed,
-            mapStyle: localStorage.getItem('dicy_mapStyle') || 'full',
-            gameMode: localStorage.getItem('dicy_gameMode') || 'classic',
-            tournamentGames: localStorage.getItem('dicy_tournamentGames') || '100',
+            humanCount: localStorage.getItem('humanCount') || '1',
+            botCount: localStorage.getItem('botCount') || '3',
+            maxDice: localStorage.getItem('maxDice') || '8',
+            diceSides: localStorage.getItem('diceSides') || '6',
+            gameSpeed: localStorage.getItem('gameSpeed') || defaultSpeed,
+            mapStyle: localStorage.getItem('mapStyle') || 'full',
+            gameMode: localStorage.getItem('gameMode') || 'classic',
+            tournamentGames: localStorage.getItem('tournamentGames') || '100',
             effectsQuality: localStorage.getItem('effectsQuality') || 'high',
-            botAI: localStorage.getItem('dicy_botAI') || 'easy',
-            perPlayerAIConfig: JSON.parse(localStorage.getItem('dicy_perPlayerAIConfig') || '{}'),
-            turnTimeLimit: parseInt(localStorage.getItem('dicy_turnTimeLimit') || '0'),
+            botAI: localStorage.getItem('botAI') || 'easy',
+            perPlayerAIConfig: JSON.parse(localStorage.getItem('perPlayerAIConfig') || '{}'),
+            turnTimeLimit: parseInt(localStorage.getItem('turnTimeLimit') || '0'),
         };
     }
 
@@ -68,18 +68,18 @@ export class SetupSettings {
     }
 
     save(key, value) {
-        localStorage.setItem(`dicy_${key}`, value.toString());
+        localStorage.setItem(key, value.toString());
         this.settings[key] = value;
     }
 
     saveMapSize(sliderValue) {
         const sizePreset = this.getMapSize(sliderValue);
-        localStorage.setItem('dicy_mapSize', `${sizePreset.width}x${sizePreset.height}`);
+        localStorage.setItem('mapSize', `${sizePreset.width}x${sizePreset.height}`);
         this.settings.mapSize = sliderValue;
     }
 
     savePerPlayerAIConfig(config) {
-        localStorage.setItem('dicy_perPlayerAIConfig', JSON.stringify(config));
+        localStorage.setItem('perPlayerAIConfig', JSON.stringify(config));
         this.settings.perPlayerAIConfig = config;
     }
 

@@ -762,7 +762,7 @@
         // Read live progress from localStorage (game runs on same origin)
         const lsStats = (() => {
             try {
-                const hs = JSON.parse(localStorage.getItem('dicy_highscores')) || {};
+                const hs = JSON.parse(localStorage.getItem('highscores')) || {};
                 const lt = hs.lifetime && typeof hs.lifetime === 'object' ? hs.lifetime : {};
                 return {
                     gamesPlayed: lt.gamesPlayed || 0,

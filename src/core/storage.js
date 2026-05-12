@@ -29,7 +29,7 @@ export const SAVE_FILENAME = 'diception_save.sav';
 
 // Keys with these prefixes are machine-local and must never be written to or
 // read from the save file (so Steam Cloud never overwrites them on other devices).
-const LOCAL_ONLY_PREFIXES = ['dicy_gfx_', 'dicy_win_', 'dicy_debug_', 'dicy_music', 'dicy_sfx'];
+const LOCAL_ONLY_PREFIXES = ['gfx_', 'win_', 'debug_', 'music', 'sfx'];
 
 function _isLocalOnly(key) {
     return LOCAL_ONLY_PREFIXES.some(p => key.startsWith(p));
@@ -87,6 +87,27 @@ export async function initStorage() {
 }
 
 /**
+ * One-time migration: rename any legacy `dicy_*` keys to their unprefixed form.
+ * Safe to call on every startup — no-ops instantly when there is nothing to migrate.
+ * Call after initStorage() so save-file keys loaded into localStorage are also covered.
+ */
+export function migrateLegacyStorage() {
+    for (const store of [localStorage, sessionStorage]) {
+        const toMigrate = [];
+        for (let i = 0; i < store.length; i++) {
+            const k = store.key(i);
+            if (k && k.startsWith('dicy_')) toMigrate.push(k);
+        }
+        for (const oldKey of toMigrate) {
+            const newKey = oldKey.slice(5);
+            const value = store.getItem(oldKey);
+            if (value !== null) store.setItem(newKey, value);
+            store.removeItem(oldKey);
+        }
+    }
+}
+
+/**
  * Await this before window.location.reload() or steam.quit() / app close.
  * Ensures the save file is written before the process exits.
  */
@@ -118,15 +139,15 @@ async function _flush() {
 
 function _invokeWrite() {
     // Stamp every write with OS + time so cross-device sync can be verified.
-    // Check: localStorage.getItem('dicy_debug_stamp') in the browser console.
+    // Check: localStorage.getItem('debug_stamp') in the browser console.
     const stamp = {
         os:      navigator.platform || navigator.userAgent,
         time:    new Date().toISOString(),
-        count:   (JSON.parse(localStorage.getItem('dicy_debug_stamp') || '{}').count || 0) + 1,
+        count:   (JSON.parse(localStorage.getItem('debug_stamp') || '{}').count || 0) + 1,
     };
     // Write directly to avoid triggering another flush cycle
     Object.getPrototypeOf(localStorage).setItem.call(
-        localStorage, 'dicy_debug_stamp', JSON.stringify(stamp)
+        localStorage, 'debug_stamp', JSON.stringify(stamp)
     );
 
     const data = {};

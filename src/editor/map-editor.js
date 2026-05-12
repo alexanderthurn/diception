@@ -724,7 +724,7 @@ export class MapEditor {
             }
             this.renderDicePalette();
             this.state.isDirty = true;
-            localStorage.setItem('dicy_maxDice', String(val));
+            localStorage.setItem('maxDice', String(val));
             this.syncEditorModsExpanderLive();
         });
 
@@ -740,25 +740,25 @@ export class MapEditor {
             this.renderer?.setDiceSides(this.state.diceSides);
             this.state.isDirty = true;
             this.renderToCanvas();
-            localStorage.setItem('dicy_diceSides', String(val));
+            localStorage.setItem('diceSides', String(val));
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsMapStyle?.addEventListener('change', () => {
-            localStorage.setItem('dicy_mapStyle', this.elements.editorModsMapStyle.value);
+            localStorage.setItem('mapStyle', this.elements.editorModsMapStyle.value);
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsGameMode?.addEventListener('change', () => {
             this.state.gameMode = this.elements.editorModsGameMode?.value || 'classic';
-            localStorage.setItem('dicy_gameMode', this.state.gameMode);
+            localStorage.setItem('gameMode', this.state.gameMode);
             this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsPlayMode?.addEventListener('change', () => {
             this.state.playMode = this.elements.editorModsPlayMode.value || SETUP_MOD_DEFAULTS.playMode;
-            localStorage.setItem('dicy_playMode', this.state.playMode);
+            localStorage.setItem('playMode', this.state.playMode);
             this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
@@ -766,7 +766,7 @@ export class MapEditor {
         this.elements.editorModsTurnLimit?.addEventListener('change', () => {
             const v = parseInt(this.elements.editorModsTurnLimit.value, 10);
             this.state.attacksPerTurn = Number.isFinite(v) ? Math.max(0, v) : 0;
-            localStorage.setItem('dicy_attacksPerTurn', String(this.state.attacksPerTurn));
+            localStorage.setItem('attacksPerTurn', String(this.state.attacksPerTurn));
             this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
@@ -775,7 +775,7 @@ export class MapEditor {
             const v = parseInt(this.elements.editorModsTurnSeconds.value, 10);
             this.state.turnTimeLimit = Number.isFinite(v) ? v : 0;
             this.state.secondsPerTurn = this.state.turnTimeLimit;
-            localStorage.setItem('dicy_secondsPerTurn', String(this.state.secondsPerTurn));
+            localStorage.setItem('secondsPerTurn', String(this.state.secondsPerTurn));
             this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
@@ -785,28 +785,28 @@ export class MapEditor {
             if (this.elements.editorModsAttackSeconds) this.elements.editorModsAttackSeconds.value = norm;
             const v = parseInt(norm, 10);
             this.state.secondsPerAttack = Number.isFinite(v) ? Math.max(0, v) : 0;
-            localStorage.setItem('dicy_secondsPerAttack', String(this.state.secondsPerAttack));
+            localStorage.setItem('secondsPerAttack', String(this.state.secondsPerAttack));
             this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsFullBoard?.addEventListener('change', () => {
             this.state.fullBoardRule = this.elements.editorModsFullBoard.value || SETUP_MOD_DEFAULTS.fullBoardRule;
-            localStorage.setItem('dicy_fullBoardRule', this.state.fullBoardRule);
+            localStorage.setItem('fullBoardRule', this.state.fullBoardRule);
             this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsAttackRule?.addEventListener('change', () => {
             this.state.attackRule = this.elements.editorModsAttackRule.value || SETUP_MOD_DEFAULTS.attackRule;
-            localStorage.setItem('dicy_attackRule', this.state.attackRule);
+            localStorage.setItem('attackRule', this.state.attackRule);
             this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
 
         this.elements.editorModsSupplyRule?.addEventListener('change', () => {
             this.state.supplyRule = this.elements.editorModsSupplyRule.value || SETUP_MOD_DEFAULTS.supplyRule;
-            localStorage.setItem('dicy_supplyRule', this.state.supplyRule);
+            localStorage.setItem('supplyRule', this.state.supplyRule);
             this.state.isDirty = true;
             this.syncEditorModsExpanderLive();
         });
@@ -1775,7 +1775,7 @@ export class MapEditor {
 
     syncEditorModsFromStateAndStorage() {
         const el = this.elements;
-        if (el.editorModsMapStyle) el.editorModsMapStyle.value = localStorage.getItem('dicy_mapStyle') || SETUP_DEFAULTS.mapStyle;
+        if (el.editorModsMapStyle) el.editorModsMapStyle.value = localStorage.getItem('mapStyle') || SETUP_DEFAULTS.mapStyle;
         if (el.editorModsGameMode) el.editorModsGameMode.value = this.state.gameMode || SETUP_MOD_DEFAULTS.gameMode;
         if (el.editorModsMaxDice) {
             el.editorModsMaxDice.value = String(this.state.maxDice);
@@ -1787,33 +1787,33 @@ export class MapEditor {
         }
 
         if (el.editorModsPlayMode) {
-            el.editorModsPlayMode.value = this.state.playMode ?? (localStorage.getItem('dicy_playMode') || SETUP_MOD_DEFAULTS.playMode);
+            el.editorModsPlayMode.value = this.state.playMode ?? (localStorage.getItem('playMode') || SETUP_MOD_DEFAULTS.playMode);
         }
         if (el.editorModsTurnLimit) {
-            el.editorModsTurnLimit.value = String(this.state.attacksPerTurn ?? localStorage.getItem('dicy_attacksPerTurn') ?? SETUP_MOD_DEFAULTS.attacksPerTurn);
+            el.editorModsTurnLimit.value = String(this.state.attacksPerTurn ?? localStorage.getItem('attacksPerTurn') ?? SETUP_MOD_DEFAULTS.attacksPerTurn);
         }
 
         const ttl = this.state.turnTimeLimit ?? 0;
         const secAllowed = ['0', '10', '15', '30', '60'];
-        let secVal = secAllowed.includes(String(ttl)) ? String(ttl) : (localStorage.getItem('dicy_secondsPerTurn') || SETUP_MOD_DEFAULTS.secondsPerTurn);
+        let secVal = secAllowed.includes(String(ttl)) ? String(ttl) : (localStorage.getItem('secondsPerTurn') || SETUP_MOD_DEFAULTS.secondsPerTurn);
         if (!secAllowed.includes(secVal)) secVal = SETUP_MOD_DEFAULTS.secondsPerTurn;
         if (el.editorModsTurnSeconds) el.editorModsTurnSeconds.value = secVal;
 
-        const atkSec = normalizeAttackSecondsUi(String(this.state.secondsPerAttack ?? (localStorage.getItem('dicy_secondsPerAttack') || SETUP_MOD_DEFAULTS.secondsPerAttack)));
+        const atkSec = normalizeAttackSecondsUi(String(this.state.secondsPerAttack ?? (localStorage.getItem('secondsPerAttack') || SETUP_MOD_DEFAULTS.secondsPerAttack)));
         if (el.editorModsAttackSeconds) el.editorModsAttackSeconds.value = atkSec;
 
         if (el.editorModsFullBoard) {
-            el.editorModsFullBoard.value = this.state.fullBoardRule ?? (localStorage.getItem('dicy_fullBoardRule') || SETUP_MOD_DEFAULTS.fullBoardRule);
+            el.editorModsFullBoard.value = this.state.fullBoardRule ?? (localStorage.getItem('fullBoardRule') || SETUP_MOD_DEFAULTS.fullBoardRule);
         }
         if (el.editorModsAttackRule) {
-            el.editorModsAttackRule.value = this.state.attackRule ?? (localStorage.getItem('dicy_attackRule') || SETUP_MOD_DEFAULTS.attackRule);
+            el.editorModsAttackRule.value = this.state.attackRule ?? (localStorage.getItem('attackRule') || SETUP_MOD_DEFAULTS.attackRule);
         }
         if (el.editorModsSupplyRule) {
-            el.editorModsSupplyRule.value = this.state.supplyRule ?? (localStorage.getItem('dicy_supplyRule') || SETUP_MOD_DEFAULTS.supplyRule);
+            el.editorModsSupplyRule.value = this.state.supplyRule ?? (localStorage.getItem('supplyRule') || SETUP_MOD_DEFAULTS.supplyRule);
         }
 
         const tgi = document.getElementById(EDITOR_MODS_PREFIX + 'tournament-games');
-        if (tgi) tgi.value = localStorage.getItem('dicy_tournamentGames') || SETUP_MOD_DEFAULTS.tournamentGames;
+        if (tgi) tgi.value = localStorage.getItem('tournamentGames') || SETUP_MOD_DEFAULTS.tournamentGames;
     }
 
     toggleEditorModsPanel() {

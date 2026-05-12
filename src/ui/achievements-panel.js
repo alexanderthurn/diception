@@ -8,7 +8,7 @@ import { ACHIEVEMENTS } from '../core/achievements.js';
 import { unlockAchievement, removeAchievement } from '../core/achievement-manager.js';
 import { registerCheatContext } from '../cheat.js';
 
-const UNLOCKED_KEY = 'dicy_ach_unlocked';
+const UNLOCKED_KEY = 'ach_unlocked';
 
 export const TITLES = {
     ACH_TUTORIAL:      'First Steps',

@@ -138,8 +138,8 @@ export class GameEventManager {
         // first reminder at turn 8, then every 5 turns.
         this._beginnerReminderFirstTurn = 8;
         this._beginnerReminderRepeatTurns = 5;
-        this._beginnerReminderStorageKey = 'dicy_beginnerReminderHumanTurns';
-        this._beginnerReminderDisabledKey = 'dicy_beginnerReminderDisabled';
+        this._beginnerReminderStorageKey = 'beginnerReminderHumanTurns';
+        this._beginnerReminderDisabledKey = 'beginnerReminderDisabled';
         this._humanTurnCounter = parseInt(localStorage.getItem(this._beginnerReminderStorageKey) || '0', 10);
         if (!Number.isFinite(this._humanTurnCounter) || this._humanTurnCounter < 0) {
             this._humanTurnCounter = 0;
@@ -231,7 +231,7 @@ export class GameEventManager {
 
         if (!data.player.isBot && !shouldAutomate) {
             // Don't count tutorial turns toward the beginner speed reminder cadence
-            const isTutorialGame = localStorage.getItem('dicy_loadedCampaign') === 'Tutorial';
+            const isTutorialGame = localStorage.getItem('loadedCampaign') === 'Tutorial';
             if (!isTutorialGame) {
                 this._humanTurnCounter += 1;
                 localStorage.setItem(this._beginnerReminderStorageKey, String(this._humanTurnCounter));
@@ -505,7 +505,7 @@ export class GameEventManager {
         content.appendChild(descList);
 
         const applySpeed = (val) => {
-            localStorage.setItem('dicy_gameSpeed', val);
+            localStorage.setItem('gameSpeed', val);
             const sel = document.getElementById('game-speed');
             if (sel) {
                 sel.value = val;
@@ -1143,9 +1143,9 @@ export class GameEventManager {
         if (this.highscoreManager && data.winner && soloHumans === 1) {
             const turns = gameStats?.gameDuration ?? Math.max(1, this.game.turn | 0);
             const durationMs = this._soloGameStartedAtMs != null ? (Date.now() - this._soloGameStartedAtMs) : null;
-            const campaignActive = localStorage.getItem('dicy_campaignMode') === '1';
-            const owner = campaignActive ? localStorage.getItem('dicy_loadedCampaign') : null;
-            const idxStr = campaignActive ? localStorage.getItem('dicy_loadedLevelIndex') : null;
+            const campaignActive = localStorage.getItem('campaignMode') === '1';
+            const owner = campaignActive ? localStorage.getItem('loadedCampaign') : null;
+            const idxStr = campaignActive ? localStorage.getItem('loadedLevelIndex') : null;
             const levelIdx = idxStr != null ? parseInt(idxStr, 10) : NaN;
             const levelKey = owner && Number.isFinite(levelIdx) && levelIdx >= 0 ? `${owner}:${levelIdx}` : null;
             this.highscoreManager.recordSoloHumanSessionEnd(this.game, {
@@ -1174,8 +1174,8 @@ export class GameEventManager {
 
         // Mark campaign level as solved when human wins
         if (humanWon && data.winner) {
-            const owner = localStorage.getItem('dicy_loadedCampaign');
-            const idxStr = localStorage.getItem('dicy_loadedLevelIndex');
+            const owner = localStorage.getItem('loadedCampaign');
+            const idxStr = localStorage.getItem('loadedLevelIndex');
             if (owner != null && idxStr != null) {
                 markLevelSolved(owner, parseInt(idxStr, 10));
 
@@ -1293,9 +1293,9 @@ export class GameEventManager {
             content.appendChild(humanSection);
         }
 
-        const isCampaignMode = localStorage.getItem('dicy_campaignMode');
-        const owner = localStorage.getItem('dicy_loadedCampaign');
-        const idxStr = localStorage.getItem('dicy_loadedLevelIndex');
+        const isCampaignMode = localStorage.getItem('campaignMode');
+        const owner = localStorage.getItem('loadedCampaign');
+        const idxStr = localStorage.getItem('loadedLevelIndex');
         const levelIndex = idxStr != null ? parseInt(idxStr, 10) : -1;
 
         let title;
@@ -1414,7 +1414,7 @@ export class GameEventManager {
         });
 
         if (choice === 'exit') {
-            if (localStorage.getItem('dicy_editorTest')) {
+            if (localStorage.getItem('editorTest')) {
                 await this.sessionManager.quitToEditor();
             } else if (campaignFinished && this.scenarioBrowser) {
                 this.scenarioBrowser.clearPendingScenario();

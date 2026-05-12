@@ -1,6 +1,6 @@
 /**
  * HighscoreManager — single persistence entry point: lifetime counters, rollups,
- * embedded campaign table rows, and solo-human analytics (`dicy_solo_stats`).
+ * embedded campaign table rows, and solo-human analytics (`solo_stats`).
  * Steam / other stores are notified via hooks where applicable.
  *
  * **Adding more persisted slices (e.g. Android 1–2 flags):** add a small module or class
@@ -14,7 +14,7 @@ import { notifyLifetimeStatChanged } from '../core/achievement-manager.js';
 import { pushLifetimeStatToSteam } from '../core/steam-player-stats-sync.js';
 import { SoloHumanStatsStore, emptySoloStatsBlob, SOLO_HUMAN_STATS_KEY } from '../core/solo-human-stats.js';
 
-export const HIGHSCORE_STORAGE_KEY = 'dicy_highscores';
+export const HIGHSCORE_STORAGE_KEY = 'highscores';
 
 const LIFETIME_KEYS = [
     'gamesPlayed',
@@ -72,7 +72,7 @@ export function resetHighscoreLifetimeTallyPreserveCampaigns() {
 export class HighscoreManager {
     constructor() {
         this.data = this._readBlob();
-        /** @private Solo stats (`dicy_solo_stats`). Bucket `g` is canonical for human games played / won; copied into `lifetime` on every `save()` for Steam + tools. */
+        /** @private Solo stats (`solo_stats`). Bucket `g` is canonical for human games played / won; copied into `lifetime` on every `save()` for Steam + tools. */
         this._soloHumanStats = new SoloHumanStatsStore();
         this.save();
     }
@@ -96,7 +96,7 @@ export class HighscoreManager {
         };
     }
 
-    /** Load `dicy_highscores` from localStorage and normalize `lifetime`. */
+    /** Load `highscores` from localStorage and normalize `lifetime`. */
     _readBlob() {
         let data;
         try {
@@ -151,7 +151,7 @@ export class HighscoreManager {
         }
     }
 
-    /** Minified JSON of `dicy_solo_stats` for a future server upload. */
+    /** Minified JSON of `solo_stats` for a future server upload. */
     exportSoloHumanStatsPayload() {
         return this._soloHumanStats.exportPayloadString();
     }

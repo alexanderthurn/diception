@@ -46,7 +46,7 @@ export class InputManager {
         this._buildMaps();
 
         // Gamepad backend: 'navigator' | 'fwnetwork'
-        const saved = localStorage.getItem('dicy_gamepad_backend') || 'navigator';
+        const saved = localStorage.getItem('gamepad_backend') || 'navigator';
         this._backend = (saved === 'navigator' || saved === 'fwnetwork') ? saved : 'navigator';
         // Start FWNetwork hosting if the resolved backend uses it
         if (this._useFwNetwork) {
@@ -131,7 +131,7 @@ export class InputManager {
      */
     setBackend(mode) {
         this._backend = mode;
-        localStorage.setItem('dicy_gamepad_backend', mode);
+        localStorage.setItem('gamepad_backend', mode);
         if (this._useFwNetwork) {
             FWNetwork.getInstance().hostRoom();
         }
@@ -527,7 +527,7 @@ export class InputManager {
 
         // Left analog stick → same tile movement as D-pad
         {
-            const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.id);
+            const savedDeadzone = localStorage.getItem('gamepad_deadzone_' + gp.id);
             const dz = savedDeadzone ? parseFloat(savedDeadzone) : 0.40;
             let lx = gp.axes[0] ?? 0;
             let ly = gp.axes[1] ?? 0;
@@ -611,7 +611,7 @@ export class InputManager {
         let rx = gp.axes[2] ?? 0;
         let ry = gp.axes[3] ?? 0;
 
-        const savedDeadzone = localStorage.getItem('dicy_gamepad_deadzone_' + gp.id);
+        const savedDeadzone = localStorage.getItem('gamepad_deadzone_' + gp.id);
         const currentDeadZone = savedDeadzone ? parseFloat(savedDeadzone) : 0.40;
 
         if (Math.abs(rx) < currentDeadZone) rx = 0;

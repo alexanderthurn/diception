@@ -1,8 +1,8 @@
 /**
  * Solo-human-only aggregates (exactly one human per match): plays, wins, best win turns, best win duration.
- * `localStorage` key `dicy_solo_stats` — each bucket is `[plays, wins, minTurnsToWin|null, minMsToWin|null]`.
+ * `localStorage` key `solo_stats` — each bucket is `[plays, wins, minTurnsToWin|null, minMsToWin|null]`.
  * Global bucket **`g`** is canonical for **games played** and **wins**; `HighscoreManager.save()` copies them into
- * `dicy_highscores.lifetime` for Steam + tools.
+ * `highscores.lifetime` for Steam + tools.
  *
  * Bucket ids:
  * - `g` — global
@@ -12,7 +12,7 @@
  * - Combos: `d:*|s:*`, `d:*|l:*`, `s:*|l:*`, `d:*|s:*|l:*` when level applies
  */
 
-export const SOLO_HUMAN_STATS_KEY = 'dicy_solo_stats';
+export const SOLO_HUMAN_STATS_KEY = 'solo_stats';
 
 const FORMAT_VERSION = 1;
 

@@ -219,10 +219,10 @@ export class GameStarter {
     startGame() {
         if (this.configManager?.customMapSource) {
             // Custom map source should always launch via custom-game logic, never campaign mode.
-            localStorage.removeItem('dicy_campaignMode');
+            localStorage.removeItem('campaignMode');
         }
-        const isTutorialCampaign = localStorage.getItem('dicy_campaignMode') === '1' &&
-            localStorage.getItem('dicy_loadedCampaign') === 'Tutorial';
+        const isTutorialCampaign = localStorage.getItem('campaignMode') === '1' &&
+            localStorage.getItem('loadedCampaign') === 'Tutorial';
         if (!isFullVersion() && !isTutorialCampaign && !this.configManager.isSetupAtFreeDefaults()) {
             this.configManager.resetToFreeDefaults();
             this._onFreeVersionBlock?.();
@@ -333,7 +333,7 @@ export class GameStarter {
 
         const isCampaignMode = this.configManager?.customMapSource
             ? null
-            : localStorage.getItem('dicy_campaignMode');
+            : localStorage.getItem('campaignMode');
         const customSetupLevel = this.configManager?.getCustomMapSourceLevel?.()
             || this.scenarioBrowser?.getCustomSetupLevel?.();
         const hasCustomSetupLevel = !isCampaignMode &&
@@ -461,15 +461,15 @@ export class GameStarter {
 
     /**
      * Start a test game from the map editor.
-     * Sets dicy_editorTest so exit routing returns to the editor.
+     * Sets editorTest so exit routing returns to the editor.
      */
     startEditorTest(snapshot) {
-        localStorage.setItem('dicy_editorTest', '1');
-        localStorage.setItem('dicy_campaignMode', '1');
-        localStorage.removeItem('dicy_loadedCampaign');
-        localStorage.removeItem('dicy_loadedLevelIndex');
+        localStorage.setItem('editorTest', '1');
+        localStorage.setItem('campaignMode', '1');
+        localStorage.removeItem('loadedCampaign');
+        localStorage.removeItem('loadedLevelIndex');
         this.scenarioBrowser.pendingLevel = snapshot;
-        sessionStorage.setItem('dicy_editorTestSnapshot', JSON.stringify(snapshot));
+        sessionStorage.setItem('editorTestSnapshot', JSON.stringify(snapshot));
         this.configManager.updateConfigFromLevel(snapshot);
         const config = this.configManager.getGameConfig();
         this.prepareAndBegin(config, {});

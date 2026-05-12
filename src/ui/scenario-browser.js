@@ -182,8 +182,8 @@ export class ScenarioBrowser {
     }
 
     restoreLastSelectedCampaign() {
-        const last = localStorage.getItem('dicy_lastCampaign');
-        const lastIsUser = localStorage.getItem('dicy_lastCampaignIsUser') === '1';
+        const last = localStorage.getItem('lastCampaign');
+        const lastIsUser = localStorage.getItem('lastCampaignIsUser') === '1';
         const campaigns = this.campaignManager.listCampaigns();
         let campaign = null;
 
@@ -213,11 +213,11 @@ export class ScenarioBrowser {
 
     showLevelGridView(campaign) {
         this.selectedCampaign = campaign;
-        if (campaign?.owner) localStorage.setItem('dicy_lastCampaign', campaign.owner);
+        if (campaign?.owner) localStorage.setItem('lastCampaign', campaign.owner);
         if (campaign?.isUserCampaign) {
-            localStorage.setItem('dicy_lastCampaignIsUser', '1');
+            localStorage.setItem('lastCampaignIsUser', '1');
         } else {
-            localStorage.removeItem('dicy_lastCampaignIsUser');
+            localStorage.removeItem('lastCampaignIsUser');
         }
         if (this.campaignSelectView) this.campaignSelectView.classList.add('hidden');
         if (this.campaignDetailView) this.campaignDetailView.classList.remove('hidden');
@@ -518,7 +518,7 @@ export class ScenarioBrowser {
         } else {
             // Selection view → close browser, go to main menu
             this._disconnectGridResizeObserver();
-            localStorage.removeItem('dicy_campaignMode');
+            localStorage.removeItem('campaignMode');
             this.scenarioBrowserModal.classList.add('hidden');
             document.getElementById('main-menu')?.classList.remove('hidden');
             if (this.effectsManager) this.effectsManager.startIntroMode();
@@ -544,9 +544,9 @@ export class ScenarioBrowser {
             || 400;
         const { cols, rows } = getGridDimensions(totalSlots, containerWidth);
 
-        const loadedOwner = localStorage.getItem('dicy_loadedCampaign');
-        const loadedIdx = localStorage.getItem('dicy_loadedLevelIndex');
-        const lastOwner = localStorage.getItem('dicy_lastCampaign');
+        const loadedOwner = localStorage.getItem('loadedCampaign');
+        const loadedIdx = localStorage.getItem('loadedLevelIndex');
+        const lastOwner = localStorage.getItem('lastCampaign');
         const solvedLevels = getSolvedLevels(campaign.owner);
 
         // Find first level not yet solved to highlight it
@@ -567,12 +567,12 @@ export class ScenarioBrowser {
             this.pendingCampaign = campaign;
             this.selectedLevelIndex = firstUnsolvedIndex;
 
-            localStorage.setItem('dicy_loadedCampaign', campaign.owner);
-            localStorage.setItem('dicy_loadedLevelIndex', String(firstUnsolvedIndex));
+            localStorage.setItem('loadedCampaign', campaign.owner);
+            localStorage.setItem('loadedLevelIndex', String(firstUnsolvedIndex));
             if (campaign.ownerId) {
-                localStorage.setItem('dicy_loadedCampaignId', campaign.ownerId);
+                localStorage.setItem('loadedCampaignId', campaign.ownerId);
             } else {
-                localStorage.removeItem('dicy_loadedCampaignId');
+                localStorage.removeItem('loadedCampaignId');
             }
         }
 
@@ -1038,12 +1038,12 @@ export class ScenarioBrowser {
         this.customSetupLevelActive = false;
         this.customSetupLevel = null;
 
-        localStorage.setItem('dicy_loadedCampaign', this.selectedCampaign.owner);
-        localStorage.setItem('dicy_loadedLevelIndex', String(index));
+        localStorage.setItem('loadedCampaign', this.selectedCampaign.owner);
+        localStorage.setItem('loadedLevelIndex', String(index));
         if (this.selectedCampaign.ownerId) {
-            localStorage.setItem('dicy_loadedCampaignId', this.selectedCampaign.ownerId);
+            localStorage.setItem('loadedCampaignId', this.selectedCampaign.ownerId);
         } else {
-            localStorage.removeItem('dicy_loadedCampaignId');
+            localStorage.removeItem('loadedCampaignId');
         }
 
         if (opts.immediateStart) {
@@ -1053,14 +1053,14 @@ export class ScenarioBrowser {
                 await this._showSpeedUpDialog();
             }
 
-            localStorage.setItem('dicy_campaignMode', '1');
+            localStorage.setItem('campaignMode', '1');
             this._disconnectGridResizeObserver();
             this.scenarioBrowserModal.classList.add('hidden');
             this.setupModal.classList.add('hidden');
             if (this.effectsManager) this.effectsManager.stopIntroMode();
             if (this.onStartGame) this.onStartGame();
         } else {
-            localStorage.removeItem('dicy_campaignMode');
+            localStorage.removeItem('campaignMode');
             this.scenarioBrowserModal.classList.add('hidden');
             this.setupModal.classList.remove('hidden');
             if (this.effectsManager) this.effectsManager.startIntroMode();
@@ -1086,12 +1086,12 @@ export class ScenarioBrowser {
         `;
         content.appendChild(segmented);
 
-        const currentSpeed = localStorage.getItem('dicy_gameSpeed') || 'beginner';
+        const currentSpeed = localStorage.getItem('gameSpeed') || 'beginner';
         const descList = createSpeedDescription(currentSpeed);
         content.appendChild(descList);
 
         const applySpeed = (val) => {
-            localStorage.setItem('dicy_gameSpeed', val);
+            localStorage.setItem('gameSpeed', val);
             const sel = document.getElementById('game-speed');
             if (sel) { sel.value = val; sel.dispatchEvent(new Event('change')); }
             document.querySelectorAll('.game-speed-segmented .segmented-option').forEach((btn) => {
@@ -1122,7 +1122,7 @@ export class ScenarioBrowser {
         this.selectedLevelIndex = index;
         this.customSetupLevelActive = true;
         this.customSetupLevel = level;
-        localStorage.removeItem('dicy_campaignMode');
+        localStorage.removeItem('campaignMode');
         this.scenarioBrowserModal.classList.add('hidden');
         this.setupModal.classList.remove('hidden');
         if (this.effectsManager) this.effectsManager.startIntroMode();
@@ -1195,8 +1195,8 @@ export class ScenarioBrowser {
     }
 
     async tryLoadSavedLevel() {
-        const owner = localStorage.getItem('dicy_loadedCampaign');
-        const indexStr = localStorage.getItem('dicy_loadedLevelIndex');
+        const owner = localStorage.getItem('loadedCampaign');
+        const indexStr = localStorage.getItem('loadedLevelIndex');
         if (!owner || indexStr == null) return;
 
         const index = parseInt(indexStr, 10);
@@ -1224,16 +1224,16 @@ export class ScenarioBrowser {
         this.selectedLevelIndex = null;
         this.customSetupLevelActive = false;
         this.customSetupLevel = null;
-        localStorage.removeItem('dicy_loadedCampaign');
-        localStorage.removeItem('dicy_loadedLevelIndex');
-        localStorage.removeItem('dicy_loadedCampaignId');
+        localStorage.removeItem('loadedCampaign');
+        localStorage.removeItem('loadedLevelIndex');
+        localStorage.removeItem('loadedCampaignId');
     }
 
     setCustomSetupLevelActive(active) {
         this.customSetupLevelActive = !!active;
         if (!this.customSetupLevelActive) {
             this.customSetupLevel = null;
-            localStorage.removeItem('dicy_campaignMode');
+            localStorage.removeItem('campaignMode');
         }
     }
 
@@ -1243,8 +1243,8 @@ export class ScenarioBrowser {
 
     loadPendingScenarioIfNeeded() {
         if (!this.pendingLevel) {
-            const owner = localStorage.getItem('dicy_loadedCampaign');
-            const indexStr = localStorage.getItem('dicy_loadedLevelIndex');
+            const owner = localStorage.getItem('loadedCampaign');
+            const indexStr = localStorage.getItem('loadedLevelIndex');
             if (owner && indexStr != null) {
                 const campaign = this.campaignManager.getCampaign(owner);
                 const index = parseInt(indexStr, 10);
