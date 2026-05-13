@@ -1346,9 +1346,9 @@ export class GameEventManager {
                 humanSection.className = 'human-stats-section';
                 humanSection.innerHTML = `
                     <table class="solo-stats-table">
-                        <thead><tr><th></th><th>Games</th><th>Wins</th><th>Win%</th><th>Best Att.</th></tr></thead>
+                        <thead><tr><th></th><th>Games</th><th>Wins</th><th>Win%</th></tr></thead>
                         <tbody>${rows.map(([label, r]) => `
-                            <tr><td class="sst-label">${label}</td><td>${r[0]}</td><td>${r[1]}</td><td>${winPct(r[0], r[1])}</td><td>${r[4] != null ? r[4] : '—'}</td></tr>
+                            <tr><td class="sst-label">${label}</td><td>${r[0]}</td><td>${r[1]}</td><td>${winPct(r[0], r[1])}</td></tr>
                         `).join('')}</tbody>
                     </table>
                 `;
