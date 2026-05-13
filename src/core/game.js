@@ -129,13 +129,10 @@ export class Game {
             });
         }
 
-        // Randomize turn order (skirmish / custom game). Campaign or scenarios can set
-        // `humanStartsFirst: true` to keep humans-first creation order so the human opens.
-        if (config.humanStartsFirst !== true) {
-            for (let i = this.players.length - 1; i > 0; i--) {
-                const j = Math.floor(rng() * (i + 1));
-                [this.players[i], this.players[j]] = [this.players[j], this.players[i]];
-            }
+        // Randomize turn order; resolveStartingPlayer (set by game-starter) adjusts for difficulty.
+        for (let i = this.players.length - 1; i > 0; i--) {
+            const j = Math.floor(rng() * (i + 1));
+            [this.players[i], this.players[j]] = [this.players[j], this.players[i]];
         }
 
         if (config.startingPlayerId !== undefined && config.startingPlayerId !== null) {

@@ -70,7 +70,6 @@ Full hand-crafted map with all players, owners, and dice pre-set.
 | `attacksPerTurn` | no | Max attacks per turn (0 = unlimited) |
 | `secondsPerTurn` | no | Wall-clock seconds per turn (0 = unlimited) |
 | `secondsPerAttack` | no | Wall-clock seconds per attack (0 = unlimited) |
-| `humanStartsFirst` | no | `true` forces human to go first |
 | `startingPlayerId` | no | Player ID to go first (integer) |
 
 ### Player fields
@@ -123,14 +122,13 @@ Layout-only map — player assignment and dice are generated at game start.
 |-------|----------|-------------|
 | `width`, `height` | yes | Map grid dimensions |
 | `bots` | no | Number of bot players (default: 1) |
-| `botAI` | no | AI difficulty: `"easy"`, `"medium"`, `"hard"` (default: `"easy"`) |
+| `botAI` | no | AI difficulty: `"easy"`, `"medium"`, `"hard"` (default: `"easy"`). Also controls turn order when there is exactly one human: `easy` → human first, `hard` → human last, `medium` → random. |
 | `maxDice` | no | Maximum dice per tile (default: 9) |
 | `diceSides` | no | Sides per die (default: 6) |
 | `gameMode` | no | Shown in setup panel: `"classic"`, `"fair"`, etc. |
 | `turnTimeLimit` | no | Legacy time limit — `0` disables it |
 | `attacksPerTurn` | no | Max attacks per turn |
 | `secondsPerTurn` | no | Wall-clock seconds per turn |
-| `humanStartsFirst` | no | `true` forces human to go first |
 | `startingPlayerId` | no | Player ID to go first |
 | `seed` | no | Map generation seed (integer) |
 

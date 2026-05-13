@@ -88,10 +88,7 @@ export function validateLevel(level) {
                 if (typeof t.dice !== 'number' || t.dice < 1) errors.push(`Tile ${i}: invalid dice`);
             }
         }
-        if (level.humanStartsFirst !== undefined && typeof level.humanStartsFirst !== 'boolean') {
-            errors.push('humanStartsFirst must be a boolean');
-        }
-        if (level.startingPlayerId !== undefined && level.startingPlayerId !== null) {
+if (level.startingPlayerId !== undefined && level.startingPlayerId !== null) {
             if (typeof level.startingPlayerId !== 'number' || !Number.isInteger(level.startingPlayerId)) {
                 errors.push('startingPlayerId must be an integer');
             }
@@ -110,10 +107,7 @@ export function validateLevel(level) {
                 }
             }
         }
-        if (level.humanStartsFirst !== undefined && typeof level.humanStartsFirst !== 'boolean') {
-            errors.push('humanStartsFirst must be a boolean');
-        }
-        if (level.startingPlayerId !== undefined && level.startingPlayerId !== null) {
+if (level.startingPlayerId !== undefined && level.startingPlayerId !== null) {
             if (typeof level.startingPlayerId !== 'number' || !Number.isInteger(level.startingPlayerId)) {
                 errors.push('startingPlayerId must be an integer');
             }

@@ -4,32 +4,26 @@ import { isFullVersion } from '../scenarios/user-identity.js';
 import { showUnlockDialog } from '../ui/show-unlock-dialog.js';
 
 /**
- * After shuffle, pick the starting player index based on bot difficulty.
- * Easy  → a human goes first (random among humans if multiple).
+ * Pick the starting player index based on bot difficulty (solo-human games only).
+ * Applies only when exactly one human is in the game; multiple humans → return null (stay random).
+ * Easy   → human goes first.
  * Medium → unchanged (random from shuffle).
- * Hard  → the bot right after a human in circular order goes first,
- *          so the human plays last in the first round.
- * Returns null if no adjustment is needed (all-human, all-bot, or medium).
+ * Hard   → human goes last (the bot right after the human in circular order starts).
  * @param {any[]} players - shuffled player array from game.players
  * @param {string} botAI
  * @returns {number|null}
  */
 function resolveStartingPlayerByDifficulty(players, botAI, rng = Math.random) {
-    const hasHumans = players.some(p => !p.isBot);
-    const hasBots   = players.some(p =>  p.isBot);
-    if (!hasHumans || !hasBots) return null; // pure human or pure bot game
+    const humanIndices = players.map((p, i) => !p.isBot ? i : -1).filter(i => i >= 0);
+    const hasBots = players.some(p => p.isBot);
+    if (humanIndices.length !== 1 || !hasBots) return null; // multi-human, pure-human, or pure-bot
 
-    if (botAI === 'easy') {
-        const humanIndices = players.map((p, i) => !p.isBot ? i : -1).filter(i => i >= 0);
-        return humanIndices[Math.floor(rng() * humanIndices.length)];
-    }
+    const humanIdx = humanIndices[0];
+
+    if (botAI === 'easy') return humanIdx;
 
     if (botAI === 'hard') {
         const n = players.length;
-        const humanIndices = players.map((p, i) => !p.isBot ? i : -1).filter(i => i >= 0);
-        // Pick any human; find the nearest bot right after that human in circular order.
-        // That bot starts → all remaining bots play → then human plays last.
-        const humanIdx = humanIndices[Math.floor(rng() * humanIndices.length)];
         for (let offset = 1; offset < n; offset++) {
             const idx = (humanIdx + offset) % n;
             if (players[idx].isBot) return idx;
@@ -97,8 +91,7 @@ function buildGameConfigFromLevel(level, baseConfig, { isCampaign = false, mapSe
     if (level?.type === 'map') {
         gameConfig.predefinedMap = level;
         if (level.seed) gameConfig.mapSeed = level.seed >>> 0;
-        if (level.humanStartsFirst === true) gameConfig.humanStartsFirst = true;
-        if (level.startingPlayerId != null) gameConfig.startingPlayerId = level.startingPlayerId;
+if (level.startingPlayerId != null) gameConfig.startingPlayerId = level.startingPlayerId;
     }
     return gameConfig;
 }
