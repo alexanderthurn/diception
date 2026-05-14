@@ -99,15 +99,17 @@ export class LoadingScreen {
     onComplete() {
         this.isComplete = true;
 
-        // Fast fade out of logo
-        const logo = this.el?.querySelector('.loading-fw-logo');
-        if (logo) {
-            const computed = getComputedStyle(logo);
-            logo.style.opacity = computed.opacity;
-            logo.style.animation = 'none';
-            logo.offsetHeight; // force reflow
-            logo.style.transition = 'opacity 0.3s ease';
-            logo.style.opacity = '0';
+        // Fast fade out of logos
+        for (const cls of ['.loading-fw-logo', '.loading-pixi-logo']) {
+            const logo = this.el?.querySelector(cls);
+            if (logo) {
+                const computed = getComputedStyle(logo);
+                logo.style.opacity = computed.opacity;
+                logo.style.animation = 'none';
+                logo.offsetHeight; // force reflow
+                logo.style.transition = 'opacity 0.3s ease';
+                logo.style.opacity = '0';
+            }
         }
 
         // Mark entire screen as completed
