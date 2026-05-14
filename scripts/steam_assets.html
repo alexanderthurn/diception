@@ -490,6 +490,10 @@
             { id: 'gpg_logo',            name: 'Logo',            w: 600,  h: 400,  type: 'logo_transparent', note: 'Transparent PNG, 600×400 — game name only' },
         ];
 
+        const ITCH_ASSETS = [
+            { id: 'itch_cover', name: 'Cover Image', w: 630, h: 500, type: 'title', note: 'Required — shown when itch.io links to the project' },
+        ];
+
         const DEMO_STORE_ASSETS = STORE_ASSETS
             .filter(a => a.id !== 'page_background' && a.id !== 'branding_image' && a.id !== 'header_image')
             .map(a => ({ ...a, id: 'demo_' + a.id, demo: true }));
@@ -579,6 +583,7 @@
             addSection('Google Play Games on PC', GPG_ASSETS);
             addSection('Demo — Store Assets', DEMO_STORE_ASSETS);
             addSection('Demo — Library Assets', DEMO_LIBRARY_ASSETS);
+            addSection('itch.io Assets', ITCH_ASSETS);
 
             // Load spritesheet then derive die coords and render all assets
             spriteSheet.onload = () => {
@@ -1379,6 +1384,7 @@ void main(void) {
                 baseId === 'header_image'   ? 0.40 :
                 baseId === 'header_capsule'    ? 0.70 :
                 baseId === 'cover_image'       ? 0.70 :
+                baseId === 'itch_cover'        ? 0.70 :
                 baseId === 'main_capsule'      ? 0.70 :
                 baseId === 'vertical_capsule'  ? 0.60 :
                 baseId === 'library_capsule'   ? 0.72 :
