@@ -211,6 +211,20 @@ The Android workflow (`.github/workflows/android.yml`) is currently set to manua
 The `STEAM_SDK_ZIP_URL` repository secret must be set in GitHub →
 Settings → Secrets → Actions for the Steam API libraries to be included.
 
+### Uploading to itch.io
+
+The itch.io workflow (`.github/workflows/itch.yml`) is **manual trigger only** — go to Actions → "itch.io Deploy (Web)" → Run workflow.
+
+It builds the web version and pushes it to [chefmangoo/diception](https://chefmangoo.itch.io/diception) via butler on the `web` channel.
+
+**Required secret (GitHub → Settings → Secrets → Actions):**
+
+| Secret | Description |
+|---|---|
+| `BUTLER_API_KEY` | itch.io API key from https://itch.io/user/settings/api-keys |
+
+---
+
 ### Uploading to Steam
 
 Requires `steamcmd` on PATH and `STEAM_USER` set:
