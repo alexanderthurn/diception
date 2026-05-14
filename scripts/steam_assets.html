@@ -438,7 +438,9 @@
             { id: 'cover_image', name: 'Cover Image', w: 800, h: 450, type: 'title' },
             { id: 'header_image', name: 'Header Image', w: 1920, h: 622, type: 'title' },
             { id: 'page_background', name: 'Page Background', w: 1438, h: 810, type: 'bg_only' },
-            { id: 'branding_image', name: 'Branding Image', w: 948, h: 203, type: 'branding' },
+            { id: 'branding_image',      name: 'Branding Image',             w: 948, h: 203, type: 'branding' },
+            { id: 'branding_image_left', name: 'Branding Image (Left shade)', w: 948, h: 203, type: 'branding', variant: 'left' },
+            { id: 'branding_image_both', name: 'Branding Image (Both sides)', w: 948, h: 203, type: 'branding', variant: 'both' },
         ];
 
         const LIBRARY_ASSETS = [
@@ -1549,81 +1551,118 @@ void main(void) {
         }
 
         // ── Branding Image renderer (948×203) ──
-        // Left ~55%: game artwork (logo + dice). Right ~45%: neutral dark space for text.
+        // variant 'right' (default): artwork left ~54%, neutral dark right ~46%
+        // variant 'left':            artwork right ~46%, neutral dark left ~54%
+        // variant 'both':            title centered, dark fades on both sides at full opacity
         function drawBrandingImage(canvas, asset) {
             const ctx = canvas.getContext('2d');
             const w = asset.w, h = asset.h;
+            const variant = asset.variant || 'right';
             const rng = mulberry32(asset.w * 1337 + asset.h * 31 + PAGE_SEED + getSeedOffset(asset));
-            const scale = Math.max(w, h) / 1080;
 
-            // Split point: artwork lives left of this, neutral space right of it
+            // Split: artwork zone is always 54% of width; which side it's on depends on variant
             const splitX = w * 0.54;
+            const artworkOnRight = variant === 'left';
+
+            // Artwork zone bounds and title centre
+            const artworkEdge = artworkOnRight ? (w - splitX) : splitX; // the inner edge of the artwork zone
+            const titleCX = variant === 'both' ? (w / 2) : artworkOnRight ? (w - splitX * 0.62) : (splitX * 0.62);
 
             // ── Full shader background ──
             drawShaderBackground(ctx, w, h, 8.0, null, 1.0);
 
-            // ── Floating dice — left half only ──
+            // ── Floating dice — artwork half only (full canvas for 'both') ──
             ctx.save();
             ctx.beginPath();
-            ctx.rect(0, 0, splitX + h * 0.3, h); // slight bleed past split
+            if (variant === 'both') {
+                ctx.rect(0, 0, w, h);
+            } else if (artworkOnRight) {
+                ctx.rect(artworkEdge - h * 0.3, 0, w - (artworkEdge - h * 0.3), h);
+            } else {
+                ctx.rect(0, 0, splitX + h * 0.3, h);
+            }
+            ctx.clip();
             const diceRng = mulberry32(asset.w * 53 + asset.h * 29 + PAGE_SEED + getSeedOffset(asset));
             drawFloatingDice(ctx, w, h, diceRng, 1.5, null, 30, 60, 1);
             ctx.restore();
 
-            // ── Particles (left side) ──
+            // ── Particles (artwork side, or full canvas for 'both') ──
             ctx.save();
             ctx.beginPath();
-            ctx.rect(0, 0, splitX + h * 0.2, h);
+            if (variant === 'both') {
+                ctx.rect(0, 0, w, h);
+            } else if (artworkOnRight) {
+                ctx.rect(artworkEdge - h * 0.2, 0, w - (artworkEdge - h * 0.2), h);
+            } else {
+                ctx.rect(0, 0, splitX + h * 0.2, h);
+            }
             ctx.clip();
             drawParticles(ctx, w, h, 30, rng);
             ctx.restore();
 
             // ── Dark radial glow behind title ──
-            const titleCX = splitX * 0.62;
             const glow = ctx.createRadialGradient(titleCX, h / 2, 0, titleCX, h / 2, splitX * 0.65);
             glow.addColorStop(0, 'rgba(6,6,22,0.75)');
             glow.addColorStop(1, 'rgba(6,6,22,0)');
             ctx.fillStyle = glow;
-            ctx.fillRect(0, 0, splitX, h);
+            if (variant === 'both') {
+                ctx.fillRect(0, 0, w, h);
+            } else if (artworkOnRight) {
+                ctx.fillRect(artworkEdge, 0, splitX, h);
+            } else {
+                ctx.fillRect(0, 0, splitX, h);
+            }
 
-            // ── DICEPTION title — vertically centered in left artwork zone ──
-            const maxTitleW = splitX * 0.88;
+            // ── DICEPTION title — vertically centered in artwork zone (or full canvas for 'both') ──
+            const maxTitleW = variant === 'both' ? w * 0.7 : splitX * 0.88;
             let titleSize = h * 0.58;
             ctx.font = `700 ${titleSize}px Rajdhani`;
             const measured = ctx.measureText('DICEPTION').width;
             titleSize = Math.min(titleSize, titleSize * (maxTitleW / measured));
             const letterSpacing = Math.round(titleSize * 0.08);
-
-            // Compute actual rendered width for accurate centering
             ctx.font = `700 ${titleSize}px Rajdhani`;
-            let actualTitleW = 0;
-            for (let i = 0; i < 'DICEPTION'.length; i++) {
-                actualTitleW += ctx.measureText('DICEPTION'[i]).width;
-                if (i < 8) actualTitleW += letterSpacing;
-            }
-
-            const titleX = titleCX;
-            const titleY = h / 2 + titleSize * 0.36; // visually centered
+            const titleY = h / 2 + titleSize * 0.36;
             const charColors = 'DICEPTION'.split('').map((_, i) => i < 4 ? '#AA00FF' : '#00FFFF');
             ctx.shadowColor = '#AA00FF';
             ctx.shadowBlur = titleSize * 0.22;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'alphabetic';
-            drawTextWithSpacing(ctx, 'DICEPTION', titleX, titleY, titleSize, 700, letterSpacing, charColors);
+            drawTextWithSpacing(ctx, 'DICEPTION', titleCX, titleY, titleSize, 700, letterSpacing, charColors);
             ctx.shadowBlur = 0;
 
-            // ── Gradient fade to neutral dark on the right ──
-            // Starts transparent at splitX - bleed, fully opaque at splitX + small margin
-            const fadeStart = splitX * 0.72;
-            const fadeGrad = ctx.createLinearGradient(fadeStart, 0, w, 0);
-            fadeGrad.addColorStop(0, 'rgba(6,6,18,0)');
-            fadeGrad.addColorStop(0.35, 'rgba(6,6,18,0.92)');
-            fadeGrad.addColorStop(1, 'rgba(6,6,18,0.97)');
-            ctx.fillStyle = fadeGrad;
-            ctx.fillRect(fadeStart, 0, w - fadeStart, h);
+            // ── Gradient fade to neutral dark ──
+            // 'right': one fade on the right
+            // 'left':  one fade on the left (mirror of right)
+            // 'both':  both sides at full opacity
+            // 'both' uses a narrower fade so only the outer edges darken
+            const fadeStart = variant === 'both' ? w * 0.55 : splitX * 0.72;
+
+            const darkMid = variant === 'both' ? 0.30 : 0.92;
+            const darkEdge = variant === 'both' ? 0.95 : 0.97;
+
+            if (!artworkOnRight) {
+                // Fade from fadeStart rightward (original direction)
+                const grad = ctx.createLinearGradient(fadeStart, 0, w, 0);
+                grad.addColorStop(0, 'rgba(6,6,18,0)');
+                grad.addColorStop(0.35, `rgba(6,6,18,${darkMid})`);
+                grad.addColorStop(1, `rgba(6,6,18,${darkEdge})`);
+                ctx.fillStyle = grad;
+                ctx.fillRect(fadeStart, 0, w - fadeStart, h);
+            }
+
+            if (artworkOnRight || variant === 'both') {
+                // Fade from (w - fadeStart) leftward (mirrored)
+                const leftFadeEnd = w - fadeStart;
+                const grad = ctx.createLinearGradient(leftFadeEnd, 0, 0, 0);
+                grad.addColorStop(0, 'rgba(6,6,18,0)');
+                grad.addColorStop(0.35, `rgba(6,6,18,${darkMid})`);
+                grad.addColorStop(1, `rgba(6,6,18,${darkEdge})`);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, leftFadeEnd, h);
+            }
 
             // ── Subtle vertical separator line ──
-            const sepX = splitX;
+            const sepX = artworkOnRight ? artworkEdge : splitX;
             const sepGrad = ctx.createLinearGradient(0, 0, 0, h);
             sepGrad.addColorStop(0, 'rgba(0,255,255,0)');
             sepGrad.addColorStop(0.3, 'rgba(0,255,255,0.3)');
