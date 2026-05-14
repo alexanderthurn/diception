@@ -86,6 +86,14 @@
     background-clip: padding-box;
 }
 
+/* Firefox: doesn't support ::-webkit-scrollbar, use CSS standard instead */
+@supports not selector(::-webkit-scrollbar) {
+    :root {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 255, 255, 0.35) rgba(0, 0, 0, 0.2);
+    }
+}
+
 /* Effect Level Overrides */
 body.fx-off {
     --glow-strength: 0;
