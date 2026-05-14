@@ -99,17 +99,19 @@ export class LoadingScreen {
     onComplete() {
         this.isComplete = true;
 
-        // Fast fade out of logos
-        for (const cls of ['.loading-fw-logo', '.loading-pixi-logo']) {
-            const logo = this.el?.querySelector(cls);
-            if (logo) {
-                const computed = getComputedStyle(logo);
-                logo.style.opacity = computed.opacity;
-                logo.style.animation = 'none';
-                logo.offsetHeight; // force reflow
-                logo.style.transition = 'opacity 0.3s ease';
-                logo.style.opacity = '0';
-            }
+        // Fast fade out of logos (Feuerware + any imgs in bottom-left partner strip)
+        const fadeLogo = (logo) => {
+            const computed = getComputedStyle(logo);
+            logo.style.opacity = computed.opacity;
+            logo.style.animation = 'none';
+            logo.offsetHeight; // force reflow
+            logo.style.transition = 'opacity 0.3s ease';
+            logo.style.opacity = '0';
+        };
+        const fw = this.el?.querySelector('.loading-fw-logo');
+        if (fw) fadeLogo(fw);
+        for (const logo of this.el?.querySelectorAll('.loading-partner-logos img') || []) {
+            fadeLogo(logo);
         }
 
         // Mark entire screen as completed
