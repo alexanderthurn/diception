@@ -457,6 +457,7 @@
 
         const CUSTOM_ASSETS = [
             { id: 'store_front_map', name: 'Store Front Map', w: 1024, h: 1024, type: 'game_map' },
+            { id: 'icon_map', name: 'Icon / Favicon Map', w: 512, h: 512, type: 'icon_map', note: '512×512 — favicon, app icon, logo' },
         ];
 
         const BROADCAST_ASSETS = [
@@ -1046,6 +1047,11 @@ void main(void) {
                 return;
             }
 
+            if (asset.type === 'icon_map') {
+                drawIconMap(canvas, asset);
+                return;
+            }
+
             if (asset.type === 'diception_map') {
                 drawDiceptionLetterMap(canvas, asset);
                 return;
@@ -1372,6 +1378,74 @@ void main(void) {
 
             ctx.globalAlpha = 1;
             ctx.shadowBlur = 0;
+        }
+
+        // ── Icon / Favicon Map — 3×3 grid filling the entire canvas ──
+        function drawIconMap(canvas, asset) {
+            const ctx = canvas.getContext('2d');
+            const w = asset.w, h = asset.h;
+            const rng = mulberry32(PAGE_SEED + getSeedOffset(asset));
+
+            // Pure black so globalAlpha=0.4 blending matches game's premultiplyColor(color,0.4)
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, w, h);
+
+            // Fixed three colors: purple (human), blue (human 2), red (bot 1)
+            const colors = ['#AA00FF', '#0088FF', '#FF0055'];
+
+            const cols = 3, rows = 3;
+
+            const DICE_LAYOUT = [
+                [2, 4, 2],
+                [4, 8, 4],
+                [2, 4, 2],
+            ];
+            const map = Array.from({ length: rows }, (_, row) =>
+                Array.from({ length: cols }, (_, col) => ({
+                    color: colors[Math.floor(rng() * colors.length)],
+                    dice: DICE_LAYOUT[row][col],
+                }))
+            );
+            // Guarantee all three colors appear
+            const flat = map.flat();
+            colors.forEach((c, i) => {
+                if (!flat.some(t => t.color === c)) flat[i * 3].color = c;
+            });
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const cell = map[row][col];
+                    // Pixel-snap to avoid sub-pixel gaps between tiles
+                    const tx = Math.round(col * w / cols);
+                    const ty = Math.round(row * h / rows);
+                    const tw = Math.round((col + 1) * w / cols) - tx;
+                    const th = Math.round((row + 1) * h / rows) - ty;
+
+                    ctx.fillStyle = cell.color;
+                    ctx.globalAlpha = 0.6;
+                    ctx.fillRect(tx, ty, tw, th);
+                    ctx.globalAlpha = 1.0;
+
+                    // Dice sprites
+                    if (DICE_SPRITE) {
+                        const sf         = Math.min(tw, th) / 60;
+                        const spacing    = 13 * sf;
+                        const spriteSize = 0.06 * sf * DICE_SPRITE.w;
+                        const cx = tx + tw / 2;
+                        const cy = ty + th / 2;
+                        const positions  = SPRITE_PATTERNS[Math.min(cell.dice, 9)] || SPRITE_PATTERNS[9];
+                        ctx.globalAlpha  = 0.9;
+                        for (const [px, py] of positions) {
+                            ctx.drawImage(spriteSheet,
+                                DICE_SPRITE.x, DICE_SPRITE.y, DICE_SPRITE.w, DICE_SPRITE.h,
+                                cx + px * spacing - spriteSize / 2,
+                                cy + py * spacing - spriteSize / 2,
+                                spriteSize, spriteSize);
+                        }
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+            }
         }
 
         function getTitleMetrics(ctx, w, h, asset) {
