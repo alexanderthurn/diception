@@ -67,6 +67,23 @@
     --button-hover-glow: 0 0 15px currentColor;
     --text-glow: 0 0 5px currentColor;
     --title-glow: 0 0 20px rgba(0, 255, 255, 0.4);
+
+}
+
+::-webkit-scrollbar {
+    width: 9px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 255, 255, 0.52);
+    border-radius: 5px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
 }
 
 /* Effect Level Overrides */
@@ -1487,7 +1504,8 @@ select {
     margin-top: 4px;
 }
 
-@media (max-width: 480px), (max-height: 600px) {
+@media (max-width: 480px),
+(max-height: 600px) {
     .human-stats-section {
         display: none;
     }
@@ -2636,24 +2654,8 @@ select {
     overflow: hidden;
     overflow-x: hidden;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0, 255, 255, 0.35) rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-}
-
-#setup-modal::-webkit-scrollbar {
-    display: none;
-    width: 10px;
-}
-
-#setup-modal::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2);
-}
-
-#setup-modal::-webkit-scrollbar-thumb {
-    background: rgba(0, 255, 255, 0.3);
-    border-radius: 5px;
 }
 
 #setup-modal .setup-columns {
@@ -2890,19 +2892,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     border-bottom: none;
 }
 
-/* Custom Scrollbar for modal content */
-.howto-content::-webkit-scrollbar {
-    width: 8px;
-}
 
-.howto-content::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.howto-content::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 0;
-}
 
 /* Data & Storage section */
 .howto-clear-area {
@@ -3820,7 +3810,8 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     -webkit-overflow-scrolling: touch;
 }
 
-@media (max-width: 480px), (max-height: 600px) {
+@media (max-width: 480px),
+(max-height: 600px) {
     .level-preview-dialog {
         max-height: 100% !important;
     }
@@ -5603,22 +5594,6 @@ canvas {
     overflow-y: auto;
     overscroll-behavior: contain;
     margin: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0, 255, 255, 0.35) rgba(0, 0, 0, 0.2);
-}
-
-.dialog-box::-webkit-scrollbar {
-    display: block;
-    width: 10px;
-}
-
-.dialog-box::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2);
-}
-
-.dialog-box::-webkit-scrollbar-thumb {
-    background: rgba(0, 255, 255, 0.3);
-    border-radius: 5px;
 }
 
 /* Mobile dialogs: use full-screen layout with safe-area spacing */
@@ -6603,8 +6578,6 @@ canvas {
     border: 1px solid var(--border-color);
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.6);
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
     min-width: 120px;
     max-width: 400px;
     z-index: 10011;
