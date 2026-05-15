@@ -2896,8 +2896,8 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
 }
 
 .howto-tile.barrier {
-    background: rgba(255, 0, 55, 0.25);
-    border: 1px solid rgba(255, 0, 55, 0.7);
+    background: rgba(0, 136, 255, 0.25);
+    border: 1px solid rgba(0, 136, 255, 0.7);
 }
 
 #start-game-btn {
@@ -6794,6 +6794,68 @@ canvas {
 
 .beginner-speed-reminder-segmented {
     margin-top: 4px;
+}
+
+/* Tutorial intro dialogs (welcome + reinforcements) */
+.tutorial-intro-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 340px;
+    margin: 0 auto;
+}
+
+.tutorial-intro-dialog > p {
+    margin: 0;
+    text-align: center;
+    color: rgba(220, 255, 255, 0.95);
+}
+
+.tutorial-intro-dialog .howto-example {
+    justify-content: center;
+}
+
+.tutorial-you-are-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.15em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: rgba(220, 255, 255, 0.85);
+}
+
+.tutorial-you-are-swatch {
+    width: 22px;
+    height: 22px;
+    background: rgba(170, 0, 255, 0.3);
+    border: 2px solid rgba(170, 0, 255, 0.9);
+    box-shadow: 0 0 8px rgba(170, 0, 255, 0.4);
+}
+
+.tutorial-you-are-color {
+    color: #aa00ff;
+    text-shadow: 0 0 10px rgba(170, 0, 255, 0.7);
+}
+
+.tutorial-reinforce-bonus {
+    color: #00ffff;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.3em;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-top: 6px;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+}
+
+.tutorial-dialog-hint {
+    margin: 0;
+    text-align: center;
+    color: rgba(180, 230, 230, 0.6);
+    font-size: 0.88em;
+    letter-spacing: 0.02em;
 }
 
 .speed-description {

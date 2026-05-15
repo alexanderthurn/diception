@@ -136,9 +136,9 @@ export class GameEventManager {
         this._timerSfxLastBeatSec = null;
 
         // Beginner-speed reminder cadence:
-        // first reminder at turn 8, then every 5 turns.
-        this._beginnerReminderFirstTurn = 8;
-        this._beginnerReminderRepeatTurns = 5;
+        // first reminder at turn 20, then every 15 turns.
+        this._beginnerReminderFirstTurn = 20;
+        this._beginnerReminderRepeatTurns = 15;
         this._beginnerReminderStorageKey = 'beginnerReminderHumanTurns';
         this._beginnerReminderDisabledKey = 'beginnerReminderDisabled';
         this._humanTurnCounter = parseInt(localStorage.getItem(this._beginnerReminderStorageKey) || '0', 10);
@@ -231,13 +231,12 @@ export class GameEventManager {
         const shouldAutomate = data.player.isBot || autoplayPlayers.has(data.player.id);
 
         if (!data.player.isBot && !shouldAutomate) {
-            // Don't count tutorial turns toward the beginner speed reminder cadence
             const isTutorialGame = localStorage.getItem('loadedCampaign') === 'Tutorial';
             if (!isTutorialGame) {
                 this._humanTurnCounter += 1;
                 localStorage.setItem(this._beginnerReminderStorageKey, String(this._humanTurnCounter));
+                void this._maybeShowBeginnerSpeedReminder(gameSpeed);
             }
-            void this._maybeShowBeginnerSpeedReminder(gameSpeed);
         }
 
         // Update turn indicator (bots only)

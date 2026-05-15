@@ -7,6 +7,7 @@ import { getCachedIdentity, isFullVersion } from '../scenarios/user-identity.js'
 import { getActiveModsSummary, hasActiveMods } from './mods-panel-helpers.js';
 import { GAME } from '../core/constants.js';
 import { createSpeedDescription, updateSpeedDescription } from './speed-descriptions.js';
+import { TileRenderer } from '../render/tile-renderer.js';
 
 /** Dev-only campaign tools (import/export JSON, etc.): ?dev=true or ?dev=1 */
 function isCampaignDevToolsEnabled() {
@@ -786,13 +787,13 @@ export class ScenarioBrowser {
             if (playerList.length > 0) {
                 const botPlayers = playerList.filter(p => p.isBot);
                 const aiIds = [...new Set(botPlayers.map(p => p.aiId || 'easy'))];
-                botCount  = botPlayers.length;
+                botCount = botPlayers.length;
                 humanCount = playerList.length - botCount;
-                botAI     = aiIds.length === 1 ? aiIds[0] : null;
+                botAI = aiIds.length === 1 ? aiIds[0] : null;
             } else {
-                botCount   = lvl.bots ?? 0;
+                botCount = lvl.bots ?? 0;
                 humanCount = 1;
-                botAI      = lvl.botAI ?? null;
+                botAI = lvl.botAI ?? null;
             }
             const modSummary = getActiveModsSummary({
                 ...lvl,
@@ -833,7 +834,7 @@ export class ScenarioBrowser {
         const body = document.createElement('div');
         body.className = 'dialog-body';
 
-        const startDynamicUpdate = (_lvl, _canvas) => {};
+        const startDynamicUpdate = (_lvl, _canvas) => { };
 
         let currentIndex = index;
         const updateContent = async (idx) => {
@@ -1068,8 +1069,17 @@ export class ScenarioBrowser {
         }
 
         if (opts.immediateStart) {
-            // Show speed-up reminder on the last tutorial level (index 3)
+            // Show tutorial dialogs before each key level
             const isTutorial = this.selectedCampaign.owner === 'Tutorial' || this.selectedCampaign.id === 'tutorial';
+            if (isTutorial && index === 0) {
+                await this._showWelcomeDialog();
+            }
+            if (isTutorial && index === 1) {
+                await this._showEndTurnDialog();
+            }
+            if (isTutorial && index === 2) {
+                await this._showReinforceDialog();
+            }
             if (isTutorial && index === 3) {
                 await this._showSpeedUpDialog();
             }
@@ -1086,6 +1096,108 @@ export class ScenarioBrowser {
             this.setupModal.classList.remove('hidden');
             if (this.effectsManager) this.effectsManager.startIntroMode();
         }
+    }
+
+    async _showWelcomeDialog() {
+        const content = document.createElement('div');
+        content.className = 'tutorial-intro-dialog';
+        content.innerHTML = `
+            <p>Welcome to Diception! Your goal is to conquer every tile on the board.</p>
+            <div class="tutorial-you-are-row">
+                <span>YOU ARE</span>
+                <span class="tutorial-you-are-swatch"></span>
+                <span class="tutorial-you-are-color">PURPLE</span>
+            </div>
+            <p class="tutorial-dialog-hint">Click your tile, then click an enemy tile to attack.</p>
+        `;
+
+        await Dialog.show({
+            title: 'Tutorial 1/4',
+            content,
+            buttons: [{ text: "LET'S GO", value: 'ok', className: 'tron-btn menu-btn-primary' }]
+        });
+    }
+
+    async _showEndTurnDialog() {
+        const m = TileRenderer.diceDataURL ?? '';
+        const die = (color) => `<span class="dice-icon-sprite howto-dice-sprite" style="background-color:${color}; -webkit-mask-image:url(${m}); mask-image:url(${m});"></span>`;
+
+        const content = document.createElement('div');
+        content.className = 'tutorial-intro-dialog';
+        content.innerHTML = `
+            <p><strong>Attack Rules: </strong>All dice are rolled and added together. If you have a higher total than the defender, you take over the territory and move your dice there (leaving 1 behind).</p>
+            <div class="howto-example">
+                <div class="dice-group">
+                    ${die('#aa00ff')}
+                    <span class="dice-plus">+</span>
+                    ${die('#aa00ff')}
+                    <span class="dice-sum" style="color:#aa00ff">8</span>
+                </div>
+                <span class="vs-indicator win">&gt;</span>
+                <div class="dice-group">
+                    ${die('#0088ff')}
+                    <span class="dice-sum" style="color:#0088ff">3</span>
+                </div>
+                <span class="sprite-icon icon-check"></span>
+            </div>
+            <p class="tutorial-dialog-hint">If you have equal or fewer points, you lose. Your dice count drops to 1 and your turn ends immediately.</p>
+            <div class="howto-example">
+                <div class="dice-group">
+                    ${die('#aa00ff')}
+                    <span class="dice-plus">+</span>
+                    ${die('#aa00ff')}
+                    <span class="dice-sum" style="color:#aa00ff">4</span>
+                </div>
+                <span class="vs-indicator loss">&#8804;</span>
+                <div class="dice-group">
+                    ${die('#0088ff')}
+                    <span class="dice-sum" style="color:#0088ff">5</span>
+                </div>
+                <span class="sprite-icon icon-cross"></span>
+            </div>
+        `;
+
+        await Dialog.show({
+            title: 'Tutorial 2/4',
+            content,
+            buttons: [{ text: 'GOT IT', value: 'ok', className: 'tron-btn menu-btn-primary' }]
+        });
+    }
+
+    async _showReinforceDialog() {
+        const content = document.createElement('div');
+        content.className = 'tutorial-intro-dialog';
+        content.innerHTML = `
+            <p>When you're done attacking, press <strong>End Turn</strong>. You get bonus dice. They are equal to the size of your largest connected region of tiles.</p>
+            <div class="howto-example">
+                <div class="howto-reinforce">
+                    <div class="howto-tile-row">
+                        <div class="howto-tile connected"></div>
+                        <div class="howto-tile connected"></div>
+                        <div class="howto-tile connected"></div>
+                        <div class="howto-tile barrier"></div>
+                    </div>
+                    <span class="tutorial-reinforce-bonus">+3</span>
+                </div>
+            </div>
+              <div class="howto-example">
+                <div class="howto-reinforce">
+                    <div class="howto-tile-row">
+                        <div class="howto-tile connected"></div>
+                        <div class="howto-tile connected"></div>
+                        <div class="howto-tile barrier"></div>
+                        <div class="howto-tile connected"></div>
+                    </div>
+                    <span class="tutorial-reinforce-bonus">+2 </span>
+                </div>
+            </div>
+        `;
+
+        await Dialog.show({
+            title: 'Tutorial 3/4',
+            content,
+            buttons: [{ text: 'GOT IT', value: 'ok', className: 'tron-btn menu-btn-primary' }]
+        });
     }
 
     /**
@@ -1127,7 +1239,7 @@ export class ScenarioBrowser {
         });
 
         await Dialog.show({
-            title: 'SPEED UP?',
+            title: 'Tutorial 4/4',
             content,
             buttons: [
                 { text: 'Continue', value: 'continue', className: 'tron-btn menu-btn-primary' }
