@@ -30,4 +30,4 @@ jobs:
       - name: Push to itch.io
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-        run: butler push ./dist chefmangoo/diception:web
+        run: butler push ./dist feuerware/diception:web

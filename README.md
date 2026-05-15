@@ -215,7 +215,7 @@ Settings → Secrets → Actions for the Steam API libraries to be included.
 
 The itch.io workflow (`.github/workflows/itch.yml`) is **manual trigger only** — go to Actions → "itch.io Deploy (Web)" → Run workflow.
 
-It builds the web version and pushes it to [chefmangoo/diception](https://chefmangoo.itch.io/diception) via butler on the `web` channel.
+It builds the web version and pushes it to [feuerware/diception](https://feuerware.itch.io/diception) via butler on the `web` channel.
 
 **Required secret (GitHub → Settings → Secrets → Actions):**
 
