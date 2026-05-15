@@ -10,11 +10,23 @@ on:
     tags-ignore:
       - '**'
   delete:
+  workflow_dispatch:
+    inputs:
+      folder:
+        description: 'Target folder on FTP server'
+        required: true
+        default: production
+        type: string
+  workflow_call:
+    inputs:
+      folder:
+        required: true
+        type: string
 
 jobs:
   # JOB 1: DEPLOY (Läuft bei jedem Push)
   deploy:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_call' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -31,20 +43,24 @@ jobs:
           npm ci
           npm run build
 
+      - name: Set target folder
+        id: target
+        run: echo "folder=${{ inputs.folder || github.ref_name }}" >> $GITHUB_OUTPUT
+
       - name: Deploy to FTP
         run: |
           sudo apt-get update && sudo apt-get install -y lftp
-          
+
           lftp -u "${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}" "${{ secrets.FTP_SERVER }}" <<EOF
           set ftp:ssl-allow no
           set ftp:passive-mode true
           set net:timeout 30
           set net:max-retries 3
-          mkdir -p "/${{ github.ref_name }}"
-          
+          mkdir -p "/${{ steps.target.outputs.folder }}"
+
           # Mirror-Befehl mit Schutz für sensible Dateien
           # --exclude-glob verhindert das Löschen deiner Server-Dateien
-          mirror -R "./dist/" "/${{ github.ref_name }}" \
+          mirror -R "./dist/" "/${{ steps.target.outputs.folder }}" \
             --delete \
             --parallel=10 \
             --exclude-glob .htaccess \

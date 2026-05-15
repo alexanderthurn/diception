@@ -1,0 +1,18 @@
+name: Production Deploy
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+
+jobs:
+  itch:
+    uses: ./.github/workflows/itch.yml
+    secrets: inherit
+
+  web:
+    uses: ./.github/workflows/ftp.yml
+    with:
+      folder: production
+    secrets: inherit
