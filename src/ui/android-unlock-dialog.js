@@ -60,6 +60,10 @@ export class AndroidUnlockDialog {
                     resolve('ad');
                 } else {
                     e.currentTarget.disabled = false;
+                    const msg = result.error === 'Ad not ready'
+                        ? 'Ad not ready yet. Please try again in a moment.'
+                        : (result.error || 'Ad unavailable. Please try again later.');
+                    Dialog.alert(msg);
                 }
             });
 

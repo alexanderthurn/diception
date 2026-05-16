@@ -154,8 +154,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
         })
         if (gmsAvailable) {
             mainHandler.post {
-                MobileAds.initialize(act) {}
-                loadRewardedAd()
+                MobileAds.initialize(act) { loadRewardedAd() }
             }
         }
     }
