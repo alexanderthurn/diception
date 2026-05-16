@@ -156,7 +156,7 @@ adb install dist-tauri/android/DICEPTION-debug.apk
 npm run tauri:build:android  # → dist-tauri/android/DICEPTION.apk (unsigned universal)
 ```
 
-The CI workflow (`.github/workflows/android.yml`) is **currently disabled** (manual trigger only). Re-enable by restoring the `push.tags` trigger in the workflow file.
+The CI workflow (`.github/workflows/android.yml`) runs on manual trigger. After a successful build it automatically uploads the signed AAB to the Google Play **internal testing track** via `ANDROID_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`. Promote to production manually in Play Console.
 
 ### CI Secrets (GitHub → Settings → Secrets → Actions)
 
@@ -166,18 +166,12 @@ Set these before re-enabling the CI workflow:
 |---|---|---|
 | `ANDROID_KEYSTORE` | ✅ | Base64-encoded `.keystore` file. Generate: `keytool -genkey -v -keystore diception.keystore -alias diception -keyalg RSA -keysize 2048 -validity 10000` then `base64 -i diception.keystore` |
 | `ANDROID_STORE_PASSWORD` | ✅ | Password used when generating the keystore |
+| `ANDROID_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | ✅ | Plain-text JSON key for a Google Play service account with **Release Manager** role. Create in Google Play Console → Setup → API access → Create service account, then download the JSON key. |
 | `AMAZON_IAP_SDK_URL` | Optional | URL to Amazon IAP SDK ZIP/JAR (your own hosted copy from Amazon Developer Portal). If omitted, the Amazon IAP path compiles but has no SDK JAR — Google Play path still works. |
 
 ### Before publishing to Google Play
 
-Replace these placeholders in the codebase:
 
-| File | Placeholder | Where to get it |
-|---|---|---|
-| `scripts/android-main-activity.patch` | `ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX` | AdMob console → App → App ID |
-| `scripts/StorePlugin.kt` | `YOUR_ADMOB_REWARDED_AD_UNIT_ID` | AdMob console → Ad units → Rewarded |
-
-Also:
 - Create an in-app product with ID `full_version` in Google Play Console → **Monetize → In-app products**
 - In Google Play Console → **Policy → App content → Advertising ID**, declare that your app uses advertising IDs (AdMob requires this). The `AD_ID` permission is already added to the manifest by the patch.
 - IAP and real ads only work when installed from the Play Store (internal testing track works, sideloaded APKs do not)
@@ -206,7 +200,7 @@ Append `?android=true` to the dev server URL to enable Android mode (persists vi
 
 ### CI Builds (GitHub Actions)
 
-The Android workflow (`.github/workflows/android.yml`) is currently set to manual trigger only. When re-enabled it runs on every `v*` tag push and produces signed APK + AAB artifacts.
+The Android workflow (`.github/workflows/android.yml`) is triggered manually and produces signed APK + AAB artifacts, then auto-publishes the AAB to Google Play internal track.
 
 The `STEAM_SDK_ZIP_URL` repository secret must be set in GitHub →
 Settings → Secrets → Actions for the Steam API libraries to be included.

@@ -86,3 +86,11 @@ jobs:
         with:
           name: android-aab
           path: dist-tauri/android/DICEPTION.aab
+
+      - name: Publish to Google Play (internal track)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.ANDROID_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.feuerware.diception
+          releaseFiles: dist-tauri/android/DICEPTION.aab
+          track: internal
