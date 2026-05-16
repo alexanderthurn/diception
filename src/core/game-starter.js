@@ -308,10 +308,10 @@ export class GameStarter {
         const applyScenarioBranch = (pendingLevel, { initializeAI = true } = {}) => {
             this.scenarioManager.applyScenarioToGame(this.game, pendingLevel);
             const { attacksPerTurn: ap, secondsPerTurn: secLim, secondsPerAttack: secAtkLim } = resolveTurnLimitsFromLevel(pendingLevel, config);
-            this.game.fullBoardRule = fullBoardRule;
+            this.game.fullBoardRule = pendingLevel?.fullBoardRule ?? fullBoardRule;
             this.game._fullBoardRuleFired = false;
-            this.game.attackRule = attackRule;
-            this.game.supplyRule = supplyRule;
+            this.game.attackRule = pendingLevel?.attackRule ?? attackRule;
+            this.game.supplyRule = pendingLevel?.supplyRule ?? supplyRule;
             this.game.attacksPerTurn = ap;
             this.game.secondsPerTurn = secLim;
             this.game.secondsPerAttack = secAtkLim;

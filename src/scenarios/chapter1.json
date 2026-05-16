@@ -1908,7 +1908,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -2102,7 +2102,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -2211,7 +2211,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -2276,7 +2276,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -2377,7 +2377,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -2478,7 +2478,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -2619,7 +2619,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -2744,7 +2744,7 @@
       "botAI": "easy",
       "maxDice": 16,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -2857,7 +2857,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -2934,7 +2934,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -3059,7 +3059,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -3164,7 +3164,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -3289,7 +3289,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -3402,8 +3402,9 @@
       "type": "scenario",
       "width": 7,
       "height": 7,
-      "maxDice": 3,
+      "maxDice": 6,
       "diceSides": 6,
+      "supplyRule": "reborn",
       "gameMode": "classic",
       "turnTimeLimit": 0,
       "players": [
