@@ -35,6 +35,7 @@ import com.google.android.gms.common.GoogleApiAvailability
 
 // Amazon IAP — SDK JAR must be placed in app/libs/
 // Download from: https://developer.amazon.com/apps-and-games/sdk-download
+// If JAR is absent, stubs from src/amazon-stubs/ are compiled instead.
 import com.amazon.device.iap.PurchasingListener
 import com.amazon.device.iap.PurchasingService
 import com.amazon.device.iap.model.FulfillmentResult
@@ -49,6 +50,8 @@ private const val AD_UNIT_PROD = "ca-app-pub-1776202225804421/5831073456"
 
 @TauriPlugin
 class StorePlugin(activity: Activity) : Plugin(activity) {
+
+    private val act = activity
 
     // ── Amazon static registration ────────────────────────────────────────────
     // Amazon's PurchasingService.registerListener() must be called before
@@ -138,8 +141,8 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
 
     private fun setupGoogle() {
         gmsAvailable = GoogleApiAvailability.getInstance()
-            .isGooglePlayServicesAvailable(activity) == ConnectionResult.SUCCESS
-        billingClient = BillingClient.newBuilder(activity)
+            .isGooglePlayServicesAvailable(act) == ConnectionResult.SUCCESS
+        billingClient = BillingClient.newBuilder(act)
             .enablePendingPurchases(
                 PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
             )
@@ -151,7 +154,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
         })
         if (gmsAvailable) {
             mainHandler.post {
-                MobileAds.initialize(activity) {}
+                MobileAds.initialize(act) {}
                 loadRewardedAd()
             }
         }
@@ -179,7 +182,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
     private fun loadRewardedAd() {
         if (!gmsAvailable) return
         RewardedAd.load(
-            activity, adUnitId(), AdRequest.Builder().build(),
+            act, adUnitId(), AdRequest.Builder().build(),
             object : RewardedAdLoadCallback() {
                 override fun onAdLoaded(ad: RewardedAd) { rewardedAd = ad }
                 override fun onAdFailedToLoad(e: LoadAdError) { rewardedAd = null }
@@ -220,7 +223,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
                     BillingFlowParams.ProductDetailsParams.newBuilder()
                         .setProductDetails(products[0]).build()
                 )).build()
-            mainHandler.post { client.launchBillingFlow(activity, flowParams) }
+            mainHandler.post { client.launchBillingFlow(act, flowParams) }
         }
     }
 
@@ -258,7 +261,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
             }
         }
         mainHandler.post {
-            ad.show(activity) { _ ->
+            ad.show(act) { _ ->
                 rewarded = true
                 pendingAdInvoke?.resolve(JSObject().put("success", true))
                 pendingAdInvoke = null
