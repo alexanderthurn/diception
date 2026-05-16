@@ -844,15 +844,13 @@ async function init() {
             const tutorialCampaign = scenarioBrowser.campaignManager.getCampaign('tutorial');
             if (tutorialCampaign) {
                 scenarioBrowser.selectedCampaign = tutorialCampaign;
-                scenarioBrowser.selectAndPlayLevel(0, { immediateStart: true });
+                await scenarioBrowser.selectAndPlayLevel(0, { immediateStart: true });
             }
         }
     };
 
-    // Show dialogs in parallel with loading
-    showStartupDialogs();
-
     onLoadingDismiss = async () => {
+        await showStartupDialogs();
         if (game.players.length > 0) {
             // Unified cleanup for auto-resume and tutorial first-start
             document.getElementById('global-back-btn')?.classList.remove('hidden');
