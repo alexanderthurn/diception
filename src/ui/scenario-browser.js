@@ -1125,7 +1125,7 @@ export class ScenarioBrowser {
         const content = document.createElement('div');
         content.className = 'tutorial-intro-dialog';
         content.innerHTML = `
-            <p><strong>Attack Rules: </strong>All dice are rolled and added together. If you have a higher total than the defender, you take over the territory and move your dice there (leaving 1 behind).</p>
+            All dice are rolled and added together. If the attacker has a higher total than the defender, the attacker takes over the territory and moves their dice there (leaving 1 behind).</p>
             <div class="howto-example">
                 <div class="dice-group">
                     ${die('#aa00ff')}
@@ -1140,7 +1140,7 @@ export class ScenarioBrowser {
                 </div>
                 <span class="sprite-icon icon-check"></span>
             </div>
-            <p class="tutorial-dialog-hint">If you have equal or fewer points, you lose. Your dice count drops to 1 and your turn ends immediately.</p>
+            <p class="tutorial-dialog-hint">If the attacker has equal or fewer points, he loses. His dice count drops to 1 and his turn ends immediately.</p>
             <div class="howto-example">
                 <div class="dice-group">
                     ${die('#aa00ff')}
