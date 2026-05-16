@@ -341,6 +341,7 @@ export class GameStarter {
                 applyScenarioBranch(pendingLevel);
             } else {
                 const gameConfig = buildGameConfigFromLevel(pendingLevel, config, { isCampaign: true, mapSeed });
+                gameConfig.resolveStartingPlayer = (players, rng) => resolveStartingPlayerByDifficulty(players, gameConfig.botAI, rng);
                 this.game.startGame(gameConfig);
                 this.attacksPerTurn = this.game.attacksPerTurn;
                 this.secondsPerTurn = this.game.secondsPerTurn;
