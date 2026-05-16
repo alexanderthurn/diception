@@ -163,6 +163,8 @@ export class Game {
             this.applyMadnessMode();
         } else if (this.gameMode === '2of2') {
             this.apply2of2Mode();
+        } else if (this.gameMode === 'easy') {
+            this.applyEasyStartMode(rng);
         }
 
         this.emit('gameStart', { players: this.players, map: this.map });
@@ -211,6 +213,20 @@ export class Game {
         this.map.tiles.forEach(tile => {
             if (!tile.blocked) {
                 tile.dice = this.maxDice;
+            }
+        });
+    }
+
+    applyEasyStartMode(rng) {
+        const rnd = rng || Math.random;
+        this.players.forEach(p => {
+            if (p.isBot) return;
+            const tiles = this.map.getTilesByOwner(p.id);
+            if (!tiles.length) return;
+            for (let i = 0; i < 5; i++) {
+                const available = tiles.filter(t => t.dice < this.maxDice);
+                if (!available.length) break;
+                available[Math.floor(rnd() * available.length)].dice++;
             }
         });
     }

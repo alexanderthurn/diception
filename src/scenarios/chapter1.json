@@ -31,31 +31,31 @@
           "x": 0,
           "y": 2,
           "owner": 0,
-          "dice": 3
+          "dice": 4
         },
         {
           "x": 1,
           "y": 1,
           "owner": 0,
-          "dice": 2
+          "dice": 3
         },
         {
           "x": 1,
           "y": 2,
           "owner": 0,
-          "dice": 4
+          "dice": 5
         },
         {
           "x": 1,
           "y": 3,
           "owner": 0,
-          "dice": 2
+          "dice": 3
         },
         {
           "x": 2,
           "y": 0,
           "owner": 0,
-          "dice": 2
+          "dice": 3
         },
         {
           "x": 2,
@@ -148,7 +148,7 @@
           "x": 1,
           "y": 2,
           "owner": 0,
-          "dice": 3
+          "dice": 4
         },
         {
           "x": 3,
@@ -160,13 +160,13 @@
           "x": 1,
           "y": 1,
           "owner": 0,
-          "dice": 3
+          "dice": 4
         },
         {
           "x": 1,
           "y": 0,
           "owner": 0,
-          "dice": 3
+          "dice": 4
         },
         {
           "x": 2,
@@ -178,7 +178,7 @@
           "x": 2,
           "y": 1,
           "owner": 0,
-          "dice": 3
+          "dice": 4
         },
         {
           "x": 2,
@@ -196,7 +196,7 @@
           "x": 0,
           "y": 1,
           "owner": 0,
-          "dice": 3
+          "dice": 4
         }
       ]
     },
@@ -229,7 +229,7 @@
           "x": 0,
           "y": 0,
           "owner": 0,
-          "dice": 2
+          "dice": 3
         },
         {
           "x": 1,
@@ -253,25 +253,25 @@
           "x": 4,
           "y": 0,
           "owner": 0,
-          "dice": 2
+          "dice": 3
         },
         {
           "x": 3,
           "y": 1,
           "owner": 0,
-          "dice": 2
+          "dice": 3
         },
         {
           "x": 4,
           "y": 1,
           "owner": 0,
-          "dice": 2
+          "dice": 3
         },
         {
           "x": 3,
           "y": 2,
           "owner": 0,
-          "dice": 2
+          "dice": 3
         },
         {
           "x": 4,
@@ -379,7 +379,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -472,7 +472,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -565,7 +565,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -666,7 +666,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -743,7 +743,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -820,7 +820,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -913,7 +913,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -990,7 +990,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -1051,7 +1051,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -1136,7 +1136,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -1277,7 +1277,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -1362,7 +1362,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -1443,7 +1443,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -1528,7 +1528,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
@@ -1653,7 +1653,7 @@
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
-      "gameMode": "classic",
+      "gameMode": "easy",
       "turnTimeLimit": 0,
       "tiles": [
         {
