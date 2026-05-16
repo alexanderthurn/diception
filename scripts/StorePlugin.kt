@@ -45,7 +45,7 @@ import com.amazon.device.iap.model.UserDataResponse
 
 private const val PRODUCT_ID = "full_version"
 private const val AD_UNIT_TEST = "ca-app-pub-3940256099942544/5224354917"
-private const val AD_UNIT_PROD = "YOUR_ADMOB_REWARDED_AD_UNIT_ID"
+private const val AD_UNIT_PROD = "ca-app-pub-1776202225804421/5831073456"
 
 @TauriPlugin
 class StorePlugin(activity: Activity) : Plugin(activity) {
