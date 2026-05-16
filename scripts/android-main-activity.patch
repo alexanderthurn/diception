@@ -55,7 +55,7 @@
 +    implementation("com.google.android.gms:play-services-ads:23.6.0")
 +    // Amazon IAP: download SDK from https://developer.amazon.com/apps-and-games/sdk-download
 +    // and place the JAR in src-tauri/gen/android/app/libs/
-+    implementation(fileTree(dir = "libs", include = ["*.jar", "*.aar"]))
++    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
  }
 
  apply(from = "tauri.build.gradle.kts")
