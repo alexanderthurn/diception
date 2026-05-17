@@ -17,6 +17,7 @@ interface PurchasingListener {
 object PurchasingService {
     @JvmStatic fun registerListener(context: Context, listener: PurchasingListener) {}
     @JvmStatic fun purchase(sku: String): String = ""
+    @JvmStatic fun getProductData(skus: Set<String>): String = ""
     @JvmStatic fun getPurchaseUpdates(reset: Boolean): String = ""
     @JvmStatic fun notifyFulfillment(receiptId: String, result: FulfillmentResult) {}
 }

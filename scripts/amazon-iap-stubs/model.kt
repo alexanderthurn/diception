@@ -3,7 +3,17 @@ package com.amazon.device.iap.model
 enum class FulfillmentResult { FULFILLED, UNAVAILABLE }
 
 class UserDataResponse
-class ProductDataResponse
+
+class ProductDataResponse {
+    enum class RequestStatus {
+        SUCCESSFUL, FAILED, NOT_SUPPORTED
+    }
+    val requestStatus: RequestStatus = RequestStatus.FAILED
+    val productData: Map<String, Product> = emptyMap()
+    class Product {
+        val price: String = ""
+    }
+}
 
 class PurchaseResponse {
     enum class RequestStatus {
