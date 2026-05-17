@@ -1902,7 +1902,7 @@ export class GridRenderer {
         const stepList = events || placements.map(p => ({ ...p, type: 'place' }));
 
         const totalFrames = this.gameSpeed === 'beginner'
-            ? Math.min(GAME.SUPPLY_ANIM_FRAMES_BEGINNER, Math.max(60, stepList.length * 30))
+            ? (stepList.length < 9 ? 180 : GAME.SUPPLY_ANIM_FRAMES_BEGINNER)
             : GAME.SUPPLY_ANIM_FRAMES_NORMAL;
 
         // Phase split: 25 % for region reveal, 75 % for sequential placement
