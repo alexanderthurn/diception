@@ -243,6 +243,12 @@ export class ScenarioBrowser {
         return nameMap[c.owner] ?? c.owner;
     }
 
+    refreshVersionState() {
+        const selectVisible = this.campaignSelectView && !this.campaignSelectView.classList.contains('hidden');
+        const modalVisible = this.scenarioBrowserModal && !this.scenarioBrowserModal.classList.contains('hidden');
+        if (modalVisible && selectVisible) this.renderCampaignList();
+    }
+
     async renderCampaignList() {
         // User campaign is accessed via the Map Editor icon — exclude from the campaign list
         const campaigns = this.campaignManager.listCampaigns().filter(c => !c.isUserCampaign);
@@ -302,7 +308,7 @@ export class ScenarioBrowser {
             const subSpan = document.createElement('span');
             subSpan.className = 'campaign-btn-sub';
             if (locked) {
-                subSpan.textContent = 'Full version only';
+                subSpan.textContent = isAndroid() ? 'Tap to unlock' : 'Full version only';
             } else if (comingSoon) {
                 subSpan.textContent = 'Coming soon';
             } else if (levelCount === 0) {

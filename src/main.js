@@ -795,6 +795,7 @@ async function init() {
         }
 
         refreshCreditsLabel();
+        scenarioBrowser.refreshVersionState();
     }
 
     configManager.setupInputListeners(effectsManager, renderer, () => {
@@ -1917,8 +1918,10 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     // --- Main Menu button wiring ---
     const achievementsPanel = new AchievementsPanel(achievementsModal, highscoreManager);
 
+    window.addEventListener('versionUnlocked', () => applyVersionUI());
+
     function showFullVersionOnlyDialog() {
-        showUnlockDialog().then(result => { if (result !== 'close') applyVersionUI(); });
+        showUnlockDialog();
     }
 
     applyVersionUI();

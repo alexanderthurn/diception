@@ -8,10 +8,13 @@ class AndroidStore {
     getProvider()               { return 'unknown'; }
 }
 
+const _MOCK_PRICES = ['€2,99', '$2.99', '£2.49', '¥480', 'A$4.99', 'CHF 3.00', 'kr 29'];
+
 class MockStore extends AndroidStore {
     async purchaseFullVersion() { return { success: true }; }
     async showRewardedAd()      { return { success: true }; }
     async restorePurchases()    { return { restored: false }; }
+    async getProductPrice()     { return { price: _MOCK_PRICES[Math.floor(Math.random() * _MOCK_PRICES.length)] }; }
     getProvider()               { return 'mock'; }
 }
 
