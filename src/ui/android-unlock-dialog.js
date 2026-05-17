@@ -41,42 +41,58 @@ export class AndroidUnlockDialog {
 
             content.querySelector('.android-unlock-iap').addEventListener('click', async (e) => {
                 e.currentTarget.disabled = true;
-                const result = await androidStore.purchaseFullVersion();
-                if (result.success) {
-                    activateFullVersion();
-                    Dialog.close(overlayRef);
-                    resolve('iap');
-                } else {
+                try {
+                    const result = await androidStore.purchaseFullVersion();
+                    if (result.success) {
+                        activateFullVersion();
+                        Dialog.close(overlayRef);
+                        resolve('iap');
+                    } else {
+                        e.currentTarget.disabled = false;
+                        if (result.error) Dialog.alert(result.error);
+                    }
+                } catch (err) {
                     e.currentTarget.disabled = false;
+                    Dialog.alert('Purchase failed. Please try again.');
                 }
             });
 
             content.querySelector('.android-unlock-ad').addEventListener('click', async (e) => {
                 e.currentTarget.disabled = true;
-                const result = await androidStore.showRewardedAd();
-                if (result.success) {
-                    setTimedUnlock(TIMED_UNLOCK_MINUTES);
-                    Dialog.close(overlayRef);
-                    resolve('ad');
-                } else {
+                try {
+                    const result = await androidStore.showRewardedAd();
+                    if (result.success) {
+                        setTimedUnlock(TIMED_UNLOCK_MINUTES);
+                        Dialog.close(overlayRef);
+                        resolve('ad');
+                    } else {
+                        e.currentTarget.disabled = false;
+                        const msg = result.error === 'Ad not ready'
+                            ? 'Ad not ready yet. Please try again in a moment.'
+                            : (result.error || 'Ad unavailable. Please try again later.');
+                        Dialog.alert(msg);
+                    }
+                } catch (err) {
                     e.currentTarget.disabled = false;
-                    const msg = result.error === 'Ad not ready'
-                        ? 'Ad not ready yet. Please try again in a moment.'
-                        : (result.error || 'Ad unavailable. Please try again later.');
-                    Dialog.alert(msg);
+                    Dialog.alert('Ad unavailable. Please try again later.');
                 }
             });
 
             content.querySelector('.android-unlock-restore').addEventListener('click', async (e) => {
                 e.currentTarget.disabled = true;
-                const result = await androidStore.restorePurchases();
-                if (result.restored) {
-                    activateFullVersion();
-                    Dialog.close(overlayRef);
-                    resolve('iap');
-                } else {
+                try {
+                    const result = await androidStore.restorePurchases();
+                    if (result.restored) {
+                        activateFullVersion();
+                        Dialog.close(overlayRef);
+                        resolve('iap');
+                    } else {
+                        e.currentTarget.disabled = false;
+                        Dialog.alert('No previous purchase found.');
+                    }
+                } catch (err) {
                     e.currentTarget.disabled = false;
-                    Dialog.alert('No previous purchase found.');
+                    Dialog.alert('Restore failed. Please try again.');
                 }
             });
 

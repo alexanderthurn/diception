@@ -1,3 +1,5 @@
+import { isAndroid } from '../scenarios/user-identity.js';
+
 class AndroidStore {
     async purchaseFullVersion() { return { success: false, error: 'Not implemented' }; }
     async showRewardedAd()      { return { success: false, error: 'Not implemented' }; }
@@ -12,24 +14,18 @@ class MockStore extends AndroidStore {
     getProvider()               { return 'mock'; }
 }
 
-class GooglePlayStore extends AndroidStore {
-    async purchaseFullVersion() { return window.android.store.purchaseFullVersion(); }
-    async showRewardedAd()      { return window.android.store.showRewardedAd(); }
-    async restorePurchases()    { return window.android.store.restorePurchases(); }
-    getProvider()               { return 'google_play'; }
-}
-
-class AmazonStore extends AndroidStore {
-    async purchaseFullVersion() { return window.android.store.purchaseFullVersion(); }
-    async showRewardedAd()      { return window.android.store.showRewardedAd(); }
-    async restorePurchases()    { return window.android.store.restorePurchases(); }
-    getProvider()               { return 'amazon'; }
+// Calls the Kotlin StorePlugin @Commands via Tauri's IPC.
+// Handles both Google Play and Amazon — the Kotlin side routes internally.
+class TauriStore extends AndroidStore {
+    _invoke(cmd) { return window.__TAURI_INTERNALS__.invoke(`plugin:store|${cmd}`); }
+    async purchaseFullVersion() { return this._invoke('purchaseFullVersion'); }
+    async showRewardedAd()      { return this._invoke('showRewardedAd'); }
+    async restorePurchases()    { return this._invoke('restorePurchases'); }
+    getProvider()               { return 'tauri'; }
 }
 
 function createStore() {
-    const provider = window.android?.storeProvider ?? 'mock';
-    if (provider === 'google_play') return new GooglePlayStore();
-    if (provider === 'amazon')      return new AmazonStore();
+    if (isAndroid() && window.__TAURI_INTERNALS__) return new TauriStore();
     return new MockStore();
 }
 

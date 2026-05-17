@@ -123,6 +123,11 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
             }
         } else {
             setupGoogle()
+            mainHandler.post {
+                webView.evaluateJavascript(
+                    "window.android && (window.android.storeProvider = 'google_play')", null
+                )
+            }
         }
     }
 
