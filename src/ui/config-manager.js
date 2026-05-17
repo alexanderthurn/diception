@@ -173,9 +173,13 @@ export class ConfigManager {
         // Load effects quality — auto-detect on first run if nothing saved
         let savedEffectsQuality = localStorage.getItem('effectsQuality');
         if (!savedEffectsQuality) {
-            const lowMemory = (navigator.deviceMemory ?? 4) <= 2;
-            const fewCores  = (navigator.hardwareConcurrency ?? 4) <= 2;
-            savedEffectsQuality = (isAndroid() || lowMemory || fewCores) ? 'medium' : 'high';
+            const mem   = navigator.deviceMemory ?? 4;
+            const cores = navigator.hardwareConcurrency ?? 4;
+            const veryWeak    = mem <= 2 || cores <= 2;
+            const fastAndroid = isAndroid() && mem >= 4 && cores >= 6;
+            if (veryWeak)                        savedEffectsQuality = 'off';
+            else if (isAndroid() && !fastAndroid) savedEffectsQuality = 'medium';
+            else                                  savedEffectsQuality = 'high';
         }
         if (savedEffectsQuality === 'low') savedEffectsQuality = 'medium';
 
