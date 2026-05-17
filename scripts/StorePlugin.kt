@@ -62,10 +62,17 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
 
         var pendingAmazonPurchaseInvoke: Invoke? = null
         var pendingAmazonRestoreInvoke: Invoke? = null
+        var pendingAmazonPriceInvoke: Invoke? = null
 
         val amazonListener = object : PurchasingListener {
             override fun onUserDataResponse(r: UserDataResponse) {}
-            override fun onProductDataResponse(r: ProductDataResponse) {}
+            override fun onProductDataResponse(r: ProductDataResponse) {
+                val price = if (r.requestStatus == ProductDataResponse.RequestStatus.SUCCESSFUL) {
+                    r.productData[PRODUCT_ID]?.price ?: ""
+                } else ""
+                pendingAmazonPriceInvoke?.resolve(JSObject().put("price", price))
+                pendingAmazonPriceInvoke = null
+            }
 
             override fun onPurchaseResponse(r: PurchaseResponse) {
                 when (r.requestStatus) {
@@ -270,6 +277,33 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
                 pendingAdInvoke?.resolve(JSObject().put("success", true))
                 pendingAdInvoke = null
             }
+        }
+    }
+
+    @Command
+    fun getProductPrice(invoke: Invoke) {
+        if (isAmazon) {
+            pendingAmazonPriceInvoke = invoke
+            PurchasingService.getProductData(setOf(PRODUCT_ID))
+            return
+        }
+        val client = billingClient
+        if (client == null || !client.isReady) {
+            invoke.resolve(JSObject().put("price", ""))
+            return
+        }
+        val params = QueryProductDetailsParams.newBuilder()
+            .setProductList(listOf(
+                QueryProductDetailsParams.Product.newBuilder()
+                    .setProductId(PRODUCT_ID)
+                    .setProductType(BillingClient.ProductType.INAPP)
+                    .build()
+            )).build()
+        client.queryProductDetailsAsync(params) { result, products ->
+            val price = if (result.responseCode == BillingClient.BillingResponseCode.OK && products.isNotEmpty()) {
+                products[0].oneTimePurchaseOfferDetails?.formattedPrice ?: ""
+            } else ""
+            invoke.resolve(JSObject().put("price", price))
         }
     }
 

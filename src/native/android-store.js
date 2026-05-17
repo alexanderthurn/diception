@@ -4,6 +4,7 @@ class AndroidStore {
     async purchaseFullVersion() { return { success: false, error: 'Not implemented' }; }
     async showRewardedAd()      { return { success: false, error: 'Not implemented' }; }
     async restorePurchases()    { return { restored: false }; }
+    async getProductPrice()     { return { price: '' }; }
     getProvider()               { return 'unknown'; }
 }
 
@@ -21,6 +22,7 @@ class TauriStore extends AndroidStore {
     async purchaseFullVersion() { return this._invoke('purchaseFullVersion'); }
     async showRewardedAd()      { return this._invoke('showRewardedAd'); }
     async restorePurchases()    { return this._invoke('restorePurchases'); }
+    async getProductPrice()     { return this._invoke('getProductPrice'); }
     getProvider()               { return 'tauri'; }
 }
 

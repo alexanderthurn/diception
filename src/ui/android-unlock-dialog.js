@@ -110,6 +110,13 @@ export class AndroidUnlockDialog {
             Dialog.show({ title: 'WANT MORE?', content, buttons: [], closeButton: true })
                 .then(() => resolve('close'));
             overlayRef = Dialog.activeOverlay;
+
+            androidStore.getProductPrice().then(({ price }) => {
+                if (price) {
+                    const sub = content.querySelector('.android-unlock-iap .android-unlock-sub');
+                    if (sub) sub.textContent = `${price} · Permanent`;
+                }
+            }).catch(() => {});
         });
     }
 }
