@@ -3,7 +3,7 @@
  * Manages localStorage settings, map size presets, and config sliders
  */
 import { GAME } from '../core/constants.js';
-import { isFullVersion } from '../scenarios/user-identity.js';
+import { isFullVersion, isAndroid } from '../scenarios/user-identity.js';
 import {
     normalizeAttackSecondsUi,
     areModsAtDefaultsForPrefix,
@@ -170,8 +170,13 @@ export class ConfigManager {
         const savedAttackRule = localStorage.getItem('attackRule') || SETUP_DEFAULTS.attackRule;
         const savedSupplyRule = localStorage.getItem('supplyRule') || SETUP_DEFAULTS.supplyRule;
 
-        // Load effects quality
-        let savedEffectsQuality = localStorage.getItem('effectsQuality') || 'high';
+        // Load effects quality — auto-detect on first run if nothing saved
+        let savedEffectsQuality = localStorage.getItem('effectsQuality');
+        if (!savedEffectsQuality) {
+            const lowMemory = (navigator.deviceMemory ?? 4) <= 2;
+            const fewCores  = (navigator.hardwareConcurrency ?? 4) <= 2;
+            savedEffectsQuality = (isAndroid() || lowMemory || fewCores) ? 'medium' : 'high';
+        }
         if (savedEffectsQuality === 'low') savedEffectsQuality = 'medium';
 
         // Apply to UI
