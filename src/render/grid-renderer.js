@@ -1897,8 +1897,12 @@ export class GridRenderer {
         const supplyRule = data.supplyRule || 'classic';
         const mapWidth = this.game.map.width;
         const playerColor = data.player.color;
+
+        // ── Main tween: runs for the full duration ────────────────────────────
+        const stepList = events || placements.map(p => ({ ...p, type: 'place' }));
+
         const totalFrames = this.gameSpeed === 'beginner'
-            ? GAME.SUPPLY_ANIM_FRAMES_BEGINNER
+            ? Math.min(GAME.SUPPLY_ANIM_FRAMES_BEGINNER, Math.max(60, stepList.length * 30))
             : GAME.SUPPLY_ANIM_FRAMES_NORMAL;
 
         // Phase split: 25 % for region reveal, 75 % for sequential placement
@@ -1929,9 +1933,6 @@ export class GridRenderer {
         if (hasFullLabel) {
             this.showBigLabel('Full', 0xff3322, totalFrames, baseOffset);
         }
-
-        // ── Main tween: runs for the full duration ────────────────────────────
-        const stepList = events || placements.map(p => ({ ...p, type: 'place' }));
 
         // ── Pre-compute dice overrides (show pre-reinforcement counts) ────────
         if (stepList.length > 0) {
