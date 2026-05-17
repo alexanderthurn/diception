@@ -1071,9 +1071,9 @@ export class ScenarioBrowser {
         if (opts.immediateStart) {
             // Show tutorial dialogs before each key level
             const isTutorial = this.selectedCampaign.owner === 'Tutorial' || this.selectedCampaign.id === 'tutorial';
-            if (isTutorial && index === 0) {
-                await this._showWelcomeDialog();
-            }
+            // if (isTutorial && index === 0) {
+            //     await this._showWelcomeDialog();
+            // }
             if (isTutorial && index === 1) {
                 await this._showEndTurnDialog();
             }
