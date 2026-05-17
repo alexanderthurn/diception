@@ -210,7 +210,7 @@ async function init() {
     }
 
     // Credits line: "Hi, name" on Steam, countdown/label on Android, "by Alexander Thurn" or "Demo Version" elsewhere
-    const demoLabel = isAndroid() ? 'LITE VERSION' : 'Demo Version';
+    const demoLabel = isAndroid() ? '' : 'Demo Version';
     let _creditsCountdownInterval = null;
     let _creditsClickCount = 0;
     let _creditsClickTimer = null;
@@ -728,7 +728,7 @@ async function init() {
         const locked = !configManager.isSetupAtFreeDefaults();
         startBtn.classList.toggle('btn-locked', locked);
         const existingIcon = startBtn.querySelector('.sprite-icon');
-        if (locked && !existingIcon) {
+        if (locked && !existingIcon && !isAndroid()) {
             const icon = document.createElement('span');
             icon.className = 'sprite-icon icon-lock';
             startBtn.prepend(icon);
@@ -748,19 +748,19 @@ async function init() {
         if (achBtn) {
             achBtn.classList.toggle('btn-locked', !full);
             const icon = achBtn.querySelector('.sprite-icon');
-            if (icon) icon.className = `sprite-icon ${full ? 'icon-achievements' : 'icon-lock'}`;
+            if (icon) icon.className = `sprite-icon ${full || isAndroid() ? 'icon-achievements' : 'icon-lock'}`;
         }
         if (editorBtn) {
             editorBtn.classList.toggle('btn-locked', !full);
             const icon = editorBtn.querySelector('.sprite-icon');
-            if (icon) icon.className = `sprite-icon ${full ? 'icon-map' : 'icon-lock'}`;
+            if (icon) icon.className = `sprite-icon ${full || isAndroid() ? 'icon-map' : 'icon-lock'}`;
         }
 
         const saveBtn = document.getElementById('pause-save-btn');
         if (saveBtn) {
             saveBtn.classList.toggle('btn-locked', !full);
             const existingIcon = saveBtn.querySelector('.sprite-icon');
-            if (!full && !existingIcon) {
+            if (!full && !existingIcon && !isAndroid()) {
                 saveBtn.prepend(Object.assign(document.createElement('span'), { className: 'sprite-icon icon-lock' }));
             } else if (full && existingIcon) {
                 existingIcon.remove();
@@ -779,7 +779,7 @@ async function init() {
             if (!lbl) return;
             if (full) {
                 lbl.querySelectorAll('.demo-field-lock').forEach(el => el.remove());
-            } else if (!lbl.querySelector('.demo-field-lock')) {
+            } else if (!isAndroid() && !lbl.querySelector('.demo-field-lock')) {
                 lbl.append(Object.assign(document.createElement('span'), { className: 'sprite-icon icon-lock demo-field-lock' }));
             }
         });

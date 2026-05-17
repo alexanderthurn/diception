@@ -3,7 +3,7 @@ import { showUnlockDialog } from './show-unlock-dialog.js';
 import { CampaignManager } from '../scenarios/campaign-manager.js';
 import { getGridDimensions } from '../scenarios/campaign-data.js';
 import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress.js';
-import { getCachedIdentity, isFullVersion } from '../scenarios/user-identity.js';
+import { getCachedIdentity, isFullVersion, isAndroid } from '../scenarios/user-identity.js';
 import { getActiveModsSummary, hasActiveMods } from './mods-panel-helpers.js';
 import { GAME } from '../core/constants.js';
 import { createSpeedDescription, updateSpeedDescription } from './speed-descriptions.js';
@@ -290,7 +290,7 @@ export class ScenarioBrowser {
 
             const nameSpan = document.createElement('span');
             if (locked) {
-                nameSpan.innerHTML = '<span class="sprite-icon icon-lock"></span> ';
+                if (!isAndroid()) nameSpan.innerHTML = '<span class="sprite-icon icon-lock"></span> ';
                 nameSpan.appendChild(document.createTextNode(displayName));
             } else if (allComplete) {
                 nameSpan.innerHTML = '<span class="sprite-icon icon-check"></span> ';

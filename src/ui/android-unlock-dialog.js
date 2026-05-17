@@ -17,8 +17,10 @@ export class AndroidUnlockDialog {
             const content = document.createElement('div');
             content.className = 'android-unlock-body';
             content.innerHTML = `
-                <p class="android-unlock-intro">Get the full DICEPTION experience.</p>
-                <ul class="full-version-features">
+                <button class="android-unlock-expander" aria-expanded="false">
+                    Get the Pro Version <span class="android-unlock-expander-arrow">▶</span>
+                </button>
+                <ul class="full-version-features android-unlock-features-list" hidden>
                     <li>Full Campaign</li>
                     <li>Harder Bots &amp; Bigger Maps</li>
                     <li>Local Multiplayer up to 8 players</li>
@@ -36,6 +38,15 @@ export class AndroidUnlockDialog {
                 </div>
                 <button class="android-unlock-restore">Restore Purchases</button>
             `;
+
+            const expander = content.querySelector('.android-unlock-expander');
+            const featureList = content.querySelector('.android-unlock-features-list');
+            expander.addEventListener('click', () => {
+                const open = featureList.hidden;
+                featureList.hidden = !open;
+                expander.setAttribute('aria-expanded', String(open));
+                expander.querySelector('.android-unlock-expander-arrow').textContent = open ? '▼' : '▶';
+            });
 
             let overlayRef = null;
 
@@ -96,7 +107,7 @@ export class AndroidUnlockDialog {
                 }
             });
 
-            Dialog.show({ title: 'LITE VERSION', content, buttons: [], closeButton: true })
+            Dialog.show({ title: 'WANT MORE?', content, buttons: [], closeButton: true })
                 .then(() => resolve('close'));
             overlayRef = Dialog.activeOverlay;
         });

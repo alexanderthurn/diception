@@ -8949,6 +8949,7 @@ canvas {
     flex-direction: column;
     gap: 3px;
 }
+.full-version-features[hidden] { display: none; }
 
 .full-version-features li {
     color: #fff;
@@ -9622,6 +9623,12 @@ input[type="range"].gamepad-slider-editing {
 }
 
 /* ── Android Unlock Dialog ── */
+@media (min-width: 769px) and (min-height: 601px) {
+    .dialog-overlay:has(.android-unlock-body) .dialog-box {
+        max-width: 400px;
+    }
+}
+
 .android-unlock-body {
     display: flex;
     flex-direction: column;
@@ -9629,6 +9636,24 @@ input[type="range"].gamepad-slider-editing {
     gap: 14px;
     padding: 8px 4px 4px;
     min-width: 280px;
+}
+
+.android-unlock-expander {
+    background: none;
+    border: none;
+    color: rgba(0, 255, 255, 0.7);
+    font-family: inherit;
+    font-size: 0.9em;
+    cursor: pointer;
+    padding: 2px 0;
+    letter-spacing: 0.04em;
+}
+.android-unlock-expander:hover {
+    color: #00ffff;
+}
+.android-unlock-expander-arrow {
+    font-size: 0.75em;
+    margin-left: 4px;
 }
 
 .android-unlock-intro {
@@ -9686,13 +9711,6 @@ input[type="range"].gamepad-slider-editing {
     font-weight: normal;
 }
 
-.android-unlock-ad .android-unlock-sub {
-    color: #fff;
-    font-weight: bold;
-    font-size: 0.9em;
-    opacity: 1;
-}
-
 .android-unlock-restore {
     background: none;
     border: none;
@@ -9707,20 +9725,6 @@ input[type="range"].gamepad-slider-editing {
 
 .android-unlock-restore:hover {
     color: #888;
-}
-
-.android-unlock-ad {
-    border-color: #AA00FF;
-    color: #AA00FF;
-    box-shadow: 0 0 8px rgba(170, 0, 255, 0.4);
-    text-shadow: 0 0 6px rgba(170, 0, 255, 0.6);
-}
-
-.android-unlock-ad:hover {
-    background: rgba(170, 0, 255, 0.15);
-    border-color: #CC44FF;
-    color: #CC44FF;
-    box-shadow: 0 0 14px rgba(170, 0, 255, 0.6);
 }
 
 .android-unlock-iap {
