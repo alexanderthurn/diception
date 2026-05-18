@@ -38,9 +38,6 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install NDK 25
-        run: sdkmanager "ndk;25.2.9519653"
-
       - run: npm ci
 
       - name: Init Android project
@@ -55,7 +52,6 @@ jobs:
       - name: Build Android
         run: npm run tauri:build:android
         env:
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/25.2.9519653
           CARGO_PROFILE_RELEASE_LTO: "false"
           CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "4"
 
