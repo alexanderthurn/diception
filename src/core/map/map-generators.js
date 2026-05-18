@@ -162,14 +162,44 @@ function generateContinentsTwoCorners(map) {
     const rnd = () => rand(map);
     const s = continentCornerSizeTwo(w, h);
     const tlBr = rnd() < 0.5;
+
+    const addInnerNub = (cornerId) => {
+        const isHoriz = rnd() < 0.5;
+        const mid = Math.floor(s / 2);
+        let nubX, nubY;
+        switch (cornerId) {
+            case 'tl':
+                if (isHoriz) { nubX = s; nubY = mid; }
+                else         { nubX = mid; nubY = s; }
+                break;
+            case 'br':
+                if (isHoriz) { nubX = w - s - 1; nubY = h - s + mid; }
+                else         { nubX = w - s + mid; nubY = h - s - 1; }
+                break;
+            case 'bl':
+                if (isHoriz) { nubX = s; nubY = h - s + mid; }
+                else         { nubX = mid; nubY = h - s - 1; }
+                break;
+            case 'tr':
+                if (isHoriz) { nubX = w - s - 1; nubY = mid; }
+                else         { nubX = w - s + mid; nubY = s; }
+                break;
+        }
+        unblock(map, nubX, nubY);
+    };
+
     if (tlBr) {
         unblockRect(map, 0, 0, s - 1, s - 1);
         unblockRect(map, w - s, h - s, w - 1, h - 1);
         createBridge2x2(map, cornerAnchor(w, h, s, 'tl'), cornerAnchor(w, h, s, 'br'));
+        addInnerNub('tl');
+        addInnerNub('br');
     } else {
         unblockRect(map, 0, h - s, s - 1, h - 1);
         unblockRect(map, w - s, 0, w - 1, s - 1);
         createBridge2x2(map, cornerAnchor(w, h, s, 'bl'), cornerAnchor(w, h, s, 'tr'));
+        addInnerNub('bl');
+        addInnerNub('tr');
     }
 }
 
