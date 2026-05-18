@@ -3400,13 +3400,19 @@
     },
     {
       "type": "scenario",
-      "width": 7,
-      "height": 7,
+      "width": 6,
+      "height": 5,
       "maxDice": 6,
       "diceSides": 6,
-      "supplyRule": "reborn",
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "reborn",
+      "playMode": "classic",
       "players": [
         {
           "id": 0,
@@ -3431,266 +3437,152 @@
           "dice": 3
         },
         {
-          "x": 2,
-          "y": 0,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 3,
-          "y": 0,
-          "owner": 0,
-          "dice": 3
-        },
-        {
           "x": 4,
           "y": 0,
           "owner": 1,
           "dice": 2
         },
         {
+          "x": 0,
+          "y": 1,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 4,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
           "x": 5,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 4,
+          "y": 2,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 5,
+          "y": 2,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 4,
+          "y": 3,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 5,
+          "y": 3,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 4,
+          "y": 4,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 3,
           "y": 0,
           "owner": 1,
           "dice": 2
         },
         {
-          "x": 0,
-          "y": 1,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 1,
-          "y": 1,
-          "owner": 0,
-          "dice": 3
-        },
-        {
           "x": 2,
-          "y": 1,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 3,
-          "y": 1,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 4,
-          "y": 1,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 5,
-          "y": 1,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 6,
-          "y": 1,
-          "owner": 1,
-          "dice": 3
-        },
-        {
-          "x": 0,
-          "y": 2,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 1,
-          "y": 2,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 2,
-          "y": 2,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 3,
-          "y": 2,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 4,
-          "y": 2,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 5,
-          "y": 2,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 6,
-          "y": 2,
-          "owner": 1,
-          "dice": 3
-        },
-        {
-          "x": 0,
-          "y": 3,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 1,
-          "y": 3,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 2,
-          "y": 3,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 3,
-          "y": 3,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 4,
-          "y": 3,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 5,
-          "y": 3,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 6,
-          "y": 3,
-          "owner": 1,
-          "dice": 3
-        },
-        {
-          "x": 0,
-          "y": 4,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 1,
-          "y": 4,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 2,
-          "y": 4,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 3,
-          "y": 4,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 4,
-          "y": 4,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 5,
-          "y": 4,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 6,
-          "y": 4,
-          "owner": 1,
-          "dice": 3
-        },
-        {
-          "x": 0,
-          "y": 5,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 1,
-          "y": 5,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 2,
-          "y": 5,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 3,
-          "y": 5,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 4,
-          "y": 5,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 5,
-          "y": 5,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 6,
-          "y": 5,
-          "owner": 1,
-          "dice": 3
-        },
-        {
-          "x": 1,
-          "y": 6,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 2,
-          "y": 6,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 3,
-          "y": 6,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 4,
-          "y": 6,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 5,
-          "y": 6,
+          "y": 0,
           "owner": 1,
           "dice": 2
         }
@@ -3698,12 +3590,19 @@
     },
     {
       "type": "scenario",
-      "width": 9,
-      "height": 9,
+      "width": 7,
+      "height": 7,
       "maxDice": 8,
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "players": [
         {
           "id": 0,
@@ -3754,10 +3653,10 @@
           "dice": 3
         },
         {
-          "x": 3,
+          "x": 4,
           "y": 0,
-          "owner": 0,
-          "dice": 3
+          "owner": 1,
+          "dice": 2
         },
         {
           "x": 5,
@@ -3767,18 +3666,6 @@
         },
         {
           "x": 6,
-          "y": 0,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 7,
-          "y": 0,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 8,
           "y": 0,
           "owner": 1,
           "dice": 2
@@ -3800,329 +3687,53 @@
           "y": 1,
           "owner": 0,
           "dice": 3
-        },
-        {
-          "x": 3,
-          "y": 1,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 5,
-          "y": 1,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 6,
-          "y": 1,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 7,
-          "y": 1,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 8,
-          "y": 1,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 0,
-          "y": 2,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 1,
-          "y": 2,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 2,
-          "y": 2,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 3,
-          "y": 2,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 5,
-          "y": 2,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 6,
-          "y": 2,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 7,
-          "y": 2,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 8,
-          "y": 2,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 0,
-          "y": 3,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 1,
-          "y": 3,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 2,
-          "y": 3,
-          "owner": 0,
-          "dice": 3
-        },
-        {
-          "x": 6,
-          "y": 3,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 7,
-          "y": 3,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 8,
-          "y": 3,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 0,
-          "y": 5,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 1,
-          "y": 5,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 2,
-          "y": 5,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 6,
-          "y": 5,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 7,
-          "y": 5,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 8,
-          "y": 5,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 0,
-          "y": 6,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 1,
-          "y": 6,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 2,
-          "y": 6,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 3,
-          "y": 6,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 5,
-          "y": 6,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 6,
-          "y": 6,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 7,
-          "y": 6,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 8,
-          "y": 6,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 0,
-          "y": 7,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 1,
-          "y": 7,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 2,
-          "y": 7,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 3,
-          "y": 7,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 5,
-          "y": 7,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 6,
-          "y": 7,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 7,
-          "y": 7,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 8,
-          "y": 7,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 0,
-          "y": 8,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 1,
-          "y": 8,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 2,
-          "y": 8,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 3,
-          "y": 8,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 5,
-          "y": 8,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 6,
-          "y": 8,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 7,
-          "y": 8,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 8,
-          "y": 8,
-          "owner": 3,
-          "dice": 2
-        },
-        {
-          "x": 0,
-          "y": 4,
-          "owner": 2,
-          "dice": 6
         },
         {
           "x": 4,
-          "y": 0,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 5,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 6,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 0,
+          "y": 2,
           "owner": 0,
-          "dice": 6
+          "dice": 3
         },
         {
-          "x": 8,
-          "y": 4,
+          "x": 1,
+          "y": 2,
+          "owner": 0,
+          "dice": 3
+        },
+        {
+          "x": 5,
+          "y": 2,
           "owner": 1,
-          "dice": 6
+          "dice": 2
         },
         {
-          "x": 4,
-          "y": 8,
-          "owner": 3,
-          "dice": 6
-        },
-        {
-          "x": 7,
-          "y": 4,
+          "x": 6,
+          "y": 2,
           "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "owner": 2,
           "dice": 2
         },
         {
@@ -4132,15 +3743,135 @@
           "dice": 2
         },
         {
+          "x": 5,
+          "y": 4,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 6,
+          "y": 4,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 0,
+          "y": 5,
+          "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 1,
+          "y": 5,
+          "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 2,
+          "y": 5,
+          "owner": 2,
+          "dice": 2
+        },
+        {
           "x": 4,
-          "y": 1,
+          "y": 5,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 5,
+          "y": 5,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 6,
+          "y": 5,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 0,
+          "y": 6,
+          "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 1,
+          "y": 6,
+          "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 2,
+          "y": 6,
+          "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 4,
+          "y": 6,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 5,
+          "y": 6,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 6,
+          "y": 6,
+          "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 6,
+          "y": 3,
+          "owner": 1,
+          "dice": 6
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "owner": 2,
+          "dice": 6
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "owner": 0,
+          "dice": 6
+        },
+        {
+          "x": 3,
+          "y": 6,
+          "owner": 3,
+          "dice": 6
+        },
+        {
+          "x": 1,
+          "y": 3,
           "owner": 0,
           "dice": 3
         },
         {
-          "x": 4,
-          "y": 7,
+          "x": 3,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 5,
+          "y": 3,
           "owner": 3,
+          "dice": 2
+        },
+        {
+          "x": 3,
+          "y": 5,
+          "owner": 2,
           "dice": 2
         }
       ]
