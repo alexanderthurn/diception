@@ -224,8 +224,9 @@ export class GameStarter {
         }
 
         const config = this.configManager.getGameConfig();
+        const isCampaignMode = localStorage.getItem('campaignMode') === '1';
 
-        if (config.humanCount + config.botCount < 2) {
+        if (!isCampaignMode && config.humanCount + config.botCount < 2) {
             Dialog.alert('A game must have at least 2 players!');
             return;
         }
