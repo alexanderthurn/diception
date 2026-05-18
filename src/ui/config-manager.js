@@ -11,6 +11,8 @@ import {
     applyModsDefaultsForPrefix,
     setModsPanelUiOpen,
     getActiveModsSummaryFromDom,
+    getActiveModsSummary,
+    hasActiveMods,
     SETUP_DEFAULTS,
 } from './mods-panel-helpers.js';
 import { randomSeed } from '../core/rng.js';
@@ -261,6 +263,44 @@ export class ConfigManager {
     /** Reusable active-mods summary text for the setup configuration. */
     getSetupActiveModsSummary() {
         return getActiveModsSummaryFromDom('', 'game-seed');
+    }
+
+    /**
+     * Mod config object for the match currently in progress (pause menu).
+     * @param {import('../core/game.js').Game} game
+     * @param {{ playMode?: string }} [opts]
+     */
+    buildInProgressModsConfig(game, { playMode } = {}) {
+        if (!game?.players?.length) return null;
+        const bots = game.players.filter(p => p.isBot);
+        const aiIds = [...new Set(bots.map(p => p.aiId || 'easy'))];
+        return {
+            humanCount: game.players.filter(p => !p.isBot).length,
+            botCount: bots.length,
+            botAI: aiIds.length === 1 ? aiIds[0] : null,
+            gameMode: game.gameMode,
+            maxDice: game.maxDice,
+            diceSides: game.diceSides,
+            attacksPerTurn: game.attacksPerTurn,
+            secondsPerTurn: game.secondsPerTurn,
+            secondsPerAttack: game.secondsPerAttack,
+            fullBoardRule: game.fullBoardRule,
+            attackRule: game.attackRule,
+            supplyRule: game.supplyRule,
+            playMode: playMode ?? localStorage.getItem('playMode'),
+            seed: game.seed,
+        };
+    }
+
+    getInProgressModsSummary(game, opts) {
+        const cfg = this.buildInProgressModsConfig(game, opts);
+        return cfg ? getActiveModsSummary(cfg) : '';
+    }
+
+    inProgressHasActiveMods(game, opts) {
+        const cfg = this.buildInProgressModsConfig(game, opts);
+        if (!cfg) return false;
+        return hasActiveMods(cfg) || (cfg.seed != null && Number(cfg.seed) > 0);
     }
 
     /** Show/hide the header reset button based on whether ANY setting differs from defaults. */
