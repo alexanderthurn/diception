@@ -43,6 +43,7 @@ import {
     setProgressCallback,
     resetAllAchievementsAndStats,
     resetPersistedStatsAndSteam,
+    recheckStatAchievements,
 } from './core/achievement-manager.js';
 import { reconcileLifetimeWithSteam } from './core/steam-player-stats-sync.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid, isFullVersion, initFullVersionCheck } from './scenarios/user-identity.js';
@@ -144,6 +145,7 @@ async function init() {
     } catch (e) {
         console.warn('[stats] Steam reconcile failed:', e);
     }
+    recheckStatAchievements(highscoreManager);
 
     // Load spritesheet
     try {
@@ -965,22 +967,30 @@ async function init() {
             streak7: 1.70,
         };
 
-        setProgressCallback((stat, newValue) => {
+        setProgressCallback((stat, newValue, opts = {}) => {
             if (!isFullVersion()) return;
             if (stat === 'gamesPlayed') return;
             sfxManager.achievementProgress(PROGRESS_PITCH[stat] ?? 1.0);
+            if (!progressToast) return;
 
-            // Find the lowest-threshold still-locked achievement for this stat
-            const pending = ACHIEVEMENTS
-                .filter(a => a.type === 'stat' && a.stat === stat)
-                .sort((a, b) => a.threshold - b.threshold)
-                .find(a => newValue < a.threshold);
-            if (!pending || !progressToast) return;
+            if (opts.tally && /^streak\d+$/.test(stat)) {
+                progressToastName.textContent = 'Chain logged';
+                progressToastFill.style.width = '100%';
+                progressToastLabel.textContent = `${newValue.toLocaleString()} lifetime`;
+                progressToast.classList.add('has-active-mods');
+            } else {
+                const pending = ACHIEVEMENTS
+                    .filter(a => a.type === 'stat' && a.stat === stat)
+                    .sort((a, b) => a.threshold - b.threshold)
+                    .find(a => newValue < a.threshold);
+                if (!pending) return;
 
-            const pct = Math.round((Math.min(newValue, pending.threshold) / pending.threshold) * 100);
-            progressToastName.textContent = ACH_TITLES[pending.id] || pending.id;
-            progressToastFill.style.width = pct + '%';
-            progressToastLabel.textContent = `${newValue.toLocaleString()} / ${pending.threshold.toLocaleString()}`;
+                const pct = Math.round((Math.min(newValue, pending.threshold) / pending.threshold) * 100);
+                progressToastName.textContent = ACH_TITLES[pending.id] || pending.id;
+                progressToastFill.style.width = pct + '%';
+                progressToastLabel.textContent = `${newValue.toLocaleString()} / ${pending.threshold.toLocaleString()}`;
+                progressToast.classList.toggle('has-active-mods', true);
+            }
 
             progressToast.style.opacity = '1';
             progressToast.style.transform = 'translateX(0)';
@@ -2171,13 +2181,14 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             summaryEl.textContent = '';
             return;
         }
-        const inMatch = game?.players?.length > 0;
+        const liveGame = gameStarter?.game;
+        const inMatch = liveGame?.players?.length > 0;
         const summary = inMatch
-            ? configManager.getInProgressModsSummary(game, { playMode: gameStarter.playMode })
+            ? configManager.getInProgressModsSummary(liveGame, { playMode: gameStarter.playMode })
             : configManager.getSetupActiveModsSummary();
         let modsActive;
         if (inMatch) {
-            modsActive = configManager.inProgressHasActiveMods(game, { playMode: gameStarter.playMode });
+            modsActive = configManager.inProgressHasActiveMods(liveGame, { playMode: gameStarter.playMode });
         } else {
             const seedVal = parseInt(document.getElementById('game-seed')?.value ?? '0', 10);
             modsActive = !configManager.areModsAtDefaults() || (Number.isFinite(seedVal) && seedVal > 0);

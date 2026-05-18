@@ -45,7 +45,11 @@ export function notifyLifetimeStatChanged(stat, newValue) {
         const stillPending = ACHIEVEMENTS.some(
             ach => ach.type === 'stat' && ach.stat === stat && !unlocked.includes(ach.id)
         );
-        if (stillPending) _progressCallback(stat, newValue);
+        if (stillPending) {
+            _progressCallback(stat, newValue);
+        } else if (/^streak\d+$/.test(stat)) {
+            _progressCallback(stat, newValue, { tally: true });
+        }
     }
 }
 
@@ -107,6 +111,16 @@ export async function resetPersistedStatsAndSteam({ achievementsToo, highscoreMa
         highscoreManager.resetLifetimeRollupsPreserveCampaigns();
     }
     if (achievementsToo) clearAllUnlocked();
+}
+
+/** Re-unlock stat achievements from current lifetime values (e.g. after new tiers ship). */
+export function recheckStatAchievements(highscoreManager) {
+    if (!highscoreManager) return;
+    for (const ach of ACHIEVEMENTS) {
+        if (ach.type !== 'stat') continue;
+        const v = highscoreManager.getLifetimeStat(ach.stat);
+        if (v >= ach.threshold) unlockAchievement(ach.id);
+    }
 }
 
 export function checkCampaignAchievement(campaignOwner, totalLevels) {

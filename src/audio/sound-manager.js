@@ -119,6 +119,14 @@ export class SoundManager {
         this._play('attackWin', { speed });
     }
 
+    /** Chain attack from conquered tile — stronger pitch curve, no cap at 5 semitones */
+    attackWinChain(chainLength = 3) {
+        this.winStreak = Math.max(this.winStreak, chainLength);
+        const semitones = Math.min(Math.max(0, chainLength - 1), 12);
+        const speed = Math.pow(2, semitones / 12);
+        this._play('attackWin', { speed, volume: this.volume * Math.min(1.15, 0.92 + chainLength * 0.03) });
+    }
+
     /** Lost a battle */
     attackLose() {
         this.winStreak = 0;

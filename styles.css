@@ -7175,8 +7175,8 @@ canvas {
 }
 
 .ach-icon {
-    width: 64px;
-    height: 64px;
+    width: 64px !important;
+    height: 64px !important;
     flex-shrink: 0;
     display: block;
     image-rendering: pixelated;

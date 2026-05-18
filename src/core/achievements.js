@@ -4,6 +4,29 @@
  * type 'event' : unlocks on a one-off moment
  * type 'campaign' : unlocks when all levels of a chapter are solved
  */
+
+/** Steam INT stat ceiling — lifetime counters clamp to this in-game and on sync. */
+export const LIFETIME_STAT_MAX = 10000;
+
+/** Lifetime chain-length tiers per peak chain (3–7). First id keeps legacy ACH_STREAK_N. */
+function streakStatAchievements(chainLen, thresholds) {
+    return thresholds.map((threshold, i) => ({
+        id: i === 0 ? `ACH_STREAK_${chainLen}` : `ACH_STREAK_${chainLen}_${threshold}`,
+        type: 'stat',
+        stat: `streak${chainLen}`,
+        threshold,
+    }));
+}
+
+/** Base tier + one 100× master tier per chain length. */
+const STREAK_ACHIEVEMENTS = [
+    ...streakStatAchievements(3, [30, 3000]),
+    ...streakStatAchievements(4, [15, 1500]),
+    ...streakStatAchievements(5, [5, 500]),
+    ...streakStatAchievements(6, [2, 200]),
+    ...streakStatAchievements(7, [1, 100]),
+];
+
 export const ACHIEVEMENTS = [
     // ── Campaign ──────────────────────────────────────────────────────────────
     { id: 'ACH_TUTORIAL',      type: 'campaign', campaign: 'tutorial'  },
@@ -34,10 +57,6 @@ export const ACHIEVEMENTS = [
     { id: 'ACH_DAVID',         type: 'event', event: 'won4vs6'                    },
     { id: 'ACH_PURE_BOTS',    type: 'event', event: 'pureBots'                   },
     { id: 'ACH_PURE_HUMANS',  type: 'event', event: 'pureHumans'                 },
-    { id: 'ACH_STREAK_3',      type: 'stat', stat: 'streak3', threshold: 30 },
-    { id: 'ACH_STREAK_4',      type: 'stat', stat: 'streak4', threshold: 15 },
-    { id: 'ACH_STREAK_5',      type: 'stat', stat: 'streak5', threshold: 5  },
-    { id: 'ACH_STREAK_6',      type: 'stat', stat: 'streak6', threshold: 2  },
-    { id: 'ACH_STREAK_7',      type: 'stat', stat: 'streak7', threshold: 1  },
+    ...STREAK_ACHIEVEMENTS,
     { id: 'ACH_SURVIVOR',      type: 'event', event: 'won8PlayerGame'             },
 ];

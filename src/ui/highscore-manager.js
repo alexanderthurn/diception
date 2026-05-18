@@ -12,6 +12,7 @@
 
 import { notifyLifetimeStatChanged } from '../core/achievement-manager.js';
 import { pushLifetimeStatToSteam } from '../core/steam-player-stats-sync.js';
+import { clampLifetimeStat } from '../core/lifetime-stat-cap.js';
 import { SoloHumanStatsStore, emptySoloStatsBlob, SOLO_HUMAN_STATS_KEY } from '../core/solo-human-stats.js';
 
 export const HIGHSCORE_STORAGE_KEY = 'highscores';
@@ -40,6 +41,8 @@ function ensureLifetimeOnData(dataObj) {
     for (const k of LIFETIME_KEYS) {
         if (typeof dataObj.lifetime[k] !== 'number' || Number.isNaN(dataObj.lifetime[k])) {
             dataObj.lifetime[k] = 0;
+        } else {
+            dataObj.lifetime[k] = clampLifetimeStat(dataObj.lifetime[k]);
         }
     }
 }
@@ -82,6 +85,8 @@ export class HighscoreManager {
         for (const k of LIFETIME_KEYS) {
             if (typeof this.data.lifetime[k] !== 'number' || Number.isNaN(this.data.lifetime[k])) {
                 this.data.lifetime[k] = 0;
+            } else {
+                this.data.lifetime[k] = clampLifetimeStat(this.data.lifetime[k]);
             }
         }
     }
@@ -181,7 +186,7 @@ export class HighscoreManager {
      */
     setLifetimeStatMerged(stat, value) {
         this._ensureLifetime();
-        const v = Math.max(0, Math.floor(Number(value) || 0));
+        const v = clampLifetimeStat(value);
         if (stat === 'gamesPlayed' || stat === 'gamesWon') {
             const cur = stat === 'gamesPlayed' ? this._soloHumanStats.getGlobalRow()[0] : this._soloHumanStats.getGlobalRow()[1];
             if (cur === v) return;
@@ -212,7 +217,7 @@ export class HighscoreManager {
         this._ensureLifetime();
         const n = Math.max(0, Math.floor(Number(amount) || 0));
         if (n === 0) return;
-        this.data.lifetime[stat] = (this.data.lifetime[stat] || 0) + n;
+        this.data.lifetime[stat] = clampLifetimeStat((this.data.lifetime[stat] || 0) + n);
         const v = this.data.lifetime[stat];
         this.save();
         pushLifetimeStatToSteam(stat, v);
@@ -221,7 +226,7 @@ export class HighscoreManager {
 
     /** Cheat / dev: set absolute value for a lifetime counter. */
     setLifetimeStat(stat, value) {
-        const v = Math.max(0, Math.floor(Number(value) || 0));
+        const v = clampLifetimeStat(value);
         if (stat === 'gamesPlayed' || stat === 'gamesWon') {
             this._soloHumanStats.setGlobalPlaysOrWins(stat, v);
             this.save();

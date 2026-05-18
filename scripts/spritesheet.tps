@@ -227,6 +227,16 @@
             <key type="filename">gfx/achievements/ACH_STREAK_6_locked.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_7.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_7_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_3_3000.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_3_3000_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_4_1500.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_4_1500_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_5_500.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_5_500_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_6_200.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_6_200_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_7_100.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_7_100_locked.png</key>
             <key type="filename">gfx/achievements/ACH_SURVIVOR.png</key>
             <key type="filename">gfx/achievements/ACH_SURVIVOR_locked.png</key>
             <key type="filename">gfx/achievements/ACH_TUTORIAL.png</key>

@@ -42,12 +42,17 @@ export const TITLES = {
     ACH_DAVID:         'David vs. Goliath',
     ACH_PURE_BOTS:     'Bot Tournament',
     ACH_PURE_HUMANS:   'Human Only',
-    ACH_STREAK_3:      'On a Roll',
-    ACH_STREAK_4:      'Hot Streak',
-    ACH_STREAK_5:      'Unstoppable',
-    ACH_STREAK_6:      'Relentless',
-    ACH_STREAK_7:      'Dominator',
-    ACH_SURVIVOR:      'Last Standing',
+    ACH_STREAK_3:          'On a Roll',
+    ACH_STREAK_3_3000:     'Chain Master',
+    ACH_STREAK_4:          'Hot Streak',
+    ACH_STREAK_4_1500:     'Unbroken Line',
+    ACH_STREAK_5:          'Unstoppable',
+    ACH_STREAK_5_500:      'Chain Tyrant',
+    ACH_STREAK_6:          'Relentless',
+    ACH_STREAK_6_200:      'Perfect Storm',
+    ACH_STREAK_7:          'Dominator',
+    ACH_STREAK_7_100:      'Chain Legend',
+    ACH_SURVIVOR:          'Last Standing',
 };
 
 const SECTIONS = [
@@ -74,11 +79,10 @@ function getDescription(ach) {
         if (ach.stat === 'gamesPlayed')  return `Play ${ach.threshold.toLocaleString()} games`;
         if (ach.stat === 'gamesWon')     return `Win ${ach.threshold.toLocaleString()} games`;
         if (ach.stat === 'underdogWins') return `Win ${ach.threshold.toLocaleString()} attacks with less than 33% odds`;
-        if (ach.stat === 'streak3') return `Chain 3 attacks from the same tile ${ach.threshold} times`;
-        if (ach.stat === 'streak4') return `Chain 4 attacks from the same tile ${ach.threshold} times`;
-        if (ach.stat === 'streak5') return `Chain 5 attacks from the same tile ${ach.threshold} times`;
-        if (ach.stat === 'streak6') return `Chain 6 attacks from the same tile ${ach.threshold} times`;
-        if (ach.stat === 'streak7') return `Chain 7 attacks from the same tile ${ach.threshold} times`;
+        if (ach.stat?.startsWith('streak')) {
+            const n = ach.stat.replace('streak', '');
+            return `Chain ${n}+ attacks from the same tile — ${ach.threshold.toLocaleString()} times (lifetime)`;
+        }
     }
     if (ach.type === 'event') {
         if (ach.event === 'won4vs6')        return 'Win an attack with 4 dice against 6 dice';

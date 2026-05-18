@@ -4,6 +4,7 @@
  */
 
 import { ACHIEVEMENTS } from './achievements.js';
+import { clampLifetimeStat } from './lifetime-stat-cap.js';
 
 /** local lifetime field → Steam stat API name */
 export const STEAM_STAT_NAMES = {
@@ -20,7 +21,7 @@ export const STEAM_STAT_NAMES = {
 export function pushLifetimeStatToSteam(stat, value) {
     const steamName = STEAM_STAT_NAMES[stat];
     if (steamName && window.steam?.setStat) {
-        window.steam.setStat(steamName, value);
+        window.steam.setStat(steamName, clampLifetimeStat(value));
     }
 }
 
@@ -39,7 +40,7 @@ export async function reconcileLifetimeWithSteam(highscoreManager) {
             steamVal = 0;
         }
         const localVal = highscoreManager.getLifetimeStat(localKey);
-        const merged = Math.max(steamVal, localVal);
+        const merged = clampLifetimeStat(Math.max(steamVal, localVal));
 
         if (merged !== localVal) {
             highscoreManager.setLifetimeStatMerged(localKey, merged);

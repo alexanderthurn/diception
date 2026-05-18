@@ -61,6 +61,8 @@ export class EffectsManager {
         this.winStreak = 0;
         this.lastWinTime = 0;
         this.streakDecayTimer = null;
+        /** Tile-chain length from game-events (accurate); overrides time-based winStreak when set */
+        this._tileChainStreak = 0;
 
         // Board-space effects (conquest ripple, last stand, etc.)
         // Created here so pooled Graphics/Filters are allocated at startup,
@@ -92,8 +94,44 @@ export class EffectsManager {
         this._timers.clear();
         this.particles.clear();
         this.screenParticles.clear();
+        this._tileChainStreak = 0;
         // Remove any lingering turn-sweep DOM elements
         document.querySelectorAll('.turn-sweep').forEach(el => el.remove());
+    }
+
+    /** @param {number} chainLength — consecutive captures from same tile this turn */
+    setTileChainStreak(chainLength) {
+        this._tileChainStreak = Math.max(0, chainLength | 0);
+    }
+
+    /** Soft cap: keeps scaling past early tiers without blowing out effects */
+    _streakScale(n) {
+        const x = Math.max(1, n);
+        return 8 + Math.log2(x) * 4;
+    }
+
+    _effectiveStreak() {
+        return Math.max(this.winStreak, this._tileChainStreak);
+    }
+
+    /**
+     * Extra juice when a tile-chain milestone hits (called after attackResult effects).
+     */
+    onChainMilestone(chainLength, result, attackerColor = 0xffffff) {
+        if (this.quality === 'off' || chainLength < 3) return;
+        const to = this.tileToWorld(result.to.x, result.to.y);
+        const scale = 1 + Math.min(chainLength - 2, 14) * 0.12;
+        if (this.quality === 'high' && this.boardEffects) {
+            this.boardEffects.conquestRipple(result.to.x, result.to.y, attackerColor, scale);
+        }
+        this.particles.emit(to.x, to.y, 'braveBurst', {
+            colors: [attackerColor, 0xffffff, 0xffff00],
+        });
+        const s = this._streakScale(chainLength);
+        this.background.pulse(0x00ff88, 0.15 + Math.min(s, 20) * 0.025);
+        if (this.renderer?.gameSpeed !== 'expert') {
+            this.renderer.pulseScanline(0.9 + Math.min(s, 20) * 0.08);
+        }
     }
 
     bindEvents() {
@@ -318,7 +356,7 @@ export class EffectsManager {
                 if (result.won) {
                     // Win: intensity = fraction of max dice the defender had + streak bonus
                     const defDice = result.defenderRolls?.length ?? 1;
-                    const streakBonus = Math.min(this.winStreak, 8) * 0.07;
+                    const streakBonus = Math.min(this._effectiveStreak(), 16) * 0.07;
                     tileGlow.flash(Math.min(1.0, defDice / maxDice + streakBonus));
                 } else {
                     // Loss: reduce current intensity by the attacker's dice fraction
@@ -362,8 +400,9 @@ export class EffectsManager {
             let shakeIntensity = 0;
             if (result.won) {
                 // Streak scaling: start only with second attack (winStreak > 1)
-                if (this.winStreak > 1) {
-                    shakeIntensity = 2 + Math.min(this.winStreak - 1, 10) * 1.5;
+                const eff = this._effectiveStreak();
+                if (eff > 1) {
+                    shakeIntensity = 2 + Math.min(eff - 1, 16) * 1.5;
                 }
             } else {
                 // Loss results in a sharp jolt
@@ -389,11 +428,12 @@ export class EffectsManager {
                 this.particles.emit(to.x, to.y, 'victoryExplosion');
 
                 // Background pulse increases with streak
-                const intensity = 0.2 + Math.min(this.winStreak, 10) * 0.05;
+                const eff = this._effectiveStreak();
+                const intensity = 0.2 + Math.min(this._streakScale(eff), 20) * 0.04;
                 this.background.pulse(0x00ff00, intensity);
                 // Scanline spike — skip for expert-speed bots (too fast, too noisy)
                 if (!isExpertBot) {
-                    this.renderer.pulseScanline(0.8 + Math.min(this.winStreak, 8) * 0.25);
+                    this.renderer.pulseScanline(0.8 + Math.min(this._streakScale(eff), 20) * 0.12);
                 }
             } else {
                 // Defeat - intensified effects for losses
@@ -451,13 +491,14 @@ export class EffectsManager {
                     if (underdogAttack) {
                         this.boardEffects.conquestRipple(result.to.x, result.to.y, aColor);
                     }
-                    if (this.winStreak > 1 && !underdogAttack) {
-                        const streakScale = 1.0 + Math.min(this.winStreak - 1, 5) * 0.25;
+                    const eff = this._effectiveStreak();
+                    if (eff > 1 && !underdogAttack) {
+                        const streakScale = 1.0 + Math.min(eff - 1, 12) * 0.22;
                         this.boardEffects.conquestRipple(result.to.x, result.to.y, aColor, streakScale);
                     }
 
                     // Streak burst: extra particles at the captured tile on 3rd+ consecutive win.
-                    if (this.winStreak >= 3) {
+                    if (eff >= 3) {
                         this.particles.emit(to.x, to.y, 'braveBurst', {
                             colors: [aColor, 0xffffff, 0xffff00],
                         });
@@ -638,6 +679,7 @@ export class EffectsManager {
 
         // Reset streak on turn start
         this.winStreak = 0;
+        this._tileChainStreak = 0;
         this.lastWinTime = 0;
 
         const color = player?.color || 0x00ffff;

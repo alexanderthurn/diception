@@ -209,6 +209,7 @@ export class GameEventManager {
             this._flushStreakAchievement();
             this._attackStreak = 0;
             this._streakTile = null;
+            this.effectsManager?.setTileChainStreak(0);
         }
 
         // Hide dice result HUD when turn starts
@@ -923,9 +924,11 @@ export class GameEventManager {
                 if (!fromMatchesLastConquest) {
                     this._flushStreakAchievement();
                     this._attackStreak = 0;
+                    this.effectsManager?.setTileChainStreak(0);
                 }
                 this._attackStreak = (this._attackStreak || 0) + 1;
                 this._streakTile = { x: result.to.x, y: result.to.y };
+                this.effectsManager?.setTileChainStreak(this._attackStreak);
                 // Debounce: only the peak streak of each chain increments its stat.
                 // Cancel any pending lower count and reschedule with the new peak.
                 clearTimeout(this._streakTimer);
@@ -938,6 +941,7 @@ export class GameEventManager {
                 this._flushStreakAchievement();
                 this._attackStreak = 0;
                 this._streakTile = null;
+                this.effectsManager?.setTileChainStreak(0);
             }
         }
 
@@ -974,10 +978,20 @@ export class GameEventManager {
 
         if (shouldPlaySound && this.sfx) {
             if (result.won) {
-                this.sfx.attackWin();
+                const chain = isSoloHuman ? (this._attackStreak || 0) : 0;
+                if (chain >= 3) {
+                    this.sfx.attackWinChain(chain);
+                } else {
+                    this.sfx.attackWin();
+                }
             } else {
                 this.sfx.attackLose();
             }
+        }
+
+        if (isSoloHuman && result.won && this._attackStreak >= 3) {
+            const color = attacker?.color ?? 0x00ffff;
+            this.effectsManager?.onChainMilestone(this._attackStreak, result, color);
         }
 
         if (result.tied && isHumanAttacker) {
