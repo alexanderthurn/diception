@@ -215,6 +215,8 @@ export class ConfigManager {
             el.tournamentConfig.classList.toggle('hidden', parseInt(savedHumanCount, 10) !== 0);
         }
 
+        this.syncBotAiGroupVisibility();
+
         // Seed input: 0 means "random at game start"; reroll fills a specific seed
         if (el.seedInput) el.seedInput.value = 0;
         if (el.seedRerollBtn) el.seedRerollBtn.addEventListener('click', () => {
@@ -344,6 +346,7 @@ export class ConfigManager {
         localStorage.setItem('humanCount', SETUP_DEFAULTS.humanCount);
         localStorage.setItem('botCount', SETUP_DEFAULTS.botCount);
         localStorage.setItem('botAI', SETUP_DEFAULTS.botAI);
+        this.syncBotAiGroupVisibility();
         this.syncSetupModsExpanderFromStorage();
     }
 
@@ -396,6 +399,7 @@ export class ConfigManager {
 
         el.botCountInput.addEventListener('change', () => {
             localStorage.setItem('botCount', el.botCountInput.value);
+            this.syncBotAiGroupVisibility();
             handleChange();
             this.syncSetupModsExpanderLive();
         });
@@ -500,6 +504,13 @@ export class ConfigManager {
         return this.mapSizePresets[index];
     }
 
+    /** Hide bot difficulty when no bots are selected. */
+    syncBotAiGroupVisibility() {
+        const group = document.getElementById('setup-bot-ai-group');
+        const bots = parseInt(this.elements.botCountInput?.value ?? '0', 10);
+        if (group) group.classList.toggle('hidden', bots === 0);
+    }
+
     /**
      * Update map size display text
      */
@@ -552,6 +563,7 @@ export class ConfigManager {
             this.updateConfigFromScenario(level);
             return;
         }
+        this.syncBotAiGroupVisibility();
         this.syncSetupModsExpanderLive();
     }
 
@@ -636,6 +648,7 @@ export class ConfigManager {
             el.attackSecondsLimitInput.value = normalizeAttackSecondsUi(scenario.secondsPerAttack);
         }
 
+        this.syncBotAiGroupVisibility();
         this.syncSetupModsExpanderLive();
     }
 

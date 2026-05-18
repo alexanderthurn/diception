@@ -2172,11 +2172,19 @@ export class MapEditor {
         const botAI = this.state.botAI ?? 'easy';
         if (this.elements.editorSharedBots) this.elements.editorSharedBots.value = String(bots);
         if (this.elements.editorSharedBotAI) this.elements.editorSharedBotAI.value = botAI;
+        this.syncBotAiGroupVisibility();
+    }
+
+    syncBotAiGroupVisibility() {
+        const group = document.getElementById('editor-bot-ai-group');
+        const bots = parseInt(this.elements.editorSharedBots?.value ?? '0', 10);
+        if (group) group.classList.toggle('hidden', bots === 0);
     }
 
     onSharedPlayersChange() {
         this.state.bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
         this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
+        this.syncBotAiGroupVisibility();
         this.rebuildPlayersFromScenarioConfig();
         this.renderColorLegend();
         this.renderPlayerPalette();
