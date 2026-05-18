@@ -52,6 +52,7 @@ export class AndroidUnlockDialog {
 
             content.querySelector('.android-unlock-iap').addEventListener('click', async (e) => {
                 e.currentTarget.disabled = true;
+                Dialog.alert(`DBG: store=${androidStore.getProvider()} ipc=${!!window.__TAURI_INTERNALS__}`);
                 try {
                     const result = await androidStore.purchaseFullVersion();
                     if (result.success) {
