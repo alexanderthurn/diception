@@ -5487,8 +5487,8 @@ body.multi-gamepad:has(#setup-modal:not(.hidden)) .gp-cursor-label {
     pointer-events: none;
 }
 
-/* Version label should never overlay dialogs/buttons */
-body:has(.modal:not(.hidden)) .game-version-display,
+/* Version label should never overlay dialogs/buttons (keep visible on main menu) */
+body:has(.modal:not(.hidden):not(#main-menu)) .game-version-display,
 body:has(.dialog-box:not(.hidden)) .game-version-display {
     opacity: 0;
 }
