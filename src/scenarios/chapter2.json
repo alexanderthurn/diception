@@ -12,29 +12,20 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
-          "x": 0,
-          "y": 0
-        },
-        {
           "x": 1,
           "y": 0
         },
         {
-          "x": 2,
-          "y": 0
-        },
-        {
-          "x": 3,
-          "y": 0
-        },
-        {
           "x": 4,
-          "y": 0
-        },
-        {
-          "x": 5,
           "y": 0
         },
         {
@@ -103,10 +94,6 @@
         },
         {
           "x": 0,
-          "y": 5
-        },
-        {
-          "x": 2,
           "y": 5
         },
         {
@@ -165,6 +152,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 3,
@@ -196,10 +190,6 @@
         },
         {
           "x": 2,
-          "y": 2
-        },
-        {
-          "x": 3,
           "y": 2
         },
         {
@@ -254,7 +244,7 @@
     },
     {
       "type": "map",
-      "width": 5,
+      "width": 6,
       "height": 4,
       "bots": 1,
       "botAI": "easy",
@@ -262,6 +252,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 2,
@@ -292,28 +289,8 @@
           "y": 2
         },
         {
-          "x": 0,
-          "y": 3
-        },
-        {
-          "x": 1,
-          "y": 3
-        },
-        {
           "x": 2,
           "y": 3
-        },
-        {
-          "x": 3,
-          "y": 3
-        },
-        {
-          "x": 4,
-          "y": 3
-        },
-        {
-          "x": 4,
-          "y": 2
         },
         {
           "x": 4,
@@ -330,6 +307,38 @@
         {
           "x": 4,
           "y": 0
+        },
+        {
+          "x": 3,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 3
+        },
+        {
+          "x": 0,
+          "y": 3
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 5,
+          "y": 0
+        },
+        {
+          "x": 5,
+          "y": 1
+        },
+        {
+          "x": 5,
+          "y": 2
+        },
+        {
+          "x": 5,
+          "y": 3
         }
       ]
     },
@@ -343,6 +352,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 0,
@@ -365,20 +381,12 @@
           "y": 1
         },
         {
-          "x": 0,
-          "y": 2
-        },
-        {
           "x": 1,
           "y": 2
         },
         {
           "x": 2,
           "y": 2
-        },
-        {
-          "x": 0,
-          "y": 3
         },
         {
           "x": 1,
@@ -423,10 +431,6 @@
         {
           "x": 3,
           "y": 2
-        },
-        {
-          "x": 3,
-          "y": 4
         },
         {
           "x": 2,
@@ -455,6 +459,26 @@
         {
           "x": 3,
           "y": 0
+        },
+        {
+          "x": 4,
+          "y": 0
+        },
+        {
+          "x": 4,
+          "y": 1
+        },
+        {
+          "x": 3,
+          "y": 5
+        },
+        {
+          "x": 4,
+          "y": 5
+        },
+        {
+          "x": 5,
+          "y": 1
         }
       ]
     },
@@ -468,6 +492,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 0,
@@ -478,76 +509,80 @@
           "y": 0
         },
         {
+          "x": 3,
+          "y": 0
+        },
+        {
+          "x": 4,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 3,
+          "y": 1
+        },
+        {
+          "x": 4,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 2
+        },
+        {
+          "x": 4,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 3
+        },
+        {
+          "x": 4,
+          "y": 3
+        },
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 1,
+          "y": 3
+        },
+        {
+          "x": 0,
+          "y": 3
+        },
+        {
+          "x": 3,
+          "y": 2
+        },
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
           "x": 2,
-          "y": 0
-        },
-        {
-          "x": 3,
-          "y": 0
-        },
-        {
-          "x": 4,
-          "y": 0
-        },
-        {
-          "x": 0,
-          "y": 1
-        },
-        {
-          "x": 1,
-          "y": 1
-        },
-        {
-          "x": 3,
-          "y": 1
-        },
-        {
-          "x": 4,
-          "y": 1
-        },
-        {
-          "x": 0,
-          "y": 2
-        },
-        {
-          "x": 4,
-          "y": 2
-        },
-        {
-          "x": 3,
           "y": 3
-        },
-        {
-          "x": 4,
-          "y": 3
-        },
-        {
-          "x": 3,
-          "y": 4
-        },
-        {
-          "x": 4,
-          "y": 4
         },
         {
           "x": 2,
+          "y": 1
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 1,
           "y": 4
-        },
-        {
-          "x": 1,
-          "y": 3
-        },
-        {
-          "x": 0,
-          "y": 3
-        },
-        {
-          "x": 3,
-          "y": 2
-        },
-        {
-          "x": 1,
-          "y": 2
         }
       ]
     },
@@ -561,6 +596,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 0,
@@ -587,10 +629,6 @@
           "y": 1
         },
         {
-          "x": 2,
-          "y": 1
-        },
-        {
           "x": 3,
           "y": 1
         },
@@ -653,14 +691,6 @@
         {
           "x": 2,
           "y": 3
-        },
-        {
-          "x": 2,
-          "y": 0
-        },
-        {
-          "x": 2,
-          "y": 4
         }
       ]
     },
@@ -755,6 +785,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 0,
@@ -773,10 +810,6 @@
           "y": 0
         },
         {
-          "x": 4,
-          "y": 0
-        },
-        {
           "x": 0,
           "y": 1
         },
@@ -786,10 +819,6 @@
         },
         {
           "x": 2,
-          "y": 1
-        },
-        {
-          "x": 3,
           "y": 1
         },
         {
@@ -852,7 +881,7 @@
     },
     {
       "type": "map",
-      "width": 6,
+      "width": 7,
       "height": 5,
       "bots": 2,
       "botAI": "easy",
@@ -860,12 +889,15 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
-          "x": 0,
-          "y": 0
-        },
-        {
           "x": 1,
           "y": 0
         },
@@ -874,12 +906,12 @@
           "y": 0
         },
         {
-          "x": 4,
+          "x": 3,
           "y": 0
         },
         {
-          "x": 0,
-          "y": 1
+          "x": 5,
+          "y": 0
         },
         {
           "x": 1,
@@ -902,64 +934,200 @@
           "y": 1
         },
         {
+          "x": 6,
+          "y": 1
+        },
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 2
+        },
+        {
+          "x": 4,
+          "y": 2
+        },
+        {
+          "x": 5,
+          "y": 2
+        },
+        {
+          "x": 6,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 3
+        },
+        {
+          "x": 4,
+          "y": 3
+        },
+        {
+          "x": 5,
+          "y": 3
+        },
+        {
+          "x": 6,
+          "y": 3
+        },
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 4
+        },
+        {
+          "x": 5,
+          "y": 4
+        },
+        {
+          "x": 6,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 0
+        },
+        {
+          "x": 6,
+          "y": 0
+        },
+        {
           "x": 0,
           "y": 2
         },
         {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "type": "map",
+      "width": 6,
+      "height": 5,
+      "bots": 3,
+      "botAI": "easy",
+      "maxDice": 8,
+      "diceSides": 6,
+      "gameMode": "classic",
+      "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
+      "tiles": [
+        {
+          "x": 1,
+          "y": 0
+        },
+        {
           "x": 2,
-          "y": 2
-        },
-        {
-          "x": 3,
-          "y": 2
-        },
-        {
-          "x": 4,
-          "y": 2
-        },
-        {
-          "x": 5,
-          "y": 2
-        },
-        {
-          "x": 2,
-          "y": 3
-        },
-        {
-          "x": 3,
-          "y": 3
-        },
-        {
-          "x": 4,
-          "y": 3
-        },
-        {
-          "x": 5,
-          "y": 3
-        },
-        {
-          "x": 2,
-          "y": 4
-        },
-        {
-          "x": 3,
-          "y": 4
-        },
-        {
-          "x": 4,
-          "y": 4
-        },
-        {
-          "x": 5,
-          "y": 4
+          "y": 0
         },
         {
           "x": 3,
           "y": 0
         },
         {
+          "x": 4,
+          "y": 0
+        },
+        {
           "x": 5,
           "y": 0
+        },
+        {
+          "x": 3,
+          "y": 1
+        },
+        {
+          "x": 4,
+          "y": 1
+        },
+        {
+          "x": 5,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 2
+        },
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 2
+        },
+        {
+          "x": 4,
+          "y": 2
+        },
+        {
+          "x": 5,
+          "y": 2
+        },
+        {
+          "x": 0,
+          "y": 3
+        },
+        {
+          "x": 1,
+          "y": 3
+        },
+        {
+          "x": 0,
+          "y": 4
+        },
+        {
+          "x": 1,
+          "y": 4
+        },
+        {
+          "x": 2,
+          "y": 4
+        },
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 4
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 2,
+          "y": 3
+        },
+        {
+          "x": 3,
+          "y": 3
+        },
+        {
+          "x": 5,
+          "y": 4
         }
       ]
     },
@@ -973,143 +1141,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
-      "tiles": [
-        {
-          "x": 1,
-          "y": 0
-        },
-        {
-          "x": 2,
-          "y": 0
-        },
-        {
-          "x": 3,
-          "y": 0
-        },
-        {
-          "x": 1,
-          "y": 1
-        },
-        {
-          "x": 2,
-          "y": 1
-        },
-        {
-          "x": 3,
-          "y": 1
-        },
-        {
-          "x": 4,
-          "y": 1
-        },
-        {
-          "x": 5,
-          "y": 1
-        },
-        {
-          "x": 0,
-          "y": 2
-        },
-        {
-          "x": 1,
-          "y": 2
-        },
-        {
-          "x": 2,
-          "y": 2
-        },
-        {
-          "x": 3,
-          "y": 2
-        },
-        {
-          "x": 4,
-          "y": 2
-        },
-        {
-          "x": 5,
-          "y": 2
-        },
-        {
-          "x": 0,
-          "y": 3
-        },
-        {
-          "x": 1,
-          "y": 3
-        },
-        {
-          "x": 3,
-          "y": 3
-        },
-        {
-          "x": 4,
-          "y": 3
-        },
-        {
-          "x": 5,
-          "y": 3
-        },
-        {
-          "x": 0,
-          "y": 4
-        },
-        {
-          "x": 1,
-          "y": 4
-        },
-        {
-          "x": 3,
-          "y": 4
-        },
-        {
-          "x": 4,
-          "y": 4
-        },
-        {
-          "x": 0,
-          "y": 5
-        },
-        {
-          "x": 1,
-          "y": 5
-        },
-        {
-          "x": 2,
-          "y": 5
-        },
-        {
-          "x": 3,
-          "y": 5
-        },
-        {
-          "x": 4,
-          "y": 5
-        },
-        {
-          "x": 2,
-          "y": 3
-        },
-        {
-          "x": 2,
-          "y": 4
-        },
-        {
-          "x": 0,
-          "y": 1
-        }
-      ]
-    },
-    {
-      "type": "map",
-      "width": 6,
-      "height": 6,
-      "bots": 3,
-      "botAI": "easy",
-      "maxDice": 8,
-      "diceSides": 6,
-      "gameMode": "classic",
-      "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 1,
@@ -1200,14 +1238,6 @@
           "y": 3
         },
         {
-          "x": 0,
-          "y": 4
-        },
-        {
-          "x": 1,
-          "y": 4
-        },
-        {
           "x": 2,
           "y": 4
         },
@@ -1224,10 +1254,6 @@
           "y": 4
         },
         {
-          "x": 1,
-          "y": 5
-        },
-        {
           "x": 2,
           "y": 5
         },
@@ -1237,10 +1263,6 @@
         },
         {
           "x": 4,
-          "y": 5
-        },
-        {
-          "x": 0,
           "y": 5
         }
       ]
@@ -1578,20 +1600,23 @@
     },
     {
       "type": "map",
-      "width": 6,
-      "height": 6,
+      "width": 7,
+      "height": 7,
       "bots": 3,
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
-          "x": 2,
-          "y": 0
-        },
-        {
           "x": 3,
           "y": 0
         },
@@ -1604,8 +1629,8 @@
           "y": 0
         },
         {
-          "x": 2,
-          "y": 1
+          "x": 6,
+          "y": 0
         },
         {
           "x": 3,
@@ -1620,8 +1645,8 @@
           "y": 1
         },
         {
-          "x": 0,
-          "y": 2
+          "x": 6,
+          "y": 1
         },
         {
           "x": 1,
@@ -1644,8 +1669,8 @@
           "y": 2
         },
         {
-          "x": 0,
-          "y": 3
+          "x": 6,
+          "y": 2
         },
         {
           "x": 1,
@@ -1668,8 +1693,8 @@
           "y": 3
         },
         {
-          "x": 0,
-          "y": 4
+          "x": 6,
+          "y": 3
         },
         {
           "x": 1,
@@ -1684,8 +1709,8 @@
           "y": 4
         },
         {
-          "x": 0,
-          "y": 5
+          "x": 4,
+          "y": 4
         },
         {
           "x": 1,
@@ -1700,29 +1725,68 @@
           "y": 5
         },
         {
-          "x": 1,
-          "y": 1
+          "x": 4,
+          "y": 5
         },
         {
-          "x": 4,
-          "y": 4
+          "x": 2,
+          "y": 1
         },
         {
           "x": 5,
           "y": 4
+        },
+        {
+          "x": 6,
+          "y": 4
+        },
+        {
+          "x": 0,
+          "y": 3
+        },
+        {
+          "x": 0,
+          "y": 4
+        },
+        {
+          "x": 0,
+          "y": 5
+        },
+        {
+          "x": 0,
+          "y": 6
+        },
+        {
+          "x": 1,
+          "y": 6
+        },
+        {
+          "x": 2,
+          "y": 6
+        },
+        {
+          "x": 3,
+          "y": 6
         }
       ]
     },
     {
       "type": "map",
       "width": 6,
-      "height": 6,
+      "height": 5,
       "bots": 2,
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 0,
@@ -1737,10 +1801,6 @@
           "y": 0
         },
         {
-          "x": 3,
-          "y": 0
-        },
-        {
           "x": 4,
           "y": 0
         },
@@ -1761,6 +1821,10 @@
           "y": 1
         },
         {
+          "x": 3,
+          "y": 1
+        },
+        {
           "x": 4,
           "y": 1
         },
@@ -1793,14 +1857,6 @@
           "y": 2
         },
         {
-          "x": 0,
-          "y": 3
-        },
-        {
-          "x": 1,
-          "y": 3
-        },
-        {
           "x": 2,
           "y": 3
         },
@@ -1817,32 +1873,16 @@
           "y": 3
         },
         {
-          "x": 2,
-          "y": 4
-        },
-        {
-          "x": 3,
-          "y": 4
-        },
-        {
-          "x": 4,
-          "y": 4
-        },
-        {
           "x": 5,
           "y": 4
         },
         {
-          "x": 5,
-          "y": 5
+          "x": 3,
+          "y": 0
         },
         {
           "x": 3,
-          "y": 1
-        },
-        {
-          "x": 3,
-          "y": 5
+          "y": 4
         }
       ]
     },
@@ -2193,11 +2233,18 @@
     {
       "type": "scenario",
       "width": 8,
-      "height": 4,
+      "height": 6,
       "maxDice": 8,
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "players": [
         {
           "id": 0,
@@ -2224,153 +2271,147 @@
       "tiles": [
         {
           "x": 2,
-          "y": 0,
+          "y": 1,
           "owner": 0,
           "dice": 1
         },
         {
           "x": 2,
-          "y": 1,
+          "y": 2,
           "owner": 0,
           "dice": 5
         },
         {
           "x": 3,
-          "y": 0,
+          "y": 1,
           "owner": 0,
           "dice": 1
         },
         {
           "x": 3,
-          "y": 1,
+          "y": 2,
           "owner": 0,
           "dice": 5
         },
         {
           "x": 3,
-          "y": 2,
+          "y": 3,
           "owner": 0,
           "dice": 5
         },
         {
           "x": 4,
-          "y": 1,
+          "y": 2,
           "owner": 1,
           "dice": 2
         },
         {
           "x": 4,
-          "y": 2,
+          "y": 3,
           "owner": 2,
           "dice": 2
         },
         {
           "x": 0,
-          "y": 3,
+          "y": 4,
           "owner": 0,
           "dice": 1
         },
         {
           "x": 6,
-          "y": 3,
+          "y": 4,
           "owner": 2,
           "dice": 2
         },
         {
           "x": 7,
-          "y": 3,
+          "y": 4,
           "owner": 2,
           "dice": 2
         },
         {
           "x": 1,
-          "y": 3,
+          "y": 4,
+          "owner": 0,
+          "dice": 1
+        },
+        {
+          "x": 2,
+          "y": 4,
           "owner": 0,
           "dice": 1
         },
         {
           "x": 2,
           "y": 3,
-          "owner": 0,
-          "dice": 1
-        },
-        {
-          "x": 2,
-          "y": 2,
           "owner": 0,
           "dice": 5
         },
         {
           "x": 3,
-          "y": 3,
+          "y": 4,
           "owner": 0,
           "dice": 1
         },
         {
           "x": 5,
-          "y": 3,
+          "y": 4,
           "owner": 2,
           "dice": 2
         },
         {
           "x": 4,
+          "y": 4,
+          "owner": 2,
+          "dice": 6
+        },
+        {
+          "x": 5,
           "y": 3,
           "owner": 2,
+          "dice": 2
+        },
+        {
+          "x": 5,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 4,
+          "y": 1,
+          "owner": 1,
           "dice": 6
         },
         {
           "x": 5,
           "y": 2,
-          "owner": 2,
-          "dice": 2
-        },
-        {
-          "x": 5,
-          "y": 0,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 4,
-          "y": 0,
-          "owner": 1,
-          "dice": 6
-        },
-        {
-          "x": 5,
-          "y": 1,
           "owner": 1,
           "dice": 2
         },
         {
           "x": 1,
-          "y": 0,
+          "y": 1,
           "owner": 0,
           "dice": 1
         },
         {
           "x": 0,
-          "y": 0,
+          "y": 1,
           "owner": 0,
           "dice": 1
         },
         {
           "x": 6,
-          "y": 0,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 7,
-          "y": 0,
-          "owner": 1,
-          "dice": 2
-        },
-        {
-          "x": 0,
           "y": 1,
-          "owner": 0,
-          "dice": 1
+          "owner": 1,
+          "dice": 2
+        },
+        {
+          "x": 7,
+          "y": 1,
+          "owner": 1,
+          "dice": 2
         },
         {
           "x": 0,
@@ -2379,95 +2420,40 @@
           "dice": 1
         },
         {
+          "x": 0,
+          "y": 3,
+          "owner": 0,
+          "dice": 1
+        },
+        {
           "x": 7,
-          "y": 2,
+          "y": 3,
           "owner": 2,
           "dice": 2
         },
         {
           "x": 7,
-          "y": 1,
+          "y": 2,
           "owner": 1,
           "dice": 2
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "owner": 0,
+          "dice": 1
+        },
+        {
+          "x": 3,
+          "y": 5,
+          "owner": 0,
+          "dice": 1
         }
       ]
     },
     {
       "type": "map",
       "width": 5,
-      "height": 4,
-      "bots": 2,
-      "botAI": "easy",
-      "maxDice": 8,
-      "diceSides": 6,
-      "gameMode": "classic",
-      "turnTimeLimit": 0,
-      "tiles": [
-        {
-          "x": 1,
-          "y": 0
-        },
-        {
-          "x": 2,
-          "y": 0
-        },
-        {
-          "x": 3,
-          "y": 0
-        },
-        {
-          "x": 0,
-          "y": 1
-        },
-        {
-          "x": 1,
-          "y": 1
-        },
-        {
-          "x": 2,
-          "y": 1
-        },
-        {
-          "x": 3,
-          "y": 1
-        },
-        {
-          "x": 1,
-          "y": 2
-        },
-        {
-          "x": 2,
-          "y": 2
-        },
-        {
-          "x": 3,
-          "y": 2
-        },
-        {
-          "x": 4,
-          "y": 2
-        },
-        {
-          "x": 3,
-          "y": 3
-        },
-        {
-          "x": 4,
-          "y": 1
-        },
-        {
-          "x": 0,
-          "y": 2
-        },
-        {
-          "x": 4,
-          "y": 3
-        }
-      ]
-    },
-    {
-      "type": "map",
-      "width": 4,
       "height": 6,
       "bots": 2,
       "botAI": "easy",
@@ -2475,78 +2461,93 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
-          "x": 0,
-          "y": 1
-        },
-        {
-          "x": 2,
-          "y": 1
-        },
-        {
-          "x": 3,
-          "y": 1
-        },
-        {
-          "x": 0,
-          "y": 2
-        },
-        {
-          "x": 1,
-          "y": 2
-        },
-        {
-          "x": 2,
-          "y": 2
-        },
-        {
-          "x": 1,
-          "y": 3
-        },
-        {
-          "x": 2,
-          "y": 3
-        },
-        {
-          "x": 3,
-          "y": 3
-        },
-        {
-          "x": 0,
-          "y": 4
-        },
-        {
-          "x": 1,
-          "y": 4
-        },
-        {
-          "x": 3,
-          "y": 4
-        },
-        {
-          "x": 3,
-          "y": 2
-        },
-        {
-          "x": 1,
-          "y": 1
-        },
-        {
-          "x": 2,
-          "y": 4
-        },
-        {
-          "x": 0,
-          "y": 3
-        },
-        {
           "x": 1,
           "y": 0
         },
         {
           "x": 2,
           "y": 0
+        },
+        {
+          "x": 3,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 2,
+          "y": 1
+        },
+        {
+          "x": 3,
+          "y": 1
+        },
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 2
+        },
+        {
+          "x": 4,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 3
+        },
+        {
+          "x": 4,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 2
+        },
+        {
+          "x": 4,
+          "y": 3
+        },
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 4
+        },
+        {
+          "x": 0,
+          "y": 3
+        },
+        {
+          "x": 0,
+          "y": 4
+        },
+        {
+          "x": 0,
+          "y": 5
         },
         {
           "x": 1,
@@ -2558,13 +2559,125 @@
         },
         {
           "x": 3,
-          "y": 0
+          "y": 5
         }
       ]
     },
     {
       "type": "map",
       "width": 6,
+      "height": 6,
+      "bots": 2,
+      "botAI": "easy",
+      "maxDice": 8,
+      "diceSides": 6,
+      "gameMode": "classic",
+      "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
+      "tiles": [
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 3,
+          "y": 1
+        },
+        {
+          "x": 4,
+          "y": 1
+        },
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 3
+        },
+        {
+          "x": 3,
+          "y": 3
+        },
+        {
+          "x": 4,
+          "y": 3
+        },
+        {
+          "x": 1,
+          "y": 4
+        },
+        {
+          "x": 2,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 4
+        },
+        {
+          "x": 4,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 1
+        },
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 1,
+          "y": 3
+        },
+        {
+          "x": 2,
+          "y": 0
+        },
+        {
+          "x": 3,
+          "y": 0
+        },
+        {
+          "x": 2,
+          "y": 5
+        },
+        {
+          "x": 3,
+          "y": 5
+        },
+        {
+          "x": 4,
+          "y": 0
+        },
+        {
+          "x": 5,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 3
+        }
+      ]
+    },
+    {
+      "type": "map",
+      "width": 8,
       "height": 4,
       "bots": 1,
       "botAI": "easy",
@@ -2572,6 +2685,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 1,
@@ -2656,6 +2776,18 @@
         {
           "x": 2,
           "y": 2
+        },
+        {
+          "x": 6,
+          "y": 2
+        },
+        {
+          "x": 6,
+          "y": 3
+        },
+        {
+          "x": 7,
+          "y": 3
         }
       ]
     },
@@ -2669,6 +2801,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 0,
@@ -2676,10 +2815,6 @@
         },
         {
           "x": 1,
-          "y": 0
-        },
-        {
-          "x": 2,
           "y": 0
         },
         {
@@ -2708,10 +2843,6 @@
         },
         {
           "x": 0,
-          "y": 5
-        },
-        {
-          "x": 1,
           "y": 5
         },
         {
@@ -2778,6 +2909,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 2,
@@ -2860,16 +2998,12 @@
           "y": 2
         },
         {
-          "x": 4,
-          "y": 1
-        },
-        {
-          "x": 4,
-          "y": 0
-        },
-        {
           "x": 0,
           "y": 4
+        },
+        {
+          "x": 5,
+          "y": 1
         }
       ]
     },
@@ -2883,6 +3017,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 0,
@@ -2981,10 +3122,6 @@
           "y": 4
         },
         {
-          "x": 0,
-          "y": 5
-        },
-        {
           "x": 2,
           "y": 5
         },
@@ -3011,10 +3148,6 @@
         {
           "x": 3,
           "y": 1
-        },
-        {
-          "x": 3,
-          "y": 0
         },
         {
           "x": 2,
@@ -3038,6 +3171,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "players": [
         {
           "id": 0,
@@ -3173,7 +3313,7 @@
           "x": 2,
           "y": 5,
           "owner": 0,
-          "dice": 1
+          "dice": 6
         },
         {
           "x": 1,
@@ -3657,6 +3797,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "players": [
         {
           "id": 0,
@@ -3668,7 +3815,7 @@
         {
           "id": 1,
           "isBot": true,
-          "color": 16711765,
+          "color": 35071,
           "storedDice": 0,
           "aiId": "easy"
         }
@@ -3684,7 +3831,7 @@
           "x": 1,
           "y": 1,
           "owner": 0,
-          "dice": 1
+          "dice": 2
         },
         {
           "x": 1,
@@ -3696,25 +3843,25 @@
           "x": 1,
           "y": 3,
           "owner": 0,
-          "dice": 1
+          "dice": 2
         },
         {
           "x": 2,
           "y": 0,
           "owner": 0,
-          "dice": 1
+          "dice": 2
         },
         {
           "x": 2,
           "y": 1,
           "owner": 0,
-          "dice": 1
+          "dice": 2
         },
         {
           "x": 2,
           "y": 2,
           "owner": 0,
-          "dice": 1
+          "dice": 2
         },
         {
           "x": 2,
@@ -3756,54 +3903,57 @@
     },
     {
       "type": "map",
-      "width": 4,
-      "height": 4,
+      "width": 5,
+      "height": 5,
       "bots": 1,
       "botAI": "easy",
       "maxDice": 8,
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
-        {
-          "x": 1,
-          "y": 0
-        },
-        {
-          "x": 2,
-          "y": 0
-        },
-        {
-          "x": 3,
-          "y": 0
-        },
         {
           "x": 2,
           "y": 1
         },
         {
-          "x": 0,
+          "x": 3,
+          "y": 1
+        },
+        {
+          "x": 4,
+          "y": 1
+        },
+        {
+          "x": 3,
           "y": 2
         },
         {
           "x": 1,
-          "y": 2
-        },
-        {
-          "x": 0,
           "y": 3
         },
         {
-          "x": 0,
-          "y": 0
+          "x": 2,
+          "y": 3
         },
         {
-          "x": 0,
-          "y": 1
+          "x": 1,
+          "y": 4
         },
         {
           "x": 1,
           "y": 1
+        },
+        {
+          "x": 1,
+          "y": 2
         },
         {
           "x": 2,
@@ -3811,6 +3961,18 @@
         },
         {
           "x": 3,
+          "y": 3
+        },
+        {
+          "x": 4,
+          "y": 2
+        },
+        {
+          "x": 1,
+          "y": 0
+        },
+        {
+          "x": 0,
           "y": 1
         }
       ]
@@ -3825,6 +3987,13 @@
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "tiles": [
         {
           "x": 4,
@@ -3844,10 +4013,6 @@
         },
         {
           "x": 4,
-          "y": 2
-        },
-        {
-          "x": 4,
           "y": 3
         },
         {
@@ -3860,10 +4025,6 @@
         },
         {
           "x": 2,
-          "y": 4
-        },
-        {
-          "x": 3,
           "y": 4
         },
         {
@@ -3915,11 +4076,18 @@
     {
       "type": "scenario",
       "width": 5,
-      "height": 3,
+      "height": 5,
       "maxDice": 8,
       "diceSides": 6,
       "gameMode": "classic",
       "turnTimeLimit": 0,
+      "attacksPerTurn": 0,
+      "secondsPerTurn": 0,
+      "secondsPerAttack": 0,
+      "fullBoardRule": "nothing",
+      "attackRule": "classic",
+      "supplyRule": "classic",
+      "playMode": "classic",
       "players": [
         {
           "id": 0,
@@ -3939,27 +4107,33 @@
       "tiles": [
         {
           "x": 3,
-          "y": 1,
+          "y": 2,
           "owner": 1,
           "dice": 1
         },
         {
           "x": 4,
-          "y": 1,
+          "y": 2,
           "owner": 1,
           "dice": 5
         },
         {
           "x": 1,
-          "y": 2,
+          "y": 3,
           "owner": 0,
           "dice": 3
         },
         {
           "x": 3,
-          "y": 2,
+          "y": 3,
           "owner": 1,
           "dice": 1
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "owner": 0,
+          "dice": 3
         },
         {
           "x": 1,
@@ -3968,40 +4142,58 @@
           "dice": 3
         },
         {
-          "x": 1,
-          "y": 0,
-          "owner": 0,
-          "dice": 3
-        },
-        {
           "x": 2,
-          "y": 0,
+          "y": 1,
           "owner": 1,
           "dice": 1
         },
         {
           "x": 2,
-          "y": 1,
+          "y": 2,
           "owner": 0,
           "dice": 3
         },
         {
           "x": 2,
-          "y": 2,
+          "y": 3,
           "owner": 1,
           "dice": 1
         },
         {
           "x": 3,
-          "y": 0,
+          "y": 1,
           "owner": 1,
           "dice": 1
         },
         {
           "x": 0,
-          "y": 1,
+          "y": 2,
           "owner": 0,
           "dice": 3
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "owner": 0,
+          "dice": 1
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "owner": 0,
+          "dice": 1
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "owner": 1,
+          "dice": 1
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "owner": 1,
+          "dice": 1
         }
       ]
     }
