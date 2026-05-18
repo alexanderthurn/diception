@@ -148,9 +148,15 @@ export class Renderer {
             screenHeight = this.app.screen.height - 160;
             padding = 0;
         } else {
-            padding = 40;
-            screenWidth = (this.app.screen.width - padding) * 0.80;
-            screenHeight = (this.app.screen.height - padding) * 0.80;
+            // Subtract the collapsed dashboard width from the available screen width
+            const isMobile = this.app.screen.width <= 768;
+            const leftOffset = isMobile ? 58 : 68;
+            const availableWidth = this.app.screen.width - leftOffset;
+            
+            // Reduce padding and increase the percentage of the screen the map is allowed to fill
+            padding = isMobile ? 20 : 40;
+            screenWidth = (availableWidth - padding) * 0.96;
+            screenHeight = (this.app.screen.height - padding) * 0.92;
         }
 
         // Calculate scale to fit
@@ -171,8 +177,12 @@ export class Renderer {
             this.rootContainer.x = leftInset;
             this.rootContainer.y = this.app.screen.height - scaledHeight - bottomInset;
         } else {
-            // Center the map in the full screen
-            this.rootContainer.x = (this.app.screen.width - scaledWidth) / 2;
+            // Center the map in the remaining available screen space
+            const isMobile = this.app.screen.width <= 768;
+            const leftOffset = isMobile ? 58 : 68;
+            const availableWidth = this.app.screen.width - leftOffset;
+            
+            this.rootContainer.x = leftOffset + (availableWidth - scaledWidth) / 2;
             this.rootContainer.y = (this.app.screen.height - scaledHeight) / 2;
         }
 
