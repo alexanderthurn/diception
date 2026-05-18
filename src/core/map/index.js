@@ -46,7 +46,8 @@ export class MapManager {
         // Determine which style to use
         let style = mapStyle === 'preset' ? 'preset' : normalizeUserMapStyle(mapStyle);
         if (style === 'random') {
-            const styles = ['continents', 'simple', 'full'];
+            // 50% chance for 'simple', 25% for 'continents', 25% for 'full'
+            const styles = ['simple', 'simple', 'continents', 'full'];
             style = styles[Math.floor(this._rng() * styles.length)];
         }
 
