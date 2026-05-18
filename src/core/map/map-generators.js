@@ -220,9 +220,17 @@ function generateContinentsFourCorners(map) {
     const br = cornerAnchor(w, h, s, 'br');
     const bl = cornerAnchor(w, h, s, 'bl');
 
-    createBridge2x2(map, tl, tr);
-    createBridge2x2(map, tr, br);
-    createBridge2x2(map, br, bl);
+    // Add randomness to connections
+    // 50% chance for a full O-ring (all 4 connected)
+    // 50% chance for a C-shape (one random bridge missing)
+    const bridgeSet = [[tl, tr], [tr, br], [br, bl], [bl, tl]];
+    const skipIndex = rand(map) < 0.5 ? Math.floor(rand(map) * 4) : -1;
+    
+    bridgeSet.forEach((b, i) => {
+        if (i !== skipIndex) {
+            createBridge2x2(map, b[0], b[1]);
+        }
+    });
 }
 
 /**
