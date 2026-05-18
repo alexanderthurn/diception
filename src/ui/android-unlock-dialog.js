@@ -60,11 +60,11 @@ export class AndroidUnlockDialog {
                         resolve('iap');
                     } else {
                         e.currentTarget.disabled = false;
-                        if (result.error) Dialog.alert(result.error);
+                        Dialog.alert(result.error || 'Purchase failed (no error)');
                     }
                 } catch (err) {
                     e.currentTarget.disabled = false;
-                    Dialog.alert('Purchase failed. Please try again.');
+                    Dialog.alert('Purchase exception: ' + (err?.message || String(err)));
                 }
             });
 
@@ -85,7 +85,7 @@ export class AndroidUnlockDialog {
                     }
                 } catch (err) {
                     e.currentTarget.disabled = false;
-                    Dialog.alert('Ad unavailable. Please try again later.');
+                    Dialog.alert('Ad exception: ' + (err?.message || String(err)));
                 }
             });
 

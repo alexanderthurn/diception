@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.webkit.WebView
 import app.tauri.annotation.Command
 import app.tauri.annotation.TauriPlugin
@@ -122,6 +123,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
 
     override fun load(webView: WebView) {
         super.load(webView)
+        Log.d("StorePlugin", "load() isAmazon=$isAmazon")
         if (isAmazon) {
             mainHandler.post {
                 webView.evaluateJavascript(
@@ -154,6 +156,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
     private fun setupGoogle() {
         gmsAvailable = GoogleApiAvailability.getInstance()
             .isGooglePlayServicesAvailable(act) == ConnectionResult.SUCCESS
+        Log.d("StorePlugin", "setupGoogle() gmsAvailable=$gmsAvailable")
         billingClient = BillingClient.newBuilder(act)
             .enablePendingPurchases(
                 PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
@@ -205,6 +208,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
 
     @Command
     fun purchaseFullVersion(invoke: Invoke) {
+        Log.d("StorePlugin", "purchaseFullVersion() isAmazon=$isAmazon billingReady=${billingClient?.isReady}")
         if (isAmazon) {
             pendingAmazonPurchaseInvoke = invoke
             PurchasingService.purchase(PRODUCT_ID)
@@ -212,6 +216,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
         }
         val client = billingClient
         if (client == null || !client.isReady) {
+            Log.d("StorePlugin", "purchaseFullVersion: billing not ready, client=$client ready=${client?.isReady}")
             invoke.resolve(JSObject().put("success", false).put("error", "Billing not ready"))
             return
         }
@@ -224,7 +229,9 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
                     .build()
             )).build()
         client.queryProductDetailsAsync(params) { result, products ->
+            Log.d("StorePlugin", "queryProductDetails: responseCode=${result.responseCode} products=${products.size}")
             if (result.responseCode != BillingClient.BillingResponseCode.OK || products.isEmpty()) {
+                Log.d("StorePlugin", "queryProductDetails: not found, msg=${result.debugMessage}")
                 invoke.resolve(JSObject().put("success", false).put("error", "Product not found"))
                 pendingGooglePurchaseInvoke = null
                 return@queryProductDetailsAsync
@@ -240,6 +247,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
 
     @Command
     fun showRewardedAd(invoke: Invoke) {
+        Log.d("StorePlugin", "showRewardedAd() isAmazon=$isAmazon gmsAvailable=$gmsAvailable adReady=${rewardedAd != null}")
         if (isAmazon) {
             invoke.resolve(JSObject().put("success", false).put("error", "Ads not available on Amazon"))
             return
@@ -282,6 +290,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
 
     @Command
     fun getProductPrice(invoke: Invoke) {
+        Log.d("StorePlugin", "getProductPrice() isAmazon=$isAmazon billingReady=${billingClient?.isReady}")
         if (isAmazon) {
             pendingAmazonPriceInvoke = invoke
             PurchasingService.getProductData(setOf(PRODUCT_ID))
