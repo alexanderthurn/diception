@@ -4,7 +4,7 @@
         <key>fileFormatVersion</key>
         <int>6</int>
         <key>texturePackerVersion</key>
-        <string>7.12.0</string>
+        <string>8.0.0</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
@@ -218,25 +218,25 @@
             <key type="filename">gfx/achievements/ACH_PURE_HUMANS.png</key>
             <key type="filename">gfx/achievements/ACH_PURE_HUMANS_locked.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_3.png</key>
-            <key type="filename">gfx/achievements/ACH_STREAK_3_locked.png</key>
-            <key type="filename">gfx/achievements/ACH_STREAK_4.png</key>
-            <key type="filename">gfx/achievements/ACH_STREAK_4_locked.png</key>
-            <key type="filename">gfx/achievements/ACH_STREAK_5.png</key>
-            <key type="filename">gfx/achievements/ACH_STREAK_5_locked.png</key>
-            <key type="filename">gfx/achievements/ACH_STREAK_6.png</key>
-            <key type="filename">gfx/achievements/ACH_STREAK_6_locked.png</key>
-            <key type="filename">gfx/achievements/ACH_STREAK_7.png</key>
-            <key type="filename">gfx/achievements/ACH_STREAK_7_locked.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_3_3000.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_3_3000_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_3_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_4.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_4_1500.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_4_1500_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_4_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_5.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_5_500.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_5_500_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_5_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_6.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_6_200.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_6_200_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_6_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_7.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_7_100.png</key>
             <key type="filename">gfx/achievements/ACH_STREAK_7_100_locked.png</key>
+            <key type="filename">gfx/achievements/ACH_STREAK_7_locked.png</key>
             <key type="filename">gfx/achievements/ACH_SURVIVOR.png</key>
             <key type="filename">gfx/achievements/ACH_SURVIVOR_locked.png</key>
             <key type="filename">gfx/achievements/ACH_TUTORIAL.png</key>
@@ -447,6 +447,22 @@
                 <rect>64,64,128,128</rect>
                 <key>scale9Paddings</key>
                 <rect>64,64,128,128</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">gfx/icons/icon.png</key>
+            <key type="filename">gfx/icons/icon_demo.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0,0</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>128,128,256,256</rect>
+                <key>scale9Paddings</key>
+                <rect>128,128,256,256</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
