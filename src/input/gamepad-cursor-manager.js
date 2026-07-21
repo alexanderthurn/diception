@@ -388,9 +388,11 @@ export class GamepadCursorManager {
             const idx = sourceId?.startsWith('gamepad-') ? parseInt(sourceId.slice('gamepad-'.length)) : -1;
             if (idx < 0) return;
             const cursor = this.cursors.get(idx);
+            const isEditorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
             if (active) {
                 this._inUIFocus.add(idx);
-                if (cursor) cursor.element.style.visibility = 'hidden';
+                // Editor keeps the cursor visible on focused controls; menus hide it
+                if (cursor && !isEditorOpen) cursor.element.style.visibility = 'hidden';
             } else {
                 this._inUIFocus.delete(idx);
                 if (cursor) cursor.element.style.visibility = '';
@@ -454,13 +456,15 @@ export class GamepadCursorManager {
             if (Math.abs(sy) < currentDeadZone) sy = 0;
 
             if (sx !== 0 || sy !== 0) {
-                const scrollX = sx * 15 * cursor.speedMultiplier;
-                const scrollY = sy * 15 * cursor.speedMultiplier;
-                const target = document.elementFromPoint(cursor.x, cursor.y);
-                if (target) {
-                    const scrollable = this.findScrollableParent(target);
-                    if (scrollable) {
-                        scrollable.scrollBy(scrollX, scrollY);
+                if (!this._inUIFocus.has(idx)) {
+                    const scrollX = sx * 15 * cursor.speedMultiplier;
+                    const scrollY = sy * 15 * cursor.speedMultiplier;
+                    const target = document.elementFromPoint(cursor.x, cursor.y);
+                    if (target) {
+                        const scrollable = this.findScrollableParent(target);
+                        if (scrollable) {
+                            scrollable.scrollBy(scrollX, scrollY);
+                        }
                     }
                 }
             }
@@ -790,6 +794,7 @@ export class GamepadCursorManager {
             // Gamepad hover highlight: apply .gamepad-focused to the element under the cursor
             const hoverOption = target.closest('.custom-select-option');
             const prevFocused = document.querySelector('.gamepad-focused');
+            const editorUiLocked = gamepadIndex >= 0 && this._inUIFocus.has(gamepadIndex);
             if (hoverOption) {
                 if (prevFocused !== hoverOption) {
                     if (prevFocused) prevFocused.classList.remove('gamepad-focused');
@@ -797,7 +802,7 @@ export class GamepadCursorManager {
                     hoverOption.focus({ preventScroll: false });
                     hoverOption.scrollIntoView({ block: 'nearest' });
                 }
-            } else if (prevFocused && !target.closest('.custom-select-dropdown')) {
+            } else if (prevFocused && !target.closest('.custom-select-dropdown') && !editorUiLocked) {
                 prevFocused.classList.remove('gamepad-focused');
             }
         }

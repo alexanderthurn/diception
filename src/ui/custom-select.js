@@ -263,7 +263,7 @@ export function initCustomSelects() {
  * Prevent native select keyboard interaction, open custom dropdown instead.
  */
 function preventSelectKeydown(e) {
-    if (['ArrowDown', 'ArrowUp', 'Space', 'Enter', ' '].includes(e.key)) {
+    if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Space', 'Enter', ' '].includes(e.key)) {
         e.preventDefault();
         e.stopPropagation();
         if (e.key === 'Enter' || e.key === ' ' || e.key === 'Space') {

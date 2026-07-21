@@ -1034,26 +1034,39 @@ export class ScenarioBrowser {
     }
 
     mapEditorCallbacksForCampaignLevel(levelIndex) {
+        const returnCampaign = this.selectedCampaign;
         return {
             onSave: (data) => {
                 this.campaignManager.setUserLevel(levelIndex, data);
-                if (this.selectedCampaign.isUserCampaign) {
+                if (returnCampaign?.isUserCampaign) {
                     this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
                 }
                 this.justSavedLevelIndex = levelIndex;
-                this.scenarioBrowserModal.classList.remove('hidden');
-                this.showLevelGridView(this.selectedCampaign);
+                this.returnFromMapEditor(this.selectedCampaign ?? returnCampaign);
                 setTimeout(() => {
                     this.justSavedLevelIndex = null;
                     this.renderLevelGrid(this.selectedCampaign);
                 }, 2000);
             },
             onClose: () => {
-                if (this.effectsManager) this.effectsManager.startIntroMode();
-                this.scenarioBrowserModal.classList.remove('hidden');
-                this.showLevelGridView(this.selectedCampaign);
+                this.returnFromMapEditor(returnCampaign);
             }
         };
+    }
+
+    /** Restore scenario browser to the campaign level grid after closing the map editor. */
+    returnFromMapEditor(campaign) {
+        if (this.effectsManager) this.effectsManager.startIntroMode();
+        this.scenarioBrowserModal.classList.remove('hidden');
+        let target = campaign ?? this.selectedCampaign;
+        if (target?.isUserCampaign) {
+            target = { ...this.campaignManager.userCampaign, isUserCampaign: true };
+        }
+        if (target) {
+            this.showLevelGridView(target);
+        } else {
+            this.showCampaignView();
+        }
     }
 
     async selectAndPlayLevel(index, opts = {}) {
@@ -1309,6 +1322,7 @@ export class ScenarioBrowser {
         };
 
         if (this.effectsManager) this.effectsManager.stopIntroMode();
+        const returnCampaign = this.selectedCampaign;
         this.mapEditor.open(template, {
             campaign,
             levelIndex: actualIndex,
@@ -1317,18 +1331,11 @@ export class ScenarioBrowser {
                 this.campaignManager.setUserLevel(actualIndex, data);
                 this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
                 this.justSavedLevelIndex = actualIndex;
-                this.scenarioBrowserModal.classList.remove('hidden');
-                this.showLevelGridView(this.selectedCampaign);
+                this.returnFromMapEditor(this.selectedCampaign);
                 setTimeout(() => { this.justSavedLevelIndex = null; this.renderLevelGrid(this.selectedCampaign); }, 2000);
             },
             onClose: () => {
-                if (this.effectsManager) this.effectsManager.startIntroMode();
-                this.scenarioBrowserModal.classList.remove('hidden');
-                if (this.selectedCampaign?.levels?.length) {
-                    this.showLevelGridView(this.selectedCampaign);
-                } else {
-                    this.showCampaignView();
-                }
+                this.returnFromMapEditor(returnCampaign ?? campaign);
             }
         });
     }

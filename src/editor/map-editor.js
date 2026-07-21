@@ -549,6 +549,11 @@ export class MapEditor {
         return Math.max(0, Math.min(buttons.length - 1, Math.round(t * (buttons.length - 1))));
     }
 
+    _editorSyncGamepadUIFocus(gpIndex, active) {
+        if (gpIndex < 0) return;
+        this.inputManager?.emit?.('gamepadUIFocus', { sourceId: 'gamepad-' + gpIndex, active });
+    }
+
     _editorEnterUIFocus(gpIndex, sourceId, side, opts = {}) {
         const buttons = this._editorGetUIButtons(side);
         if (!buttons.length) return;
@@ -588,6 +593,7 @@ export class MapEditor {
                 index: gpIndex
             });
         }
+        this._editorSyncGamepadUIFocus(gpIndex, true);
     }
 
     _editorCrossUIFocus(gpIndex, sourceId, toSide, fromFocusState, opts = {}) {
@@ -607,6 +613,7 @@ export class MapEditor {
         const buttons = this._editorGetUIButtons(focusState.side);
         buttons.forEach(b => b.classList.remove('gamepad-focused'));
         this._editorUIFocusStates.delete(sourceId);
+        this._editorSyncGamepadUIFocus(gpIndex, false);
         const cur = this._editorGetCursorState(sourceId);
         if (focusState.returnTile) {
             cur.x = focusState.returnTile.x;
@@ -682,12 +689,7 @@ export class MapEditor {
         if (rowIdx === -1) return;
 
         if (dx !== 0) {
-            // Range/select/number: change value in place
-            if (currentEl.tagName === 'SELECT' || currentEl.type === 'range' || currentEl.type === 'number') {
-                this._editorChangeElementValue(currentEl, dx);
-                return;
-            }
-            // Button/other: navigate within row
+            // Button/other: navigate within row (sliders/selects use A/B to change values)
             const nextCol = colIdx + dx;
             if (nextCol >= 0 && nextCol < rows[rowIdx].length) {
                 this._editorMoveFocusTo(focusState, elements, rows[rowIdx][nextCol].idx, gpIndex);
@@ -759,6 +761,8 @@ export class MapEditor {
             el.selectedIndex = newIdx;
             el.dispatchEvent(new Event('change', { bubbles: true }));
         }
+        // Keep focus on our gamepad highlight — native focus steals D-pad as arrow-key scroll
+        if (document.activeElement === el) el.blur();
     }
 
     _editorMoveCursor(dx, dy, gpIndex, sourceId) {
@@ -1062,13 +1066,13 @@ export class MapEditor {
                 const els = this._editorGetUIButtons(focusState.side);
                 const el = els[focusState.buttonIndex];
                 if (el) {
-                    if (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'number')) {
+                    if (el.tagName === 'INPUT' && el.type === 'text') {
                         el.focus();
                     } else if (el.type === 'checkbox') {
                         el.checked = !el.checked;
                         el.dispatchEvent(new Event('change', { bubbles: true }));
-                    } else if (el.type === 'range' || el.tagName === 'SELECT') {
-                        // Already interactive via left/right — confirm just clicks if button
+                    } else if (el.type === 'range' || el.tagName === 'SELECT' || el.type === 'number') {
+                        this._editorChangeElementValue(el, 1);
                     } else {
                         el.click();
                     }
@@ -1091,6 +1095,13 @@ export class MapEditor {
             const sourceId = 'gamepad-' + gpIndex;
 
             if (this._editorUIFocusStates.has(sourceId)) {
+                const focusState = this._editorUIFocusStates.get(sourceId);
+                const els = this._editorGetUIButtons(focusState.side);
+                const el = els[focusState.buttonIndex];
+                if (el && (el.type === 'range' || el.tagName === 'SELECT' || el.type === 'number')) {
+                    this._editorChangeElementValue(el, -1);
+                    return;
+                }
                 this._editorExitUIFocus(gpIndex, sourceId);
                 return;
             }
@@ -1716,6 +1727,7 @@ export class MapEditor {
         }
         this._editorCursorStates.clear();
         this._editorUIFocusStates.clear();
+        this.inputManager?.emit?.('gamepadClearUIFocus');
 
         if (this.onClose && !this._suppressOnClose) {
             this.onClose();
