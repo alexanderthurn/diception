@@ -549,6 +549,10 @@ export class MapEditor {
         return Math.max(0, Math.min(buttons.length - 1, Math.round(t * (buttons.length - 1))));
     }
 
+    _editorHasScenarioTabs() {
+        return this._editorGetUIButtons('bottom').length > 0;
+    }
+
     _editorSyncGamepadUIFocus(gpIndex, active) {
         if (gpIndex < 0) return;
         this.inputManager?.emit?.('gamepadUIFocus', { sourceId: 'gamepad-' + gpIndex, active });
@@ -647,12 +651,16 @@ export class MapEditor {
 
         const currentEl = elements[focusState.buttonIndex];
 
-        // Top bar: left/right navigates linearly; down from zoom/settings → settings panel; down from back → map
+        // Top bar: left/right navigates linearly; down from zoom/settings → settings panel; down from back → assign/dice or map
         if (side === 'top') {
             if (dy === 1) {
-                // Zoom + settings toggle (right side): drop into Map/Scenario controls
                 if (focusState.buttonIndex >= 1) {
                     this._editorCrossUIFocus(gpIndex, sourceId, 'right', focusState, { preferEditorType: 'scenario' });
+                } else if (this._editorHasScenarioTabs()) {
+                    this._editorCrossUIFocus(gpIndex, sourceId, 'bottom', focusState, {
+                        initialIndex: 0,
+                        preferActiveTab: false,
+                    });
                 } else {
                     this._editorExitUIFocus(gpIndex, sourceId);
                 }
@@ -678,9 +686,25 @@ export class MapEditor {
             return;
         }
 
-        // Bottom mode tabs: left/right navigate, up exits to map
+        // Bottom mode tabs: left/right navigate; up from Assign → close; up from Dice → map; right from Dice → map
         if (side === 'bottom') {
-            if (dy === -1) { this._editorExitUIFocus(gpIndex, sourceId); return; }
+            if (dy === -1) {
+                if (focusState.buttonIndex === 0) {
+                    this._editorEnterUIFocus(gpIndex, sourceId, 'top', {
+                        initialIndex: 0,
+                        crossReturn: { side: 'bottom', buttonIndex: focusState.buttonIndex },
+                        returnTile: focusState.returnTile,
+                        preserveReturnTile: true,
+                    });
+                } else {
+                    this._editorExitUIFocus(gpIndex, sourceId);
+                }
+                return;
+            }
+            if (dx === 1 && focusState.buttonIndex === elements.length - 1) {
+                this._editorExitUIFocus(gpIndex, sourceId);
+                return;
+            }
             if (dx === 0) return;
             const newIdx = Math.max(0, Math.min(elements.length - 1, focusState.buttonIndex + dx));
             if (newIdx !== focusState.buttonIndex) this._editorMoveFocusTo(focusState, elements, newIdx, gpIndex);
@@ -714,16 +738,7 @@ export class MapEditor {
             if (nextCol >= 0 && nextCol < rows[rowIdx].length) {
                 this._editorMoveFocusTo(focusState, elements, rows[rowIdx][nextCol].idx, gpIndex);
             } else if (dx === -1) {
-                if (focusState.crossReturn?.side === 'top') {
-                    this._editorEnterUIFocus(gpIndex, sourceId, 'top', {
-                        initialIndex: focusState.crossReturn.buttonIndex,
-                        crossReturn: { side: 'right', buttonIndex: focusState.buttonIndex },
-                        returnTile: focusState.returnTile,
-                        preserveReturnTile: true,
-                    });
-                } else {
-                    this._editorExitUIFocus(gpIndex, sourceId);
-                }
+                this._editorExitUIFocus(gpIndex, sourceId);
             }
             return;
         }
@@ -815,13 +830,19 @@ export class MapEditor {
             this._editorEnterUIFocus(gpIndex, sourceId, 'bottom', { preferActiveTab: true });
             return;
         }
-        // Left edge in bottom half → Assign/Dice tabs
-        if (dx === -1 && newX === cur.x && cur.y >= Math.floor(h / 2)) {
+        // Left edge → close (upper half / map mode) or Dice tab (lower half, scenario mode)
+        if (dx === -1 && newX === cur.x) {
             const bottomButtons = this._editorGetUIButtons('bottom');
-            if (bottomButtons.length) {
-                this._editorEnterUIFocus(gpIndex, sourceId, 'bottom', { preferActiveTab: true });
-                return;
+            const midY = Math.floor(h / 2);
+            if (cur.y >= midY && bottomButtons.length) {
+                const diceIdx = bottomButtons.findIndex(el => el.dataset?.mode === 'dice');
+                this._editorEnterUIFocus(gpIndex, sourceId, 'bottom', {
+                    initialIndex: diceIdx >= 0 ? diceIdx : bottomButtons.length - 1,
+                });
+            } else {
+                this._editorEnterUIFocus(gpIndex, sourceId, 'top', { initialIndex: 0 });
             }
+            return;
         }
 
         cur.x = newX;
