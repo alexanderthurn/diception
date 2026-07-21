@@ -118,16 +118,42 @@ export class InputController {
         if (this.uiFocusStates.has(sourceId)) {
             const uiFocus = this.uiFocusStates.get(sourceId);
             const isRight = uiFocus.side === 'right';
-            // Exit conditions:
-            //  right-side: left exits
-            //  top: down exits, or left exits when on the first button (global-back-btn)
-            const exitRight = isRight && dx === -1;
-            const exitTop = !isRight && (dy === 1 || (dx === -1 && uiFocus.buttonIndex === 0));
-            if (exitRight || exitTop) {
+
+            // Right HUD: End Turn + Autoplay sit side-by-side — left/right navigates, left from Autoplay exits
+            if (isRight) {
+                const buttons = this._getUIButtons('right');
+                if (dx === -1) {
+                    if (uiFocus.buttonIndex < buttons.length - 1) {
+                        buttons[uiFocus.buttonIndex]?.classList.remove('gamepad-focused');
+                        uiFocus.buttonIndex += 1;
+                        buttons[uiFocus.buttonIndex].classList.add('gamepad-focused');
+                        if (index >= 0) {
+                            const gcm = this.inputManager.gamepadCursorManager;
+                            const cursor = gcm?.cursors?.get(index);
+                            if (cursor) gcm.moveCursorToElement(cursor, buttons[uiFocus.buttonIndex]);
+                        }
+                    } else {
+                        this._exitUIFocus(sourceId);
+                    }
+                } else if (dx === 1 && uiFocus.buttonIndex > 0) {
+                    buttons[uiFocus.buttonIndex]?.classList.remove('gamepad-focused');
+                    uiFocus.buttonIndex -= 1;
+                    buttons[uiFocus.buttonIndex].classList.add('gamepad-focused');
+                    if (index >= 0) {
+                        const gcm = this.inputManager.gamepadCursorManager;
+                        const cursor = gcm?.cursors?.get(index);
+                        if (cursor) gcm.moveCursorToElement(cursor, buttons[uiFocus.buttonIndex]);
+                    }
+                }
+                return;
+            }
+
+            // Top bar: down exits, left from back exits
+            const exitTop = dy === 1 || (dx === -1 && uiFocus.buttonIndex === 0);
+            if (exitTop) {
                 this._exitUIFocus(sourceId);
             } else {
-                // Navigate within group: up/down for right-side, left/right for top
-                const navDelta = isRight ? dy : dx;
+                const navDelta = dx;
                 if (navDelta !== 0) {
                     const buttons = this._getUIButtons(uiFocus.side);
                     if (buttons.length > 0) {
@@ -825,7 +851,7 @@ export class InputController {
     /** Returns visible, non-disabled buttons for a UI group ('right' or 'top'). */
     _getUIButtons(side) {
         const ids = side === 'right'
-            ? ['end-turn-btn', 'autoplay-btn']
+            ? ['end-turn-btn', 'auto-win-btn']
             : ['global-back-btn', 'zoom-out-btn', 'zoom-in-btn'];
         return ids.map(id => document.getElementById(id))
             .filter(btn => btn && !btn.hidden && !btn.classList.contains('hidden') && !btn.disabled);

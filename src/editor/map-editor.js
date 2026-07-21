@@ -508,6 +508,7 @@ export class MapEditor {
 
     _editorGetUIButtons(side) {
         if (side === 'right') {
+            if (!this._editorSettingsPanelOpen()) return [];
             const panel = document.querySelector('.editor-settings');
             if (!panel) return [];
             return Array.from(panel.querySelectorAll(
@@ -551,6 +552,35 @@ export class MapEditor {
 
     _editorHasScenarioTabs() {
         return this._editorGetUIButtons('bottom').length > 0;
+    }
+
+    _editorSettingsPanelOpen() {
+        return !!this.elements.settingsPanel?.classList.contains('editor-settings-open');
+    }
+
+    _editorSettingsToggleTopIndex() {
+        const topButtons = this._editorGetUIButtons('top');
+        const idx = topButtons.findIndex(el => el.id === 'editor-settings-toggle');
+        return idx >= 0 ? idx : topButtons.length - 1;
+    }
+
+    _editorEnterSettingsToggleFocus(gpIndex, sourceId, opts = {}) {
+        this._editorEnterUIFocus(gpIndex, sourceId, 'top', {
+            initialIndex: this._editorSettingsToggleTopIndex(),
+            ...opts,
+        });
+    }
+
+    /** Right edge: settings panel when open, otherwise the top-bar toggle that opens it. */
+    _editorEnterRightPanelOrToggle(gpIndex, sourceId, opts = {}) {
+        if (this._editorSettingsPanelOpen()) {
+            this._editorEnterUIFocus(gpIndex, sourceId, 'right', opts);
+        } else {
+            this._editorEnterSettingsToggleFocus(gpIndex, sourceId, {
+                preserveReturnTile: opts.preserveReturnTile,
+                returnTile: opts.returnTile,
+            });
+        }
     }
 
     _editorSyncGamepadUIFocus(gpIndex, active) {
@@ -655,7 +685,13 @@ export class MapEditor {
         if (side === 'top') {
             if (dy === 1) {
                 if (focusState.buttonIndex >= 1) {
-                    this._editorCrossUIFocus(gpIndex, sourceId, 'right', focusState, { preferEditorType: 'scenario' });
+                    if (this._editorSettingsPanelOpen()) {
+                        this._editorCrossUIFocus(gpIndex, sourceId, 'right', focusState, { preferEditorType: 'scenario' });
+                    } else if (focusState.buttonIndex < this._editorSettingsToggleTopIndex()) {
+                        this._editorMoveFocusTo(focusState, elements, this._editorSettingsToggleTopIndex(), gpIndex);
+                    } else {
+                        this._editorExitUIFocus(gpIndex, sourceId);
+                    }
                 } else if (this._editorHasScenarioTabs()) {
                     this._editorCrossUIFocus(gpIndex, sourceId, 'bottom', focusState, {
                         initialIndex: 0,
@@ -667,7 +703,9 @@ export class MapEditor {
                 return;
             }
             if (dx === 1 && focusState.buttonIndex === elements.length - 1) {
-                this._editorCrossUIFocus(gpIndex, sourceId, 'right', focusState, { preferTypeSegmented: true });
+                if (this._editorSettingsPanelOpen()) {
+                    this._editorCrossUIFocus(gpIndex, sourceId, 'right', focusState, { preferTypeSegmented: true });
+                }
                 return;
             }
             if (dx === -1 && focusState.buttonIndex === 0 && focusState.crossReturn?.side === 'right') {
@@ -807,17 +845,17 @@ export class MapEditor {
         const newX = Math.max(0, Math.min(w - 1, cur.x + dx));
         const newY = Math.max(0, Math.min(h - 1, cur.y + dy));
 
-        // Right edge → enter right panel (Map/Scenario when near top, else first control)
+        // Right edge → settings panel (open) or settings toggle (closed)
         if (dx === 1 && newX === cur.x) {
             const preferType = cur.y <= Math.max(0, Math.floor(h / 4));
-            this._editorEnterUIFocus(gpIndex, sourceId, 'right', { preferTypeSegmented: preferType });
+            this._editorEnterRightPanelOrToggle(gpIndex, sourceId, { preferTypeSegmented: preferType });
             return;
         }
-        // Top edge → zoom/top bar on left/center; Map/Scenario on right portion of map
+        // Top edge → zoom/top bar on left/center; settings panel or toggle on right portion of map
         if (dy === -1 && newY === cur.y) {
             const rightThreshold = Math.ceil(w / 2);
             if (cur.x >= rightThreshold) {
-                this._editorEnterUIFocus(gpIndex, sourceId, 'right', { preferTypeSegmented: true });
+                this._editorEnterRightPanelOrToggle(gpIndex, sourceId, { preferTypeSegmented: true });
             } else {
                 this._editorEnterUIFocus(gpIndex, sourceId, 'top', {
                     initialIndex: this._editorTopBarIndexForMapX(cur.x, w),
