@@ -87,6 +87,19 @@ export class InputController {
                 this._exitUIFocus(sourceId);
             }
         });
+        this.inputManager.on('gamepadRestoreToTiles', () => {
+            const gcm = this.inputManager.gamepadCursorManager;
+            if (!gcm) return;
+            for (const idx of gcm.activatedGamepads) {
+                const sourceId = this._sourceId(idx);
+                const cs = this._getCursorState(sourceId);
+                if (cs.x === null || cs.y === null) {
+                    this.initCursorAtNearestTile(idx, sourceId);
+                } else {
+                    this.syncGamepadCursor(idx, sourceId);
+                }
+            }
+        });
     }
 
     onMove(data) {
@@ -121,6 +134,11 @@ export class InputController {
                         buttons[uiFocus.buttonIndex]?.classList.remove('gamepad-focused');
                         uiFocus.buttonIndex = (uiFocus.buttonIndex + navDelta + buttons.length) % buttons.length;
                         buttons[uiFocus.buttonIndex].classList.add('gamepad-focused');
+                        if (index >= 0) {
+                            const gcm = this.inputManager.gamepadCursorManager;
+                            const cursor = gcm?.cursors?.get(index);
+                            if (cursor) gcm.moveCursorToElement(cursor, buttons[uiFocus.buttonIndex]);
+                        }
                     }
                 }
             }
@@ -129,9 +147,8 @@ export class InputController {
 
         const cursorState = this._getCursorState(sourceId);
 
-        // Show D-pad cursor, hide same-source hover
+        // Show D-pad cursor on the board
         cursorState.visible = true;
-        this.renderer.setHover(null, null, sourceId);
 
         // If tile is selected for this source, try to attack in direction
         // (but allow edge navigation to UI buttons even in attack mode)
@@ -196,6 +213,7 @@ export class InputController {
         cursorState.x = closest.x;
         cursorState.y = closest.y;
         this.renderer.setCursor(cursorState.x, cursorState.y, sourceId);
+        this.renderer.setHover(cursorState.x, cursorState.y, sourceId);
 
         if (gamepadIndex !== -1) {
             this.syncGamepadCursor(gamepadIndex, sourceId);
@@ -228,6 +246,10 @@ export class InputController {
             cursorState.x = newX;
             cursorState.y = newY;
             this.renderer.setCursor(cursorState.x, cursorState.y, sourceId);
+        }
+
+        if (!this.selectedTiles.has(sourceId)) {
+            this.renderer.setHover(cursorState.x, cursorState.y, sourceId);
         }
 
         if (gamepadIndex !== -1) {
@@ -383,6 +405,8 @@ export class InputController {
         if (!gcm) return;
         for (const idx of gcm.activatedGamepads) {
             const sourceId = this._sourceId(idx);
+            // Keep HUD button focus stable while zoom/pan updates the map underneath
+            if (this.uiFocusStates.has(sourceId)) continue;
             this.syncGamepadCursor(idx, sourceId);
         }
     }
@@ -727,6 +751,7 @@ export class InputController {
             cursorState.x = targetX;
             cursorState.y = targetY;
             this.renderer.setCursor(targetX, targetY, sourceId);
+            this.renderer.setHover(targetX, targetY, sourceId);
             if (gamepadIndex !== -1) this.syncGamepadCursor(gamepadIndex, sourceId);
             return;
         }
@@ -743,10 +768,12 @@ export class InputController {
         const cursorState = this._getCursorState(sourceId);
         cursorState.x = x;
         cursorState.y = y;
+        cursorState.visible = true;
         this.renderer.setSelection(x, y, sourceId);
         if (cursorState.visible) {
             this.renderer.setCursor(x, y, sourceId);
         }
+        this._refreshGamepadBoardCursor(sourceId);
     }
 
     syncGamepadCursor(index, sourceId = 'mouse') {
@@ -761,7 +788,19 @@ export class InputController {
                 y: screenPos.y
             });
         }
+    }
 
+    /** Keep gamepad crosshair + tile highlight aligned after combat or selection changes. */
+    _refreshGamepadBoardCursor(sourceId) {
+        if (!sourceId.startsWith('gamepad-')) return;
+        const gpIdx = parseInt(sourceId.slice('gamepad-'.length));
+        const cs = this._getCursorState(sourceId);
+        cs.visible = true;
+        if (cs.x === null || cs.y === null) return;
+        if (!this.selectedTiles.has(sourceId)) {
+            this.renderer.setHover(cs.x, cs.y, sourceId);
+        }
+        this.syncGamepadCursor(gpIdx, sourceId);
     }
 
     calculatePinchDistance() {
@@ -780,6 +819,7 @@ export class InputController {
         cursorState.visible = keepVisible;
         this.renderer.setSelection(null, null, sourceId);
         if (!keepVisible) this.renderer.setCursor(null, null, sourceId);
+        this._refreshGamepadBoardCursor(sourceId);
     }
 
     /** Returns visible, non-disabled buttons for a UI group ('right' or 'top'). */
@@ -799,6 +839,12 @@ export class InputController {
         buttons[idx].classList.add('gamepad-focused');
         this.renderer.setCursor(null, null, sourceId);
         this.inputManager.emit('gamepadUIFocus', { sourceId, active: true });
+        if (sourceId.startsWith('gamepad-')) {
+            const gpIndex = parseInt(sourceId.slice('gamepad-'.length));
+            const gcm = this.inputManager.gamepadCursorManager;
+            const cursor = gcm?.cursors?.get(gpIndex);
+            if (cursor) gcm.moveCursorToElement(cursor, buttons[idx]);
+        }
     }
 
     _exitUIFocus(sourceId) {
@@ -811,11 +857,21 @@ export class InputController {
         const cursorState = this._getCursorState(sourceId);
         if (cursorState.x !== null && cursorState.y !== null) {
             this.renderer.setCursor(cursorState.x, cursorState.y, sourceId);
+            if (!this.selectedTiles.has(sourceId)) {
+                this.renderer.setHover(cursorState.x, cursorState.y, sourceId);
+            }
         }
         this.inputManager.emit('gamepadUIFocus', { sourceId, active: false });
         // Snap physical cursor back to the tile it was on before UI focus
         if (sourceId.startsWith('gamepad-')) {
-            this.syncGamepadCursor(parseInt(sourceId.slice('gamepad-'.length)), sourceId);
+            const gpIndex = parseInt(sourceId.slice('gamepad-'.length));
+            const gcm = this.inputManager.gamepadCursorManager;
+            const cursor = gcm?.cursors?.get(gpIndex);
+            if (cursor) {
+                cursor.element.style.visibility = '';
+                cursor.element.style.opacity = '1.0';
+            }
+            this.syncGamepadCursor(gpIndex, sourceId);
         }
     }
 

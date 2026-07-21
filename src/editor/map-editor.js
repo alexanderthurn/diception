@@ -554,12 +554,22 @@ export class MapEditor {
         this.inputManager?.emit?.('gamepadUIFocus', { sourceId: 'gamepad-' + gpIndex, active });
     }
 
+    /** Hide map tile marker while gamepad is navigating UI panels. */
+    _editorClearMapTileHighlight(sourceId) {
+        this.state.hoveredTile = null;
+        this.renderer?.grid?.setHover?.(null, null, sourceId);
+        this.updateHoverPreview();
+    }
+
     _editorEnterUIFocus(gpIndex, sourceId, side, opts = {}) {
         const buttons = this._editorGetUIButtons(side);
         if (!buttons.length) return;
 
         let buttonIndex = opts.initialIndex ?? 0;
-        if (opts.preferTypeSegmented && side === 'right') {
+        if (opts.preferEditorType && side === 'right') {
+            const idx = buttons.findIndex(el => el.dataset?.type === opts.preferEditorType);
+            if (idx >= 0) buttonIndex = idx;
+        } else if (opts.preferTypeSegmented && side === 'right') {
             const idx = buttons.findIndex(el => el.classList?.contains('segmented-option'));
             if (idx >= 0) buttonIndex = idx;
         }
@@ -585,6 +595,7 @@ export class MapEditor {
 
         document.querySelectorAll('.gamepad-focused').forEach(el => el.classList.remove('gamepad-focused'));
         buttons[buttonIndex].classList.add('gamepad-focused');
+        this._editorClearMapTileHighlight(sourceId);
         const rect = buttons[buttonIndex].getBoundingClientRect();
         if (gpIndex >= 0) {
             this.inputManager?.emit?.('gamepadCursorMoveRequest', {
@@ -622,6 +633,7 @@ export class MapEditor {
         if (cur.x !== null) {
             this.state.hoveredTile = { x: cur.x, y: cur.y };
             this.renderer?.grid?.setHover?.(cur.x, cur.y, sourceId);
+            this.updateHoverPreview();
             this._editorSyncCursor(gpIndex, sourceId);
         }
     }
@@ -635,9 +647,17 @@ export class MapEditor {
 
         const currentEl = elements[focusState.buttonIndex];
 
-        // Top bar: left/right navigates linearly; down exits to map; edges cross into settings panel
+        // Top bar: left/right navigates linearly; down from zoom/settings → settings panel; down from back → map
         if (side === 'top') {
-            if (dy === 1) { this._editorExitUIFocus(gpIndex, sourceId); return; }
+            if (dy === 1) {
+                // Zoom + settings toggle (right side): drop into Map/Scenario controls
+                if (focusState.buttonIndex >= 1) {
+                    this._editorCrossUIFocus(gpIndex, sourceId, 'right', focusState, { preferEditorType: 'scenario' });
+                } else {
+                    this._editorExitUIFocus(gpIndex, sourceId);
+                }
+                return;
+            }
             if (dx === 1 && focusState.buttonIndex === elements.length - 1) {
                 this._editorCrossUIFocus(gpIndex, sourceId, 'right', focusState, { preferTypeSegmented: true });
                 return;

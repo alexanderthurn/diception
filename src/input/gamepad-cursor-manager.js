@@ -40,6 +40,7 @@ export class GamepadCursorManager {
         this.animationFrameId = null;
         this.disposed = false;
         this._modalObserver = null;
+        this._combatUiHidden = false;
 
         // Bound event handlers for cleanup
         this.boundEventHandlers = {
@@ -47,6 +48,7 @@ export class GamepadCursorManager {
             gamepadButtonUp: null,
             gamepadCursorMoveRequest: null,
             gamepadUIFocus: null,
+            gamepadClearUIFocus: null,
         };
 
         // Update loop for movement
@@ -356,28 +358,34 @@ export class GamepadCursorManager {
             cursor.x = x;
             cursor.y = y;
             GamepadCursorManager.savedPositions.set(index, { x, y });
-            // Size cursor to tile
+            // Size cursor to tile (keep a readable minimum when zoomed out)
             if (this.getTileScreenSize) {
-                const sz = Math.round(this.getTileScreenSize() / this._uiScale());
+                const sz = Math.max(36, Math.round(this.getTileScreenSize() / this._uiScale()));
                 this._resizeCursor(cursor, sz, sz, 0.20);
             }
             this._positionCursor(cursor);
-            cursor.element.style.opacity = '0.35';
+            cursor.element.style.opacity = '1.0';
             this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, index);
         };
 
         this.boundEventHandlers.gamepadUIFocus = ({ sourceId, active }) => {
             const idx = sourceId?.startsWith('gamepad-') ? parseInt(sourceId.slice('gamepad-'.length)) : -1;
             if (idx < 0) return;
-            const cursor = this.cursors.get(idx);
-            const isEditorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
             if (active) {
                 this._inUIFocus.add(idx);
-                // Editor keeps the cursor visible on focused controls; menus hide it
-                if (cursor && !isEditorOpen) cursor.element.style.visibility = 'hidden';
             } else {
                 this._inUIFocus.delete(idx);
-                if (cursor) cursor.element.style.visibility = '';
+            }
+        };
+
+        this.boundEventHandlers.gamepadClearUIFocus = () => {
+            for (const idx of [...this._inUIFocus]) {
+                this._inUIFocus.delete(idx);
+                const cursor = this.cursors.get(idx);
+                if (cursor) {
+                    cursor.element.style.visibility = '';
+                    cursor.element.style.opacity = '1.0';
+                }
             }
         };
 
@@ -386,16 +394,22 @@ export class GamepadCursorManager {
         this.inputManager.on('gamepadButtonUp', this.boundEventHandlers.gamepadButtonUp);
         this.inputManager.on('gamepadCursorMoveRequest', this.boundEventHandlers.gamepadCursorMoveRequest);
         this.inputManager.on('gamepadUIFocus', this.boundEventHandlers.gamepadUIFocus);
+        this.inputManager.on('gamepadClearUIFocus', this.boundEventHandlers.gamepadClearUIFocus);
     }
 
     update() {
         if (this.disposed) return;
 
-        // Hide all cursors when fullscreen attack overlay or beginner dice HUD is shown
+        // Hide cursors during dramatic attack overlay, or beginner dice HUD (click to dismiss)
         const attackVisible = this._attackOverlay && !this._attackOverlay.classList.contains('hidden');
         const diceVisible = this._diceResultHud && !this._diceResultHud.classList.contains('hidden') &&
-            (localStorage.getItem('gameSpeed') || 'beginner') === 'beginner';
-        this.container.style.visibility = (attackVisible || diceVisible) ? 'hidden' : '';
+            localStorage.getItem('gameSpeed') === 'beginner';
+        const shouldHide = attackVisible || diceVisible;
+        if (this._combatUiHidden && !shouldHide) {
+            this.inputManager.emit('gamepadRestoreToTiles');
+        }
+        this._combatUiHidden = shouldHide;
+        this.container.style.visibility = shouldHide ? 'hidden' : '';
 
         const gamepads = this.inputManager.getGamepads();
         const activeIndices = new Set();
@@ -467,6 +481,10 @@ export class GamepadCursorManager {
             }
 
             cursor.element.style.opacity = '1.0';
+            // Safety: stale hidden state from older builds / interrupted UI focus
+            if (!this._inUIFocus.has(idx)) {
+                cursor.element.style.visibility = '';
+            }
         }
 
         // Remove cursors for gamepads that are no longer connected
@@ -510,6 +528,9 @@ export class GamepadCursorManager {
             }
             if (this.boundEventHandlers.gamepadUIFocus) {
                 this.inputManager.off('gamepadUIFocus', this.boundEventHandlers.gamepadUIFocus);
+            }
+            if (this.boundEventHandlers.gamepadClearUIFocus) {
+                this.inputManager.off('gamepadClearUIFocus', this.boundEventHandlers.gamepadClearUIFocus);
             }
         }
 
@@ -991,7 +1012,7 @@ export class GamepadCursorManager {
     }
 
     /** Move a cursor's crosshair to the centre of a DOM element. */
-    moveCursorToElement(cursor, el) {
+    moveCursorToElement(cursor, el, gamepadIndex = null) {
         const rect = el.getBoundingClientRect();
         cursor.x = Math.max(0, Math.min(window.innerWidth, rect.left + rect.width / 2));
         cursor.y = Math.max(0, Math.min(window.innerHeight, rect.top + rect.height / 2));
@@ -1003,8 +1024,10 @@ export class GamepadCursorManager {
         this._resizeCursor(cursor, w, h);
         this._positionCursor(cursor);
         cursor.element.style.opacity = '1.0';
+        cursor.element.style.visibility = '';
         this._setCursorMode(cursor, 'dpad');
-        this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0);
+        const idx = gamepadIndex ?? [...this.cursors.entries()].find(([, c]) => c === cursor)?.[0] ?? 0;
+        this.simulateMouseEvent('mousemove', cursor.x, cursor.y, 0, idx);
     }
 
     /**
@@ -1245,7 +1268,7 @@ export class GamepadCursorManager {
             this._positionCursor(cursor);
 
             if (this.getTileScreenSize) {
-                const sz = Math.round(this.getTileScreenSize() / this._uiScale());
+                const sz = Math.max(36, Math.round(this.getTileScreenSize() / this._uiScale()));
                 this._resizeCursor(cursor, sz, sz, 0.20);
             }
         }
@@ -1267,6 +1290,21 @@ export class GamepadCursorManager {
         }
         // Tell input-controller to clear its uiFocusStates (removes gamepad-focused classes etc.)
         this.inputManager.emit('gamepadClearUIFocus');
+    }
+
+    /** After the last modal closes, snap cursors back onto the map. */
+    _restoreCursorsAfterModalClose() {
+        document.querySelectorAll('.gamepad-focused').forEach(el => el.classList.remove('gamepad-focused'));
+        const inGame = this.game.players.length > 0 && !this.game.gameOver;
+        if (!inGame) return;
+        for (const idx of this.activatedGamepads) {
+            const cursor = this.cursors.get(idx);
+            if (cursor) {
+                cursor.element.style.visibility = '';
+                cursor.element.style.opacity = '1.0';
+            }
+        }
+        this.inputManager.emit('gamepadRestoreToTiles');
     }
 
     _exitSliderEditMode(index) {
@@ -1334,6 +1372,7 @@ export class GamepadCursorManager {
                         } else if (!document.querySelector('.modal:not(.hidden)')) {
                             // Modal closed and no other modal is open → release cursors to canvas
                             this._clearUIFocusOnModalOpen();
+                            this._restoreCursorsAfterModalClose();
                         }
                     }
                 }
