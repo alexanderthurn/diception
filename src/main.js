@@ -2215,7 +2215,12 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         return true;
     }
 
-    // Pause when Steam Overlay opens (Shift+Tab / API); Home button may not fire on WebView2.
+    // Pause when the window loses focus (Alt-Tab, Steam Overlay on Mac, etc.)
+    if (isDesktopContext()) {
+        window.addEventListener('blur', () => { openPauseMenu(); });
+    }
+
+    // Backup: Steam GameOverlayActivated — Windows injected overlay often does not blur.
     if (isSteamContext()) {
         const overlayHandler = (p) => {
             if (p?.active) openPauseMenu();
