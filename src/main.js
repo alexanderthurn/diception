@@ -1877,9 +1877,17 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         });
     }
 
-    // Refresh configure buttons when gamepads connect/disconnect
+    // Refresh configure buttons when gamepads connect/disconnect;
+    // pause the match if a controller is unplugged mid-game.
     if (inputManager) {
-        inputManager.on('gamepadChange', () => refreshControlsSection());
+        let _prevGamepadIndices = new Set(inputManager.connectedGamepadIndices || []);
+        inputManager.on('gamepadChange', (indices) => {
+            refreshControlsSection();
+            const next = new Set(indices || []);
+            const lostPad = [..._prevGamepadIndices].some(i => !next.has(i));
+            _prevGamepadIndices = next;
+            if (lostPad) openPauseMenu();
+        });
     }
 
     // --- Settings open/close (shared between main menu and pause) ---
@@ -2044,12 +2052,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         }
         // In-game (no modal open) → open pause menu
         if (sessionManagerRef && sessionManagerRef.isGameInProgress()) {
-            syncPauseModsSummary();
-            pauseModal.classList.remove('hidden');
-            initGameSpeedSegmented();
-            syncPauseAudioBtns();
-            const exitBtn = document.getElementById('pause-mainmenu-btn');
-            if (exitBtn) exitBtn.textContent = 'Exit';
+            openPauseMenu();
         }
     });
 
@@ -2196,6 +2199,35 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         summaryEl.textContent = summary || '';
         summaryEl.classList.toggle('hidden', !summary);
         summaryEl.classList.toggle('has-active-mods', modsActive);
+    }
+
+    /** Open pause during an active match (controller disconnect, Steam overlay, etc.). */
+    function openPauseMenu() {
+        if (!pauseModal || !pauseModal.classList.contains('hidden')) return false;
+        if (!sessionManagerRef?.isGameInProgress()) return false;
+        if (mapEditor?.isOpen) return false;
+        if (mainMenu && !mainMenu.classList.contains('hidden')) return false;
+        syncPauseModsSummary();
+        pauseModal.classList.remove('hidden');
+        initGameSpeedSegmented();
+        syncPauseAudioBtns();
+        const exitBtn = document.getElementById('pause-mainmenu-btn');
+        if (exitBtn) exitBtn.textContent = 'Exit';
+        return true;
+    }
+
+    // Pause when Steam Overlay opens (Shift+Tab / API); Home button may not fire on WebView2.
+    if (isSteamContext()) {
+        const overlayHandler = (p) => {
+            if (p?.active) openPauseMenu();
+        };
+        if (window.electronEvents?.onOverlay) {
+            window.electronEvents.onOverlay(overlayHandler);
+        } else if (isTauriContext()) {
+            import('@tauri-apps/api/event')
+                .then(({ listen }) => listen('steam-overlay', (e) => overlayHandler(e.payload)))
+                .catch(() => { });
+        }
     }
 
     // Toggles delegate to the main buttons so AudioController handles everything

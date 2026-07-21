@@ -511,7 +511,7 @@ export class MapEditor {
             const panel = document.querySelector('.editor-settings');
             if (!panel) return [];
             return Array.from(panel.querySelectorAll(
-                'button:not([disabled]), input[type="range"], input[type="text"], select'
+                'button:not([disabled]), input[type="range"], input[type="text"], input[type="number"], input[type="checkbox"], select'
             )).filter(el => !el.disabled && el.offsetParent !== null);
         }
         if (side === 'top') {
@@ -519,7 +519,26 @@ export class MapEditor {
                 .map(id => document.getElementById(id))
                 .filter(el => el && el.offsetParent !== null);
         }
+        if (side === 'bottom') {
+            const tabs = document.getElementById('editor-scenario-tabs');
+            if (!tabs || tabs.offsetParent === null) return [];
+            return Array.from(tabs.querySelectorAll('button.editor-tab'))
+                .filter(el => !el.disabled && el.offsetParent !== null);
+        }
         return [];
+    }
+
+    /** Seed tile cursor for the primary master pad so A works immediately on open. */
+    _editorSeedGamepadCursors() {
+        let gpIndex = this.inputManager?.getPrimaryMasterIndex?.() ?? -1;
+        if (gpIndex < 0) {
+            const indices = this.inputManager?.connectedGamepadIndices;
+            if (indices?.size) gpIndex = indices.values().next().value;
+        }
+        if (gpIndex < 0) return;
+        const sourceId = 'gamepad-' + gpIndex;
+        const cur = this._editorGetCursorState(sourceId);
+        if (cur.x === null) this._editorInitCursor(gpIndex, sourceId);
     }
 
     _editorEnterUIFocus(gpIndex, sourceId, side) {
@@ -570,6 +589,15 @@ export class MapEditor {
             return;
         }
 
+        // Bottom mode tabs: left/right navigate, up exits to map
+        if (side === 'bottom') {
+            if (dy === -1) { this._editorExitUIFocus(gpIndex, sourceId); return; }
+            if (dx === 0) return;
+            const newIdx = Math.max(0, Math.min(elements.length - 1, focusState.buttonIndex + dx));
+            if (newIdx !== focusState.buttonIndex) this._editorMoveFocusTo(focusState, elements, newIdx, gpIndex);
+            return;
+        }
+
         // Right panel: build spatial row grid (same approach as navigateModal)
         const withPos = elements.map((el, idx) => {
             const r = el.getBoundingClientRect();
@@ -592,8 +620,8 @@ export class MapEditor {
         if (rowIdx === -1) return;
 
         if (dx !== 0) {
-            // Range/select: change value in place
-            if (currentEl.tagName === 'SELECT' || currentEl.type === 'range') {
+            // Range/select/number: change value in place
+            if (currentEl.tagName === 'SELECT' || currentEl.type === 'range' || currentEl.type === 'number') {
                 this._editorChangeElementValue(currentEl, dx);
                 return;
             }
@@ -634,10 +662,12 @@ export class MapEditor {
     }
 
     _editorChangeElementValue(el, direction) {
-        if (el.type === 'range') {
+        if (el.type === 'range' || el.type === 'number') {
             const step = parseFloat(el.step) || 1;
-            el.value = Math.max(parseFloat(el.min) || 0,
-                Math.min(parseFloat(el.max) || 100, parseFloat(el.value) + direction * step));
+            const min = el.min !== '' ? parseFloat(el.min) : (el.type === 'number' ? -Infinity : 0);
+            const max = el.max !== '' ? parseFloat(el.max) : (el.type === 'number' ? Infinity : 100);
+            const next = parseFloat(el.value || 0) + direction * step;
+            el.value = Math.max(min, Math.min(max, next));
             el.dispatchEvent(new Event('input', { bubbles: true }));
             el.dispatchEvent(new Event('change', { bubbles: true }));
         } else if (el.tagName === 'SELECT') {
@@ -662,6 +692,11 @@ export class MapEditor {
         // Top edge → enter top toolbar focus
         if (dy === -1 && newY === cur.y) {
             this._editorEnterUIFocus(gpIndex, sourceId, 'top');
+            return;
+        }
+        // Bottom edge → enter Assign/Dice tabs (when visible)
+        if (dy === 1 && newY === cur.y) {
+            this._editorEnterUIFocus(gpIndex, sourceId, 'bottom');
             return;
         }
 
@@ -888,7 +923,7 @@ export class MapEditor {
             }
         }, true); // capture: true so we run before InputManager for move keys
 
-        // Gamepad: move event — D-pad navigates tile cursor; analog stick still pans
+        // Gamepad: move event — D-pad / left stick navigates tile cursor
         this.boundMoveHandler = (data) => {
             if (!this.isOpen || !this.renderer) return;
             // Yield to modal navigation when a .modal is open on top of the editor
@@ -927,8 +962,11 @@ export class MapEditor {
                 const els = this._editorGetUIButtons(focusState.side);
                 const el = els[focusState.buttonIndex];
                 if (el) {
-                    if (el.tagName === 'INPUT' && el.type === 'text') {
+                    if (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'number')) {
                         el.focus();
+                    } else if (el.type === 'checkbox') {
+                        el.checked = !el.checked;
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
                     } else if (el.type === 'range' || el.tagName === 'SELECT') {
                         // Already interactive via left/right — confirm just clicks if button
                     } else {
@@ -939,6 +977,7 @@ export class MapEditor {
             }
 
             const cur = this._editorGetCursorState(sourceId);
+            if (cur.x === null) this._editorInitCursor(gpIndex, sourceId);
             if (cur.x === null) return;
             this.handleTileInteraction(cur.x, cur.y, 0, false, false);
         };
@@ -1522,6 +1561,12 @@ export class MapEditor {
         this.updateEditorHelpVisibility();
         window.addEventListener('resize', this.boundUpdateEditorHelp);
         this.inputManager?.on('gamepadChange', this.boundUpdateEditorHelp);
+        // Seed tile cursor so A paints immediately without a prior D-pad nudge
+        this._editorSeedGamepadCursors();
+        this.boundEditorGamepadSeed = () => {
+            if (this.isOpen) this._editorSeedGamepadCursors();
+        };
+        this.inputManager?.on('gamepadChange', this.boundEditorGamepadSeed);
     }
 
     /**
@@ -1532,6 +1577,10 @@ export class MapEditor {
         if (this.boundUpdateEditorHelp) {
             window.removeEventListener('resize', this.boundUpdateEditorHelp);
             this.inputManager?.off('gamepadChange', this.boundUpdateEditorHelp);
+        }
+        if (this.boundEditorGamepadSeed) {
+            this.inputManager?.off('gamepadChange', this.boundEditorGamepadSeed);
+            this.boundEditorGamepadSeed = null;
         }
         if (this.renderer && this.renderer.grid) {
             this.renderer.grid.setPaintMode(false);

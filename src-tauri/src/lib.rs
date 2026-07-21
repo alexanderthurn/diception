@@ -15,9 +15,10 @@ struct SteamApp {
     user_name: String,
     steam_id: u64,
     app_id: u32,
-    /// Keeps Remote Play callback registrations alive for the app lifetime.
+    /// Keeps Steam callback registrations alive for the app lifetime
+    /// (Remote Play, Game Overlay, etc.).
     #[allow(dead_code)]
-    _remote_play_cbs: Vec<steamworks::CallbackHandle>,
+    _steam_cbs: Vec<steamworks::CallbackHandle>,
 }
 
 #[cfg(not(target_os = "android"))]
@@ -330,7 +331,7 @@ pub fn run() {
                     user_name,
                     steam_id,
                     app_id,
-                    _remote_play_cbs: Vec::new(),
+                    _steam_cbs: Vec::new(),
                 };
                 (Some(app), true)
             }
@@ -456,8 +457,18 @@ pub fn run() {
                                 );
                             }
                         });
-                        sa._remote_play_cbs.push(cb_connected);
-                        sa._remote_play_cbs.push(cb_disconnected);
+                        let cb_overlay = sa.client.register_callback({
+                            let handle = handle.clone();
+                            move |c: steamworks::GameOverlayActivated| {
+                                let _ = handle.emit(
+                                    "steam-overlay",
+                                    serde_json::json!({ "active": c.active }),
+                                );
+                            }
+                        });
+                        sa._steam_cbs.push(cb_connected);
+                        sa._steam_cbs.push(cb_disconnected);
+                        sa._steam_cbs.push(cb_overlay);
                     }
                 }
             }
