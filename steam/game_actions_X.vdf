@@ -34,8 +34,6 @@
 				"move_left"			"#Action_MoveLeft"
 				"move_right"		"#Action_MoveRight"
 				"gamepad_drag"		"#Action_GamepadDrag"
-				"cursor_speed_down"	"#Action_CursorSpeedDown"
-				"cursor_speed_up"	"#Action_CursorSpeedUp"
 			}
 		}
 	}
@@ -57,8 +55,6 @@
 			"Action_MoveLeft"		"Attack Left"
 			"Action_MoveRight"		"Attack Right"
 			"Action_GamepadDrag"	"Hold to Pan Map"
-			"Action_CursorSpeedDown"	"Cursor Speed -"
-			"Action_CursorSpeedUp"		"Cursor Speed +"
 		}
 	}
 }

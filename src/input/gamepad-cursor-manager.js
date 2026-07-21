@@ -1,5 +1,4 @@
 import { GAME } from '../core/constants.js';
-import { isDesktopContext } from '../scenarios/user-identity.js';
 import { detectControllerType, buttonIconHTML } from './controller-icons.js';
 
 /**
@@ -24,8 +23,6 @@ export class GamepadCursorManager {
         this.getTileScreenSize = null; // injected by main.js: () => number
         this._attackOverlay = document.getElementById('attack-overlay');
         this._diceResultHud = document.getElementById('dice-result-hud');
-        const isDesktop = isDesktopContext();
-        this.cursorSpeed = isDesktop ? 12 : 20;
 
         // Container for all virtual cursors
         this.container = document.createElement('div');
@@ -93,8 +90,6 @@ export class GamepadCursorManager {
             moveLeft: gb.move_left?.[0] ?? 14,
             moveRight: gb.move_right?.[0] ?? 15,
             drag: gb.gamepad_drag?.[0] ?? 1,
-            cursorSpeedDown: gb.cursor_speed_down?.[0] ?? 4,
-            cursorSpeedUp: gb.cursor_speed_up?.[0] ?? 5,
             zoomOut: gb.zoom_out?.[0] ?? 6,
             zoomIn: gb.zoom_in?.[0] ?? 7,
         };
@@ -173,8 +168,6 @@ export class GamepadCursorManager {
                 [b.moveLeft]: 'Attack Left',
                 [b.moveRight]: 'Attack Right',
                 [b.drag]: 'Hold to move map',
-                [b.cursorSpeedDown]: 'Cursor Speed -',
-                [b.cursorSpeedUp]: 'Cursor Speed +',
                 [b.zoomOut]: 'Zoom out',
                 [b.zoomIn]: 'Zoom in',
             };
@@ -188,8 +181,6 @@ export class GamepadCursorManager {
                 [b.moveLeft]: 'Move cursor',
                 [b.moveRight]: 'Move cursor',
                 [b.drag]: 'Hold to pan map',
-                [b.cursorSpeedDown]: 'Cursor Speed -',
-                [b.cursorSpeedUp]: 'Cursor Speed +',
                 [b.zoomOut]: 'Zoom out',
                 [b.zoomIn]: 'Zoom in',
             };
@@ -209,8 +200,8 @@ export class GamepadCursorManager {
             // In menu mode, only allow cursor/zoom/confirm/cancel buttons
             if (isMenuOpen) {
                 const allowedInMenu = isEditorEffective
-                    ? [...b.confirmButtons, ...b.cancelButtons, b.endTurn, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight]
-                    : [...b.confirmButtons, ...b.cancelButtons, b.drag, b.cursorSpeedDown, b.cursorSpeedUp, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight];
+                    ? [...b.confirmButtons, ...b.cancelButtons, b.endTurn, b.drag, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight]
+                    : [...b.confirmButtons, ...b.cancelButtons, b.drag, b.zoomOut, b.zoomIn, b.menu, b.moveUp, b.moveDown, b.moveLeft, b.moveRight];
                 if (!allowedInMenu.includes(button)) return;
 
                 if (!isEditorEffective) {
@@ -307,15 +298,6 @@ export class GamepadCursorManager {
                 }
             } else if (button === b.drag && this.inputManager.isGamepadAllowedGlobalAction(index)) {
                 this.simulateMouseEvent('mousedown', cursor.x, cursor.y, 1, index);
-            } else if (button === b.cursorSpeedDown) {
-                cursor.speedMultiplier = Math.max(0.25, parseFloat((cursor.speedMultiplier - 0.25).toFixed(2)));
-                const gpIdDown = this.inputManager.getGamepads().find(g => g.index === index)?.id ?? index;
-                localStorage.setItem('gamepad_speed_' + gpIdDown, cursor.speedMultiplier);
-                this.showFeedback(index, `Speed ×${cursor.speedMultiplier}`, button);
-            } else if (button === b.cursorSpeedUp) {
-                cursor.speedMultiplier = Math.min(3, parseFloat((cursor.speedMultiplier + 0.25).toFixed(2)));
-                const gpIdUp = this.inputManager.getGamepads().find(g => g.index === index)?.id ?? index;
-                localStorage.setItem('gamepad_speed_' + gpIdUp, cursor.speedMultiplier);
             }
             // zoom_in / zoom_out are handled by InputManager → input-controller via 'zoom' event
         };
@@ -456,9 +438,10 @@ export class GamepadCursorManager {
             if (Math.abs(sy) < currentDeadZone) sy = 0;
 
             if (sx !== 0 || sy !== 0) {
-                if (!this._inUIFocus.has(idx)) {
-                    const scrollX = sx * 15 * cursor.speedMultiplier;
-                    const scrollY = sy * 15 * cursor.speedMultiplier;
+                const editorOpen = !!document.querySelector('.editor-overlay:not(.hidden)');
+                if (!this._inUIFocus.has(idx) && !editorOpen) {
+                    const scrollX = sx * 15;
+                    const scrollY = sy * 15;
                     const target = document.elementFromPoint(cursor.x, cursor.y);
                     if (target) {
                         const scrollable = this.findScrollableParent(target);
@@ -618,7 +601,6 @@ export class GamepadCursorManager {
             controllerType: gamepad ? detectControllerType(gamepad) : 'xbox',
             lastPlayerId: -1,
             lastColor: '',
-            speedMultiplier: parseFloat(localStorage.getItem('gamepad_speed_' + (gamepad?.id ?? index))) || 1.0,
             dragTarget: null,
             mode: 'dpad',
         };

@@ -1744,7 +1744,6 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     const FIXED_CONTROLS = [
         { label: 'Navigate Cursor', keyboard: '-', gamepad: 'Left Stick' },
         { label: 'Zoom', keyboard: 'Wheel', gamepad: 'L2 / R2' },
-        { label: 'Cursor Speed', keyboard: '-', gamepad: 'L1 / R1' },
     ];
 
     // Gamepad column for keyboardOnly actions (uses analog stick, not a button)

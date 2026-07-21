@@ -31,8 +31,6 @@ export const GAME_ACTIONS = [
     { id: 'pan_left',          label: 'Camera Left',     keyboardOnly: true },
     { id: 'pan_right',         label: 'Camera Right',    keyboardOnly: true },
     { id: 'gamepad_drag',      label: 'Hold to Pan Map', gamepadOnly:  true },
-    { id: 'cursor_speed_down', label: 'Cursor Speed -',  gamepadOnly:  true },
-    { id: 'cursor_speed_up',   label: 'Cursor Speed +',  gamepadOnly:  true },
 ];
 
 /**
@@ -69,8 +67,6 @@ export const DEFAULT_BINDINGS = {
         zoom_in:          [7],
         zoom_out:         [6],
         gamepad_drag:     [1],
-        cursor_speed_down:[4],
-        cursor_speed_up:  [5],
     },
 };
 
