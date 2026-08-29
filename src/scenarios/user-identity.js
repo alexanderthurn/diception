@@ -156,6 +156,10 @@ export function isDesktopContext() {
 
 const FULL_GAME_APP_ID = 4429000;
 
+// Android in-app purchase, persisted so a purchase survives an app restart.
+// Reconciled against Google Play on every startup by syncEntitlement().
+const ANDROID_OWNED_KEY = 'full_version_owned';
+
 let _resolvedFull = null; // null = not yet determined
 
 /**
@@ -166,6 +170,7 @@ export async function initFullVersionCheck() {
     const param = new URLSearchParams(window.location.search).get('full');
     if (param === 'true')  { _resolvedFull = true;  return; }
     if (param === 'false') { _resolvedFull = false; return; }
+    if (isAndroid()) { _resolvedFull = localStorage.getItem(ANDROID_OWNED_KEY) === '1'; return; }
     if (!isSteamContext()) { _resolvedFull = false; return; }
     try {
         const id = await window.steam.getAppId();
@@ -185,10 +190,22 @@ export function isFullVersion() {
 }
 
 /**
- * Activate full version in-memory (e.g. after successful IAP).
+ * Activate the full version (after a successful IAP or restore).
+ * On Android this is persisted — otherwise the purchase would be lost on the next launch.
  */
 export function activateFullVersion() {
     _resolvedFull = true;
+    if (isAndroid()) localStorage.setItem(ANDROID_OWNED_KEY, '1');
+}
+
+/**
+ * Drop a previously granted Android purchase (refund / chargeback).
+ * Only call after a store query that actually succeeded — see syncEntitlement().
+ */
+export function revokeFullVersion() {
+    if (!isAndroid()) return;
+    localStorage.removeItem(ANDROID_OWNED_KEY);
+    _resolvedFull = false;
 }
 
 /**

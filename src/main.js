@@ -48,6 +48,7 @@ import {
 import { reconcileLifetimeWithSteam } from './core/steam-player-stats-sync.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid, isFullVersion, initFullVersionCheck } from './scenarios/user-identity.js';
 import { showUnlockDialog } from './ui/show-unlock-dialog.js';
+import { syncEntitlement } from './native/android-store.js';
 import { isTimedUnlockActive, getTimedUnlockRemainingMs, setTimedUnlock } from './core/timed-unlock.js';
 import { initStorage, flushStorage, migrateLegacyStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
@@ -107,7 +108,6 @@ async function init() {
         window.android = {
             quit:          () => Promise.resolve(),
             isDev:         () => Promise.resolve(true),
-            storeProvider: 'mock',
         };
     }
 
@@ -1942,6 +1942,9 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     }
 
     applyVersionUI();
+
+    // Re-grant a purchase made on an earlier run (and drop it again after a refund)
+    if (isAndroid()) syncEntitlement().then(() => applyVersionUI());
 
     document.getElementById('main-icons-achievements-btn')?.addEventListener('click', () => {
         if (!isFullVersion()) { showFullVersionOnlyDialog(); return; }

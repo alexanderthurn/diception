@@ -9685,6 +9685,13 @@ input[type="range"].gamepad-slider-editing {
     align-items: center;
     gap: 6px;
 }
+.android-unlock-option[hidden] {
+    display: none;
+}
+/* Only one purchase route available (e.g. no ads on this device) */
+.android-unlock-options.single-option {
+    grid-template-columns: 1fr;
+}
 
 .android-unlock-option-desc {
     margin: 0;

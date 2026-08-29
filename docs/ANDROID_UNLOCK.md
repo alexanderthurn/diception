@@ -1,27 +1,58 @@
 # Android Unlock System
 
-Handles two unlock paths on Android: permanent via in-app purchase and timed via rewarded ad.
-Desktop/web use the existing unlock flow and are unaffected.
+Two unlock paths on Android: a permanent in-app purchase, and a timed unlock earned by watching
+a rewarded ad. Desktop/web use the Steam app-ID check and are unaffected.
 
 ---
 
 ## Dialog
 
-**`src/ui/android-unlock-dialog.js`** — new component, separate from the existing upgrade prompt.
+**`src/ui/android-unlock-dialog.js`** — shown by `showUnlockDialog()` whenever a locked feature is
+tapped and `isAndroid() && !isFullVersion()`.
 
-Shown when `isAndroid() && !isFullVersion() && !isTimedUnlockActive()`.
+- **WATCH AD** — rewarded ad, then `setTimedUnlock(TIMED_UNLOCK_MINUTES)`. Hidden entirely when
+  `getStoreInfo()` reports `adsAvailable: false` (no Play Services on the device).
+- **BUY** — one-time IAP. Shows the localised price once `getProductPrice()` returns.
+- **Restore Purchases** — re-checks Google Play for an existing purchase.
 
-Two buttons:
-- **Unlock Full Game** — triggers IAP purchase flow
-- **Watch Ad (30 min)** — triggers rewarded ad, then starts timed unlock
+Error strings from the Kotlin layer are mapped to user-facing text in `PURCHASE_ERRORS` /
+`AD_ERRORS`. `canceled` and `superseded` are silent — the user already knows what they did.
 
-Stub behaviour (now): both buttons call `activateTimedUnlock()` immediately with a long duration so the full version activates without a real purchase or ad.
+---
+
+## Entitlement
+
+**`src/scenarios/user-identity.js`**
+
+```
+isFullVersion()        — true if Steam full app, a stored Android purchase, or a live timed unlock
+activateFullVersion()  — grants; on Android persists localStorage 'full_version_owned'
+revokeFullVersion()    — clears that flag (refund); no-op off Android
+```
+
+The purchase **must** be persisted — without it a paying customer drops back to the demo on the
+next launch.
+
+`initFullVersionCheck()` seeds `_resolvedFull` from the stored flag on Android, so the full version
+is available offline and before the store answers.
+
+**`syncEntitlement()`** (`src/native/android-store.js`) runs once per launch from `main.js` and
+reconciles that flag with Google Play:
+
+| Store result | Effect |
+|---|---|
+| `{ ok: true, restored: true }` | `activateFullVersion()` — purchase from an earlier run is back |
+| `{ ok: true, restored: false }` | `revokeFullVersion()` — refunded or never owned |
+| `{ ok: false, … }` | nothing — a failed query (offline, Play updating) must never revoke |
+
+The same startup query also **acknowledges** owned purchases on the Kotlin side. Play reverses any
+purchase left unacknowledged for three days, so this is not optional.
 
 ---
 
 ## Timed Unlock
 
-**`src/core/timed-unlock.js`**
+**`src/core/timed-unlock.js`** — `TIMED_UNLOCK_MINUTES = 60`.
 
 ```
 setTimedUnlock(minutes)       — writes expiry timestamp to localStorage
@@ -30,97 +61,63 @@ getTimedUnlockRemainingMs()   — ms until expiry, 0 if expired
 clearTimedUnlock()
 ```
 
-`user-identity.js` `isFullVersion()` calls `isTimedUnlockActive()` as one of its conditions.
-
-Duration is a named constant `TIMED_UNLOCK_MINUTES = 30` in `timed-unlock.js`.
+The countdown is rendered into the main-menu credits label by `refreshCreditsLabel()` in `main.js`,
+which also fires `_onTimerExpiry` when it runs out — so expiry is noticed on the menu, never
+mid-match. Tapping the label five times shortens the remaining time to 3 seconds (test hook for the
+expiry path).
 
 ---
 
-## Store Abstraction
+## Store Bridge
 
-**`src/native/android-store.js`** — provider-agnostic interface.
+**`src/native/android-store.js`** — `androidStore` singleton, chosen at module load:
+
+| Wrapper | Selected when |
+|---|---|
+| `TauriStore` | Android + `window.__TAURI_INTERNALS__` — invokes `plugin:store\|<command>` |
+| `MockStore` | Browser, or `?android=true` simulation |
+| `UnavailableStore` | Android device without the plugin — fails visibly, never grants anything |
+
+Every invoke is wrapped in a timeout (30 s for queries, 10 min for the interactive purchase/ad
+flows) so a stalled native call can never leave a dialog button permanently disabled.
 
 ```js
-class AndroidStore {
-  purchaseFullVersion()   → Promise<{ success: boolean, error?: string }>
-  showRewardedAd()        → Promise<{ success: boolean, error?: string }>
-  restorePurchases()      → Promise<{ restored: boolean }>
-  getProvider()           → string   // "google_play" | "amazon" | "mock"
-}
+getStoreInfo()        → { provider, adsAvailable, billingReady }
+purchaseFullVersion() → { success, error? }   // error: 'canceled' | 'pending' | 'Billing not ready' | …
+showRewardedAd()      → { success, error? }   // error: 'Ad not ready' | 'Ad skipped' | …
+restorePurchases()    → { ok, restored }
+getProductPrice()     → { price }             // formatted, localised; '' if unavailable
 ```
-
-Three implementations, all extending `AndroidStore`:
-
-| Class | Used when |
-|---|---|
-| `MockStore` | Now — both methods resolve immediately with `{ success: true }` |
-| `GooglePlayStore` | `window.android.storeProvider === 'google_play'` |
-| `AmazonStore` | `window.android.storeProvider === 'amazon'` |
-
-Active instance exported as `androidStore` singleton, selected at module load time based on `window.android.storeProvider`.
 
 ---
 
-## Tauri Bridge (Rust — Android only)
+## Kotlin Layer
 
-New commands in `lib.rs` under `#[cfg(target_os = "android")]`:
+**`scripts/StorePlugin.kt`** — copied into the generated project by `npm run android:init`,
+registered from Rust in `src-tauri/src/lib.rs`:
 
 ```rust
-android_purchase_full_version()   → Result<bool, String>
-android_show_rewarded_ad()        → Result<bool, String>
-android_restore_purchases()       → Result<bool, String>
-android_get_store_provider()      → String   // "google_play" | "amazon" | "mock"
+tauri::plugin::Builder::<tauri::Wry, ()>::new("store")
+    .setup(|_app, api| { api.register_android_plugin("com.feuerware.diception", "StorePlugin")?; Ok(()) })
 ```
 
-`ANDROID_INIT_SCRIPT` gains a `store` sub-object on `window.android`:
+Product ID `full_version` (INAPP). Behaviour worth knowing:
 
-```js
-window.android.store = {
-  purchaseFullVersion: () => ipc.invoke('android_purchase_full_version'),
-  showRewardedAd:      () => ipc.invoke('android_show_rewarded_ad'),
-  restorePurchases:    () => ipc.invoke('android_restore_purchases'),
-  getProvider:         () => ipc.invoke('android_get_store_provider'),
-};
-window.android.storeProvider = 'mock'; // overridden per build variant
-```
-
----
-
-## Kotlin Layer (future)
-
-When real IAP/ads are implemented, these wrap the native SDKs and are called by the Tauri commands above.
-
-**`GooglePlayBillingWrapper.kt`**
-- Uses `com.android.billingclient:billing-ktx`
-- SKU: `full_version` (one-time product)
-- Handles purchase acknowledgement and consumption
-
-**`AdMobRewardedAdWrapper.kt`**
-- Uses `com.google.android.gms:play-services-ads`
-- Loads a rewarded ad on startup, reloads after each show
-- `showRewardedAd()` returns success only after the reward callback fires
-
-**`AmazonIAPWrapper.kt`**
-- Uses Amazon Appstore SDK
-- Same interface, different billing backend
-
-Provider is selected at Kotlin build time via a build flavor or `BuildConfig` flag, which sets `storeProvider` in the init script.
+- **Every command resolves its `Invoke` on every path.** An unresolved Invoke leaves the JS promise
+  pending and the button disabled until the app restarts — including the `PENDING` purchase state
+  and a failed `launchBillingFlow`.
+- **Billing reconnects** with exponential backoff (1 s → 60 s) on `onBillingServiceDisconnected`,
+  and acknowledges owned purchases on every successful connection.
+- **Ad loads retry** with backoff (5 s → 2 min). Without this, one failed load at launch (no
+  network) disables the free-unlock path for the whole session.
+- **`getProductPrice` waits** up to ~10 s for the billing connection rather than returning an empty
+  price when the dialog is opened right after launch.
+- Ads use the AdMob test unit when `BuildConfig.DEBUG`, the production unit otherwise.
 
 ---
 
-## Integration Points
+## Not implemented
 
-- `user-identity.js` — `isFullVersion()` adds `|| isTimedUnlockActive()`
-- `main.js` — after init, if `isAndroid() && !isFullVersion()`, show the android unlock dialog instead of the standard upgrade prompt
-- Timer expiry: check `isTimedUnlockActive()` on each game start (existing `initFullVersionCheck` call is the right hook)
-
----
-
-## What to build first
-
-1. `src/core/timed-unlock.js`
-2. `src/native/android-store.js` with `MockStore`
-3. `src/ui/android-unlock-dialog.js` wired to mock store
-4. Update `user-identity.js` to check timed unlock
-5. Rust commands + init script (when ready for real store/ad integration)
-6. Kotlin wrappers per store target
+- **No consent flow for ads (Google UMP).** Serving AdMob to EEA users without one violates
+  Google's EU User Consent Policy — needed before a public release.
+- **No hardware back-button handling.** Back exits the app from anywhere, including mid-match.

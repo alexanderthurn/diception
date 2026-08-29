@@ -288,12 +288,6 @@ const ANDROID_INIT_SCRIPT: &str = r#"
     window.android = {
         quit:          function() { return ipc.invoke('android_quit'); },
         isDev:         function() { return ipc.invoke('android_is_dev'); },
-        storeProvider: 'google_play',
-        store: {
-            purchaseFullVersion: function() { return ipc.invoke('plugin:store|purchaseFullVersion'); },
-            showRewardedAd:      function() { return ipc.invoke('plugin:store|showRewardedAd'); },
-            restorePurchases:    function() { return ipc.invoke('plugin:store|restorePurchases'); },
-        },
     };
 })();
 "#;
