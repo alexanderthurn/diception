@@ -52,6 +52,7 @@ import { syncEntitlement, androidStore } from './native/android-store.js';
 import { addPluginListener } from '@tauri-apps/api/core';
 import { isTimedUnlockActive, getTimedUnlockRemainingMs, setTimedUnlock } from './core/timed-unlock.js';
 import { initStorage, flushStorage, migrateLegacyStorage } from './core/storage.js';
+import { initI18n } from './core/i18n.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { AchievementsPanel, TITLES as ACH_TITLES } from './ui/achievements-panel.js';
 import { ACHIEVEMENTS } from './core/achievements.js';
@@ -99,6 +100,8 @@ async function init() {
     await initStorage();
     // Rename any legacy dicy_* keys left from older builds
     migrateLegacyStorage();
+    // Translations before any UI is read or shown
+    await initI18n();
     // Resolve full vs demo before any isFullVersion() calls
     await initFullVersionCheck();
 

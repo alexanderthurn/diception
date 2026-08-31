@@ -43,7 +43,7 @@
             <img src="assets/icons/feuerware-logo.png" alt="Feuerware" class="loading-fw-logo">
         </div>
 
-        <div class="loading-partner-logos" aria-label="Built with">
+        <div data-i18n-aria-label="loading_screen.aria-label_built_with" class="loading-partner-logos" aria-label="Built with">
             <img src="assets/icons/pixijs-logo.png" alt="PixiJS" class="loading-pixi-logo">
         </div>
 
@@ -55,13 +55,13 @@
             <div class="loading-bar-container">
                 <div id="loading-bar-fill" class="loading-bar-fill"></div>
             </div>
-            <div id="loading-prompt" class="loading-prompt">INITIALIZING SYSTEM...</div>
+            <div data-i18n="loading_screen.initializing_system" id="loading-prompt" class="loading-prompt">INITIALIZING SYSTEM...</div>
         </div>
 
-        <div id="loading-icons" class="loading-icons hidden" title="Mouse + Keyboard, Gamepad, or Touch">
-            <span class="loading-input-group" title="Mouse + Keyboard"><span
+        <div data-i18n-title="loading_screen.title_mouse_keyboard_gamepad" id="loading-icons" class="loading-icons hidden" title="Mouse + Keyboard, Gamepad, or Touch">
+            <span data-i18n-title="loading_icons.title_mouse_keyboard" class="loading-input-group" title="Mouse + Keyboard"><span
                     class="sprite-icon icon-input-mk"></span></span>
-            <span title="Gamepad" class="sprite-icon icon-gamepad"></span>
+            <span data-i18n-title="loading_icons.title_gamepad" title="Gamepad" class="sprite-icon icon-gamepad"></span>
         </div>
         <div id="loading-version" class="loading-version"></div>
     </div>
@@ -82,19 +82,19 @@
             <div class="attack-side" id="attack-attacker-side">
                 <div class="attack-role-row" id="attack-attacker-role">
                     <span class="sprite-icon icon-attack attack-role-icon"></span>
-                    <span class="attack-role-label">Attacker</span>
+                    <span data-i18n="attack_attacker_role.attacker" class="attack-role-label">Attacker</span>
                 </div>
                 <div class="attack-dice-row" id="attack-attacker-dice"></div>
                 <span class="attack-side-sum" id="attack-attacker-sum"></span>
             </div>
             <div class="attack-center-col">
-                <span class="attack-vs-label">VS</span>
+                <span data-i18n="attack_panel.vs" class="attack-vs-label">VS</span>
                 <span class="attack-compare-sign" id="attack-compare-sign"></span>
             </div>
             <div class="attack-side" id="attack-defender-side">
                 <div class="attack-role-row" id="attack-defender-role">
                     <span class="sprite-icon icon-defend attack-role-icon"></span>
-                    <span class="attack-role-label">Defender</span>
+                    <span data-i18n="attack_defender_role.defender" class="attack-role-label">Defender</span>
                 </div>
                 <div class="attack-dice-row" id="attack-defender-dice"></div>
                 <span class="attack-side-sum" id="attack-defender-sum"></span>
@@ -103,7 +103,7 @@
         </div>
     </div>
 
-    <div id="fps-counter" class="hidden">FPS: 00</div>
+    <div data-i18n="ui.fps_00" id="fps-counter" class="hidden">FPS: 00</div>
 
     <div id="ui-overlay">
         <div id="turn-limit-hud" class="turn-limit-hud game-ui hidden">
@@ -112,41 +112,41 @@
         </div>
         <button id="end-turn-btn" class="tron-btn game-ui hidden">
             <span id="end-turn-reinforcement" class="reinforcement-count"></span>
-            <span id="end-turn-text">End Turn</span>
+            <span data-i18n="end_turn_btn.end_turn" id="end-turn-text">End Turn</span>
             <span id="end-turn-hint" class="input-hint hidden"></span>
         </button>
-        <button id="auto-win-btn" class="tron-btn game-ui hidden" title="Toggle Autoplay"><span
+        <button data-i18n-title="ui_overlay.title_toggle_autoplay" id="auto-win-btn" class="tron-btn game-ui hidden" title="Toggle Autoplay"><span
                 class="sprite-icon icon-autoplay"></span></button>
 
         <div id="music-controls" class="panel">
-            <button id="global-back-btn" class="tron-btn small global-back-btn hidden" aria-label="Back">
+            <button data-i18n-aria-label="music_controls.aria-label_back" id="global-back-btn" class="tron-btn small global-back-btn hidden" aria-label="Back">
                 <span class="sprite-icon icon-close"></span>
                 <span class="sprite-icon icon-settings hidden"></span>
             </button>
-            <button id="new-game-btn" class="tron-btn small hidden" title="Menu" style="display:none"><span
+            <button data-i18n-title="music_controls.title_menu" id="new-game-btn" class="tron-btn small hidden" title="Menu" style="display:none"><span data-i18n="new_game_btn.menu"
                     class="btn-text">Menu</span><span class="btn-icon"><span
                         class="sprite-icon icon-settings"></span></span><span id="new-game-hint"
                     class="input-hint hidden"></span></button>
-            <button id="toolbar-music-toggle" class="tron-btn small main-menu-control hidden" title="Music"><span
+            <button data-i18n-title="music_controls.title_music" id="toolbar-music-toggle" class="tron-btn small main-menu-control hidden" title="Music"><span
                     class="sprite-icon icon-music-on"></span></button>
-            <input type="range" id="toolbar-music-volume" class="main-menu-control hidden" min="0" max="100" value="30"
+            <input data-i18n-title="music_controls.title_music_volume" type="range" id="toolbar-music-volume" class="main-menu-control hidden" min="0" max="100" value="30"
                 title="Music Volume">
-            <button id="toolbar-sfx-toggle" class="tron-btn small main-menu-control hidden" title="Sound Effects"><span
+            <button data-i18n-title="music_controls.title_sound_effects" id="toolbar-sfx-toggle" class="tron-btn small main-menu-control hidden" title="Sound Effects"><span
                     class="sprite-icon icon-sfx-on"></span></button>
-            <input type="range" id="toolbar-sfx-volume" class="main-menu-control hidden" min="0" max="100" value="30"
+            <input data-i18n-title="music_controls.title_sfx_volume" type="range" id="toolbar-sfx-volume" class="main-menu-control hidden" min="0" max="100" value="30"
                 title="SFX Volume">
-            <button id="zoom-out-btn" class="tron-btn small zoom-control hidden" title="Zoom Out"><span
+            <button data-i18n-title="music_controls.title_zoom_out" id="zoom-out-btn" class="tron-btn small zoom-control hidden" title="Zoom Out"><span
                     class="sprite-icon icon-zoom-out"></span></button>
-            <button id="zoom-in-btn" class="tron-btn small zoom-control hidden" title="Zoom In"><span
+            <button data-i18n-title="music_controls.title_zoom_in" id="zoom-in-btn" class="tron-btn small zoom-control hidden" title="Zoom In"><span
                     class="sprite-icon icon-zoom-in"></span></button>
-            <button id="editor-settings-toggle" class="tron-btn small editor-settings-toggle hidden" title="Settings"
+            <button data-i18n-aria-label="music_controls.aria-label_settings" data-i18n-title="music_controls.title_settings" id="editor-settings-toggle" class="tron-btn small editor-settings-toggle hidden" title="Settings"
                 aria-label="Settings"><span class="sprite-icon icon-campaigns"></span></button>
         </div>
 
         <template id="shared-mods-fields-template">
             <div class="shared-mods-fields-root">
                 <div class="control-group" data-mods-group="setup-game-mode-group">
-                    <label>Start Mode</label>
+                    <label data-i18n="shared_mods_fields_template.start_mode">Start Mode</label>
                     <select data-mods-el="game-mode">
                         <option value="classic" selected>Classic</option>
                         <option value="easy">Easy Start</option>
@@ -158,7 +158,7 @@
 
                 <div class="control-row">
                     <div class="control-group half" data-mods-group="setup-play-mode-group">
-                        <label>Play Mode</label>
+                        <label data-i18n="shared_mods_fields_template.play_mode">Play Mode</label>
                         <select data-mods-el="play-mode">
                             <option value="classic" selected>Classic</option>
                             <option value="parallel">Parallel</option>
@@ -166,7 +166,7 @@
                         </select>
                     </div>
                     <div class="control-group half" data-mods-group="setup-full-board-rule-group">
-                        <label>End Game</label>
+                        <label data-i18n="shared_mods_fields_template.end_game">End Game</label>
                         <select data-mods-el="full-board-rule">
                             <option value="nothing" selected>Default</option>
                             <option value="most_territories">Territories</option>
@@ -180,7 +180,7 @@
 
                 <div class="control-row">
                     <div class="control-group half" data-mods-group="setup-attack-rule-group">
-                        <label>Attack Rules</label>
+                        <label data-i18n="shared_mods_fields_template.attack_rules">Attack Rules</label>
                         <select data-mods-el="attack-rule">
                             <option value="classic" selected>Classic</option>
                             <option value="easy_attack">Easy Attack</option>
@@ -188,7 +188,7 @@
                         </select>
                     </div>
                     <div class="control-group half" data-mods-group="setup-supply-rule-group">
-                        <label>Overflow</label>
+                        <label data-i18n="shared_mods_fields_template.overflow">Overflow</label>
                         <select data-mods-el="supply-rule">
                             <option value="classic" selected>Classic</option>
                             <option value="no_stack">No Stack</option>
@@ -202,11 +202,11 @@
                 <div class="control-row tournament-config-row hidden" data-mods-group="tournament-config"
                     data-mods-tournament-row>
                     <div class="control-group" data-mods-group="setup-tournament-games-group">
-                        <label>Tournament Games</label>
+                        <label data-i18n="shared_mods_fields_template.tournament_games">Tournament Games</label>
                         <div class="range-row tournament-games-row">
                             <input type="number" data-mods-el="tournament-games" class="tournament-games-input" min="1"
                                 max="10000" value="100">
-                            <button type="button" data-mods-el="run-tournament-btn" class="tron-btn small">▶ Run
+                            <button data-i18n="shared_mods_fields_template.run_tournament" type="button" data-mods-el="run-tournament-btn" class="tron-btn small">▶ Run
                                 Tournament</button>
                         </div>
                     </div>
@@ -214,14 +214,14 @@
 
                 <div class="control-row">
                     <div class="control-group half" data-mods-group="setup-max-dice-group">
-                        <label>Max Dice per Territory</label>
+                        <label data-i18n="shared_mods_fields_template.max_dice_per_territory">Max Dice per Territory</label>
                         <div class="range-row">
                             <input type="range" data-mods-el="max-dice" min="2" max="12" value="8">
                             <span data-mods-val="max-dice-val">8</span>
                         </div>
                     </div>
                     <div class="control-group half" data-mods-group="setup-dice-sides-group">
-                        <label>Dice Sides</label>
+                        <label data-i18n="shared_mods_fields_template.dice_sides">Dice Sides</label>
                         <div class="range-row">
                             <input type="range" data-mods-el="dice-sides" min="1" max="12" value="6">
                             <span data-mods-val="dice-sides-val">6</span>
@@ -231,7 +231,7 @@
 
                 <div class="control-row">
                     <div class="control-group third" data-mods-group="setup-attacks-limit-group">
-                        <label>Attacks</label>
+                        <label data-i18n="shared_mods_fields_template.attacks">Attacks</label>
                         <select data-mods-el="turn-time-limit">
                             <option value="0" selected>∞ Unlimited</option>
                             <option value="1">1 / turn</option>
@@ -240,7 +240,7 @@
                         </select>
                     </div>
                     <div class="control-group third" data-mods-group="setup-turn-seconds-group">
-                        <label>Turn time</label>
+                        <label data-i18n="shared_mods_fields_template.turn_time">Turn time</label>
                         <select data-mods-el="turn-seconds-limit">
                             <option value="0" selected>∞ Unlimited</option>
                             <option value="10">10s</option>
@@ -250,7 +250,7 @@
                         </select>
                     </div>
                     <div class="control-group third" data-mods-group="setup-attack-seconds-group">
-                        <label>Attack time</label>
+                        <label data-i18n="shared_mods_fields_template.attack_time">Attack time</label>
                         <select data-mods-el="attack-seconds-limit">
                             <option value="0" selected>∞ Unlimited</option>
                             <option value="5">5s</option>
@@ -264,11 +264,11 @@
 
                 <div class="control-row" data-mods-group="setup-seed-group">
                     <div class="control-group">
-                        <label>Seed</label>
+                        <label data-i18n="shared_mods_fields_template.seed">Seed</label>
                         <div class="seed-row">
                             <input type="number" data-mods-el="game-seed" class="seed-input" min="0" max="4294967295"
                                 step="1">
-                            <button type="button" data-mods-el="game-seed-reroll"
+                            <button data-i18n-title="shared_mods_fields_template.title_new_random_seed" type="button" data-mods-el="game-seed-reroll"
                                 class="tron-btn small seed-reroll-btn menu-btn-utility"
                                 title="New random seed">⟳</button>
                         </div>
@@ -279,24 +279,24 @@
 
         <div id="setup-modal" class="modal hidden">
             <div class="modal-header">
-                <h2 class="tron-title small">CUSTOM GAME</h2>
-                <button class="close-btn modal-close-btn" aria-label="Back"
+                <h2 data-i18n="setup_modal.custom_game" class="tron-title small">CUSTOM GAME</h2>
+                <button data-i18n-aria-label="setup_modal.aria-label_back" class="close-btn modal-close-btn" aria-label="Back"
                     onclick="document.getElementById('global-back-btn').click()">×</button>
-                <button class="close-btn modal-reset-btn hidden" id="setup-reset-all-btn"
+                <button data-i18n-aria-label="setup_modal.aria-label_reset_all_settings" data-i18n-title="setup_modal.title_reset_all_settings" class="close-btn modal-reset-btn hidden" id="setup-reset-all-btn"
                     aria-label="Reset all settings to defaults" title="Reset all settings to defaults">↺</button>
             </div>
             <div class="setup-columns">
                 <div class="setup-main-col">
                     <div class="control-row">
                         <div class="control-group half" id="setup-map-size-group">
-                            <label>Map Size</label>
+                            <label data-i18n="setup_map_size_group.map_size">Map Size</label>
                             <div class="map-size-row">
                                 <input type="range" id="map-size" min="1" max="10" value="2">
                                 <span id="map-size-val">4x4</span>
                             </div>
                         </div>
                         <div class="control-group quarter" id="map-style-group">
-                            <label>Style</label>
+                            <label data-i18n="map_style_group.style">Style</label>
                             <select id="map-style">
                                 <option value="random" selected>Random</option>
                                 <option value="full">Full Grid</option>
@@ -308,8 +308,8 @@
 
                     <div class="control-row hidden" id="setup-map-source-row">
                         <div class="control-group" id="setup-map-source-group">
-                            <label>Map</label>
-                            <button type="button" class="tron-btn menu-btn-utility" id="setup-map-source-btn"
+                            <label data-i18n="setup_map_source_group.map">Map</label>
+                            <button data-i18n-title="setup_map_source_group.title_use_random_size" data-i18n="setup_map_source_group.campaign_level" type="button" class="tron-btn menu-btn-utility" id="setup-map-source-btn"
                                 title="Use random size + style instead">
                                 Campaign Level
                             </button>
@@ -318,7 +318,7 @@
 
                     <div class="control-row">
                         <div class="control-group quarter" id="setup-humans-group">
-                            <label>Humans</label>
+                            <label data-i18n="setup_humans_group.humans">Humans</label>
                             <select id="human-count">
                                 <option value="0">0</option>
                                 <option value="1" selected>1</option>
@@ -332,7 +332,7 @@
                             </select>
                         </div>
                         <div class="control-group quarter" id="setup-bots-group">
-                            <label>Bots</label>
+                            <label data-i18n="setup_bots_group.bots">Bots</label>
                             <select id="bot-count">
                                 <option value="0">0</option>
                                 <option value="1">1</option>
@@ -346,7 +346,7 @@
                             </select>
                         </div>
                         <div class="control-group half" id="setup-bot-ai-group">
-                            <label>Bot Difficulty</label>
+                            <label data-i18n="setup_bot_ai_group.bot_difficulty">Bot Difficulty</label>
                             <select id="bot-ai-select">
                                 <option value="easy" selected>Easy</option>
                                 <option value="medium">Medium</option>
@@ -359,8 +359,8 @@
                         <button type="button" class="tron-btn small setup-mods-toggle menu-btn-utility"
                             id="setup-mods-toggle" aria-expanded="false" aria-controls="setup-mods-panel">
                             <span class="setup-mods-chevron" aria-hidden="true"></span>
-                            <span class="setup-mods-toggle-label">Mods</span>
-                            <span class="setup-mods-active-badge hidden" id="setup-mods-active-badge">On</span>
+                            <span data-i18n="setup_mods_toggle.mods" class="setup-mods-toggle-label">Mods</span>
+                            <span data-i18n="setup_mods_toggle.on" class="setup-mods-active-badge hidden" id="setup-mods-active-badge">On</span>
                         </button>
                     </div>
                     <div id="setup-mods-summary" class="setup-mods-summary hidden"></div>
@@ -371,7 +371,7 @@
                 </div>
             </div>
             <div class="setup-start-row">
-                <button id="start-game-btn" class="tron-btn large menu-btn-primary" data-no-sfx
+                <button data-i18n="setup_modal.start" id="start-game-btn" class="tron-btn large menu-btn-primary" data-no-sfx
                     data-gamepad-autofocus>START</button>
             </div>
         </div>
@@ -402,12 +402,12 @@
                         Settings</button>
                     <button id="main-icons-editor-btn" class="tron-btn small menu-btn-neutral"><span
                             class="sprite-icon icon-paint"></span>
-                        <span class="btn-label">Editor</span></button>
+                        <span data-i18n="main_icons_editor_btn.editor" class="btn-label">Editor</span></button>
                     <button id="main-howto-btn" class="tron-btn small menu-btn-neutral"><span
                             class="sprite-icon icon-help"></span> How
                         To</button>
                     <button id="main-icons-achievements-btn" class="tron-btn small menu-btn-danger"><span
-                            class="sprite-icon icon-achievements"></span> <span
+                            class="sprite-icon icon-achievements"></span> <span data-i18n="main_icons_achievements_btn.achievements"
                             class="btn-label">Achievements</span></button>
                     <button id="main-about-btn" class="tron-btn small menu-btn-neutral"><span
                             class="sprite-icon icon-scenario"></span>
@@ -422,18 +422,18 @@
         <!-- Pause Menu (in-game) -->
         <div id="pause-modal" class="modal hidden">
             <div class="modal-header">
-                <button class="close-btn modal-close-btn" aria-label="Resume"
+                <button data-i18n-aria-label="pause_modal.aria-label_resume" class="close-btn modal-close-btn" aria-label="Resume"
                     onclick="document.getElementById('global-back-btn').click()">×</button>
-                <h2 class="tron-title small">PAUSED</h2>
+                <h2 data-i18n="pause_modal.paused" class="tron-title small">PAUSED</h2>
             </div>
             <div class="pause-content">
 
                 <div class="pause-module">
-                    <span class="pause-module-label">Speed</span>
+                    <span data-i18n="pause_modal.speed" class="pause-module-label">Speed</span>
                     <div class="segmented-btn game-speed-segmented">
-                        <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
-                        <button type="button" class="segmented-option" data-value="normal">Normal</button>
-                        <button type="button" class="segmented-option" data-value="expert">Expert</button>
+                        <button data-i18n="pause_modal.beginner" type="button" class="segmented-option" data-value="beginner">Beginner</button>
+                        <button data-i18n="pause_modal.normal" type="button" class="segmented-option" data-value="normal">Normal</button>
+                        <button data-i18n="pause_modal.expert" type="button" class="segmented-option" data-value="expert">Expert</button>
                     </div>
                 </div>
                 <div id="pause-mods-summary" class="setup-mods-summary hidden"></div>
@@ -441,27 +441,27 @@
                 <div class="pause-module">
                     <div class="pause-audio-row">
                         <div class="pause-audio-track">
-                            <button id="pause-music-toggle" class="tron-btn small menu-btn-utility" title="Music"><span
+                            <button data-i18n-title="pause_modal.title_music" id="pause-music-toggle" class="tron-btn small menu-btn-utility" title="Music"><span
                                     class="sprite-icon icon-music-on"></span></button>
-                            <input type="range" id="pause-music-volume" min="0" max="100" value="30"
+                            <input data-i18n-title="pause_modal.title_music_volume" type="range" id="pause-music-volume" min="0" max="100" value="30"
                                 title="Music Volume">
                         </div>
                         <div class="pause-audio-track">
-                            <button id="pause-sfx-toggle" class="tron-btn small active menu-btn-utility"
+                            <button data-i18n-title="pause_modal.title_sound_effects" id="pause-sfx-toggle" class="tron-btn small active menu-btn-utility"
                                 title="Sound Effects"><span class="sprite-icon icon-sfx-on"></span></button>
-                            <input type="range" id="pause-sfx-volume" min="0" max="100" value="30" title="SFX Volume">
+                            <input data-i18n-title="pause_modal.title_sfx_volume" type="range" id="pause-sfx-volume" min="0" max="100" value="30" title="SFX Volume">
                         </div>
                     </div>
                 </div>
 
                 <div class="pause-btn-row">
-                    <button id="pause-retry-btn" class="tron-btn large menu-btn-primary">Rematch</button>
-                    <button id="pause-save-btn" class="tron-btn large menu-btn-utility">Save</button>
+                    <button data-i18n="pause_modal.rematch" id="pause-retry-btn" class="tron-btn large menu-btn-primary">Rematch</button>
+                    <button data-i18n="pause_modal.save" id="pause-save-btn" class="tron-btn large menu-btn-utility">Save</button>
                 </div>
 
                 <div class="pause-btn-row">
-                    <button id="pause-mainmenu-btn" class="tron-btn large pause-exit-btn menu-btn-danger">Exit</button>
-                    <button id="pause-topmenu-btn" class="tron-btn large pause-topmenu-btn menu-btn-neutral">Main
+                    <button data-i18n="pause_modal.exit" id="pause-mainmenu-btn" class="tron-btn large pause-exit-btn menu-btn-danger">Exit</button>
+                    <button data-i18n="pause_modal.main_menu" id="pause-topmenu-btn" class="tron-btn large pause-topmenu-btn menu-btn-neutral">Main
                         Menu</button>
                 </div>
 
@@ -470,17 +470,17 @@
 
         <div id="howto-modal" class="modal hidden large-modal">
             <div class="modal-header">
-                <button class="close-btn modal-close-btn" aria-label="Back"
+                <button data-i18n-aria-label="howto_modal.aria-label_back" class="close-btn modal-close-btn" aria-label="Back"
                     onclick="document.getElementById('global-back-btn').click()">×</button>
-                <h2 class="tron-title small">HOW TO</h2>
+                <h2 data-i18n="howto_modal.how_to" class="tron-title small">HOW TO</h2>
             </div>
             <div class="howto-content">
                 <section>
-                    <h3>BASICS</h3>
-                    <p><strong>OBJECTIVE:</strong> Conquer all tiles of the grid.</p>
+                    <h3 data-i18n="howto_modal.basics">BASICS</h3>
+                    <p><strong data-i18n="howto_modal.objective">OBJECTIVE:</strong> Conquer all tiles of the grid.</p>
                     <ul class="howto-list">
                         <li>
-                            <strong>COMBAT:</strong> Dice attack dice. Your attack power is the sum of all your dice
+                            <strong data-i18n="howto_modal.combat">COMBAT:</strong> Dice attack dice. Your attack power is the sum of all your dice
                             values. Highest sum wins.
                             <div class="howto-example">
                                 <div class="dice-group">
@@ -497,7 +497,7 @@
                             </div>
                         </li>
                         <li>
-                            <strong>WINNING:</strong> If you have a higher total than the defender, you win. You take
+                            <strong data-i18n="howto_modal.winning">WINNING:</strong> If you have a higher total than the defender, you win. You take
                             over the territory and move your dice there (leaving 1 behind).
                             <div class="howto-example">
                                 <div class="dice-group">
@@ -523,7 +523,7 @@
                             </div>
                         </li>
                         <li>
-                            <strong>LOSING:</strong> If you have equal or fewer points, you lose. Your dice count drops
+                            <strong data-i18n="howto_modal.losing">LOSING:</strong> If you have equal or fewer points, you lose. Your dice count drops
                             to 1 and your turn ends immediately.
                             <div class="howto-example">
                                 <div class="dice-group">
@@ -549,17 +549,17 @@
                             </div>
                         </li>
                         <li>
-                            <strong>REINFORCE:</strong> At the end of your turn, you get new dice. You get dice based on
+                            <strong data-i18n="howto_modal.reinforce">REINFORCE:</strong> At the end of your turn, you get new dice. You get dice based on
                             your biggest connected territories amount. Like if you have 4 territories, but only 3 are
                             adjacent, you get 3 dice.
                             <div class="howto-example">
                                 <div class="howto-reinforce">
                                     <div class="howto-tile-row">
-                                        <div class="howto-tile connected" title="Connected"></div>
-                                        <div class="howto-tile connected" title="Connected"></div>
-                                        <div class="howto-tile connected" title="Connected"></div>
+                                        <div data-i18n-title="howto_modal.title_connected" class="howto-tile connected" title="Connected"></div>
+                                        <div data-i18n-title="howto_modal.title_connected_2" class="howto-tile connected" title="Connected"></div>
+                                        <div data-i18n-title="howto_modal.title_connected_3" class="howto-tile connected" title="Connected"></div>
                                         <div class="howto-tile barrier"></div>
-                                        <div class="howto-tile connected" title="Isolated"></div>
+                                        <div data-i18n-title="howto_modal.title_isolated" class="howto-tile connected" title="Isolated"></div>
                                     </div>
                                     <span
                                         style="color:#aa00ff; font-size:24px; font-weight:bold; display:flex; align-items:center; gap:6px; margin-top:6px;">
@@ -569,33 +569,33 @@
                                 </div>
                             </div>
                         </li>
-                        <li><strong>TURN LIMIT:</strong> If no player conquers all territories within 999 turns, the
+                        <li><strong data-i18n="howto_modal.turn_limit">TURN LIMIT:</strong> If no player conquers all territories within 999 turns, the
                             game ends and the player with the most total dice (on the board + in reserve) wins.</li>
                     </ul>
                 </section>
 
                 <section>
-                    <h3>GAME SPEED</h3>
-                    <p>Controls how fast the game plays. Can be changed anytime in Pause or Settings.</p>
+                    <h3 data-i18n="howto_modal.game_speed">GAME SPEED</h3>
+                    <p data-i18n="howto_modal.controls_how_fast_the">Controls how fast the game plays. Can be changed anytime in Pause or Settings.</p>
                     <ul class="howto-list">
-                        <li><strong>Beginner</strong> — Full animations &amp; dice rolls. Win chances &amp; input hints
+                        <li><strong data-i18n="howto_modal.beginner">Beginner</strong> — Full animations &amp; dice rolls. Win chances &amp; input hints
                             shown. Slow bot turns.</li>
-                        <li><strong>Normal</strong> — Faster animations. Win chances shown. Fast bot turns.</li>
-                        <li><strong>Expert</strong> — No animations. No win chances. One-click attack shortcut. Instant
+                        <li><strong data-i18n="howto_modal.normal">Normal</strong> — Faster animations. Win chances shown. Fast bot turns.</li>
+                        <li><strong data-i18n="howto_modal.expert">Expert</strong> — No animations. No win chances. One-click attack shortcut. Instant
                             bot turns.</li>
                     </ul>
                 </section>
 
                 <section>
-                    <h3>BOT DIFFICULTY</h3>
-                    <p>Choose how challenging the AI opponents are. Set per-bot in the player roster.</p>
+                    <h3 data-i18n="howto_modal.bot_difficulty">BOT DIFFICULTY</h3>
+                    <p data-i18n="howto_modal.choose_how_challenging_the">Choose how challenging the AI opponents are. Set per-bot in the player roster.</p>
                     <ul class="howto-list">
-                        <li><strong>Easy</strong> — Targets bots first. Makes mistakes. Good for learning the game.
+                        <li><strong data-i18n="howto_modal.easy">Easy</strong> — Targets bots first. Makes mistakes. Good for learning the game.
                             Player starts first.
                         </li>
-                        <li><strong>Medium</strong> — Attacks anyone equally. Prefers a dice advantage of 2 or more and
+                        <li><strong data-i18n="howto_modal.medium">Medium</strong> — Attacks anyone equally. Prefers a dice advantage of 2 or more and
                             plays a bit more aggressive.</li>
-                        <li><strong>Hard</strong> — Same as medium but plans
+                        <li><strong data-i18n="howto_modal.hard">Hard</strong> — Same as medium but plans
                             attacks more strategically: focuses on the strongest player, breaks enemy connected regions
                             to
                             cut their reinforcements, and
@@ -604,13 +604,13 @@
                 </section>
 
                 <section>
-                    <h3>WIN PROBABILITY CALCULATOR</h3>
-                    <p>Select dice sides to see win probability when attacking. <span class="prob-legend"><span
-                                class="prob-high-text">Green ≥75%</span> <span class="prob-medium-high-text">Yellow
-                                50-74%</span> <span class="prob-medium-text">Orange 25-49%</span> <span
+                    <h3 data-i18n="howto_modal.win_probability_calculator">WIN PROBABILITY CALCULATOR</h3>
+                    <p>Select dice sides to see win probability when attacking. <span class="prob-legend"><span data-i18n="howto_modal.green_75"
+                                class="prob-high-text">Green ≥75%</span> <span data-i18n="howto_modal.yellow_50_74" class="prob-medium-high-text">Yellow
+                                50-74%</span> <span data-i18n="howto_modal.orange_25_49" class="prob-medium-text">Orange 25-49%</span> <span data-i18n="howto_modal.red_25"
                                 class="prob-low-text">Red &lt;25%</span></span></p>
                     <div class="probability-controls">
-                        <label for="prob-dice-sides">Dice Sides:</label>
+                        <label data-i18n="howto_modal.dice_sides" for="prob-dice-sides">Dice Sides:</label>
                         <select id="prob-dice-sides">
                             <option value="1">D1</option>
                             <option value="2">D2</option>
@@ -625,7 +625,7 @@
                             <option value="11">D11</option>
                             <option value="12">D12</option>
                         </select>
-                        <label for="prob-attack-rule">Attack Rules:</label>
+                        <label data-i18n="howto_modal.attack_rules" for="prob-attack-rule">Attack Rules:</label>
                         <select id="prob-attack-rule">
                             <option value="classic" selected>Classic</option>
                             <option value="easy_attack">Easy Attack</option>
@@ -651,7 +651,7 @@
                                     <th>12</th>
                                 </tr>
                             </thead>
-                            <tbody id="probability-table-body">
+                            <tbody data-i18n="probability_table.generated_by_javascript" id="probability-table-body">
                                 <!-- Generated by JavaScript -->
                             </tbody>
                         </table>
@@ -659,75 +659,75 @@
                 </section>
 
                 <section>
-                    <h3>MODS</h3>
+                    <h3 data-i18n="howto_modal.mods">MODS</h3>
                     <ul class="howto-list">
-                        <li><strong>Play Mode</strong>
+                        <li><strong data-i18n="howto_modal.play_mode">Play Mode</strong>
                             <ul class="howto-list">
-                                <li><strong>Classic</strong> — Players take turns one at a time. Only the active player
+                                <li><strong data-i18n="howto_modal.classic">Classic</strong> — Players take turns one at a time. Only the active player
                                     can attack.</li>
-                                <li><strong>Parallel</strong> — Every player (human and bot) can attack at any time
+                                <li><strong data-i18n="howto_modal.parallel">Parallel</strong> — Every player (human and bot) can attack at any time
                                     simultaneously.</li>
-                                <li><strong>Parallel S</strong> — Like Parallel, but the currently active player is safe
+                                <li><strong data-i18n="howto_modal.parallel_s">Parallel S</strong> — Like Parallel, but the currently active player is safe
                                     from bot attacks.</li>
                             </ul>
                         </li>
-                        <li><strong>End Game</strong> — What happens when the board is completely filled by a single
+                        <li><strong data-i18n="howto_modal.end_game">End Game</strong> — What happens when the board is completely filled by a single
                             player:
                             <ul class="howto-list">
-                                <li><strong>Default</strong> — That player wins immediately.</li>
-                                <li><strong>Territories</strong> — The player with the most territories wins instead.
+                                <li><strong data-i18n="howto_modal.default">Default</strong> — That player wins immediately.</li>
+                                <li><strong data-i18n="howto_modal.territories">Territories</strong> — The player with the most territories wins instead.
                                 </li>
-                                <li><strong>Largest Region</strong> — The player with the biggest single connected
+                                <li><strong data-i18n="howto_modal.largest_region">Largest Region</strong> — The player with the biggest single connected
                                     region wins.</li>
-                                <li><strong>Random Tile</strong> — A random tile is picked; its owner wins.</li>
-                                <li><strong>Max Dice +4</strong> — The conquering player's max dice cap is raised by 4
+                                <li><strong data-i18n="howto_modal.random_tile">Random Tile</strong> — A random tile is picked; its owner wins.</li>
+                                <li><strong data-i18n="howto_modal.max_dice_4">Max Dice +4</strong> — The conquering player's max dice cap is raised by 4
                                     and the game continues.</li>
-                                <li><strong>Autoplay</strong> — Human players are switched to autoplay and the game
+                                <li><strong data-i18n="howto_modal.autoplay">Autoplay</strong> — Human players are switched to autoplay and the game
                                     finishes automatically.</li>
                             </ul>
                         </li>
-                        <li><strong>Overflow</strong> — What happens when a reinforcement die lands on a territory
+                        <li><strong data-i18n="howto_modal.overflow">Overflow</strong> — What happens when a reinforcement die lands on a territory
                             already at max dice:
                             <ul class="howto-list">
-                                <li><strong>Classic</strong> — The die is redirected to another non-full territory; if
+                                <li><strong data-i18n="howto_modal.classic_2">Classic</strong> — The die is redirected to another non-full territory; if
                                     all are full it goes to the stack for next turn.</li>
-                                <li><strong>No Stack</strong> — Redirected to a non-full territory as usual, but excess
+                                <li><strong data-i18n="howto_modal.no_stack">No Stack</strong> — Redirected to a non-full territory as usual, but excess
                                     dice are lost instead of stacking.</li>
-                                <li><strong>Full</strong> — Reinforcements are placed randomly across all territories.
+                                <li><strong data-i18n="howto_modal.full">Full</strong> — Reinforcements are placed randomly across all territories.
                                     If the chosen territory is full, that die is lost.</li>
-                                <li><strong>Reborn</strong> — Like No Stack Hard, but if the chosen territory is full it
+                                <li><strong data-i18n="howto_modal.reborn">Reborn</strong> — Like No Stack Hard, but if the chosen territory is full it
                                     resets to 1 die instead of the die being lost.</li>
                             </ul>
                         </li>
-                        <li><strong>Attack Rules</strong> — How ties are resolved when both sides roll the same total:
+                        <li><strong data-i18n="howto_modal.attack_rules_2">Attack Rules</strong> — How ties are resolved when both sides roll the same total:
                             <ul class="howto-list">
-                                <li><strong>Classic</strong> — Attacker must roll strictly higher to win. Ties go to the
+                                <li><strong data-i18n="howto_modal.classic_3">Classic</strong> — Attacker must roll strictly higher to win. Ties go to the
                                     defender.</li>
-                                <li><strong>Easy Attack</strong> — Attacker wins on a tie as well as a higher roll.</li>
-                                <li><strong>Tie Die</strong> — On a tie, both territories drop to 1 die and no territory
+                                <li><strong data-i18n="howto_modal.easy_attack">Easy Attack</strong> — Attacker wins on a tie as well as a higher roll.</li>
+                                <li><strong data-i18n="howto_modal.tie_die">Tie Die</strong> — On a tie, both territories drop to 1 die and no territory
                                     changes hands.</li>
                             </ul>
                         </li>
-                        <li><strong>Attacks</strong> — Limits how many attacks a player can make per turn. Unlimited by
+                        <li><strong data-i18n="howto_modal.attacks">Attacks</strong> — Limits how many attacks a player can make per turn. Unlimited by
                             default.</li>
-                        <li><strong>Turn Time</strong> — Time limit in seconds for an entire turn. Unlimited by default.
+                        <li><strong data-i18n="howto_modal.turn_time">Turn Time</strong> — Time limit in seconds for an entire turn. Unlimited by default.
                         </li>
-                        <li><strong>Attack Time</strong> — Time limit in seconds for each individual attack. Unlimited
+                        <li><strong data-i18n="howto_modal.attack_time">Attack Time</strong> — Time limit in seconds for each individual attack. Unlimited
                             by default.</li>
-                        <li><strong>Max Dice per Territory</strong> — The maximum number of dice that can stack on a
+                        <li><strong data-i18n="howto_modal.max_dice_per_territory">Max Dice per Territory</strong> — The maximum number of dice that can stack on a
                             single tile.</li>
-                        <li><strong>Dice Sides</strong> — Sides per die. Higher sides increase variance; D1 makes all
+                        <li><strong data-i18n="howto_modal.dice_sides_2">Dice Sides</strong> — Sides per die. Higher sides increase variance; D1 makes all
                             dice equal.</li>
-                        <li><strong>Map Style</strong> — Shape of the generated map (Full, Balanced, Islands, etc.).
+                        <li><strong data-i18n="howto_modal.map_style">Map Style</strong> — Shape of the generated map (Full, Balanced, Islands, etc.).
                         </li>
-                        <li><strong>Game Mode</strong> — Variant rules for how the map is populated at game start.</li>
+                        <li><strong data-i18n="howto_modal.game_mode">Game Mode</strong> — Variant rules for how the map is populated at game start.</li>
                     </ul>
                 </section>
 
                 <section>
-                    <h3>CONTROLS REFERENCE</h3>
+                    <h3 data-i18n="howto_modal.controls_reference">CONTROLS REFERENCE</h3>
                     <div id="gamepad-controls-panel">
-                        <div class="gp-panel-title">GAMEPAD CONTROLS</div>
+                        <div data-i18n="gamepad_controls_panel.gamepad_controls" class="gp-panel-title">GAMEPAD CONTROLS</div>
                         <svg class="gcp-svg" viewBox="-55 0 350 175" xmlns="http://www.w3.org/2000/svg">
                             <!-- Main body -->
                             <rect class="gcp-body" x="58" y="55" width="124" height="68" rx="8" />
@@ -780,82 +780,82 @@
                             <circle class="gcp-dot" cx="157" cy="118" r="1.5" />
                             <line class="gcp-line" x1="157" y1="118" x2="208" y2="154" />
                             <!-- Labels — left -->
-                            <text class="gcp-lbl gcp-lbl-l" x="30" y="16">Zoom Out</text>
-                            <text class="gcp-lbl gcp-lbl-l" x="30" y="34">Cursor<tspan x="30" dy="13">Speed -</tspan>
+                            <text data-i18n="gamepad_controls_panel.zoom_out" class="gcp-lbl gcp-lbl-l" x="30" y="16">Zoom Out</text>
+                            <text class="gcp-lbl gcp-lbl-l" x="30" y="34">Cursor<tspan data-i18n="gamepad_controls_panel.speed" x="30" dy="13">Speed -</tspan>
                             </text>
-                            <text class="gcp-lbl gcp-lbl-l" x="30" y="70">Move /<tspan x="30" dy="13">Attack</tspan>
+                            <text class="gcp-lbl gcp-lbl-l" x="30" y="70">Move /<tspan data-i18n="gamepad_controls_panel.attack" x="30" dy="13">Attack</tspan>
                             </text>
-                            <text class="gcp-lbl gcp-lbl-l" x="30" y="114">Deselect</text>
+                            <text data-i18n="gamepad_controls_panel.deselect" class="gcp-lbl gcp-lbl-l" x="30" y="114">Deselect</text>
                             <!-- Labels — right -->
-                            <text class="gcp-lbl gcp-lbl-r" x="210" y="16">Zoom In</text>
-                            <text class="gcp-lbl gcp-lbl-r" x="210" y="34">Cursor<tspan x="210" dy="13">Speed +</tspan>
+                            <text data-i18n="gamepad_controls_panel.zoom_in" class="gcp-lbl gcp-lbl-r" x="210" y="16">Zoom In</text>
+                            <text class="gcp-lbl gcp-lbl-r" x="210" y="34">Cursor<tspan data-i18n="gamepad_controls_panel.speed_2" x="210" dy="13">Speed +</tspan>
                             </text>
-                            <text class="gcp-lbl gcp-lbl-r" x="210" y="66">End Turn</text>
-                            <text class="gcp-lbl gcp-lbl-r" x="210" y="84">Hold to<tspan x="210" dy="13">Pan Map</tspan>
+                            <text data-i18n="gamepad_controls_panel.end_turn" class="gcp-lbl gcp-lbl-r" x="210" y="66">End Turn</text>
+                            <text class="gcp-lbl gcp-lbl-r" x="210" y="84">Hold to<tspan data-i18n="gamepad_controls_panel.pan_map" x="210" dy="13">Pan Map</tspan>
                             </text>
-                            <text class="gcp-lbl gcp-lbl-r" x="210" y="118">Select/Attack</text>
-                            <text class="gcp-lbl gcp-lbl-r" x="210" y="156">Pan Map</text>
+                            <text data-i18n="gamepad_controls_panel.select_attack" class="gcp-lbl gcp-lbl-r" x="210" y="118">Select/Attack</text>
+                            <text data-i18n="gamepad_controls_panel.pan_map_2" class="gcp-lbl gcp-lbl-r" x="210" y="156">Pan Map</text>
                             <!-- Label — center -->
-                            <text class="gcp-lbl" style="text-anchor:middle" x="120" y="134">Menu</text>
+                            <text data-i18n="gamepad_controls_panel.menu" class="gcp-lbl" style="text-anchor:middle" x="120" y="134">Menu</text>
                         </svg>
                     </div>
                     <table class="control-table" id="controls-table">
                         <thead>
                             <tr>
-                                <th>Action</th>
-                                <th>Keyboard</th>
-                                <th>Gamepad</th>
+                                <th data-i18n="controls_table.action">Action</th>
+                                <th data-i18n="controls_table.keyboard">Keyboard</th>
+                                <th data-i18n="controls_table.gamepad">Gamepad</th>
                             </tr>
                         </thead>
                         <tbody id="controls-table-body">
                         </tbody>
                     </table>
-                    <h3>MAP EDITOR</h3>
-                    <p style="margin-top:0">When editing maps or scenarios, controls change:</p>
+                    <h3 data-i18n="howto_modal.map_editor">MAP EDITOR</h3>
+                    <p data-i18n="howto_modal.when_editing_maps_or" style="margin-top:0">When editing maps or scenarios, controls change:</p>
                     <table class="control-table">
                         <tr>
-                            <th>Action</th>
-                            <th>Keyboard</th>
-                            <th>Gamepad</th>
+                            <th data-i18n="howto_modal.action">Action</th>
+                            <th data-i18n="howto_modal.keyboard">Keyboard</th>
+                            <th data-i18n="howto_modal.gamepad">Gamepad</th>
                         </tr>
                         <tr>
-                            <td>Move cursor</td>
-                            <td>Mouse</td>
-                            <td>Left Stick</td>
+                            <td data-i18n="howto_modal.move_cursor">Move cursor</td>
+                            <td data-i18n="howto_modal.mouse">Mouse</td>
+                            <td data-i18n="howto_modal.left_stick">Left Stick</td>
                         </tr>
                         <tr>
-                            <td>Pan map</td>
-                            <td>WASD / Arrows</td>
-                            <td>D-Pad Up/Down / Right Stick</td>
+                            <td data-i18n="howto_modal.pan_map">Pan map</td>
+                            <td data-i18n="howto_modal.wasd_arrows">WASD / Arrows</td>
+                            <td data-i18n="howto_modal.d_pad_up_down">D-Pad Up/Down / Right Stick</td>
                         </tr>
                         <tr>
-                            <td>Add / Paint tile</td>
-                            <td>Left Click</td>
-                            <td>A Button</td>
+                            <td data-i18n="howto_modal.add_paint_tile">Add / Paint tile</td>
+                            <td data-i18n="howto_modal.left_click">Left Click</td>
+                            <td data-i18n="howto_modal.a_button">A Button</td>
                         </tr>
                         <tr>
-                            <td>Remove tile</td>
-                            <td>Right Click</td>
-                            <td>X Button</td>
+                            <td data-i18n="howto_modal.remove_tile">Remove tile</td>
+                            <td data-i18n="howto_modal.right_click">Right Click</td>
+                            <td data-i18n="howto_modal.x_button">X Button</td>
                         </tr>
                         <tr>
-                            <td>Dice mode</td>
+                            <td data-i18n="howto_modal.dice_mode">Dice mode</td>
                             <td>F</td>
-                            <td>D-Pad Left</td>
+                            <td data-i18n="howto_modal.d_pad_left">D-Pad Left</td>
                         </tr>
                         <tr>
-                            <td>Assign mode</td>
+                            <td data-i18n="howto_modal.assign_mode">Assign mode</td>
                             <td>R</td>
-                            <td>D-Pad Right</td>
+                            <td data-i18n="howto_modal.d_pad_right">D-Pad Right</td>
                         </tr>
                         <tr>
-                            <td>Paint mode</td>
+                            <td data-i18n="howto_modal.paint_mode">Paint mode</td>
                             <td>Y</td>
-                            <td>Y Button</td>
+                            <td data-i18n="howto_modal.y_button">Y Button</td>
                         </tr>
                         <tr>
-                            <td>Zoom</td>
-                            <td>Wheel</td>
+                            <td data-i18n="howto_modal.zoom">Zoom</td>
+                            <td data-i18n="howto_modal.wheel">Wheel</td>
                             <td>L2 / R2</td>
                         </tr>
                     </table>
@@ -867,19 +867,19 @@
         <!-- Settings Modal (shared: main menu + in-game pause) -->
         <div id="settings-modal" class="modal hidden large-modal">
             <div class="modal-header">
-                <h2 class="tron-title small">SETTINGS</h2>
-                <button class="close-btn modal-close-btn" aria-label="Back"
+                <h2 data-i18n="settings_modal.settings" class="tron-title small">SETTINGS</h2>
+                <button data-i18n-aria-label="settings_modal.aria-label_back" class="close-btn modal-close-btn" aria-label="Back"
                     onclick="document.getElementById('global-back-btn').click()">×</button>
             </div>
             <div class="howto-content">
                 <div class="settings-group settings-group-flat">
-                    <div class="settings-group-header">GAME SPEED</div>
+                    <div data-i18n="settings_modal.game_speed" class="settings-group-header">GAME SPEED</div>
                     <div class="settings-group-body">
                         <div class="control-group">
                             <div class="segmented-btn game-speed-segmented">
-                                <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
-                                <button type="button" class="segmented-option" data-value="normal">Normal</button>
-                                <button type="button" class="segmented-option" data-value="expert">Expert</button>
+                                <button data-i18n="settings_modal.beginner" type="button" class="segmented-option" data-value="beginner">Beginner</button>
+                                <button data-i18n="settings_modal.normal" type="button" class="segmented-option" data-value="normal">Normal</button>
+                                <button data-i18n="settings_modal.expert" type="button" class="segmented-option" data-value="expert">Expert</button>
                             </div>
                             <select id="game-speed" style="display:none">
                                 <option value="beginner">Beginner</option>
@@ -891,24 +891,24 @@
                 </div>
 
                 <div class="settings-group settings-group-flat">
-                    <div class="settings-group-header">AUDIO</div>
+                    <div data-i18n="settings_modal.audio" class="settings-group-header">AUDIO</div>
                     <div class="settings-group-body">
                         <div class="control-row">
                             <div class="control-group half">
-                                <label>Music</label>
+                                <label data-i18n="settings_modal.music">Music</label>
                                 <div class="range-row">
-                                    <button id="music-toggle" class="tron-btn small menu-btn-utility"
+                                    <button data-i18n-title="settings_modal.title_music" id="music-toggle" class="tron-btn small menu-btn-utility"
                                         title="Music"><span class="sprite-icon icon-music-on"></span></button>
-                                    <input type="range" id="music-volume" min="0" max="100" value="30"
+                                    <input data-i18n-title="settings_modal.title_music_volume" type="range" id="music-volume" min="0" max="100" value="30"
                                         title="Music Volume">
                                 </div>
                             </div>
                             <div class="control-group half">
-                                <label>Sound Effects</label>
+                                <label data-i18n="settings_modal.sound_effects">Sound Effects</label>
                                 <div class="range-row">
-                                    <button id="sfx-toggle" class="tron-btn small active menu-btn-utility"
+                                    <button data-i18n-title="settings_modal.title_sound_effects" id="sfx-toggle" class="tron-btn small active menu-btn-utility"
                                         title="Sound Effects"><span class="sprite-icon icon-sfx-on"></span></button>
-                                    <input type="range" id="sfx-volume" min="0" max="100" value="30" title="SFX Volume">
+                                    <input data-i18n-title="settings_modal.title_sfx_volume" type="range" id="sfx-volume" min="0" max="100" value="30" title="SFX Volume">
                                 </div>
                             </div>
                         </div>
@@ -917,34 +917,34 @@
 
 
                 <details class="settings-group">
-                    <summary class="settings-group-header">CONTROLS</summary>
+                    <summary data-i18n="settings_modal.controls" class="settings-group-header">CONTROLS</summary>
                     <div class="settings-group-body">
-                        <p style="margin-top:0">Configure your keyboard and gamepad bindings.</p>
+                        <p data-i18n="settings_modal.configure_your_keyboard_and" style="margin-top:0">Configure your keyboard and gamepad bindings.</p>
                         <div id="controls-configure-area" class="controls-configure-area"></div>
                     </div>
                 </details>
 
                 <details class="settings-group" id="howto-display-section">
-                    <summary class="settings-group-header">GRAPHICS</summary>
+                    <summary data-i18n="howto_display_section.graphics" class="settings-group-header">GRAPHICS</summary>
                     <div class="settings-group-body">
-                        <p style="margin-top:0">Configure rendering options. Some changes may require a restart to
+                        <p data-i18n="howto_display_section.configure_rendering_options_some" style="margin-top:0">Configure rendering options. Some changes may require a restart to
                             apply.</p>
                         <div id="desktop-display-controls" class="control-row hidden" style="margin-bottom: 10px;">
                             <div class="control-group third">
-                                <label>Display Mode</label>
+                                <label data-i18n="desktop_display_controls.display_mode">Display Mode</label>
                                 <select id="gfx-display-mode">
                                     <option value="windowed">Windowed</option>
                                     <option value="fullscreen" selected>Fullscreen</option>
                                 </select>
                             </div>
                             <div class="control-group third">
-                                <label>Monitor</label>
+                                <label data-i18n="desktop_display_controls.monitor">Monitor</label>
                                 <select id="gfx-monitor">
                                     <option value="">Loading...</option>
                                 </select>
                             </div>
                             <div class="control-group third">
-                                <label>Scale Down Res</label>
+                                <label data-i18n="desktop_display_controls.scale_down_res">Scale Down Res</label>
                                 <select id="gfx-resolution">
                                     <option value="1.0" selected>1.0 (Native)</option>
                                     <option value="0.75">0.75 (Performance)</option>
@@ -955,7 +955,7 @@
                         </div>
                         <div class="control-row">
                             <div class="control-group third">
-                                <label>Visual Effects</label>
+                                <label data-i18n="howto_display_section.visual_effects">Visual Effects</label>
                                 <select id="effects-quality">
                                     <option value="high">High</option>
                                     <option value="medium" selected>Medium</option>
@@ -963,14 +963,14 @@
                                 </select>
                             </div>
                             <div class="control-group third">
-                                <label>Anti-Aliasing</label>
+                                <label data-i18n="howto_display_section.anti_aliasing">Anti-Aliasing</label>
                                 <select id="gfx-antialias">
                                     <option value="on">On (Smoother)</option>
                                     <option value="off" selected>Off (Faster)</option>
                                 </select>
                             </div>
                             <div class="control-group third">
-                                <label>Framerate Limit</label>
+                                <label data-i18n="howto_display_section.framerate_limit">Framerate Limit</label>
                                 <select id="gfx-framerate">
                                     <option value="vsync" selected>VSync (Monitor)</option>
                                     <option value="400">400 FPS</option>
@@ -981,7 +981,7 @@
                                 </select>
                             </div>
                             <div class="control-group third">
-                                <label>FPS Counter</label>
+                                <label data-i18n="howto_display_section.fps_counter">FPS Counter</label>
                                 <select id="gfx-fps">
                                     <option value="off" selected>Off</option>
                                     <option value="on">On</option>
@@ -992,18 +992,18 @@
                 </details>
 
                 <details class="settings-group" id="howto-data-section">
-                    <summary class="settings-group-header">STORAGE</summary>
+                    <summary data-i18n="howto_data_section.storage" class="settings-group-header">STORAGE</summary>
                     <div class="settings-group-body">
-                        <p style="margin-top:0">This game stores settings, progress, and campaigns in your browser's
+                        <p data-i18n="howto_data_section.this_game_stores_settings" style="margin-top:0">This game stores settings, progress, and campaigns in your browser's
                             local storage.</p>
                         <div id="howto-clear-area" class="howto-clear-area">
                             <div id="howto-keep-campaigns-row" class="howto-keep-campaigns hidden">
                                 <label class="howto-checkbox-label">
                                     <input type="checkbox" id="howto-keep-campaigns" checked>
-                                    Keep my campaigns (<code>userCampaign</code>)
+                                    Keep my campaigns (<code data-i18n="howto_keep_campaigns_row.usercampaign">userCampaign</code>)
                                 </label>
                             </div>
-                            <button id="howto-clear-storage-btn" class="tron-btn small menu-btn-danger">Clear All
+                            <button data-i18n="howto_clear_area.clear_all_storage" id="howto-clear-storage-btn" class="tron-btn small menu-btn-danger">Clear All
                                 Storage</button>
                         </div>
                     </div>
@@ -1015,7 +1015,7 @@
         <div id="achievement-toast">
             <span id="achievement-toast-icon" class="sprite-icon"></span>
             <div>
-                <div class="ach-toast-label">Achievement Unlocked</div>
+                <div data-i18n="achievement_toast.achievement_unlocked" class="ach-toast-label">Achievement Unlocked</div>
                 <div id="achievement-toast-name" class="ach-toast-name"></div>
             </div>
         </div>
@@ -1032,32 +1032,32 @@
         <!-- Achievements Modal -->
         <div id="achievements-modal" class="modal hidden large-modal">
             <div class="modal-header">
-                <h2 class="tron-title small">ACHIEVEMENTS</h2>
-                <button class="close-btn modal-close-btn" aria-label="Back"
+                <h2 data-i18n="achievements_modal.achievements" class="tron-title small">ACHIEVEMENTS</h2>
+                <button data-i18n-aria-label="achievements_modal.aria-label_back" class="close-btn modal-close-btn" aria-label="Back"
                     onclick="document.getElementById('global-back-btn').click()">×</button>
             </div>
             <div class="howto-content">
                 <table class="ach-stats-table">
                     <tr>
-                        <td class="ach-stats-label">Achievements</td>
+                        <td data-i18n="achievements_modal.achievements_2" class="ach-stats-label">Achievements</td>
                         <td class="ach-stats-value" id="ach-subtitle">—</td>
                     </tr>
                     <tr>
-                        <td class="ach-stats-label">Games Played</td>
+                        <td data-i18n="achievements_modal.games_played" class="ach-stats-label">Games Played</td>
                         <td class="ach-stats-value" id="ach-stat-played">—</td>
                     </tr>
                     <tr>
-                        <td class="ach-stats-label">Games Won</td>
+                        <td data-i18n="achievements_modal.games_won" class="ach-stats-label">Games Won</td>
                         <td class="ach-stats-value" id="ach-stat-won">—</td>
                     </tr>
                     <tr>
-                        <td class="ach-stats-label">Win Rate</td>
+                        <td data-i18n="achievements_modal.win_rate" class="ach-stats-label">Win Rate</td>
                         <td class="ach-stats-value" id="ach-stat-winrate">—</td>
                     </tr>
                 </table>
                 <div id="ach-bucket-stats"></div>
                 <div class="achievements-reset-stats-row">
-                    <button type="button" id="achievements-reset-stats-btn"
+                    <button data-i18n="achievements_modal.reset_game_statistics" type="button" id="achievements-reset-stats-btn"
                         class="tron-btn small menu-btn-utility">Reset Game Statistics…</button>
                 </div>
                 <div id="ach-grid"></div>
@@ -1067,19 +1067,19 @@
         <!-- About Modal -->
         <div id="about-modal" class="modal hidden large-modal">
             <div class="modal-header">
-                <h2 class="tron-title small">ABOUT</h2>
-                <button class="close-btn modal-close-btn" aria-label="Back"
+                <h2 data-i18n="about_modal.about" class="tron-title small">ABOUT</h2>
+                <button data-i18n-aria-label="about_modal.aria-label_back" class="close-btn modal-close-btn" aria-label="Back"
                     onclick="document.getElementById('global-back-btn').click()">×</button>
             </div>
             <div class="howto-content">
                 <section>
-                    <h3>CREDITS</h3>
+                    <h3 data-i18n="about_modal.credits">CREDITS</h3>
                     <div class="setting-explain">
                         <p>This game was made by <strong>Alexander Thurn</strong>.</p>
-                        <p>Its core is <strong>open source</strong> under the <strong>GNU GPL v3</strong>.</p>
-                        <p>The <strong>web version</strong> is free. It is a subset of the full game,
+                        <p>Its core is <strong data-i18n="about_modal.open_source">open source</strong> under the <strong data-i18n="about_modal.gnu_gpl_v3">GNU GPL v3</strong>.</p>
+                        <p>The <strong data-i18n="about_modal.web_version">web version</strong> is free. It is a subset of the full game,
                             but contains all of the core engine and a tutorial. The
-                            <strong>paid version</strong> contains more features, like handcrafted campaigns and in case
+                            <strong data-i18n="about_modal.paid_version">paid version</strong> contains more features, like handcrafted campaigns and in case
                             of Steam: cloud saving and achievements.
                         </p>
                         <p>GitHub: <a href="https://github.com/alexanderthurn/diception" target="_blank"
@@ -1091,12 +1091,12 @@
                         </p>
                         <p>Visit <a href="https://feuerware.com" target="_blank"
                                 class="about-link highlight-link">feuerware.com</a> for more games.</p>
-                        <p><strong>Gamepad &amp; Keyboard Icons</strong> by <a
+                        <p><strong data-i18n="about_modal.gamepad_keyboard_icons">Gamepad &amp; Keyboard Icons</strong> by <a data-i18n="about_modal.kenney_nl"
                                 href="https://kenney.nl/assets/input-prompts" target="_blank"
                                 class="about-link highlight-link">Kenney.nl</a> (CC0)</p>
-                        <p>Music made with <a href="https://suno.com/invite/@werteherren" target="_blank"
+                        <p>Music made with <a data-i18n="about_modal.suno" href="https://suno.com/invite/@werteherren" target="_blank"
                                 class="about-link highlight-link">Suno</a> (Suno Pro).</p>
-                        <p>Game rendering by <a href="https://pixijs.com" target="_blank"
+                        <p>Game rendering by <a data-i18n="about_modal.pixijs" href="https://pixijs.com" target="_blank"
                                 rel="noopener" class="about-link highlight-link">PixiJS</a>
                             <img src="assets/icons/pixijs-logo.png" alt="PixiJS" class="about-pixijs-logo">
                         </p>
@@ -1104,29 +1104,29 @@
                 </section>
 
                 <section>
-                    <h3>MUSIC</h3>
-                    <p>Toggle tracks to include/exclude from the play loop.</p>
-                    <ul id="howto-music-list" class="howto-music-list">
+                    <h3 data-i18n="about_modal.music">MUSIC</h3>
+                    <p data-i18n="about_modal.toggle_tracks_to_include">Toggle tracks to include/exclude from the play loop.</p>
+                    <ul data-i18n="about_modal.populated_by_javascript" id="howto-music-list" class="howto-music-list">
                         <!-- Populated by JavaScript -->
                     </ul>
                 </section>
 
                 <section>
-                    <h3>LEGAL NOTICE (IMPRINT)</h3>
+                    <h3 data-i18n="about_modal.legal_notice_imprint">LEGAL NOTICE (IMPRINT)</h3>
                     <div class="setting-explain">
-                        <p><strong>Service Provider:</strong><br>
+                        <p><strong data-i18n="about_modal.service_provider">Service Provider:</strong><br>
                             Alexander Thurn<br>Gerhardstr. 16<br>53229 Bonn<br>Germany</p>
-                        <p><strong>Contact:</strong><br>
+                        <p><strong data-i18n="about_modal.contact">Contact:</strong><br>
                             Email: <a class="about-link highlight-link"
                                 href="mailto:info@feuerware.com">info@feuerware.com</a><br>
                             Phone: +49 (0) 176 23570002</p>
-                        <p><strong>Privacy Policy:</strong><br>
+                        <p><strong data-i18n="about_modal.privacy_policy">Privacy Policy:</strong><br>
                             <a class="about-link highlight-link" href="https://feuerware.com/2025/privacy.html"
                                 target="_blank" rel="noopener">feuerware.com/2025/privacy.html</a></p>
-                        <p id="ad-privacy-row" hidden><strong>Advertising:</strong><br>
-                            <button id="ad-privacy-btn" class="about-link highlight-link">Ad privacy settings</button></p>
+                        <p id="ad-privacy-row" hidden><strong data-i18n="ad_privacy_row.advertising">Advertising:</strong><br>
+                            <button data-i18n="ad_privacy_row.ad_privacy_settings" id="ad-privacy-btn" class="about-link highlight-link">Ad privacy settings</button></p>
                         <hr>
-                        <p><em>Information according to § 5 DDG:</em><br>
+                        <p><em data-i18n="about_modal.information_according_to_5">Information according to § 5 DDG:</em><br>
                             Responsible for content according to § 18 Abs. 2 MStV: Alexander Thurn (address as stated
                             above).</p>
                     </div>
@@ -1136,17 +1136,17 @@
 
         <div id="player-dashboard" class="panel game-ui hidden">
             <h3 class="dash-header" id="dash-header">
-                <span id="player-turn">Initializing...</span>
+                <span data-i18n="dash_header.initializing" id="player-turn">Initializing...</span>
                 <span id="dash-toggle">[-]</span>
             </h3>
             <div id="player-collapsed-list"></div>
             <div id="dash-content">
-                <div id="player-list">
+                <div data-i18n="dash_content.populated_by_js" id="player-list">
                     <!-- Populated by JS -->
                 </div>
                 <hr class="dash-divider">
-                <h4 class="log-title">BATTLE LOG</h4>
-                <div id="log-entries">
+                <h4 data-i18n="dash_content.battle_log" class="log-title">BATTLE LOG</h4>
+                <div data-i18n="dash_content.populated_by_js_2" id="log-entries">
                     <!-- Populated by JS -->
                 </div>
             </div>
@@ -1156,29 +1156,29 @@
         <!-- Tournament Results Modal -->
         <div id="tournament-results-modal" class="modal hidden">
             <div class="modal-header">
-                <h2 class="tron-title small">TOURNAMENT RESULTS</h2>
+                <h2 data-i18n="tournament_results_modal.tournament_results" class="tron-title small">TOURNAMENT RESULTS</h2>
                 <button id="tournament-close-btn" class="close-btn">×</button>
             </div>
             <div id="tournament-results"></div>
             <div class="tournament-actions">
-                <button id="tournament-again-btn" class="tron-btn menu-btn-primary">Run Again</button>
-                <button id="tournament-done-btn" class="tron-btn menu-btn-neutral">Done</button>
+                <button data-i18n="tournament_results_modal.run_again" id="tournament-again-btn" class="tron-btn menu-btn-primary">Run Again</button>
+                <button data-i18n="tournament_results_modal.done" id="tournament-done-btn" class="tron-btn menu-btn-neutral">Done</button>
             </div>
         </div>
 
         <!-- Scenario Browser (full-screen overlay) -->
         <div id="scenario-browser-modal" class="hidden">
             <!-- close btn hidden; triggered programmatically by global-back-btn -->
-            <button id="scenario-browser-close-btn" style="display:none" aria-label="Close"></button>
+            <button data-i18n-aria-label="scenario_browser_modal.aria-label_close" id="scenario-browser-close-btn" style="display:none" aria-label="Close"></button>
 
             <!-- View 1: Campaign Selection -->
             <div id="campaign-select-view" class="modal large-modal hidden">
                 <div class="modal-header">
-                    <button class="close-btn modal-close-btn" aria-label="Back"
+                    <button data-i18n-aria-label="campaign_select_view.aria-label_back" class="close-btn modal-close-btn" aria-label="Back"
                         onclick="document.getElementById('global-back-btn').click()">×</button>
-                    <h2 class="tron-title small">CAMPAIGN</h2>
+                    <h2 data-i18n="campaign_select_view.campaign" class="tron-title small">CAMPAIGN</h2>
                 </div>
-                <div id="campaign-button-list" class="campaign-button-list howto-content">
+                <div data-i18n="campaign_select_view.populated_by_js" id="campaign-button-list" class="campaign-button-list howto-content">
                     <!-- populated by JS -->
                 </div>
             </div>
@@ -1186,13 +1186,13 @@
             <!-- View 2: Campaign Detail (level grid) -->
             <div id="campaign-detail-view" class="modal large-modal hidden">
                 <div class="modal-header">
-                    <button class="close-btn modal-close-btn" aria-label="Back"
+                    <button data-i18n-aria-label="campaign_detail_view.aria-label_back" class="close-btn modal-close-btn" aria-label="Back"
                         onclick="document.getElementById('global-back-btn').click()">×</button>
                     <h2 id="campaign-detail-title" class="tron-title small"></h2>
                 </div>
                 <div class="howto-content">
                     <div id="level-grid-container">
-                        <div id="campaign-user-actions" class="campaign-dev-toolbar hidden"
+                        <div data-i18n-aria-label="level_grid_container.aria-label_developer_campaign_tools" id="campaign-user-actions" class="campaign-dev-toolbar hidden"
                             aria-label="Developer campaign tools"></div>
                         <div id="level-grid-header"></div>
                         <div id="level-grid"></div>
@@ -1203,7 +1203,7 @@
 
             <!-- Legacy refs kept hidden for JS compatibility -->
             <div id="campaign-list" style="display:none"></div>
-            <select id="campaign-select" style="display:none" aria-label="Select campaign"></select>
+            <select data-i18n-aria-label="scenario_browser_modal.aria-label_select_campaign" id="campaign-select" style="display:none" aria-label="Select campaign"></select>
         </div>
 
         <!-- Map/Scenario Editor Overlay (uses main game canvas) -->
@@ -1228,8 +1228,8 @@
             <div class="editor-settings">
                 <!-- Map / Scenario type selector -->
                 <div class="segmented-btn editor-type-segmented" id="editor-type-segmented">
-                    <button class="segmented-option" data-type="map">Map</button>
-                    <button class="segmented-option" data-type="scenario">Scenario</button>
+                    <button data-i18n="editor_type_segmented.map" class="segmented-option" data-type="map">Map</button>
+                    <button data-i18n="editor_type_segmented.scenario" class="segmented-option" data-type="scenario">Scenario</button>
                 </div>
 
                 <!-- Map/Scenario-specific -->
@@ -1238,14 +1238,14 @@
                     <div id="editor-shared-players-section">
                         <div class="control-row hidden">
                             <div class="control-group">
-                                <label>Map Size</label>
+                                <label data-i18n="editor_shared_players_section.map_size">Map Size</label>
                                 <div class="range-row">
                                     <input type="range" id="editor-map-size" min="1" max="10" value="4">
                                     <span id="editor-map-size-val">6×6</span>
                                 </div>
                             </div>
                             <div class="control-group" id="editor-map-style-group">
-                                <label>Map Style</label>
+                                <label data-i18n="editor_map_style_group.map_style">Map Style</label>
                                 <select id="editor-map-style">
                                     <option value="random" selected>Random</option>
                                     <option value="full">Full Grid</option>
@@ -1256,7 +1256,7 @@
                         </div>
                         <div class="control-row">
                             <div class="control-group half">
-                                <label>Bots</label>
+                                <label data-i18n="editor_shared_players_section.bots">Bots</label>
                                 <select id="editor-shared-bots">
                                     <option value="0">0</option>
                                     <option value="1" selected>1</option>
@@ -1270,7 +1270,7 @@
                                 </select>
                             </div>
                             <div class="control-group half" id="editor-bot-ai-group">
-                                <label>Bot Difficulty</label>
+                                <label data-i18n="editor_bot_ai_group.bot_difficulty">Bot Difficulty</label>
                                 <select id="editor-shared-bot-ai">
                                     <option value="easy" selected>Easy</option>
                                     <option value="medium">Medium</option>
@@ -1285,10 +1285,10 @@
                             <button type="button" class="tron-btn small setup-mods-toggle" id="editor-mods-toggle"
                                 aria-expanded="false" aria-controls="editor-mods-panel">
                                 <span class="setup-mods-chevron" aria-hidden="true"></span>
-                                <span class="setup-mods-toggle-label">Mods</span>
-                                <span class="setup-mods-active-badge hidden" id="editor-mods-active-badge">On</span>
+                                <span data-i18n="editor_mods_toggle.mods" class="setup-mods-toggle-label">Mods</span>
+                                <span data-i18n="editor_mods_toggle.on" class="setup-mods-active-badge hidden" id="editor-mods-active-badge">On</span>
                             </button>
-                            <button type="button" id="editor-mods-reset" class="tron-btn small setup-mods-reset hidden"
+                            <button data-i18n-title="editor_mods_toolbar.title_reset_all_mods" data-i18n="editor_mods_toolbar.reset_mods" type="button" id="editor-mods-reset" class="tron-btn small setup-mods-reset hidden"
                                 title="Reset all Mods to defaults">Reset Mods</button>
                         </div>
                         <div id="editor-mods-summary" class="setup-mods-summary hidden"></div>
@@ -1297,21 +1297,21 @@
                 </div>
 
                 <div class="editor-quick-actions" id="editor-quick-actions">
-                    <button id="editor-clear-btn" class="tron-btn small hidden">Clear</button>
-                    <button id="editor-fill-btn" class="tron-btn small hidden">Fill</button>
+                    <button data-i18n="editor_quick_actions.clear" id="editor-clear-btn" class="tron-btn small hidden">Clear</button>
+                    <button data-i18n="editor_quick_actions.fill" id="editor-fill-btn" class="tron-btn small hidden">Fill</button>
                     <button id="editor-random-btn" class="tron-btn small hidden"><span
                             class="sprite-icon icon-dice"></span>
                         Random</button>
                     <div class="editor-seed-row hidden">
-                        <label class="editor-seed-label">Seed</label>
+                        <label data-i18n="editor_quick_actions.seed" class="editor-seed-label">Seed</label>
                         <input type="number" id="editor-seed-input" class="seed-input" min="0" max="4294967295" step="1"
                             placeholder="0">
-                        <button type="button" id="editor-seed-reroll" class="tron-btn editor-seed-reroll-btn"
+                        <button data-i18n-title="editor_quick_actions.title_new_random_seed" type="button" id="editor-seed-reroll" class="tron-btn editor-seed-reroll-btn"
                             title="New random seed">⟳</button>
                     </div>
                     <div class="editor-quick-actions-row editor-scenario-only">
-                        <button id="editor-random-owners-btn" class="tron-btn small">Random Owners</button>
-                        <button id="editor-random-dice-btn" class="tron-btn small">Random Dice</button>
+                        <button data-i18n="editor_quick_actions.random_owners" id="editor-random-owners-btn" class="tron-btn small">Random Owners</button>
+                        <button data-i18n="editor_quick_actions.random_dice" id="editor-random-dice-btn" class="tron-btn small">Random Dice</button>
                     </div>
                 </div>
 
@@ -1326,7 +1326,7 @@
                 </div>
                 <div id="editor-help-text" class="editor-help-text hidden">
                     WASD/Arrows: pan · R: Assign · F: Dice · Y: Paint
-                    <span id="editor-help-gamepad" class="hidden"> · D-pad/Stick: cursor · Y: Assign/Dice · A: paint/activate · X: remove · A/B: ± in settings · B + stick: pan</span>
+                    <span data-i18n="editor_help_text.d_pad_stick_cursor" id="editor-help-gamepad" class="hidden"> · D-pad/Stick: cursor · Y: Assign/Dice · A: paint/activate · X: remove · A/B: ± in settings · B + stick: pan</span>
                     — See ? in main menu for full controls
                 </div>
                 <div id="editor-color-legend" class="editor-color-legend editor-scenario-only"></div>
@@ -1347,7 +1347,7 @@
             </div>
             <!-- Hover preview: what left-click would do (assign/dice mode) -->
             <div id="editor-hover-preview" class="editor-hover-preview hidden">
-                <span class="editor-hover-preview-label">Click →</span>
+                <span data-i18n="editor_hover_preview.click" class="editor-hover-preview-label">Click →</span>
                 <div class="editor-hover-preview-content"></div>
             </div>
         </div>
