@@ -13,6 +13,12 @@
 import en from '../locales/en.json';
 
 const LANGUAGE_KEY = 'language';
+
+/** Shown in the language picker — always in the language itself. */
+export const LANGUAGE_NAMES = {
+    en: 'English',
+    de: 'Deutsch',
+};
 const FALLBACK = 'en';
 
 /** Locales shipped with the game. Add the file, add it here. */

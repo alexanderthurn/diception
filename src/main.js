@@ -52,7 +52,7 @@ import { syncEntitlement, androidStore } from './native/android-store.js';
 import { addPluginListener } from '@tauri-apps/api/core';
 import { isTimedUnlockActive, getTimedUnlockRemainingMs, setTimedUnlock } from './core/timed-unlock.js';
 import { initStorage, flushStorage, migrateLegacyStorage } from './core/storage.js';
-import { initI18n } from './core/i18n.js';
+import { initI18n, setLanguage, getLanguage, getAvailableLanguages, LANGUAGE_NAMES } from './core/i18n.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { AchievementsPanel, TITLES as ACH_TITLES } from './ui/achievements-panel.js';
 import { ACHIEVEMENTS } from './core/achievements.js';
@@ -1934,7 +1934,30 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         bindMusicToggles();
         refreshControlsSection();
         initGameSpeedSegmented();
+        initLanguageSegmented();
         settingsModal.classList.remove('hidden');
+    }
+
+    // Language buttons — built from the locales the game ships with
+    function initLanguageSegmented() {
+        const container = document.querySelector('.language-segmented');
+        if (!container || container.childElementCount) return;
+        for (const code of getAvailableLanguages()) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'segmented-option';
+            btn.dataset.value = code;
+            // Language names stay in their own language, never translated
+            btn.textContent = LANGUAGE_NAMES[code] || code.toUpperCase();
+            btn.classList.toggle('active', code === getLanguage());
+            btn.addEventListener('click', async () => {
+                await setLanguage(code);
+                container.querySelectorAll('.segmented-option').forEach(o => {
+                    o.classList.toggle('active', o.dataset.value === code);
+                });
+            });
+            container.appendChild(btn);
+        }
     }
 
     // Segmented game speed buttons — synced across all instances, immediate effect in-game
