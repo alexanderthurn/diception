@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/android-schema.json",
+  "identifier": "android-store",
+  "description": "allows the web layer to call the Android StorePlugin commands",
+  "platforms": ["android"],
+  "windows": ["main"],
+  "permissions": ["store:default"]
+}
