@@ -9637,6 +9637,28 @@ input[type="range"].gamepad-slider-editing {
     }
 }
 
+.android-unlock-success {
+    gap: 10px;
+    padding: 12px 4px 6px;
+    text-align: center;
+}
+
+.android-unlock-success-headline {
+    margin: 0;
+    color: #00ffff;
+    font-size: 1.2em;
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 12px rgba(0, 255, 255, 0.5);
+}
+
+.android-unlock-success-body {
+    margin: 0;
+    color: #ccc;
+    font-size: 0.95em;
+    line-height: 1.5;
+    max-width: 34ch;
+}
+
 /* Dice art frames the dialog: upright at the top, mirrored at the bottom.
    Backgrounds, so they stretch full width and never affect layout. */
 .dialog-overlay:has(.android-unlock-body) .dialog-box {

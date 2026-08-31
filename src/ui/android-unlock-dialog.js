@@ -26,6 +26,41 @@ function durationLabel(minutes) {
     return `${minutes} MIN`;
 }
 
+
+const SUCCESS = {
+    ad: {
+        title: 'Congratulations',
+        headline: () => `Full version unlocked for ${durationLabel(TIMED_UNLOCK_MINUTES).toLowerCase()}`,
+        body: 'Campaign, harder bots, bigger maps, local multiplayer and the map editor are open. Watch another ad later to extend.',
+    },
+    iap: {
+        title: 'THANK YOU',
+        headline: () => 'The full version is yours',
+        body: 'Everything is unlocked permanently, on this and any device signed in with your Google account. Thanks for supporting DICEPTION.',
+    },
+    restore: {
+        title: 'RESTORED',
+        headline: () => 'Your purchase is back',
+        body: 'The full version is unlocked again on this device.',
+    },
+};
+
+/** Confirmation after a successful unlock, framed like the offer dialog. */
+function showUnlockSuccess(kind) {
+    const info = SUCCESS[kind];
+    const content = document.createElement('div');
+    content.className = 'android-unlock-body android-unlock-success';
+    content.innerHTML = `
+        <p class="android-unlock-success-headline">${info.headline()}</p>
+        <p class="android-unlock-success-body">${info.body}</p>
+    `;
+    return Dialog.show({
+        title: info.title,
+        content,
+        buttons: [{ text: 'Okay', value: true, className: 'tron-btn menu-btn-primary' }],
+    });
+}
+
 export class AndroidUnlockDialog {
     static show() {
         return new Promise(resolve => {
@@ -59,6 +94,7 @@ export class AndroidUnlockDialog {
                     if (result.success) {
                         activateFullVersion();
                         Dialog.close(overlayRef);
+                        await showUnlockSuccess('iap');
                         resolve('iap');
                         return;
                     }
@@ -88,6 +124,7 @@ export class AndroidUnlockDialog {
                     if (result.success) {
                         setTimedUnlock(TIMED_UNLOCK_MINUTES);
                         Dialog.close(overlayRef);
+                        await showUnlockSuccess('ad');
                         resolve('ad');
                         return;
                     }
@@ -112,6 +149,7 @@ export class AndroidUnlockDialog {
                     if (result.restored) {
                         activateFullVersion();
                         Dialog.close(overlayRef);
+                        await showUnlockSuccess('restore');
                         resolve('iap');
                         return;
                     }
