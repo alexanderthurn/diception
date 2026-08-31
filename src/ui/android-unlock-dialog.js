@@ -39,7 +39,7 @@ export class AndroidUnlockDialog {
                 </ul>
                 <div class="android-unlock-options">
                     <div class="android-unlock-option android-unlock-ad-option">
-                        <button class="android-unlock-btn android-unlock-ad tron-btn">WATCH AD<span class="android-unlock-sub">${durationLabel(TIMED_UNLOCK_MINUTES)} FREE</span></button>
+                        <button class="android-unlock-btn android-unlock-ad tron-btn">WATCH AD<span class="android-unlock-sub">${durationLabel(TIMED_UNLOCK_MINUTES)}</span></button>
                     </div>
                     <div class="android-unlock-option">
                         <button class="android-unlock-btn android-unlock-iap tron-btn">BUY<span class="android-unlock-sub">Permanent</span></button>
@@ -118,7 +118,7 @@ export class AndroidUnlockDialog {
                 }
             });
 
-            Dialog.show({ title: 'Get Pro', content, buttons: [], closeButton: true })
+            Dialog.show({ title: 'Get Full Version', content, buttons: [], closeButton: true })
                 .then(() => resolve('close'));
             overlayRef = Dialog.activeOverlay;
 
