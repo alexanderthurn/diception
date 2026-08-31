@@ -52,7 +52,7 @@ import { syncEntitlement, androidStore } from './native/android-store.js';
 import { addPluginListener } from '@tauri-apps/api/core';
 import { isTimedUnlockActive, getTimedUnlockRemainingMs, setTimedUnlock } from './core/timed-unlock.js';
 import { initStorage, flushStorage, migrateLegacyStorage } from './core/storage.js';
-import { initI18n, setLanguage, getLanguage, getAvailableLanguages, LANGUAGE_NAMES } from './core/i18n.js';
+import { initI18n, setLanguage, getLanguage, getAvailableLanguages, LANGUAGE_NAMES, t } from './core/i18n.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { AchievementsPanel, achievementTitle } from './ui/achievements-panel.js';
 import { ACHIEVEMENTS } from './core/achievements.js';
@@ -185,7 +185,7 @@ async function init() {
 
     // Shared desktop quit flow (used by quit button and fallback cancel path)
     const handleQuit = async () => {
-        if (await Dialog.confirm('Are you sure you want to exit the game?', 'EXIT GAME?')) {
+        if (await Dialog.confirm(t('app.exit_confirm'), t('app.exit_title'))) {
             await flushStorage();
             if (window.steam) {
                 window.steam.quit();
@@ -538,7 +538,7 @@ async function init() {
         // Controllers title
         const title = document.createElement('div');
         title.className = 'gp-panel-title';
-        title.textContent = 'GAMEPADS';
+        title.textContent = t('app.gamepads');
         gamepadSidePanel.appendChild(title);
 
         if (steamRemotePlaySessions.size > 0) {
@@ -546,7 +546,7 @@ async function init() {
             remoteBlock.className = 'gp-remote-block';
             const sub = document.createElement('div');
             sub.className = 'gp-panel-subtitle';
-            sub.textContent = 'Remote guests';
+            sub.textContent = t('app.remote_guests');
             remoteBlock.appendChild(sub);
             const guestList = document.createElement('div');
             guestList.className = 'gp-remote-guest-list';
@@ -580,7 +580,7 @@ async function init() {
             const cycleBtn = document.createElement('button');
             cycleBtn.className = 'tron-btn small gp-cycle-btn';
             cycleBtn.style.setProperty('--gp-color', pColor);
-            cycleBtn.title = 'Change player assignment';
+            cycleBtn.title = t('app.change_assignment');
             cycleBtn.textContent = String(gpIdx + 1);
             cycleBtn.addEventListener('click', () => {
                 gcm?._cycleAssignment(gpIdx, 1);
@@ -1002,7 +1002,7 @@ async function init() {
             if (!progressToast) return;
 
             if (opts.tally && /^streak\d+$/.test(stat)) {
-                progressToastName.textContent = 'Chain logged';
+                progressToastName.textContent = t('app.chain_logged');
                 progressToastFill.style.width = '100%';
                 progressToastLabel.textContent = `${newValue.toLocaleString()} lifetime`;
                 progressToast.classList.add('has-active-mods');
@@ -1120,7 +1120,7 @@ async function init() {
     if (gfxAntialias) {
         gfxAntialias.addEventListener('change', async (e) => {
             localStorage.setItem('gfx_antialias', e.target.value);
-            const ok = await Dialog.confirm('Changing Anti-Aliasing requires a restart. Reload now?', 'RESTART REQUIRED');
+            const ok = await Dialog.confirm(t('app.aa_restart'), t('app.restart_required'));
             if (ok) { await flushStorage(); window.location.reload(); }
         });
     }
@@ -1425,7 +1425,7 @@ async function init() {
             if (newState) {
                 // Now on autoplay: disable button
                 endTurnBtn.disabled = true;
-                if (endTurnText) endTurnText.textContent = 'END TURN';
+                if (endTurnText) endTurnText.textContent = t('app.end_turn');
                 if (endTurnReinforcement) endTurnReinforcement.textContent = '';
 
                 setTimeout(async () => {
@@ -1442,7 +1442,7 @@ async function init() {
                 if (player) {
                     const regionDice = game.map.findLargestConnectedRegion(player.id);
                     const storedDice = player.storedDice || 0;
-                    if (endTurnText) endTurnText.textContent = 'END TURN';
+                    if (endTurnText) endTurnText.textContent = t('app.end_turn');
                     if (endTurnReinforcement) {
                         endTurnReinforcement.textContent = `(+${regionDice + storedDice})`;
                     }
@@ -1520,7 +1520,7 @@ async function init() {
             const levelIndex = scenarioBrowser.campaignManager.userCampaign.levels.length + 1;
             scenarioBrowser.campaignManager.setUserLevel(-1, scenario);
 
-            Dialog.alert(`Saved as #${levelIndex} in 'Your Campaign'`);
+            Dialog.alert(t('app.saved_as_level', { index: levelIndex }));
         }
     };
 
@@ -2287,7 +2287,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         initGameSpeedSegmented();
         syncPauseAudioBtns();
         const exitBtn = document.getElementById('pause-mainmenu-btn');
-        if (exitBtn) exitBtn.textContent = 'Exit';
+        if (exitBtn) exitBtn.textContent = t('app.exit');
         return true;
     }
 
@@ -2393,15 +2393,13 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
     clearStorageBtn?.addEventListener('click', async () => {
         const keepCampaigns = keepCampaignsCheck?.checked && keepCampaignsRow && !keepCampaignsRow.classList.contains('hidden');
-        const msg = keepCampaigns
-            ? 'Clear all stored data except your campaigns?'
-            : 'Clear all stored data? This cannot be undone.';
-        const ok = await Dialog.confirm(msg, 'CLEAR STORAGE?');
+        const msg = t(keepCampaigns ? 'app.clear_storage_keep' : 'app.clear_storage_all');
+        const ok = await Dialog.confirm(msg, t('app.clear_storage_title'));
         if (ok) {
             clearAllStorage();
             await resetAllAchievementsAndStats();
             await flushStorage();
-            Dialog.alert('Storage cleared. The page will reload.');
+            Dialog.alert(t('app.storage_cleared'));
             window.location.reload();
         }
     });
@@ -2422,7 +2420,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         cb.type = 'checkbox';
         cb.id = 'dialog-reset-stats-ach-cb';
         const span = document.createElement('span');
-        span.textContent = 'Also reset achievements';
+        span.textContent = t('app.also_reset_achievements');
         label.appendChild(cb);
         label.appendChild(span);
         wrap.appendChild(label);
@@ -2447,10 +2445,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
             achievementsPanel.open();
         }
         await Dialog.alert(
-            achievementsToo
-                ? 'Statistics and achievements were reset.'
-                : 'Statistics were reset. Achievements were left unchanged.',
-            'DONE'
+            t(achievementsToo ? 'app.stats_ach_reset' : 'app.stats_reset'),
+            t('app.done')
         );
     });
 
