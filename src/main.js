@@ -890,6 +890,17 @@ async function init() {
     window.addEventListener('adOverlayEnd', () => audioController.restoreForOverlay());
     renderer.sfx = sfxManager;
 
+    // External links must leave the app: inside the Tauri WebView an <a> would replace
+    // the game with the web page, and on Android there is no way back from there.
+    // On the plain web build window.openUrl is absent and normal navigation applies.
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest?.('a[href^="http"]');
+        // The Steam store link has its own handler that prefers the Steam overlay
+        if (!link || link.classList.contains('steam-store-link') || !window.openUrl) return;
+        e.preventDefault();
+        window.openUrl(link.href);
+    }, { capture: true });
+
     // Play button.ogg on every button click except end-turn
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('button');

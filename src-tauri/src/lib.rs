@@ -106,18 +106,6 @@ fn open_devtools(window: tauri::WebviewWindow) {
     window.open_devtools();
 }
 
-#[tauri::command]
-fn open_url(url: String) {
-    #[cfg(target_os = "macos")]
-    { std::process::Command::new("open").arg(&url).spawn().ok(); }
-    #[cfg(target_os = "windows")]
-    { std::process::Command::new("cmd").args(["/C", "start", "", &url]).spawn().ok(); }
-    #[cfg(target_os = "linux")]
-    { std::process::Command::new("xdg-open").arg(&url).spawn().ok(); }
-    #[cfg(target_os = "android")]
-    { let _ = url; }
-}
-
 #[cfg(not(target_os = "android"))]
 #[tauri::command]
 fn steam_get_stat_i32(state: tauri::State<SteamState>, stat_name: String) -> Result<i32, String> {
@@ -277,7 +265,7 @@ const COMMON_INIT_SCRIPT: &str = r#"
 (function() {
     var ipc = window.__TAURI_INTERNALS__;
     if (!ipc) return;
-    window.openUrl = function(url) { return ipc.invoke('open_url', { url: url }); };
+    window.openUrl = function(url) { return ipc.invoke('plugin:opener|open_url', { url: url }); };
 })();
 "#;
 
@@ -359,7 +347,6 @@ pub fn run() {
                 storage_get_path,
                 android_quit,
                 android_is_dev,
-                open_url,
             ]);
 
         if steam_available {
@@ -395,6 +382,11 @@ pub fn run() {
                     .build(),
             )
             .plugin(
+                tauri::plugin::Builder::<tauri::Wry, ()>::new("common-bridge")
+                    .js_init_script(COMMON_INIT_SCRIPT.to_string())
+                    .build(),
+            )
+            .plugin(
                 tauri::plugin::Builder::<tauri::Wry, ()>::new("store")
                     .setup(|_app, api| {
                         api.register_android_plugin("com.feuerware.diception", "StorePlugin")?;
@@ -405,6 +397,8 @@ pub fn run() {
     }
 
     // ── Common setup ──────────────────────────────────────────────────────────
+    builder = builder.plugin(tauri_plugin_opener::init());
+
     builder
         .setup(|app| {
             #[cfg(not(target_os = "android"))]

@@ -19,6 +19,8 @@
     "core:window:allow-is-fullscreen",
     "core:window:allow-outer-size",
     "core:window:allow-available-monitors",
-    "core:window:allow-current-monitor"
+    "core:window:allow-current-monitor",
+    "opener:allow-open-url",
+    "opener:allow-default-urls"
   ]
 }
