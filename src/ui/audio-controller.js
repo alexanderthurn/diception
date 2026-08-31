@@ -391,23 +391,32 @@ export class AudioController {
     }
 
     /**
-     * Silence music while a fullscreen overlay owns the screen (rewarded ad).
-     * Does not touch the user's music setting — restoreForOverlay() puts it back.
+     * Silence music while something else owns the screen — a rewarded ad, or the app
+     * being sent to the background. Does not touch the user's music setting;
+     * restorePlayback() puts it back.
      */
-    suspendForOverlay() {
+    suspendPlayback() {
+        // Suspending the context silences everything at once, including sounds already
+        // scheduled — pausing individual aliases leaves the output stream running.
+        const ctx = sound.context?.audioContext;
+        if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {});
+
         if (!this.musicPlaying || this._musicPaused) return;
         const alias = this._currentMusicAlias();
         if (alias && sound.exists(alias)) {
             sound.pause(alias);
             this._musicPaused = true;
-            this._suspendedByOverlay = true;
+            this._suspendedExternally = true;
         }
     }
 
-    /** Resume music paused by suspendForOverlay(), if the user hasn't turned it off meanwhile. */
-    restoreForOverlay() {
-        if (!this._suspendedByOverlay) return;
-        this._suspendedByOverlay = false;
+    /** Resume music paused by suspendPlayback(), if the user hasn't turned it off meanwhile. */
+    restorePlayback() {
+        const ctx = sound.context?.audioContext;
+        if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+        if (!this._suspendedExternally) return;
+        this._suspendedExternally = false;
         if (!this.musicPlaying || !this._musicPaused) return;
         const alias = this._currentMusicAlias();
         if (alias && sound.exists(alias)) {

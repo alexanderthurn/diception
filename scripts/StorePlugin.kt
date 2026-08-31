@@ -60,6 +60,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
 
     private val act = activity
     private val mainHandler = Handler(Looper.getMainLooper())
+    private var webView: WebView? = null
 
     private var billingClient: BillingClient? = null
     private var billingReady = false
@@ -78,6 +79,7 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
 
     override fun load(webView: WebView) {
         super.load(webView)
+        this.webView = webView
         gmsAvailable = GoogleApiAvailability.getInstance()
             .isGooglePlayServicesAvailable(act) == ConnectionResult.SUCCESS
         Log.d(TAG, "load() gmsAvailable=$gmsAvailable")
@@ -93,6 +95,26 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
         // The status itself is refreshed silently so the privacy options entry point can be
         // offered on every launch — this shows no UI.
         if (gmsAvailable) refreshConsentStatus()
+    }
+
+    /**
+     * Tauri does not call webView.onPause(), so the page never sees a visibilitychange and
+     * keeps its audio stream running in the background. Tell the web layer directly.
+     */
+    override fun onPause() {
+        notifyWeb("app-pause")
+    }
+
+    override fun onResume() {
+        notifyWeb("app-resume")
+    }
+
+    private fun notifyWeb(event: String) {
+        Log.d(TAG, "lifecycle: $event (webView=${webView != null})")
+        val view = webView ?: return
+        mainHandler.post {
+            view.evaluateJavascript("window.dispatchEvent(new Event('$event'))", null)
+        }
     }
 
     // ── Billing connection ────────────────────────────────────────────────────

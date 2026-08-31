@@ -49,6 +49,7 @@ import { reconcileLifetimeWithSteam } from './core/steam-player-stats-sync.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid, isFullVersion, initFullVersionCheck } from './scenarios/user-identity.js';
 import { showUnlockDialog } from './ui/show-unlock-dialog.js';
 import { syncEntitlement, androidStore } from './native/android-store.js';
+import { addPluginListener } from '@tauri-apps/api/core';
 import { isTimedUnlockActive, getTimedUnlockRemainingMs, setTimedUnlock } from './core/timed-unlock.js';
 import { initStorage, flushStorage, migrateLegacyStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
@@ -886,8 +887,18 @@ async function init() {
     const audioController = new AudioController(sfxManager);
     audioController.init();
     // Mute music while a rewarded ad plays over the app
-    window.addEventListener('adOverlayStart', () => audioController.suspendForOverlay());
-    window.addEventListener('adOverlayEnd', () => audioController.restoreForOverlay());
+    window.addEventListener('adOverlayStart', () => audioController.suspendPlayback());
+    window.addEventListener('adOverlayEnd', () => audioController.restorePlayback());
+
+    // ...and while the app is in the background: the WebView keeps the audio stream
+    // running after the activity pauses, so music would play on over other apps
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) audioController.suspendPlayback();
+        else audioController.restorePlayback();
+    });
+    // Android never fires visibilitychange for the WebView, so the native side signals it
+    window.addEventListener('app-pause', () => audioController.suspendPlayback());
+    window.addEventListener('app-resume', () => audioController.restorePlayback());
     renderer.sfx = sfxManager;
 
     // External links must leave the app: inside the Tauri WebView an <a> would replace
@@ -1442,6 +1453,14 @@ async function init() {
 
     // Input Manager Events
     setupInputEvents(game, inputManager, sessionManager, handleQuit);
+
+    // Android hardware back: without a listener Tauri finishes the activity, so back would
+    // quit the game from anywhere. Reuse the same cascade as the menu key — close a dialog,
+    // else the global back button, else the quit confirmation on the main menu.
+    if (isAndroid() && window.__TAURI_INTERNALS__) {
+        addPluginListener('app', 'back-button', () => inputManager.emit('menu'))
+            .catch(e => console.warn('[back] listener registration failed:', e));
+    }
 
     // Menu Navigation
     const { showFullVersionOnlyDialog } = setupMenuNavigation(effectsManager, audioController, inputManager, gameStarter, renderer, mapEditor, applyVersionUI, configManager, highscoreManager);
