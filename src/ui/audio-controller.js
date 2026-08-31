@@ -390,6 +390,32 @@ export class AudioController {
         this.musicToggle.classList.toggle('active', this.musicPlaying);
     }
 
+    /**
+     * Silence music while a fullscreen overlay owns the screen (rewarded ad).
+     * Does not touch the user's music setting — restoreForOverlay() puts it back.
+     */
+    suspendForOverlay() {
+        if (!this.musicPlaying || this._musicPaused) return;
+        const alias = this._currentMusicAlias();
+        if (alias && sound.exists(alias)) {
+            sound.pause(alias);
+            this._musicPaused = true;
+            this._suspendedByOverlay = true;
+        }
+    }
+
+    /** Resume music paused by suspendForOverlay(), if the user hasn't turned it off meanwhile. */
+    restoreForOverlay() {
+        if (!this._suspendedByOverlay) return;
+        this._suspendedByOverlay = false;
+        if (!this.musicPlaying || !this._musicPaused) return;
+        const alias = this._currentMusicAlias();
+        if (alias && sound.exists(alias)) {
+            sound.resume(alias);
+            this._musicPaused = false;
+        }
+    }
+
     handleSfxToggle() {
         const action = this.getMobileAction(this.sfx.enabled, this.sfxVolume);
 

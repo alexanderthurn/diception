@@ -88,8 +88,11 @@ export class AndroidUnlockDialog {
             content.querySelector('.android-unlock-ad').addEventListener('click', async (e) => {
                 const btn = e.currentTarget;
                 btn.disabled = true;
+                // The ad is a fullscreen Android activity; the WebView keeps playing audio
+                window.dispatchEvent(new Event('adOverlayStart'));
                 try {
                     const result = await androidStore.showRewardedAd();
+                    window.dispatchEvent(new Event('adOverlayEnd'));
                     if (result.success) {
                         setTimedUnlock(TIMED_UNLOCK_MINUTES);
                         Dialog.close(overlayRef);
@@ -100,6 +103,7 @@ export class AndroidUnlockDialog {
                     if (result.error === 'superseded') return;
                     Dialog.alert(AD_ERRORS[result.error] || 'Ad unavailable. Please try again later.');
                 } catch (err) {
+                    window.dispatchEvent(new Event('adOverlayEnd'));
                     btn.disabled = false;
                     Dialog.alert('Ad unavailable. Please try again later.');
                     console.warn('[store] rewarded ad failed:', err);

@@ -885,6 +885,9 @@ async function init() {
     }
     const audioController = new AudioController(sfxManager);
     audioController.init();
+    // Mute music while a rewarded ad plays over the app
+    window.addEventListener('adOverlayStart', () => audioController.suspendForOverlay());
+    window.addEventListener('adOverlayEnd', () => audioController.restoreForOverlay());
     renderer.sfx = sfxManager;
 
     // Play button.ogg on every button click except end-turn
