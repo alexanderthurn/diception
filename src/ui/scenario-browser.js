@@ -1,5 +1,6 @@
 import { Dialog } from './dialog.js';
 import { showUnlockDialog } from './show-unlock-dialog.js';
+import { t } from '../core/i18n.js';
 import { CampaignManager } from '../scenarios/campaign-manager.js';
 import { getGridDimensions } from '../scenarios/campaign-data.js';
 import { getSolvedLevels, markLevelSolved } from '../scenarios/campaign-progress.js';
@@ -232,15 +233,16 @@ export class ScenarioBrowser {
     }
 
     getCampaignDisplayName(c) {
-        const nameMap = {
-            'Tutorial': 'Tutorial',
-            'chapter1': 'Chapter 1',
-            'chapter2': 'Chapter 2',
-            'chapter3': 'Chapter 3',
-            'chapter4': 'Chapter 4',
+        const nameKeys = {
+            'Tutorial': 'campaign.name_tutorial',
+            'chapter1': 'campaign.name_chapter1',
+            'chapter2': 'campaign.name_chapter2',
+            'chapter3': 'campaign.name_chapter3',
+            'chapter4': 'campaign.name_chapter4',
         };
-        if (c.isUserCampaign) return 'Your Campaign';
-        return nameMap[c.owner] ?? c.owner;
+        if (c.isUserCampaign) return t('campaign.name_user');
+        const key = nameKeys[c.owner];
+        return key ? t(key) : c.owner;
     }
 
     refreshVersionState() {
@@ -308,9 +310,9 @@ export class ScenarioBrowser {
             const subSpan = document.createElement('span');
             subSpan.className = 'campaign-btn-sub';
             if (locked) {
-                subSpan.textContent = isAndroid() ? 'Tap to unlock' : 'Full version only';
+                subSpan.textContent = t(isAndroid() ? 'campaign.tap_to_unlock' : 'campaign.full_version_only');
             } else if (comingSoon) {
-                subSpan.textContent = 'Coming soon';
+                subSpan.textContent = t('campaign.coming_soon');
             } else if (levelCount === 0) {
                 subSpan.textContent = '—';
             } else {
@@ -391,7 +393,7 @@ export class ScenarioBrowser {
 
         const placeholderOpt = document.createElement('option');
         placeholderOpt.value = '';
-        placeholderOpt.textContent = 'Copy from campaign…';
+        placeholderOpt.textContent = t('campaign.copy_from');
         placeholderOpt.disabled = true;
         placeholderOpt.selected = true;
         sourceSelect.appendChild(placeholderOpt);
@@ -408,8 +410,8 @@ export class ScenarioBrowser {
         const copyBtn = document.createElement('button');
         copyBtn.type = 'button';
         copyBtn.className = 'tron-btn small campaign-dev-btn menu-btn-neutral';
-        copyBtn.textContent = 'Copy';
-        copyBtn.setAttribute('aria-label', 'Copy the selected campaign into your campaign');
+        copyBtn.textContent = t('campaign.copy');
+        copyBtn.setAttribute('aria-label', t('campaign.copy_aria'));
         copyBtn.addEventListener('click', () => this.importUserCampaignFromExisting(sourceSelect));
 
         copyRow.appendChild(sourceSelect);
@@ -418,22 +420,22 @@ export class ScenarioBrowser {
         const importBtn = document.createElement('button');
         importBtn.type = 'button';
         importBtn.className = 'tron-btn small campaign-dev-btn menu-btn-utility';
-        importBtn.textContent = 'Import JSON';
-        importBtn.setAttribute('aria-label', 'Import campaign from a JSON file');
+        importBtn.textContent = t('campaign.import_json');
+        importBtn.setAttribute('aria-label', t('campaign.import_aria'));
         importBtn.addEventListener('click', () => this.importUserCampaignJson());
 
         const exportBtn = document.createElement('button');
         exportBtn.type = 'button';
         exportBtn.className = 'tron-btn small campaign-dev-btn menu-btn-utility';
-        exportBtn.textContent = 'Export JSON';
-        exportBtn.setAttribute('aria-label', 'Download your campaign as JSON');
+        exportBtn.textContent = t('campaign.export_json');
+        exportBtn.setAttribute('aria-label', t('campaign.export_aria'));
         exportBtn.addEventListener('click', () => this.exportUserCampaignJson());
 
         const resetBtn = document.createElement('button');
         resetBtn.type = 'button';
         resetBtn.className = 'tron-btn small campaign-dev-btn menu-btn-danger';
-        resetBtn.textContent = 'Reset';
-        resetBtn.setAttribute('aria-label', 'Reset your campaign to zero levels');
+        resetBtn.textContent = t('campaign.reset');
+        resetBtn.setAttribute('aria-label', t('campaign.reset_aria'));
         resetBtn.addEventListener('click', () => this.resetUserCampaign());
 
         const exportActions = document.createElement('div');
@@ -450,12 +452,12 @@ export class ScenarioBrowser {
         if (!isCampaignDevToolsEnabled()) return;
         const idx = parseInt(sourceSelect.value, 10);
         if (Number.isNaN(idx) || idx < 0) {
-            await Dialog.alert('Choose a campaign from the list first.', 'Copy campaign');
+            await Dialog.alert(t('campaign.pick_first'), t('campaign.copy_title'));
             return;
         }
         const source = this._devImportableCampaigns?.[idx];
         if (!source?.levels || !Array.isArray(source.levels)) {
-            await Dialog.alert('That campaign is invalid.', 'Copy campaign');
+            await Dialog.alert(t('campaign.invalid'), t('campaign.copy_title'));
             return;
         }
 
@@ -468,7 +470,7 @@ export class ScenarioBrowser {
 
         const imp = await this.campaignManager.importFromExistingCampaign(source);
         if (!imp.ok) {
-            await Dialog.alert(imp.errors.join('\n'), 'Copy failed');
+            await Dialog.alert(imp.errors.join('\n'), t('campaign.copy_failed'));
             return;
         }
         this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
@@ -478,14 +480,14 @@ export class ScenarioBrowser {
     async resetUserCampaign() {
         if (!isCampaignDevToolsEnabled()) return;
         const proceed = await Dialog.confirm(
-            'Reset your campaign and remove all levels?',
-            'Reset campaign'
+            t('campaign.reset_confirm'),
+            t('campaign.reset_title')
         );
         if (!proceed) return;
 
         const result = await this.campaignManager.resetUserCampaign();
         if (!result.ok) {
-            await Dialog.alert('Failed to reset campaign.', 'Reset campaign');
+            await Dialog.alert(t('campaign.reset_failed'), t('campaign.reset_title'));
             return;
         }
         this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
@@ -495,7 +497,7 @@ export class ScenarioBrowser {
     async importUserCampaignJson() {
         if (!isCampaignDevToolsEnabled()) return;
         const proceed = await Dialog.confirm(
-            'Replace your entire saved campaign with the imported JSON file?',
+            t('campaign.import_confirm'),
             'Import campaign'
         );
         if (!proceed) return;
@@ -517,7 +519,7 @@ export class ScenarioBrowser {
                 this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
                 await this.renderLevelGrid(this.selectedCampaign);
             } catch (e) {
-                await Dialog.alert(e?.message || String(e), 'Import failed');
+                await Dialog.alert(e?.message || String(e), t('campaign.import_failed'));
             }
         });
         input.click();
@@ -828,7 +830,7 @@ export class ScenarioBrowser {
         const closeBtn = document.createElement('button');
         closeBtn.className = 'dialog-close-btn';
         closeBtn.innerHTML = '×';
-        closeBtn.setAttribute('aria-label', 'Close');
+        closeBtn.setAttribute('aria-label', t('common.close'));
         header.appendChild(closeBtn);
 
         const titleEl = document.createElement('h1');
@@ -876,7 +878,7 @@ export class ScenarioBrowser {
             playBtn.className = 'tron-btn primary menu-btn-primary';
             playBtn.dataset.noSfx = '';
             playBtn.dataset.gamepadAutofocus = '';
-            playBtn.textContent = 'Play';
+            playBtn.textContent = t('campaign.play');
             playBtn.onclick = () => finish('play');
             primaryRow.appendChild(playBtn);
 
@@ -884,7 +886,7 @@ export class ScenarioBrowser {
             if (solved) {
                 const customBtn = document.createElement('button');
                 customBtn.className = 'tron-btn menu-btn-utility';
-                customBtn.textContent = 'Custom';
+                customBtn.textContent = t('campaign.custom');
                 customBtn.onclick = () => finish('custom');
                 primaryRow.appendChild(customBtn);
             }
@@ -893,19 +895,19 @@ export class ScenarioBrowser {
             if (this.isOwner) {
                 const editBtn = document.createElement('button');
                 editBtn.className = 'tron-btn small menu-btn-neutral';
-                editBtn.textContent = 'Edit';
+                editBtn.textContent = t('campaign.edit');
                 editBtn.onclick = () => finish('edit');
                 secondaryRow.appendChild(editBtn);
 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'tron-btn small danger menu-btn-danger';
-                deleteBtn.textContent = 'Delete';
+                deleteBtn.textContent = t('campaign.delete');
                 deleteBtn.onclick = () => finish('delete');
                 secondaryRow.appendChild(deleteBtn);
 
                 const moveLeftBtn = document.createElement('button');
                 moveLeftBtn.className = 'tron-btn small move-btn menu-btn-utility';
-                moveLeftBtn.textContent = '← Move';
+                moveLeftBtn.textContent = t('campaign.move_left');
                 moveLeftBtn.disabled = idx <= 0;
                 moveLeftBtn.onclick = async () => {
                     this.campaignManager.moveUserLevel(idx, idx - 1);
@@ -919,7 +921,7 @@ export class ScenarioBrowser {
 
                 const moveRightBtn = document.createElement('button');
                 moveRightBtn.className = 'tron-btn small move-btn menu-btn-utility';
-                moveRightBtn.textContent = 'Move →';
+                moveRightBtn.textContent = t('campaign.move_right');
                 moveRightBtn.disabled = idx >= totalLevels - 1;
                 moveRightBtn.onclick = async () => {
                     this.campaignManager.moveUserLevel(idx, idx + 1);
@@ -973,7 +975,7 @@ export class ScenarioBrowser {
 
     async deleteLevel(index) {
         if (!this.isOwner || !this.selectedCampaign) return;
-        if (!(await Dialog.confirm('Delete this level?'))) return;
+        if (!(await Dialog.confirm(t('campaign.delete_level_confirm')))) return;
         this.campaignManager.removeUserLevel(index);
         if (this.selectedCampaign.isUserCampaign) {
             this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
