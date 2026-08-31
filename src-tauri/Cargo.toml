@@ -15,17 +15,17 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.5.4", features = [] }
+tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-tauri = { version = "2.10.0", features = ["devtools"] }
+tauri = { version = "2.11.5", features = ["devtools"] }
 tauri-plugin-log = "2"
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-steamworks = "0.12"
+steamworks = "0.13"
 
 [profile.release]
 panic = "abort"   # Verringert die Größe, indem im Fehlerfall sofort abgebrochen wird

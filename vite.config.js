@@ -24,8 +24,11 @@ export default defineConfig({
         pad: 'pad.html',
       },
       output: {
-        manualChunks: {
-          pixi: ['pixi.js'],
+        // Funktion statt Objekt — Rolldown (Vite 8) unterstützt die Objektform nicht mehr
+        manualChunks(id) {
+          if (id.includes('node_modules/pixi.js') || id.includes('node_modules/@pixi')) {
+            return 'pixi';
+          }
         },
       },
     },
