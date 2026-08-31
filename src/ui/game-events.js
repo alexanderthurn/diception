@@ -1,3 +1,4 @@
+import { t } from '../core/i18n.js';
 import { Dialog } from './dialog.js';
 import { createAI } from '../core/ai/index.js';
 import { GAME } from '../core/constants.js';
@@ -244,7 +245,7 @@ export class GameEventManager {
         if (data.player.isBot) {
             const colorHex = '#' + data.player.color.toString(16).padStart(6, '0');
             const playerAI = playerAIs.get(data.player.id);
-            const aiName = playerAI?.name || 'Bot';
+            const aiName = playerAI?.name || t('game.bot');
             this.turnIndicator.innerHTML = `<span style="color:${colorHex}">${aiName} ${data.player.id}</span> is playing...`;
             this.turnIndicator.classList.remove('hidden');
         } else {
@@ -797,10 +798,10 @@ export class GameEventManager {
         }
 
         const tt = [];
-        if (turnSecPart != null) tt.push(`${turnSecPart}s left on turn`);
-        if (atkSecPart != null) tt.push(`${atkSecPart}s for this attack`);
-        if (hasAttackLine) tt.push(remAttacks === 1 ? '1 attack left' : `${remAttacks} attacks left`);
-        this._limitHudEl.title = tt.length ? tt.join(' · ') : 'Turn limits';
+        if (turnSecPart != null) tt.push(t('game.turn_seconds_left', { s: turnSecPart }));
+        if (atkSecPart != null) tt.push(t('game.attack_seconds_left', { s: atkSecPart }));
+        if (hasAttackLine) tt.push(remAttacks === 1 ? t('game.one_attack_left') : t('game.attacks_left', { n: remAttacks }));
+        this._limitHudEl.title = tt.length ? tt.join(' · ') : t('game.turn_limits');
 
         this._tryTimerCountdownSfx();
     }
@@ -873,7 +874,7 @@ export class GameEventManager {
         if (this.addLog) this.addLog(`Board full — max dice per territory is now ${data.maxDice}.`, 'info');
         if (this.renderer?.forceUpdate) this.renderer.forceUpdate(false);
         const color = this.game.currentPlayer?.color ?? 0x00ffff;
-        this.renderer?.grid?.showBigLabel(`Max Dice: ${data.maxDice}`, color);
+        this.renderer?.grid?.showBigLabel(t('game.max_dice', { n: data.maxDice }), color);
     }
 
     _flushStreakAchievement() {
@@ -996,7 +997,7 @@ export class GameEventManager {
 
         if (result.tied && isHumanAttacker) {
             const color = attacker?.color ?? 0x00ffff;
-            this.renderer?.grid?.showBigLabel('Draw', color);
+            this.renderer?.grid?.showBigLabel(t('game.draw'), color);
         }
 
         // Update End Turn button
@@ -1338,16 +1339,16 @@ export class GameEventManager {
         if (soloHumans === 1 && this.highscoreManager) {
             const b = this.highscoreManager.getSoloHumanStatsBlob().buckets;
             const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-            const sizeLabel = s => s === 'medium' ? 'Mid size' : cap(s);
+            const sizeLabel = s => s === 'medium' ? t('game.mid_size') : cap(s);
             const winPct = (plays, wins) => plays > 0 ? `${Math.round(wins / plays * 100)}%` : '—';
 
             const rows = [];
             if (soloLevelKey) {
                 const lk = (soloDiff && soloSizeGroup) ? b[`d:${soloDiff}|s:${soloSizeGroup}|l:${soloLevelKey}`] : null;
-                if (lk && lk[0] > 0) rows.push(['This Level', lk]);
+                if (lk && lk[0] > 0) rows.push([t('game.this_level'), lk]);
             } else {
                 const g = b['g'];
-                if (g) rows.push(['Global', g]);
+                if (g) rows.push([t('game.global'), g]);
                 const d = soloDiff ? b[`d:${soloDiff}`] : null;
                 if (d && d[0] > 0) rows.push([cap(soloDiff), d]);
                 const ds = (soloDiff && soloSizeGroup) ? b[`d:${soloDiff}|s:${soloSizeGroup}`] : null;
