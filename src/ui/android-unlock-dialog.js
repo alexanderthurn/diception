@@ -2,46 +2,49 @@ import { Dialog } from './dialog.js';
 import { androidStore } from '../native/android-store.js';
 import { activateFullVersion } from '../scenarios/user-identity.js';
 import { setTimedUnlock, TIMED_UNLOCK_MINUTES } from '../core/timed-unlock.js';
+import { t } from '../core/i18n.js';
 
+// Native error codes mapped to their message keys
 const AD_ERRORS = {
-    'Ad not ready': 'No ad available right now. Please try again in a moment.',
-    'consent-declined': 'Without your consent no ad can be shown. You can change this any time under About → Ad privacy settings.',
-    'Ad skipped': 'The ad has to run to the end to unlock the free play time.',
-    'Store unavailable': 'The store is unavailable in this build.',
-    'Google Play Services not available': 'Rewarded ads need Google Play Services on this device.',
+    'Ad not ready': 'unlock.err_ad_not_ready',
+    'consent-declined': 'unlock.err_consent',
+    'Ad skipped': 'unlock.err_ad_skipped',
+    'Store unavailable': 'unlock.err_store_unavailable',
+    'Google Play Services not available': 'unlock.err_no_play_services',
 };
 
 const PURCHASE_ERRORS = {
-    pending: 'Payment is still being processed. The full version unlocks as soon as it clears.',
-    'Billing not ready': 'Google Play is not ready yet. Please try again in a moment.',
-    'Product not found': 'This purchase is not available on your account right now.',
-    'Store unavailable': 'The store is unavailable in this build.',
+    pending: 'unlock.err_pending',
+    'Billing not ready': 'unlock.err_billing_not_ready',
+    'Product not found': 'unlock.err_product_not_found',
+    'Store unavailable': 'unlock.err_store_unavailable',
 };
 
 function durationLabel(minutes) {
     if (minutes >= 60 && minutes % 60 === 0) {
         const h = minutes / 60;
-        return `${h} HOUR${h > 1 ? 'S' : ''}`;
+        return t(h > 1 ? 'unlock.hours' : 'unlock.hour', { h });
     }
-    return `${minutes} MIN`;
+    return t('unlock.minutes', { m: minutes });
 }
 
 
 const SUCCESS = {
     ad: {
-        title: 'Congratulations',
-        headline: () => `Full version unlocked for ${durationLabel(TIMED_UNLOCK_MINUTES).toLowerCase()}`,
-        body: 'Campaign, harder bots, bigger maps, local multiplayer and the map editor are open. Watch another ad later to extend.',
+        title: () => t('unlock.success_ad_title'),
+        headline: () => t('unlock.success_ad_headline',
+            { duration: durationLabel(TIMED_UNLOCK_MINUTES).toLowerCase() }),
+        body: () => t('unlock.success_ad_body'),
     },
     iap: {
-        title: 'THANK YOU',
-        headline: () => 'The full version is yours',
-        body: 'Everything is unlocked permanently, on this and any device signed in with your Google account. Thanks for supporting DICEPTION.',
+        title: () => t('unlock.success_iap_title'),
+        headline: () => t('unlock.success_iap_headline'),
+        body: () => t('unlock.success_iap_body'),
     },
     restore: {
-        title: 'RESTORED',
-        headline: () => 'Your purchase is back',
-        body: 'The full version is unlocked again on this device.',
+        title: () => t('unlock.success_restore_title'),
+        headline: () => t('unlock.success_restore_headline'),
+        body: () => t('unlock.success_restore_body'),
     },
 };
 
@@ -52,12 +55,12 @@ function showUnlockSuccess(kind) {
     content.className = 'android-unlock-body android-unlock-success';
     content.innerHTML = `
         <p class="android-unlock-success-headline">${info.headline()}</p>
-        <p class="android-unlock-success-body">${info.body}</p>
+        <p class="android-unlock-success-body">${info.body()}</p>
     `;
     return Dialog.show({
-        title: info.title,
+        title: info.title(),
         content,
-        buttons: [{ text: 'Okay', value: true, className: 'tron-btn menu-btn-primary' }],
+        buttons: [{ text: t('unlock.success_ok'), value: true, className: 'tron-btn menu-btn-primary' }],
     });
 }
 
@@ -68,20 +71,20 @@ export class AndroidUnlockDialog {
             content.className = 'android-unlock-body';
             content.innerHTML = `
                 <ul class="full-version-features android-unlock-features">
-                    <li><span class="sprite-icon icon-skull"></span>Harder Bots &amp; Bigger Maps</li>
-                    <li><span class="sprite-icon icon-campaigns"></span>Campaign</li>
-                    <li><span class="sprite-icon icon-gamepad"></span>Local Multiplayer up to 8 players</li>
-                    <li><span class="sprite-icon icon-achievements"></span>Map Editor, Achievements &amp; more</li>
+                    <li><span class="sprite-icon icon-skull"></span>${t('unlock.feature_bots_maps')}</li>
+                    <li><span class="sprite-icon icon-campaigns"></span>${t('unlock.feature_campaign')}</li>
+                    <li><span class="sprite-icon icon-gamepad"></span>${t('unlock.feature_multiplayer')}</li>
+                    <li><span class="sprite-icon icon-achievements"></span>${t('unlock.feature_editor')}</li>
                 </ul>
                 <div class="android-unlock-options">
                     <div class="android-unlock-option android-unlock-ad-option">
-                        <button class="android-unlock-btn android-unlock-ad tron-btn menu-btn-primary">WATCH AD<span class="android-unlock-sub">${durationLabel(TIMED_UNLOCK_MINUTES)} FREE</span></button>
+                        <button class="android-unlock-btn android-unlock-ad tron-btn menu-btn-primary">${t('unlock.watch_ad')}<span class="android-unlock-sub">${t('unlock.free_suffix', { duration: durationLabel(TIMED_UNLOCK_MINUTES) })}</span></button>
                     </div>
                     <div class="android-unlock-option">
-                        <button class="android-unlock-iap">BUY<span class="android-unlock-sub">Permanent</span></button>
+                        <button class="android-unlock-iap">${t('unlock.buy')}<span class="android-unlock-sub">${t('unlock.permanent')}</span></button>
                     </div>
                 </div>
-                <button class="android-unlock-restore">Restore Purchases</button>
+                <button class="android-unlock-restore">${t('unlock.restore')}</button>
             `;
 
             let overlayRef = null;
@@ -100,10 +103,10 @@ export class AndroidUnlockDialog {
                     }
                     btn.disabled = false;
                     if (result.error === 'canceled' || result.error === 'superseded') return;
-                    Dialog.alert(PURCHASE_ERRORS[result.error] || result.error || 'Purchase failed.');
+                    Dialog.alert(PURCHASE_ERRORS[result.error] ? t(PURCHASE_ERRORS[result.error]) : (result.error || t('unlock.err_purchase_generic')));
                 } catch (err) {
                     btn.disabled = false;
-                    Dialog.alert('Purchase failed. Please try again.');
+                    Dialog.alert(t('unlock.err_purchase_retry'));
                     console.warn('[store] purchase failed:', err);
                 }
             });
@@ -113,7 +116,7 @@ export class AndroidUnlockDialog {
                 const label = btn.innerHTML;
                 btn.disabled = true;
                 // Consent form and ad load both happen now, so say so rather than looking stuck
-                btn.innerHTML = 'PLEASE WAIT<span class="android-unlock-sub">loading ad…</span>';
+                btn.innerHTML = `${t('unlock.please_wait')}<span class="android-unlock-sub">${t('unlock.loading_ad')}</span>`;
                 // The ad is a fullscreen Android activity; the WebView keeps playing audio
                 window.dispatchEvent(new Event('adOverlayStart'));
                 try {
@@ -131,12 +134,12 @@ export class AndroidUnlockDialog {
                     btn.innerHTML = label;
                     btn.disabled = false;
                     if (result.error === 'superseded') return;
-                    Dialog.alert(AD_ERRORS[result.error] || 'Ad unavailable. Please try again later.');
+                    Dialog.alert(t(AD_ERRORS[result.error] || 'unlock.err_ad_generic'));
                 } catch (err) {
                     window.dispatchEvent(new Event('adOverlayEnd'));
                     btn.innerHTML = label;
                     btn.disabled = false;
-                    Dialog.alert('Ad unavailable. Please try again later.');
+                    Dialog.alert(t('unlock.err_ad_generic'));
                     console.warn('[store] rewarded ad failed:', err);
                 }
             });
@@ -154,24 +157,22 @@ export class AndroidUnlockDialog {
                         return;
                     }
                     btn.disabled = false;
-                    Dialog.alert(result.ok
-                        ? 'No previous purchase found.'
-                        : 'Could not reach Google Play. Please check your connection and try again.');
+                    Dialog.alert(t(result.ok ? 'unlock.restore_none' : 'unlock.restore_offline'));
                 } catch (err) {
                     btn.disabled = false;
-                    Dialog.alert('Restore failed. Please try again.');
+                    Dialog.alert(t('unlock.restore_failed'));
                     console.warn('[store] restore failed:', err);
                 }
             });
 
-            Dialog.show({ title: 'FULL VERSION', content, buttons: [], closeButton: true })
+            Dialog.show({ title: t('unlock.title'), content, buttons: [], closeButton: true })
                 .then(() => resolve('close'));
             overlayRef = Dialog.activeOverlay;
 
             androidStore.getProductPrice().then(({ price }) => {
                 if (price) {
                     const sub = content.querySelector('.android-unlock-iap .android-unlock-sub');
-                    if (sub) sub.textContent = `${price} · Permanent`;
+                    if (sub) sub.textContent = t('unlock.price_permanent', { price });
                 }
             }).catch(() => {});
 

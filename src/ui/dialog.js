@@ -3,6 +3,8 @@
  */
 import { shieldFromPassthrough } from './pointer-shield.js';
 
+import { t } from '../core/i18n.js';
+
 export class Dialog {
     static activeOverlay = null;
 
@@ -115,11 +117,11 @@ export class Dialog {
      * @param {string} message 
      * @param {string} title 
      */
-    static alert(message, title = 'SYSTEM') {
+    static alert(message, title = t('dialog.system')) {
         return this.show({
             title,
             message,
-            buttons: [{ text: 'OK', value: true, className: 'tron-btn menu-btn-primary' }]
+            buttons: [{ text: t('dialog.ok'), value: true, className: 'tron-btn menu-btn-primary' }]
         });
     }
 
@@ -129,13 +131,13 @@ export class Dialog {
      * @param {string} title 
      * @returns {Promise<boolean>}
      */
-    static confirm(message, title = 'CONFIRMATION') {
+    static confirm(message, title = t('dialog.confirmation')) {
         return this.show({
             title,
             message,
             buttons: [
-                { text: 'OK', value: true, className: 'tron-btn menu-btn-primary' },
-                { text: 'CANCEL', value: false, className: 'tron-btn small menu-btn-neutral' }
+                { text: t('dialog.ok'), value: true, className: 'tron-btn menu-btn-primary' },
+                { text: t('dialog.cancel'), value: false, className: 'tron-btn small menu-btn-neutral' }
             ]
         });
     }
@@ -148,18 +150,18 @@ export class Dialog {
         const content = document.createElement('div');
         content.className = 'full-version-dialog-body';
         content.innerHTML = `
-            <p class="full-version-intro">You are playing the demo version of Diception. Unlock the full experience.</p>
+            <p class="full-version-intro">${t('dialog.demo_intro')}</p>
             <a href="${STEAM_URL}" target="_blank" rel="noopener" class="steam-store-link">
                 <img src="assets/icons/steam-logo.png" alt="Steam" class="steam-store-logo">
-                <span>Full Version</span>
+                <span>${t('dialog.full_version')}</span>
             </a>
             <ul class="full-version-features">
-                <li>Full Campaign</li>
-                <li>Expanded Maps and more difficult Bots</li>
-                <li>Local Multiplayer for up to 8 players</li>
-                <li>Mods: Parallel turns, special attack rules…</li>
-                <li>Map Editor, Cloud Saves, Achievements</li>
-                <li>Remote Play Together</li>
+                <li>${t('dialog.feature_campaign')}</li>
+                <li>${t('dialog.feature_maps_bots')}</li>
+                <li>${t('dialog.feature_multiplayer')}</li>
+                <li>${t('dialog.feature_mods')}</li>
+                <li>${t('dialog.feature_editor')}</li>
+                <li>${t('dialog.feature_remote_play')}</li>
             </ul>`;
         const openStore = () => {
             if (window.steam) {
@@ -178,11 +180,11 @@ export class Dialog {
             openStore();
         });
         return this.show({
-            title: 'GET IT NOW',
+            title: t('dialog.get_it_now'),
             content,
             closeButton: true,
             buttons: [
-                { text: 'GET ON STEAM', value: 'steam', className: 'tron-btn menu-btn-primary' },
+                { text: t('dialog.get_on_steam'), value: 'steam', className: 'tron-btn menu-btn-primary' },
             ],
         }).then(val => { if (val === 'steam') openStore(); });
     }
