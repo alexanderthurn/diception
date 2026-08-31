@@ -8949,7 +8949,6 @@ canvas {
     flex-direction: column;
     gap: 3px;
 }
-.full-version-features[hidden] { display: none; }
 
 .full-version-features li {
     color: #fff;
@@ -9638,23 +9637,6 @@ input[type="range"].gamepad-slider-editing {
     min-width: 280px;
 }
 
-.android-unlock-expander {
-    background: none;
-    border: none;
-    color: rgba(0, 255, 255, 0.7);
-    font-family: inherit;
-    font-size: 0.9em;
-    cursor: pointer;
-    padding: 2px 0;
-    letter-spacing: 0.04em;
-}
-.android-unlock-expander:hover {
-    color: #00ffff;
-}
-.android-unlock-expander-arrow {
-    font-size: 0.75em;
-    margin-left: 4px;
-}
 
 .android-unlock-intro {
     margin: 0;
@@ -9693,16 +9675,18 @@ input[type="range"].gamepad-slider-editing {
     grid-template-columns: 1fr;
 }
 
-.android-unlock-option-desc {
-    margin: 0;
-    color: #777;
-    font-size: 0.78em;
-    text-align: center;
-    line-height: 1.4;
-}
 
 .android-unlock-btn {
     width: 100%;
+    /* Square-ish where there's room; the cap keeps them sane on short screens */
+    aspect-ratio: 1 / 1;
+    max-height: 150px;
+    min-height: 84px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
     font-size: 1em;
     padding: 10px 8px;
     letter-spacing: 0.05em;

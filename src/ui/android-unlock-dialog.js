@@ -31,10 +31,7 @@ export class AndroidUnlockDialog {
             const content = document.createElement('div');
             content.className = 'android-unlock-body';
             content.innerHTML = `
-                <button class="android-unlock-expander" aria-expanded="false">
-                    Get the Pro Version <span class="android-unlock-expander-arrow">▶</span>
-                </button>
-                <ul class="full-version-features android-unlock-features-list" hidden>
+                <ul class="full-version-features">
                     <li>Full Campaign</li>
                     <li>Harder Bots &amp; Bigger Maps</li>
                     <li>Local Multiplayer up to 8 players</li>
@@ -42,25 +39,14 @@ export class AndroidUnlockDialog {
                 </ul>
                 <div class="android-unlock-options">
                     <div class="android-unlock-option android-unlock-ad-option">
-                        <button class="android-unlock-btn android-unlock-ad tron-btn">WATCH AD<br><span class="android-unlock-sub">${durationLabel(TIMED_UNLOCK_MINUTES)} FREE</span></button>
-                        <p class="android-unlock-option-desc">Watch a short ad and play the full game free for ${durationLabel(TIMED_UNLOCK_MINUTES)}.</p>
+                        <button class="android-unlock-btn android-unlock-ad tron-btn">WATCH AD<span class="android-unlock-sub">${durationLabel(TIMED_UNLOCK_MINUTES)} FREE</span></button>
                     </div>
                     <div class="android-unlock-option">
-                        <button class="android-unlock-btn android-unlock-iap tron-btn">BUY<br><span class="android-unlock-sub">Permanent</span></button>
-                        <p class="android-unlock-option-desc">One-time purchase. Unlock everything forever.</p>
+                        <button class="android-unlock-btn android-unlock-iap tron-btn">BUY<span class="android-unlock-sub">Permanent</span></button>
                     </div>
                 </div>
                 <button class="android-unlock-restore">Restore Purchases</button>
             `;
-
-            const expander = content.querySelector('.android-unlock-expander');
-            const featureList = content.querySelector('.android-unlock-features-list');
-            expander.addEventListener('click', () => {
-                const open = featureList.hidden;
-                featureList.hidden = !open;
-                expander.setAttribute('aria-expanded', String(open));
-                expander.querySelector('.android-unlock-expander-arrow').textContent = open ? '▼' : '▶';
-            });
 
             let overlayRef = null;
 
@@ -132,7 +118,7 @@ export class AndroidUnlockDialog {
                 }
             });
 
-            Dialog.show({ title: 'WANT MORE?', content, buttons: [], closeButton: true })
+            Dialog.show({ title: 'Get Pro', content, buttons: [], closeButton: true })
                 .then(() => resolve('close'));
             overlayRef = Dialog.activeOverlay;
 
