@@ -54,7 +54,7 @@ import { isTimedUnlockActive, getTimedUnlockRemainingMs, setTimedUnlock } from '
 import { initStorage, flushStorage, migrateLegacyStorage } from './core/storage.js';
 import { initI18n, setLanguage, getLanguage, getAvailableLanguages, LANGUAGE_NAMES } from './core/i18n.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
-import { AchievementsPanel, TITLES as ACH_TITLES } from './ui/achievements-panel.js';
+import { AchievementsPanel, achievementTitle } from './ui/achievements-panel.js';
 import { ACHIEVEMENTS } from './core/achievements.js';
 import { initCustomSelects } from './ui/custom-select.js';
 import {
@@ -1014,7 +1014,7 @@ async function init() {
                 if (!pending) return;
 
                 const pct = Math.round((Math.min(newValue, pending.threshold) / pending.threshold) * 100);
-                progressToastName.textContent = ACH_TITLES[pending.id] || pending.id;
+                progressToastName.textContent = achievementTitle(pending.id);
                 progressToastFill.style.width = pct + '%';
                 progressToastLabel.textContent = `${newValue.toLocaleString()} / ${pending.threshold.toLocaleString()}`;
                 progressToast.classList.toggle('has-active-mods', true);

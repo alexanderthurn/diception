@@ -7,65 +7,33 @@
 import { ACHIEVEMENTS } from '../core/achievements.js';
 import { unlockAchievement, removeAchievement } from '../core/achievement-manager.js';
 import { registerCheatContext } from '../cheat.js';
+import { t } from '../core/i18n.js';
 
 const DIFFS = ['easy', 'medium', 'hard'];
 const SIZES = [
-    { key: 'small',  label: 'Small',    hint: '≤4'  },
-    { key: 'medium', label: 'Mid',      hint: '5–7' },
-    { key: 'big',    label: 'Big',      hint: '8+'  },
+    { key: 'small',  labelKey: 'ach.size.small',    hint: '≤4'  },
+    { key: 'medium', labelKey: 'ach.size.mid',      hint: '5–7' },
+    { key: 'big',    labelKey: 'ach.size.big',      hint: '8+'  },
 ];
 
 const UNLOCKED_KEY = 'ach_unlocked';
 
-export const TITLES = {
-    ACH_TUTORIAL:      'First Steps',
-    ACH_CHAPTER1:      'Chapter 1 Complete',
-    ACH_CHAPTER2:      'Chapter 2 Complete',
-    ACH_CHAPTER3:      'Chapter 3 Complete',
-    ACH_CHAPTER4:      'Chapter 4 Complete',
-    ACH_GAMES_10:      'Warming Up',
-    ACH_GAMES_50:      'Getting Serious',
-    ACH_GAMES_100:     'Centurion',
-    ACH_GAMES_150:     'Dedicated',
-    ACH_GAMES_200:     'Veteran',
-    ACH_GAMES_300:     'Battle-Hardened',
-    ACH_GAMES_400:     'Tactician',
-    ACH_GAMES_500:     'Commander',
-    ACH_GAMES_1000:    'Warlord',
-    ACH_GAMES_10000:   'Legend',
-    ACH_FIRST_WIN:     'Victor',
-    ACH_UNDERDOG_5:    'Lucky Shot',
-    ACH_UNDERDOG_10:   'Against the Odds',
-    ACH_UNDERDOG_50:   'Unlikely Hero',
-    ACH_UNDERDOG_100:  'Miracle Worker',
-    ACH_UNDERDOG_500:  "Fortune's Favorite",
-    ACH_DAVID:         'David vs. Goliath',
-    ACH_PURE_BOTS:     'Bot Tournament',
-    ACH_PURE_HUMANS:   'Human Only',
-    ACH_STREAK_3:          'On a Roll',
-    ACH_STREAK_3_3000:     'Chain Master',
-    ACH_STREAK_4:          'Hot Streak',
-    ACH_STREAK_4_1500:     'Unbroken Line',
-    ACH_STREAK_5:          'Unstoppable',
-    ACH_STREAK_5_500:      'Chain Tyrant',
-    ACH_STREAK_6:          'Relentless',
-    ACH_STREAK_6_200:      'Perfect Storm',
-    ACH_STREAK_7:          'Dominator',
-    ACH_STREAK_7_100:      'Chain Legend',
-    ACH_SURVIVOR:          'Last Standing',
-};
+/** Achievement titles resolve through i18n; the panel and the progress toast both use this. */
+export function achievementTitle(id) {
+    return t(`ach.${id}.title`);
+}
 
 const SECTIONS = [
     {
-        label: 'Campaign',
+        labelKey: 'ach.section.campaign',
         filter: a => a.type === 'campaign',
     },
     {
-        label: 'Games Played',
+        labelKey: 'ach.section.games_played',
         filter: a => a.type === 'stat' && a.stat === 'gamesPlayed',
     },
     {
-        label: 'Special Combat',
+        labelKey: 'ach.section.special_combat',
         filter: a => a.type === 'event' || (a.type === 'stat' && a.stat !== 'gamesPlayed'),
     },
 ];
@@ -73,22 +41,22 @@ const SECTIONS = [
 function getDescription(ach) {
     if (ach.type === 'campaign') {
         const name = ach.campaign.charAt(0).toUpperCase() + ach.campaign.slice(1);
-        return `Complete the ${name} chapter`;
+        return t('ach.desc.campaign', { name });
     }
     if (ach.type === 'stat') {
-        if (ach.stat === 'gamesPlayed')  return `Play ${ach.threshold.toLocaleString()} games`;
-        if (ach.stat === 'gamesWon')     return `Win ${ach.threshold.toLocaleString()} games`;
-        if (ach.stat === 'underdogWins') return `Win ${ach.threshold.toLocaleString()} attacks with less than 33% odds`;
+        const count = ach.threshold.toLocaleString();
+        if (ach.stat === 'gamesPlayed')  return t('ach.desc.games_played', { count });
+        if (ach.stat === 'gamesWon')     return t('ach.desc.games_won', { count });
+        if (ach.stat === 'underdogWins') return t('ach.desc.underdog', { count });
         if (ach.stat?.startsWith('streak')) {
-            const n = ach.stat.replace('streak', '');
-            return `Chain ${n}+ attacks from the same tile — ${ach.threshold.toLocaleString()} times (lifetime)`;
+            return t('ach.desc.streak', { n: ach.stat.replace('streak', ''), count });
         }
     }
     if (ach.type === 'event') {
-        if (ach.event === 'won4vs6')        return 'Win an attack with 4 dice against 6 dice';
-        if (ach.event === 'won8PlayerGame') return 'Win a game against 7 opponents';
-        if (ach.event === 'pureBots')       return 'Let a bots-only game run to completion';
-        if (ach.event === 'pureHumans')     return 'Play a game with 2+ humans and no bots';
+        if (ach.event === 'won4vs6')        return t('ach.desc.won4vs6');
+        if (ach.event === 'won8PlayerGame') return t('ach.desc.won8player');
+        if (ach.event === 'pureBots')       return t('ach.desc.pure_bots');
+        if (ach.event === 'pureHumans')     return t('ach.desc.pure_humans');
     }
     return '';
 }
@@ -206,7 +174,7 @@ export class AchievementsPanel {
 
             const heading = document.createElement('div');
             heading.className = 'ach-section-header';
-            heading.textContent = section.label;
+            heading.textContent = t(section.labelKey);
             this._grid.appendChild(heading);
 
             group.forEach(ach => {
@@ -214,7 +182,7 @@ export class AchievementsPanel {
                 const iconClass = isUnlocked
                     ? ach.id.replace(/_/g, '-')
                     : ach.id.replace(/_/g, '-') + '-locked';
-                const title = TITLES[ach.id] || ach.id.replace('ACH_', '').replace(/_/g, ' ');
+                const title = achievementTitle(ach.id);
 
                 let progressHTML = '';
                 if (ach.type === 'stat' && !isUnlocked) {
