@@ -32,18 +32,18 @@ export class AndroidUnlockDialog {
             const content = document.createElement('div');
             content.className = 'android-unlock-body';
             content.innerHTML = `
-                <ul class="full-version-features">
-                    <li>Full Campaign</li>
-                    <li>Harder Bots &amp; Bigger Maps</li>
-                    <li>Local Multiplayer up to 8 players</li>
-                    <li>Map Editor, Achievements &amp; more</li>
+                <ul class="full-version-features android-unlock-features">
+                    <li><span class="sprite-icon icon-skull"></span>Harder Bots &amp; Bigger Maps</li>
+                    <li><span class="sprite-icon icon-campaigns"></span>Campaign</li>
+                    <li><span class="sprite-icon icon-gamepad"></span>Local Multiplayer up to 8 players</li>
+                    <li><span class="sprite-icon icon-achievements"></span>Map Editor, Achievements &amp; more</li>
                 </ul>
                 <div class="android-unlock-options">
                     <div class="android-unlock-option android-unlock-ad-option">
-                        <button class="android-unlock-btn android-unlock-ad tron-btn">WATCH AD<span class="android-unlock-sub">${durationLabel(TIMED_UNLOCK_MINUTES)}</span></button>
+                        <button class="android-unlock-btn android-unlock-ad tron-btn menu-btn-primary">WATCH AD<span class="android-unlock-sub">${durationLabel(TIMED_UNLOCK_MINUTES)} FREE</span></button>
                     </div>
                     <div class="android-unlock-option">
-                        <button class="android-unlock-btn android-unlock-iap tron-btn">BUY<span class="android-unlock-sub">Permanent</span></button>
+                        <button class="android-unlock-iap">BUY<span class="android-unlock-sub">Permanent</span></button>
                     </div>
                 </div>
                 <button class="android-unlock-restore">Restore Purchases</button>
@@ -126,7 +126,7 @@ export class AndroidUnlockDialog {
                 }
             });
 
-            Dialog.show({ title: 'Get Full Version', content, buttons: [], closeButton: true })
+            Dialog.show({ title: 'FULL VERSION', content, buttons: [], closeButton: true })
                 .then(() => resolve('close'));
             overlayRef = Dialog.activeOverlay;
 
