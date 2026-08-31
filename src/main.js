@@ -1816,7 +1816,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
                 const gpBtns = bindings.gamepad[action.id] || [];
                 gpDisplay = getGamepadButtonsName(gpBtns);
             }
-            html += `<tr><td>${action.label}</td><td>${kbDisplay}</td><td>${gpDisplay}</td></tr>`;
+            html += `<tr><td>${t(action.labelKey)}</td><td>${kbDisplay}</td><td>${gpDisplay}</td></tr>`;
         }
 
         tbody.innerHTML = html;

@@ -17,20 +17,20 @@ const STORAGE_KEY = 'key_bindings';
  * gamepadOnly:  true  → shown only in gamepad config  (no keyboard binding).
  */
 export const GAME_ACTIONS = [
-    { id: 'confirm',           label: 'Select/Attack' },
-    { id: 'cancel',            label: 'Deselect' },
-    { id: 'end_turn',          label: 'End Turn' },
-    { id: 'move_up',           label: 'Attack Up' },
-    { id: 'move_down',         label: 'Attack Down' },
-    { id: 'move_left',         label: 'Attack Left' },
-    { id: 'move_right',        label: 'Attack Right' },
-    { id: 'zoom_in',           label: 'Zoom In' },
-    { id: 'zoom_out',          label: 'Zoom Out' },
-    { id: 'pan_up',            label: 'Camera Up',       keyboardOnly: true },
-    { id: 'pan_down',          label: 'Camera Down',     keyboardOnly: true },
-    { id: 'pan_left',          label: 'Camera Left',     keyboardOnly: true },
-    { id: 'pan_right',         label: 'Camera Right',    keyboardOnly: true },
-    { id: 'gamepad_drag',      label: 'Hold to Pan Map', gamepadOnly:  true },
+    { id: 'confirm',           labelKey: 'action.confirm' },
+    { id: 'cancel',            labelKey: 'action.cancel' },
+    { id: 'end_turn',          labelKey: 'action.end_turn' },
+    { id: 'move_up',           labelKey: 'action.move_up' },
+    { id: 'move_down',         labelKey: 'action.move_down' },
+    { id: 'move_left',         labelKey: 'action.move_left' },
+    { id: 'move_right',        labelKey: 'action.move_right' },
+    { id: 'zoom_in',           labelKey: 'action.zoom_in' },
+    { id: 'zoom_out',          labelKey: 'action.zoom_out' },
+    { id: 'pan_up',            labelKey: 'action.pan_up',       keyboardOnly: true },
+    { id: 'pan_down',          labelKey: 'action.pan_down',     keyboardOnly: true },
+    { id: 'pan_left',          labelKey: 'action.pan_left',     keyboardOnly: true },
+    { id: 'pan_right',         labelKey: 'action.pan_right',    keyboardOnly: true },
+    { id: 'gamepad_drag',      labelKey: 'action.gamepad_drag', gamepadOnly:  true },
 ];
 
 /**

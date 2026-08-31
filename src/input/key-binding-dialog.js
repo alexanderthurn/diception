@@ -1,3 +1,4 @@
+import { t } from '../core/i18n.js';
 import {
     GAME_ACTIONS,
     DEFAULT_BINDINGS,
@@ -123,7 +124,7 @@ export class KeyBindingDialog {
 
                 const labelEl = document.createElement('span');
                 labelEl.className = 'keybinding-row-label';
-                labelEl.textContent = action.label;
+                labelEl.textContent = t(action.labelKey);
 
                 const keyEl = document.createElement('span');
                 const bd = getBindingDisplay(action);
