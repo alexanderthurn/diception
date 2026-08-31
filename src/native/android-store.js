@@ -10,6 +10,7 @@ class AndroidStore {
     async showRewardedAd()      { return { success: false, error: 'Not implemented' }; }
     async restorePurchases()    { return { ok: false, restored: false }; }
     async getProductPrice()     { return { price: '' }; }
+    async showPrivacyOptions()  { return { shown: false }; }
 }
 
 const _MOCK_PRICES = ['€2,99', '$2.99', '£2.49', '¥480', 'A$4.99', 'CHF 3.00', 'kr 29'];
@@ -45,6 +46,7 @@ class TauriStore extends AndroidStore {
     async showRewardedAd()      { return this._invoke('showRewardedAd', INTERACTIVE_TIMEOUT_MS); }
     async restorePurchases()    { return this._invoke('restorePurchases', QUERY_TIMEOUT_MS); }
     async getProductPrice()     { return this._invoke('getProductPrice', QUERY_TIMEOUT_MS); }
+    async showPrivacyOptions()  { return this._invoke('showPrivacyOptions', INTERACTIVE_TIMEOUT_MS); }
 }
 
 function createStore() {

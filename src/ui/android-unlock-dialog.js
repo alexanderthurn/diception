@@ -4,7 +4,8 @@ import { activateFullVersion } from '../scenarios/user-identity.js';
 import { setTimedUnlock, TIMED_UNLOCK_MINUTES } from '../core/timed-unlock.js';
 
 const AD_ERRORS = {
-    'Ad not ready': 'Ad not ready yet. Please try again in a moment.',
+    'Ad not ready': 'No ad available right now. Please try again in a moment.',
+    'consent-declined': 'Without your consent no ad can be shown. You can change this any time under About → Ad privacy settings.',
     'Ad skipped': 'The ad has to run to the end to unlock the free play time.',
     'Store unavailable': 'The store is unavailable in this build.',
     'Google Play Services not available': 'Rewarded ads need Google Play Services on this device.',
@@ -73,23 +74,30 @@ export class AndroidUnlockDialog {
 
             content.querySelector('.android-unlock-ad').addEventListener('click', async (e) => {
                 const btn = e.currentTarget;
+                const label = btn.innerHTML;
                 btn.disabled = true;
+                // Consent form and ad load both happen now, so say so rather than looking stuck
+                btn.innerHTML = 'PLEASE WAIT<span class="android-unlock-sub">loading ad…</span>';
                 // The ad is a fullscreen Android activity; the WebView keeps playing audio
                 window.dispatchEvent(new Event('adOverlayStart'));
                 try {
                     const result = await androidStore.showRewardedAd();
                     window.dispatchEvent(new Event('adOverlayEnd'));
+                    // A consent decision may have created the privacy options entry point
+                    window.dispatchEvent(new Event('adConsentResolved'));
                     if (result.success) {
                         setTimedUnlock(TIMED_UNLOCK_MINUTES);
                         Dialog.close(overlayRef);
                         resolve('ad');
                         return;
                     }
+                    btn.innerHTML = label;
                     btn.disabled = false;
                     if (result.error === 'superseded') return;
                     Dialog.alert(AD_ERRORS[result.error] || 'Ad unavailable. Please try again later.');
                 } catch (err) {
                     window.dispatchEvent(new Event('adOverlayEnd'));
+                    btn.innerHTML = label;
                     btn.disabled = false;
                     Dialog.alert('Ad unavailable. Please try again later.');
                     console.warn('[store] rewarded ad failed:', err);

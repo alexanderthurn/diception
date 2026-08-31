@@ -9621,6 +9621,15 @@ input[type="range"].gamepad-slider-editing {
     }
 }
 
+/* The ad-consent entry point is a button (it opens a native form) but reads as a link */
+#ad-privacy-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
 /* ── Android Unlock Dialog ── */
 @media (min-width: 769px) and (min-height: 601px) {
     .dialog-overlay:has(.android-unlock-body) .dialog-box {

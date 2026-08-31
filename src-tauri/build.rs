@@ -15,6 +15,7 @@ fn main() {
           "showRewardedAd",
           "getProductPrice",
           "restorePurchases",
+          "showPrivacyOptions",
         ])
         .default_permission(tauri_build::DefaultPermissionRule::AllowAllCommands),
     ),

@@ -30,6 +30,10 @@ import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.ump.ConsentDebugSettings
+import com.google.android.ump.ConsentInformation
+import com.google.android.ump.ConsentRequestParameters
+import com.google.android.ump.UserMessagingPlatform
 
 private const val TAG = "StorePlugin"
 private const val PRODUCT_ID = "full_version"
@@ -40,6 +44,8 @@ private const val BILLING_RETRY_MIN_MS = 1_000L
 private const val BILLING_RETRY_MAX_MS = 60_000L
 private const val AD_RETRY_MIN_MS = 5_000L
 private const val AD_RETRY_MAX_MS = 120_000L
+private const val AD_WAIT_MS = 500L
+private const val AD_WAIT_ATTEMPTS = 20 // ~10s waiting for an ad to load
 private const val BILLING_WAIT_MS = 500L
 private const val BILLING_WAIT_RETRIES = 20 // ~10s of waiting for the billing connection
 
@@ -61,6 +67,8 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
     private var pendingPurchaseInvoke: Invoke? = null
 
     private var gmsAvailable = false
+    private var consentInformation: ConsentInformation? = null
+    private var adsInitialized = false
     private var rewardedAd: RewardedAd? = null
     private var adLoading = false
     private var adRetryMs = AD_RETRY_MIN_MS
@@ -81,11 +89,10 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
             .setListener(purchasesListener)
             .build()
         connectBilling()
-
-        if (gmsAvailable) {
-            // initialize() does disk and network I/O — keep it off the UI thread.
-            Thread { MobileAds.initialize(act) { mainHandler.post { loadRewardedAd() } } }.start()
-        }
+        // The ads SDK and the consent form start lazily, on the first rewarded-ad request.
+        // The status itself is refreshed silently so the privacy options entry point can be
+        // offered on every launch — this shows no UI.
+        if (gmsAvailable) refreshConsentStatus()
     }
 
     // ── Billing connection ────────────────────────────────────────────────────
@@ -211,6 +218,63 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
                 .build()
         )).build()
 
+    // ── Consent (UMP) ─────────────────────────────────────────────────────────
+
+    /** Refreshes the consent status without ever showing a form. */
+    private fun refreshConsentStatus() {
+        val ci = UserMessagingPlatform.getConsentInformation(act)
+        consentInformation = ci
+        ci.requestConsentInfoUpdate(act, consentParams(), {
+            Log.d(TAG, "consent status: canRequestAds=${ci.canRequestAds()} " +
+                "privacyOptions=${ci.privacyOptionsRequirementStatus}")
+        }, { error ->
+            Log.d(TAG, "consent status failed: ${error.errorCode} ${error.message}")
+        })
+    }
+
+    private fun consentParams(): ConsentRequestParameters {
+        val params = ConsentRequestParameters.Builder()
+        if (BuildConfig.DEBUG) {
+            // Emulators and test devices can then exercise the EEA form from anywhere
+            params.setConsentDebugSettings(
+                ConsentDebugSettings.Builder(act)
+                    .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
+                    .build()
+            )
+        }
+        return params.build()
+    }
+
+    /**
+     * Runs the consent flow on demand — the form is only worth showing to someone who
+     * actually wants an ad, and ads are never requested before it resolves.
+     * [onDone] receives whether ads may be requested afterwards.
+     */
+    private fun startConsentFlow(onDone: (Boolean) -> Unit) {
+        val ci = UserMessagingPlatform.getConsentInformation(act)
+        consentInformation = ci
+        ci.requestConsentInfoUpdate(act, consentParams(), {
+            Log.d(TAG, "consent updated: canRequestAds=${ci.canRequestAds()} " +
+                "privacyOptions=${ci.privacyOptionsRequirementStatus}")
+            UserMessagingPlatform.loadAndShowConsentFormIfRequired(act) { error ->
+                if (error != null) Log.d(TAG, "consent form: ${error.errorCode} ${error.message}")
+                onDone(ci.canRequestAds())
+            }
+        }, { error ->
+            // A failed update must not strand the caller; fall back to the cached state
+            Log.d(TAG, "consent update failed: ${error.errorCode} ${error.message}")
+            onDone(ci.canRequestAds())
+        })
+    }
+
+    /** Initialises the ads SDK once, then runs [onDone] on the main thread. */
+    private fun initializeAds(onDone: () -> Unit) {
+        if (adsInitialized) { onDone(); return }
+        adsInitialized = true
+        // initialize() does disk and network I/O — keep it off the UI thread.
+        Thread { MobileAds.initialize(act) { mainHandler.post { onDone() } } }.start()
+    }
+
     // ── Ads ───────────────────────────────────────────────────────────────────
 
     private fun adUnitId() = if (BuildConfig.DEBUG) AD_UNIT_TEST else AD_UNIT_PROD
@@ -253,10 +317,13 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
 
     @Command
     fun getStoreInfo(invoke: Invoke) {
+        val privacyOptionsRequired = consentInformation?.privacyOptionsRequirementStatus ==
+            ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED
         invoke.resolve(JSObject()
             .put("provider", "google_play")
             .put("adsAvailable", gmsAvailable)
-            .put("billingReady", billingReady))
+            .put("billingReady", billingReady)
+            .put("privacyOptionsRequired", privacyOptionsRequired))
     }
 
     @Command
@@ -304,15 +371,41 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
             invoke.resolve(JSObject().put("success", false).put("error", "Google Play Services not available"))
             return
         }
-        val ad = rewardedAd
-        if (ad == null) {
-            adRetryMs = AD_RETRY_MIN_MS
-            loadRewardedAd()
-            invoke.resolve(JSObject().put("success", false).put("error", "Ad not ready"))
-            return
-        }
         resolveAd(false, "superseded")
         pendingAdInvoke = invoke
+        // Consent first — it may show a form — then SDK init, then the ad itself
+        if (consentInformation?.canRequestAds() == true) {
+            prepareAndShowAd()
+        } else {
+            startConsentFlow { allowed ->
+                if (!allowed) {
+                    Log.d(TAG, "ads withheld — consent not granted")
+                    resolveAd(false, "consent-declined")
+                } else {
+                    prepareAndShowAd()
+                }
+            }
+        }
+    }
+
+    private fun prepareAndShowAd() {
+        adRetryMs = AD_RETRY_MIN_MS
+        initializeAds { awaitAdThenShow(0) }
+    }
+
+    /** Waits for a loaded ad, kicking off loads as needed, and gives up after ~10s. */
+    private fun awaitAdThenShow(attempt: Int) {
+        val ad = rewardedAd
+        if (ad != null) { showLoadedAd(ad); return }
+        if (attempt >= AD_WAIT_ATTEMPTS) {
+            resolveAd(false, "Ad not ready")
+            return
+        }
+        loadRewardedAd()
+        mainHandler.postDelayed({ awaitAdThenShow(attempt + 1) }, AD_WAIT_MS)
+    }
+
+    private fun showLoadedAd(ad: RewardedAd) {
         var rewarded = false
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
@@ -359,6 +452,25 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
      * `ok` reports whether Play actually answered. The web layer may only revoke a stored
      * entitlement when `ok` is true — a failed query must never look like a refund.
      */
+    /** Re-opens the consent form so users can change their ad choices (required by Google). */
+    @Command
+    fun showPrivacyOptions(invoke: Invoke) {
+        val ci = consentInformation
+        if (ci?.privacyOptionsRequirementStatus !=
+            ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED) {
+            invoke.resolve(JSObject().put("shown", false))
+            return
+        }
+        mainHandler.post {
+            UserMessagingPlatform.showPrivacyOptionsForm(act) { error ->
+                if (error != null) Log.d(TAG, "privacy options: ${error.errorCode} ${error.message}")
+                // Consent may have just been granted — preload so the next ad is instant
+                if (consentInformation?.canRequestAds() == true) initializeAds { loadRewardedAd() }
+                invoke.resolve(JSObject().put("shown", true))
+            }
+        }
+    }
+
     @Command
     fun restorePurchases(invoke: Invoke) {
         withBilling { ready ->

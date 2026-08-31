@@ -47,11 +47,12 @@
 \ No newline at end of file
 --- a/src-tauri/gen/android/app/build.gradle.kts
 +++ b/src-tauri/gen/android/app/build.gradle.kts
-@@ -66,5 +66,7 @@ dependencies {
+@@ -66,5 +66,8 @@ dependencies {
      androidTestImplementation("androidx.test.ext:junit:1.1.4")
      androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
 +    implementation("com.android.billingclient:billing:9.1.0")
 +    implementation("com.google.android.gms:play-services-ads:23.6.0")
++    implementation("com.google.android.ump:user-messaging-platform:4.0.0")
  }
 
  apply(from = "tauri.build.gradle.kts")

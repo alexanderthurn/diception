@@ -48,7 +48,7 @@ import {
 import { reconcileLifetimeWithSteam } from './core/steam-player-stats-sync.js';
 import { isTauriContext, isSteamContext, isDesktopContext, isAndroid, isFullVersion, initFullVersionCheck } from './scenarios/user-identity.js';
 import { showUnlockDialog } from './ui/show-unlock-dialog.js';
-import { syncEntitlement } from './native/android-store.js';
+import { syncEntitlement, androidStore } from './native/android-store.js';
 import { isTimedUnlockActive, getTimedUnlockRemainingMs, setTimedUnlock } from './core/timed-unlock.js';
 import { initStorage, flushStorage, migrateLegacyStorage } from './core/storage.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
@@ -1956,6 +1956,20 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     }
 
     applyVersionUI();
+
+    // Google requires an in-app way to change ad consent once the form has been shown.
+    // Consent runs lazily on the first ad, so re-check after the user has answered it.
+    if (isAndroid()) {
+        const adPrivacyBtn = document.getElementById('ad-privacy-btn');
+        adPrivacyBtn?.addEventListener('click', () => androidStore.showPrivacyOptions().catch(() => {}));
+        const refreshAdPrivacyRow = () => androidStore.getStoreInfo()
+            .then(({ privacyOptionsRequired }) => {
+                const row = document.getElementById('ad-privacy-row');
+                if (row) row.hidden = !privacyOptionsRequired;
+            }).catch(() => {});
+        refreshAdPrivacyRow();
+        window.addEventListener('adConsentResolved', refreshAdPrivacyRow);
+    }
 
     // Re-grant a purchase made on an earlier run (and drop it again after a refund)
     if (isAndroid()) syncEntitlement().then(() => applyVersionUI());
