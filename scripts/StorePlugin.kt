@@ -277,11 +277,16 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
                 resolvePurchase(false, "Product not found")
                 return@queryProductDetailsAsync
             }
+            // Play's purchase-options model exposes offers in a list; the legacy singular
+            // accessor only answers when an option is flagged backwards-compatible, so
+            // prefer the list and pass its offer token when there is one.
+            val details = products[0]
+            val paramsBuilder = BillingFlowParams.ProductDetailsParams.newBuilder()
+                .setProductDetails(details)
+            details.oneTimePurchaseOfferDetailsList?.firstOrNull()?.offerToken
+                ?.let { paramsBuilder.setOfferToken(it) }
             val flowParams = BillingFlowParams.newBuilder()
-                .setProductDetailsParamsList(listOf(
-                    BillingFlowParams.ProductDetailsParams.newBuilder()
-                        .setProductDetails(products[0]).build()
-                )).build()
+                .setProductDetailsParamsList(listOf(paramsBuilder.build())).build()
             mainHandler.post {
                 val launch = client.launchBillingFlow(act, flowParams)
                 if (launch.responseCode != BillingClient.BillingResponseCode.OK) {
@@ -341,7 +346,9 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
             client.queryProductDetailsAsync(productQueryParams()) { result, queryResult ->
                 val products = queryResult.productDetailsList
                 val price = if (result.responseCode == BillingClient.BillingResponseCode.OK && products.isNotEmpty()) {
-                    products[0].oneTimePurchaseOfferDetails?.formattedPrice ?: ""
+                    val d = products[0]
+                    d.oneTimePurchaseOfferDetailsList?.firstOrNull()?.formattedPrice
+                        ?: d.oneTimePurchaseOfferDetails?.formattedPrice ?: ""
                 } else ""
                 invoke.resolve(JSObject().put("price", price))
             }
