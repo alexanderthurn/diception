@@ -50,7 +50,7 @@
 @@ -66,5 +66,7 @@ dependencies {
      androidTestImplementation("androidx.test.ext:junit:1.1.4")
      androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
-+    implementation("com.android.billingclient:billing-ktx:7.1.1")
++    implementation("com.android.billingclient:billing:9.1.0")
 +    implementation("com.google.android.gms:play-services-ads:23.6.0")
  }
 

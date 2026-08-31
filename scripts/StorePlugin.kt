@@ -270,7 +270,8 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
         }
         resolvePurchase(false, "superseded") // a second tap must not strand the first Invoke
         pendingPurchaseInvoke = invoke
-        client.queryProductDetailsAsync(productQueryParams()) { result, products ->
+        client.queryProductDetailsAsync(productQueryParams()) { result, queryResult ->
+            val products = queryResult.productDetailsList
             Log.d(TAG, "queryProductDetails: code=${result.responseCode} products=${products.size}")
             if (result.responseCode != BillingClient.BillingResponseCode.OK || products.isEmpty()) {
                 resolvePurchase(false, "Product not found")
@@ -337,7 +338,8 @@ class StorePlugin(activity: Activity) : Plugin(activity) {
                 invoke.resolve(JSObject().put("price", ""))
                 return@withBilling
             }
-            client.queryProductDetailsAsync(productQueryParams()) { result, products ->
+            client.queryProductDetailsAsync(productQueryParams()) { result, queryResult ->
+                val products = queryResult.productDetailsList
                 val price = if (result.responseCode == BillingClient.BillingResponseCode.OK && products.isNotEmpty()) {
                     products[0].oneTimePurchaseOfferDetails?.formattedPrice ?: ""
                 } else ""
