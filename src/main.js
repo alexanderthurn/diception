@@ -1778,8 +1778,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
     // Controls table: fixed rows that are not configurable
     const FIXED_CONTROLS = [
-        { label: 'Navigate Cursor', keyboard: '-', gamepad: 'Left Stick' },
-        { label: 'Zoom', keyboard: 'Wheel', gamepad: 'L2 / R2' },
+        { labelKey: 'controls.navigate_cursor', keyboard: '-', gamepad: 'Left Stick' },
+        { labelKey: 'controls.zoom', keyboard: 'Wheel', gamepad: 'L2 / R2' },
     ];
 
     // Gamepad column for keyboardOnly actions (uses analog stick, not a button)
@@ -1802,7 +1802,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
         // Fixed rows first
         for (const row of FIXED_CONTROLS) {
-            html += `<tr><td>${row.label}</td><td>${row.keyboard}</td><td>${row.gamepad}</td></tr>`;
+            html += `<tr><td>${t(row.labelKey)}</td><td>${row.keyboard}</td><td>${row.gamepad}</td></tr>`;
         }
 
         // Configurable actions

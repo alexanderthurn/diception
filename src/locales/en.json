@@ -157,6 +157,8 @@
   "campaign_select_view.campaign": "CAMPAIGN",
   "campaign_select_view.populated_by_js": "populated by JS",
   "common.close": "Close",
+  "controls.navigate_cursor": "Navigate Cursor",
+  "controls.zoom": "Zoom",
   "controls_table.action": "Action",
   "controls_table.gamepad": "Gamepad",
   "controls_table.keyboard": "Keyboard",
