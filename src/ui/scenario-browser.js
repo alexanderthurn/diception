@@ -1123,19 +1123,19 @@ export class ScenarioBrowser {
         const content = document.createElement('div');
         content.className = 'tutorial-intro-dialog';
         content.innerHTML = `
-            <p>Welcome to Diception! Your goal is to conquer every tile on the board.</p>
+            <p>${t('tutorial.welcome')}</p>
             <div class="tutorial-you-are-row">
-                <span>YOU ARE</span>
+                <span>${t('tutorial.you_are')}</span>
                 <span class="tutorial-you-are-swatch"></span>
-                <span class="tutorial-you-are-color">PURPLE</span>
+                <span class="tutorial-you-are-color">${t('tutorial.purple')}</span>
             </div>
-            <p class="tutorial-dialog-hint">Click your tile, then click an enemy tile to attack.</p>
+            <p class="tutorial-dialog-hint">${t('tutorial.hint_attack')}</p>
         `;
 
         await Dialog.show({
-            title: 'Tutorial 1/4',
+            title: t('tutorial.title_1'),
             content,
-            buttons: [{ text: "LET'S GO", value: 'ok', className: 'tron-btn menu-btn-primary' }]
+            buttons: [{ text: t('tutorial.lets_go'), value: 'ok', className: 'tron-btn menu-btn-primary' }]
         });
     }
 
@@ -1161,7 +1161,7 @@ export class ScenarioBrowser {
                 </div>
                 <span class="sprite-icon icon-check"></span>
             </div>
-            <p class="tutorial-dialog-hint">If the attacker has equal or fewer points, he loses. His dice count drops to 1 and his turn ends immediately.</p>
+            <p class="tutorial-dialog-hint">${t('tutorial.hint_lose')}</p>
             <div class="howto-example">
                 <div class="dice-group">
                     ${die('#aa00ff')}
@@ -1179,9 +1179,9 @@ export class ScenarioBrowser {
         `;
 
         await Dialog.show({
-            title: 'Tutorial 2/4',
+            title: t('tutorial.title_2'),
             content,
-            buttons: [{ text: 'GOT IT', value: 'ok', className: 'tron-btn menu-btn-primary' }]
+            buttons: [{ text: t('tutorial.got_it'), value: 'ok', className: 'tron-btn menu-btn-primary' }]
         });
     }
 
@@ -1189,7 +1189,7 @@ export class ScenarioBrowser {
         const content = document.createElement('div');
         content.className = 'tutorial-intro-dialog';
         content.innerHTML = `
-            <p>When you're done attacking, press <strong>End Turn</strong>. You get bonus dice. They are equal to the size of your largest connected region of tiles.</p>
+            <p>${t('tutorial.end_turn_explain')}</p>
             <div class="howto-example">
                 <div class="howto-reinforce">
                     <div class="howto-tile-row">
@@ -1215,9 +1215,9 @@ export class ScenarioBrowser {
         `;
 
         await Dialog.show({
-            title: 'Tutorial 3/4',
+            title: t('tutorial.title_3'),
             content,
-            buttons: [{ text: 'GOT IT', value: 'ok', className: 'tron-btn menu-btn-primary' }]
+            buttons: [{ text: t('tutorial.got_it'), value: 'ok', className: 'tron-btn menu-btn-primary' }]
         });
     }
 
@@ -1228,7 +1228,7 @@ export class ScenarioBrowser {
         const content = document.createElement('div');
         content.className = 'beginner-speed-reminder';
         content.innerHTML = `
-            <p class="beginner-speed-reminder-text">On bigger maps, animations can take a while. Once you're comfortable with the basics, we recommend Normal or Expert speed. You can change this anytime in Pause or Settings.</p>
+            <p class="beginner-speed-reminder-text">${t('tutorial.speed_reminder')}</p>
         `;
 
         const segmented = document.createElement('div');
@@ -1260,10 +1260,10 @@ export class ScenarioBrowser {
         });
 
         await Dialog.show({
-            title: 'Tutorial 4/4',
+            title: t('tutorial.title_4'),
             content,
             buttons: [
-                { text: 'Continue', value: 'continue', className: 'tron-btn menu-btn-primary' }
+                { text: t('tutorial.continue'), value: 'continue', className: 'tron-btn menu-btn-primary' }
             ]
         });
     }
