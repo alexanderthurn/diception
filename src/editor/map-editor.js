@@ -6,6 +6,7 @@
  */
 
 // No longer using generateScenarioId
+import { t } from '../core/i18n.js';
 import { Dialog } from '../ui/dialog.js';
 import { GAME } from '../core/constants.js';
 import { getInputHint, ACTION_ASSIGN, ACTION_DICE, ACTION_END_TURN } from '../ui/input-hints.js';
@@ -208,13 +209,6 @@ const CONFIG_MAP_SIZE_PRESETS = [
     { width: 12, height: 12, label: '12×12' }
 ];
 
-
-// Available AI difficulties
-const AVAILABLE_AIS = [
-    { id: 'easy', name: 'Easy' },
-    { id: 'medium', name: 'Medium' },
-    { id: 'hard', name: 'Hard' }
-];
 
 export class MapEditor {
     constructor(scenarioManager) {
@@ -1864,7 +1858,7 @@ export class MapEditor {
         const btn = this.elements.saveBtn;
         if (!btn) return;
         const idx = this.editorOptions?.levelIndex;
-        btn.innerHTML = '<span class="sprite-icon icon-save"></span> ' + (idx != null ? `Save #${idx + 1}` : 'Save');
+        btn.innerHTML = '<span class="sprite-icon icon-save"></span> ' + (idx != null ? t('editor.save_slot', { n: idx + 1 }) : t('editor.save'));
     }
 
     handleSave() {
@@ -1881,7 +1875,7 @@ export class MapEditor {
         this.state.bots = parseInt(this.elements.editorSharedBots?.value || '2', 10);
         this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
         if (this.state.tiles.size === 0) {
-            this.showStatus('Add at least one tile first', 'error');
+            this.showStatus(t('editor.need_one_tile'), 'error');
             return null;
         }
         const bounds = this.computeMinimalBounds();
@@ -1919,7 +1913,7 @@ export class MapEditor {
         this.state.botAI = this.elements.editorSharedBotAI?.value || 'easy';
         this.rebuildPlayersFromScenarioConfig();
         if (this.state.tiles.size === 0) {
-            this.showStatus('Add at least one tile first', 'error');
+            this.showStatus(t('editor.need_one_tile'), 'error');
             return null;
         }
 
@@ -2140,7 +2134,7 @@ export class MapEditor {
         const addBtn = document.createElement('div');
         addBtn.className = 'paint-swatch add-tile';
         if (this.state.paintMode === 'add') addBtn.classList.add('selected');
-        addBtn.title = 'Add tiles';
+        addBtn.title = t('editor.add_tiles');
         addBtn.addEventListener('click', () => {
             this.state.paintMode = 'add';
             this.renderPaintPalette();
@@ -2150,7 +2144,7 @@ export class MapEditor {
         const removeBtn = document.createElement('div');
         removeBtn.className = 'paint-swatch remove-tile';
         if (this.state.paintMode === 'remove') removeBtn.classList.add('selected');
-        removeBtn.title = 'Remove tiles';
+        removeBtn.title = t('editor.remove_tiles');
         removeBtn.addEventListener('click', () => {
             this.state.paintMode = 'remove';
             this.renderPaintPalette();
@@ -2696,12 +2690,12 @@ export class MapEditor {
             try {
                 this.editorOptions.onSave(mapData);
                 this.state.isDirty = false;
-                this.showStatus('Saved!', 'success');
+                this.showStatus(t('editor.saved'), 'success');
                 this.close();
                 return mapData;
             } catch (e) {
                 this._logSaveFailure('campaign map → setUserLevel', e);
-                this.showStatus('Failed to save', 'error');
+                this.showStatus(t('editor.save_failed'), 'error');
                 return null;
             }
         }
@@ -2715,18 +2709,18 @@ export class MapEditor {
         mapData.createdAt = Date.now();
 
         const existing = this.scenarioManager.getScenario(name);
-        if (existing && !(await Dialog.confirm(`A map with name "${name}" already exists. Overwrite?`))) {
+        if (existing && !(await Dialog.confirm(t('editor.map_exists', { name })))) {
             return null;
         }
 
         try {
             this.scenarioManager.saveEditorScenario(mapData);
             this.state.isDirty = false;
-            this.showStatus('Map saved!', 'success');
+            this.showStatus(t('editor.map_saved'), 'success');
             return mapData;
         } catch (e) {
             this._logSaveFailure('standalone map → scenario library', e);
-            this.showStatus('Failed to save', 'error');
+            this.showStatus(t('editor.save_failed'), 'error');
             return null;
         }
     }
@@ -2742,12 +2736,12 @@ export class MapEditor {
             try {
                 this.editorOptions.onSave(scenarioData);
                 this.state.isDirty = false;
-                this.showStatus('Saved!', 'success');
+                this.showStatus(t('editor.saved'), 'success');
                 this.close();
                 return scenarioData;
             } catch (e) {
                 this._logSaveFailure('campaign scenario → setUserLevel', e);
-                this.showStatus('Failed to save', 'error');
+                this.showStatus(t('editor.save_failed'), 'error');
                 return null;
             }
         }
@@ -2761,7 +2755,7 @@ export class MapEditor {
         scenarioData.createdAt = Date.now();
 
         const existing = this.scenarioManager.getScenario(name);
-        if (existing && !(await Dialog.confirm(`A scenario with name "${name}" already exists. Overwrite?`))) {
+        if (existing && !(await Dialog.confirm(t('editor.scenario_exists', { name })))) {
             return null;
         }
 
@@ -2772,7 +2766,7 @@ export class MapEditor {
             return scenarioData;
         } catch (e) {
             this._logSaveFailure('standalone scenario → scenario library', e);
-            this.showStatus('Failed to save', 'error');
+            this.showStatus(t('editor.save_failed'), 'error');
             return null;
         }
     }
@@ -2791,7 +2785,7 @@ export class MapEditor {
             try {
                 this.editorOptions.onSave(snapshot);
                 this.state.isDirty = false;
-                this.showStatus('Saved!', 'success');
+                this.showStatus(t('editor.saved'), 'success');
             } catch (e) {
                 this._logSaveFailure('test → save', e);
             }

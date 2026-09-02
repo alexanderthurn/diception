@@ -1,3 +1,4 @@
+import { t } from '../core/i18n.js';
 import { GAME } from '../core/constants.js';
 import { detectControllerType, buttonIconHTML } from './controller-icons.js';
 
@@ -161,30 +162,30 @@ export class GamepadCursorManager {
             }
 
             const gameLabels = {
-                [b.confirm]: 'Select',
-                [b.cancel]: 'Deselect',
-                [b.endTurn]: 'End Turn',
-                [b.menu]: 'Main Menu',
-                [b.moveUp]: 'Attack Up',
-                [b.moveDown]: 'Attack Down',
-                [b.moveLeft]: 'Attack Left',
-                [b.moveRight]: 'Attack Right',
-                [b.drag]: 'Hold to move map',
-                [b.zoomOut]: 'Zoom out',
-                [b.zoomIn]: 'Zoom in',
+                [b.confirm]: t('pad.select'),
+                [b.cancel]: t('pad.deselect'),
+                [b.endTurn]: t('pad.end_turn'),
+                [b.menu]: t('pad.main_menu'),
+                [b.moveUp]: t('pad.attack_up'),
+                [b.moveDown]: t('pad.attack_down'),
+                [b.moveLeft]: t('pad.attack_left'),
+                [b.moveRight]: t('pad.attack_right'),
+                [b.drag]: t('pad.hold_move_map'),
+                [b.zoomOut]: t('pad.zoom_out'),
+                [b.zoomIn]: t('pad.zoom_in'),
             };
             const editorLabels = {
-                [b.confirm]: 'Add / Paint',
-                [b.cancel]: 'Remove tile',
-                [b.endTurn]: 'Assign / Dice',
-                [b.menu]: 'Main Menu',
-                [b.moveUp]: 'Move cursor',
-                [b.moveDown]: 'Move cursor',
-                [b.moveLeft]: 'Move cursor',
-                [b.moveRight]: 'Move cursor',
-                [b.drag]: 'Hold to pan map',
-                [b.zoomOut]: 'Zoom out',
-                [b.zoomIn]: 'Zoom in',
+                [b.confirm]: t('pad.add_paint'),
+                [b.cancel]: t('pad.remove_tile'),
+                [b.endTurn]: t('pad.assign_dice'),
+                [b.menu]: t('pad.main_menu'),
+                [b.moveUp]: t('pad.move_cursor'),
+                [b.moveDown]: t('pad.move_cursor'),
+                [b.moveLeft]: t('pad.move_cursor'),
+                [b.moveRight]: t('pad.move_cursor'),
+                [b.drag]: t('pad.hold_pan_map'),
+                [b.zoomOut]: t('pad.zoom_out'),
+                [b.zoomIn]: t('pad.zoom_in'),
             };
 
             const buttonLabels = isEditorEffective ? editorLabels : gameLabels;
