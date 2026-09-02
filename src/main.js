@@ -216,7 +216,7 @@ async function init() {
     }
 
     // Credits line: "Hi, name" on Steam, countdown/label on Android, "by Alexander Thurn" or "Demo Version" elsewhere
-    const demoLabel = isAndroid() ? '' : 'Demo Version';
+    const demoLabel = isAndroid() ? '' : t('app.demo_version');
     let _creditsCountdownInterval = null;
     let _creditsClickCount = 0;
     let _creditsClickTimer = null;
@@ -1720,7 +1720,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
                 const displayName = filename.replace(/\.(mp3|ogg)$/i, '');
                 return `<li class="howto-music-item">
                     <span class="howto-music-name" data-filename="${filename.replace(/"/g, '&quot;')}">${displayName}</span>
-                    <button type="button" class="howto-music-toggle tron-btn small ${isActive ? 'active' : ''}" data-filename="${filename.replace(/"/g, '&quot;')}" title="${isActive ? 'Active in playlist' : 'Inactive (excluded from loop)'}">${isActive ? '✓' : '○'}</button>
+                    <button type="button" class="howto-music-toggle tron-btn small ${isActive ? 'active' : ''}" data-filename="${filename.replace(/"/g, '&quot;')}" title="${isActive ? t('app.track_active') : t('app.track_inactive')}">${isActive ? '✓' : '○'}</button>
                 </li>`;
             }).join('');
         }

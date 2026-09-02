@@ -550,7 +550,7 @@ export class ScenarioBrowser {
         this.isOwner = isUserCampaign;
         const levels = campaign.levels || [];
 
-        const ownerLabel = isUserCampaign ? 'Your Campaign' : (campaign.owner || 'Unnamed Campaign');
+        const ownerLabel = isUserCampaign ? t('campaign.name_user') : (campaign.owner || t('campaign.unnamed'));
         if (this.campaignDetailTitle) this.campaignDetailTitle.textContent = ownerLabel;
         const totalSlots = this.isOwner ? levels.length + 1 : levels.length;
         const containerWidth = this.levelGridContainer.offsetWidth
