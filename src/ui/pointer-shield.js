@@ -12,9 +12,17 @@
 
 // Track all currently held pointer IDs globally.
 const _activePointers = new Set();
-document.addEventListener('pointerdown',   e => _activePointers.add(e.pointerId),    { capture: true, passive: true });
-document.addEventListener('pointerup',     e => _activePointers.delete(e.pointerId), { capture: true, passive: true });
-document.addEventListener('pointercancel', e => _activePointers.delete(e.pointerId), { capture: true, passive: true });
+const _release = (e) => _activePointers.delete(e.pointerId);
+document.addEventListener('pointerdown',   e => _activePointers.add(e.pointerId), { capture: true, passive: true });
+document.addEventListener('pointerup',     _release, { capture: true, passive: true });
+document.addEventListener('pointercancel', _release, { capture: true, passive: true });
+
+/**
+ * Grace period after an element appears. Android WebView dispatches the
+ * synthesized click long after pointerup, so a dialog opening in between sees
+ * no held pointer but still catches the trailing click.
+ */
+const GRACE_MS = 350;
 
 // While > 0, swallow all clicks on the document (covers browsers that fire
 // click after pointerup even when preventDefault() was called on pointerup).
@@ -26,12 +34,19 @@ document.addEventListener('click', e => {
     }
 }, { capture: true });
 
+function swallowClicksFor(ms) {
+    _swallowClicks++;
+    setTimeout(() => { _swallowClicks--; }, ms);
+}
+
 /**
  * Absorb the first pointerup/pointercancel for every pointer that was already
- * held when this element became visible. Also swallows any click that arrives
- * in the same event-dispatch cycle.
+ * held when this element became visible, and ignore any click arriving within
+ * the grace period — it belongs to the gesture that was already in flight.
  */
 export function shieldFromPassthrough(el) {
+    swallowClicksFor(GRACE_MS);
+
     const tainted = new Set(_activePointers);
     if (tainted.size === 0) return;
 
@@ -40,8 +55,7 @@ export function shieldFromPassthrough(el) {
         e.preventDefault();
         e.stopImmediatePropagation();
         // Briefly swallow clicks in case the browser fires one after this pointerup
-        _swallowClicks++;
-        setTimeout(() => { _swallowClicks--; }, 300);
+        swallowClicksFor(GRACE_MS);
         tainted.delete(e.pointerId);
         if (tainted.size === 0) {
             el.removeEventListener('pointerup',     absorb, true);
