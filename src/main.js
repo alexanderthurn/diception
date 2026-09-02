@@ -2296,27 +2296,26 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     });
 
     document.getElementById('toolbar-music-toggle')?.addEventListener('click', () => {
-        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 600;
-        const tbVol = document.getElementById('toolbar-music-volume');
-        if (isMobile && tbVol) {
-            const isVisible = tbVol.classList.contains('visible');
-            document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
-            if (!isVisible) tbVol.classList.add('visible');
-        }
         document.getElementById('music-toggle')?.click();
         syncToolbarAudioBtns();
+        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 600;
+        const tbVol = document.getElementById('toolbar-music-volume');
+        const mainBtn = document.getElementById('music-toggle');
+        if (!isMobile || !tbVol) return;
+        document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
+        // Reveal volume briefly when turning audio on; hide when muting
+        if (mainBtn?.classList.contains('active')) tbVol.classList.add('visible');
     });
 
     document.getElementById('toolbar-sfx-toggle')?.addEventListener('click', () => {
-        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 600;
-        const tbVol = document.getElementById('toolbar-sfx-volume');
-        if (isMobile && tbVol) {
-            const isVisible = tbVol.classList.contains('visible');
-            document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
-            if (!isVisible) tbVol.classList.add('visible');
-        }
         document.getElementById('sfx-toggle')?.click();
         syncToolbarAudioBtns();
+        const isMobile = window.innerWidth <= 768 || window.innerHeight <= 600;
+        const tbVol = document.getElementById('toolbar-sfx-volume');
+        const mainBtn = document.getElementById('sfx-toggle');
+        if (!isMobile || !tbVol) return;
+        document.querySelectorAll('#music-controls input[type="range"]').forEach(el => el.classList.remove('visible'));
+        if (mainBtn?.classList.contains('active')) tbVol.classList.add('visible');
     });
 
     document.getElementById('toolbar-music-volume')?.addEventListener('input', (e) => {

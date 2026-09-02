@@ -280,14 +280,8 @@ export class AudioController {
         this._playCurrent();
     }
 
-    getMobileAction(isEnabled, volumeSlider) {
-        if (window.innerWidth > 768 && window.innerHeight > 600) return null;
-
-        const isVisible = volumeSlider.classList.contains('visible');
-
-        if (!isEnabled) return 'unmute-show';
-        if (isEnabled && isVisible) return 'pause-hide';
-        return 'show';
+    _isCompactAudioUi() {
+        return window.innerWidth <= 768 || window.innerHeight <= 600;
     }
 
     showSliderWithTimeout(slider, timeoutKey) {
@@ -300,7 +294,7 @@ export class AudioController {
     }
 
     resetSliderTimeout(slider, timeoutKey) {
-        if (window.innerWidth <= 768 || window.innerHeight <= 600) {
+        if (this._isCompactAudioUi()) {
             slider.classList.add('visible');
             clearTimeout(this[timeoutKey]);
             this[timeoutKey] = setTimeout(() => {
@@ -310,58 +304,9 @@ export class AudioController {
     }
 
     handleMusicToggle() {
-        const action = this.getMobileAction(this.musicPlaying, this.musicVolume);
-
-        if (action === 'unmute-show') {
-            clearTimeout(this.musicTimeout);
-            this.showSliderWithTimeout(this.musicVolume, 'musicTimeout');
-            if (!this.musicPlaying) {
-                this.musicPlaying = true;
-                if (this.isFirstRunEver) {
-                    this.isFirstRunEver = false;
-                    this._playCurrent();
-                } else {
-                    const alias = this._currentMusicAlias();
-                    if (this._musicPaused && alias && sound.exists(alias)) {
-                        sound.resume(alias);
-                        this._musicPaused = false;
-                    } else {
-                        this._playCurrent();
-                    }
-                }
-                this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-on"></span>';
-                this.musicToggle.classList.add('active');
-                localStorage.setItem('musicEnabled', 'true');
-            }
-            return;
-        }
-
-        // Music ON, slider hidden → just show slider, keep playing
-        if (action === 'show') {
-            clearTimeout(this.musicTimeout);
-            this.showSliderWithTimeout(this.musicVolume, 'musicTimeout');
-            return;
-        }
-
-        // Music ON, slider visible → pause + hide slider
-        if (action === 'pause-hide') {
+        if (this.musicPlaying) {
             clearTimeout(this.musicTimeout);
             this.musicVolume.classList.remove('visible');
-            const alias = this._currentMusicAlias();
-            if (alias && sound.exists(alias)) {
-                sound.pause(alias);
-                this._musicPaused = true;
-            }
-            this.musicPlaying = false;
-            this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-off"></span>';
-            this.musicToggle.classList.remove('active');
-            localStorage.setItem('musicEnabled', 'false');
-            return;
-        }
-
-        // Desktop toggle
-        if (this.musicPlaying) {
-            // Pause music
             const alias = this._currentMusicAlias();
             if (alias && sound.exists(alias)) {
                 sound.pause(alias);
@@ -385,6 +330,11 @@ export class AudioController {
                 }
             }
             this.musicToggle.innerHTML = '<span class="sprite-icon icon-music-on"></span>';
+            // Compact UI keeps volume collapsed — reveal briefly when turning audio back on
+            if (this._isCompactAudioUi()) {
+                clearTimeout(this.musicTimeout);
+                this.showSliderWithTimeout(this.musicVolume, 'musicTimeout');
+            }
         }
         localStorage.setItem('musicEnabled', this.musicPlaying.toString());
         this.musicToggle.classList.toggle('active', this.musicPlaying);
@@ -426,43 +376,17 @@ export class AudioController {
     }
 
     handleSfxToggle() {
-        const action = this.getMobileAction(this.sfx.enabled, this.sfxVolume);
-
-        if (action === 'unmute-show') {
-            clearTimeout(this.sfxTimeout);
-            this.showSliderWithTimeout(this.sfxVolume, 'sfxTimeout');
-            if (!this.sfx.enabled) {
-                this.sfx.setEnabled(true);
-                this.sfxToggle.innerHTML = '<span class="sprite-icon icon-sfx-on"></span>';
-                this.sfxToggle.classList.add('active');
-                localStorage.setItem('sfxEnabled', 'true');
-            }
-            return;
-        }
-
-        // SFX ON, slider hidden → just show slider, keep enabled
-        if (action === 'show') {
-            clearTimeout(this.sfxTimeout);
-            this.showSliderWithTimeout(this.sfxVolume, 'sfxTimeout');
-            return;
-        }
-
-        // SFX ON, slider visible → disable + hide slider
-        if (action === 'pause-hide') {
-            clearTimeout(this.sfxTimeout);
-            this.sfxVolume.classList.remove('visible');
-            this.sfx.setEnabled(false);
-            this.sfxToggle.innerHTML = '<span class="sprite-icon icon-sfx-off"></span>';
-            this.sfxToggle.classList.remove('active');
-            localStorage.setItem('sfxEnabled', 'false');
-            return;
-        }
-
-        // Desktop toggle
         const enabled = !this.sfx.enabled;
         this.sfx.setEnabled(enabled);
         this.sfxToggle.innerHTML = `<span class="sprite-icon icon-sfx-${enabled ? 'on' : 'off'}"></span>`;
         this.sfxToggle.classList.toggle('active', enabled);
         localStorage.setItem('sfxEnabled', enabled.toString());
+
+        clearTimeout(this.sfxTimeout);
+        if (enabled && this._isCompactAudioUi()) {
+            this.showSliderWithTimeout(this.sfxVolume, 'sfxTimeout');
+        } else {
+            this.sfxVolume.classList.remove('visible');
+        }
     }
 }
