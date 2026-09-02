@@ -2,6 +2,9 @@
  * SessionManager - Handles game session lifecycle
  * Manages reset, auto-save, and resume functionality
  */
+
+import { t } from './i18n.js';
+
 export class SessionManager {
     constructor(game, renderer, effectsManager, turnHistory, mapEditor) {
         this.game = game;
@@ -47,7 +50,7 @@ export class SessionManager {
         const isCampaignMode = localStorage.getItem('campaignMode');
         const mainMenuBtn = document.getElementById('pause-mainmenu-btn');
         if (mainMenuBtn) {
-            mainMenuBtn.textContent = 'Exit to Menu';
+            mainMenuBtn.textContent = t('game.exit_to_menu');
         }
     }
 

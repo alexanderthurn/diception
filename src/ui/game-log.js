@@ -1,6 +1,9 @@
 /**
  * GameLog - Manages turn-based log grouping in the UI
  */
+
+import { t } from '../core/i18n.js';
+
 export class GameLog {
     constructor(game, turnHistory, scenarioManager) {
         this.game = game;
@@ -97,7 +100,7 @@ export class GameLog {
             summaryHtml += ` <span class="sprite-icon icon-dice"></span>${saved}`;
         }
         if (!summaryHtml) {
-            summaryHtml = '(no action)';
+            summaryHtml = t('log.no_action');
         }
 
         summary.innerHTML = summaryHtml;

@@ -172,25 +172,26 @@ export function getActiveModsSummary(config) {
     const botCount = parseInt(config.botCount, 10);
     if (!Number.isNaN(botCount) && botCount > 0) {
         const humanCount = parseInt(config.humanCount, 10) || 1;
-        const ai = config.botAI || null;
+        const ai = config.botAI ? t(`opt.bot_ai_select.${config.botAI}`) : null;
+        const one = botCount === 1;
         const botLabel = ai
-            ? `${botCount} ${ai} bot${botCount !== 1 ? 's' : ''}`
-            : `${botCount} bot${botCount !== 1 ? 's' : ''}`;
-        parts.push(humanCount > 1 ? `${humanCount} humans, ${botLabel}` : botLabel);
+            ? t(one ? 'mods_summary.bot_one_ai' : 'mods_summary.bots_ai', { count: botCount, ai })
+            : t(one ? 'mods_summary.bot_one' : 'mods_summary.bots', { count: botCount });
+        parts.push(humanCount > 1 ? t('mods_summary.humans', { count: humanCount, bots: botLabel }) : botLabel);
     }
 
     if (config.gameMode && config.gameMode !== d.gameMode)
         parts.push(GAME_MODE_LABELS[config.gameMode] ? t(GAME_MODE_LABELS[config.gameMode]) : config.gameMode);
     if (config.maxDice != null && String(config.maxDice) !== d.maxDice)
-        parts.push(`Max ${config.maxDice}`);
+        parts.push(t('mods_summary.max_dice', { n: config.maxDice }));
     if (config.diceSides != null && String(config.diceSides) !== d.diceSides)
         parts.push(`D${config.diceSides}`);
     if (config.attacksPerTurn != null && String(config.attacksPerTurn) !== d.attacksPerTurn)
-        parts.push(`${config.attacksPerTurn} Atk`);
+        parts.push(t('mods_summary.attacks', { n: config.attacksPerTurn }));
     if (config.secondsPerTurn != null && String(config.secondsPerTurn) !== d.secondsPerTurn)
-        parts.push(`${config.secondsPerTurn}s/Turn`);
+        parts.push(t('mods_summary.seconds_turn', { n: config.secondsPerTurn }));
     if (config.secondsPerAttack != null && String(config.secondsPerAttack) !== d.secondsPerAttack)
-        parts.push(`${config.secondsPerAttack}s/Atk`);
+        parts.push(t('mods_summary.seconds_attack', { n: config.secondsPerAttack }));
     const fbr = config.fullBoardRule || 'nothing';
     if (fbr !== d.fullBoardRule)
         parts.push(FULL_BOARD_LABELS[fbr] ? t(FULL_BOARD_LABELS[fbr]) : fbr);
@@ -203,7 +204,7 @@ export function getActiveModsSummary(config) {
     if (config.playMode && config.playMode !== d.playMode)
         parts.push(PLAY_MODE_LABELS[config.playMode] ? t(PLAY_MODE_LABELS[config.playMode]) : config.playMode);
     if (config.seed != null && Number(config.seed) > 0)
-        parts.push('Fixed Luck');
+        parts.push(t('mods_summary.fixed_luck'));
 
     return parts.join(' · ');
 }

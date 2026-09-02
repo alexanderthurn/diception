@@ -2,6 +2,9 @@
  * LoadingScreen handles the visual presentation of the game initialization process.
  * It features a terminal-style log and a progress bar, followed by a start prompt.
  */
+
+import { t } from '../core/i18n.js';
+
 export class LoadingScreen {
     constructor(inputManager, opts = {}) {
         this.inputManager = inputManager;
@@ -125,9 +128,9 @@ export class LoadingScreen {
             const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
 
             if (isTouch || isIPad) {
-                this.prompt.textContent = 'Touch to Start';
+                this.prompt.textContent = t('loading.touch_to_start');
             } else {
-                this.prompt.textContent = 'Press any key to start';
+                this.prompt.textContent = t('loading.press_any_key');
             }
 
             this.prompt.classList.add('visible');

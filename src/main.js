@@ -280,7 +280,7 @@ async function init() {
             console.log('Steam User:', name);
             const el = document.getElementById('main-menu-credits');
             if (isFullVersion()) {
-                if (el) el.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">Hi, ${name}</span>`;
+                if (el) el.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">${t('app.steam_hi', { name })}</span>`;
             } else {
                 if (el) { el.textContent = demoLabel; el.classList.add('demo-version-label'); }
                 const loadingCredits = document.querySelector('#loading-screen .credits');
@@ -591,7 +591,7 @@ async function init() {
             // Remove button
             const removeBtn = document.createElement('button');
             removeBtn.className = 'tron-btn small gp-remove-btn';
-            removeBtn.title = `Remove controller ${gpIdx + 1}`;
+            removeBtn.title = t('app.remove_controller', { n: gpIdx + 1 });
             removeBtn.textContent = '✕';
             removeBtn.addEventListener('click', () => {
                 gcm?.kickGamepad(gpIdx);
@@ -950,28 +950,7 @@ async function init() {
             }, 3500);
         };
 
-        const getFriendlyName = (id) => {
-            const a = ACHIEVEMENTS_MAP[id];
-            if (!a) return id;
-            if (a.type === 'campaign') return a.campaign.replace(/^./, c => c.toUpperCase()) + ' Complete';
-            if (a.type === 'stat') {
-                if (a.stat === 'gamesPlayed') return `${a.threshold.toLocaleString()} Games Played`;
-                if (a.stat === 'gamesWon') return 'First Win';
-                if (a.stat === 'underdogWins') return `${a.threshold.toLocaleString()} Underdog Wins`;
-            }
-            if (a.type === 'event') {
-                if (a.event === 'won4vs6') return 'David vs. Goliath';
-                if (a.event === 'attackStreak3') return '3 Attack Streak';
-                if (a.event === 'attackStreak4') return '4 Attack Streak';
-                if (a.event === 'attackStreak5') return '5 Attack Streak';
-                if (a.event === 'attackStreak6') return '6 Attack Streak';
-                if (a.event === 'attackStreak7') return '7 Attack Streak';
-                if (a.event === 'won8PlayerGame') return 'Last Standing';
-                if (a.event === 'pureBots') return 'Bot Tournament';
-                if (a.event === 'pureHumans') return 'Human Only';
-            }
-            return id;
-        };
+        const getFriendlyName = (id) => ACHIEVEMENTS_MAP[id] ? t(`ach.${id}.title`) : id;
 
         setUnlockCallback((id) => {
             if (!isFullVersion()) return;
@@ -1048,14 +1027,14 @@ async function init() {
         const remotePlayHandler = (p) => {
             if (!p || typeof p.sessionId !== 'number') return;
             if (p.kind === 'connected') {
-                const name = p.clientName || `Session ${p.sessionId}`;
+                const name = p.clientName || t('app.session_n', { n: p.sessionId });
                 steamRemotePlaySessions.set(p.sessionId, name);
-                gameLog.addNotice(`Remote Play: ${name} connected`, 'remote-play');
+                gameLog.addNotice(t('log.remote_connected', { name }), 'remote-play');
             } else if (p.kind === 'disconnected') {
                 const name =
                     steamRemotePlaySessions.get(p.sessionId) ||
                     p.clientName ||
-                    `Session ${p.sessionId}`;
+                    t('app.session_n', { n: p.sessionId });
                 steamRemotePlaySessions.delete(p.sessionId);
                 gameLog.addNotice(`Remote Play: ${name} disconnected`, 'remote-play');
             }
@@ -1823,16 +1802,16 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
 
         // Build configure buttons
         let configHtml = '<div class="controls-configure-row" style="flex-wrap: wrap; gap: 15px;">';
-        configHtml += '<div><button class="tron-btn small" id="configure-keyboard-btn" style="margin-bottom:10px;">KEYBOARD</button></div>';
+        configHtml += `<div><button class="tron-btn small" id="configure-keyboard-btn" style="margin-bottom:10px;">${t('controls.keyboard_btn')}</button></div>`;
         configHtml += '<div style="width:100%; height:0;"></div>';
 
         {
             const BACKEND_LABELS = {
-                'navigator': 'GAMEPAD: BROWSER',
-                'fwnetwork': 'GAMEPAD: FW-NETWORK',
+                'navigator': t('controls.gamepad_browser'),
+                'fwnetwork': t('controls.gamepad_fwnetwork'),
             };
             const currentBackend = inputManager.backend || 'auto';
-            const label = BACKEND_LABELS[currentBackend] ?? 'GAMEPAD: BROWSER';
+            const label = BACKEND_LABELS[currentBackend] ?? t('controls.gamepad_browser');
             configHtml += `<div><button class="tron-btn small" id="gamepad-type-toggle-btn" style="margin-bottom:10px;">${label}</button></div>`;
         }
 
@@ -1860,7 +1839,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
                 configHtml += `
                 <div class="gamepad-config-entry" style="border-left-color:${colorHex}">
                     <span class="gce-label" style="color:${colorHex}">${humanIdx + 1}</span>
-                    <button class="tron-btn small gamepad-configure-btn" data-gamepad-index="${rawIdx}" style="border-color:${colorHex};color:${colorHex}">BINDINGS</button>
+                    <button class="tron-btn small gamepad-configure-btn" data-gamepad-index="${rawIdx}" style="border-color:${colorHex};color:${colorHex}">${t('controls.bindings_btn')}</button>
                     <label class="gce-dz-label">DZ</label>
                     <input type="range" class="gamepad-deadzone-slider" data-gamepad-index="${rawIdx}" data-gamepad-id="${gpId}" min="0.0" max="0.5" step="0.01" value="${currentDeadzone}">
                     <span class="deadzone-value" id="deadzone-val-${rawIdx}">${displayPct}%</span>
@@ -1955,6 +1934,9 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
                 container.querySelectorAll('.segmented-option').forEach(o => {
                     o.classList.toggle('active', o.dataset.value === code);
                 });
+                // These two sections are built in JS, so applyTranslations() can't reach them.
+                refreshControlsSection();
+                refreshHowtoSections();
             });
             container.appendChild(btn);
         }
@@ -2409,10 +2391,7 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         wrap.className = 'dialog-reset-stats-wrap';
         const help = document.createElement('p');
         help.className = 'dialog-reset-stats-help';
-        help.textContent =
-            'This deletes lifetime game counters (games played, wins, streaks, underdog wins, and related totals). '
-            + 'Campaign progress, settings, and maps are not removed. '
-            + 'If your counters are synced to a profile or cloud save, those copies are cleared as well.';
+        help.textContent = t('app.reset_stats_help');
         wrap.appendChild(help);
         const label = document.createElement('label');
         label.className = 'howto-checkbox-label dialog-reset-stats-ach-option';
@@ -2426,12 +2405,12 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         wrap.appendChild(label);
 
         const choice = await Dialog.show({
-            title: 'RESET STATISTICS?',
+            title: t('app.reset_stats_title'),
             message: '',
             content: wrap,
             buttons: [
-                { text: 'RESET', value: 'reset', className: 'tron-btn small menu-btn-danger' },
-                { text: 'CANCEL', value: 'cancel', className: 'tron-btn small menu-btn-neutral' },
+                { text: t('app.reset'), value: 'reset', className: 'tron-btn small menu-btn-danger' },
+                { text: t('dialog.cancel'), value: 'cancel', className: 'tron-btn small menu-btn-neutral' },
             ],
         });
         if (choice !== 'reset') return;

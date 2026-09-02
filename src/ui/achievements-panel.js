@@ -141,23 +141,22 @@ export class AchievementsPanel {
         if (this._bucketStats && this._highscoreManager) {
             const b = this._highscoreManager.getSoloHumanStatsBlob().buckets;
             const winPct = (p, w) => p > 0 ? `${Math.round(w / p * 100)}%` : '—';
-            const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
             const boxes = DIFFS.map(diff => {
                 const diffRow = b[`d:${diff}`] ?? [0, 0, null, null];
-                const rows = [['All sizes', diffRow]];
-                for (const { key, label, hint } of SIZES) {
+                const rows = [[t('ach.all_sizes'), diffRow]];
+                for (const { key, labelKey, hint } of SIZES) {
                     const r = b[`d:${diff}|s:${key}`] ?? [0, 0, null, null];
-                    rows.push([`+ ${label} (${hint})`, r]);
+                    rows.push([`+ ${t(labelKey)} (${hint})`, r]);
                 }
                 return { diff, rows };
             });
 
             this._bucketStats.innerHTML = boxes.map(({ diff, rows }) => `
                 <div class="ach-diff-box">
-                    <div class="ach-diff-box-title">${cap(diff)}</div>
+                    <div class="ach-diff-box-title">${t(`opt.bot_ai_select.${diff}`)}</div>
                     <table class="solo-stats-table">
-                        <thead><tr><th></th><th>Games</th><th>Wins</th><th>Win%</th></tr></thead>
+                        <thead><tr><th></th><th>${t('game.stats_games')}</th><th>${t('game.stats_wins')}</th><th>${t('game.stats_winpct')}</th></tr></thead>
                         <tbody>${rows.map(([label, r]) => `
                             <tr><td class="sst-label">${label}</td><td>${r[0]}</td><td>${r[1]}</td><td>${winPct(r[0], r[1])}</td></tr>
                         `).join('')}</tbody>

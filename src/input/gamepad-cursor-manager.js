@@ -963,7 +963,7 @@ export class GamepadCursorManager {
     closeCurrentModal() {
         const modal = this.getOpenModal();
         if (!modal) return;
-        const closeBtn = modal.querySelector('.close-btn, [aria-label="Close"], button[title="Close"]');
+        const closeBtn = modal.querySelector('.close-btn');
         if (closeBtn) { closeBtn.click(); return; }
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true, cancelable: true }));
     }

@@ -28,7 +28,7 @@ export class KeyBindingDialog {
         const pending = { ...bindings.keyboard };
 
         const saved = await this._runWizard({
-            title: 'CONFIGURE KEYBOARD',
+            title: t('controls.configure_keyboard'),
             actions,
             device: 'keyboard',
             gamepadIndex: null,
@@ -161,19 +161,19 @@ export class KeyBindingDialog {
 
             const skipBtn = document.createElement('button');
             skipBtn.className = 'tron-btn small';
-            skipBtn.textContent = 'SKIP';
+            skipBtn.textContent = t('controls.skip');
 
             const saveBtn = document.createElement('button');
             saveBtn.className = 'tron-btn small';
-            saveBtn.textContent = 'SAVE';
+            saveBtn.textContent = t('controls.save');
 
             const resetBtn = document.createElement('button');
             resetBtn.className = 'tron-btn small';
-            resetBtn.textContent = 'RESET';
+            resetBtn.textContent = t('app.reset');
 
             const cancelBtn = document.createElement('button');
             cancelBtn.className = 'tron-btn small';
-            cancelBtn.textContent = 'CANCEL';
+            cancelBtn.textContent = t('dialog.cancel');
 
             footer.appendChild(skipBtn);
             footer.appendChild(resetBtn);

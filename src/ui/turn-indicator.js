@@ -1,6 +1,9 @@
 /**
  * TurnIndicator - Manages the turn indicator and end turn button
  */
+
+import { t } from '../core/i18n.js';
+
 export class TurnIndicator {
     constructor(game) {
         this.game = game;
@@ -31,7 +34,7 @@ export class TurnIndicator {
     showEndTurnButton(player, expectedReinforcements) {
         this.endTurnBtn.classList.remove('hidden');
         this.endTurnBtn.disabled = false;
-        if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+        if (this.endTurnText) this.endTurnText.textContent = t('app.end_turn');
         if (this.endTurnReinforcement) this.endTurnReinforcement.textContent = `(+${expectedReinforcements})`;
 
         const playerColorHex = '#' + player.color.toString(16).padStart(6, '0');
@@ -42,12 +45,12 @@ export class TurnIndicator {
     hideEndTurnButton() {
         this.endTurnBtn.classList.add('hidden');
         this.endTurnBtn.disabled = true;
-        if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+        if (this.endTurnText) this.endTurnText.textContent = t('app.end_turn');
         if (this.endTurnReinforcement) this.endTurnReinforcement.textContent = '';
     }
 
     updateEndTurnButton(expectedReinforcements) {
-        if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+        if (this.endTurnText) this.endTurnText.textContent = t('app.end_turn');
         if (this.endTurnReinforcement) this.endTurnReinforcement.textContent = `(+${expectedReinforcements})`;
     }
 

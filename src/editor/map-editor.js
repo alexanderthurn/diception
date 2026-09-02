@@ -283,7 +283,7 @@ export class MapEditor {
 
     createEmptyState(width = 16, height = 16) {
         return {
-            name: 'New Map',
+            name: t('editor.new_map'),
             description: '',
             author: '',
             width,
@@ -2597,7 +2597,7 @@ export class MapEditor {
             const colorHex = '#' + player.color.toString(16).padStart(6, '0');
             swatch.style.backgroundColor = colorHex;
             swatch.textContent = player.id + 1;
-            swatch.title = `Player ${player.id + 1}`;
+            swatch.title = t('game.player_n', { n: player.id + 1 });
 
             swatch.addEventListener('click', () => {
                 this.state.selectedPlayer = player.id;
@@ -2700,7 +2700,7 @@ export class MapEditor {
             }
         }
 
-        const name = this.state.name.trim() || 'Untitled Map';
+        const name = this.state.name.trim() || t('editor.untitled_map');
         this.state.name = name;
         mapData.name = name;
         mapData.description = this.state.description;
@@ -2746,7 +2746,7 @@ export class MapEditor {
             }
         }
 
-        const name = this.state.name.trim() || 'Untitled Scenario';
+        const name = this.state.name.trim() || t('editor.untitled_scenario');
         this.state.name = name;
         scenarioData.name = name;
         scenarioData.description = this.state.description;
@@ -2762,7 +2762,7 @@ export class MapEditor {
         try {
             this.scenarioManager.saveEditorScenario(scenarioData);
             this.state.isDirty = false;
-            this.showStatus('Scenario saved!', 'success');
+            this.showStatus(t('editor.scenario_saved'), 'success');
             return scenarioData;
         } catch (e) {
             this._logSaveFailure('standalone scenario → scenario library', e);

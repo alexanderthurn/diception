@@ -1,7 +1,16 @@
 import { createAI } from './ai/index.js';
+import { t } from './i18n.js';
 import { Dialog } from '../ui/dialog.js';
 import { isFullVersion } from '../scenarios/user-identity.js';
 import { showUnlockDialog } from '../ui/show-unlock-dialog.js';
+
+/** AI runner display names → locale keys, so bot names follow the language. */
+const AI_NAME_KEYS = {
+    Easy: 'opt.bot_ai_select.easy',
+    Medium: 'opt.bot_ai_select.medium',
+    Hard: 'opt.bot_ai_select.hard',
+    Autoplay: 'game.autoplay',
+};
 
 /**
  * Pick the starting player index based on bot difficulty (solo-human games only).
@@ -513,7 +522,7 @@ export class GameStarter {
 
         for (const player of this.game.players) {
             if (!player.isBot) {
-                player.name = this.getPlayerName ? this.getPlayerName(player) : `Human ${player.id + 1}`;
+                player.name = this.getPlayerName ? this.getPlayerName(player) : t('game.human_n', { n: player.id + 1 });
                 continue;
             }
 
@@ -532,9 +541,11 @@ export class GameStarter {
         return (player) => {
             if (player.isBot) {
                 const aiRunner = this.playerAIs.get(player.id);
-                return aiRunner ? `${aiRunner.name} ${player.id}` : `Bot ${player.id}`;
+                if (!aiRunner) return t('game.bot_n', { n: player.id });
+                const key = AI_NAME_KEYS[aiRunner.name];
+                return `${key ? t(key) : aiRunner.name} ${player.id}`;
             }
-            return `Human ${player.id + 1}`;
+            return t('game.human_n', { n: player.id + 1 });
         };
     }
 }

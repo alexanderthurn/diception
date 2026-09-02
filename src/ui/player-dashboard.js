@@ -1,6 +1,9 @@
 /**
  * PlayerDashboard - Manages the player list and dashboard UI
  */
+
+import { t } from '../core/i18n.js';
+
 export class PlayerDashboard {
     constructor(game) {
         this.game = game;
@@ -148,10 +151,10 @@ export class PlayerDashboard {
                    ${autoplayBtn}
                 </div>
                 <div class="p-stats-row">
-                   <span title="Tiles owned"><span class="sprite-icon icon-map"></span> ${p.tileCount || 0}</span>
-                   <span title="Connected region size"><span class="sprite-icon icon-link"></span> ${p.connectedTiles || 0}</span>
-                   <span title="Total dice" style="display: flex; align-items: center; gap: 4px;"><span class="dice-icon-sprite mini" style="background-color: #888; -webkit-mask-image: url(${this.diceDataURL}); mask-image: url(${this.diceDataURL});"></span> ${p.totalDice || 0}</span>
-                   ${p.storedDice > 0 ? `<span title="Stored dice"><span class="sprite-icon icon-dice"></span> ${p.storedDice}</span>` : ''}
+                   <span title="${t('dash.tiles_owned')}"><span class="sprite-icon icon-map"></span> ${p.tileCount || 0}</span>
+                   <span title="${t('dash.connected_size')}"><span class="sprite-icon icon-link"></span> ${p.connectedTiles || 0}</span>
+                   <span title="${t('dash.total_dice')}" style="display: flex; align-items: center; gap: 4px;"><span class="dice-icon-sprite mini" style="background-color: #888; -webkit-mask-image: url(${this.diceDataURL}); mask-image: url(${this.diceDataURL});"></span> ${p.totalDice || 0}</span>
+                   ${p.storedDice > 0 ? `<span title="${t('dash.stored_dice')}"><span class="sprite-icon icon-dice"></span> ${p.storedDice}</span>` : ''}
                 </div>
             `;
             this.playerList.appendChild(div);

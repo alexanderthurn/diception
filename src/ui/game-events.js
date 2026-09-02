@@ -45,14 +45,14 @@ function showVictoryCard(humanWon, winnerColorHex, quality, campaignFinished = f
         const titleEl = document.createElement('div');
         titleEl.className = 'victory-title';
         if (campaignFinished) {
-            titleEl.innerHTML = 'CAMPAIGN<br>COMPLETE';
+            titleEl.innerHTML = t('game.campaign_complete_card');
             titleEl.classList.add('victory-title-campaign');
         } else {
-            titleEl.textContent = humanWon ? 'VICTORY' : 'DEFEAT';
+            titleEl.textContent = humanWon ? t('game.victory') : t('game.defeat');
         }
         const hintEl = document.createElement('div');
         hintEl.className = 'victory-hint';
-        hintEl.textContent = 'click to continue';
+        hintEl.textContent = t('game.click_to_continue');
         body.appendChild(titleEl);
         body.appendChild(hintEl);
         overlay.appendChild(body);
@@ -219,8 +219,8 @@ export class GameEventManager {
         // Auto-save at start of turn
         this.turnHistory.saveAutoSave(this.game);
 
-        const name = this.getPlayerName ? this.getPlayerName(data.player) : (data.player.isBot ? `Bot ${data.player.id}` : `Player ${data.player.id}`);
-        this.playerText.textContent = `${name}'s Turn`;
+        const name = this.getPlayerName ? this.getPlayerName(data.player) : (data.player.isBot ? t('game.bot_n', { n: data.player.id }) : t('game.player_n', { n: data.player.id }));
+        this.playerText.textContent = t('game.player_turn', { name });
         this.playerText.style.color = '#' + data.player.color.toString(16).padStart(6, '0');
 
         // Update dashboard to reflect new active player
@@ -285,7 +285,7 @@ export class GameEventManager {
         } else {
             this.autoWinBtn.classList.add('hidden');
         }
-        if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+        if (this.endTurnText) this.endTurnText.textContent = t('app.end_turn');
         if (this.endTurnReinforcement) this.endTurnReinforcement.textContent = '';
 
         // Check if all alive human players have autoplay enabled (eliminated humans are ignored)
@@ -437,7 +437,7 @@ export class GameEventManager {
         const regionDice = this.game.map.findLargestConnectedRegion(player.id);
         const storedDice = player.storedDice || 0;
 
-        if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+        if (this.endTurnText) this.endTurnText.textContent = t('app.end_turn');
         if (this.endTurnReinforcement) {
             this.endTurnReinforcement.textContent = `(+${regionDice + storedDice})`;
             this.endTurnReinforcement.classList.remove('hidden');
@@ -491,15 +491,15 @@ export class GameEventManager {
         const content = document.createElement('div');
         content.className = 'beginner-speed-reminder';
         content.innerHTML = `
-            <p class="beginner-speed-reminder-text">On bigger maps, animations can take a while. Once you're comfortable with the basics, we recommend Normal or Expert speed. You can change this anytime in Pause or Settings.</p>
+            <p class="beginner-speed-reminder-text">${t('tutorial.speed_reminder')}</p>
         `;
 
         const segmented = document.createElement('div');
         segmented.className = 'segmented-btn game-speed-segmented beginner-speed-reminder-segmented';
         segmented.innerHTML = `
-            <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
-            <button type="button" class="segmented-option" data-value="normal">Normal</button>
-            <button type="button" class="segmented-option" data-value="expert">Expert</button>
+            <button type="button" class="segmented-option" data-value="beginner">${t('opt.game_speed.beginner')}</button>
+            <button type="button" class="segmented-option" data-value="normal">${t('opt.game_speed.normal')}</button>
+            <button type="button" class="segmented-option" data-value="expert">${t('opt.game_speed.expert')}</button>
         `;
         content.appendChild(segmented);
 
@@ -531,11 +531,11 @@ export class GameEventManager {
         this.renderer.inputManager?.setSuspended(true);
         try {
             const choice = await Dialog.show({
-                title: 'SPEED UP?',
+                title: t('game.speed_up_title'),
                 content,
                 buttons: [
-                    { text: 'Continue', value: 'continue', className: 'tron-btn menu-btn-primary' },
-                    { text: 'Do not show again', value: 'disable', className: 'tron-btn menu-btn-neutral' }
+                    { text: t('tutorial.continue'), value: 'continue', className: 'tron-btn menu-btn-primary' },
+                    { text: t('game.dont_show_again'), value: 'disable', className: 'tron-btn menu-btn-neutral' }
                 ]
             });
             if (choice === 'disable') {
@@ -791,7 +791,7 @@ export class GameEventManager {
         if (hasAttackLine && this._attacksLeftEl) {
             this._attacksLeftEl.classList.remove('hidden');
             const n = remAttacks;
-            this._attacksLeftEl.textContent = n === 1 ? '1 attack left' : `${n} attacks left`;
+            this._attacksLeftEl.textContent = n === 1 ? t('game.one_attack_left') : t('game.attacks_left', { n });
         } else if (this._attacksLeftEl) {
             this._attacksLeftEl.classList.add('hidden');
             this._attacksLeftEl.textContent = '';
@@ -871,7 +871,7 @@ export class GameEventManager {
     }
 
     handleMaxDiceRaised(data) {
-        if (this.addLog) this.addLog(`Board full — max dice per territory is now ${data.maxDice}.`, 'info');
+        if (this.addLog) this.addLog(t('log.board_full', { n: data.maxDice }), 'info');
         if (this.renderer?.forceUpdate) this.renderer.forceUpdate(false);
         const color = this.game.currentPlayer?.color ?? 0x00ffff;
         this.renderer?.grid?.showBigLabel(t('game.max_dice', { n: data.maxDice }), color);
@@ -948,7 +948,7 @@ export class GameEventManager {
 
         const attacker = this.game.players.find(p => p.id === result.attackerId);
         const defender = this.game.players.find(p => p.id === result.defenderId);
-        const defenderName = defender ? this.getPlayerName(defender) : `Player ${result.defenderId}`;
+        const defenderName = defender ? this.getPlayerName(defender) : t('game.player_n', { n: result.defenderId });
 
         const attackRollStr = result.attackerRolls.join('+');
         const defendRollStr = result.defenderRolls.join('+');
@@ -1005,7 +1005,7 @@ export class GameEventManager {
             const regionDice = this.game.map.findLargestConnectedRegion(attacker.id);
             const storedDice = attacker.storedDice || 0;
 
-            if (this.endTurnText) this.endTurnText.textContent = 'END TURN';
+            if (this.endTurnText) this.endTurnText.textContent = t('app.end_turn');
             if (this.endTurnReinforcement) {
                 this.endTurnReinforcement.textContent = `(+${regionDice + storedDice})`;
             }
@@ -1084,8 +1084,8 @@ export class GameEventManager {
     }
 
     handlePlayerEliminated(player) {
-        const name = this.getPlayerName ? this.getPlayerName(player) : (player.isBot ? `Bot ${player.id}` : `Player ${player.id}`);
-        if (this.addLog) this.addLog(`${name} has been eliminated!`, 'death', 'icon-skull');
+        const name = this.getPlayerName ? this.getPlayerName(player) : (player.isBot ? t('game.bot_n', { n: player.id }) : t('game.player_n', { n: player.id }));
+        if (this.addLog) this.addLog(t('log.eliminated', { name }), 'death', 'icon-skull');
         if (this.sfx) this.sfx.playerEliminated();
         if (this.playerDashboard) this.playerDashboard.update();
     }
@@ -1138,11 +1138,11 @@ export class GameEventManager {
         const fullBoardResolution = data.fullBoardResolution || false;
         if (this.addLog) {
             if (turnLimitReached) {
-                this.addLog(`Turn limit reached! ${name} wins by dice count!`, 'death', 'icon-timer');
+                this.addLog(t('log.turn_limit_win', { name }), 'death', 'icon-timer');
             } else if (fullBoardResolution) {
-                this.addLog(`Board settled — ${name} wins!`, 'death', 'icon-target');
+                this.addLog(t('log.board_settled', { name }), 'death', 'icon-target');
             } else {
-                this.addLog(`${name} wins the game!`, 'death', 'icon-achievements');
+                this.addLog(t('log.wins_game', { name }), 'death', 'icon-achievements');
             }
         }
 
@@ -1259,26 +1259,26 @@ export class GameEventManager {
         const diceLost   = soloLevelKey ? (gameStats?.humanDiceLost   ?? null) : null;
 
         const showBest = humanWon && !isNewBest && prevBestTurns !== null && soloHumans === 1;
-        const bracket = v => `<span class="game-over-best-bracket">(Best: ${v})</span>`;
+        const bracket = v => `<span class="game-over-best-bracket">${t('game.best', { v })}</span>`;
 
-        let turnsHtml = `Turns: ${turnCount}`;
-        let timeHtml  = durationStr ? `  <span class="game-over-duration">Time: ${durationStr}</span>` : '';
+        let turnsHtml = t('game.turns', { n: turnCount });
+        let timeHtml  = durationStr ? `  <span class="game-over-duration">${t('game.time', { v: durationStr })}</span>` : '';
         if (showBest) {
             if (turnCount > prevBestTurns) {
                 turnsHtml += `  ${bracket(prevBestTurns)}`;
             } else if (turnCount === prevBestTurns && durationStr && prevBestDuration != null && soloDurationMs != null && soloDurationMs > prevBestDuration) {
-                timeHtml = `  <span class="game-over-duration">Time: ${durationStr}  ${bracket(fmtDuration(prevBestDuration))}</span>`;
+                timeHtml = `  <span class="game-over-duration">${t('game.time', { v: durationStr })}  ${bracket(fmtDuration(prevBestDuration))}</span>`;
             }
         }
 
         const hasCampaignRow = soloAttacks != null || diceKilled != null || diceLost != null;
         turnsP.innerHTML = turnsHtml
             + timeHtml
-            + (isNewBest ? `  <span class="game-over-newbest">★ New best</span>` : '')
+            + (isNewBest ? `  <span class="game-over-newbest">${t('game.new_best')}</span>` : '')
             + (hasCampaignRow ? `<br><span class="game-over-campaign-row">`
-                + (soloAttacks != null ? `Attacks: ${soloAttacks}` : '')
-                + (diceKilled  != null ? `  Defeated dice: ${diceKilled}` : '')
-                + (diceLost    != null ? `  Lost dice: ${diceLost}` : '')
+                + (soloAttacks != null ? t('game.attacks_stat', { n: soloAttacks }) : '')
+                + (diceKilled  != null ? `  ${t('game.defeated_dice', { n: diceKilled })}` : '')
+                + (diceLost    != null ? `  ${t('game.lost_dice', { n: diceLost })}` : '')
                 + `</span>` : '');
         content.appendChild(turnsP);
 
@@ -1290,7 +1290,7 @@ export class GameEventManager {
             let statsHtml = '';
             // Elimination timeline (redesigned to horizontal sentence)
             statsHtml += '<div class="timeline-section-horizontal">';
-            statsHtml += '<h4 class="timeline-title">Timeline</h4>';
+            statsHtml += `<h4 class="timeline-title">${t('game.timeline')}</h4>`;
             statsHtml += '<div class="timeline-sentence">';
 
             // Show eliminated players with red symbol
@@ -1338,8 +1338,8 @@ export class GameEventManager {
         // === SOLO STATS TABLE (only in solo human vs bots) ===
         if (soloHumans === 1 && this.highscoreManager) {
             const b = this.highscoreManager.getSoloHumanStatsBlob().buckets;
-            const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-            const sizeLabel = s => s === 'medium' ? t('game.mid_size') : cap(s);
+            const diffLabel = s => t(`opt.bot_ai_select.${s}`);
+            const sizeLabel = s => s === 'medium' ? t('game.mid_size') : t(`ach.size.${s}`);
             const winPct = (plays, wins) => plays > 0 ? `${Math.round(wins / plays * 100)}%` : '—';
 
             const rows = [];
@@ -1350,9 +1350,9 @@ export class GameEventManager {
                 const g = b['g'];
                 if (g) rows.push([t('game.global'), g]);
                 const d = soloDiff ? b[`d:${soloDiff}`] : null;
-                if (d && d[0] > 0) rows.push([cap(soloDiff), d]);
+                if (d && d[0] > 0) rows.push([diffLabel(soloDiff), d]);
                 const ds = (soloDiff && soloSizeGroup) ? b[`d:${soloDiff}|s:${soloSizeGroup}`] : null;
-                if (ds && ds[0] > 0) rows.push([`${cap(soloDiff)} + ${sizeLabel(soloSizeGroup)}`, ds]);
+                if (ds && ds[0] > 0) rows.push([`${diffLabel(soloDiff)} + ${sizeLabel(soloSizeGroup)}`, ds]);
             }
 
             if (rows.length > 0) {
@@ -1360,7 +1360,7 @@ export class GameEventManager {
                 humanSection.className = 'human-stats-section';
                 humanSection.innerHTML = `
                     <table class="solo-stats-table">
-                        <thead><tr><th></th><th>Games</th><th>Wins</th><th>Win%</th></tr></thead>
+                        <thead><tr><th></th><th>${t('game.stats_games')}</th><th>${t('game.stats_wins')}</th><th>${t('game.stats_winpct')}</th></tr></thead>
                         <tbody>${rows.map(([label, r]) => `
                             <tr><td class="sst-label">${label}</td><td>${r[0]}</td><td>${r[1]}</td><td>${winPct(r[0], r[1])}</td></tr>
                         `).join('')}</tbody>
@@ -1377,7 +1377,7 @@ export class GameEventManager {
 
         let title;
         if (humanCount === 1) {
-            title = humanWon ? 'WON' : 'DEFEAT';
+            title = humanWon ? t('game.won') : t('game.defeat');
         } else {
             title = name;
         }
@@ -1396,34 +1396,30 @@ export class GameEventManager {
             campaignFinished = humanWon && totalLevels > 0 && effectiveLevelIndex === totalLevels - 1;
 
             if (!campaign) {
-                buttons = [{ text: 'Exit', value: 'exit', className: 'tron-btn' }];
+                buttons = [{ text: t('app.exit'), value: 'exit', className: 'tron-btn' }];
             } else if (campaignFinished) {
-                title = 'CAMPAIGN COMPLETE!';
+                title = t('game.campaign_complete');
                 const celebrationEl = document.createElement('p');
                 celebrationEl.className = 'campaign-celebration';
-                celebrationEl.textContent = `You finished all ${totalLevels} levels of ${campaign?.owner || 'this campaign'}!`;
+                celebrationEl.textContent = t('game.campaign_celebration', { n: totalLevels, name: campaign?.owner || t('game.this_campaign') });
                 celebrationEl.style.cssText = 'font-size: 1.2em; margin: 1em 0; color: var(--primary-color);';
                 content.insertBefore(celebrationEl, content.firstChild);
             }
 
             if (campaign) {
                 if (hasNextLevel) {
-                    buttons.push({ text: 'Next Level', value: 'next', className: 'tron-btn' });
+                    buttons.push({ text: t('game.next_level'), value: 'next', className: 'tron-btn' });
                 }
 
-                if (campaignFinished) {
-                    buttons.push({ text: 'Exit', value: 'exit', className: 'tron-btn' });
-                } else {
-                    buttons.push({ text: 'Exit', value: 'exit', className: 'tron-btn' });
-                }
+                buttons.push({ text: t('app.exit'), value: 'exit', className: 'tron-btn' });
             }
         }
         if (buttons.length === 0) {
-            buttons.push({ text: 'Exit', value: 'exit', className: 'tron-btn' });
+            buttons.push({ text: t('app.exit'), value: 'exit', className: 'tron-btn' });
         }
 
         if (!campaignFinished && !buttons.some(b => b.value === 'rematch')) {
-            const rematchBtn = { text: 'Rematch', value: 'rematch', className: 'tron-btn' };
+            const rematchBtn = { text: t('pause_modal.rematch'), value: 'rematch', className: 'tron-btn' };
             const exitIdx = buttons.findIndex(b => b.value === 'exit');
             if (exitIdx >= 0) {
                 buttons.splice(exitIdx + 1, 0, rematchBtn);

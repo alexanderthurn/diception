@@ -389,7 +389,7 @@ export class ScenarioBrowser {
 
         const sourceSelect = document.createElement('select');
         sourceSelect.className = 'campaign-dev-import-select';
-        sourceSelect.setAttribute('aria-label', 'Built-in or online campaign to copy into yours');
+        sourceSelect.setAttribute('aria-label', t('campaign.copy_source_aria'));
 
         const placeholderOpt = document.createElement('option');
         placeholderOpt.value = '';
@@ -463,8 +463,8 @@ export class ScenarioBrowser {
 
         const displayName = this.getCampaignDisplayName(source);
         const proceed = await Dialog.confirm(
-            `Replace your entire saved campaign with "${displayName}" (${source.levels.length} levels)?`,
-            'Copy campaign'
+            t('campaign.copy_confirm', { name: displayName, n: source.levels.length }),
+            t('campaign.copy_title')
         );
         if (!proceed) return;
 
@@ -498,7 +498,7 @@ export class ScenarioBrowser {
         if (!isCampaignDevToolsEnabled()) return;
         const proceed = await Dialog.confirm(
             t('campaign.import_confirm'),
-            'Import campaign'
+            t('campaign.import_title')
         );
         if (!proceed) return;
 
@@ -513,7 +513,7 @@ export class ScenarioBrowser {
                 const data = JSON.parse(text);
                 const imp = await this.campaignManager.importFromPortableJson(data);
                 if (!imp.ok) {
-                    await Dialog.alert(imp.errors.join('\n'), 'Import failed');
+                    await Dialog.alert(imp.errors.join('\n'), t('campaign.import_failed'));
                     return;
                 }
                 this.selectedCampaign = { ...this.campaignManager.userCampaign, isUserCampaign: true };
@@ -666,12 +666,13 @@ export class ScenarioBrowser {
         const lines = [];
         const maxDice = level.maxDice ?? 9;
         const diceSides = level.diceSides ?? 6;
-        lines.push(`Max ${maxDice} · ${diceSides}‑sided`);
+        lines.push(t('level.max_sided', { max: maxDice, sides: diceSides }));
         const bots = (level.players || []).filter(p => p.isBot).length;
         const aiIds = [...new Set((level.players || []).filter(p => p.isBot).map(p => p.aiId || 'easy'))];
-        const botAIStr = aiIds.length ? aiIds.join(', ') : (bots ? 'easy' : '—');
+        const aiLabel = id => t(`opt.bot_ai_select.${id}`);
+        const botAIStr = aiIds.length ? aiIds.map(aiLabel).join(', ') : (bots ? aiLabel('easy') : '—');
         lines.push(`${level.width || '?'}×${level.height || '?'}`);
-        if (bots > 0) lines.push(`${bots} bot${bots !== 1 ? 's' : ''} · ${botAIStr}`);
+        if (bots > 0) lines.push(`${t(bots === 1 ? 'mods_summary.bot_one' : 'mods_summary.bots', { count: bots })} · ${botAIStr}`);
         return lines;
     }
 
@@ -1146,7 +1147,7 @@ export class ScenarioBrowser {
         const content = document.createElement('div');
         content.className = 'tutorial-intro-dialog';
         content.innerHTML = `
-            All dice are rolled and added together. If the attacker has a higher total than the defender, the attacker takes over the territory and moves their dice there (leaving 1 behind).</p>
+            <p>${t('tutorial.combat_explain')}</p>
             <div class="howto-example">
                 <div class="dice-group">
                     ${die('#aa00ff')}
@@ -1234,9 +1235,9 @@ export class ScenarioBrowser {
         const segmented = document.createElement('div');
         segmented.className = 'segmented-btn game-speed-segmented beginner-speed-reminder-segmented';
         segmented.innerHTML = `
-            <button type="button" class="segmented-option" data-value="beginner">Beginner</button>
-            <button type="button" class="segmented-option" data-value="normal">Normal</button>
-            <button type="button" class="segmented-option" data-value="expert">Expert</button>
+            <button type="button" class="segmented-option" data-value="beginner">${t('opt.game_speed.beginner')}</button>
+            <button type="button" class="segmented-option" data-value="normal">${t('opt.game_speed.normal')}</button>
+            <button type="button" class="segmented-option" data-value="expert">${t('opt.game_speed.expert')}</button>
         `;
         content.appendChild(segmented);
 
