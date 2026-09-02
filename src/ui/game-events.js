@@ -1,4 +1,5 @@
 import { Dialog } from './dialog.js';
+import { shieldFromPassthrough } from './pointer-shield.js';
 import { createAI } from '../core/ai/index.js';
 import { GAME } from '../core/constants.js';
 import { shouldShowInputHints, getInputHint, ACTION_END_TURN, ACTION_MENU } from './input-hints.js';
@@ -56,6 +57,7 @@ function showVictoryCard(humanWon, winnerColorHex, quality, campaignFinished = f
         body.appendChild(hintEl);
         overlay.appendChild(body);
         document.body.appendChild(overlay);
+        shieldFromPassthrough(overlay);
 
         const autoDismissMs = campaignFinished ? 4000 : 2500;
         const dismiss = () => {

@@ -1,4 +1,5 @@
 import { Dialog } from './dialog.js';
+import { shieldFromPassthrough } from './pointer-shield.js';
 import { showUnlockDialog } from './show-unlock-dialog.js';
 import { CampaignManager } from '../scenarios/campaign-manager.js';
 import { getGridDimensions } from '../scenarios/campaign-data.js';
@@ -944,6 +945,7 @@ export class ScenarioBrowser {
         dialog.appendChild(actions);
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
+        shieldFromPassthrough(overlay);
 
         if (Dialog.activeOverlay) Dialog.close(Dialog.activeOverlay);
         Dialog.activeOverlay = overlay;
