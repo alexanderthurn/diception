@@ -51,12 +51,7 @@ function detectLanguage() {
     return LOCALES[device] ? device : FALLBACK;
 }
 
-/** Load a language and apply it to the document. Awaited once during startup. */
-export async function initI18n(language = detectLanguage()) {
-    await setLanguage(language);
-}
-
-export async function setLanguage(language) {
+async function applyLanguage(language) {
     const loader = LOCALES[language] || LOCALES[FALLBACK];
     try {
         _strings = await loader();
@@ -66,9 +61,23 @@ export async function setLanguage(language) {
         _strings = en;
         _language = FALLBACK;
     }
-    localStorage.setItem(LANGUAGE_KEY, _language);
     document.documentElement.lang = _language;
     applyTranslations();
+}
+
+/**
+ * Load a language and apply it to the document. Awaited once during startup.
+ * Detection is deliberately not persisted, so the game keeps following the
+ * device language until the player picks one in Settings.
+ */
+export async function initI18n(language = detectLanguage()) {
+    await applyLanguage(language);
+}
+
+/** Switch language on an explicit player choice — this one sticks. */
+export async function setLanguage(language) {
+    await applyLanguage(language);
+    localStorage.setItem(LANGUAGE_KEY, _language);
 }
 
 /**
