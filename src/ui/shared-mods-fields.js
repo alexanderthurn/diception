@@ -3,6 +3,8 @@
  * Markup lives once in index.html (#shared-mods-fields-template); ids are assigned per instance.
  */
 
+import { applyTranslations } from '../core/i18n.js';
+
 const TEMPLATE_ID = 'shared-mods-fields-template';
 
 /**
@@ -17,6 +19,8 @@ export function mountSharedModsFields(container, { idPrefix = '', hideTournament
         return;
     }
     const root = tpl.content.cloneNode(true);
+    // the clone carries data-i18n attributes but has never been translated
+    applyTranslations(root);
     const mountRoot = root.querySelector('.shared-mods-fields-root');
     if (!mountRoot) return;
 

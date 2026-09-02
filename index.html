@@ -148,11 +148,11 @@
                 <div class="control-group" data-mods-group="setup-game-mode-group">
                     <label data-i18n="shared_mods_fields_template.start_mode">Start Mode</label>
                     <select data-mods-el="game-mode">
-                        <option value="classic" selected>Classic</option>
-                        <option value="easy">Easy Start</option>
-                        <option value="fair">Fair Start</option>
-                        <option value="madness">Full Madness</option>
-                        <option value="2of2">2 of 2</option>
+                        <option data-i18n="opt.classic" value="classic" selected>Classic</option>
+                        <option data-i18n="opt.easy" value="easy">Easy Start</option>
+                        <option data-i18n="opt.fair" value="fair">Fair Start</option>
+                        <option data-i18n="opt.madness" value="madness">Full Madness</option>
+                        <option data-i18n="opt.2of2" value="2of2">2 of 2</option>
                     </select>
                 </div>
 
@@ -160,20 +160,20 @@
                     <div class="control-group half" data-mods-group="setup-play-mode-group">
                         <label data-i18n="shared_mods_fields_template.play_mode">Play Mode</label>
                         <select data-mods-el="play-mode">
-                            <option value="classic" selected>Classic</option>
-                            <option value="parallel">Parallel</option>
-                            <option value="parallel-s">Parallel S</option>
+                            <option data-i18n="opt.classic_2" value="classic" selected>Classic</option>
+                            <option data-i18n="opt.parallel" value="parallel">Parallel</option>
+                            <option data-i18n="opt.parallel_s" value="parallel-s">Parallel S</option>
                         </select>
                     </div>
                     <div class="control-group half" data-mods-group="setup-full-board-rule-group">
                         <label data-i18n="shared_mods_fields_template.end_game">End Game</label>
                         <select data-mods-el="full-board-rule">
-                            <option value="nothing" selected>Default</option>
-                            <option value="most_territories">Territories</option>
-                            <option value="biggest_territory">Largest region</option>
-                            <option value="random_picker">Random tile</option>
-                            <option value="raise_max_dice">Max dice +4</option>
-                            <option value="autoplay_humans">Autoplay</option>
+                            <option data-i18n="opt.nothing" value="nothing" selected>Default</option>
+                            <option data-i18n="opt.most_territories" value="most_territories">Territories</option>
+                            <option data-i18n="opt.biggest_territory" value="biggest_territory">Largest region</option>
+                            <option data-i18n="opt.random_picker" value="random_picker">Random tile</option>
+                            <option data-i18n="opt.raise_max_dice" value="raise_max_dice">Max dice +4</option>
+                            <option data-i18n="opt.autoplay_humans" value="autoplay_humans">Autoplay</option>
                         </select>
                     </div>
                 </div>
@@ -182,18 +182,18 @@
                     <div class="control-group half" data-mods-group="setup-attack-rule-group">
                         <label data-i18n="shared_mods_fields_template.attack_rules">Attack Rules</label>
                         <select data-mods-el="attack-rule">
-                            <option value="classic" selected>Classic</option>
-                            <option value="easy_attack">Easy Attack</option>
-                            <option value="all_die">Tie Die</option>
+                            <option data-i18n="opt.classic_3" value="classic" selected>Classic</option>
+                            <option data-i18n="opt.easy_attack" value="easy_attack">Easy Attack</option>
+                            <option data-i18n="opt.all_die" value="all_die">Tie Die</option>
                         </select>
                     </div>
                     <div class="control-group half" data-mods-group="setup-supply-rule-group">
                         <label data-i18n="shared_mods_fields_template.overflow">Overflow</label>
                         <select data-mods-el="supply-rule">
-                            <option value="classic" selected>Classic</option>
-                            <option value="no_stack">No Stack</option>
-                            <option value="no_stack_hard">Full</option>
-                            <option value="reborn">Reborn</option>
+                            <option data-i18n="opt.classic_4" value="classic" selected>Classic</option>
+                            <option data-i18n="opt.no_stack" value="no_stack">No Stack</option>
+                            <option data-i18n="opt.no_stack_hard" value="no_stack_hard">Full</option>
+                            <option data-i18n="opt.reborn" value="reborn">Reborn</option>
                         </select>
                     </div>
                 </div>
@@ -233,16 +233,16 @@
                     <div class="control-group third" data-mods-group="setup-attacks-limit-group">
                         <label data-i18n="shared_mods_fields_template.attacks">Attacks</label>
                         <select data-mods-el="turn-time-limit">
-                            <option value="0" selected>∞ Unlimited</option>
-                            <option value="1">1 / turn</option>
-                            <option value="3">3 / turn</option>
-                            <option value="5">5 / turn</option>
+                            <option data-i18n="opt.0" value="0" selected>∞ Unlimited</option>
+                            <option data-i18n="opt.1" value="1">1 / turn</option>
+                            <option data-i18n="opt.3" value="3">3 / turn</option>
+                            <option data-i18n="opt.5" value="5">5 / turn</option>
                         </select>
                     </div>
                     <div class="control-group third" data-mods-group="setup-turn-seconds-group">
                         <label data-i18n="shared_mods_fields_template.turn_time">Turn time</label>
                         <select data-mods-el="turn-seconds-limit">
-                            <option value="0" selected>∞ Unlimited</option>
+                            <option data-i18n="opt.0_2" value="0" selected>∞ Unlimited</option>
                             <option value="10">10s</option>
                             <option value="15">15s</option>
                             <option value="30">30s</option>
@@ -252,7 +252,7 @@
                     <div class="control-group third" data-mods-group="setup-attack-seconds-group">
                         <label data-i18n="shared_mods_fields_template.attack_time">Attack time</label>
                         <select data-mods-el="attack-seconds-limit">
-                            <option value="0" selected>∞ Unlimited</option>
+                            <option data-i18n="opt.0_3" value="0" selected>∞ Unlimited</option>
                             <option value="5">5s</option>
                             <option value="10">10s</option>
                             <option value="15">15s</option>
@@ -298,10 +298,10 @@
                         <div class="control-group quarter" id="map-style-group">
                             <label data-i18n="map_style_group.style">Style</label>
                             <select id="map-style">
-                                <option value="random" selected>Random</option>
-                                <option value="full">Full Grid</option>
-                                <option value="continents">Continents</option>
-                                <option value="simple">Simple</option>
+                                <option data-i18n="opt.map_style.random" value="random" selected>Random</option>
+                                <option data-i18n="opt.map_style.full_grid" value="full">Full Grid</option>
+                                <option data-i18n="opt.map_style.continents" value="continents">Continents</option>
+                                <option data-i18n="opt.map_style.simple" value="simple">Simple</option>
                             </select>
                         </div>
                     </div>
@@ -348,9 +348,9 @@
                         <div class="control-group half" id="setup-bot-ai-group">
                             <label data-i18n="setup_bot_ai_group.bot_difficulty">Bot Difficulty</label>
                             <select id="bot-ai-select">
-                                <option value="easy" selected>Easy</option>
-                                <option value="medium">Medium</option>
-                                <option value="hard">Hard</option>
+                                <option data-i18n="opt.bot_ai_select.easy" value="easy" selected>Easy</option>
+                                <option data-i18n="opt.bot_ai_select.medium" value="medium">Medium</option>
+                                <option data-i18n="opt.bot_ai_select.hard" value="hard">Hard</option>
                             </select>
                         </div>
                     </div>
@@ -470,11 +470,11 @@
             <div class="howto-content">
                 <section>
                     <h3 data-i18n="howto_modal.basics">BASICS</h3>
-                    <p><strong data-i18n="howto_modal.objective">OBJECTIVE:</strong> Conquer all tiles of the grid.</p>
+                    <p data-i18n-html="howto_modal.objective_conquer_all_tiles_of"><strong>OBJECTIVE:</strong> Conquer all tiles of the grid.</p>
                     <ul class="howto-list">
                         <li>
-                            <strong data-i18n="howto_modal.combat">COMBAT:</strong> Dice attack dice. Your attack power is the sum of all your dice
-                            values. Highest sum wins.
+                            <strong data-i18n="howto_modal.combat">COMBAT:</strong> <span data-i18n="howto_modal.dice_attack_dice_your_attack">Dice attack dice. Your attack power is the sum of all your dice
+                            values. Highest sum wins.</span>
                             <div class="howto-example">
                                 <div class="dice-group">
                                     <span class="dice-icon-sprite howto-dice-sprite"
@@ -490,8 +490,8 @@
                             </div>
                         </li>
                         <li>
-                            <strong data-i18n="howto_modal.winning">WINNING:</strong> If you have a higher total than the defender, you win. You take
-                            over the territory and move your dice there (leaving 1 behind).
+                            <strong data-i18n="howto_modal.winning">WINNING:</strong> <span data-i18n="howto_modal.if_you_have_a_higher">If you have a higher total than the defender, you win. You take
+                            over the territory and move your dice there (leaving 1 behind).</span>
                             <div class="howto-example">
                                 <div class="dice-group">
                                     <span class="dice-icon-sprite howto-dice-sprite"
@@ -516,8 +516,8 @@
                             </div>
                         </li>
                         <li>
-                            <strong data-i18n="howto_modal.losing">LOSING:</strong> If you have equal or fewer points, you lose. Your dice count drops
-                            to 1 and your turn ends immediately.
+                            <strong data-i18n="howto_modal.losing">LOSING:</strong> <span data-i18n="howto_modal.if_you_have_equal_or">If you have equal or fewer points, you lose. Your dice count drops
+                            to 1 and your turn ends immediately.</span>
                             <div class="howto-example">
                                 <div class="dice-group">
                                     <span class="dice-icon-sprite howto-dice-sprite"
@@ -542,9 +542,9 @@
                             </div>
                         </li>
                         <li>
-                            <strong data-i18n="howto_modal.reinforce">REINFORCE:</strong> At the end of your turn, you get new dice. You get dice based on
+                            <strong data-i18n="howto_modal.reinforce">REINFORCE:</strong> <span data-i18n="howto_modal.at_the_end_of_your">At the end of your turn, you get new dice. You get dice based on
                             your biggest connected territories amount. Like if you have 4 territories, but only 3 are
-                            adjacent, you get 3 dice.
+                            adjacent, you get 3 dice.</span>
                             <div class="howto-example">
                                 <div class="howto-reinforce">
                                     <div class="howto-tile-row">
@@ -562,7 +562,7 @@
                                 </div>
                             </div>
                         </li>
-                        <li><strong data-i18n="howto_modal.turn_limit">TURN LIMIT:</strong> If no player conquers all territories within 999 turns, the
+                        <li data-i18n-html="howto_modal.turn_limit_if_no_player"><strong>TURN LIMIT:</strong> If no player conquers all territories within 999 turns, the
                             game ends and the player with the most total dice (on the board + in reserve) wins.</li>
                     </ul>
                 </section>
@@ -571,10 +571,10 @@
                     <h3 data-i18n="howto_modal.game_speed">GAME SPEED</h3>
                     <p data-i18n="howto_modal.controls_how_fast_the">Controls how fast the game plays. Can be changed anytime in Pause or Settings.</p>
                     <ul class="howto-list">
-                        <li><strong data-i18n="howto_modal.beginner">Beginner</strong> — Full animations &amp; dice rolls. Win chances &amp; input hints
+                        <li data-i18n-html="howto_modal.beginner_full_animations_amp_dice"><strong>Beginner</strong> — Full animations &amp; dice rolls. Win chances &amp; input hints
                             shown. Slow bot turns.</li>
-                        <li><strong data-i18n="howto_modal.normal">Normal</strong> — Faster animations. Win chances shown. Fast bot turns.</li>
-                        <li><strong data-i18n="howto_modal.expert">Expert</strong> — No animations. No win chances. One-click attack shortcut. Instant
+                        <li data-i18n-html="howto_modal.normal_faster_animations_win_chances"><strong>Normal</strong> — Faster animations. Win chances shown. Fast bot turns.</li>
+                        <li data-i18n-html="howto_modal.expert_no_animations_no_win"><strong>Expert</strong> — No animations. No win chances. One-click attack shortcut. Instant
                             bot turns.</li>
                     </ul>
                 </section>
@@ -583,12 +583,12 @@
                     <h3 data-i18n="howto_modal.bot_difficulty">BOT DIFFICULTY</h3>
                     <p data-i18n="howto_modal.choose_how_challenging_the">Choose how challenging the AI opponents are. Set per-bot in the player roster.</p>
                     <ul class="howto-list">
-                        <li><strong data-i18n="howto_modal.easy">Easy</strong> — Targets bots first. Makes mistakes. Good for learning the game.
+                        <li data-i18n-html="howto_modal.easy_targets_bots_first_makes"><strong>Easy</strong> — Targets bots first. Makes mistakes. Good for learning the game.
                             Player starts first.
                         </li>
-                        <li><strong data-i18n="howto_modal.medium">Medium</strong> — Attacks anyone equally. Prefers a dice advantage of 2 or more and
+                        <li data-i18n-html="howto_modal.medium_attacks_anyone_equally_prefers"><strong>Medium</strong> — Attacks anyone equally. Prefers a dice advantage of 2 or more and
                             plays a bit more aggressive.</li>
-                        <li><strong data-i18n="howto_modal.hard">Hard</strong> — Same as medium but plans
+                        <li data-i18n-html="howto_modal.hard_same_as_medium_but"><strong>Hard</strong> — Same as medium but plans
                             attacks more strategically: focuses on the strongest player, breaks enemy connected regions
                             to
                             cut their reinforcements, and
@@ -620,8 +620,8 @@
                         </select>
                         <label data-i18n="howto_modal.attack_rules" for="prob-attack-rule">Attack Rules:</label>
                         <select id="prob-attack-rule">
-                            <option value="classic" selected>Classic</option>
-                            <option value="easy_attack">Easy Attack</option>
+                            <option data-i18n="opt.prob_attack_rule.classic" value="classic" selected>Classic</option>
+                            <option data-i18n="opt.prob_attack_rule.easy_attack" value="easy_attack">Easy Attack</option>
                         </select>
                     </div>
                     <div class="probability-table-wrapper">
@@ -656,64 +656,64 @@
                     <ul class="howto-list">
                         <li><strong data-i18n="howto_modal.play_mode">Play Mode</strong>
                             <ul class="howto-list">
-                                <li><strong data-i18n="howto_modal.classic">Classic</strong> — Players take turns one at a time. Only the active player
+                                <li data-i18n-html="howto_modal.classic_players_take_turns_one"><strong>Classic</strong> — Players take turns one at a time. Only the active player
                                     can attack.</li>
-                                <li><strong data-i18n="howto_modal.parallel">Parallel</strong> — Every player (human and bot) can attack at any time
+                                <li data-i18n-html="howto_modal.parallel_every_player_human_and"><strong>Parallel</strong> — Every player (human and bot) can attack at any time
                                     simultaneously.</li>
-                                <li><strong data-i18n="howto_modal.parallel_s">Parallel S</strong> — Like Parallel, but the currently active player is safe
+                                <li data-i18n-html="howto_modal.parallel_s_like_parallel_but"><strong>Parallel S</strong> — Like Parallel, but the currently active player is safe
                                     from bot attacks.</li>
                             </ul>
                         </li>
                         <li><strong data-i18n="howto_modal.end_game">End Game</strong> — What happens when the board is completely filled by a single
                             player:
                             <ul class="howto-list">
-                                <li><strong data-i18n="howto_modal.default">Default</strong> — That player wins immediately.</li>
-                                <li><strong data-i18n="howto_modal.territories">Territories</strong> — The player with the most territories wins instead.
+                                <li data-i18n-html="howto_modal.default_that_player_wins_immediately"><strong>Default</strong> — That player wins immediately.</li>
+                                <li data-i18n-html="howto_modal.territories_the_player_with_the"><strong>Territories</strong> — The player with the most territories wins instead.
                                 </li>
-                                <li><strong data-i18n="howto_modal.largest_region">Largest Region</strong> — The player with the biggest single connected
+                                <li data-i18n-html="howto_modal.largest_region_the_player_with"><strong>Largest Region</strong> — The player with the biggest single connected
                                     region wins.</li>
-                                <li><strong data-i18n="howto_modal.random_tile">Random Tile</strong> — A random tile is picked; its owner wins.</li>
-                                <li><strong data-i18n="howto_modal.max_dice_4">Max Dice +4</strong> — The conquering player's max dice cap is raised by 4
+                                <li data-i18n-html="howto_modal.random_tile_a_random_tile"><strong>Random Tile</strong> — A random tile is picked; its owner wins.</li>
+                                <li data-i18n-html="howto_modal.max_dice_4_the_conquering"><strong>Max Dice +4</strong> — The conquering player's max dice cap is raised by 4
                                     and the game continues.</li>
-                                <li><strong data-i18n="howto_modal.autoplay">Autoplay</strong> — Human players are switched to autoplay and the game
+                                <li data-i18n-html="howto_modal.autoplay_human_players_are_switched"><strong>Autoplay</strong> — Human players are switched to autoplay and the game
                                     finishes automatically.</li>
                             </ul>
                         </li>
                         <li><strong data-i18n="howto_modal.overflow">Overflow</strong> — What happens when a reinforcement die lands on a territory
                             already at max dice:
                             <ul class="howto-list">
-                                <li><strong data-i18n="howto_modal.classic_2">Classic</strong> — The die is redirected to another non-full territory; if
+                                <li data-i18n-html="howto_modal.classic_the_die_is_redirected"><strong>Classic</strong> — The die is redirected to another non-full territory; if
                                     all are full it goes to the stack for next turn.</li>
-                                <li><strong data-i18n="howto_modal.no_stack">No Stack</strong> — Redirected to a non-full territory as usual, but excess
+                                <li data-i18n-html="howto_modal.no_stack_redirected_to_a"><strong>No Stack</strong> — Redirected to a non-full territory as usual, but excess
                                     dice are lost instead of stacking.</li>
-                                <li><strong data-i18n="howto_modal.full">Full</strong> — Reinforcements are placed randomly across all territories.
+                                <li data-i18n-html="howto_modal.full_reinforcements_are_placed_randomly"><strong>Full</strong> — Reinforcements are placed randomly across all territories.
                                     If the chosen territory is full, that die is lost.</li>
-                                <li><strong data-i18n="howto_modal.reborn">Reborn</strong> — Like No Stack Hard, but if the chosen territory is full it
+                                <li data-i18n-html="howto_modal.reborn_like_no_stack_hard"><strong>Reborn</strong> — Like No Stack Hard, but if the chosen territory is full it
                                     resets to 1 die instead of the die being lost.</li>
                             </ul>
                         </li>
                         <li><strong data-i18n="howto_modal.attack_rules_2">Attack Rules</strong> — How ties are resolved when both sides roll the same total:
                             <ul class="howto-list">
-                                <li><strong data-i18n="howto_modal.classic_3">Classic</strong> — Attacker must roll strictly higher to win. Ties go to the
+                                <li data-i18n-html="howto_modal.classic_attacker_must_roll_strictly"><strong>Classic</strong> — Attacker must roll strictly higher to win. Ties go to the
                                     defender.</li>
-                                <li><strong data-i18n="howto_modal.easy_attack">Easy Attack</strong> — Attacker wins on a tie as well as a higher roll.</li>
-                                <li><strong data-i18n="howto_modal.tie_die">Tie Die</strong> — On a tie, both territories drop to 1 die and no territory
+                                <li data-i18n-html="howto_modal.easy_attack_attacker_wins_on"><strong>Easy Attack</strong> — Attacker wins on a tie as well as a higher roll.</li>
+                                <li data-i18n-html="howto_modal.tie_die_on_a_tie"><strong>Tie Die</strong> — On a tie, both territories drop to 1 die and no territory
                                     changes hands.</li>
                             </ul>
                         </li>
-                        <li><strong data-i18n="howto_modal.attacks">Attacks</strong> — Limits how many attacks a player can make per turn. Unlimited by
+                        <li data-i18n-html="howto_modal.attacks_limits_how_many_attacks"><strong>Attacks</strong> — Limits how many attacks a player can make per turn. Unlimited by
                             default.</li>
-                        <li><strong data-i18n="howto_modal.turn_time">Turn Time</strong> — Time limit in seconds for an entire turn. Unlimited by default.
+                        <li data-i18n-html="howto_modal.turn_time_time_limit_in"><strong>Turn Time</strong> — Time limit in seconds for an entire turn. Unlimited by default.
                         </li>
-                        <li><strong data-i18n="howto_modal.attack_time">Attack Time</strong> — Time limit in seconds for each individual attack. Unlimited
+                        <li data-i18n-html="howto_modal.attack_time_time_limit_in"><strong>Attack Time</strong> — Time limit in seconds for each individual attack. Unlimited
                             by default.</li>
-                        <li><strong data-i18n="howto_modal.max_dice_per_territory">Max Dice per Territory</strong> — The maximum number of dice that can stack on a
+                        <li data-i18n-html="howto_modal.max_dice_per_territory_the"><strong>Max Dice per Territory</strong> — The maximum number of dice that can stack on a
                             single tile.</li>
-                        <li><strong data-i18n="howto_modal.dice_sides_2">Dice Sides</strong> — Sides per die. Higher sides increase variance; D1 makes all
+                        <li data-i18n-html="howto_modal.dice_sides_sides_per_die"><strong>Dice Sides</strong> — Sides per die. Higher sides increase variance; D1 makes all
                             dice equal.</li>
-                        <li><strong data-i18n="howto_modal.map_style">Map Style</strong> — Shape of the generated map (Full, Balanced, Islands, etc.).
+                        <li data-i18n-html="howto_modal.map_style_shape_of_the"><strong>Map Style</strong> — Shape of the generated map (Full, Balanced, Islands, etc.).
                         </li>
-                        <li><strong data-i18n="howto_modal.game_mode">Game Mode</strong> — Variant rules for how the map is populated at game start.</li>
+                        <li data-i18n-html="howto_modal.game_mode_variant_rules_for"><strong>Game Mode</strong> — Variant rules for how the map is populated at game start.</li>
                     </ul>
                 </section>
 
@@ -884,9 +884,9 @@
                                 <button data-i18n="settings_modal.expert" type="button" class="segmented-option" data-value="expert">Expert</button>
                             </div>
                             <select id="game-speed" style="display:none">
-                                <option value="beginner">Beginner</option>
-                                <option value="normal">Normal</option>
-                                <option value="expert">Expert</option>
+                                <option data-i18n="opt.game_speed.beginner" value="beginner">Beginner</option>
+                                <option data-i18n="opt.game_speed.normal" value="normal">Normal</option>
+                                <option data-i18n="opt.game_speed.expert" value="expert">Expert</option>
                             </select>
                         </div>
                     </div>
@@ -935,23 +935,23 @@
                             <div class="control-group third">
                                 <label data-i18n="desktop_display_controls.display_mode">Display Mode</label>
                                 <select id="gfx-display-mode">
-                                    <option value="windowed">Windowed</option>
-                                    <option value="fullscreen" selected>Fullscreen</option>
+                                    <option data-i18n="opt.gfx_display_mode.windowed" value="windowed">Windowed</option>
+                                    <option data-i18n="opt.gfx_display_mode.fullscreen" value="fullscreen" selected>Fullscreen</option>
                                 </select>
                             </div>
                             <div class="control-group third">
                                 <label data-i18n="desktop_display_controls.monitor">Monitor</label>
                                 <select id="gfx-monitor">
-                                    <option value="">Loading...</option>
+                                    <option data-i18n="opt.gfx_monitor.loading" value="">Loading...</option>
                                 </select>
                             </div>
                             <div class="control-group third">
                                 <label data-i18n="desktop_display_controls.scale_down_res">Scale Down Res</label>
                                 <select id="gfx-resolution">
-                                    <option value="1.0" selected>1.0 (Native)</option>
-                                    <option value="0.75">0.75 (Performance)</option>
-                                    <option value="0.5">0.5 (Fast)</option>
-                                    <option value="0.25">0.25 (Potato)</option>
+                                    <option data-i18n="opt.gfx_resolution.1_0_native" value="1.0" selected>1.0 (Native)</option>
+                                    <option data-i18n="opt.gfx_resolution.0_75_performance" value="0.75">0.75 (Performance)</option>
+                                    <option data-i18n="opt.gfx_resolution.0_5_fast" value="0.5">0.5 (Fast)</option>
+                                    <option data-i18n="opt.gfx_resolution.0_25_potato" value="0.25">0.25 (Potato)</option>
                                 </select>
                             </div>
                         </div>
@@ -959,34 +959,34 @@
                             <div class="control-group third">
                                 <label data-i18n="howto_display_section.visual_effects">Visual Effects</label>
                                 <select id="effects-quality">
-                                    <option value="high">High</option>
-                                    <option value="medium" selected>Medium</option>
-                                    <option value="off">Off</option>
+                                    <option data-i18n="opt.effects_quality.high" value="high">High</option>
+                                    <option data-i18n="opt.effects_quality.medium" value="medium" selected>Medium</option>
+                                    <option data-i18n="opt.effects_quality.off" value="off">Off</option>
                                 </select>
                             </div>
                             <div class="control-group third">
                                 <label data-i18n="howto_display_section.anti_aliasing">Anti-Aliasing</label>
                                 <select id="gfx-antialias">
-                                    <option value="on">On (Smoother)</option>
-                                    <option value="off" selected>Off (Faster)</option>
+                                    <option data-i18n="opt.gfx_antialias.on_smoother" value="on">On (Smoother)</option>
+                                    <option data-i18n="opt.gfx_antialias.off_faster" value="off" selected>Off (Faster)</option>
                                 </select>
                             </div>
                             <div class="control-group third">
                                 <label data-i18n="howto_display_section.framerate_limit">Framerate Limit</label>
                                 <select id="gfx-framerate">
-                                    <option value="vsync" selected>VSync (Monitor)</option>
-                                    <option value="400">400 FPS</option>
-                                    <option value="120">120 FPS</option>
-                                    <option value="60">60 FPS</option>
-                                    <option value="30">30 FPS</option>
-                                    <option value="10">10 FPS</option>
+                                    <option data-i18n="opt.gfx_framerate.vsync_monitor" value="vsync" selected>VSync (Monitor)</option>
+                                    <option data-i18n="opt.gfx_framerate.400_fps" value="400">400 FPS</option>
+                                    <option data-i18n="opt.gfx_framerate.120_fps" value="120">120 FPS</option>
+                                    <option data-i18n="opt.gfx_framerate.60_fps" value="60">60 FPS</option>
+                                    <option data-i18n="opt.gfx_framerate.30_fps" value="30">30 FPS</option>
+                                    <option data-i18n="opt.gfx_framerate.10_fps" value="10">10 FPS</option>
                                 </select>
                             </div>
                             <div class="control-group third">
                                 <label data-i18n="howto_display_section.fps_counter">FPS Counter</label>
                                 <select id="gfx-fps">
-                                    <option value="off" selected>Off</option>
-                                    <option value="on">On</option>
+                                    <option data-i18n="opt.gfx_fps.off" value="off" selected>Off</option>
+                                    <option data-i18n="opt.gfx_fps.on" value="on">On</option>
                                 </select>
                             </div>
                         </div>
@@ -1217,11 +1217,9 @@
             <div class="editor-bottom-bar">
                 <!-- Assign / Dice tabs — only visible in Scenario mode -->
                 <div class="editor-mode-tabs" id="editor-scenario-tabs">
-                    <button class="editor-tab active" data-mode="assign"><span class="sprite-icon icon-assign"></span>
-                        Assign
-                        <span id="editor-assign-hint" class="input-hint keyboard">R</span></button>
+                    <button class="editor-tab active" data-mode="assign"><span class="sprite-icon icon-assign"></span> <span data-i18n="editor.tab_assign">Assign</span><span id="editor-assign-hint" class="input-hint keyboard">R</span></button>
                     <button class="editor-tab" data-mode="dice"><span class="dice-icon-sprite mini"
-                            style="background-color: #888;"></span> Dice <span id="editor-dice-hint"
+                            style="background-color: #888;"></span> <span data-i18n="editor.tab_dice">Dice</span> <span id="editor-dice-hint"
                             class="input-hint keyboard">F</span></button>
                 </div>
             </div>
@@ -1249,10 +1247,10 @@
                             <div class="control-group" id="editor-map-style-group">
                                 <label data-i18n="editor_map_style_group.map_style">Map Style</label>
                                 <select id="editor-map-style">
-                                    <option value="random" selected>Random</option>
-                                    <option value="full">Full Grid</option>
-                                    <option value="continents">Continents</option>
-                                    <option value="simple">Simple</option>
+                                    <option data-i18n="opt.editor_map_style.random" value="random" selected>Random</option>
+                                    <option data-i18n="opt.editor_map_style.full_grid" value="full">Full Grid</option>
+                                    <option data-i18n="opt.editor_map_style.continents" value="continents">Continents</option>
+                                    <option data-i18n="opt.editor_map_style.simple" value="simple">Simple</option>
                                 </select>
                             </div>
                         </div>
@@ -1274,9 +1272,9 @@
                             <div class="control-group half" id="editor-bot-ai-group">
                                 <label data-i18n="editor_bot_ai_group.bot_difficulty">Bot Difficulty</label>
                                 <select id="editor-shared-bot-ai">
-                                    <option value="easy" selected>Easy</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="hard">Hard</option>
+                                    <option data-i18n="opt.editor_shared_bot_ai.easy" value="easy" selected>Easy</option>
+                                    <option data-i18n="opt.editor_shared_bot_ai.medium" value="medium">Medium</option>
+                                    <option data-i18n="opt.editor_shared_bot_ai.hard" value="hard">Hard</option>
                                 </select>
                             </div>
                         </div>
@@ -1303,7 +1301,7 @@
                     <button data-i18n="editor_quick_actions.fill" id="editor-fill-btn" class="tron-btn small hidden">Fill</button>
                     <button id="editor-random-btn" class="tron-btn small hidden"><span
                             class="sprite-icon icon-dice"></span>
-                        Random</button>
+                        <span data-i18n="editor.random">Random</span></button>
                     <div class="editor-seed-row hidden">
                         <label data-i18n="editor_quick_actions.seed" class="editor-seed-label">Seed</label>
                         <input type="number" id="editor-seed-input" class="seed-input" min="0" max="4294967295" step="1"
@@ -1320,10 +1318,10 @@
                 <div class="editor-actions">
                     <div class="editor-actions-row">
                         <button id="editor-test-btn" class="tron-btn"><span class="sprite-icon icon-play"></span>
-                            Test</button>
+                            <span data-i18n="editor.test">Test</span></button>
                         <button id="editor-save-btn" class="tron-btn primary"><span
                                 class="sprite-icon icon-save"></span>
-                            Save</button>
+                            <span data-i18n="editor.save">Save</span></button>
                     </div>
                 </div>
                 <div id="editor-help-text" class="editor-help-text hidden">

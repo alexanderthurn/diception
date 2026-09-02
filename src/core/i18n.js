@@ -6,6 +6,7 @@
  *
  * Markup is annotated in index.html:
  *   <span data-i18n="menu.custom_game">Custom Game</span>
+ *   <li data-i18n-html="howto.combat"><strong>COMBAT:</strong> …</li>
  *   <input data-i18n-placeholder="setup.name_hint">
  *   <button data-i18n-aria-label="common.back">
  */
@@ -95,6 +96,11 @@ const ATTRIBUTE_BINDINGS = [
 export function applyTranslations(root = document) {
     root.querySelectorAll('[data-i18n]').forEach(el => {
         el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    // Sentences that carry inline markup, e.g. "<strong>COMBAT:</strong> Dice attack dice."
+    // The values come from our own locale files, never from user input.
+    root.querySelectorAll('[data-i18n-html]').forEach(el => {
+        el.innerHTML = t(el.getAttribute('data-i18n-html'));
     });
     for (const [dataAttr, target] of ATTRIBUTE_BINDINGS) {
         root.querySelectorAll(`[${dataAttr}]`).forEach(el => {
