@@ -1,12 +1,13 @@
 /**
  * Shared logic for Custom Game and Editor "Mods" panels (same field set, optional id prefix).
  */
+import { t } from '../core/i18n.js';
 
-const GAME_MODE_LABELS    = { easy: 'Easy Start', fair: 'Fair Start', madness: 'Madness', '2of2': '2of2' };
-const FULL_BOARD_LABELS   = { most_territories: 'Territories', biggest_territory: 'Largest Region', random_picker: 'Random Tile', raise_max_dice: 'Max Dice +4', autoplay_humans: 'Autoplay' };
-const ATTACK_RULE_LABELS  = { easy_attack: 'Easy Attack', all_die: 'Tie Die' };
-const SUPPLY_RULE_LABELS  = { no_stack: 'No Stack', no_stack_hard: 'Full', reborn: 'Reborn' };
-const PLAY_MODE_LABELS    = { parallel: 'Parallel', 'parallel-s': 'Parallel S' };
+const GAME_MODE_LABELS    = { easy: 'mods.mode_easy', fair: 'mods.mode_fair', madness: 'mods.mode_madness', '2of2': 'mods.mode_2of2' };
+const FULL_BOARD_LABELS   = { most_territories: 'mods.board_most_territories', biggest_territory: 'mods.board_biggest_territory', random_picker: 'mods.board_random_picker', raise_max_dice: 'mods.board_raise_max_dice', autoplay_humans: 'mods.board_autoplay_humans' };
+const ATTACK_RULE_LABELS  = { easy_attack: 'mods.attack_easy_attack', all_die: 'mods.attack_all_die' };
+const SUPPLY_RULE_LABELS  = { no_stack: 'mods.supply_no_stack', no_stack_hard: 'mods.supply_no_stack_hard', reborn: 'mods.supply_reborn' };
+const PLAY_MODE_LABELS    = { parallel: 'mods.play_parallel', 'parallel-s': 'mods.play_parallel_s' };
 
 /**
  * Single source of truth for all Custom Game defaults.
@@ -179,7 +180,7 @@ export function getActiveModsSummary(config) {
     }
 
     if (config.gameMode && config.gameMode !== d.gameMode)
-        parts.push(GAME_MODE_LABELS[config.gameMode] || config.gameMode);
+        parts.push(GAME_MODE_LABELS[config.gameMode] ? t(GAME_MODE_LABELS[config.gameMode]) : config.gameMode);
     if (config.maxDice != null && String(config.maxDice) !== d.maxDice)
         parts.push(`Max ${config.maxDice}`);
     if (config.diceSides != null && String(config.diceSides) !== d.diceSides)
@@ -192,15 +193,15 @@ export function getActiveModsSummary(config) {
         parts.push(`${config.secondsPerAttack}s/Atk`);
     const fbr = config.fullBoardRule || 'nothing';
     if (fbr !== d.fullBoardRule)
-        parts.push(FULL_BOARD_LABELS[fbr] || fbr);
+        parts.push(FULL_BOARD_LABELS[fbr] ? t(FULL_BOARD_LABELS[fbr]) : fbr);
     const ar = config.attackRule || 'classic';
     if (ar !== d.attackRule)
-        parts.push(ATTACK_RULE_LABELS[ar] || ar);
+        parts.push(ATTACK_RULE_LABELS[ar] ? t(ATTACK_RULE_LABELS[ar]) : ar);
     const sr = config.supplyRule || 'classic';
     if (sr !== d.supplyRule)
-        parts.push(SUPPLY_RULE_LABELS[sr] || sr);
+        parts.push(SUPPLY_RULE_LABELS[sr] ? t(SUPPLY_RULE_LABELS[sr]) : sr);
     if (config.playMode && config.playMode !== d.playMode)
-        parts.push(PLAY_MODE_LABELS[config.playMode] || config.playMode);
+        parts.push(PLAY_MODE_LABELS[config.playMode] ? t(PLAY_MODE_LABELS[config.playMode]) : config.playMode);
     if (config.seed != null && Number(config.seed) > 0)
         parts.push('Fixed Luck');
 

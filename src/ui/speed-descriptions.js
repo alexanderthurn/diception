@@ -3,23 +3,12 @@
  * Shared between game-events.js and scenario-browser.js.
  */
 
+import { t } from '../core/i18n.js';
+
 const SPEED_DESCRIPTIONS = {
-    beginner: [
-        'Full animations & dice rolls',
-        'Win chances & input hints shown',
-        'Slow bot turns',
-    ],
-    normal: [
-        'Faster animations',
-        'Win chances shown',
-        'Fast bot turns',
-    ],
-    expert: [
-        'No animations',
-        'No win chances',
-        'One-click attack shortcut',
-        'Instant bot turns',
-    ],
+    beginner: ['speed.beginner_1', 'speed.beginner_2', 'speed.beginner_3'],
+    normal:   ['speed.normal_1', 'speed.normal_2', 'speed.normal_3'],
+    expert:   ['speed.expert_1', 'speed.expert_2', 'speed.expert_3', 'speed.expert_4'],
 };
 
 /**
@@ -44,7 +33,7 @@ export function updateSpeedDescription(ul, speed) {
     ul.innerHTML = '';
     for (const text of items) {
         const li = document.createElement('li');
-        li.textContent = text;
+        li.textContent = t(text);
         ul.appendChild(li);
     }
 }
