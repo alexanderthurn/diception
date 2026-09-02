@@ -491,6 +491,12 @@ async function init() {
 
     const configManager = new ConfigManager();
     configManager.loadSavedSettings();
+    // Apply effects quality now (EffectsManager defaults to high before settings load)
+    {
+        const q = document.getElementById('effects-quality')?.value || localStorage.getItem('effectsQuality') || 'high';
+        effectsManager.setQuality(q);
+        renderer.setEffectsQuality(q);
+    }
 
     // Update gamepad status in menu
     inputManager.on('gamepadChange', (indices) => {
