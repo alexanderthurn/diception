@@ -3,6 +3,7 @@
  * Manages localStorage settings, map size presets, and config sliders
  */
 import { GAME } from '../core/constants.js';
+import { t } from '../core/i18n.js';
 import { isFullVersion, isAndroid } from '../scenarios/user-identity.js';
 import {
     normalizeAttackSecondsUi,
@@ -707,7 +708,7 @@ export class ConfigManager {
             this.customMapSource.level = level;
         }
         this.updateConfigFromLevel(level);
-        el.mapSourceBtn.textContent = label || 'Campaign Level';
+        el.mapSourceBtn.textContent = label || t('setup_map_source_group.campaign_level');
         el.mapSourceRow?.classList.remove('hidden');
         el.mapSizeGroup?.classList.add('hidden');
         el.mapStyleGroup?.classList.add('hidden');
