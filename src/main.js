@@ -996,7 +996,7 @@ async function init() {
             if (opts.tally && /^streak\d+$/.test(stat)) {
                 progressToastName.textContent = t('app.chain_logged');
                 progressToastFill.style.width = '100%';
-                progressToastLabel.textContent = `${newValue.toLocaleString()} lifetime`;
+                progressToastLabel.textContent = t('app.lifetime_total', { n: newValue.toLocaleString(getLanguage()) });
                 progressToast.classList.add('has-active-mods');
             } else {
                 const pending = ACHIEVEMENTS
@@ -1008,7 +1008,7 @@ async function init() {
                 const pct = Math.round((Math.min(newValue, pending.threshold) / pending.threshold) * 100);
                 progressToastName.textContent = achievementTitle(pending.id);
                 progressToastFill.style.width = pct + '%';
-                progressToastLabel.textContent = `${newValue.toLocaleString()} / ${pending.threshold.toLocaleString()}`;
+                progressToastLabel.textContent = `${newValue.toLocaleString(getLanguage())} / ${pending.threshold.toLocaleString(getLanguage())}`;
                 progressToast.classList.toggle('has-active-mods', true);
             }
 
@@ -1674,8 +1674,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         if (_achBtnProgress) _achBtnProgress.textContent = `${unlocked.length} / ${ACHIEVEMENTS.length}`;
 
         // Achievements modal stats
-        if (_achStatPlayed) _achStatPlayed.textContent = played.toLocaleString();
-        if (_achStatWon) _achStatWon.textContent = won.toLocaleString();
+        if (_achStatPlayed) _achStatPlayed.textContent = played.toLocaleString(getLanguage());
+        if (_achStatWon) _achStatWon.textContent = won.toLocaleString(getLanguage());
         if (_achStatWinrate) _achStatWinrate.textContent = played > 0 ? `${pct}%` : '—';
     };
     new MutationObserver(() => {

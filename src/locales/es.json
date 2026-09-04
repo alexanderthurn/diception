@@ -123,6 +123,7 @@
   "app.exit_confirm": "¿Seguro que quieres salir del juego?",
   "app.exit_title": "¿SALIR DEL JUEGO?",
   "app.gamepads": "MANDOS",
+  "app.lifetime_total": "{n} en total",
   "app.remote_guests": "Invitados remotos",
   "app.remove_controller": "Quitar el mando {n}",
   "app.reset": "REINICIAR",

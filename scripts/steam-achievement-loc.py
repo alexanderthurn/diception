@@ -34,6 +34,20 @@ game |= {f'ACH_STREAK_{c}_{t}' for c, t in ((3, 3000), (4, 1500), (5, 500), (6, 
 # here means a new language costs one line in STEAM_LANG and nothing else.
 SENTENCE_END = {'schinese': '。', 'tchinese': '。', 'japanese': '。'}
 
+# Thousands separator per language. Getting this wrong is quiet but wrong:
+# "3,000" reads as three in French and as a decimal in German.
+THOUSANDS = {
+    'german': '.', 'spanish': '.', 'italian': '.', 'portuguese': '.', 'brazilian': '.',
+    'danish': '.', 'dutch': '.', 'romanian': '.', 'turkish': '.', 'greek': '.',
+    'indonesian': '.', 'vietnamese': '.',
+    'french': '\u202f', 'russian': '\u202f', 'polish': '\u202f', 'czech': '\u202f',
+    'swedish': '\u202f', 'norwegian': '\u202f', 'finnish': '\u202f', 'hungarian': '\u202f',
+    'bulgarian': '\u202f', 'ukrainian': '\u202f', 'latam': ',',
+}
+
+def num(lang, n):
+    return f'{n:,}'.replace(',', THOUSANDS.get(STEAM_LANG[lang], ','))
+
 def t(lang, key, **vars):
     v = loc[lang][key]
     for name, val in vars.items():
@@ -63,7 +77,7 @@ def desc(lang, aid):
         name = t(lang, f'campaign.name_chapter{CH[aid]}')
         return sentence(lang, t(lang, 'ach.desc.campaign', name=name))
     if aid in GAMES:
-        return sentence(lang, t(lang, 'ach.desc.games_played', count=f'{GAMES[aid]:,}'))
+        return sentence(lang, t(lang, 'ach.desc.games_played', count=num(lang, GAMES[aid])))
     if aid == 'ACH_FIRST_WIN':
         return sentence(lang, t(lang, 'ach.desc.games_won', count='100'))
     if aid in UNDER:
@@ -78,7 +92,7 @@ def desc(lang, aid):
         return sentence(lang, t(lang, 'ach.desc.won8player'))
     if aid in STREAK:
         chain, count = STREAK[aid]
-        return sentence(lang, t(lang, 'ach.desc.streak', n=chain, count=f'{count:,}'))
+        return sentence(lang, t(lang, 'ach.desc.streak', n=chain, count=num(lang, count)))
     raise KeyError(aid)
 
 # Steam carries Chapter 5-8 placeholders the game does not define yet.

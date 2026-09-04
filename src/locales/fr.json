@@ -123,6 +123,7 @@
   "app.exit_confirm": "Voulez-vous vraiment quitter le jeu ?",
   "app.exit_title": "QUITTER LE JEU ?",
   "app.gamepads": "MANETTES",
+  "app.lifetime_total": "{n} au total",
   "app.remote_guests": "Invités à distance",
   "app.remove_controller": "Retirer la manette {n}",
   "app.reset": "RÉINITIALISER",

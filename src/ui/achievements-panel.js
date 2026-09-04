@@ -7,7 +7,7 @@
 import { ACHIEVEMENTS } from '../core/achievements.js';
 import { unlockAchievement, removeAchievement } from '../core/achievement-manager.js';
 import { registerCheatContext } from '../cheat.js';
-import { t } from '../core/i18n.js';
+import { t, getLanguage } from '../core/i18n.js';
 
 const DIFFS = ['easy', 'medium', 'hard'];
 const SIZES = [
@@ -43,7 +43,7 @@ function getDescription(ach) {
         return t('ach.desc.campaign', { name: t(`campaign.name_${ach.campaign}`) });
     }
     if (ach.type === 'stat') {
-        const count = ach.threshold.toLocaleString();
+        const count = ach.threshold.toLocaleString(getLanguage());
         if (ach.stat === 'gamesPlayed')  return t('ach.desc.games_played', { count });
         if (ach.stat === 'gamesWon')     return t('ach.desc.games_won', { count });
         if (ach.stat === 'underdogWins') return t('ach.desc.underdog', { count });
@@ -133,8 +133,8 @@ export class AchievementsPanel {
         const statPlayed   = this._modal?.querySelector('#ach-stat-played');
         const statWon      = this._modal?.querySelector('#ach-stat-won');
         const statWinrate  = this._modal?.querySelector('#ach-stat-winrate');
-        if (statPlayed)  statPlayed.textContent  = played.toLocaleString();
-        if (statWon)     statWon.textContent      = won.toLocaleString();
+        if (statPlayed)  statPlayed.textContent  = played.toLocaleString(getLanguage());
+        if (statWon)     statWon.textContent      = won.toLocaleString(getLanguage());
         if (statWinrate) statWinrate.textContent  = played > 0 ? `${pct}%` : '—';
 
         if (this._bucketStats && this._highscoreManager) {
@@ -192,7 +192,7 @@ export class AchievementsPanel {
                                 <div class="ach-progress-fill" style="width:${pct}%"></div>
                             </div>
                             <div class="ach-progress-label">
-                                ${(stats[ach.stat]||0).toLocaleString()} / ${ach.threshold.toLocaleString()}
+                                ${(stats[ach.stat]||0).toLocaleString(getLanguage())} / ${ach.threshold.toLocaleString(getLanguage())}
                             </div>
                         </div>`;
                 }

@@ -123,6 +123,7 @@
   "app.exit_confirm": "Möchtest du das Spiel wirklich beenden?",
   "app.exit_title": "SPIEL BEENDEN?",
   "app.gamepads": "GAMEPADS",
+  "app.lifetime_total": "{n} insgesamt",
   "app.remote_guests": "Remote-Gäste",
   "app.remove_controller": "Controller {n} entfernen",
   "app.reset": "ZURÜCKSETZEN",

@@ -123,6 +123,7 @@
   "app.exit_confirm": "确定要退出游戏吗？",
   "app.exit_title": "退出游戏？",
   "app.gamepads": "手柄",
+  "app.lifetime_total": "累计 {n}",
   "app.remote_guests": "远程玩家",
   "app.remove_controller": "移除手柄 {n}",
   "app.reset": "重置",
