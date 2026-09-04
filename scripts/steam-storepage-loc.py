@@ -138,7 +138,11 @@ for lang, i in idx.items():
     if len(block[SHORT]) > SHORT_MAX:
         sys.exit(f'{lang} short_description is {len(block[SHORT])} chars, over {SHORT_MAX}')
 
-json.dump(data, open(VDF, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
+# Match Steam's own export format so a re-download diffs cleanly: compact
+# separators, raw UTF-8, and forward slashes escaped the way PHP's json_encode
+# writes them. Both forms parse identically; this just keeps the round trip flat.
+text = json.dumps(data, ensure_ascii=False, separators=(',', ':')).replace('/', '\\/')
+open(VDF, 'w', encoding='utf-8').write(text)
 for lang in ('english',) + tuple(idx):
     b = data['languages'][lang]
     print(f'{lang:8} about {len(b[ABOUT]):5} chars | short {len(b[SHORT]):3}/{SHORT_MAX}')
