@@ -44,6 +44,7 @@ STEAM_LANG = {
     'ms': 'malay',
     'vi': 'vietnamese',
     'zh-tw': 'tchinese',
+    'es-419': 'latam',
 }
 
 loc = {c: json.load(open(f'src/locales/{c}.json', encoding='utf-8')) for c in STEAM_LANG}

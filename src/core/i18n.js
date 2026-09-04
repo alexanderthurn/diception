@@ -44,6 +44,7 @@ export const LANGUAGE_NAMES = {
     'ms': 'Bahasa Melayu',
     'vi': 'Tiếng Việt',
     'zh-tw': '繁體中文',
+    'es-419': 'Español (LatAm)',
 };
 const FALLBACK = 'en';
 
@@ -76,6 +77,7 @@ const LOCALES = {
     'ms': () => import('../locales/ms.json').then(m => m.default),
     'vi': () => import('../locales/vi.json').then(m => m.default),
     'zh-tw': () => import('../locales/zh-tw.json').then(m => m.default),
+    'es-419': () => import('../locales/es-419.json').then(m => m.default),
 };
 
 let _strings = en;
@@ -91,9 +93,15 @@ export function getAvailableLanguages() {
 }
 
 /**
- * Resolve the language: an explicit user choice wins, otherwise the device language,
- * otherwise English. Only the primary subtag is used ('de-AT' -> 'de').
+ * Resolve the language: an explicit user choice wins, otherwise the device
+ * language, otherwise English. The full tag is tried first ('pt-BR' -> pt-br),
+ * then the region rules below, then the primary subtag ('de-AT' -> 'de').
  */
+// Latin America is dozens of region tags (es-MX, es-AR, es-CO…) and none of
+// them match a locale file, so the base language would hand them Spain's
+// Spanish. Map every Spanish region except Spain itself to es-419.
+const REGIONAL = { es: (region) => (region && region !== 'es' ? 'es-419' : 'es') };
+
 function detectLanguage() {
     const stored = localStorage.getItem(LANGUAGE_KEY);
     if (stored && LOCALES[stored]) return stored;
@@ -102,7 +110,9 @@ function detectLanguage() {
     // Simplified. Falls back to the base language when we ship only one.
     const tag = (navigator.language || FALLBACK).toLowerCase();
     if (LOCALES[tag]) return tag;
-    const base = tag.split('-')[0];
+    const [base, region] = tag.split('-');
+    const regional = REGIONAL[base] && REGIONAL[base](region);
+    if (regional && LOCALES[regional]) return regional;
     return LOCALES[base] ? base : FALLBACK;
 }
 
