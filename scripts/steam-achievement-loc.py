@@ -39,6 +39,7 @@ STEAM_LANG = {
     'el': 'greek',
     'uk': 'ukrainian',
     'bg': 'bulgarian',
+    'ro': 'romanian',
 }
 
 loc = {c: json.load(open(f'src/locales/{c}.json', encoding='utf-8')) for c in STEAM_LANG}
