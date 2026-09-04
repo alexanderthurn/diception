@@ -12,3 +12,6 @@ src-tauri/resources/libsteam_api.so
 src-tauri/resources/libsteam_api.dylib
 .npm-temp-cache
 steam_appid.txt
+
+# Downloaded font source for scripts/build-cjk-font.py (17 MB, re-fetched on demand)
+scripts/.cache/

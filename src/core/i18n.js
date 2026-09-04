@@ -20,6 +20,7 @@ export const LANGUAGE_NAMES = {
     en: 'English',
     de: 'Deutsch',
     es: 'Español',
+    zh: '中文',
 };
 const FALLBACK = 'en';
 
@@ -28,6 +29,7 @@ const LOCALES = {
     en: () => Promise.resolve(en),
     de: () => import('../locales/de.json').then(m => m.default),
     es: () => import('../locales/es.json').then(m => m.default),
+    zh: () => import('../locales/zh.json').then(m => m.default),
 };
 
 let _strings = en;
