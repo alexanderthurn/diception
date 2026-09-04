@@ -34,6 +34,7 @@ export const LANGUAGE_NAMES = {
     'sv': 'Svenska',
     'da': 'Dansk',
     'nb': 'Norsk bokmål',
+    'fi': 'Suomi',
 };
 const FALLBACK = 'en';
 
@@ -56,6 +57,7 @@ const LOCALES = {
     'sv': () => import('../locales/sv.json').then(m => m.default),
     'da': () => import('../locales/da.json').then(m => m.default),
     'nb': () => import('../locales/nb.json').then(m => m.default),
+    'fi': () => import('../locales/fi.json').then(m => m.default),
 };
 
 let _strings = en;
