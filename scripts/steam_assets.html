@@ -2822,7 +2822,12 @@ void main(void) {
         // references, so uploading it replaces the current English images with a
         // fresh glitch roll. "Mods" is spelled the same in every language so far
         // but is still exported per language, so each locale is a complete set.
+        // Locale code -> Steam's own language name. The asset upload form detects
+        // the language from the filename suffix, and it matches on these names,
+        // not on ISO codes: "_schinese", not "_zh". English keeps no suffix — it
+        // is the base asset the localized ones override.
         const TITLE_LANGUAGES = ['en', 'de', 'es', 'zh'];
+        const STEAM_LANG = { en: '', de: '_german', es: '_spanish', zh: '_schinese' };
 
         const TITLE_SECTIONS = [
             { section: 'grid_control',      color: '#FFFFFF',
@@ -2926,11 +2931,7 @@ void main(void) {
                     setBorderColor(sec.color);
                     renderGifFrameTitle();
 
-                    // English keeps the unsuffixed name the store page already
-                    // references, so those files drop straight in as replacements.
-                    const file = lang === 'en'
-                        ? `${sec.section}_title.png`
-                        : `${sec.section}_title_${lang}.png`;
+                    const file = `${sec.section}_title${STEAM_LANG[lang]}.png`;
                     const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
                     zip.file(file, blob);
 
