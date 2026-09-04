@@ -417,7 +417,7 @@
         <div class="gif-frame-actions">
             <button class="gif-frame-download-btn" onclick="downloadGifFrame()">⬇ Download PNG</button>
             <button class="gif-frame-download-btn" onclick="downloadGifFrameTitle()" style="margin-left: 10px; background: #2a475e;">⬇ Download Title</button>
-            <button class="gif-frame-download-btn" onclick="downloadLocalizedTitles()" style="margin-left: 10px; background: #2a475e;">⬇ Download DE + ES Titles</button>
+            <button class="gif-frame-download-btn localized-titles-btn" onclick="downloadLocalizedTitles()" style="margin-left: 10px; background: #2a475e;">⬇ Download Titles in all languages</button>
         </div>
 
         <div class="gif-frame-preview-stack" id="gif-frame-preview-stack" style="position:relative;display:inline-block; vertical-align:top;">
@@ -2796,22 +2796,32 @@ void main(void) {
         }
 
         // ── Localized store-page section titles ────────────────────────────────
-        // The store page's section header images are generated here. German and
-        // Spanish need their own copies; these render through the same
+        // The store page's section header images are generated here. Each
+        // translated language needs its own copy; these render through the same
         // renderGifFrameTitle() the English set was made with.
+        //
+        // Adding a language: add its code to TITLE_LANGUAGES and a string to
+        // every section's `text` map. Nothing else needs to change.
         //
         // Colour is fixed per section so a section keeps its identity across
         // languages. Glitch density, intensity and seed are re-rolled on every
-        // export, so clicking again gives a fresh variation to pick from — the
-        // values used are listed afterwards so a good one can be reproduced.
+        // export, so running it again offers a different set to choose from —
+        // the values used are written into the zip so a good roll can be redone.
         //
-        // "Mods" is spelled the same in all three languages and reuses the
-        // existing English mods_title, so it is not listed here.
+        // English is deliberately not regenerated: those images already exist
+        // and a fresh glitch roll would replace them. "Mods" is spelled the same
+        // in every language so far and reuses the English mods_title.
+        const TITLE_LANGUAGES = ['de', 'es'];
+
         const TITLE_SECTIONS = [
-            { section: 'grid_control',      color: '#FF0055', de: 'Rastersteuerung',    es: 'Control de rejilla' },
-            { section: 'local_multiplayer', color: '#FF0055', de: 'Lokaler Mehrspieler', es: 'Multijugador local' },
-            { section: 'speed',             color: '#FFCC00', de: 'Tempo',              es: 'Velocidad' },
-            { section: 'campaign',          color: '#00FFFF', de: 'Kampagne',           es: 'Campaña' },
+            { section: 'grid_control',      color: '#FF0055',
+              text: { de: 'Rastersteuerung',     es: 'Control de rejilla' } },
+            { section: 'local_multiplayer', color: '#FF0055',
+              text: { de: 'Lokaler Mehrspieler', es: 'Multijugador local' } },
+            { section: 'speed',             color: '#FFCC00',
+              text: { de: 'Tempo',               es: 'Velocidad' } },
+            { section: 'campaign',          color: '#00FFFF',
+              text: { de: 'Kampagne',            es: 'Campaña' } },
         ];
 
         const GLITCH_DENSITY_RANGE   = [5, 40];
@@ -2855,6 +2865,10 @@ void main(void) {
         }
 
         async function downloadLocalizedTitles() {
+            const btn = document.querySelector('.localized-titles-btn');
+            const label = btn ? btn.textContent : null;
+            if (btn) { btn.textContent = '⏳ Zipping...'; btn.disabled = true; }
+
             const titleInput = document.getElementById('gif-frame-title-input');
             const fsInput = document.getElementById('gif-frame-title-fs-input');
             const canvas = document.getElementById('gif-frame-title-canvas');
@@ -2876,10 +2890,16 @@ void main(void) {
             // word crowd the glitch lines.
             const budget = w - 208;
 
+            const zip = new JSZip();
+            const root = zip.folder('store_page_titles');
             const log = [];
-            for (const sec of TITLE_SECTIONS) {
-                for (const lang of ['de', 'es']) {
-                    const text = sec[lang];
+
+            for (const lang of TITLE_LANGUAGES) {
+                const folder = root.folder(lang);
+                for (const sec of TITLE_SECTIONS) {
+                    const text = sec.text[lang];
+                    if (!text) { log.push(`SKIPPED ${sec.section} (${lang}): no text`); continue; }
+
                     const density = randInt(...GLITCH_DENSITY_RANGE);
                     const intensity = rand1dp(...GLITCH_INTENSITY_RANGE);
                     const seed = randInt(...GLITCH_SEED_RANGE);
@@ -2894,21 +2914,32 @@ void main(void) {
                     setControlPair('gif-frame-glitch-seed', seed);
                     setBorderColor(sec.color);
                     renderGifFrameTitle();
-                    await new Promise(r => setTimeout(r, 60));
 
-                    const file = `${sec.section}_title_${lang}`;
-                    const a = document.createElement('a');
-                    a.download = file + '.png';
-                    a.href = canvas.toDataURL('image/png');
-                    a.click();
+                    const file = `${sec.section}_title_${lang}.png`;
+                    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+                    folder.file(file, blob);
 
-                    log.push(`${file}.png  ${sec.color}  ${fs}px`
-                        + `${fs !== orig.fs ? ' (shrunk)' : ''}`
+                    log.push(`${lang}/${file}`
+                        + `  text "${text}"  colour ${sec.color}  ${fs}px${fs !== orig.fs ? ' (shrunk to fit)' : ''}`
                         + `  density ${density}  intensity ${intensity}  seed ${seed}`);
-                    await new Promise(r => setTimeout(r, 350));
                 }
             }
 
+            root.file('titles.txt',
+                'DICEPTION store page section titles\n'
+                + 'Generated ' + new Date().toISOString() + '\n'
+                + 'Glitch density/intensity/seed are re-rolled on every export;\n'
+                + 'the values below reproduce these exact images by hand.\n\n'
+                + log.join('\n') + '\n');
+
+            const content = await zip.generateAsync({ type: 'blob' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = 'diception_store_page_titles.zip';
+            link.click();
+            URL.revokeObjectURL(link.href);
+
+            // Put the panel back exactly as it was.
             titleInput.value = orig.text;
             setControlPair('gif-frame-title-fs', orig.fs);
             setControlPair('gif-frame-glitch-density', orig.density);
@@ -2918,9 +2949,8 @@ void main(void) {
             else if (orig.picker) setBorderColor(orig.picker);
             renderGifFrameTitle();
 
-            console.log('Localized titles exported:\n' + log.join('\n'));
-            alert('Exported ' + log.length + ' localized titles:\n\n' + log.join('\n')
-                + '\n\nGlitch values are random each run - click again for a different set.');
+            if (btn) { btn.textContent = label; btn.disabled = false; }
+            console.log('Store page titles exported:\n' + log.join('\n'));
         }
 
         function downloadGifFrameTitle() {
