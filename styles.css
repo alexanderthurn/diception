@@ -56,6 +56,16 @@
         U+0500-052F, U+1E00-1EFF, U+2010-2027, U+2116;
 }
 
+/* Korean. Usage-based like the CJK subset above. */
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/assets/fonts/NotoSansKR-subset.woff2') format('woff2-variations');
+    unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3;
+}
+
 /* Chinese and Japanese. Cut to the characters those locales use, so this one
    does need rebuilding when their text changes. */
 @font-face {
