@@ -41,6 +41,7 @@ export const LANGUAGE_NAMES = {
     'bg': 'Български',
     'ro': 'Română',
     'id': 'Bahasa Indonesia',
+    'ms': 'Bahasa Melayu',
 };
 const FALLBACK = 'en';
 
@@ -70,6 +71,7 @@ const LOCALES = {
     'bg': () => import('../locales/bg.json').then(m => m.default),
     'ro': () => import('../locales/ro.json').then(m => m.default),
     'id': () => import('../locales/id.json').then(m => m.default),
+    'ms': () => import('../locales/ms.json').then(m => m.default),
 };
 
 let _strings = en;

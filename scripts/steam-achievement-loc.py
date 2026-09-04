@@ -41,6 +41,7 @@ STEAM_LANG = {
     'bg': 'bulgarian',
     'ro': 'romanian',
     'id': 'indonesian',
+    'ms': 'malay',
 }
 
 loc = {c: json.load(open(f'src/locales/{c}.json', encoding='utf-8')) for c in STEAM_LANG}
