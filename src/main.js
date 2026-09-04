@@ -215,7 +215,11 @@ async function init() {
         }
     }
 
-    // Credits line: "Hi, name" on Steam, countdown/label on Android, "by Alexander Thurn" or "Demo Version" elsewhere
+    // Credits line: "Hi, name" on Steam, countdown/label on Android, the byline
+    // or "Demo Version" elsewhere. The name is not translated, the wording
+    // around it is — Chinese needs "作者：X" rather than a bare preposition.
+    const AUTHOR = 'Alexander Thurn';
+    const bylineLabel = () => t('app.credits_by', { name: AUTHOR });
     const demoLabel = () => (isAndroid() ? '' : t('app.demo_version'));
     let _creditsCountdownInterval = null;
     let _creditsClickCount = 0;
@@ -243,7 +247,7 @@ async function init() {
                 const totalSec = Math.ceil(ms / 1000);
                 const m = Math.floor(totalSec / 60);
                 const s = totalSec % 60;
-                const label = `${m}:${String(s).padStart(2, '0')} LEFT`;
+                const label = t('app.time_left', { time: `${m}:${String(s).padStart(2, '0')}` });
                 if (el) { el.textContent = label; el.classList.remove('demo-version-label'); }
             };
             update();
@@ -267,11 +271,11 @@ async function init() {
         }
 
         const full = isFullVersion();
-        const versionLabel = full ? 'by Alexander Thurn' : demoLabel();
+        const versionLabel = full ? bylineLabel() : demoLabel();
         if (el) { el.textContent = versionLabel; el.classList.toggle('demo-version-label', !full); }
         if (loadingCredits) {
-            if (!full) { loadingCredits.textContent = demoLabel(); loadingCredits.classList.add('demo-version-label'); }
-            else { loadingCredits.classList.remove('demo-version-label'); }
+            loadingCredits.textContent = full ? bylineLabel() : demoLabel();
+            loadingCredits.classList.toggle('demo-version-label', !full);
         }
     }
 
@@ -279,6 +283,8 @@ async function init() {
         window.steam.getUserName().then(name => {
             console.log('Steam User:', name);
             const el = document.getElementById('main-menu-credits');
+            const steamLoadingCredits = document.querySelector('#loading-screen .credits');
+            if (steamLoadingCredits) steamLoadingCredits.textContent = bylineLabel();
             if (isFullVersion()) {
                 if (el) el.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">${t('app.steam_hi', { name })}</span>`;
             } else {
