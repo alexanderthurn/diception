@@ -24,6 +24,7 @@ STEAM_LANG = {
     'fr': 'french',
     'ru': 'russian',
     'pt-br': 'brazilian',
+    'ja': 'japanese',
 }
 
 loc = {c: json.load(open(f'src/locales/{c}.json', encoding='utf-8')) for c in STEAM_LANG}
