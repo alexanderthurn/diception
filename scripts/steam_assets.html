@@ -2796,21 +2796,51 @@ void main(void) {
         }
 
         // ── Localized store-page section titles ────────────────────────────────
-        // The store page's [h2] section images are generated here. German and
-        // Spanish need their own copies; this renders them with the settings
-        // currently in the panel, so they match the English set exactly.
+        // The store page's section header images are generated here. German and
+        // Spanish need their own copies; these render through the same
+        // renderGifFrameTitle() the English set was made with.
+        //
+        // Colour is fixed per section so a section keeps its identity across
+        // languages. Glitch density, intensity and seed are re-rolled on every
+        // export, so clicking again gives a fresh variation to pick from — the
+        // values used are listed afterwards so a good one can be reproduced.
+        //
         // "Mods" is spelled the same in all three languages and reuses the
-        // English mods_title, so it is not listed.
-        const LOCALIZED_TITLES = [
-            { file: 'grid_control_title_de',      text: 'Rastersteuerung' },
-            { file: 'local_multiplayer_title_de', text: 'Lokaler Mehrspieler' },
-            { file: 'speed_title_de',             text: 'Tempo' },
-            { file: 'campaign_title_de',          text: 'Kampagne' },
-            { file: 'grid_control_title_es',      text: 'Control de rejilla' },
-            { file: 'local_multiplayer_title_es', text: 'Multijugador local' },
-            { file: 'speed_title_es',             text: 'Velocidad' },
-            { file: 'campaign_title_es',          text: 'Campaña' },
+        // existing English mods_title, so it is not listed here.
+        const TITLE_SECTIONS = [
+            { section: 'grid_control',      color: '#FF0055', de: 'Rastersteuerung',    es: 'Control de rejilla' },
+            { section: 'local_multiplayer', color: '#FF0055', de: 'Lokaler Mehrspieler', es: 'Multijugador local' },
+            { section: 'speed',             color: '#FFCC00', de: 'Tempo',              es: 'Velocidad' },
+            { section: 'campaign',          color: '#00FFFF', de: 'Kampagne',           es: 'Campaña' },
         ];
+
+        const GLITCH_DENSITY_RANGE   = [5, 40];
+        const GLITCH_INTENSITY_RANGE = [0, 5];
+        const GLITCH_SEED_RANGE      = [1, 9999];
+
+        const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+        const rand1dp = (lo, hi) => Math.round((lo + Math.random() * (hi - lo)) * 10) / 10;
+
+        /** Set a slider/number input pair that the renderer reads. */
+        function setControlPair(base, value) {
+            const inp = document.getElementById(base + '-input');
+            const sld = document.getElementById(base + '-slider');
+            if (inp) inp.value = value;
+            if (sld) sld.value = value;
+        }
+
+        /** Activate the matching border swatch, or fall back to the custom picker. */
+        function setBorderColor(hex) {
+            let matched = false;
+            document.querySelectorAll('#gif-frame-border-swatches .color-swatch').forEach(sw => {
+                const on = sw.dataset.color.toUpperCase() === hex.toUpperCase();
+                sw.classList.toggle('active', on);
+                if (on) matched = true;
+            });
+            const picker = document.getElementById('gif-frame-border-color-picker');
+            if (picker) picker.value = hex;
+            return matched;
+        }
 
         /** Width the drawn text would occupy at a given font size. */
         function measureTitleWidth(ctx, text, fontSize) {
@@ -2827,41 +2857,70 @@ void main(void) {
         async function downloadLocalizedTitles() {
             const titleInput = document.getElementById('gif-frame-title-input');
             const fsInput = document.getElementById('gif-frame-title-fs-input');
-            const fsSlider = document.getElementById('gif-frame-title-fs-slider');
             const canvas = document.getElementById('gif-frame-title-canvas');
             const ctx = canvas.getContext('2d');
 
-            const origText = titleInput.value;
-            const origFs = parseInt(fsInput.value) || 36;
+            // Remember everything this routine overwrites.
+            const orig = {
+                text: titleInput.value,
+                fs: parseInt(fsInput.value) || 36,
+                density: document.getElementById('gif-frame-glitch-density-input').value,
+                intensity: document.getElementById('gif-frame-glitch-intensity-input').value,
+                seed: document.getElementById('gif-frame-glitch-seed-input').value,
+                swatch: document.querySelector('#gif-frame-border-swatches .color-swatch.active')?.dataset.color,
+                picker: document.getElementById('gif-frame-border-color-picker')?.value,
+            };
+
             const w = parseInt(document.getElementById('gif-frame-w-input').value) || 600;
-            // Leave room for a wing of at least ~60px on each side, matching the
-            // English titles rather than letting long words crowd the glitch lines.
+            // Leave a wing of at least ~60px each side rather than letting a long
+            // word crowd the glitch lines.
             const budget = w - 208;
 
             const log = [];
-            for (const entry of LOCALIZED_TITLES) {
-                let fs = origFs;
-                while (fs > 12 && measureTitleWidth(ctx, entry.text, fs) > budget) fs--;
-                titleInput.value = entry.text;
-                fsInput.value = fs;
-                if (fsSlider) fsSlider.value = fs;
-                renderGifFrameTitle();
-                await new Promise(r => setTimeout(r, 60));
+            for (const sec of TITLE_SECTIONS) {
+                for (const lang of ['de', 'es']) {
+                    const text = sec[lang];
+                    const density = randInt(...GLITCH_DENSITY_RANGE);
+                    const intensity = rand1dp(...GLITCH_INTENSITY_RANGE);
+                    const seed = randInt(...GLITCH_SEED_RANGE);
 
-                const a = document.createElement('a');
-                a.download = entry.file + '.png';
-                a.href = canvas.toDataURL('image/png');
-                a.click();
-                log.push(`${entry.file}.png  ${fs}px${fs !== origFs ? ` (shrunk from ${origFs} to fit)` : ''}`);
-                await new Promise(r => setTimeout(r, 350));
+                    let fs = orig.fs;
+                    while (fs > 12 && measureTitleWidth(ctx, text, fs) > budget) fs--;
+
+                    titleInput.value = text;
+                    setControlPair('gif-frame-title-fs', fs);
+                    setControlPair('gif-frame-glitch-density', density);
+                    setControlPair('gif-frame-glitch-intensity', intensity);
+                    setControlPair('gif-frame-glitch-seed', seed);
+                    setBorderColor(sec.color);
+                    renderGifFrameTitle();
+                    await new Promise(r => setTimeout(r, 60));
+
+                    const file = `${sec.section}_title_${lang}`;
+                    const a = document.createElement('a');
+                    a.download = file + '.png';
+                    a.href = canvas.toDataURL('image/png');
+                    a.click();
+
+                    log.push(`${file}.png  ${sec.color}  ${fs}px`
+                        + `${fs !== orig.fs ? ' (shrunk)' : ''}`
+                        + `  density ${density}  intensity ${intensity}  seed ${seed}`);
+                    await new Promise(r => setTimeout(r, 350));
+                }
             }
 
-            titleInput.value = origText;
-            fsInput.value = origFs;
-            if (fsSlider) fsSlider.value = origFs;
+            titleInput.value = orig.text;
+            setControlPair('gif-frame-title-fs', orig.fs);
+            setControlPair('gif-frame-glitch-density', orig.density);
+            setControlPair('gif-frame-glitch-intensity', orig.intensity);
+            setControlPair('gif-frame-glitch-seed', orig.seed);
+            if (orig.swatch) setBorderColor(orig.swatch);
+            else if (orig.picker) setBorderColor(orig.picker);
             renderGifFrameTitle();
+
             console.log('Localized titles exported:\n' + log.join('\n'));
-            alert('Exported ' + LOCALIZED_TITLES.length + ' localized titles:\n\n' + log.join('\n'));
+            alert('Exported ' + log.length + ' localized titles:\n\n' + log.join('\n')
+                + '\n\nGlitch values are random each run - click again for a different set.');
         }
 
         function downloadGifFrameTitle() {
