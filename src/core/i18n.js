@@ -30,6 +30,7 @@ export const LANGUAGE_NAMES = {
     'tr': 'Türkçe',
     'ko': '한국어',
     'nl': 'Nederlands',
+    'cs': 'Čeština',
 };
 const FALLBACK = 'en';
 
@@ -48,6 +49,7 @@ const LOCALES = {
     'tr': () => import('../locales/tr.json').then(m => m.default),
     'ko': () => import('../locales/ko.json').then(m => m.default),
     'nl': () => import('../locales/nl.json').then(m => m.default),
+    'cs': () => import('../locales/cs.json').then(m => m.default),
 };
 
 let _strings = en;
