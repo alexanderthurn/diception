@@ -4,6 +4,11 @@ Only the prose is replaced; BBCode tags, {STEAM_APP_IMAGE} references and the
 &quot;/&amp; entity encoding are carried over from the English source untouched,
 so the localized pages keep exactly the same layout as the English one.
 
+The section title images stay on their English names on purpose: they are
+uploaded in Steamworks as localized versions of the same asset, so Steam
+serves the right language itself and falls back to English where a language
+has none.
+
 Run from the repo root, then upload the JSON in Steamworks under
 Store Presence -> Localization.
 """
@@ -95,20 +100,6 @@ ABOUT_PARTS = [
   "[b]Funciones exclusivas de Steam:[/b] guardado en la nube, logros y Remote Play Together."),
 ]
 
-# The five extras/*_title graphics carry the section name as artwork. Each
-# language has its own copy, exported from scripts/steam_assets.html via
-# "Download Titles in all languages". English keeps the unsuffixed name; the
-# other locales get a "_<lang>" suffix, so only the src changes per language.
-TITLE_IMAGES = [
-    'grid_control_title',
-    'local_multiplayer_title',
-    'speed_title',
-    'mods_title',
-    'campaign_title',
-]
-
-LANG_SUFFIX = {'german': '_de', 'spanish': '_es'}
-
 SHORT_TEXT = {
  'german': "Schluss mit isometrischen Karten und langsamen Animationen. Diception ist ein blitzschnelles rundenbasiertes Eroberungsspiel auf einem klaren 2D-Raster. Leicht zu lernen, schwer zu meistern. Maus, Tastatur und Gamepad, Mods, lokaler Mehrspieler für 8 und Remote Play. Go!",
  'spanish': "Olvídate de los mapas isométricos y las animaciones lentas. Diception es un juego de conquista por turnos ultrarrápido sobre una rejilla 2D limpia. Fácil de aprender, difícil de dominar. Ratón, teclado y mando, mods, multijugador local para 8 y Remote Play. ¡Vamos!",
@@ -144,12 +135,6 @@ for lang, i in idx.items():
         if src not in about:
             sys.exit(f'fragment not found in english about ({lang}): {src[:60]!r}')
         about = about.replace(src, parts[i], 1)
-    for img in TITLE_IMAGES:
-        src = f'{{STEAM_APP_IMAGE}}/extras/{img}&quot;'
-        if src not in about:
-            sys.exit(f'title image not found in english about ({lang}): {img}')
-        about = about.replace(src, f'{{STEAM_APP_IMAGE}}/extras/{img}{LANG_SUFFIX[lang]}&quot;', 1)
-
     block = data['languages'][lang]
     block[ABOUT] = about
     block[SHORT] = SHORT_TEXT[lang]
