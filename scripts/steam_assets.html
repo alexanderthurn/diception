@@ -5,10 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DICEPTION — Steam Assets</title>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@700&amp;family=Noto+Sans+JP:wght@700&amp;family=Noto+Sans+KR:wght@700&amp;family=Noto+Sans+TC:wght@700&amp;display=swap">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- Pull sprite positions directly from the game's CSS — auto-updates when spritesheet is regenerated -->
     <link rel="stylesheet" href="../public/assets/gfx/sprites.css">
     <style>
+        /* Scripts Rajdhani does not cover: Greek, Cyrillic (incl. Ukrainian),
+           Vietnamese and Romanian come from Noto Sans; Hangul from Noto Sans KR;
+           Traditional Chinese from Noto Sans TC. Loaded from the CDN because
+           this page is a local dev tool — the game itself bundles subsets. */
         /* Same subset the game ships, so CJK titles match the in-game type.
            Only the section-title canvas uses it; the capsule art stays Latin. */
         @font-face {
@@ -2728,7 +2734,7 @@ void main(void) {
             if (!text) return;
 
             const letterSpacing = Math.round(fontSize * 0.2);
-            ctx.font = `700 ${fontSize}px Rajdhani, "Noto Sans SC"`;
+            ctx.font = `700 ${fontSize}px Rajdhani, "Noto Sans", "Noto Sans SC", "Noto Sans JP", "Noto Sans TC", "Noto Sans KR"`;
 
             let totalWidth = 0;
             for (let i = 0; i < text.length; i++) {
@@ -2805,42 +2811,95 @@ void main(void) {
         }
 
         // ── Localized store-page section titles ────────────────────────────────
-        // The store page's section header images are generated here. Each
-        // translated language needs its own copy; these render through the same
-        // renderGifFrameTitle() the English set was made with.
+        // The store page's section header images are generated here, one set per
+        // language, all through the same renderGifFrameTitle() the English set
+        // was made with.
         //
-        // Adding a language: add its code to TITLE_LANGUAGES and a string to
-        // every section's `text` map. Nothing else needs to change.
+        // Keys are Steam's own language names, because the asset upload form
+        // detects the language from the filename suffix and matches on those,
+        // not on ISO codes: "_schinese", not "_zh". English carries no suffix —
+        // it is the base asset the localized ones override.
+        //
+        // Adding a language: one entry in TITLE_LANGUAGES and one string per
+        // section. Nothing else changes.
         //
         // Colour is fixed per section so a section keeps its identity across
         // languages. Glitch density, intensity and seed are re-rolled on every
         // export, so running it again offers a different set to choose from —
         // the values used are written into the zip so a good roll can be redone.
         // Files are flat in the zip; the language is in each filename.
-        //
-        // English is exported under the unsuffixed names the store page already
-        // references, so uploading it replaces the current English images with a
-        // fresh glitch roll. "Mods" is spelled the same in every language so far
-        // but is still exported per language, so each locale is a complete set.
-        // Locale code -> Steam's own language name. The asset upload form detects
-        // the language from the filename suffix, and it matches on these names,
-        // not on ISO codes: "_schinese", not "_zh". English keeps no suffix — it
-        // is the base asset the localized ones override.
-        const TITLE_LANGUAGES = ['en', 'de', 'es', 'zh'];
-        const STEAM_LANG = { en: '', de: '_german', es: '_spanish', zh: '_schinese' };
+        const TITLE_LANGUAGES = [
+            'english', 'french', 'italian', 'german', 'spanish', 'latam',
+            'brazilian', 'portuguese', 'dutch', 'danish', 'norwegian', 'swedish',
+            'finnish', 'czech', 'polish', 'hungarian', 'romanian', 'turkish',
+            'indonesian', 'malay', 'vietnamese', 'greek', 'bulgarian', 'russian',
+            'ukrainian', 'japanese', 'koreana', 'schinese', 'tchinese',
+        ];
 
         const TITLE_SECTIONS = [
-            { section: 'grid_control',      color: '#FFFFFF',
-              text: { en: 'Grid Control',        de: 'Rastersteuerung',     es: 'Control de rejilla', zh: '网格操控' } },
-            { section: 'local_multiplayer', color: '#FF0055',
-              text: { en: 'Local Multiplayer',   de: 'Lokaler Mehrspieler', es: 'Multijugador local', zh: '本地多人' } },
-            { section: 'speed',             color: '#0088FF',
-              text: { en: 'Speed',               de: 'Tempo',               es: 'Velocidad', zh: '速度' } },
-            { section: 'mods',              color: '#FFCC00',
-              text: { en: 'Mods',                de: 'Mods',                es: 'Mods', zh: '模组' } },
-            { section: 'campaign',          color: '#00AA44',
-              text: { en: 'Campaign',            de: 'Kampagne',            es: 'Campaña', zh: '战役' } },
+            { section: 'grid_control', color: '#FFFFFF', text: {
+                english: 'Grid Control',      french: 'Contrôle en grille',  italian: 'Controllo a griglia',
+                german: 'Rastersteuerung',    spanish: 'Control de rejilla', latam: 'Control de cuadrícula',
+                brazilian: 'Controle em grade', portuguese: 'Controlo em grelha', dutch: 'Rasterbesturing',
+                danish: 'Gitterstyring',      norwegian: 'Rutenettstyring',  swedish: 'Rutnätsstyrning',
+                finnish: 'Ruudukko-ohjaus',   czech: 'Ovládání v mřížce',    polish: 'Sterowanie siatką',
+                hungarian: 'Rácsvezérlés',    romanian: 'Control pe grilă',  turkish: 'Izgara kontrolü',
+                indonesian: 'Kontrol Grid',   malay: 'Kawalan Grid',         vietnamese: 'Điều khiển lưới',
+                greek: 'Έλεγχος πλέγματος',   bulgarian: 'Управление с мрежа', russian: 'Управление сеткой',
+                ukrainian: 'Керування сіткою', japanese: 'グリッド操作',       koreana: '그리드 조작',
+                schinese: '网格操控',          tchinese: '網格操控' } },
+
+            { section: 'local_multiplayer', color: '#FF0055', text: {
+                english: 'Local Multiplayer', french: 'Multijoueur local',   italian: 'Multigiocatore locale',
+                german: 'Lokaler Mehrspieler', spanish: 'Multijugador local', latam: 'Multijugador local',
+                brazilian: 'Multijogador local', portuguese: 'Multijogador local', dutch: 'Lokale multiplayer',
+                danish: 'Lokal multiplayer',  norwegian: 'Lokal flerspiller', swedish: 'Lokalt flerspelarläge',
+                finnish: 'Paikallinen moninpeli', czech: 'Místní multiplayer', polish: 'Gra lokalna',
+                hungarian: 'Helyi többjátékos', romanian: 'Multiplayer local', turkish: 'Yerel çok oyunculu',
+                indonesian: 'Multipemain Lokal', malay: 'Multipemain Setempat', vietnamese: 'Nhiều người chơi',
+                greek: 'Τοπικό multiplayer',  bulgarian: 'Локална игра',      russian: 'Локальная игра',
+                ukrainian: 'Локальна гра',    japanese: 'ローカル対戦',        koreana: '로컬 멀티플레이',
+                schinese: '本地多人',          tchinese: '本地多人' } },
+
+            { section: 'speed', color: '#0088FF', text: {
+                english: 'Speed',             french: 'Vitesse',             italian: 'Velocità',
+                german: 'Tempo',              spanish: 'Velocidad',          latam: 'Velocidad',
+                brazilian: 'Velocidade',      portuguese: 'Velocidade',      dutch: 'Snelheid',
+                danish: 'Hastighed',          norwegian: 'Hastighet',        swedish: 'Hastighet',
+                finnish: 'Nopeus',            czech: 'Rychlost',             polish: 'Szybkość',
+                hungarian: 'Sebesség',        romanian: 'Viteză',            turkish: 'Hız',
+                indonesian: 'Kecepatan',      malay: 'Kelajuan',             vietnamese: 'Tốc độ',
+                greek: 'Ταχύτητα',            bulgarian: 'Скорост',          russian: 'Скорость',
+                ukrainian: 'Швидкість',       japanese: 'スピード',           koreana: '속도',
+                schinese: '速度',              tchinese: '速度' } },
+
+            { section: 'mods', color: '#FFCC00', text: {
+                english: 'Mods',              french: 'Mods',                italian: 'Mod',
+                german: 'Mods',               spanish: 'Mods',               latam: 'Mods',
+                brazilian: 'Mods',            portuguese: 'Mods',            dutch: 'Mods',
+                danish: 'Mods',               norwegian: 'Mods',             swedish: 'Mods',
+                finnish: 'Modit',             czech: 'Módy',                 polish: 'Mody',
+                hungarian: 'Modok',           romanian: 'Moduri',            turkish: 'Modlar',
+                indonesian: 'Mod',            malay: 'Mod',                  vietnamese: 'Mod',
+                greek: 'Mods',                bulgarian: 'Модове',           russian: 'Моды',
+                ukrainian: 'Моди',            japanese: 'モッド',             koreana: '모드',
+                schinese: '模组',              tchinese: '模組' } },
+
+            { section: 'campaign', color: '#00AA44', text: {
+                english: 'Campaign',          french: 'Campagne',            italian: 'Campagna',
+                german: 'Kampagne',           spanish: 'Campaña',            latam: 'Campaña',
+                brazilian: 'Campanha',        portuguese: 'Campanha',        dutch: 'Campagne',
+                danish: 'Kampagne',           norwegian: 'Kampanje',         swedish: 'Kampanj',
+                finnish: 'Kampanja',          czech: 'Tažení',               polish: 'Kampania',
+                hungarian: 'Hadjárat',        romanian: 'Campanie',          turkish: 'Kampanya',
+                indonesian: 'Kampanye',       malay: 'Kempen',               vietnamese: 'Chiến dịch',
+                greek: 'Εκστρατεία',          bulgarian: 'Кампания',         russian: 'Кампания',
+                ukrainian: 'Кампанія',        japanese: 'キャンペーン',        koreana: '캠페인',
+                schinese: '战役',              tchinese: '戰役' } },
         ];
+
+        /** Font stack the title canvas draws with; Rajdhani first so Latin is unchanged. */
+        const TITLE_FONT_STACK = 'Rajdhani, "Noto Sans", "Noto Sans SC", "Noto Sans JP", "Noto Sans TC", "Noto Sans KR"';
 
         const GLITCH_DENSITY_RANGE   = [5, 40];
         const GLITCH_INTENSITY_RANGE = [0, 5];
@@ -2873,7 +2932,7 @@ void main(void) {
         /** Width the drawn text would occupy at a given font size. */
         function measureTitleWidth(ctx, text, fontSize) {
             const letterSpacing = Math.round(fontSize * 0.2);
-            ctx.font = `700 ${fontSize}px Rajdhani, "Noto Sans SC"`;
+            ctx.font = `700 ${fontSize}px Rajdhani, "Noto Sans", "Noto Sans SC", "Noto Sans JP", "Noto Sans TC", "Noto Sans KR"`;
             let total = 0;
             for (let i = 0; i < text.length; i++) {
                 total += ctx.measureText(text[i]).width;
@@ -2923,6 +2982,11 @@ void main(void) {
                     let fs = orig.fs;
                     while (fs > 12 && measureTitleWidth(ctx, text, fs) > budget) fs--;
 
+                    // Canvas draws with whatever is loaded *now*; a CDN face that has
+                    // not arrived yet is silently substituted. Ask for it explicitly.
+                    try { await document.fonts.load(`700 ${fs}px ${TITLE_FONT_STACK}`, text); }
+                    catch (e) { /* offline: fall through to whatever is available */ }
+
                     titleInput.value = text;
                     setControlPair('gif-frame-title-fs', fs);
                     setControlPair('gif-frame-glitch-density', density);
@@ -2931,7 +2995,7 @@ void main(void) {
                     setBorderColor(sec.color);
                     renderGifFrameTitle();
 
-                    const file = `${sec.section}_title${STEAM_LANG[lang]}.png`;
+                    const file = `${sec.section}_title${lang === 'english' ? '' : '_' + lang}.png`;
                     const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
                     zip.file(file, blob);
 
