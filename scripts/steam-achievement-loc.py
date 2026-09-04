@@ -23,6 +23,7 @@ STEAM_LANG = {
     'zh': 'schinese',
     'fr': 'french',
     'ru': 'russian',
+    'pt-br': 'brazilian',
 }
 
 loc = {c: json.load(open(f'src/locales/{c}.json', encoding='utf-8')) for c in STEAM_LANG}

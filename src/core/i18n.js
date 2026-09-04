@@ -23,6 +23,7 @@ export const LANGUAGE_NAMES = {
     zh: '中文',
     fr: 'Français',
     ru: 'Русский',
+    pt-br: 'Português (BR)',
 };
 const FALLBACK = 'en';
 
@@ -34,6 +35,7 @@ const LOCALES = {
     zh: () => import('../locales/zh.json').then(m => m.default),
     fr: () => import('../locales/fr.json').then(m => m.default),
     ru: () => import('../locales/ru.json').then(m => m.default),
+    pt-br: () => import('../locales/pt-br.json').then(m => m.default),
 };
 
 let _strings = en;
@@ -55,8 +57,13 @@ export function getAvailableLanguages() {
 function detectLanguage() {
     const stored = localStorage.getItem(LANGUAGE_KEY);
     if (stored && LOCALES[stored]) return stored;
-    const device = (navigator.language || FALLBACK).split('-')[0].toLowerCase();
-    return LOCALES[device] ? device : FALLBACK;
+    // Try the full tag before the base language, so a Brazilian gets pt-br
+    // rather than European Portuguese, and Taiwan gets zh-tw rather than
+    // Simplified. Falls back to the base language when we ship only one.
+    const tag = (navigator.language || FALLBACK).toLowerCase();
+    if (LOCALES[tag]) return tag;
+    const base = tag.split('-')[0];
+    return LOCALES[base] ? base : FALLBACK;
 }
 
 async function applyLanguage(language) {
