@@ -22,6 +22,7 @@ export const LANGUAGE_NAMES = {
     es: 'Español',
     zh: '中文',
     fr: 'Français',
+    ru: 'Русский',
 };
 const FALLBACK = 'en';
 
@@ -32,6 +33,7 @@ const LOCALES = {
     es: () => import('../locales/es.json').then(m => m.default),
     zh: () => import('../locales/zh.json').then(m => m.default),
     fr: () => import('../locales/fr.json').then(m => m.default),
+    ru: () => import('../locales/ru.json').then(m => m.default),
 };
 
 let _strings = en;
