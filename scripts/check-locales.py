@@ -33,7 +33,7 @@ for f in glob.glob('public/assets/fonts/*.woff2'):
 SHARED = set('←→∞▶★')   # system fallback in every language, English included
 en = json.load(open('src/locales/en.json', encoding='utf-8'))
 ph = re.compile(r'\{[a-zA-Z_]+\}'); tag = re.compile(r'</?[a-zA-Z]+/?>')
-STRAY = re.compile(r'\b(the|and|with|from|your|press|click|game|level)\b', re.I)
+STRAY = re.compile(r'\b(the|and|with|from|your|press|click|game|level|turn|dice|territory|attack|player|map|board|settings|score)\b', re.I)
 ok = True
 for p in sorted(glob.glob('src/locales/*.json')):
     c = os.path.basename(p)[:-5]
@@ -52,6 +52,15 @@ for p in sorted(glob.glob('src/locales/*.json')):
     # a value identical to English is usually an untranslated leftover
     same = [k for k in en if k in d and d[k] == en[k] and len(en[k]) > 12 and STRAY.search(en[k])]
     if same: probs.append(f'still english: {same[:3]}')
+    # An English word embedded in an otherwise translated string is almost always
+    # a slip while writing, and nothing else here would notice it.
+    if c not in ('en',):
+        embedded = [k for k in d
+                    if d[k] != en.get(k) and STRAY.search(d[k])
+                    and not STRAY.search(''.join(ch for ch in en.get(k, '') if ch.isascii()))]
+        embedded = [k for k in embedded if any(w in d[k].lower() for w in
+                    (' territory', ' the ', ' and ', ' with ', 'decide'))]
+        if embedded: probs.append(f'english inside translation: {embedded[:3]}')
     print(f'  {c:6} {len(d):3} keys  {"OK" if not probs else "; ".join(probs)}')
     if probs: ok = False
 sys.exit(0 if ok else 1)

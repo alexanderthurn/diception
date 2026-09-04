@@ -27,6 +27,7 @@ export const LANGUAGE_NAMES = {
     'ja': '日本語',
     'it': 'Italiano',
     'pl': 'Polski',
+    'tr': 'Türkçe',
 };
 const FALLBACK = 'en';
 
@@ -42,6 +43,7 @@ const LOCALES = {
     'ja': () => import('../locales/ja.json').then(m => m.default),
     'it': () => import('../locales/it.json').then(m => m.default),
     'pl': () => import('../locales/pl.json').then(m => m.default),
+    'tr': () => import('../locales/tr.json').then(m => m.default),
 };
 
 let _strings = en;
