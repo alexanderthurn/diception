@@ -2811,17 +2811,20 @@ void main(void) {
         //
         // English is deliberately not regenerated: those images already exist
         // and a fresh glitch roll would replace them. "Mods" is spelled the same
-        // in every language so far and reuses the English mods_title.
+        // in every language so far, but is still exported per language so each
+        // locale has a complete set to upload.
         const TITLE_LANGUAGES = ['de', 'es'];
 
         const TITLE_SECTIONS = [
-            { section: 'grid_control',      color: '#FF0055',
+            { section: 'grid_control',      color: '#FFFFFF',
               text: { de: 'Rastersteuerung',     es: 'Control de rejilla' } },
             { section: 'local_multiplayer', color: '#FF0055',
               text: { de: 'Lokaler Mehrspieler', es: 'Multijugador local' } },
-            { section: 'speed',             color: '#FFCC00',
+            { section: 'speed',             color: '#00FFFF',
               text: { de: 'Tempo',               es: 'Velocidad' } },
-            { section: 'campaign',          color: '#00FFFF',
+            { section: 'mods',              color: '#FFCC00',
+              text: { de: 'Mods',                es: 'Mods' } },
+            { section: 'campaign',          color: '#00AA44',
               text: { de: 'Kampagne',            es: 'Campaña' } },
         ];
 
