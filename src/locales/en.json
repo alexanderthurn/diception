@@ -116,7 +116,6 @@
   "app.clear_storage_all": "Clear all stored data? This cannot be undone.",
   "app.clear_storage_keep": "Clear all stored data except your campaigns?",
   "app.clear_storage_title": "CLEAR STORAGE?",
-  "app.credits_by": "by {name}",
   "app.demo_version": "Demo Version",
   "app.done": "DONE",
   "app.end_turn": "END TURN",

@@ -116,7 +116,6 @@
   "app.clear_storage_all": "清除所有已保存的数据？此操作无法撤销。",
   "app.clear_storage_keep": "清除除战役以外的所有已保存数据？",
   "app.clear_storage_title": "清除数据？",
-  "app.credits_by": "作者：{name}",
   "app.demo_version": "试玩版",
   "app.done": "完成",
   "app.end_turn": "结束回合",

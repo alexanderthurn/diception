@@ -116,7 +116,6 @@
   "app.clear_storage_all": "Alle gespeicherten Daten löschen? Das lässt sich nicht rückgängig machen.",
   "app.clear_storage_keep": "Alle gespeicherten Daten außer deinen Kampagnen löschen?",
   "app.clear_storage_title": "SPEICHER LÖSCHEN?",
-  "app.credits_by": "von {name}",
   "app.demo_version": "Demo-Version",
   "app.done": "FERTIG",
   "app.end_turn": "ZUG BEENDEN",

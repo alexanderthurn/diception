@@ -216,10 +216,11 @@ async function init() {
     }
 
     // Credits line: "Hi, name" on Steam, countdown/label on Android, the byline
-    // or "Demo Version" elsewhere. The name is not translated, the wording
-    // around it is — Chinese needs "作者：X" rather than a bare preposition.
-    const AUTHOR = 'Alexander Thurn';
-    const bylineLabel = () => t('app.credits_by', { name: AUTHOR });
+    // or "Demo Version" elsewhere. The byline is branding and stays English in
+    // every language, so it is deliberately not a locale key — nothing for a
+    // translator to pick up. It matches the static markup in index.html.
+    const BYLINE = 'by Alexander Thurn';
+    const bylineLabel = () => BYLINE;
     const demoLabel = () => (isAndroid() ? '' : t('app.demo_version'));
     let _creditsCountdownInterval = null;
     let _creditsClickCount = 0;

@@ -116,7 +116,6 @@
   "app.clear_storage_all": "¿Borrar todos los datos guardados? Esto no se puede deshacer.",
   "app.clear_storage_keep": "¿Borrar todos los datos guardados salvo tus campañas?",
   "app.clear_storage_title": "¿BORRAR DATOS?",
-  "app.credits_by": "por {name}",
   "app.demo_version": "Versión demo",
   "app.done": "LISTO",
   "app.end_turn": "TERMINAR TURNO",
