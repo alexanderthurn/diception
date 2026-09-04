@@ -8406,6 +8406,13 @@ canvas {
     margin-bottom: 0;
 }
 
+/* .half is flex:1, which only bites inside a .control-row. These groups sit
+   directly in the block-level body, so give the modifier a meaning here too:
+   a control that reads better narrow than stretched across the panel. */
+#settings-modal .settings-group-body .control-group.half {
+    max-width: 50%;
+}
+
 /* ── Tournament Results Modal ── */
 .tournament-actions {
     display: flex;
@@ -8598,6 +8605,7 @@ canvas {
     #settings-modal .control-group.quarter {
         flex: unset;
         width: 100%;
+        max-width: none;
     }
 }
 
