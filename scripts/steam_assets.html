@@ -417,6 +417,7 @@
         <div class="gif-frame-actions">
             <button class="gif-frame-download-btn" onclick="downloadGifFrame()">⬇ Download PNG</button>
             <button class="gif-frame-download-btn" onclick="downloadGifFrameTitle()" style="margin-left: 10px; background: #2a475e;">⬇ Download Title</button>
+            <button class="gif-frame-download-btn" onclick="downloadLocalizedTitles()" style="margin-left: 10px; background: #2a475e;">⬇ Download DE + ES Titles</button>
         </div>
 
         <div class="gif-frame-preview-stack" id="gif-frame-preview-stack" style="position:relative;display:inline-block; vertical-align:top;">
@@ -2792,6 +2793,75 @@ void main(void) {
 
             drawWing(insetX, leftEnd);
             drawWing(rightStart, rightEnd);
+        }
+
+        // ── Localized store-page section titles ────────────────────────────────
+        // The store page's [h2] section images are generated here. German and
+        // Spanish need their own copies; this renders them with the settings
+        // currently in the panel, so they match the English set exactly.
+        // "Mods" is spelled the same in all three languages and reuses the
+        // English mods_title, so it is not listed.
+        const LOCALIZED_TITLES = [
+            { file: 'grid_control_title_de',      text: 'Rastersteuerung' },
+            { file: 'local_multiplayer_title_de', text: 'Lokaler Mehrspieler' },
+            { file: 'speed_title_de',             text: 'Tempo' },
+            { file: 'campaign_title_de',          text: 'Kampagne' },
+            { file: 'grid_control_title_es',      text: 'Control de rejilla' },
+            { file: 'local_multiplayer_title_es', text: 'Multijugador local' },
+            { file: 'speed_title_es',             text: 'Velocidad' },
+            { file: 'campaign_title_es',          text: 'Campaña' },
+        ];
+
+        /** Width the drawn text would occupy at a given font size. */
+        function measureTitleWidth(ctx, text, fontSize) {
+            const letterSpacing = Math.round(fontSize * 0.2);
+            ctx.font = `700 ${fontSize}px Rajdhani`;
+            let total = 0;
+            for (let i = 0; i < text.length; i++) {
+                total += ctx.measureText(text[i]).width;
+                if (i < text.length - 1) total += letterSpacing;
+            }
+            return total;
+        }
+
+        async function downloadLocalizedTitles() {
+            const titleInput = document.getElementById('gif-frame-title-input');
+            const fsInput = document.getElementById('gif-frame-title-fs-input');
+            const fsSlider = document.getElementById('gif-frame-title-fs-slider');
+            const canvas = document.getElementById('gif-frame-title-canvas');
+            const ctx = canvas.getContext('2d');
+
+            const origText = titleInput.value;
+            const origFs = parseInt(fsInput.value) || 36;
+            const w = parseInt(document.getElementById('gif-frame-w-input').value) || 600;
+            // Leave room for a wing of at least ~60px on each side, matching the
+            // English titles rather than letting long words crowd the glitch lines.
+            const budget = w - 208;
+
+            const log = [];
+            for (const entry of LOCALIZED_TITLES) {
+                let fs = origFs;
+                while (fs > 12 && measureTitleWidth(ctx, entry.text, fs) > budget) fs--;
+                titleInput.value = entry.text;
+                fsInput.value = fs;
+                if (fsSlider) fsSlider.value = fs;
+                renderGifFrameTitle();
+                await new Promise(r => setTimeout(r, 60));
+
+                const a = document.createElement('a');
+                a.download = entry.file + '.png';
+                a.href = canvas.toDataURL('image/png');
+                a.click();
+                log.push(`${entry.file}.png  ${fs}px${fs !== origFs ? ` (shrunk from ${origFs} to fit)` : ''}`);
+                await new Promise(r => setTimeout(r, 350));
+            }
+
+            titleInput.value = origText;
+            fsInput.value = origFs;
+            if (fsSlider) fsSlider.value = origFs;
+            renderGifFrameTitle();
+            console.log('Localized titles exported:\n' + log.join('\n'));
+            alert('Exported ' + LOCALIZED_TITLES.length + ' localized titles:\n\n' + log.join('\n'));
         }
 
         function downloadGifFrameTitle() {
