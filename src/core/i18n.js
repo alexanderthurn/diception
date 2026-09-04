@@ -36,6 +36,7 @@ export const LANGUAGE_NAMES = {
     'nb': 'Norsk bokmål',
     'fi': 'Suomi',
     'hu': 'Magyar',
+    'el': 'Ελληνικά',
 };
 const FALLBACK = 'en';
 
@@ -60,6 +61,7 @@ const LOCALES = {
     'nb': () => import('../locales/nb.json').then(m => m.default),
     'fi': () => import('../locales/fi.json').then(m => m.default),
     'hu': () => import('../locales/hu.json').then(m => m.default),
+    'el': () => import('../locales/el.json').then(m => m.default),
 };
 
 let _strings = en;
