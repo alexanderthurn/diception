@@ -259,7 +259,7 @@ ABOUT_PARTS = [
         'dutch': '[h2][b]Opensource &amp; community[/b][/h2]',
         'finnish': '[h2][b]Avoin lähdekoodi &amp; yhteisö[/b][/h2]',
         'french': '[h2][b]Open source &amp; communauté[/b][/h2]',
-        'german': '[h2][b]Open Source &amp; Community[/b][/h2]',
+        'german': '[h2][b]Offener Quellcode &amp; Community[/b][/h2]',
         'greek': '[h2][b]Ανοιχτός κώδικας &amp; κοινότητα[/b][/h2]',
         'hungarian': '[h2][b]Nyílt forráskód &amp; közösség[/b][/h2]',
         'indonesian': '[h2][b]Sumber terbuka &amp; komunitas[/b][/h2]',
@@ -871,10 +871,8 @@ def bbcode_balance(text):
 
 en_balance = bbcode_balance(en[ABOUT])
 
-# A fragment left identical to the English is usually one that was forgotten
-# rather than one deliberately kept, so name them. German keeps the "Open
-# Source & Community" heading on purpose: both words are the normal German
-# terms and that page has already been reviewed.
+# A fragment left identical to the English is almost always one that was
+# forgotten, so name them. There are none right now.
 untranslated = [(i, lang) for i, frag in enumerate(ABOUT_PARTS)
                 for lang in TARGETS if frag[lang] == frag['english']]
 if untranslated:
