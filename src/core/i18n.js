@@ -38,6 +38,7 @@ export const LANGUAGE_NAMES = {
     'hu': 'Magyar',
     'el': 'Ελληνικά',
     'uk': 'Українська',
+    'bg': 'Български',
 };
 const FALLBACK = 'en';
 
@@ -64,6 +65,7 @@ const LOCALES = {
     'hu': () => import('../locales/hu.json').then(m => m.default),
     'el': () => import('../locales/el.json').then(m => m.default),
     'uk': () => import('../locales/uk.json').then(m => m.default),
+    'bg': () => import('../locales/bg.json').then(m => m.default),
 };
 
 let _strings = en;
