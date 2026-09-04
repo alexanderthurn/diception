@@ -21,6 +21,7 @@ export const LANGUAGE_NAMES = {
     de: 'Deutsch',
     es: 'Español',
     zh: '中文',
+    fr: 'Français',
 };
 const FALLBACK = 'en';
 
@@ -30,6 +31,7 @@ const LOCALES = {
     de: () => import('../locales/de.json').then(m => m.default),
     es: () => import('../locales/es.json').then(m => m.default),
     zh: () => import('../locales/zh.json').then(m => m.default),
+    fr: () => import('../locales/fr.json').then(m => m.default),
 };
 
 let _strings = en;
