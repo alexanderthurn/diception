@@ -35,6 +35,8 @@ SUBSETS = [
         'cache': 'NotoSans-variable.ttf',
         'mode': 'blocks',
         'blocks': [
+            (0x00A0, 0x00FF),   # Latin-1 Supplement — Rajdhani lacks 12 of these,
+                                # incl. the ordinal indicators Portuguese uses (º ª)
             (0x0100, 0x017F),   # Latin Extended-A   — Polish, Czech, Hungarian…
             (0x0180, 0x024F),   # Latin Extended-B   — Romanian ș ț
             (0x0370, 0x03FF),   # Greek
