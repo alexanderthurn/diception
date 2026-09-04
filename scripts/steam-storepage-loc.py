@@ -13,6 +13,17 @@ VDF = 'steam/storepage_1106365_all.json'
 ABOUT = 'app[content][about]'
 SHORT = 'app[content][short_description]'
 
+# Corrections applied to the English about text before anything is translated,
+# so all three languages stay in sync. Upload fixes the English page too.
+ENGLISH_FIXES = [
+    # unfinished sentence
+    ("are waiting for you to.\u00a0", "are waiting for you.\u00a0"),
+    # double space
+    ("Or try  [b]parallel turns[/b]", "Or try [b]parallel turns[/b]"),
+    # stray empty bold paragraph above the campaign blurb
+    ("[p][b] [/b] [/p]", ""),
+]
+
 # (english fragment, german, spanish) — applied to the English about text in order.
 ABOUT_PARTS = [
  ("[b]Diception[/b] is a fast, minimalistic conquest game. Inspired by classics like [i]Risk[/i] and [i]DiceWars[/i], it features quick turn-based matches, an extensive campaign, a built-in editor, and local multiplayer for up to 8 players. By replacing the classic isometric view with an optimized [b]2D Grid View[/b], the game offers seamless Mouse, Keyboard, and Gamepad support for a lightning-fast experience.",
@@ -35,11 +46,11 @@ ABOUT_PARTS = [
   "Wähle zwischen 3 Geschwindigkeitsmodi. Ob du jeden Zug in Ruhe durchdenken oder in Millisekunden durch die Gebiete &quot;blitzen&quot; willst — du entscheidest.",
   "Elige entre 3 modos de velocidad. Tanto si quieres analizar cada movimiento como hacer un &quot;blitz&quot; por los territorios en milisegundos, tú decides."),
 
- ("Why settle for six sides? Or try  [b]parallel turns[/b] for maximum chaos. Adjust win conditions, start settings and supply rules to create your own unique way to play.\u00a0",
+ ("Why settle for six sides? Or try [b]parallel turns[/b] for maximum chaos. Adjust win conditions, start settings and supply rules to create your own unique way to play.\u00a0",
   "Warum bei sechs Seiten aufhören? Oder probiere [b]parallele Züge[/b] für maximales Chaos. Passe Siegbedingungen, Startregeln und Nachschubregeln an und bau dir deine ganz eigene Spielweise.\u00a0",
   "¿Por qué conformarse con seis caras? O prueba los [b]turnos paralelos[/b] para un caos total. Ajusta las condiciones de victoria, el modo de inicio y las reglas de refuerzos para crear tu propia forma de jugar.\u00a0"),
 
- ("Handcrafted levels with various settings are waiting for you to.\u00a0",
+ ("Handcrafted levels with various settings are waiting for you.\u00a0",
   "Handgebaute Level mit ganz unterschiedlichen Einstellungen warten auf dich.\u00a0",
   "Niveles hechos a mano con ajustes muy variados te están esperando.\u00a0"),
 
@@ -106,6 +117,10 @@ SHORT_MAX = 300
 
 data = json.load(open(VDF, encoding='utf-8'))
 en = data['languages']['english']
+
+for src, dst in ENGLISH_FIXES:
+    if src in en[ABOUT]:
+        en[ABOUT] = en[ABOUT].replace(src, dst)
 idx = {'german': 1, 'spanish': 2}
 
 for lang, i in idx.items():
