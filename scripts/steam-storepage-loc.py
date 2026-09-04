@@ -27,7 +27,7 @@ ENGLISH_FIXES = [
 # (english fragment, german, spanish) — applied to the English about text in order.
 ABOUT_PARTS = [
  ("[b]Diception[/b] is a fast, minimalistic conquest game. Inspired by classics like [i]Risk[/i] and [i]DiceWars[/i], it features quick turn-based matches, an extensive campaign, a built-in editor, and local multiplayer for up to 8 players. By replacing the classic isometric view with an optimized [b]2D Grid View[/b], the game offers seamless Mouse, Keyboard, and Gamepad support for a lightning-fast experience.",
-  "[b]Diception[/b] ist ein schnelles, minimalistisches Eroberungsspiel. Inspiriert von Klassikern wie [i]Risiko[/i] und [i]DiceWars[/i] bietet es kurze rundenbasierte Partien, eine umfangreiche Kampagne, einen eingebauten Editor und lokalen Mehrspieler für bis zu 8 Spieler. Statt der klassischen isometrischen Ansicht nutzt Diception eine optimierte [b]2D-Rasteransicht[/b] — mit durchgängiger Unterstützung für Maus, Tastatur und Gamepad und einem entsprechend hohen Tempo.",
+  "[b]Diception[/b] ist ein schnelles, minimalistisches Eroberungsspiel. Inspiriert von Klassikern wie [i]Risiko[/i] und [i]DiceWars[/i] bietet es kurze rundenbasierte Partien, eine umfangreiche Kampagne, einen eingebauten Editor und lokalen Mehrspieler für bis zu 8 Spieler. Statt der klassischen isometrischen Ansicht nutzt Diception eine optimierte [b]2D-Rasteransicht[/b], mit durchgängiger Unterstützung für Maus, Tastatur und Gamepad und entsprechend hohem Tempo.",
   "[b]Diception[/b] es un juego de conquista rápido y minimalista. Inspirado en clásicos como [i]Risk[/i] y [i]DiceWars[/i], ofrece partidas por turnos ágiles, una campaña extensa, un editor integrado y multijugador local para hasta 8 jugadores. En lugar de la clásica vista isométrica utiliza una [b]vista de rejilla 2D[/b] optimizada, con soporte fluido para ratón, teclado y mando, y la velocidad que eso permite."),
 
  ("[h2][b]Key Features:[/b][/h2]",
@@ -35,7 +35,7 @@ ABOUT_PARTS = [
   "[h2][b]Características principales:[/b][/h2]"),
 
  ("Diception uses a clean 2D matrix with 4-way connections. This enables lightning-fast [b]WASD and D-Pad controls[/b], allowing for rapid-fire gameplay without sacrificing strategic depth.",
-  "Diception nutzt eine klare 2D-Matrix mit Verbindungen in vier Richtungen. Das ermöglicht blitzschnelle Steuerung per [b]WASD und Steuerkreuz[/b] — hohes Tempo, ohne strategische Tiefe zu opfern.",
+  "Diception nutzt eine klare 2D-Matrix mit Verbindungen in vier Richtungen. Das ermöglicht blitzschnelle Steuerung per [b]WASD und Steuerkreuz[/b]: hohes Tempo, ohne strategische Tiefe zu opfern.",
   "Diception utiliza una matriz 2D limpia con conexiones en cuatro direcciones. Eso permite un control rapidísimo con [b]WASD y cruceta[/b]: partidas veloces sin renunciar a la profundidad estratégica."),
 
  ("Battle up to 8 players in local multiplayer (Gamepads supported). Thanks to [b]Steam Remote Play Together[/b], your friends can join the fun online even if they don't own the game!",
@@ -43,7 +43,7 @@ ABOUT_PARTS = [
   "Enfréntate a hasta 8 jugadores en multijugador local (con soporte para mandos). Gracias a [b]Steam Remote Play Together[/b], tus amigos pueden unirse en línea aunque no tengan el juego."),
 
  ("Choose from 3 different speed modes. Whether you want to analyze every move or &quot;blitz&quot; through territories in milliseconds, the choice is yours.",
-  "Wähle zwischen 3 Geschwindigkeitsmodi. Ob du jeden Zug in Ruhe durchdenken oder in Millisekunden durch die Gebiete &quot;blitzen&quot; willst — du entscheidest.",
+  "Wähle zwischen 3 Geschwindigkeitsmodi. Ob du jeden Zug in Ruhe durchdenken oder in Millisekunden durch die Gebiete &quot;blitzen&quot; willst: du entscheidest.",
   "Elige entre 3 modos de velocidad. Tanto si quieres analizar cada movimiento como hacer un &quot;blitz&quot; por los territorios en milisegundos, tú decides."),
 
  ("Why settle for six sides? Or try [b]parallel turns[/b] for maximum chaos. Adjust win conditions, start settings and supply rules to create your own unique way to play.\u00a0",
@@ -67,7 +67,7 @@ ABOUT_PARTS = [
   "[h2][b]Versión completa y demo[/b][/h2]"),
 
  ("The [b]free demo[/b] offers a balanced 1vs2 bot setup on a medium-sized map. This specific configuration is one of the most fun ways to play and will remain free forever!",
-  "Die [b]kostenlose Demo[/b] bietet eine ausgewogene Partie 1 gegen 2 Bots auf einer mittelgroßen Karte. Genau diese Konstellation macht besonders viel Spaß — und bleibt für immer kostenlos!",
+  "Die [b]kostenlose Demo[/b] bietet eine ausgewogene Partie 1 gegen 2 Bots auf einer mittelgroßen Karte. Genau diese Konstellation macht besonders viel Spaß und bleibt für immer kostenlos!",
   "La [b]demo gratuita[/b] ofrece una partida equilibrada de 1 contra 2 bots en un mapa mediano. Esa configuración concreta es una de las más divertidas del juego, y seguirá siendo gratis para siempre."),
 
  ("[b]By purchasing the full version, you unlock:[/b]",
@@ -109,7 +109,7 @@ TITLE_IMAGES = {
 }
 
 SHORT_TEXT = {
- 'german': "Schluss mit isometrischen Karten und langsamen Animationen. Diception ist ein blitzschnelles rundenbasiertes Eroberungsspiel auf einem klaren 2D-Raster. Leicht zu lernen, schwer zu meistern. Maus, Tastatur und Gamepad, Mods, lokaler Mehrspieler für 8 und Remote Play. Los!",
+ 'german': "Schluss mit isometrischen Karten und langsamen Animationen. Diception ist ein blitzschnelles rundenbasiertes Eroberungsspiel auf einem klaren 2D-Raster. Leicht zu lernen, schwer zu meistern. Maus, Tastatur und Gamepad, Mods, lokaler Mehrspieler für 8 und Remote Play. Go!",
  'spanish': "Olvídate de los mapas isométricos y las animaciones lentas. Diception es un juego de conquista por turnos ultrarrápido sobre una rejilla 2D limpia. Fácil de aprender, difícil de dominar. Ratón, teclado y mando, mods, multijugador local para 8 y Remote Play. ¡Vamos!",
 }
 
