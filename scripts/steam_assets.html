@@ -2807,6 +2807,7 @@ void main(void) {
         // languages. Glitch density, intensity and seed are re-rolled on every
         // export, so running it again offers a different set to choose from —
         // the values used are written into the zip so a good roll can be redone.
+        // Files are flat in the zip; the language is in each filename.
         //
         // English is deliberately not regenerated: those images already exist
         // and a fresh glitch roll would replace them. "Mods" is spelled the same
@@ -2891,11 +2892,9 @@ void main(void) {
             const budget = w - 208;
 
             const zip = new JSZip();
-            const root = zip.folder('store_page_titles');
             const log = [];
 
             for (const lang of TITLE_LANGUAGES) {
-                const folder = root.folder(lang);
                 for (const sec of TITLE_SECTIONS) {
                     const text = sec.text[lang];
                     if (!text) { log.push(`SKIPPED ${sec.section} (${lang}): no text`); continue; }
@@ -2917,15 +2916,15 @@ void main(void) {
 
                     const file = `${sec.section}_title_${lang}.png`;
                     const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-                    folder.file(file, blob);
+                    zip.file(file, blob);
 
-                    log.push(`${lang}/${file}`
+                    log.push(file
                         + `  text "${text}"  colour ${sec.color}  ${fs}px${fs !== orig.fs ? ' (shrunk to fit)' : ''}`
                         + `  density ${density}  intensity ${intensity}  seed ${seed}`);
                 }
             }
 
-            root.file('titles.txt',
+            zip.file('titles.txt',
                 'DICEPTION store page section titles\n'
                 + 'Generated ' + new Date().toISOString() + '\n'
                 + 'Glitch density/intensity/seed are re-rolled on every export;\n'
