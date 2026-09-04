@@ -56,5 +56,39 @@
 			"Action_MoveRight"		"Attack Right"
 			"Action_GamepadDrag"	"Hold to Pan Map"
 		}
+		"german"
+		{
+			"Set_GameControls"		"Spielsteuerung"
+			"Action_CursorMove"		"Cursor bewegen"
+			"Action_MapPan"			"Karte verschieben"
+			"Action_ZoomIn"			"Heranzoomen"
+			"Action_ZoomOut"		"Herauszoomen"
+			"Action_Confirm"		"Auswählen / Angreifen"
+			"Action_Cancel"			"Abwählen"
+			"Action_EndTurn"		"Zug beenden"
+			"Action_Menu"			"Hauptmenü"
+			"Action_MoveUp"			"Angriff nach oben"
+			"Action_MoveDown"		"Angriff nach unten"
+			"Action_MoveLeft"		"Angriff nach links"
+			"Action_MoveRight"		"Angriff nach rechts"
+			"Action_GamepadDrag"	"Halten zum Verschieben"
+		}
+		"spanish"
+		{
+			"Set_GameControls"		"Controles del juego"
+			"Action_CursorMove"		"Mover el cursor"
+			"Action_MapPan"			"Mover el mapa"
+			"Action_ZoomIn"			"Acercar"
+			"Action_ZoomOut"		"Alejar"
+			"Action_Confirm"		"Seleccionar / Atacar"
+			"Action_Cancel"			"Deseleccionar"
+			"Action_EndTurn"		"Terminar turno"
+			"Action_Menu"			"Menú principal"
+			"Action_MoveUp"			"Atacar arriba"
+			"Action_MoveDown"		"Atacar abajo"
+			"Action_MoveLeft"		"Atacar a la izquierda"
+			"Action_MoveRight"		"Atacar a la derecha"
+			"Action_GamepadDrag"	"Mantener para mover el mapa"
+		}
 	}
 }
