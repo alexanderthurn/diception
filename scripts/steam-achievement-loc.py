@@ -1,12 +1,14 @@
-"""Fill steam/i18n/*.vdf from the game's locale files.
+"""Fill steam/4429000_loc_all.vdf from the game's locale files.
 
 Steam keys achievement text by NEW_ACHIEVEMENT_<n>_<i>, not by API name, so
 entries are matched to the game through the English display name already in
-4429000_loc_english.vdf. Run from the repo root after changing an achievement
-title, then upload the files in Steamworks under Achievement Localization.
+the file's english block. Run from the repo root after changing an achievement
+title, then upload the file in Steamworks under Achievement Localization.
 
-Descriptions are written here rather than reused from ach.desc.* because Steam
-uses full sentences with a trailing period, where the in-game panel does not.
+English values are rewritten too, which trims the stray whitespace Steam's own
+export carries. Descriptions are written here rather than reused from
+ach.desc.* because Steam uses full sentences with a trailing period, where the
+in-game panel does not.
 """
 import re, json, io
 
@@ -93,8 +95,14 @@ def future(lang, n):
     return ({'en':f'Chapter {n} Complete','de':f'Kapitel {n} geschafft','es':f'Capítulo {n} completado'}[lang],
             {'en':f'Complete Chapter {n}.','de':f'Schließe Kapitel {n} ab.','es':f'Completa el capítulo {n}.'}[lang])
 
-src = open('steam/i18n/4429000_loc_english.vdf', encoding='utf-8').read()
-order = re.findall(r'"NEW_ACHIEVEMENT_(\d+_\d+)_NAME"\t+"([^"]*)"', src)
+VDF = 'steam/4429000_loc_all.vdf'
+src = open(VDF, encoding='utf-8').read()
+BLOCK = re.compile(r'^\t"(\w+)"\n\t\{\n\t\t"Tokens"\n\t\t\{\n(.*?)^\t\t\}\n\t\}$', re.S | re.M)
+blocks = {m.group(1): m for m in BLOCK.finditer(src)}
+missing = {'english', 'german', 'spanish'} - set(blocks)
+if missing:
+    raise SystemExit(f'{VDF} has no block for: {sorted(missing)}')
+order = re.findall(r'"NEW_ACHIEVEMENT_(\d+_\d+)_NAME"\t+"([^"]*)"', blocks['english'].group(2))
 byname = {loc['en'][f'ach.{a}.title']: a for a in game}
 
 resolved = []
@@ -108,26 +116,24 @@ for tok, raw in order:
 
 STEAM_LANG = {'en': 'english', 'de': 'german', 'es': 'spanish'}
 
-def render(lang):
-    out = io.StringIO()
-    out.write('"lang"\n{\n\t"Language"\t"%s"\n\t"Tokens"\n\t{\n' % STEAM_LANG[lang])
+def tokens(lang):
+    out = []
     for tok, aid, fut in resolved:
         if aid is None:
             name, d = future(lang, fut)
         else:
             name, d = loc[lang][f'ach.{aid}.title'], desc(lang, aid)
         for suffix, val in (('NAME', name), ('DESC', d)):
-            key = f'"NEW_ACHIEVEMENT_{tok}_{suffix}"'
-            out.write(f'\t\t{key}\t"{val}"\n')
-    out.write('\t}\n}\n')
-    return out.getvalue()
+            out.append(f'\t\t\t"NEW_ACHIEVEMENT_{tok}_{suffix}"\t"{val}"')
+    return '\n'.join(out) + '\n'
 
-FILES = (('en','4429000_loc_english.vdf'),
-         ('de','4429000_loc_german.vdf'),
-         ('es','4429000_loc_spanish.vdf'))
-# Render everything before touching disk: opening for write truncates, so a
-# failure mid-render would destroy the english file this script reads from.
-rendered = {fn: render(lang) for lang, fn in FILES}
-for fn, text in rendered.items():
-    open(f'steam/i18n/{fn}', 'w', encoding='utf-8').write(text)
-    print('wrote', fn, len(text), 'bytes')
+# Build every block before writing: the file is also this script's input.
+out = src
+for lang, steam in STEAM_LANG.items():
+    m = blocks[steam]
+    out = out[:m.start(2)] + tokens(lang) + out[m.end(2):]
+    blocks = {b.group(1): b for b in BLOCK.finditer(out)}   # offsets shift
+
+open(VDF, 'w', encoding='utf-8').write(out)
+n = len(resolved)
+print(f'{VDF}: {n} achievements x 3 languages, {len(out)} bytes')
