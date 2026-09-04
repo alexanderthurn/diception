@@ -1928,7 +1928,8 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     // language they cannot read needs to find their own in the list.
     function initLanguageSelect() {
         const select = document.getElementById('language-select');
-        if (!select || select.childElementCount) return;
+        if (!select) return;
+        if (select.childElementCount) { select.value = getLanguage(); return; }
         for (const code of getAvailableLanguages()) {
             const opt = document.createElement('option');
             opt.value = code;
