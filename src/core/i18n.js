@@ -25,6 +25,7 @@ export const LANGUAGE_NAMES = {
     ru: 'Русский',
     'pt-br': 'Português (BR)',
     'ja': '日本語',
+    'it': 'Italiano',
 };
 const FALLBACK = 'en';
 
@@ -38,6 +39,7 @@ const LOCALES = {
     ru: () => import('../locales/ru.json').then(m => m.default),
     'pt-br': () => import('../locales/pt-br.json').then(m => m.default),
     'ja': () => import('../locales/ja.json').then(m => m.default),
+    'it': () => import('../locales/it.json').then(m => m.default),
 };
 
 let _strings = en;
