@@ -44,6 +44,7 @@ SUBSETS = [
             (0x0500, 0x052F),   # Cyrillic Supplement
             (0x1E00, 0x1EFF),   # Latin Extended Additional — Vietnamese
             (0x2010, 0x2027),   # dashes and quotes used by these languages
+            (0x2116, 0x2116),   # № — the numero sign Russian/Ukrainian/Bulgarian use
         ],
     },
     {
