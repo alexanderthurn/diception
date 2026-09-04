@@ -33,6 +33,8 @@ for f in glob.glob('public/assets/fonts/*.woff2'):
 SHARED = set('←→∞▶★')   # system fallback in every language, English included
 en = json.load(open('src/locales/en.json', encoding='utf-8'))
 ph = re.compile(r'\{[a-zA-Z_]+\}'); tag = re.compile(r'</?[a-zA-Z]+/?>')
+WORD = re.compile(r'[^\W\d_]+')          # one unbroken run of letters
+NONLATIN = re.compile(r'[\u0370-\u03ff\u0400-\u04ff]')   # Greek + Cyrillic
 STRAY = re.compile(r'\b(the|and|with|from|your|press|click|game|level|turn|dice|territory|attack|player|map|board|settings|score)\b', re.I)
 ok = True
 for p in sorted(glob.glob('src/locales/*.json')):
@@ -61,6 +63,14 @@ for p in sorted(glob.glob('src/locales/*.json')):
         embedded = [k for k in embedded if any(w in d[k].lower() for w in
                     (' territory', ' the ', ' and ', ' with ', 'decide'))]
         if embedded: probs.append(f'english inside translation: {embedded[:3]}')
+
+    # A Latin letter inside a Cyrillic or Greek word looks identical on screen but
+    # breaks search, sorting and text-to-speech. Markup and the words English
+    # deliberately leaves alone (WASD, FPS, VSync) are stripped before looking.
+    mixed = [k for k, v in d.items()
+             for w in WORD.findall(tag.sub(' ', ph.sub(' ', v)))
+             if NONLATIN.search(w) and re.search(r'[A-Za-z]', w)]
+    if mixed: probs.append(f'mixed script: {sorted(set(mixed))[:3]}')
     print(f'  {c:6} {len(d):3} keys  {"OK" if not probs else "; ".join(probs)}')
     if probs: ok = False
 sys.exit(0 if ok else 1)
