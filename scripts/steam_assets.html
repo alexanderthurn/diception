@@ -2809,23 +2809,23 @@ void main(void) {
         // the values used are written into the zip so a good roll can be redone.
         // Files are flat in the zip; the language is in each filename.
         //
-        // English is deliberately not regenerated: those images already exist
-        // and a fresh glitch roll would replace them. "Mods" is spelled the same
-        // in every language so far, but is still exported per language so each
-        // locale has a complete set to upload.
-        const TITLE_LANGUAGES = ['de', 'es'];
+        // English is exported under the unsuffixed names the store page already
+        // references, so uploading it replaces the current English images with a
+        // fresh glitch roll. "Mods" is spelled the same in every language so far
+        // but is still exported per language, so each locale is a complete set.
+        const TITLE_LANGUAGES = ['en', 'de', 'es'];
 
         const TITLE_SECTIONS = [
             { section: 'grid_control',      color: '#FFFFFF',
-              text: { de: 'Rastersteuerung',     es: 'Control de rejilla' } },
+              text: { en: 'Grid Control',        de: 'Rastersteuerung',     es: 'Control de rejilla' } },
             { section: 'local_multiplayer', color: '#FF0055',
-              text: { de: 'Lokaler Mehrspieler', es: 'Multijugador local' } },
-            { section: 'speed',             color: '#00FFFF',
-              text: { de: 'Tempo',               es: 'Velocidad' } },
+              text: { en: 'Local Multiplayer',   de: 'Lokaler Mehrspieler', es: 'Multijugador local' } },
+            { section: 'speed',             color: '#0088FF',
+              text: { en: 'Speed',               de: 'Tempo',               es: 'Velocidad' } },
             { section: 'mods',              color: '#FFCC00',
-              text: { de: 'Mods',                es: 'Mods' } },
+              text: { en: 'Mods',                de: 'Mods',                es: 'Mods' } },
             { section: 'campaign',          color: '#00AA44',
-              text: { de: 'Kampagne',            es: 'Campaña' } },
+              text: { en: 'Campaign',            de: 'Kampagne',            es: 'Campaña' } },
         ];
 
         const GLITCH_DENSITY_RANGE   = [5, 40];
@@ -2917,7 +2917,11 @@ void main(void) {
                     setBorderColor(sec.color);
                     renderGifFrameTitle();
 
-                    const file = `${sec.section}_title_${lang}.png`;
+                    // English keeps the unsuffixed name the store page already
+                    // references, so those files drop straight in as replacements.
+                    const file = lang === 'en'
+                        ? `${sec.section}_title.png`
+                        : `${sec.section}_title_${lang}.png`;
                     const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
                     zip.file(file, blob);
 
