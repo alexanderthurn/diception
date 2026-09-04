@@ -9821,14 +9821,16 @@ input[type="range"].gamepad-slider-editing {
     border-color: var(--border-color);
     color: var(--border-color);
 }
-/* Language picker. A single flex row shrinks every option toward nothing as
-   locales are added, so this one wraps instead. min-width keeps a name like
-   "Português" legible rather than clipping it. */
-.language-segmented {
-    flex-wrap: wrap;
+/* Language section header: the globe reads as "language" even to a player who
+   has switched to a script they cannot read and needs to find their way back. */
+.settings-group-header-icon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.language-segmented .segmented-option {
-    flex: 1 1 auto;
-    min-width: 84px;
+.settings-header-glyph {
+    width: 1.05em;
+    height: 1.05em;
+    flex-shrink: 0;
 }

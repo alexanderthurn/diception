@@ -78,10 +78,26 @@ export async function initI18n(language = detectLanguage()) {
     await applyLanguage(language);
 }
 
+/**
+ * Parts of the UI are built in JS and hold text that applyTranslations() cannot
+ * reach — a summary line, a cached label, a list rendered once. They register
+ * here and re-render when the player picks a different language.
+ */
+const _listeners = new Set();
+
+export function onLanguageChange(fn) {
+    _listeners.add(fn);
+    return () => _listeners.delete(fn);
+}
+
 /** Switch language on an explicit player choice — this one sticks. */
 export async function setLanguage(language) {
     await applyLanguage(language);
     localStorage.setItem(LANGUAGE_KEY, _language);
+    for (const fn of _listeners) {
+        try { fn(_language); }
+        catch (e) { console.warn('[i18n] language-change listener failed:', e); }
+    }
 }
 
 /**

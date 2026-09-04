@@ -52,7 +52,7 @@ import { syncEntitlement, androidStore } from './native/android-store.js';
 import { addPluginListener } from '@tauri-apps/api/core';
 import { isTimedUnlockActive, getTimedUnlockRemainingMs, setTimedUnlock } from './core/timed-unlock.js';
 import { initStorage, flushStorage, migrateLegacyStorage } from './core/storage.js';
-import { initI18n, setLanguage, getLanguage, getAvailableLanguages, LANGUAGE_NAMES, t } from './core/i18n.js';
+import { initI18n, setLanguage, getLanguage, getAvailableLanguages, LANGUAGE_NAMES, onLanguageChange, t } from './core/i18n.js';
 import { KeyBindingDialog } from './input/key-binding-dialog.js';
 import { AchievementsPanel, achievementTitle } from './ui/achievements-panel.js';
 import { ACHIEVEMENTS } from './core/achievements.js';
@@ -216,7 +216,7 @@ async function init() {
     }
 
     // Credits line: "Hi, name" on Steam, countdown/label on Android, "by Alexander Thurn" or "Demo Version" elsewhere
-    const demoLabel = isAndroid() ? '' : t('app.demo_version');
+    const demoLabel = () => (isAndroid() ? '' : t('app.demo_version'));
     let _creditsCountdownInterval = null;
     let _creditsClickCount = 0;
     let _creditsClickTimer = null;
@@ -267,10 +267,10 @@ async function init() {
         }
 
         const full = isFullVersion();
-        const versionLabel = full ? 'by Alexander Thurn' : demoLabel;
+        const versionLabel = full ? 'by Alexander Thurn' : demoLabel();
         if (el) { el.textContent = versionLabel; el.classList.toggle('demo-version-label', !full); }
         if (loadingCredits) {
-            if (!full) { loadingCredits.textContent = demoLabel; loadingCredits.classList.add('demo-version-label'); }
+            if (!full) { loadingCredits.textContent = demoLabel(); loadingCredits.classList.add('demo-version-label'); }
             else { loadingCredits.classList.remove('demo-version-label'); }
         }
     }
@@ -282,9 +282,9 @@ async function init() {
             if (isFullVersion()) {
                 if (el) el.innerHTML = `<span class="steam-login-info" style="color: #66c0f4">${t('app.steam_hi', { name })}</span>`;
             } else {
-                if (el) { el.textContent = demoLabel; el.classList.add('demo-version-label'); }
+                if (el) { el.textContent = demoLabel(); el.classList.add('demo-version-label'); }
                 const loadingCredits = document.querySelector('#loading-screen .credits');
-                if (loadingCredits) { loadingCredits.textContent = demoLabel; loadingCredits.classList.add('demo-version-label'); }
+                if (loadingCredits) { loadingCredits.textContent = demoLabel(); loadingCredits.classList.add('demo-version-label'); }
             }
         });
     } else {
@@ -1919,33 +1919,24 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
         bindMusicToggles();
         refreshControlsSection();
         initGameSpeedSegmented();
-        initLanguageSegmented();
+        initLanguageSelect();
         settingsModal.classList.remove('hidden');
     }
 
-    // Language buttons — built from the locales the game ships with
-    function initLanguageSegmented() {
-        const container = document.querySelector('.language-segmented');
-        if (!container || container.childElementCount) return;
+    // Language picker — a select rather than a segmented row, so it stays usable
+    // as locales are added. Options are never translated: a player who picked a
+    // language they cannot read needs to find their own in the list.
+    function initLanguageSelect() {
+        const select = document.getElementById('language-select');
+        if (!select || select.childElementCount) return;
         for (const code of getAvailableLanguages()) {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'segmented-option';
-            btn.dataset.value = code;
-            // Language names stay in their own language, never translated
-            btn.textContent = LANGUAGE_NAMES[code] || code.toUpperCase();
-            btn.classList.toggle('active', code === getLanguage());
-            btn.addEventListener('click', async () => {
-                await setLanguage(code);
-                container.querySelectorAll('.segmented-option').forEach(o => {
-                    o.classList.toggle('active', o.dataset.value === code);
-                });
-                // These two sections are built in JS, so applyTranslations() can't reach them.
-                refreshControlsSection();
-                refreshHowtoSections();
-            });
-            container.appendChild(btn);
+            const opt = document.createElement('option');
+            opt.value = code;
+            opt.textContent = LANGUAGE_NAMES[code] || code.toUpperCase();
+            select.appendChild(opt);
         }
+        select.value = getLanguage();
+        select.addEventListener('change', () => { void setLanguage(select.value); });
     }
 
     // Segmented game speed buttons — synced across all instances, immediate effect in-game
@@ -1987,6 +1978,15 @@ function setupMenuNavigation(effectsManager, audioController, inputManager, game
     function showFullVersionOnlyDialog() {
         showUnlockDialog();
     }
+
+    // Re-render the parts built in JS: applyTranslations() only reaches markup
+    // carrying data-i18n, so these would keep whatever language they were built in.
+    onLanguageChange(() => {
+        refreshControlsSection();
+        refreshHowtoSections();
+        applyVersionUI();
+        configManager.refreshModsSummary();
+    });
 
     applyVersionUI();
 

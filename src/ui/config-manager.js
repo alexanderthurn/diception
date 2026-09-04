@@ -330,6 +330,11 @@ export class ConfigManager {
         this._syncModsSummary(!this.areModsAtDefaults());
     }
 
+    /** Re-render the summary line, e.g. after a language change. */
+    refreshModsSummary() {
+        this._syncModsSummary(!this.areModsAtDefaults());
+    }
+
     /** Sync badge + reset btn on initial load; panel always starts collapsed. */
     _syncModsSummary(_nonDefault) {
         const summary = document.getElementById('setup-mods-summary');

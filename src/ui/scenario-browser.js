@@ -551,7 +551,8 @@ export class ScenarioBrowser {
         this.isOwner = isUserCampaign;
         const levels = campaign.levels || [];
 
-        const ownerLabel = isUserCampaign ? t('campaign.name_user') : (campaign.owner || t('campaign.unnamed'));
+        const ownerLabel = isUserCampaign ? t('campaign.name_user')
+            : (this.getCampaignDisplayName(campaign) || t('campaign.unnamed'));
         if (this.campaignDetailTitle) this.campaignDetailTitle.textContent = ownerLabel;
         const totalSlots = this.isOwner ? levels.length + 1 : levels.length;
         const containerWidth = this.levelGridContainer.offsetWidth
@@ -601,7 +602,8 @@ export class ScenarioBrowser {
             }
         }
 
-        this.levelGridHeader.innerHTML = `<span>${ownerLabel}</span><span>${levels.length} levels</span>`;
+        this.levelGridHeader.innerHTML =
+            `<span>${ownerLabel}</span><span>${t('campaign.level_count', { n: levels.length })}</span>`;
 
         // Derive chapter color index (non-tutorial chapters get color by their index in the chapters list)
         const allCampaigns = this.campaignManager.listCampaigns().filter(c => !c.isUserCampaign);
@@ -788,8 +790,8 @@ export class ScenarioBrowser {
 
             const p = document.createElement('p');
             p.className = 'level-preview-type';
-            const typeLabel = lvl.type === 'map' ? 'Map' : 'Scenario';
-            p.textContent = `${typeLabel} · Level ${idx + 1}`;
+            const typeLabel = t(lvl.type === 'map' ? 'editor_type_segmented.map' : 'editor_type_segmented.scenario');
+            p.textContent = `${typeLabel} · ${t('campaign.level_n', { n: idx + 1 })}`;
             content.appendChild(p);
 
             const playerList = lvl.players || [];
@@ -1285,7 +1287,7 @@ export class ScenarioBrowser {
         if (this.effectsManager) this.effectsManager.startIntroMode();
         if (this.onOpenCustomFromLevel) {
             const campaignName = this.getCampaignDisplayName(this.selectedCampaign);
-            const label = `${campaignName} - Level ${index + 1}`;
+            const label = `${campaignName} - ${t('campaign.level_n', { n: index + 1 })}`;
             this.onOpenCustomFromLevel(level, label);
         }
     }
