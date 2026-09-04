@@ -12,7 +12,7 @@ in-game panel does not.
 """
 import re, json, io
 
-loc = {c: json.load(open(f'src/locales/{c}.json', encoding='utf-8')) for c in ('en', 'de', 'es')}
+loc = {c: json.load(open(f'src/locales/{c}.json', encoding='utf-8')) for c in ('en', 'de', 'es', 'zh')}
 game = set(re.findall(r"id:\s*'([A-Z0-9_]+)'", open('src/core/achievements.js', encoding='utf-8').read()))
 game |= {f'ACH_STREAK_{c}' for c in (3, 4, 5, 6, 7)}
 game |= {f'ACH_STREAK_{c}_{t}' for c, t in ((3, 3000), (4, 1500), (5, 500), (6, 200), (7, 100))}
@@ -38,52 +38,60 @@ PLUS = {'ACH_STREAK_3_3000','ACH_STREAK_4_1500','ACH_STREAK_5_500',
 def desc(lang, aid):
     if aid == 'ACH_TUTORIAL':
         return {'en':'Complete the Tutorial chapter.','de':'Schließe das Tutorial ab.',
-                'es':'Completa el tutorial.'}[lang]
+                'es':'Completa el tutorial.','zh':'完成教程。'}[lang]
     if aid in CH:
         n = CH[aid]
         return {'en':f'Complete Chapter {n}.','de':f'Schließe Kapitel {n} ab.',
-                'es':f'Completa el capítulo {n}.'}[lang]
+                'es':f'Completa el capítulo {n}.','zh':f'完成第 {n} 章。'}[lang]
     if aid in GAMES:
         n = GAMES[aid]
         return {'en':f'Play {n:,} games.','de':f'Spiele {de_num(n)} Partien.',
-                'es':f'Juega {es_num(n)} partidas.'}[lang]
+                'es':f'Juega {es_num(n)} partidas.','zh':f'进行 {n:,} 场对局。'}[lang]
     if aid == 'ACH_FIRST_WIN':
         return {'en':'Win 100 games.','de':'Gewinne 100 Partien.',
-                'es':'Gana 100 partidas.'}[lang]
+                'es':'Gana 100 partidas.','zh':'赢得 100 场对局。'}[lang]
     if aid in UNDER:
         n = UNDER[aid]
         return {'en':f'Win {n} attacks at less than 33% odds.',
                 'de':f'Gewinne {n} Angriffe mit weniger als 33% Gewinnchance.',
-                'es':f'Gana {n} ataques con menos del 33% de probabilidad.'}[lang]
+                'es':f'Gana {n} ataques con menos del 33% de probabilidad.',
+                'zh':f'在胜率低于 33% 的情况下赢得 {n} 次进攻。'}[lang]
     if aid == 'ACH_DAVID':
         return {'en':'Win an attack with 4 dice against 6 dice.',
                 'de':'Gewinne einen Angriff mit 4 Würfeln gegen 6 Würfel.',
-                'es':'Gana un ataque con 4 dados contra 6 dados.'}[lang]
+                'es':'Gana un ataque con 4 dados contra 6 dados.',
+                'zh':'用 4 个骰子战胜 6 个骰子。'}[lang]
     if aid == 'ACH_PURE_BOTS':
         return {'en':'Let a bots-only game run to completion.',
                 'de':'Lass ein reines Bot-Spiel bis zum Ende laufen.',
-                'es':'Deja que una partida solo de bots llegue al final.'}[lang]
+                'es':'Deja que una partida solo de bots llegue al final.',
+                'zh':'让一场纯电脑对局进行到结束。'}[lang]
     if aid == 'ACH_PURE_HUMANS':
         return {'en':'Play a game with 2 or more humans and no bots.',
                 'de':'Spiele eine Partie mit 2 oder mehr Menschen und ohne Bots.',
-                'es':'Juega una partida con 2 o más humanos y sin bots.'}[lang]
+                'es':'Juega una partida con 2 o más humanos y sin bots.',
+                'zh':'进行一场 2 人以上、没有电脑的对局。'}[lang]
     if aid == 'ACH_SURVIVOR':
         return {'en':'Win a game against 7 opponents.',
                 'de':'Gewinne eine Partie gegen 7 Gegner.',
-                'es':'Gana una partida contra 7 rivales.'}[lang]
+                'es':'Gana una partida contra 7 rivales.',
+                'zh':'在 7 名对手的对局中获胜。'}[lang]
     if aid in STREAK:
         chain, count = STREAK[aid]
         if count == 1:
             return {'en':f'Chain {chain} consecutive attacks from the same tile.',
                     'de':f'Verkette {chain} aufeinanderfolgende Angriffe vom selben Feld.',
-                    'es':f'Encadena {chain} ataques consecutivos desde la misma casilla.'}[lang]
+                    'es':f'Encadena {chain} ataques consecutivos desde la misma casilla.',
+                    'zh':f'从同一格连续进攻 {chain} 次。'}[lang]
         if aid in PLUS:
             return {'en':f'Chain {chain}+ attacks from the same tile {count:,} times.',
                     'de':f'Verkette {chain} oder mehr Angriffe vom selben Feld, insgesamt {de_num(count)} Mal.',
-                    'es':f'Encadena {chain} o más ataques desde la misma casilla {es_num(count)} veces.'}[lang]
+                    'es':f'Encadena {chain} o más ataques desde la misma casilla {es_num(count)} veces.',
+                    'zh':f'从同一格连续进攻 {chain} 次以上，累计 {count:,} 次。'}[lang]
         return {'en':f'Chain {chain} consecutive attacks from the same tile {count:,} times.',
                 'de':f'Verkette {chain} aufeinanderfolgende Angriffe vom selben Feld, insgesamt {count} Mal.',
-                'es':f'Encadena {chain} ataques consecutivos desde la misma casilla {count} veces.'}[lang]
+                'es':f'Encadena {chain} ataques consecutivos desde la misma casilla {count} veces.',
+                'zh':f'从同一格连续进攻 {chain} 次，累计 {count} 次。'}[lang]
     raise KeyError(aid)
 
 # Chapters 5-8 exist in Steam but not in the game yet.
@@ -92,14 +100,16 @@ FUTURE = {
     'Chapter 7 Complete': 7, 'Chapter 8 Complete': 8,
 }
 def future(lang, n):
-    return ({'en':f'Chapter {n} Complete','de':f'Kapitel {n} geschafft','es':f'Capítulo {n} completado'}[lang],
-            {'en':f'Complete Chapter {n}.','de':f'Schließe Kapitel {n} ab.','es':f'Completa el capítulo {n}.'}[lang])
+    return ({'en':f'Chapter {n} Complete','de':f'Kapitel {n} geschafft','es':f'Capítulo {n} completado',
+             'zh':f'第 {n} 章通关'}[lang],
+            {'en':f'Complete Chapter {n}.','de':f'Schließe Kapitel {n} ab.','es':f'Completa el capítulo {n}.',
+             'zh':f'完成第 {n} 章。'}[lang])
 
 VDF = 'steam/4429000_loc_all.vdf'
 src = open(VDF, encoding='utf-8').read()
 BLOCK = re.compile(r'^\t"(\w+)"\n\t\{\n\t\t"Tokens"\n\t\t\{\n(.*?)^\t\t\}\n\t\}$', re.S | re.M)
 blocks = {m.group(1): m for m in BLOCK.finditer(src)}
-missing = {'english', 'german', 'spanish'} - set(blocks)
+missing = {'english', 'german', 'spanish', 'schinese'} - set(blocks)
 if missing:
     raise SystemExit(f'{VDF} has no block for: {sorted(missing)}')
 order = re.findall(r'"NEW_ACHIEVEMENT_(\d+_\d+)_NAME"\t+"([^"]*)"', blocks['english'].group(2))
@@ -114,7 +124,7 @@ for tok, raw in order:
     else: raise SystemExit(f'unmapped: {tok} {v!r}')
     resolved.append((tok, aid, FUTURE.get(v)))
 
-STEAM_LANG = {'en': 'english', 'de': 'german', 'es': 'spanish'}
+STEAM_LANG = {'en': 'english', 'de': 'german', 'es': 'spanish', 'zh': 'schinese'}
 
 def tokens(lang):
     out = []
@@ -136,4 +146,4 @@ for lang, steam in STEAM_LANG.items():
 
 open(VDF, 'w', encoding='utf-8').write(out)
 n = len(resolved)
-print(f'{VDF}: {n} achievements x 3 languages, {len(out)} bytes')
+print(f"{VDF}: {n} achievements x {len(STEAM_LANG)} languages, {len(out)} bytes")

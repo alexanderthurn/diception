@@ -90,5 +90,22 @@
 			"Action_MoveRight"		"Atacar a la derecha"
 			"Action_GamepadDrag"	"Mantener para mover el mapa"
 		}
+		"schinese"
+		{
+			"Set_GameControls"	"游戏操作"
+			"Action_CursorMove"	"移动光标"
+			"Action_MapPan"	"拖动地图"
+			"Action_ZoomIn"	"放大"
+			"Action_ZoomOut"	"缩小"
+			"Action_Confirm"	"选择 / 进攻"
+			"Action_Cancel"	"取消选择"
+			"Action_EndTurn"	"结束回合"
+			"Action_Menu"	"主菜单"
+			"Action_MoveUp"	"向上进攻"
+			"Action_MoveDown"	"向下进攻"
+			"Action_MoveLeft"	"向左进攻"
+			"Action_MoveRight"	"向右进攻"
+			"Action_GamepadDrag"	"按住以拖动地图"
+		}
 	}
 }

@@ -9,6 +9,15 @@
     <!-- Pull sprite positions directly from the game's CSS — auto-updates when spritesheet is regenerated -->
     <link rel="stylesheet" href="../public/assets/gfx/sprites.css">
     <style>
+        /* Same subset the game ships, so CJK titles match the in-game type.
+           Only the section-title canvas uses it; the capsule art stays Latin. */
+        @font-face {
+            font-family: 'Noto Sans SC';
+            font-style: normal;
+            font-weight: 100 900;
+            src: url('../public/assets/fonts/NotoSansSC-subset.woff2') format('woff2-variations');
+        }
+
         @font-face {
             font-family: 'Rajdhani';
             font-style: normal;
@@ -2719,7 +2728,7 @@ void main(void) {
             if (!text) return;
 
             const letterSpacing = Math.round(fontSize * 0.2);
-            ctx.font = `700 ${fontSize}px Rajdhani`;
+            ctx.font = `700 ${fontSize}px Rajdhani, "Noto Sans SC"`;
 
             let totalWidth = 0;
             for (let i = 0; i < text.length; i++) {
@@ -2813,19 +2822,19 @@ void main(void) {
         // references, so uploading it replaces the current English images with a
         // fresh glitch roll. "Mods" is spelled the same in every language so far
         // but is still exported per language, so each locale is a complete set.
-        const TITLE_LANGUAGES = ['en', 'de', 'es'];
+        const TITLE_LANGUAGES = ['en', 'de', 'es', 'zh'];
 
         const TITLE_SECTIONS = [
             { section: 'grid_control',      color: '#FFFFFF',
-              text: { en: 'Grid Control',        de: 'Rastersteuerung',     es: 'Control de rejilla' } },
+              text: { en: 'Grid Control',        de: 'Rastersteuerung',     es: 'Control de rejilla', zh: '网格操控' } },
             { section: 'local_multiplayer', color: '#FF0055',
-              text: { en: 'Local Multiplayer',   de: 'Lokaler Mehrspieler', es: 'Multijugador local' } },
+              text: { en: 'Local Multiplayer',   de: 'Lokaler Mehrspieler', es: 'Multijugador local', zh: '本地多人' } },
             { section: 'speed',             color: '#0088FF',
-              text: { en: 'Speed',               de: 'Tempo',               es: 'Velocidad' } },
+              text: { en: 'Speed',               de: 'Tempo',               es: 'Velocidad', zh: '速度' } },
             { section: 'mods',              color: '#FFCC00',
-              text: { en: 'Mods',                de: 'Mods',                es: 'Mods' } },
+              text: { en: 'Mods',                de: 'Mods',                es: 'Mods', zh: '模组' } },
             { section: 'campaign',          color: '#00AA44',
-              text: { en: 'Campaign',            de: 'Kampagne',            es: 'Campaña' } },
+              text: { en: 'Campaign',            de: 'Kampagne',            es: 'Campaña', zh: '战役' } },
         ];
 
         const GLITCH_DENSITY_RANGE   = [5, 40];
@@ -2859,7 +2868,7 @@ void main(void) {
         /** Width the drawn text would occupy at a given font size. */
         function measureTitleWidth(ctx, text, fontSize) {
             const letterSpacing = Math.round(fontSize * 0.2);
-            ctx.font = `700 ${fontSize}px Rajdhani`;
+            ctx.font = `700 ${fontSize}px Rajdhani, "Noto Sans SC"`;
             let total = 0;
             for (let i = 0; i < text.length; i++) {
                 total += ctx.measureText(text[i]).width;
