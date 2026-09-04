@@ -12,16 +12,38 @@ in-game panel does not.
 """
 import re, json, io
 
-loc = {c: json.load(open(f'src/locales/{c}.json', encoding='utf-8')) for c in ('en', 'de', 'es', 'zh')}
+
+# Game locale code -> Steam's name for it in THIS file. Steam is not consistent
+# across its own exports: the achievement importer says "korean" where the store
+# page localization says "koreana".
+STEAM_LANG = {
+    'en': 'english',
+    'de': 'german',
+    'es': 'spanish',
+    'zh': 'schinese',
+}
+
+loc = {c: json.load(open(f'src/locales/{c}.json', encoding='utf-8')) for c in STEAM_LANG}
 game = set(re.findall(r"id:\s*'([A-Z0-9_]+)'", open('src/core/achievements.js', encoding='utf-8').read()))
 game |= {f'ACH_STREAK_{c}' for c in (3, 4, 5, 6, 7)}
 game |= {f'ACH_STREAK_{c}_{t}' for c, t in ((3, 3000), (4, 1500), (5, 500), (6, 200), (7, 100))}
 
-def de_num(n): return f'{n:,}'.replace(',', '.')
-def es_num(n): return f'{n:,}'.replace(',', '.')
+# Steam shows fuller sentences than the in-game panel: same wording, closed with
+# a full stop. Deriving them from the locale files rather than keeping a table
+# here means a new language costs one line in STEAM_LANG and nothing else.
+SENTENCE_END = {'schinese': '。', 'tchinese': '。', 'japanese': '。'}
 
-# Descriptions in Steam's register (full sentences, trailing period), not the
-# terser in-game phrasing. Terminology matches the shipped locale files.
+def t(lang, key, **vars):
+    v = loc[lang][key]
+    for name, val in vars.items():
+        v = v.replace('{' + name + '}', str(val))
+    return v
+
+def sentence(lang, text):
+    """Close the sentence the way the language does, without doubling it."""
+    end = SENTENCE_END.get(STEAM_LANG[lang], '.')
+    return text if text.endswith(('.', '。', '！', '!')) else text + end
+
 CH = {'ACH_CHAPTER1': 1, 'ACH_CHAPTER2': 2, 'ACH_CHAPTER3': 3, 'ACH_CHAPTER4': 4}
 GAMES = {'ACH_GAMES_10':10,'ACH_GAMES_50':50,'ACH_GAMES_100':100,'ACH_GAMES_150':150,
          'ACH_GAMES_200':200,'ACH_GAMES_300':300,'ACH_GAMES_400':400,'ACH_GAMES_500':500,
@@ -32,84 +54,45 @@ STREAK = {'ACH_STREAK_3':(3,30),'ACH_STREAK_4':(4,15),'ACH_STREAK_5':(5,5),
           'ACH_STREAK_6':(6,2),'ACH_STREAK_7':(7,1),
           'ACH_STREAK_3_3000':(3,3000),'ACH_STREAK_4_1500':(4,1500),
           'ACH_STREAK_5_500':(5,500),'ACH_STREAK_6_200':(6,200),'ACH_STREAK_7_100':(7,100)}
-PLUS = {'ACH_STREAK_3_3000','ACH_STREAK_4_1500','ACH_STREAK_5_500',
-        'ACH_STREAK_6_200','ACH_STREAK_7_100'}
 
 def desc(lang, aid):
     if aid == 'ACH_TUTORIAL':
-        return {'en':'Complete the Tutorial chapter.','de':'Schließe das Tutorial ab.',
-                'es':'Completa el tutorial.','zh':'完成教程。'}[lang]
+        return sentence(lang, t(lang, 'ach.desc.campaign', name=t(lang, 'campaign.name_tutorial')))
     if aid in CH:
-        n = CH[aid]
-        return {'en':f'Complete Chapter {n}.','de':f'Schließe Kapitel {n} ab.',
-                'es':f'Completa el capítulo {n}.','zh':f'完成第 {n} 章。'}[lang]
+        name = t(lang, f'campaign.name_chapter{CH[aid]}')
+        return sentence(lang, t(lang, 'ach.desc.campaign', name=name))
     if aid in GAMES:
-        n = GAMES[aid]
-        return {'en':f'Play {n:,} games.','de':f'Spiele {de_num(n)} Partien.',
-                'es':f'Juega {es_num(n)} partidas.','zh':f'进行 {n:,} 场对局。'}[lang]
+        return sentence(lang, t(lang, 'ach.desc.games_played', count=f'{GAMES[aid]:,}'))
     if aid == 'ACH_FIRST_WIN':
-        return {'en':'Win 100 games.','de':'Gewinne 100 Partien.',
-                'es':'Gana 100 partidas.','zh':'赢得 100 场对局。'}[lang]
+        return sentence(lang, t(lang, 'ach.desc.games_won', count='100'))
     if aid in UNDER:
-        n = UNDER[aid]
-        return {'en':f'Win {n} attacks at less than 33% odds.',
-                'de':f'Gewinne {n} Angriffe mit weniger als 33% Gewinnchance.',
-                'es':f'Gana {n} ataques con menos del 33% de probabilidad.',
-                'zh':f'在胜率低于 33% 的情况下赢得 {n} 次进攻。'}[lang]
+        return sentence(lang, t(lang, 'ach.desc.underdog', count=UNDER[aid]))
     if aid == 'ACH_DAVID':
-        return {'en':'Win an attack with 4 dice against 6 dice.',
-                'de':'Gewinne einen Angriff mit 4 Würfeln gegen 6 Würfel.',
-                'es':'Gana un ataque con 4 dados contra 6 dados.',
-                'zh':'用 4 个骰子战胜 6 个骰子。'}[lang]
+        return sentence(lang, t(lang, 'ach.desc.won4vs6'))
     if aid == 'ACH_PURE_BOTS':
-        return {'en':'Let a bots-only game run to completion.',
-                'de':'Lass ein reines Bot-Spiel bis zum Ende laufen.',
-                'es':'Deja que una partida solo de bots llegue al final.',
-                'zh':'让一场纯电脑对局进行到结束。'}[lang]
+        return sentence(lang, t(lang, 'ach.desc.pure_bots'))
     if aid == 'ACH_PURE_HUMANS':
-        return {'en':'Play a game with 2 or more humans and no bots.',
-                'de':'Spiele eine Partie mit 2 oder mehr Menschen und ohne Bots.',
-                'es':'Juega una partida con 2 o más humanos y sin bots.',
-                'zh':'进行一场 2 人以上、没有电脑的对局。'}[lang]
+        return sentence(lang, t(lang, 'ach.desc.pure_humans'))
     if aid == 'ACH_SURVIVOR':
-        return {'en':'Win a game against 7 opponents.',
-                'de':'Gewinne eine Partie gegen 7 Gegner.',
-                'es':'Gana una partida contra 7 rivales.',
-                'zh':'在 7 名对手的对局中获胜。'}[lang]
+        return sentence(lang, t(lang, 'ach.desc.won8player'))
     if aid in STREAK:
         chain, count = STREAK[aid]
-        if count == 1:
-            return {'en':f'Chain {chain} consecutive attacks from the same tile.',
-                    'de':f'Verkette {chain} aufeinanderfolgende Angriffe vom selben Feld.',
-                    'es':f'Encadena {chain} ataques consecutivos desde la misma casilla.',
-                    'zh':f'从同一格连续进攻 {chain} 次。'}[lang]
-        if aid in PLUS:
-            return {'en':f'Chain {chain}+ attacks from the same tile {count:,} times.',
-                    'de':f'Verkette {chain} oder mehr Angriffe vom selben Feld, insgesamt {de_num(count)} Mal.',
-                    'es':f'Encadena {chain} o más ataques desde la misma casilla {es_num(count)} veces.',
-                    'zh':f'从同一格连续进攻 {chain} 次以上，累计 {count:,} 次。'}[lang]
-        return {'en':f'Chain {chain} consecutive attacks from the same tile {count:,} times.',
-                'de':f'Verkette {chain} aufeinanderfolgende Angriffe vom selben Feld, insgesamt {count} Mal.',
-                'es':f'Encadena {chain} ataques consecutivos desde la misma casilla {count} veces.',
-                'zh':f'从同一格连续进攻 {chain} 次，累计 {count} 次。'}[lang]
+        return sentence(lang, t(lang, 'ach.desc.streak', n=chain, count=f'{count:,}'))
     raise KeyError(aid)
 
-# Chapters 5-8 exist in Steam but not in the game yet.
-FUTURE = {
-    'Chapter 5 Complete': 5, 'Chapter 6 Complete': 6,
-    'Chapter 7 Complete': 7, 'Chapter 8 Complete': 8,
-}
+# Steam carries Chapter 5-8 placeholders the game does not define yet.
+FUTURE = {f'Chapter {n} Complete': n for n in (5, 6, 7, 8)}
+
 def future(lang, n):
-    return ({'en':f'Chapter {n} Complete','de':f'Kapitel {n} geschafft','es':f'Capítulo {n} completado',
-             'zh':f'第 {n} 章通关'}[lang],
-            {'en':f'Complete Chapter {n}.','de':f'Schließe Kapitel {n} ab.','es':f'Completa el capítulo {n}.',
-             'zh':f'完成第 {n} 章。'}[lang])
+    name = t(lang, 'campaign.name_chapter_n', n=n)
+    title = t(lang, 'ach.ACH_CHAPTER1.title').replace(t(lang, 'campaign.name_chapter1'), name)
+    return title, sentence(lang, t(lang, 'ach.desc.campaign', name=name))
 
 VDF = 'steam/4429000_loc_all.vdf'
 src = open(VDF, encoding='utf-8').read()
 BLOCK = re.compile(r'^\t"(\w+)"\n\t\{\n\t\t"Tokens"\n\t\t\{\n(.*?)^\t\t\}\n\t\}$', re.S | re.M)
 blocks = {m.group(1): m for m in BLOCK.finditer(src)}
-missing = {'english', 'german', 'spanish', 'schinese'} - set(blocks)
+missing = set(STEAM_LANG.values()) - set(blocks)
 if missing:
     raise SystemExit(f'{VDF} has no block for: {sorted(missing)}')
 order = re.findall(r'"NEW_ACHIEVEMENT_(\d+_\d+)_NAME"\t+"([^"]*)"', blocks['english'].group(2))
@@ -123,8 +106,6 @@ for tok, raw in order:
     elif v in FUTURE:        aid = None
     else: raise SystemExit(f'unmapped: {tok} {v!r}')
     resolved.append((tok, aid, FUTURE.get(v)))
-
-STEAM_LANG = {'en': 'english', 'de': 'german', 'es': 'spanish', 'zh': 'schinese'}
 
 def tokens(lang):
     out = []

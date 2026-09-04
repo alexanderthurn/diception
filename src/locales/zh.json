@@ -170,6 +170,7 @@
   "campaign.name_chapter2": "第二章",
   "campaign.name_chapter3": "第三章",
   "campaign.name_chapter4": "第四章",
+  "campaign.name_chapter_n": "第 {n} 章",
   "campaign.name_tutorial": "教程",
   "campaign.name_user": "你的战役",
   "campaign.pick_first": "请先从列表中选择一个战役。",

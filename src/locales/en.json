@@ -170,6 +170,7 @@
   "campaign.name_chapter2": "Chapter 2",
   "campaign.name_chapter3": "Chapter 3",
   "campaign.name_chapter4": "Chapter 4",
+  "campaign.name_chapter_n": "Chapter {n}",
   "campaign.name_tutorial": "Tutorial",
   "campaign.name_user": "Your Campaign",
   "campaign.pick_first": "Choose a campaign from the list first.",
