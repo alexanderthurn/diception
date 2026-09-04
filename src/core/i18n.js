@@ -45,6 +45,7 @@ export const LANGUAGE_NAMES = {
     'vi': 'Tiếng Việt',
     'zh-tw': '繁體中文',
     'es-419': 'Español (LatAm)',
+    'pt': 'Português (PT)',
 };
 const FALLBACK = 'en';
 
@@ -78,6 +79,7 @@ const LOCALES = {
     'vi': () => import('../locales/vi.json').then(m => m.default),
     'zh-tw': () => import('../locales/zh-tw.json').then(m => m.default),
     'es-419': () => import('../locales/es-419.json').then(m => m.default),
+    'pt': () => import('../locales/pt.json').then(m => m.default),
 };
 
 let _strings = en;
