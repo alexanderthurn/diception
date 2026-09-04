@@ -68,15 +68,6 @@
         U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF;
 }
 
-/* Korean. Written by scripts/build-fonts.py once ko.json exists. */
-@font-face {
-    font-family: 'Noto Sans KR';
-    font-style: normal;
-    font-weight: 100 900;
-    font-display: swap;
-    src: url('/assets/fonts/NotoSansKR-subset.woff2') format('woff2-variations');
-    unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3;
-}
 
 /* Gamepad / keyboard focus ring — visible only on non-mouse focus */
 :focus {

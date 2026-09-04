@@ -23,7 +23,7 @@ export const LANGUAGE_NAMES = {
     zh: '中文',
     fr: 'Français',
     ru: 'Русский',
-    pt-br: 'Português (BR)',
+    'pt-br': 'Português (BR)',
 };
 const FALLBACK = 'en';
 
@@ -35,7 +35,7 @@ const LOCALES = {
     zh: () => import('../locales/zh.json').then(m => m.default),
     fr: () => import('../locales/fr.json').then(m => m.default),
     ru: () => import('../locales/ru.json').then(m => m.default),
-    pt-br: () => import('../locales/pt-br.json').then(m => m.default),
+    'pt-br': () => import('../locales/pt-br.json').then(m => m.default),
 };
 
 let _strings = en;
