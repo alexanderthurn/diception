@@ -40,8 +40,7 @@ const SECTIONS = [
 
 function getDescription(ach) {
     if (ach.type === 'campaign') {
-        const name = ach.campaign.charAt(0).toUpperCase() + ach.campaign.slice(1);
-        return t('ach.desc.campaign', { name });
+        return t('ach.desc.campaign', { name: t(`campaign.name_${ach.campaign}`) });
     }
     if (ach.type === 'stat') {
         const count = ach.threshold.toLocaleString();

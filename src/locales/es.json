@@ -70,7 +70,7 @@
   "ach.ACH_UNDERDOG_50.title": "Héroe improbable",
   "ach.ACH_UNDERDOG_500.title": "El favorito de la fortuna",
   "ach.all_sizes": "Todos los tamaños",
-  "ach.desc.campaign": "Completa el capítulo {name}",
+  "ach.desc.campaign": "Completa {name}",
   "ach.desc.games_played": "Juega {count} partidas",
   "ach.desc.games_won": "Gana {count} partidas",
   "ach.desc.pure_bots": "Deja que una partida solo de bots llegue al final",

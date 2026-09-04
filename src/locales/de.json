@@ -70,7 +70,7 @@
   "ach.ACH_UNDERDOG_50.title": "Unerwarteter Held",
   "ach.ACH_UNDERDOG_500.title": "Glückskind",
   "ach.all_sizes": "Alle Größen",
-  "ach.desc.campaign": "Schließe das Kapitel {name} ab",
+  "ach.desc.campaign": "Schließe {name} ab",
   "ach.desc.games_played": "Spiele {count} Partien",
   "ach.desc.games_won": "Gewinne {count} Partien",
   "ach.desc.pure_bots": "Lass ein reines Bot-Spiel bis zum Ende laufen",

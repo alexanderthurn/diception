@@ -70,7 +70,7 @@
   "ach.ACH_UNDERDOG_50.title": "Unlikely Hero",
   "ach.ACH_UNDERDOG_500.title": "Fortune's Favorite",
   "ach.all_sizes": "All sizes",
-  "ach.desc.campaign": "Complete the {name} chapter",
+  "ach.desc.campaign": "Complete {name}",
   "ach.desc.games_played": "Play {count} games",
   "ach.desc.games_won": "Win {count} games",
   "ach.desc.pure_bots": "Let a bots-only game run to completion",
