@@ -45,6 +45,12 @@ Both read `src/locales/*.json` and are idempotent. They rewrite only the token
 values, leaving the surrounding structure byte-identical, so re-downloading
 after an upload diffs cleanly.
 
+### Steam's language names are not consistent between its own exports
+
+Korean is `korean` in the achievement VDF but `koreana` in the store page JSON,
+and `koreana` is what the **asset upload form** matches (verified). The
+generators map per file; do not assume one name works everywhere.
+
 A language only appears in these files once it is enabled for the app in
 Steamworks and the file is re-exported — the generators fill blocks that exist,
 they do not create them.

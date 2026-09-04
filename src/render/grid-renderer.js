@@ -1776,7 +1776,7 @@ export class GridRenderer {
         const label = new Text({
             text,
             style: new TextStyle({
-                fontFamily: 'Rajdhani, "Noto Sans SC", Arial',
+                fontFamily: 'Rajdhani, "Noto Sans Fallback", "Noto Sans SC", "Noto Sans KR", Arial',
                 fontSize,
                 fontWeight: '700',
                 fill: '#ffffff',
@@ -1848,7 +1848,7 @@ export class GridRenderer {
         const label = new Text({
             text,
             style: new TextStyle({
-                fontFamily: 'Rajdhani, "Noto Sans SC", Arial',
+                fontFamily: 'Rajdhani, "Noto Sans Fallback", "Noto Sans SC", "Noto Sans KR", Arial',
                 fontSize,
                 fontWeight: '700',
                 fill: '#ffffff',
