@@ -347,7 +347,7 @@ async function init() {
         qrCodeContainer.label = new Text({
             text: '',
             style: new TextStyle({
-                fontFamily: 'Rajdhani, "Noto Sans Fallback", "Noto Sans SC", "Noto Sans KR"',
+                fontFamily: 'Rajdhani, "Noto Sans Fallback", "Noto Sans SC", "Noto Sans TC", "Noto Sans KR"',
                 fontSize: 22,
                 fontWeight: '700',
                 fill: '#00ffff',

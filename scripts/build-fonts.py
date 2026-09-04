@@ -18,8 +18,9 @@ Run from the repo root:
 
     python scripts/build-fonts.py
 
-Each @font-face in styles.css carries a unicode-range so a player only
-downloads the scripts their language needs.
+Order matters: each subset drops every codepoint an earlier one already
+claimed, so no two ranges overlap. Each @font-face in styles.css carries a
+unicode-range, so a player only downloads the scripts their language needs.
 """
 import json, os, struct, sys, urllib.request
 
@@ -77,6 +78,27 @@ SUBSETS = [
             (0xAC00, 0xD7A3),   # Hangul syllables
         ],
     },
+    {
+        # Traditional Chinese. Built last and stripped of every codepoint the
+        # Simplified subset already carries, so the two unicode-ranges never
+        # overlap and each character has exactly one face that can draw it.
+        # The scripts mostly use different codepoints (戰 vs 战), so what stays
+        # here is genuinely Traditional; the handful both share (骰子, 回合)
+        # renders from the SC face, where the shapes are all but identical.
+        'out': 'NotoSansTC-subset.woff2',
+        'source': f'{GF}/notosanstc/NotoSansTC%5Bwght%5D.ttf',
+        'cache': 'NotoSansTC-variable.ttf',
+        'mode': 'usage',
+        'locales': ['zh-tw'],
+        'blocks': [
+            (0x2E80, 0x2EFF),   # CJK radicals
+            (0x3000, 0x303F),   # CJK punctuation
+            (0x3400, 0x4DBF),   # CJK ext A
+            (0x4E00, 0x9FFF),   # CJK unified ideographs
+            (0xF900, 0xFAFF),   # compatibility ideographs
+            (0xFF00, 0xFFEF),   # fullwidth forms
+        ],
+    },
 ]
 
 def cmap_codepoints(path):
@@ -114,7 +136,7 @@ def fetch(url, cache):
         urllib.request.urlretrieve(url, path)
     return path
 
-def build(spec, latin):
+def build(spec, claimed):
     in_blocks = lambda cp: any(lo <= cp <= hi for lo, hi in spec['blocks'])
 
     if spec['mode'] == 'blocks':
@@ -122,7 +144,7 @@ def build(spec, latin):
         available = cmap_codepoints(source)
         # Skip anything Rajdhani already draws. It sits first in every stack, so
         # it wins for those glyphs regardless — carrying them twice is dead weight.
-        wanted = sorted(cp for cp in available if in_blocks(cp) and cp not in latin)
+        wanted = sorted(cp for cp in available if in_blocks(cp) and cp not in claimed)
     else:
         used = set()
         for code in spec['locales']:
@@ -131,10 +153,10 @@ def build(spec, latin):
                 continue
             for v in json.load(open(path, encoding='utf-8')).values():
                 used |= {ord(c) for c in v}
-        wanted = sorted(cp for cp in used if in_blocks(cp) and cp not in latin)
+        wanted = sorted(cp for cp in used if in_blocks(cp) and cp not in claimed)
         if not wanted:
             print(f'{spec["out"]}: no text for {spec["locales"]} yet, skipped')
-            return
+            return set()
         source = fetch(spec['source'], spec['cache'])
 
     from fontTools import subset
@@ -153,11 +175,15 @@ def build(spec, latin):
     print(f'{spec["out"]}: {len(wanted)} glyphs, {os.path.getsize(out)/1024:.1f} KB '
           f'({spec["mode"]})')
     print('   unicode-range: ' + ', '.join(f'U+{lo:04X}-{hi:04X}' for lo, hi in spec['blocks']))
+    return set(wanted)
 
 def main():
-    latin = cmap_codepoints(LATIN_FONT)
+    # Rajdhani sits first in every stack, so it wins for the glyphs it has;
+    # carrying those again in a fallback is dead weight. Each subset then also
+    # gives up whatever an earlier one claimed, keeping the ranges disjoint.
+    claimed = cmap_codepoints(LATIN_FONT)
     for spec in SUBSETS:
-        build(spec, latin)
+        claimed |= build(spec, claimed)
 
 if __name__ == '__main__':
     main()

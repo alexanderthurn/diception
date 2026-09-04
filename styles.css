@@ -78,6 +78,20 @@
         U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF;
 }
 
+/* Traditional Chinese carries only the characters Simplified does not, so the
+   two files never draw the same codepoint. It sits after 'Noto Sans SC' in every
+   stack: shared characters come from the SC face, Traditional-only ones fall
+   through to this one. */
+@font-face {
+    font-family: 'Noto Sans TC';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/assets/fonts/NotoSansTC-subset.woff2') format('woff2-variations');
+    unicode-range: U+2E80-2EFF, U+3000-303F, U+3400-4DBF, U+4E00-9FFF,
+        U+F900-FAFF, U+FF00-FFEF;
+}
+
 
 /* Gamepad / keyboard focus ring — visible only on non-mouse focus */
 :focus {
@@ -169,7 +183,7 @@ body {
     overflow: hidden;
     overscroll-behavior: none;
     background-color: var(--bg-color);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     color: var(--text-color);
     /* Disable all browser gestures (zoom, pan) by default */
     touch-action: none;
@@ -326,7 +340,7 @@ body.loading-active #ui-overlay {
     border: none;
     border-right: 1px solid var(--border-color);
     color: var(--border-color);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-weight: bold;
     font-size: 13px;
     text-transform: uppercase;
@@ -888,7 +902,7 @@ body.fx-off .player-tile.rumble-lose {
 }
 
 .tron-btn {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     background: #000;
     border: 1px solid var(--border-color);
     color: var(--border-color);
@@ -1659,7 +1673,7 @@ select {
 }
 
 .dice-roll {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', monospace;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', monospace;
     color: #fff;
 }
 
@@ -2176,7 +2190,7 @@ select {
 
 .loading-status {
     color: var(--border-color);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', monospace;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', monospace;
     font-size: 1.2rem;
     letter-spacing: 2px;
     margin-top: 20px;
@@ -2188,7 +2202,7 @@ select {
     bottom: 25px;
     right: 30px;
     color: var(--border-color);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', monospace;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', monospace;
     font-size: 0.75rem;
     opacity: 0.5;
     margin: 0;
@@ -2200,7 +2214,7 @@ select {
     bottom: 5px;
     right: 10px;
     color: var(--border-color);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', monospace;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', monospace;
     font-size: 0.65rem;
     opacity: 0.4;
     pointer-events: none;
@@ -2442,7 +2456,7 @@ select {
 .system-logs {
     width: 90%;
     height: 100px;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', monospace;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', monospace;
     font-size: 0.8rem;
     color: #00ff00;
     text-align: left;
@@ -2507,7 +2521,7 @@ select {
     bottom: 25px;
     left: 30px;
     color: var(--border-color);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', monospace;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', monospace;
     font-size: 0.75rem;
     letter-spacing: 1px;
     opacity: 0.5;
@@ -5428,7 +5442,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     right: 0;
     top: 0;
     transform: translate(50%, -50%);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 11px;
     font-weight: 700;
     line-height: 1;
@@ -5458,7 +5472,7 @@ body:has(#scenario-browser-modal:not(.hidden)) #global-back-btn {
     top: 48px;
     left: 50%;
     transform: translateX(-50%);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 13px;
     font-weight: 700;
     line-height: 1;
@@ -5509,7 +5523,7 @@ body.multi-gamepad:has(#setup-modal:not(.hidden)) .gp-cursor-label {
     left: 50%;
     transform: translateX(-50%);
     color: #00ff00;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', monospace;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', monospace;
     font-size: 13px;
     z-index: 1000;
     pointer-events: none;
@@ -5521,7 +5535,7 @@ body.multi-gamepad:has(#setup-modal:not(.hidden)) .gp-cursor-label {
     bottom: 16px;
     right: 16px;
     color: rgba(0, 255, 255, 0.4);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', monospace;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', monospace;
     font-size: 12px;
     letter-spacing: 1px;
     z-index: 20;
@@ -5544,7 +5558,7 @@ body:has(.dialog-box:not(.hidden)) .game-version-display {
     list-style: none;
     cursor: pointer;
     padding: 12px 0;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 14px;
     font-weight: 700;
     letter-spacing: 2px;
@@ -5986,7 +6000,7 @@ canvas {
 
 .gce-section-label {
     width: 100%;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 2px;
@@ -5996,7 +6010,7 @@ canvas {
 }
 
 .gce-no-gamepad {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 12px;
     color: rgba(255, 255, 255, 0.35);
     font-style: italic;
@@ -6701,7 +6715,7 @@ canvas {
     text-transform: uppercase;
     letter-spacing: 1px;
     border-bottom: 1px solid rgba(0, 255, 255, 0.15);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-weight: bold;
 }
 
@@ -6713,7 +6727,7 @@ canvas {
     border: none;
     border-left: 3px solid transparent;
     color: #ccc;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 0.95em;
     text-align: left;
     cursor: pointer;
@@ -6861,7 +6875,7 @@ canvas {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 1.15em;
     font-weight: 600;
     letter-spacing: 0.08em;
@@ -6883,7 +6897,7 @@ canvas {
 
 .tutorial-reinforce-bonus {
     color: #00ffff;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 1.3em;
     font-weight: 700;
     letter-spacing: 0.05em;
@@ -6910,7 +6924,7 @@ canvas {
 }
 
 .speed-description li {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 0.85em;
     color: rgba(200, 240, 245, 0.85);
     padding: 2px 0;
@@ -7091,7 +7105,7 @@ canvas {
 .ach-stats-table {
     width: 100%;
     max-width: 320px;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     border-collapse: collapse;
     margin-bottom: 12px;
     background: rgba(0, 22, 28, 0.96);
@@ -7137,7 +7151,7 @@ canvas {
 
 .ach-section-header {
     grid-column: 1 / -1;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-weight: 700;
     font-size: 11px;
     letter-spacing: 3px;
@@ -7229,7 +7243,7 @@ canvas {
 }
 
 .ach-card-title {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-weight: 700;
     font-size: 14px;
     color: rgba(198, 244, 252, 0.92);
@@ -7243,7 +7257,7 @@ canvas {
 }
 
 .ach-card-desc {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 13px;
     color: rgba(164, 210, 220, 0.86);
     line-height: 1.4;
@@ -7274,7 +7288,7 @@ canvas {
     color: rgba(177, 228, 239, 0.9);
     font-size: 11px;
     margin-top: 3px;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     letter-spacing: 1px;
 }
 
@@ -7292,7 +7306,7 @@ canvas {
     border: 1px solid var(--border-color);
     padding: 12px 16px;
     max-width: 320px;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     opacity: 0;
     transform: translateX(24px);
     transition: opacity 0.35s, transform 0.35s;
@@ -7335,7 +7349,7 @@ canvas {
     padding: 8px 14px;
     min-width: 180px;
     max-width: 280px;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     opacity: 0;
     transform: translateX(24px);
     transition: opacity 0.25s, transform 0.25s;
@@ -7391,7 +7405,7 @@ canvas {
 }
 
 .m-label {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 3px;
@@ -8387,7 +8401,7 @@ canvas {
 }
 
 #settings-modal .settings-group-header {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 16px;
     font-weight: 700;
     letter-spacing: 3px;
@@ -8650,7 +8664,7 @@ canvas {
 }
 
 .gamepad-assign-label {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-weight: 600;
     font-size: 13px;
     letter-spacing: 1px;
@@ -8708,7 +8722,7 @@ canvas {
 }
 
 #turn-timer {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 32px;
     font-weight: 700;
     color: var(--border-color);
@@ -8719,7 +8733,7 @@ canvas {
 }
 
 .turn-attacks-left {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 1rem;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -8803,7 +8817,7 @@ canvas {
 }
 
 .gcp-lbl {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 13px;
     font-weight: 700;
     fill: rgba(0, 255, 255, 0.8);
@@ -8819,7 +8833,7 @@ canvas {
 }
 
 .gcp-btn-lbl {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 8.5px;
     font-weight: 700;
     fill: rgba(0, 255, 255, 0.9);
@@ -8832,7 +8846,7 @@ canvas {
 }
 
 .gp-master-hint {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.5px;
@@ -8892,7 +8906,7 @@ canvas {
 }
 
 .gp-panel-title {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-weight: 700;
     font-size: 11px;
     letter-spacing: 3px;
@@ -8908,7 +8922,7 @@ canvas {
 }
 
 .gp-panel-subtitle {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-weight: 600;
     font-size: 10px;
     letter-spacing: 2px;
@@ -8921,7 +8935,7 @@ canvas {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 12px;
     color: rgba(200, 240, 255, 0.85);
 }
@@ -8946,7 +8960,7 @@ canvas {
     border-color: var(--gp-color, #aaa);
     background: color-mix(in srgb, var(--gp-color, #aaa) 20%, transparent);
     color: #fff;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 15px;
     font-weight: 700;
 }
@@ -9034,7 +9048,7 @@ canvas {
     border: 1px solid rgba(0, 255, 255, 0.35);
     color: #00ffff;
     text-decoration: none;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-weight: 700;
     font-size: 1em;
     letter-spacing: 2px;
@@ -9282,7 +9296,7 @@ input[type="range"].gamepad-slider-editing {
 }
 
 .attack-role-label {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 17px;
     font-weight: 700;
     text-transform: uppercase;
@@ -9305,7 +9319,7 @@ input[type="range"].gamepad-slider-editing {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 22px;
     font-weight: 700;
     background: rgba(0, 0, 0, 0.5);
@@ -9364,7 +9378,7 @@ input[type="range"].gamepad-slider-editing {
 }
 
 .attack-side-sum {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 30px;
     font-weight: 700;
     color: #fff;
@@ -9394,7 +9408,7 @@ input[type="range"].gamepad-slider-editing {
 }
 
 .attack-vs-label {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 14px;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.3);
@@ -9402,7 +9416,7 @@ input[type="range"].gamepad-slider-editing {
 }
 
 .attack-compare-sign {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 44px;
     font-weight: 700;
     opacity: 0;
@@ -9432,7 +9446,7 @@ input[type="range"].gamepad-slider-editing {
     bottom: 12px;
     left: 50%;
     transform: translateX(-50%) scale(0.6);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 22px;
     font-weight: 700;
     letter-spacing: 3px;
@@ -9503,7 +9517,7 @@ input[type="range"].gamepad-slider-editing {
 }
 
 .victory-title {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: clamp(3.5rem, 10vw, 7rem);
     font-weight: 700;
     letter-spacing: 0.3em;
@@ -9514,7 +9528,7 @@ input[type="range"].gamepad-slider-editing {
 }
 
 .victory-hint {
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 0.85rem;
     color: rgba(255, 255, 255, 0);
     letter-spacing: 0.25em;
@@ -9839,7 +9853,7 @@ input[type="range"].gamepad-slider-editing {
     background: none;
     border: none;
     color: rgba(0, 255, 255, 0.65);
-    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans KR', sans-serif;
+    font-family: 'Rajdhani', 'Noto Sans Fallback', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans KR', sans-serif;
     font-size: 0.95em;
     cursor: pointer;
     padding: 2px 8px;

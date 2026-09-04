@@ -43,6 +43,7 @@ export const LANGUAGE_NAMES = {
     'id': 'Bahasa Indonesia',
     'ms': 'Bahasa Melayu',
     'vi': 'Tiếng Việt',
+    'zh-tw': '繁體中文',
 };
 const FALLBACK = 'en';
 
@@ -74,6 +75,7 @@ const LOCALES = {
     'id': () => import('../locales/id.json').then(m => m.default),
     'ms': () => import('../locales/ms.json').then(m => m.default),
     'vi': () => import('../locales/vi.json').then(m => m.default),
+    'zh-tw': () => import('../locales/zh-tw.json').then(m => m.default),
 };
 
 let _strings = en;
