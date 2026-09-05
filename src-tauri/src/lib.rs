@@ -55,6 +55,30 @@ fn steam_get_app_id(state: tauri::State<SteamState>) -> Result<u32, String> {
 
 #[cfg(not(target_os = "android"))]
 #[tauri::command]
+fn steam_get_game_language(state: tauri::State<SteamState>) -> Result<String, String> {
+    // The language the player picked for this game in Steam, which is a separate
+    // setting from the OS locale the webview sees as navigator.language.
+    // Steam passes -language on launch, so that is preferred; current_game_language()
+    // has no way to say "unknown" and falls back to the Steam UI language instead.
+    let args: Vec<String> = std::env::args().collect();
+    if let Some(i) = args.iter().position(|a| a == "-language") {
+        if let Some(v) = args.get(i + 1) {
+            let v = v.trim().to_lowercase();
+            if !v.is_empty() {
+                return Ok(v);
+            }
+        }
+    }
+    let guard = state.lock().map_err(|e| e.to_string())?;
+    guard
+        .as_ref()
+        .map(|s| s.client.apps().current_game_language().trim().to_lowercase())
+        .filter(|l| !l.is_empty())
+        .ok_or_else(|| "Steam not initialized".to_string())
+}
+
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
 fn steam_is_dev() -> bool {
     cfg!(debug_assertions)
 }
@@ -231,6 +255,7 @@ const STEAM_INIT_SCRIPT: &str = r#"
         getSteamId:       function()         { return ipc.invoke('steam_get_steam_id'); },
         getAppId:         function()         { return ipc.invoke('steam_get_app_id'); },
         isDev:            function()         { return ipc.invoke('steam_is_dev'); },
+        getGameLanguage:  function()         { return ipc.invoke('steam_get_game_language'); },
         quit:             function()         { return ipc.invoke('steam_quit'); },
         activateOverlay:  function(dialog)   { return ipc.invoke('steam_activate_overlay', { dialog: dialog || 'Friends' }); },
         openStore:        function()         { return ipc.invoke('steam_activate_overlay_to_store'); },
@@ -332,6 +357,7 @@ pub fn run() {
                 steam_get_steam_id,
                 steam_get_app_id,
                 steam_is_dev,
+                steam_get_game_language,
                 steam_quit,
                 steam_activate_overlay,
                 steam_activate_overlay_to_store,
