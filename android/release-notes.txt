@@ -1,0 +1,145 @@
+<en-US>
+Diception now speaks 29 languages.
+Menus, tutorial, rules and achievements are fully translated.
+The game follows your device language. You can pick another any time under Settings → LANGUAGE.
+</en-US>
+<bg>
+Diception вече говори 29 езика.
+Менютата, обучението, правилата и постиженията са напълно преведени.
+Играта следва езика на устройството ти. Можеш да избереш друг по всяко време в Настройки → ЕЗИК.
+</bg>
+<cs-CZ>
+Diception teď mluví 29 jazyky.
+Nabídky, výuka, pravidla i achievementy jsou plně přeložené.
+Hra se řídí jazykem tvého zařízení. Jiný si můžeš kdykoli vybrat v Nastavení → JAZYK.
+</cs-CZ>
+<da-DK>
+Diception taler nu 29 sprog.
+Menuer, vejledning, regler og præstationer er fuldt oversat.
+Spillet følger din enheds sprog. Du kan altid vælge et andet under Indstillinger → SPROG.
+</da-DK>
+<de-DE>
+Diception spricht jetzt 29 Sprachen.
+Menüs, Tutorial, Regeln und Erfolge sind vollständig übersetzt.
+Das Spiel folgt der Sprache deines Geräts. Eine andere wählst du jederzeit unter Einstellungen → SPRACHE.
+</de-DE>
+<el-GR>
+Το Diception μιλάει πλέον 29 γλώσσες.
+Τα μενού, ο οδηγός, οι κανόνες και τα επιτεύγματα είναι πλήρως μεταφρασμένα.
+Το παιχνίδι ακολουθεί τη γλώσσα της συσκευής σου. Μπορείς να διαλέξεις άλλη όποτε θες στις Ρυθμίσεις → ΓΛΩΣΣΑ.
+</el-GR>
+<es-419>
+Diception ahora habla 29 idiomas.
+Los menús, el tutorial, las reglas y los logros están totalmente traducidos.
+El juego sigue el idioma de tu dispositivo. Puedes elegir otro cuando quieras en Configuración → IDIOMA.
+</es-419>
+<es-ES>
+Diception ahora habla 29 idiomas.
+Los menús, el tutorial, las reglas y los logros están totalmente traducidos.
+El juego sigue el idioma de tu dispositivo. Puedes elegir otro cuando quieras en Ajustes → IDIOMA.
+</es-ES>
+<fi-FI>
+Diception puhuu nyt 29 kieltä.
+Valikot, opastus, säännöt ja saavutukset on käännetty kokonaan.
+Peli seuraa laitteesi kieltä. Voit valita toisen milloin tahansa kohdasta Asetukset → KIELI.
+</fi-FI>
+<fr-FR>
+Diception parle désormais 29 langues.
+Les menus, le tutoriel, les règles et les succès sont entièrement traduits.
+Le jeu suit la langue de votre appareil. Vous pouvez en choisir une autre à tout moment dans Réglages → LANGUE.
+</fr-FR>
+<hu-HU>
+A Diception mostantól 29 nyelven beszél.
+A menük, az oktatómód, a szabályok és a teljesítmények teljesen le vannak fordítva.
+A játék az eszközöd nyelvét követi. Bármikor választhatsz másikat a Beállítások → NYELV alatt.
+</hu-HU>
+<id>
+Diception kini berbicara dalam 29 bahasa.
+Menu, panduan, aturan, dan pencapaian sudah diterjemahkan sepenuhnya.
+Permainan mengikuti bahasa perangkatmu. Kamu bisa memilih yang lain kapan saja di Pengaturan → BAHASA.
+</id>
+<it-IT>
+Diception ora parla 29 lingue.
+Menu, tutorial, regole e obiettivi sono tradotti per intero.
+Il gioco segue la lingua del tuo dispositivo. Puoi sceglierne un'altra quando vuoi in Impostazioni → LINGUA.
+</it-IT>
+<ja-JP>
+Diception が29の言語に対応しました。
+メニュー、チュートリアル、ルール、実績のすべてを翻訳しています。
+ゲームは端末の言語に従います。設定 → 言語 からいつでも変更できます。
+</ja-JP>
+<ko-KR>
+Diception이 이제 29개 언어를 지원합니다.
+메뉴와 튜토리얼, 규칙, 도전 과제까지 모두 번역했습니다.
+게임은 기기 언어를 따릅니다. 설정 → 언어 에서 언제든 다른 언어를 고를 수 있습니다.
+</ko-KR>
+<ms>
+Diception kini bertutur dalam 29 bahasa.
+Menu, tunjuk ajar, peraturan dan pencapaian diterjemahkan sepenuhnya.
+Permainan mengikut bahasa peranti anda. Anda boleh memilih yang lain bila-bila masa di Tetapan → BAHASA.
+</ms>
+<nl-NL>
+Diception spreekt nu 29 talen.
+Menu's, uitleg, regels en prestaties zijn volledig vertaald.
+Het spel volgt de taal van je apparaat. Je kunt altijd een andere kiezen onder Instellingen → TAAL.
+</nl-NL>
+<no-NO>
+Diception snakker nå 29 språk.
+Menyer, opplæring, regler og prestasjoner er fullt oversatt.
+Spillet følger språket på enheten din. Du kan når som helst velge et annet under Innstillinger → SPRÅK.
+</no-NO>
+<pl-PL>
+Diception mówi teraz w 29 językach.
+Menu, samouczek, zasady i osiągnięcia są w pełni przetłumaczone.
+Gra podąża za językiem twojego urządzenia. Inny wybierzesz w każdej chwili w Ustawienia → JĘZYK.
+</pl-PL>
+<pt-BR>
+Diception agora fala 29 idiomas.
+Menus, tutorial, regras e conquistas estão totalmente traduzidos.
+O jogo segue o idioma do seu aparelho. Você pode escolher outro quando quiser em Configurações → IDIOMA.
+</pt-BR>
+<pt-PT>
+O Diception fala agora 29 idiomas.
+Menus, tutorial, regras e proezas estão totalmente traduzidos.
+O jogo segue o idioma do teu dispositivo. Podes escolher outro quando quiseres em Definições → IDIOMA.
+</pt-PT>
+<ro>
+Diception vorbește acum 29 de limbi.
+Meniurile, tutorialul, regulile și realizările sunt traduse integral.
+Jocul urmează limba dispozitivului tău. Poți alege alta oricând din Setări → LIMBĂ.
+</ro>
+<ru-RU>
+Diception теперь говорит на 29 языках.
+Меню, обучение, правила и достижения переведены полностью.
+Игра следует языку вашего устройства. Другой можно выбрать в любой момент в Настройки → ЯЗЫК.
+</ru-RU>
+<sv-SE>
+Diception talar nu 29 språk.
+Menyer, handledning, regler och prestationer är helt översatta.
+Spelet följer språket på din enhet. Du kan när som helst välja ett annat under Inställningar → SPRÅK.
+</sv-SE>
+<tr-TR>
+Diception artık 29 dil konuşuyor.
+Menüler, öğretici, kurallar ve başarımların tamamı çevrildi.
+Oyun cihazının dilini izler. İstediğin zaman Ayarlar → DİL bölümünden başka bir dil seçebilirsin.
+</tr-TR>
+<uk>
+Diception тепер говорить 29 мовами.
+Меню, навчання, правила та досягнення перекладено повністю.
+Гра слідує мові твого пристрою. Іншу можна вибрати будь-коли в Налаштування → МОВА.
+</uk>
+<vi>
+Diception giờ đã có 29 ngôn ngữ.
+Menu, hướng dẫn, luật chơi và thành tích đều được dịch đầy đủ.
+Trò chơi theo ngôn ngữ của thiết bị. Bạn có thể chọn ngôn ngữ khác bất cứ lúc nào ở Cài đặt → NGÔN NGỮ.
+</vi>
+<zh-CN>
+Diception 现已支持 29 种语言。
+菜单、教程、规则和成就全部完成翻译。
+游戏会跟随设备语言。你可以随时在 设置 → 语言 中另选一种。
+</zh-CN>
+<zh-TW>
+Diception 現已支援 29 種語言。
+選單、教學、規則和成就全部完成翻譯。
+遊戲會跟隨裝置語言。你可以隨時在 設定 → 語言 中另選一種。
+</zh-TW>

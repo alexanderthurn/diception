@@ -32,3 +32,13 @@ Steam's Remote Play paragraph and its Steam-exclusive bullet are dropped.
 
 To regenerate after changing the Steam copy, re-run the generator rather than
 editing these files by hand — they are output, not source.
+
+## Release notes
+
+`release-notes.txt` holds the per-version notes in the same tag format the Play
+Console gives you, in the same order, so it pastes straight in. Limit is 500
+characters per language; the current set peaks at 225.
+
+Each note names that language's own in-game labels (Settings and LANGUAGE as the
+player actually sees them), so the instruction is followable. If those labels are
+ever renamed in `src/locales/`, update the notes to match.
