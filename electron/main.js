@@ -120,6 +120,20 @@ ipcMain.handle('steam:getSteamId', () => {
 ipcMain.handle('steam:getAppId', () =>
     steam?.utils.getAppId() ?? 0);
 
+// The language the player picked for this game in Steam. That is a separate
+// setting from the OS locale, which is all navigator.language can see in the
+// renderer, so without this a German Steam client on an English Windows shows
+// the game in English. Steam also passes -language on launch; it is preferred
+// because currentGameLanguage() answers 'english' when the API is unavailable,
+// which would otherwise override a correct guess from the OS locale.
+ipcMain.handle('steam:getGameLanguage', () => {
+    const i = process.argv.indexOf('-language');
+    const fromArgv = i !== -1 ? process.argv[i + 1] : null;
+    if (fromArgv && String(fromArgv).trim()) return String(fromArgv).trim().toLowerCase();
+    const name = steam?.apps?.currentGameLanguage?.();
+    return name && String(name).trim() ? String(name).trim().toLowerCase() : null;
+});
+
 ipcMain.handle('steam:isDev', () =>
     !app.isPackaged);
 

@@ -37,6 +37,35 @@ WORD = re.compile(r'[^\W\d_]+')          # one unbroken run of letters
 NONLATIN = re.compile(r'[\u0370-\u03ff\u0400-\u04ff]')   # Greek + Cyrillic
 STRAY = re.compile(r'\b(the|and|with|from|your|press|click|game|level|turn|dice|territory|attack|player|map|board|settings|score)\b', re.I)
 ok = True
+
+# i18n.js maps Steam's own language names back to our locale codes so a Steam
+# player gets the language they picked for the game, not their OS locale. That
+# map has to agree with STEAM_LANG here, or the two silently disagree.
+def _steam_map_drift():
+    import ast
+    js = open('src/core/i18n.js', encoding='utf-8').read()
+    block = re.search(r'const STEAM_LANGUAGES = \{(.*?)\};', js, re.S)
+    if not block:
+        return ['STEAM_LANGUAGES not found in src/core/i18n.js']
+    in_js = dict(re.findall(r"(\w+):\s*'([\w-]+)'", block.group(1)))
+    py = open('scripts/steam-achievement-loc.py', encoding='utf-8').read()
+    i = py.index('STEAM_LANG')
+    in_py = {v: k for k, v in ast.literal_eval(py[py.index('{', i):py.index('\n}', i) + 2]).items()}
+    in_js.pop('koreana', None)   # Steam's runtime API says koreana, its VDF export says korean
+    out = []
+    if set(in_js) != set(in_py):
+        out.append(f'steam names differ: js-only {sorted(set(in_js)-set(in_py))}, '
+                   f'py-only {sorted(set(in_py)-set(in_js))}')
+    for k in sorted(set(in_js) & set(in_py)):
+        if in_js[k] != in_py[k]:
+            out.append(f'steam name {k!r}: js says {in_js[k]!r}, py says {in_py[k]!r}')
+    return out
+
+drift = _steam_map_drift()
+if drift:
+    ok = False
+    for d in drift:
+        print(f'  STEAM MAP  {d}')
 for p in sorted(glob.glob('src/locales/*.json')):
     c = os.path.basename(p)[:-5]
     if c == 'en': continue

@@ -104,6 +104,37 @@ export function getAvailableLanguages() {
 // Spanish. Map every Spanish region except Spain itself to es-419.
 const REGIONAL = { es: (region) => (region && region !== 'es' ? 'es-419' : 'es') };
 
+/**
+ * Steam's own language names, which are not ISO codes. Mirrors STEAM_LANG in
+ * scripts/steam-achievement-loc.py; check-locales.py fails if the two drift.
+ * Korean appears twice on purpose: Steam's runtime API answers 'koreana' while
+ * its achievement export uses 'korean'.
+ */
+const STEAM_LANGUAGES = {
+    bulgarian: 'bg', czech: 'cs', danish: 'da', german: 'de', greek: 'el',
+    english: 'en', spanish: 'es', latam: 'es-419', finnish: 'fi', french: 'fr',
+    hungarian: 'hu', indonesian: 'id', italian: 'it', japanese: 'ja',
+    korean: 'ko', koreana: 'ko', malay: 'ms', norwegian: 'nb', dutch: 'nl',
+    polish: 'pl', portuguese: 'pt', brazilian: 'pt-br', romanian: 'ro',
+    russian: 'ru', swedish: 'sv', turkish: 'tr', ukrainian: 'uk',
+    vietnamese: 'vi', schinese: 'zh', tchinese: 'zh-tw',
+};
+
+/**
+ * The language the player picked for this game in Steam, which is a different
+ * setting from the OS locale navigator.language reports. Null when we are not
+ * running under Steam or it could not say.
+ */
+async function steamLanguage() {
+    try {
+        const name = await window.steam?.getGameLanguage?.();
+        return name ? (STEAM_LANGUAGES[String(name).toLowerCase()] ?? null) : null;
+    } catch (e) {
+        console.warn('[i18n] could not read the Steam game language:', e);
+        return null;
+    }
+}
+
 function detectLanguage() {
     const stored = localStorage.getItem(LANGUAGE_KEY);
     if (stored && LOCALES[stored]) return stored;
@@ -137,7 +168,15 @@ async function applyLanguage(language) {
  * Detection is deliberately not persisted, so the game keeps following the
  * device language until the player picks one in Settings.
  */
-export async function initI18n(language = detectLanguage()) {
+export async function initI18n(language) {
+    if (language === undefined) {
+        // An explicit choice always wins; then Steam's per-game language, which
+        // the OS locale would otherwise override; then the device language.
+        const stored = localStorage.getItem(LANGUAGE_KEY);
+        language = (stored && LOCALES[stored])
+            ? stored
+            : (await steamLanguage()) ?? detectLanguage();
+    }
     await applyLanguage(language);
 }
 
