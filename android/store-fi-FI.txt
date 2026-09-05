@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception on nopea ja pelkistetty valloituspeli.
+Full description: Riskin ja DiceWarsin kaltaisista klassikoista ammentava peli tarjoaa lyhyitä vuoropohjaisia otteluita, laajan kampanjan, sisäänrakennetun editorin ja paikallisen moninpelin jopa 8 pelaajalle. Perinteisen isometrisen näkymän sijaan käytössä on optimoitu 2D-ruudukkonäkymä, joka tukee saumattomasti kosketusta, hiirtä, näppäimistöä ja ohjainta, ja kulkee sen mukaisella vauhdilla.
+
+Tärkeimmät ominaisuudet:
+
+Ruudukko-ohjaus
+Unohda isometriset kartat ja hitaat animaatiot. Diception käyttää selkeää 2D-matriisia, jossa ruudut liittyvät neljään suuntaan. Siksi WASD- ja ristiohjaimen hallinta on salamannopeaa: kova vauhti ilman että strateginen syvyys kärsii.
+
+Paikallinen moninpeli
+Ota mittaa jopa 8 pelaajasta paikallisessa moninpelissä (ohjaimet tuettuina).
+
+Nopeus
+Valitse kolmesta nopeustilasta. Halusitpa puntaroida jokaisen siirron tai "salamasotia" alueiden läpi millisekunneissa, valinta on sinun.
+
+Modit
+Miksi tyytyä kuuteen sivuun? Tai kokeile rinnakkaisia vuoroja äärimmäisen kaaoksen vuoksi. Säädä voittoehtoja, aloitusasetuksia ja vahvistussääntöjä ja rakenna oma tapasi pelata.
+
+Käsin tehdyt tasot, kukin omilla asetuksillaan, odottavat sinua.
+
+ 
+
+Avoin lähdekoodi & yhteisö
+
+Diception on avoimuudelle rakennettu intohimoprojekti. Mielestämme pelin logiikan kuuluu olla kaikkien tutkittavissa. Siksi Diceptionin ydin on avointa lähdekoodia. Voit lukea koodin, katsoa miten todennäköisyyslaskenta toimii tai osallistua itse.
+
+Lite-versio ja täysi versio
+
+Ilmainen Lite-versio tarjoaa tasapainoisen ottelun 1 vastaan 2 bottia keskikokoisella kartalla. Juuri tuo kokoonpano on yksi hauskimmista tavoista pelata, ja se pysyy ilmaisena ikuisesti!
+
+Ostamalla täyden version (tai katsomalla videomainoksen ja saamalla tunnin ilmaista peliaikaa) avaat:
+
+- Koko kampanjan.
+- Isommat kartat ja vaikeammat botit.
+- Paikallisen moninpelin jopa 8 pelaajalle (ohjaimet ja puhelimet käyvät ohjaimiksi).
+- Mods: rinnakkaiset vuorot, erityiset hyökkäys- ja voittosäännöt, vapaasti valittavat nopan sivut ja vuororajat.

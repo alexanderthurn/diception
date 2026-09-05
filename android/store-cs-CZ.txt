@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception je rychlá, minimalistická dobyvatelská hra.
+Full description: Inspirovaná klasikami jako Risk a DiceWars nabízí krátké tahové partie, rozsáhlou kampaň, vestavěný editor a místní hru až pro 8 hráčů. Místo klasického izometrického pohledu používá optimalizovaný 2D pohled na mřížku, s plynulou podporou dotyku, myši, klávesnice a gamepadu, a tomu odpovídajícím tempem.
+
+Hlavní vlastnosti:
+
+Ovládání v mřížce
+Zapomeň na izometrické mapy a pomalé animace. Diception používá čistou 2D matici se spoji ve čtyřech směrech. Díky tomu je ovládání pomocí WASD a křížového ovladače bleskové: vysoké tempo, aniž by tím trpěla strategická hloubka.
+
+Místní multiplayer
+Utkej se až s 8 hráči v místní hře (gamepady podporovány).
+
+Rychlost
+Vyber si ze 3 režimů rychlosti. Ať už chceš promýšlet každý tah, nebo se přes území prohnat "bleskovkou" během milisekund, je to na tobě.
+
+Módy
+Proč zůstávat u šesti stěn? Nebo zkus paralelní tahy pro maximální chaos. Uprav podmínky vítězství, pravidla startu a posil a poskládej si vlastní způsob hraní.
+
+Čekají na tebe ručně připravené úrovně, každá s vlastním nastavením.
+
+ 
+
+Otevřený kód & komunita
+
+Diception je srdcovka postavená na otevřenosti. Myslíme si, že herní logika má být k nahlédnutí pro každého. Proto je jádro Diception otevřený kód. Můžeš si kód projít, podívat se, jak funguje výpočet pravděpodobností, nebo sám přispět.
+
+Verze Lite a plná verze
+
+Verze Lite zdarma nabízí vyrovnanou partii 1 proti 2 botům na středně velké mapě. Právě tahle sestava patří k nejzábavnějším způsobům hraní a zůstane zdarma navždy!
+
+Koupí plné verze (nebo zhlédnutím videoreklamy za 1 hodinu přístupu zdarma) si odemkneš:
+
+- Celou kampaň.
+- Větší mapy a boty s vyšší obtížností.
+- Místní hru až pro 8 hráčů (gamepady i telefony fungují jako ovladač).
+- Mods: paralelní tahy, zvláštní pravidla útoku a vítězství, libovolný počet stěn kostky a limity tahů.

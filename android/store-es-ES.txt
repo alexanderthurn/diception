@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception es un juego de conquista rápido y minimalista.
+Full description: Inspirado en clásicos como Risk y DiceWars, ofrece partidas por turnos ágiles, una campaña extensa, un editor integrado y multijugador local para hasta 8 jugadores. En lugar de la clásica vista isométrica utiliza una vista de rejilla 2D optimizada, con soporte fluido para toque, ratón, teclado y mando, y la velocidad que eso permite.
+
+Características principales:
+
+Control de rejilla
+Olvídate de los mapas isométricos y las animaciones lentas. Diception utiliza una matriz 2D limpia con conexiones en cuatro direcciones. Eso permite un control rapidísimo con WASD y cruceta: partidas veloces sin renunciar a la profundidad estratégica.
+
+Multijugador local
+Enfréntate a hasta 8 jugadores en multijugador local (con soporte para mandos).
+
+Velocidad
+Elige entre 3 modos de velocidad. Tanto si quieres analizar cada movimiento como hacer un "blitz" por los territorios en milisegundos, tú decides.
+
+Mods
+¿Por qué conformarse con seis caras? O prueba los turnos paralelos para un caos total. Ajusta las condiciones de victoria, el modo de inicio y las reglas de refuerzos para crear tu propia forma de jugar.
+
+Niveles hechos a mano con ajustes muy variados te están esperando.
+
+ 
+
+Código abierto y comunidad
+
+Diception es un proyecto personal basado en la transparencia. Creemos que la lógica de un juego debería estar abierta para que cualquiera la estudie. Por eso el motor de Diception es código abierto. Puedes consultar el código, ver cómo funciona el cálculo de probabilidades o incluso contribuir.
+
+Versión lite y versión completa
+
+La versión lite gratuita ofrece una partida equilibrada de 1 contra 2 bots en un mapa mediano. Esa configuración concreta es una de las más divertidas del juego, y seguirá siendo gratis para siempre.
+
+Al comprar la versión completa (o al ver un anuncio en vídeo para conseguir 1 hora de acceso gratis) desbloqueas:
+
+- La campaña completa.
+- Mapas más grandes y bots de mayor dificultad.
+- Multijugador local para hasta 8 jugadores (admite mandos y teléfonos móviles como mando).
+- Mods: Turnos paralelos, reglas especiales de ataque y victoria, caras de dado personalizables y límites de turno.

@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception é um jogo de conquista rápido e minimalista.
+Full description: Inspirado em clássicos como Risk e DiceWars, traz partidas curtas por turnos, uma campanha extensa, um editor integrado e multijogador local para até 8 jogadores. No lugar da clássica visão isométrica, usa uma visão em grade 2D otimizada, com suporte fluido a toque, mouse, teclado e controle, e a velocidade que isso permite.
+
+Destaques:
+
+Controle em grade
+Esqueça mapas isométricos e animações lentas. Diception usa uma matriz 2D limpa com conexões nas quatro direções. Isso deixa os controles WASD e do direcional rapidíssimos: ritmo alto, sem abrir mão da profundidade estratégica.
+
+Multijogador local
+Enfrente até 8 jogadores no multijogador local (com suporte a controles).
+
+Velocidade
+Escolha entre 3 modos de velocidade. Quer analisar cada jogada ou atravessar os territórios num "blitz" de milissegundos? A escolha é sua.
+
+Mods
+Por que parar em seis faces? Ou experimente turnos paralelos para o caos total. Ajuste condições de vitória, regras de início e de reforço e monte o seu próprio jeito de jogar.
+
+Fases feitas à mão, cada uma com suas configurações, esperam por você.
+
+ 
+
+Código aberto e comunidade
+
+Diception é um projeto de paixão construído sobre transparência. Acreditamos que a lógica de um jogo deve estar aberta a todos. Por isso o motor do Diception é de código aberto. Você pode ler o código, ver como funciona o motor de probabilidades ou até contribuir.
+
+Versão lite e completa
+
+A versão lite gratuita traz uma partida equilibrada de 1 contra 2 bots em um mapa médio. Essa configuração é uma das mais divertidas e vai continuar gratuita para sempre!
+
+Ao comprar a versão completa (ou assistindo a um anúncio em vídeo para ganhar 1 hora de acesso gratuito), você desbloqueia:
+
+- A campanha completa.
+- Mapas maiores e bots mais difíceis.
+- Multijogador local para até 8 jogadores (controles e celulares funcionam como controle).
+- Mods: turnos paralelos, regras especiais de ataque e vitória, faces de dado personalizadas e limites de turno.

@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception ialah permainan penaklukan yang pantas dan ringkas.
+Full description: Diilhamkan oleh karya klasik seperti Risk dan DiceWars, ia menawarkan perlawanan bergilir yang singkat, kempen yang luas, penyunting terbina dalam, dan permainan bersama pada satu peranti untuk sehingga 8 pemain. Selain paparan isometrik yang biasa, ia menggunakan paparan grid 2D yang dioptimumkan, dengan sokongan lancar untuk sentuhan, tetikus, papan kekunci dan gamepad, serta kepantasan yang datang dengannya.
+
+Ciri utama:
+
+Kawalan Grid
+Lupakan peta isometrik dan animasi yang perlahan. Diception menggunakan matriks 2D yang kemas dengan sambungan ke empat arah. Justeru kawalan WASD dan D-pad terasa amat pantas: tempo tinggi tanpa mengorbankan kedalaman strategi.
+
+Multipemain Setempat
+Tempuh sehingga 8 pemain dalam permainan bersama pada satu peranti (gamepad disokong).
+
+Kelajuan
+Pilih satu daripada 3 mod kelajuan. Sama ada anda mahu menimbang setiap langkah atau meredah wilayah dengan "blitz" dalam milisaat, pilihan di tangan anda.
+
+Mod
+Mengapa perlu berhenti pada enam sisi? Atau cuba giliran selari untuk kekacauan maksimum. Laraskan syarat kemenangan, peraturan permulaan dan peraturan bantuan untuk membina cara bermain anda sendiri.
+
+Tahap buatan tangan dengan pelbagai tetapan sedang menanti anda.
+
+ 
+
+Sumber terbuka & komuniti
+
+Diception ialah projek yang lahir daripada minat dan dibina atas ketelusan. Kami percaya logik sesebuah permainan sepatutnya boleh diteliti sesiapa sahaja. Sebab itu teras enjin Diception ialah sumber terbuka. Anda boleh membaca kodnya, melihat cara enjin kebarangkaliannya berfungsi, malah menyumbang.
+
+Versi Lite dan versi penuh
+
+Versi Lite percuma menawarkan perlawanan seimbang 1 lawan 2 bot pada peta bersaiz sederhana. Susunan inilah salah satu cara bermain paling seronok, dan ia akan kekal percuma selamanya!
+
+Dengan membeli versi penuh (atau menonton iklan video untuk akses percuma selama 1 jam), anda membuka:
+
+- Kempen sepenuhnya.
+- Peta yang lebih luas dan bot dengan tahap kesukaran lebih tinggi.
+- Permainan bersama pada satu peranti untuk sehingga 8 pemain (gamepad dan telefon boleh digunakan sebagai kawalan).
+- Mods: giliran selari, peraturan serangan dan kemenangan khas, bilangan sisi dadu sesuka hati, dan had giliran.

@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception là một trò chơi chinh phục nhanh và tối giản.
+Full description: Lấy cảm hứng từ những tựa game kinh điển như Risk và DiceWars, trò chơi mang đến các ván đấu theo lượt ngắn gọn, một chiến dịch đồ sộ, trình sửa tích hợp và chơi chung trên một máy cho tối đa 8 người. Thay cho góc nhìn đẳng cự quen thuộc, trò chơi dùng góc nhìn lưới 2D đã tối ưu, hỗ trợ mượt mà cảm ứng, chuột, bàn phím và tay cầm, cùng tốc độ tương xứng.
+
+Điểm nổi bật:
+
+Điều khiển lưới
+Quên đi bản đồ đẳng cự và hiệu ứng chậm chạp. Diception dùng một ma trận 2D gọn gàng, nối theo bốn hướng. Nhờ vậy điều khiển bằng WASD và D-pad cực nhanh: nhịp độ cao mà không đánh đổi chiều sâu chiến thuật.
+
+Nhiều người chơi
+Đối đầu với tối đa 8 người chơi khi chơi chung trên một máy (hỗ trợ tay cầm).
+
+Tốc độ
+Chọn một trong 3 chế độ tốc độ. Dù bạn muốn cân nhắc từng nước đi hay lướt qua các lãnh thổ theo kiểu "chớp nhoáng" trong vài mili giây, lựa chọn là của bạn.
+
+Mod
+Tại sao phải dừng ở sáu mặt? Hoặc thử lượt song song để hỗn loạn hết cỡ. Điều chỉnh điều kiện thắng, luật khởi đầu và luật tiếp viện để tạo ra lối chơi của riêng bạn.
+
+Những màn chơi làm thủ công, mỗi màn một thiết lập riêng, đang chờ bạn.
+
+ 
+
+Mã nguồn mở và cộng đồng
+
+Diception là một dự án tâm huyết, xây trên sự minh bạch. Chúng tôi tin rằng logic của một trò chơi nên để ai cũng xem được. Vì vậy phần lõi của Diception là mã nguồn mở. Bạn có thể đọc mã, xem cách bộ tính xác suất hoạt động, thậm chí đóng góp.
+
+Bản Lite và bản đầy đủ
+
+Bản Lite miễn phí mang đến ván đấu cân bằng 1 chọi 2 bot trên bản đồ cỡ vừa. Chính cấu hình này là một trong những cách chơi thú vị nhất, và sẽ miễn phí mãi mãi!
+
+Khi mua bản đầy đủ (hoặc xem quảng cáo video để chơi miễn phí 1 giờ), bạn mở khóa:
+
+- Toàn bộ chiến dịch.
+- Bản đồ rộng hơn và bot có độ khó cao hơn.
+- Chơi chung trên một máy cho tối đa 8 người (tay cầm và điện thoại đều dùng được để điều khiển).
+- Mods: lượt song song, luật tấn công và luật thắng đặc biệt, số mặt xúc xắc tùy ý, và giới hạn lượt.

@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception ist ein schnelles, minimalistisches Eroberungsspiel.
+Full description: Inspiriert von Klassikern wie Risiko und DiceWars bietet es kurze rundenbasierte Partien, eine umfangreiche Kampagne, einen eingebauten Editor und lokalen Mehrspieler für bis zu 8 Spieler. Statt der klassischen isometrischen Ansicht nutzt Diception eine optimierte 2D-Rasteransicht, mit durchgängiger Unterstützung für Touch, Maus, Tastatur und Gamepad und entsprechend hohem Tempo.
+
+Hauptmerkmale:
+
+Rastersteuerung
+Schluss mit isometrischen Karten und langsamen Animationen. Diception nutzt eine klare 2D-Matrix mit Verbindungen in vier Richtungen. Das ermöglicht blitzschnelle Steuerung per WASD und Steuerkreuz: hohes Tempo, ohne strategische Tiefe zu opfern.
+
+Lokaler Mehrspieler
+Tritt im lokalen Mehrspieler gegen bis zu 8 Spieler an (Gamepads werden unterstützt).
+
+Tempo
+Wähle zwischen 3 Geschwindigkeitsmodi. Ob du jeden Zug in Ruhe durchdenken oder in Millisekunden durch die Gebiete "blitzen" willst: du entscheidest.
+
+Mods
+Warum bei sechs Seiten aufhören? Oder probiere parallele Züge für maximales Chaos. Passe Siegbedingungen, Startregeln und Nachschubregeln an und bau dir deine ganz eigene Spielweise.
+
+Handgebaute Level mit ganz unterschiedlichen Einstellungen warten auf dich.
+
+ 
+
+Offener Quellcode & Community
+
+Diception ist ein Herzensprojekt, das auf Transparenz setzt. Wir finden, dass Spiellogik für alle nachvollziehbar sein sollte. Deshalb ist die Kern-Engine von Diception Open Source. Du kannst dir den Code ansehen, nachvollziehen, wie die Wahrscheinlichkeitsberechnung funktioniert, oder selbst etwas beitragen.
+
+Lite-Version und Vollversion
+
+Die kostenlose Lite-Version bietet eine ausgewogene Partie 1 gegen 2 Bots auf einer mittelgroßen Karte. Genau diese Konstellation macht besonders viel Spaß und bleibt für immer kostenlos!
+
+Mit dem Kauf der Vollversion (oder indem du ein Video ansiehst und 1 Stunde lang kostenlos spielst) schaltest du frei:
+
+- Die komplette Kampagne.
+- Größere Karten und Bots mit höherem Schwierigkeitsgrad.
+- Lokalen Mehrspieler für bis zu 8 Spieler (Gamepads und Smartphones als Eingabegeräte werden unterstützt).
+- Mods: Parallele Züge, besondere Angriffs- und Siegregeln, frei wählbare Würfelseiten und Zuglimits.

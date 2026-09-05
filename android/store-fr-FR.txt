@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception est un jeu de conquête rapide et minimaliste.
+Full description: Inspiré de classiques comme Risk et DiceWars, il propose des parties au tour par tour rapides, une campagne étoffée, un éditeur intégré et du multijoueur local jusqu'à 8 joueurs. En remplaçant la vue isométrique classique par une vue en grille 2D optimisée, le jeu offre une prise en main fluide au tactile, à la souris, au clavier et à la manette, pour une expérience ultra-rapide.
+
+Points forts :
+
+Contrôle en grille
+Oubliez les cartes isométriques et les animations lentes. Diception utilise une matrice 2D épurée avec des connexions dans quatre directions. Cela permet des commandes WASD et croix directionnelle fulgurantes : un rythme soutenu, sans sacrifier la profondeur stratégique.
+
+Multijoueur local
+Affrontez jusqu'à 8 joueurs en multijoueur local (manettes prises en charge).
+
+Vitesse
+Choisissez parmi 3 modes de vitesse. Que vous vouliez analyser chaque coup ou traverser les territoires en "blitz" en quelques millisecondes, c'est vous qui décidez.
+
+Mods
+Pourquoi se contenter de six faces ? Ou essayez les tours parallèles pour un chaos maximal. Ajustez les conditions de victoire, les règles de départ et de renfort pour créer votre propre façon de jouer.
+
+Des niveaux faits main, avec des réglages variés, vous attendent.
+
+ 
+
+Open source & communauté
+
+Diception est un projet passion bâti sur la transparence. Nous pensons que la logique d'un jeu devrait être ouverte à tous. C'est pourquoi le moteur de Diception est open source. Vous pouvez consulter le code, voir comment fonctionne le moteur de probabilités, ou même y contribuer.
+
+Version Lite et version complète
+
+La version Lite gratuite propose une partie équilibrée à 1 contre 2 bots sur une carte de taille moyenne. Cette configuration est l'une des plus amusantes, et elle restera gratuite pour toujours !
+
+En achetant la version complète (ou en regardant une publicité vidéo pour 1 heure d'accès gratuit), vous débloquez :
+
+- La campagne complète.
+- Des cartes plus grandes et des bots plus coriaces.
+- Le multijoueur local jusqu'à 8 joueurs (manettes et téléphones acceptés comme manettes).
+- Mods : tours parallèles, règles spéciales d'attaque et de victoire, nombre de faces au choix et limites de tour.

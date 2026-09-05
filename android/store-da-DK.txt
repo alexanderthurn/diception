@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception er et hurtigt, minimalistisk erobringsspil.
+Full description: Inspireret af klassikere som Risk og DiceWars byder det på korte turbaserede partier, en omfattende kampagne, en indbygget editor og lokal flerspiller for op til 8 spillere. I stedet for det klassiske isometriske billede bruger det en optimeret 2D-gittervisning med glidende understøttelse af berøring, mus, tastatur og controller, og det tempo der følger med.
+
+Vigtigste funktioner:
+
+Gitterstyring
+Glem isometriske kort og langsomme animationer. Diception bruger en ren 2D-matrix med forbindelser i fire retninger. Det gør WASD- og D-pad-styring lynhurtig: højt tempo uden at gå på kompromis med den strategiske dybde.
+
+Lokal multiplayer
+Tag kampen op mod op til 8 spillere i lokal flerspiller (controllere understøttes).
+
+Hastighed
+Vælg mellem 3 hastighedstilstande. Uanset om du vil tænke hvert træk igennem eller "lynkrige" gennem områderne på millisekunder, er valget dit.
+
+Mods
+Hvorfor nøjes med seks sider? Eller prøv parallelle ture for maksimalt kaos. Justér sejrsbetingelser, startregler og forstærkningsregler, og byg din helt egen måde at spille på.
+
+Håndlavede baner med hver deres indstillinger venter på dig.
+
+ 
+
+Open source & fællesskab
+
+Diception er et hjerteprojekt bygget på åbenhed. Vi mener, at spillogik bør være til at kigge efter i sømmene for alle. Derfor er kernen i Diception open source. Du kan læse koden, se hvordan sandsynlighedsmotoren fungerer, eller selv bidrage.
+
+Lite-version og fuld version
+
+Den gratis Lite-version byder på et afbalanceret parti med 1 mod 2 botter på et mellemstort kort. Netop den opsætning er en af de sjoveste måder at spille på, og den bliver gratis for altid!
+
+Med den fulde version (eller ved at se en videoreklame og få 1 times gratis adgang) låser du op for:
+
+- Hele kampagnen.
+- Større kort og botter med højere sværhedsgrad.
+- Lokal flerspiller for op til 8 spillere (controllere og mobiltelefoner kan bruges som styring).
+- Mods: parallelle ture, særlige angrebs- og sejrsregler, frit valg af terningsider og turgrænser.

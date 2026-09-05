@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception is een snel, minimalistisch veroveringsspel.
+Full description: Geïnspireerd op klassiekers als Risk en DiceWars biedt het korte beurtgebaseerde partijen, een uitgebreide campagne, een ingebouwde editor en lokale multiplayer voor maximaal 8 spelers. In plaats van het klassieke isometrische beeld gebruikt het een geoptimaliseerde 2D-rasterweergave, met vloeiende ondersteuning voor touch, muis, toetsenbord en controller, en het tempo dat daarbij hoort.
+
+Belangrijkste kenmerken:
+
+Rasterbesturing
+Vergeet isometrische kaarten en trage animaties. Diception gebruikt een strakke 2D-matrix met verbindingen in vier richtingen. Daardoor zijn WASD- en D-padbesturing razendsnel: hoog tempo, zonder in te leveren op strategische diepgang.
+
+Lokale multiplayer
+Neem het in lokale multiplayer op tegen maximaal 8 spelers (controllers worden ondersteund).
+
+Snelheid
+Kies uit 3 snelheidsmodi. Of je nu elke zet wilt uitdenken of in milliseconden door de gebieden wilt "blitzen": jij bepaalt.
+
+Mods
+Waarom stoppen bij zes zijden? Of probeer parallelle beurten voor maximale chaos. Pas winvoorwaarden, startregels en aanvoerregels aan en bouw je eigen manier van spelen.
+
+Met de hand gemaakte levels, elk met eigen instellingen, staan voor je klaar.
+
+ 
+
+Opensource & community
+
+Diception is een passieproject dat op transparantie is gebouwd. Wij vinden dat spellogica voor iedereen te bekijken hoort te zijn. Daarom is de kern van Diception opensource. Je kunt de code inzien, bekijken hoe de kansberekening werkt, of zelf meehelpen.
+
+Lite-versie en volledige versie
+
+De gratis Lite-versie biedt een uitgebalanceerde partij van 1 tegen 2 bots op een middelgrote kaart. Deze opzet is een van de leukste manieren om te spelen en blijft voor altijd gratis!
+
+Met de volledige versie (of door een videoadvertentie te bekijken voor 1 uur gratis toegang) ontgrendel je:
+
+- De volledige campagne.
+- Grotere kaarten en bots met een hogere moeilijkheidsgraad.
+- Lokale multiplayer voor maximaal 8 spelers (controllers en telefoons werken als besturing).
+- Mods: parallelle beurten, speciale aanvals- en winregels, zelf gekozen dobbelsteenzijden en beurtlimieten.

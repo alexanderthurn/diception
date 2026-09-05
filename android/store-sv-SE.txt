@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception är ett snabbt, minimalistiskt erövringsspel.
+Full description: Inspirerat av klassiker som Risk och DiceWars bjuder det på korta turordningsbaserade partier, en omfattande kampanj, en inbyggd editor och lokalt flerspelarläge för upp till 8 spelare. I stället för den klassiska isometriska vyn används en optimerad 2D-rutnätsvy, med sömlöst stöd för pekskärm, mus, tangentbord och handkontroll, och tempot som följer med.
+
+Viktigaste funktionerna:
+
+Rutnätsstyrning
+Glöm isometriska kartor och långsamma animationer. Diception använder en ren 2D-matris med förbindelser i fyra riktningar. Det gör WASD- och styrkorsstyrning blixtsnabb: högt tempo utan att offra det strategiska djupet.
+
+Lokalt flerspelarläge
+Möt upp till 8 spelare i lokalt flerspelarläge (handkontroller stöds).
+
+Hastighet
+Välj mellan 3 hastighetslägen. Vare sig du vill tänka igenom varje drag eller "blixtkriga" genom områdena på millisekunder är valet ditt.
+
+Mods
+Varför nöja sig med sex sidor? Eller prova parallella drag för maximalt kaos. Justera segervillkor, startregler och förstärkningsregler och bygg ditt helt egna sätt att spela.
+
+Handgjorda banor med var sina inställningar väntar på dig.
+
+ 
+
+Öppen källkod & gemenskap
+
+Diception är ett hjärteprojekt byggt på öppenhet. Vi tycker att spellogik ska gå att granska för alla. Därför är kärnan i Diception öppen källkod. Du kan läsa koden, se hur sannolikhetsmotorn fungerar eller själv bidra.
+
+Lite-version och fullversion
+
+Den gratis Lite-versionen bjuder på ett balanserat parti med 1 mot 2 bottar på en medelstor karta. Just den uppsättningen är ett av de roligaste sätten att spela, och den förblir gratis för alltid!
+
+Med fullversionen (eller genom att se en videoannons och få 1 timmes gratis speltid) låser du upp:
+
+- Hela kampanjen.
+- Större kartor och bottar med högre svårighetsgrad.
+- Lokalt flerspelarläge för upp till 8 spelare (handkontroller och mobiltelefoner kan användas som styrning).
+- Mods: parallella drag, särskilda attack- och segerregler, fritt val av tärningssidor och draggränser.

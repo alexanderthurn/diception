@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception hızlı ve sade bir fetih oyunu.
+Full description: Risk ve DiceWars gibi klasiklerden ilham alan oyun, kısa sıra tabanlı maçlar, geniş bir kampanya, dahili bir düzenleyici ve 8 oyuncuya kadar yerel çok oyunculu mod sunuyor. Klasik izometrik görünüm yerine optimize edilmiş bir 2B ızgara görünümü kullanıyor; dokunmatik, fare, klavye ve oyun kumandası desteği kusursuz, hız da buna göre.
+
+Öne çıkan özellikler:
+
+Izgara kontrolü
+İzometrik haritaları ve yavaş animasyonları unut. Diception, dört yönde bağlantısı olan sade bir 2B matris kullanır. Bu sayede WASD ve yön tuşu kontrolleri son derece hızlıdır: stratejik derinlikten ödün vermeden yüksek tempo.
+
+Yerel çok oyunculu
+Yerel çok oyunculu modda 8 oyuncuya kadar karşı karşıya gel (oyun kumandaları destekleniyor).
+
+Hız
+3 hız modundan birini seç. İster her hamleyi tek tek düşün, ister milisaniyeler içinde bölgeleri "yıldırım hızıyla" geç, karar senin.
+
+Modlar
+Neden altı yüzle yetinelim? Ya da tam kaos için paralel turları dene. Kazanma koşullarını, başlangıç ve takviye kurallarını ayarla ve kendi oynayış tarzını kur.
+
+El emeğiyle hazırlanmış, her biri farklı ayarlara sahip bölümler seni bekliyor.
+
+ 
+
+Açık kaynak & topluluk
+
+Diception, şeffaflık üzerine kurulmuş bir tutku projesi. Oyun mantığının herkesin inceleyebileceği bir şey olması gerektiğine inanıyoruz. Bu yüzden Diception'ın çekirdeği açık kaynak. Kodu inceleyebilir, olasılık motorunun nasıl çalıştığını görebilir, hatta katkıda bulunabilirsin.
+
+Lite sürüm ve tam sürüm
+
+Ücretsiz Lite sürüm, orta boy bir haritada 1'e 2 bota karşı dengeli bir maç sunuyor. Tam da bu kurulum, oyunun en keyifli hallerinden biri ve sonsuza dek ücretsiz kalacak!
+
+Tam sürümü satın alarak (ya da bir video reklam izleyip 1 saat ücretsiz erişim kazanarak) şunların kilidini açarsın:
+
+- Kampanyanın tamamı.
+- Daha büyük haritalar ve daha zorlu botlar.
+- 8 oyuncuya kadar yerel çok oyunculu mod (oyun kumandaları ve telefonlar kumanda olarak kullanılabilir).
+- Mods: paralel turlar, özel saldırı ve kazanma kuralları, istediğin kadar zar yüzü ve tur sınırları.

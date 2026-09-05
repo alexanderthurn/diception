@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception to szybka, minimalistyczna gra o podboju.
+Full description: Zainspirowana klasykami pokroju Risk i DiceWars oferuje krótkie partie turowe, rozbudowaną kampanię, wbudowany edytor i grę lokalną nawet dla 8 osób. Zamiast klasycznego widoku izometrycznego korzysta z zoptymalizowanego widoku siatki 2D, z płynną obsługą dotyku, myszy, klawiatury i pada, a więc i z odpowiednim tempem.
+
+Najważniejsze cechy:
+
+Sterowanie siatką
+Zapomnij o mapach izometrycznych i powolnych animacjach. Diception korzysta z czystej matrycy 2D z połączeniami w czterech kierunkach. Dzięki temu sterowanie WASD i krzyżakiem jest błyskawiczne: wysokie tempo bez rezygnacji z głębi strategicznej.
+
+Gra lokalna
+Zmierz się nawet z 8 graczami w grze lokalnej (pady obsługiwane).
+
+Szybkość
+Wybierz jeden z 3 trybów szybkości. Chcesz analizować każdy ruch albo przelecieć przez terytoria "blitzem" w kilka milisekund? Wybór należy do ciebie.
+
+Mody
+Po co poprzestawać na sześciu ściankach? Albo spróbuj tur równoległych dla maksymalnego chaosu. Dostosuj warunki zwycięstwa, zasady startu i zaopatrzenia i zbuduj własny sposób gry.
+
+Czekają na ciebie ręcznie przygotowane poziomy, każdy z własnymi ustawieniami.
+
+ 
+
+Otwarty kod & społeczność
+
+Diception to projekt z pasji, zbudowany na przejrzystości. Uważamy, że logika gry powinna być dostępna do wglądu dla każdego. Dlatego rdzeń Diception ma otwarty kod. Możesz przejrzeć kod, zobaczyć, jak działa silnik prawdopodobieństwa, albo sam coś dołożyć.
+
+Wersja Lite i pełna wersja
+
+Darmowa wersja Lite oferuje wyrównaną partię 1 na 2 boty na mapie średniej wielkości. Ten układ to jeden z najprzyjemniejszych sposobów gry i pozostanie darmowy na zawsze!
+
+Kupując pełną wersję (albo oglądając reklamę wideo dla 1 godziny darmowego dostępu), odblokowujesz:
+
+- Pełną kampanię.
+- Większe mapy i boty o wyższym poziomie trudności.
+- Grę lokalną nawet dla 8 osób (pady i telefony działają jako sterowanie).
+- Mods: tury równoległe, specjalne zasady ataku i zwycięstwa, dowolna liczba ścianek kostki i limity tur.

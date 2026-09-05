@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception egy gyors, letisztult hódítós játék.
+Full description: Az olyan klasszikusokból merít, mint a Risk és a DiceWars, és rövid körökre osztott meccseket, terjedelmes kampányt, beépített szerkesztőt és akár 8 fős helyi többjátékos módot kínál. A megszokott izometrikus nézet helyett optimalizált 2D rácsnézetet használ, érintéssel, egérrel, billentyűzettel és kontrollerrel egyaránt gördülékenyen, a hozzá tartozó tempóval.
+
+Főbb jellemzők:
+
+Rácsvezérlés
+Felejtsd el az izometrikus pályákat és a lassú animációkat. A Diception letisztult 2D mátrixot használ, négy irányú kapcsolatokkal. Ettől villámgyors a WASD és az iránygomb kezelése: pörgős játékmenet a stratégiai mélység feláldozása nélkül.
+
+Helyi többjátékos
+Mérkőzz meg akár 8 játékossal helyi többjátékos módban (kontrollerek támogatottak).
+
+Sebesség
+Válassz a 3 sebességmód közül. Akár minden lépést végig akarsz gondolni, akár ezredmásodpercek alatt "villámháborúzol" végig a területeken, a döntés a tiéd.
+
+Modok
+Miért állnánk meg hat oldalnál? Vagy próbáld ki a párhuzamos köröket a teljes káoszért. Állítsd be a győzelmi feltételeket, a kezdési és az utánpótlási szabályokat, és rakd össze a saját játékmódodat.
+
+Kézzel készített pályák várnak rád, mindegyik a maga beállításaival.
+
+ 
+
+Nyílt forráskód & közösség
+
+A Diception szenvedélyből született, az átláthatóságra építve. Úgy gondoljuk, egy játék logikájába bárki beleláthat. Ezért a Diception motorja nyílt forráskódú. Átnézheted a kódot, megnézheted, hogyan működik a valószínűségszámítás, vagy akár hozzá is tehetsz.
+
+Lite változat és teljes változat
+
+Az ingyenes Lite változat kiegyensúlyozott, 1 a 2 bot elleni meccset kínál közepes méretű pályán. Éppen ez az összeállítás az egyik legszórakoztatóbb játékmód, és örökre ingyenes marad!
+
+A teljes változat megvásárlásával (vagy egy videohirdetés megnézésével 1 óra ingyenes hozzáférésért) feloldod:
+
+- A teljes kampányt.
+- Nagyobb pályákat és nehezebb botokat.
+- A helyi többjátékos módot akár 8 játékosnak (a kontrollerek és a telefonok is használhatók vezérlőként).
+- Mods: párhuzamos körök, különleges támadási és győzelmi szabályok, szabadon választható kockaoldalak és körkorlátok.

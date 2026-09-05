@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception er et raskt, minimalistisk erobringsspill.
+Full description: Inspirert av klassikere som Risk og DiceWars byr det på korte turbaserte partier, en omfattende kampanje, en innebygd editor og lokal flerspiller for opptil 8 spillere. I stedet for det klassiske isometriske bildet bruker det en optimalisert 2D-rutenettvisning, med sømløs støtte for berøring, mus, tastatur og håndkontroll, og tempoet som følger med.
+
+Viktigste funksjoner:
+
+Rutenettstyring
+Glem isometriske kart og trege animasjoner. Diception bruker en ren 2D-matrise med forbindelser i fire retninger. Det gjør WASD- og D-pad-styring lynrask: høyt tempo uten å ofre strategisk dybde.
+
+Lokal flerspiller
+Møt opptil 8 spillere i lokal flerspiller (håndkontroller støttes).
+
+Hastighet
+Velg mellom 3 hastighetsmoduser. Om du vil tenke gjennom hvert trekk eller "lynkrige" gjennom områdene på millisekunder, er valget ditt.
+
+Mods
+Hvorfor nøye seg med seks sider? Eller prøv parallelle turer for maksimalt kaos. Juster seiersvilkår, startregler og forsyningsregler, og bygg din helt egen måte å spille på.
+
+Håndlagde nivåer med hver sine innstillinger venter på deg.
+
+ 
+
+Åpen kildekode & fellesskap
+
+Diception er et hjerteprosjekt bygget på åpenhet. Vi mener spillogikk bør være mulig for alle å granske. Derfor er kjernen i Diception åpen kildekode. Du kan lese koden, se hvordan sannsynlighetsmotoren fungerer, eller bidra selv.
+
+Lite-versjon og full versjon
+
+Den gratis Lite-versjonen byr på et balansert parti med 1 mot 2 botter på et mellomstort kart. Nettopp det oppsettet er en av de morsomste måtene å spille på, og det forblir gratis for alltid!
+
+Med full versjon (eller ved å se en videoannonse og få 1 times gratis tilgang) låser du opp:
+
+- Hele kampanjen.
+- Større kart og botter med høyere vanskelighetsgrad.
+- Lokal flerspiller for opptil 8 spillere (håndkontroller og mobiltelefoner kan brukes som styring).
+- Mods: parallelle turer, spesielle angreps- og seiersregler, fritt valg av terningsider og turgrenser.

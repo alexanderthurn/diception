@@ -1,0 +1,36 @@
+App Name: Diception
+Short description: Diception este un joc de cucerire rapid și minimalist.
+Full description: Inspirat din clasice precum Risk și DiceWars, oferă partide scurte pe ture, o campanie amplă, un editor integrat și joc local pentru până la 8 jucători. În locul clasicei vederi izometrice folosește o vedere pe grilă 2D optimizată, cu suport fluid pentru atingere, mouse, tastatură și controler, și viteza pe care o permite asta.
+
+Caracteristici principale:
+
+Control pe grilă
+Uită de hărțile izometrice și de animațiile lente. Diception folosește o matrice 2D curată, cu legături în patru direcții. Asta face ca comenzile WASD și de pe cruce să fie fulgerătoare: ritm alert, fără să sacrifice profunzimea strategică.
+
+Multiplayer local
+Înfruntă până la 8 jucători în joc local (controlerele sunt acceptate).
+
+Viteză
+Alege dintre 3 moduri de viteză. Fie că vrei să analizezi fiecare mutare, fie să treci prin teritorii ca un "blitz" în milisecunde, alegerea îți aparține.
+
+Moduri
+De ce să te oprești la șase fețe? Sau încearcă turele paralele pentru haos total. Reglează condițiile de victorie, regulile de start și de întăriri și construiește-ți propriul mod de a juca.
+
+Te așteaptă niveluri făcute manual, fiecare cu setările lui.
+
+ 
+
+Sursă deschisă & comunitate
+
+Diception este un proiect făcut din pasiune, construit pe transparență. Credem că logica unui joc ar trebui să fie la vedere pentru oricine. De aceea nucleul jocului Diception este cu sursă deschisă. Poți citi codul, vedea cum funcționează motorul de probabilități sau chiar contribui.
+
+Versiunea Lite și versiunea completă
+
+Versiunea Lite gratuită oferă o partidă echilibrată de 1 contra 2 boți pe o hartă medie. Tocmai această configurație este una dintre cele mai distractive și va rămâne gratuită pentru totdeauna!
+
+Cumpărând versiunea completă (sau urmărind o reclamă video pentru 1 oră de acces gratuit) deblochezi:
+
+- Campania completă.
+- Hărți mai mari și boți cu dificultate ridicată.
+- Jocul local pentru până la 8 jucători (controlerele și telefoanele pot fi folosite pe post de comandă).
+- Mods: ture paralele, reguli speciale de atac și de victorie, fețe de zar la alegere și limite de tură.
